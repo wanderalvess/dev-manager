@@ -1,0 +1,55 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Compilação e Artefatos (Build Outputs)
+dist/
+dist-electron/
+release/
+build/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+
+# Variáveis de Ambiente e Configurações Locais
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+config.json
+
+# IDEs e Editores
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.iml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Sistema Operacional (OS Metadata)
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Diretórios temporários e scripts locais
+scratch/
+.system_generated/
+setup-commits.*

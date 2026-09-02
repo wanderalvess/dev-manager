@@ -1,0 +1,65 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import electron from 'vite-plugin-electron';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    electron([
+      {
+        entry: 'src/main/index.ts',
+        vite: {
+          build: {
+            outDir: 'dist-electron/main',
+            minify: false
+          }
+        }
+      },
+      {
+        entry: 'src/preload/index.ts',
+        onstart(options) {
+          options.reload();
+        },
+        vite: {
+          build: {
+            outDir: 'dist-electron/preload',
+            minify: false,
+            rollupOptions: {
+              external: ['electron'],
+              output: {
+                format: 'cjs',
+                entryFileNames: '[name].cjs',
+                exports: 'none',
+                inlineDynamicImports: true
+              }
+            }
+          }
+        }
+      }
+    ])
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src/renderer/src'),
+      '@shared': path.resolve(__dirname, 'src/shared')
+    }
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true
+      },
+      '/ws': {
+        target: 'ws://localhost:3000',
+        ws: true
+      }
+    }
+  }
+});
