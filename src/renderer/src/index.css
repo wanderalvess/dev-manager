@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Base Padrão Light (Espaço Clássico - Laranja) */
+    --background: 210 35% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 25 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 35% 93%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 30% 93%;
+    --muted-foreground: 215.4 16.3% 40%;
+    --accent: 25 100% 95%;
+    --accent-foreground: 25 100% 35%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214.3 28% 88%;
+    --input: 214.3 28% 88%;
+    --ring: 25 100% 50%;
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    /* Base Padrão Dark (Espaço Clássico - Laranja) */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47% 11.2%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 47% 11.2%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 25 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 25 80% 15%;
+    --accent-foreground: 25 100% 60%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 22%;
+    --input: 217.2 32.6% 22%;
+    --ring: 25 100% 50%;
+  }
+
+  /* Variante 2: Midnight Tech (Pitch Black & Electric Blue) */
+  .theme-midnight {
+    --primary: 217 91% 60%;
+    --ring: 217 91% 60%;
+  }
+
+  .dark.theme-midnight,
+  .dark .theme-midnight {
+    --background: 0 0% 2%;
+    --card: 0 0% 5.5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 0 0% 5.5%;
+    --popover-foreground: 210 40% 98%;
+    --secondary: 217 35% 12%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 35% 12%;
+    --muted-foreground: 217 20% 65%;
+    --border: 217 45% 20%;
+    --input: 217 45% 20%;
+    --accent: 217 91% 15%;
+    --accent-foreground: 217 91% 65%;
+  }
+
+  .theme-midnight:not(.dark) {
+    --background: 217 50% 98%;
+    --foreground: 217 45% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 217 45% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 217 45% 12%;
+    --secondary: 217 40% 93%;
+    --secondary-foreground: 217 45% 12%;
+    --muted: 217 40% 93%;
+    --muted-foreground: 217 25% 45%;
+    --border: 217 35% 88%;
+    --input: 217 35% 88%;
+    --accent: 217 91% 95%;
+    --accent-foreground: 217 91% 40%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+  }
+}
+
+/* Transições universais suaves entre temas */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 200ms;
+}
+
+/* Painéis e superfícies Cockpit dinâmicas */
+/* Utilitários Cockpit */
+.cockpit-panel {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+.cockpit-card {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cockpit-card:hover {
+  border-color: hsl(var(--primary) / 0.5);
+}
+
+/* Brilhos neon e acentos dinâmicos */
+.glow-primary {
+  box-shadow: 0 0 20px -4px hsl(var(--primary) / 0.45);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px -5px rgba(0, 180, 216, 0.35);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.35);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px -5px rgba(255, 138, 0, 0.35);
+}
+
+.glow-rose {
+  box-shadow: 0 0 20px -5px rgba(244, 63, 94, 0.35);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.45);
+}
+
+/* Animações de status */
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+.radar-live {
+  animation: radar-pulse 2s infinite ease-in-out;
+}
