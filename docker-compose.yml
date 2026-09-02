@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # =====================================================================
+  # 🚀 Dev Manager (Web Cockpit & Automação)
+  # =====================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dev-manager
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - DOCKER_CONTAINER=true
+      - PORT=3000
+      - HOST=0.0.0.0
+      - CONFIG_DIR=/workspace/config
+      - PROJECTS_DIR=/workspace/projects
+      - KARAF_DIR=/workspace/karaf
+      - APP_DIR=/workspace/app
+      - KARAF_USER=${KARAF_USER:-karaf}
+      - KARAF_PASS=${KARAF_PASS:-karaf}
+      - TARGET_PR_BRANCH=${TARGET_PR_BRANCH:-develop}
+    volumes:
+      # Persistência de configurações do painel
+      - dev-config:/workspace/config
+      # Mapeamento de repositórios Git do Host
+      - ${HOST_PROJECTS_DIR:-./projects}:/workspace/projects
+      # Mapeamento opcional do Karaf / App local
+      - ${HOST_KARAF_DIR:-./karaf}:/workspace/karaf
+      - ${HOST_APP_DIR:-./app}:/workspace/app
+    networks:
+      - dev-network
+
+  # =====================================================================
+  # 📦 Apache Karaf (Contêiner OSGi Opcional - Perfil: full-stack / services)
+  # =====================================================================
+  karaf:
+    image: karaf:4.4.6
+    container_name: karaf-server
+    restart: unless-stopped
+    profiles:
+      - full-stack
+      - services
+    ports:
+      - "${WEB_PORT:-8889}:8889" # HTTP Web
+      - "8181:8181" # HTTP Karaf Alternativo
+      - "${KARAF_SSH_PORT:-8101}:8101" # SSH Console (client)
+      - "${JAVA_DEBUG_PORT:-5005}:5005" # Java Remote Debugger (IntelliJ / VSCode)
+    environment:
+      - KARAF_DEBUG=true
+      - JAVA_DEBUG_PORT=5005
+    volumes:
+      - karaf-data:/opt/karaf/data
+      - karaf-deploy:/opt/karaf/deploy
+    networks:
+      - dev-network
+
+  # =====================================================================
+  # 🗄️ Oracle Database Free (Banco Local Opcional - Perfil: full-stack / services)
+  # =====================================================================
+  oracle-db:
+    image: gvenzl/oracle-free:slim-faststart
+    container_name: oracle-db
+    restart: unless-stopped
+    profiles:
+      - full-stack
+      - services
+    ports:
+      - "1521:1521" # Listener Oracle DB
+    environment:
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD:-devmanager}
+      - APP_USER=${DB_USER:-DEVUSER}
+      - APP_USER_PASSWORD=${DB_PASSWORD:-devmanager}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    networks:
+      - dev-network
+
+# =====================================================================
+# Redes e Volumes Persistentes
+# =====================================================================
+networks:
+  dev-network:
+    driver: bridge
+
+volumes:
+  dev-config:
+    driver: local
+  karaf-data:
+    driver: local
+  karaf-deploy:
+    driver: local
+  oracle-data:
+    driver: local

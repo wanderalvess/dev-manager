@@ -1,0 +1,30 @@
+# =========================================================
+# Dockerfile para Ambiente de Desenvolvimento (Live Reload)
+# =========================================================
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Instala ferramentas essenciais
+RUN apk add --no-cache git bash curl net-tools tzdata
+
+# Variáveis de ambiente padrão
+ENV NODE_ENV=development \
+    DOCKER_CONTAINER=true \
+    PORT=3000 \
+    HOST=0.0.0.0 \
+    CONFIG_DIR=/workspace/config \
+    PROJECTS_DIR=/workspace/projects \
+    KARAF_DIR=/workspace/karaf \
+    APP_DIR=/workspace/app
+
+RUN mkdir -p /workspace/config /workspace/projects /workspace/karaf /workspace/app
+
+COPY package.json package-lock.json ./
+RUN npm install && npm install -g tsx
+
+COPY . .
+
+EXPOSE 3000 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
