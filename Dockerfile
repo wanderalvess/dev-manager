@@ -3,7 +3,7 @@
 # =========================================================
 
 # --- Estágio 1: Build do Frontend React + Vite ---
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # --- Estágio 2: Runtime da Aplicação ---
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 

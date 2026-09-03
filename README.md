@@ -109,7 +109,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 
 | Camada | Tecnologias |
 | :--- | :--- |
-| **Shell Desktop** | [Electron](https://www.electronjs.org/) (v29), Node.js API (`child_process`, `fs`, `os`, `path`) |
+| **Shell Desktop** | [Electron](https://www.electronjs.org/) (v44), Node.js API (`child_process`, `fs`, `os`, `path`) |
 | **Frontend** | [React](https://react.dev/) (v18), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vitejs.dev/) |
 | **Estilização** | [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) |
 | **Empacotamento** | [Electron Builder](https://www.electron.build/) (Instalador NSIS e Portátil com elevação de Admin) |
@@ -120,7 +120,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 ## 📋 Pré-requisitos
 
 * **Sistema Operacional:** Windows 10 ou Windows 11 (64-bit).
-* **Node.js:** Versão 18.x ou 20.x ou superior.
+* **Node.js:** Versão 22.12.x ou superior.
 * **npm:** Versão 9.x ou superior.
 * **Privilégios de Administrador:** Necessário para iniciar e parar serviços do Windows.
 * **Git:** Instalado e configurado no PATH do Windows.

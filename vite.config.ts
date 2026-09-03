@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [
@@ -25,13 +28,17 @@ export default defineConfig({
           build: {
             outDir: 'dist-electron/preload',
             minify: false,
-            rollupOptions: {
+            lib: {
+              formats: ['cjs'],
+              fileName: () => 'index.cjs'
+            },
+            rolldownOptions: {
               external: ['electron'],
               output: {
                 format: 'cjs',
                 entryFileNames: '[name].cjs',
                 exports: 'none',
-                inlineDynamicImports: true
+                codeSplitting: false
               }
             }
           }
