@@ -12,20 +12,16 @@ import {
   Radio,
   Globe,
   Terminal,
-  Power,
   Settings,
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
   Activity,
-  Cpu,
-  Sparkles,
   ExternalLink,
   Layers,
   Plus,
   Edit3,
   Copy,
-  Trash2,
   Clock,
   FolderOpen
 } from 'lucide-react';
@@ -34,12 +30,9 @@ import {
   EnvironmentLog,
   PortStatus,
   ProcessStatus,
-  IdeInfo,
   AppSettings,
-  EnvironmentAutomationConfig,
   AutomationProfile,
   AutomationStep,
-  detectIdeInfo,
   getWebPort,
   getWebUrl
 } from '../../../shared/types';
@@ -63,7 +56,6 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const [isCheckingPorts, setIsCheckingPorts] = useState(false);
   const [isCheckingProcesses, setIsCheckingProcesses] = useState(false);
   const [isKarafEmbeddedRunning, setIsKarafEmbeddedRunning] = useState<boolean>(false);
-  const [ideInfo, setIdeInfo] = useState<IdeInfo>(() => detectIdeInfo());
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -95,7 +87,6 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       try {
         const st = await window.electronAPI.getSettings();
         setSettings(st);
-        setIdeInfo(detectIdeInfo(st.intellijPath, st.ideName));
 
         if (st.automationProfiles && st.automationProfiles.length > 0) {
           setProfiles(st.automationProfiles);
@@ -459,7 +450,6 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const runningProcessesCount = processes.filter((p) => p.isRunning).length;
   const activePortsCount = ports.filter((p) => p.inUse).length;
   const webPort = getWebPort(settings, ports);
-  const isWebPortActive = ports.some((p) => p.port === webPort && p.inUse);
   const webPortalUrl = getWebUrl(settings, '', ports);
   const karafConsoleUrl = getWebUrl(settings, '/system/console', ports);
 
@@ -827,7 +817,8 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                                 {idx + 1}
                               </span>
                               <span className="text-xs font-bold text-foreground truncate">{step.name}</span>
-                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/40">
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/40 flex items-center gap-1">
+                                <StepIcon className="w-3 h-3" />
                                 {step.type}
                               </span>
                               {step.launchMode && (
@@ -1006,7 +997,8 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                 {/* Processos com travas */}
                 {processes.length > 0 && (
                   <div className="pt-2 border-t border-border/40">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <RefreshCw className={`w-3 h-3 ${isCheckingProcesses ? 'animate-spin text-primary' : ''}`} />
                       Processos Conflitantes:
                     </span>
                     <div className="space-y-1">

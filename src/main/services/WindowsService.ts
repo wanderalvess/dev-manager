@@ -195,6 +195,7 @@ export class WindowsService {
       }
       return true;
     } catch (err) {
+      console.error(`Erro ao finalizar processo ${imageName}:`, err);
       return false;
     }
   }

@@ -190,11 +190,11 @@ export function initApiBridge() {
       return data.isAdmin;
     },
 
-    getServicesStatus: async (customServices?: TrackedServiceConfig[]): Promise<ServiceStatus[]> => {
+    getServicesStatus: async (_customServices?: TrackedServiceConfig[]): Promise<ServiceStatus[]> => {
       return apiFetch<ServiceStatus[]>('/api/env/services');
     },
 
-    getProcessesStatus: async (customProcesses?: TrackedProcessConfig[]): Promise<ProcessStatus[]> => {
+    getProcessesStatus: async (_customProcesses?: TrackedProcessConfig[]): Promise<ProcessStatus[]> => {
       return apiFetch<ProcessStatus[]>('/api/env/processes');
     },
 

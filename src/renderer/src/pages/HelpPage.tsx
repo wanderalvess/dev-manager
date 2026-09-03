@@ -23,13 +23,8 @@ import {
   Info,
   Sparkles,
   LifeBuoy,
-  KeyRound,
   Code2,
-  AlertTriangle,
-  FolderOpen,
   ArrowRight,
-  Radio,
-  Clock,
   Laptop
 } from 'lucide-react';
 import { SystemAppInfo, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';

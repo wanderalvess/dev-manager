@@ -117,6 +117,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setMode is redefined every render (closes over variant); the mode/variant effect above re-applies theme classes right after, so a stale closure here is harmless and re-subscribing each render would be pure churn
   }, []);
 
   return (
@@ -126,6 +127,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider on purpose
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
   if (!context) {

@@ -24,9 +24,6 @@ import {
   Server,
   Flame,
   Zap,
-  SlidersHorizontal,
-  CheckSquare,
-  Square,
   Globe,
   Terminal
 } from 'lucide-react';

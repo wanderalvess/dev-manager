@@ -9,12 +9,10 @@ export class NetworkPortScanner {
   public static async checkPort(port: number, host: string = '127.0.0.1', timeoutMs: number = 400): Promise<boolean> {
     return new Promise((resolve) => {
       const socket = new net.Socket();
-      let isConnected = false;
 
       socket.setTimeout(timeoutMs);
 
       socket.on('connect', () => {
-        isConnected = true;
         socket.destroy();
         resolve(true);
       });
