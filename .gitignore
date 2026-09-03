@@ -27,7 +27,8 @@ config.json
 
 # IDEs e Editores
 .idea/
-.vscode/
+.vscode/*
+!.vscode/mcp.json
 *.suo
 *.ntvs*
 *.njsproj

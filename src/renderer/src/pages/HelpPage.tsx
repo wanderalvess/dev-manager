@@ -25,7 +25,8 @@ import {
   LifeBuoy,
   Code2,
   ArrowRight,
-  Laptop
+  Laptop,
+  Bot
 } from 'lucide-react';
 import { SystemAppInfo, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 
@@ -279,6 +280,42 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
             <span className="font-bold text-foreground block pt-1">Privilégios de Administrador (UAC):</span>
             <p>
               Ambos os executáveis já incluem elevação de privilégios (<code className="font-mono text-primary">requireAdministrator</code>) para garantir o controle total de parada/inicialização de serviços Windows e liberação de portas sem erros.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'mcp-server',
+      question: 'O que é o servidor MCP e como uso o Dev Manager a partir de um assistente de IA (Claude Code)?',
+      category: 'Integração & MCP',
+      tags: ['mcp', 'claude', 'ia', 'agente', 'automação', 'model context protocol', 'stdio'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit — Ambiente, Perfis, Karaf, Git &amp; Azure, Rotinas e Configurações — como 41 <em>tools</em> que um assistente de IA pode chamar diretamente, sem passar pela interface gráfica.
+          </p>
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-2">
+            <span className="font-bold text-foreground block">Ativar no Claude Code:</span>
+            <p>
+              O arquivo <code className="font-mono text-primary">.mcp.json</code> na raiz do projeto já registra o servidor. Basta abrir esta pasta no Claude Code e rodar <code className="font-mono text-primary">/mcp</code> para conectar — nenhuma configuração manual é necessária.
+            </p>
+            <span className="font-bold text-foreground block pt-1">Rodar manualmente (stdio):</span>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60">
+              <code>npm run mcp</code>
+              <button
+                onClick={() => copyToClipboard('npm run mcp', 'cmd-mcp-faq')}
+                className="p-1 hover:text-foreground transition-colors"
+                title="Copiar comando"
+              >
+                {copiedItem === 'cmd-mcp-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-300 space-y-1">
+            <span className="font-bold block">Importante:</span>
+            <p>
+              O servidor MCP tem o mesmo poder do Cockpit — pode iniciar/parar serviços, matar processos e rodar builds/deploys. Ele roda só localmente via stdio (sem porta de rede exposta) e reaproveita as mesmas validações de segurança do REST/IPC.
             </p>
           </div>
         </div>
@@ -678,6 +715,41 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                 </ul>
               </div>
             </div>
+
+            {/* Card: Servidor MCP */}
+            <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3.5 shadow-md">
+              <div className="flex items-center space-x-2.5 pb-2 border-b border-border">
+                <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
+                    5. Servidor MCP (Automação via IA)
+                  </h3>
+                  <span className="text-[10px] text-muted-foreground font-mono">Model Context Protocol • stdio</span>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
+                <p>
+                  Expõe as mesmas automações do Cockpit como <em>tools</em> chamáveis por um assistente de IA (ex: Claude Code), sem passar pela interface:
+                </p>
+                <ul className="space-y-1.5 pl-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                    <span><strong>41 Tools por Domínio:</strong> <code className="font-mono text-primary">env_*</code>, <code className="font-mono text-primary">karaf_*</code>, <code className="font-mono text-primary">git_*</code>, <code className="font-mono text-primary">routines_*</code>, <code className="font-mono text-primary">settings_*</code>, entre outros.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                    <span><strong>Mesma Camada de Segurança:</strong> Reaproveita as validações de path/comando/identificador já usadas pelo Cockpit e pela API REST — nenhuma lógica duplicada.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                    <span><strong>Local via stdio:</strong> Sem porta de rede exposta. Registro automático no Claude Code pelo <code className="font-mono text-primary">.mcp.json</code> da raiz do projeto.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1046,6 +1118,9 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                 </span>
                 <span className="px-2.5 py-1 rounded-lg bg-card border border-border text-emerald-400">
                   Git & Azure DevOps REST
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-card border border-border text-violet-400">
+                  Model Context Protocol (MCP)
                 </span>
               </div>
             </div>

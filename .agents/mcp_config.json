@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "dev-manager": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/index.ts"]
+    }
+  }
+}

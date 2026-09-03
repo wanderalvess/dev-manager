@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "dev-manager": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "${workspaceFolder}/src/mcp/index.ts"]
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 > **Cockpit e Painel de Automação Desktop Integrado para Desenvolvedores e Apache Karaf OSGi.**
 
-Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manager** centraliza e automatiza todas as tarefas rotineiras do dia a dia de desenvolvimento: liberação de portas e serviços conflitantes em segundo plano, inicialização de IDEs, disparo do contêiner OSGi em modo debug, deploy automatizado de features Maven no Karaf, gerenciamento de repositórios Git / Azure DevOps, catálogo de rotinas e central completa de ajuda e diagnósticos.
+Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manager** centraliza e automatiza todas as tarefas rotineiras do dia a dia de desenvolvimento: liberação de portas e serviços conflitantes em segundo plano, inicialização de IDEs, disparo do contêiner OSGi em modo debug, deploy automatizado de features Maven no Karaf, gerenciamento de repositórios Git / Azure DevOps, catálogo de rotinas e central completa de ajuda e diagnósticos. Além do Cockpit desktop, todas essas automações também ficam disponíveis para assistentes de IA como o Claude Code via um **servidor MCP** embutido.
 
 ---
 
@@ -105,6 +105,28 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 
 ---
 
+### 6. 🤖 Servidor MCP — Automação via Assistentes de IA
+* **Model Context Protocol (MCP) via stdio:**
+  * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code — pode chamar diretamente, sem passar pela interface gráfica.
+* **41 Tools Organizadas por Domínio:**
+  * `system_*`, `env_*`, `profile_*`, `karaf_*`, `git_*`, `routines_*` e `settings_*` — desde consultas de status até o pipeline completo de deploy Karaf e execução de perfis de automação.
+* **Terceiro Consumidor da Mesma Camada de Serviços:**
+  * Reaproveita exatamente as mesmas classes de serviço e validações de segurança (`isValidIdentifier`, `isSafeLocalPath`, `isSafeKarafCommand`) já usadas pelo IPC do Electron e pela API REST (`src/server`) — nenhuma lógica de negócio duplicada.
+* **Protocolo Aberto — Funciona em Qualquer Cliente MCP:**
+  * O servidor é MCP puro via stdio, sem nada específico de um cliente. Só muda o arquivo de registro:
+  * **Claude Code:** [`.mcp.json`](.mcp.json) na raiz — abra o projeto e rode `/mcp`.
+  * **VS Code / GitHub Copilot Chat (agent mode):** [`.vscode/mcp.json`](.vscode/mcp.json).
+  * **Google Antigravity:** [`.agents/mcp_config.json`](.agents/mcp_config.json) (workspace) ou `~/.gemini/config/mcp_config.json` (global).
+* **Execução Manual:**
+  ```bash
+  npm run mcp
+  ```
+  Inicia o servidor MCP via stdio (`tsx src/mcp/index.ts`) — mesmo mecanismo do script `server` (REST/Docker), agora falando o protocolo MCP.
+
+> ⚠️ **Nota de segurança:** o servidor MCP tem o mesmo poder que o próprio Cockpit — iniciar/parar serviços Windows, matar processos, rodar builds Maven e comandos Karaf. Ele roda localmente via stdio (sem porta de rede exposta) e é pensado para uso pelo mesmo desenvolvedor que já opera essas ações pela interface. Transporte remoto/HTTP não faz parte desta versão.
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
 
 | Camada | Tecnologias |
@@ -114,6 +136,8 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 | **Estilização** | [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) |
 | **Empacotamento** | [Electron Builder](https://www.electron.build/) (Instalador NSIS e Portátil com elevação de Admin) |
 | **Integrações** | Windows Services (`sc`, `net stop/start`, `netstat`), Git CLI, Apache Karaf Client, Azure DevOps |
+| **Servidor Web/Docker** | [Express](https://expressjs.com/), [ws](https://github.com/websockets/ws) (WebSocket), [tsx](https://github.com/privatenumber/tsx) |
+| **Integração com IA** | [Model Context Protocol](https://modelcontextprotocol.io/) (`@modelcontextprotocol/sdk`), [Zod](https://zod.dev/) |
 
 ---
 
@@ -218,6 +242,7 @@ Ambos os executáveis incluem manifesto interno configurado com `requestedExecut
 
 ```
 dev-manager/
+├── .mcp.json                   # Registro do servidor MCP para clientes como o Claude Code
 ├── electron-builder.json5      # Configuração de empacotamento Windows / NSIS
 ├── package.json                # Dependências e scripts do projeto
 ├── tailwind.config.js          # Configurações de cores, fontes e temas
@@ -229,12 +254,22 @@ dev-manager/
     │   ├── index.ts            # Inicialização da janela principal e ciclo de vida
     │   ├── ipc/
     │   │   └── registerIpc.ts  # Registro de canais de comunicação IPC seguros
-    │   └── services/           # Regras de negócio e integração de sistema
-    │       ├── ConfigService.ts    # Persistência de configurações e auto-detecção
-    │       ├── GitAzureService.ts  # Leitura de repositórios Git e URLs do Azure
-    │       ├── KarafService.ts     # Execução de comandos Karaf e console embutido
-    │       ├── RoutinesService.ts  # Varredura e lançamento de rotinas
-    │       └── WindowsService.ts   # Controle de serviços Windows e portas de rede
+    │   ├── services/           # Regras de negócio e integração de sistema
+    │   │   ├── ConfigService.ts    # Persistência de configurações e auto-detecção
+    │   │   ├── GitAzureService.ts  # Leitura de repositórios Git e URLs do Azure
+    │   │   ├── KarafService.ts     # Execução de comandos Karaf e console embutido
+    │   │   ├── RoutinesService.ts  # Varredura e lançamento de rotinas
+    │   │   └── WindowsService.ts   # Controle de serviços Windows e portas de rede
+    │   └── utils/
+    │       └── security.ts     # Validadores compartilhados (paths, comandos, identificadores)
+    │
+    ├── server/                 # API REST + WebSocket standalone (modo Web/Docker)
+    │   ├── index.ts            # Express + ws, mesmos services do Electron, sem UI
+    │   └── services/
+    │       └── NetworkPortScanner.ts
+    │
+    ├── mcp/                    # Servidor MCP (Model Context Protocol) via stdio
+    │   └── index.ts            # Terceiro consumidor dos services — tools para clientes MCP/IA
     │
     ├── preload/                # Script Preload (Ponte IPC segura com contextBridge)
     │   ├── index.ts
@@ -257,9 +292,10 @@ dev-manager/
     │           ├── KarafDeployPage.tsx # Deploy e diagnósticos de features Karaf OSGi
     │           ├── GitAzurePage.tsx    # Hub de repositórios Git e Pull Requests
     │           ├── RoutinesPage.tsx    # Catálogo e lançador de rotinas
-    │           └── SettingsPage.tsx    # Tela de configurações e portas monitoradas
+    │           ├── SettingsPage.tsx    # Tela de configurações e portas monitoradas
+    │           └── HelpPage.tsx        # Central de Ajuda, FAQ, atalhos e diagnóstico
     │
-    └── shared/                 # Tipos e utilitários compartilhados entre main e renderer
+    └── shared/                 # Tipos e utilitários compartilhados entre main, server e mcp
         └── types.ts            # Interfaces TypeScript (AppSettings, ServiceStatus, etc.)
 ```
 
