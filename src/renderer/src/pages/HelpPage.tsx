@@ -326,7 +326,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
             <HelpCircle className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
               Central de Ajuda e Documentação
               <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                 MANUAL DO DESENVOLVEDOR
@@ -360,13 +360,13 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id as HelpCategory)}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 border ${
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 border ${
                 isActive
                   ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
                   : 'bg-card/50 text-muted-foreground border-border hover:text-foreground hover:bg-card'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-4 h-4" />
               <span>{cat.label}</span>
             </button>
           );
@@ -400,7 +400,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
 
               {/* Fluxo de Trabalho Recomendado */}
               <div className="pt-2 border-t border-border">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary block mb-3">
+                <span className="text-[13px] font-bold uppercase tracking-wider text-primary block mb-3">
                   Fluxo de Trabalho Diário Recomendado:
                 </span>
 
@@ -454,7 +454,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                         onClick={() => onNavigate('git')}
                         className="text-[11px] text-blue-500 font-semibold flex items-center gap-1 hover:underline pt-1"
                       >
-                        <span>Ir para Git Hub</span> <ArrowRight className="w-3 h-3" />
+                        <span>Ir para Git &amp; Azure</span> <ArrowRight className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -463,7 +463,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                     <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-xs border border-indigo-500/20">
                       4
                     </div>
-                    <h4 className="text-xs font-bold text-foreground">Rotinas Delphi</h4>
+                    <h4 className="text-xs font-bold text-foreground">Catálogo de Rotinas</h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                       Busca instantânea por número (1301, 1406, 4116, PCINF000) e execução direta com favoritos salvos.
                     </p>
@@ -547,7 +547,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                   <Terminal className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
                     1. Gestor de Ambiente & Automação
                   </h3>
                   <span className="text-[10px] text-muted-foreground font-mono">Servidor OSGi Debug & Serviços</span>
@@ -586,7 +586,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                   <Layers className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
                     2. Deploy OSGi Karaf (client.bat)
                   </h3>
                   <span className="text-[10px] text-muted-foreground font-mono">Maven Feature Deployer</span>
@@ -621,7 +621,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                   <GitPullRequest className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
                     3. Git & Azure DevOps Hub
                   </h3>
                   <span className="text-[10px] text-muted-foreground font-mono">Gestão de Branches & PRs</span>
@@ -656,8 +656,8 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                   <Grid className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-                    4. Catálogo de Rotinas Delphi
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
+                    4. Catálogo de Rotinas
                   </h3>
                   <span className="text-[10px] text-muted-foreground font-mono">Executáveis .exe e .pc</span>
                 </div>
@@ -694,7 +694,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
               <div className="flex items-center justify-between pb-2 border-b border-border">
                 <div className="flex items-center space-x-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
                     Atalhos de Teclado Globais
                   </h3>
                 </div>
@@ -841,7 +841,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
 
               {/* Tabela de Diagnóstico Técnico da Máquina */}
               <div className="pt-2 border-t border-border">
-                <div className="text-xs font-bold uppercase tracking-wider text-foreground mb-3 flex items-center gap-1.5">
+                <div className="text-[13px] font-bold uppercase tracking-wider text-foreground mb-3 flex items-center gap-1.5">
                   <Cpu className="w-4 h-4 text-primary" />
                   <span>Diagnóstico do Ambiente de Execução</span>
                 </div>
@@ -960,7 +960,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                     <Laptop className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
                       Empacotamento & Geração de Executável (.exe)
                     </h3>
                     <span className="text-[10px] text-muted-foreground font-mono">Electron Builder • Windows Release</span>
@@ -1026,7 +1026,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
 
             {/* Tecnologias Utilizadas */}
             <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3 shadow-md">
-              <div className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+              <div className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
                 <Code2 className="w-4 h-4 text-primary" />
                 <span>Stack Tecnológica do Painel</span>
               </div>

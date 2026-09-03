@@ -90,11 +90,11 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
               <GitPullRequest className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 Controle de Versão (Git & Azure DevOps)
                 <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   {projects.length} {projects.length === 1 ? 'Repositório Ativo' : 'Repositórios Ativos'}
@@ -254,7 +254,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                       title="Sincronizar referências remotas (git fetch)"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isExecutingGit ? 'animate-spin' : ''}`} />
-                      <span>Sincronizar (Fetch)</span>
+                      <span>Fetch</span>
                     </button>
                     <button
                       onClick={() => handleExecGit('pull')}
@@ -263,25 +263,25 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                       title="Baixar e mesclar alterações da branch remota (git pull)"
                     >
                       <Download className="w-3.5 h-3.5 text-primary" />
-                      <span>Atualizar (Pull)</span>
+                      <span>Pull</span>
                     </button>
                     <button
                       onClick={() => handleExecGit('stash')}
                       disabled={isExecutingGit}
-                      className="px-2.5 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                      className="p-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg transition-colors shadow-sm"
                       title="Guardar alterações locais temporariamente (git stash)"
+                      aria-label="Guardar alterações locais (git stash)"
                     >
                       <Archive className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Guardar (Stash)</span>
                     </button>
                     <button
                       onClick={() => handleExecGit('stash-pop')}
                       disabled={isExecutingGit}
-                      className="px-2.5 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                      className="p-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg transition-colors shadow-sm"
                       title="Restaurar alterações locais guardadas (git stash pop)"
+                      aria-label="Restaurar alterações guardadas (git stash pop)"
                     >
                       <ArchiveRestore className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Restaurar (Pop)</span>
                     </button>
                   </div>
                 </div>
@@ -289,7 +289,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                 {/* Fluxo Visual de Pull Request */}
                 <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <span className="text-[13px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                       <GitMerge className="w-4 h-4" />
                       Criar Pull Request no Azure DevOps
                     </span>

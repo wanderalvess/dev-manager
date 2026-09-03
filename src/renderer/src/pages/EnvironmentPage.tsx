@@ -66,6 +66,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const [ideInfo, setIdeInfo] = useState<IdeInfo>(() => detectIdeInfo());
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Perfis de Automação
   const [profiles, setProfiles] = useState<AutomationProfile[]>([]);
@@ -497,7 +498,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                <h2 className="text-base font-bold text-foreground">
                   Preparação de Ambiente &amp; Workflows
                 </h2>
 
@@ -569,29 +570,54 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
               </button>
             </div>
 
-            {/* Parar Tudo do Perfil */}
-            <button
-              type="button"
-              onClick={handleStopActiveProfile}
-              disabled={actionLoading === 'stop-all' || isRunningProfile}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-sm"
-              title="Encerrar todos os processos e portas configuradas neste perfil"
-            >
-              <Square className="w-3.5 h-3.5" />
-              <span>Parar Tudo</span>
-            </button>
+            {/* Menu de Ações do Perfil: Parar Tudo / Reiniciar Tudo */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                disabled={isRunningProfile}
+                className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-card hover:bg-muted text-foreground border border-border shadow-sm"
+                title="Ações do perfil: parar ou reiniciar toda a esteira"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>Ações</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            {/* Reiniciar Tudo do Perfil */}
-            <button
-              type="button"
-              onClick={handleRestartActiveProfile}
-              disabled={isRunningProfile}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-sm"
-              title="Derrubar todas as portas e reexecutar a esteira na sequência"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Reiniciar Tudo</span>
-            </button>
+              {isProfileMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-60 origin-top-right rounded-xl bg-card border border-border shadow-2xl p-1.5 z-50 flex flex-col space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        handleStopActiveProfile();
+                      }}
+                      disabled={actionLoading === 'stop-all' || isRunningProfile}
+                      className="w-full px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-left"
+                      title="Encerrar todos os processos e portas configuradas neste perfil"
+                    >
+                      <Square className="w-3.5 h-3.5 shrink-0" />
+                      <span>Parar Tudo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        handleRestartActiveProfile();
+                      }}
+                      disabled={isRunningProfile}
+                      className="w-full px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 text-left"
+                      title="Derrubar todas as portas e reexecutar a esteira na sequência"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                      <span>Reiniciar Tudo</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* BOTÃO PRINCIPAL: Subir Ambiente em Sequência */}
             <button
@@ -622,58 +648,52 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+            {/* Trilha compacta: o detalhe de cada etapa fica nos cartões da coluna esquerda */}
+            <div className="flex items-center gap-1">
               {activeProfile.steps.map((step, index) => {
                 const stepNum = index + 1;
                 const isCurrent = isRunningProfile && currentRunningStepId === step.id;
                 const isPast = isRunningProfile && activeStepIndex > stepNum;
                 const portStatus = step.port ? ports.find((p) => p.port === step.port) : undefined;
                 const isPortUp = portStatus?.inUse ?? false;
-                const StepIcon = getStepIcon(step.type);
+                const isDone = isPast || isPortUp;
 
-                let borderStyle = 'border-border bg-card/60 text-muted-foreground';
+                let dotStyle = 'bg-muted text-muted-foreground border-border';
                 if (isCurrent) {
-                  borderStyle = 'border-primary bg-primary/15 text-primary ring-1 ring-primary glow-primary';
-                } else if (isPast || isPortUp) {
-                  borderStyle = 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300';
+                  dotStyle = 'bg-primary text-primary-foreground border-primary animate-pulse glow-primary';
+                } else if (isDone) {
+                  dotStyle = 'bg-emerald-500 text-white border-emerald-500';
                 }
 
                 return (
-                  <div
-                    key={step.id}
-                    className={`p-2.5 rounded-xl border flex items-center space-x-2.5 transition-all ${
-                      step.enabled === false ? 'opacity-40 grayscale' : ''
-                    } ${borderStyle}`}
-                  >
+                  <React.Fragment key={step.id}>
+                    {index > 0 && (
+                      <div
+                        className={`h-[2px] flex-1 rounded-full ${
+                          isDone || isCurrent ? 'bg-emerald-500/50' : 'bg-border'
+                        }`}
+                      />
+                    )}
                     <div
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
-                        isCurrent
-                          ? 'bg-primary text-primary-foreground animate-pulse'
-                          : isPortUp || isPast
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-muted text-muted-foreground'
+                      className={`flex items-center gap-1.5 shrink-0 ${
+                        step.enabled === false ? 'opacity-40 grayscale' : ''
                       }`}
+                      title={`${stepNum}. ${step.name}${step.port ? ` — porta ${step.port} ${isPortUp ? 'ativa' : 'inativa'}` : ` — ${step.type}`}`}
                     >
-                      {isPortUp || isPast ? <CheckCircle2 className="w-4 h-4 stroke-[3]" /> : stepNum}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[11px] font-bold truncate text-foreground flex items-center gap-1">
-                        <StepIcon className="w-3 h-3 text-primary shrink-0" />
-                        <span className="truncate">{step.name}</span>
+                      <div
+                        className={`w-6 h-6 rounded-lg border flex items-center justify-center font-bold text-[11px] transition-all ${dotStyle}`}
+                      >
+                        {isDone ? <CheckCircle2 className="w-3.5 h-3.5 stroke-[3]" /> : stepNum}
                       </div>
-                      <div className="text-[9px] font-mono text-muted-foreground truncate flex items-center gap-1.5">
-                        {step.port ? (
-                          <span className={isPortUp ? 'text-emerald-500 font-bold' : ''}>
-                            :{step.port} {isPortUp ? '● UP' : '○ OFF'}
-                          </span>
-                        ) : (
-                          <span>{step.type}</span>
-                        )}
-                        {step.delayAfterSeconds ? <span>• {step.delayAfterSeconds}s delay</span> : null}
-                      </div>
+                      <span
+                        className={`text-[11px] font-semibold truncate max-w-[140px] ${
+                          isCurrent ? 'text-primary font-bold' : isDone ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground'
+                        }`}
+                      >
+                        {step.name}
+                      </span>
                     </div>
-                  </div>
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -752,7 +772,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
               <div className="flex items-center space-x-2">
                 <Zap className="w-4 h-4 text-primary" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
                   Projetos e Serviços da Stack ({activeProfile?.steps?.length || 0})
                 </h3>
               </div>
@@ -907,7 +927,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             <button
               type="button"
               onClick={() => setShowDiagnostics(!showDiagnostics)}
-              className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center justify-between text-[13px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
             >
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
