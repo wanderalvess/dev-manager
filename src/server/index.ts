@@ -12,7 +12,8 @@ import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
-import { EnvironmentLog, KarafDeployRequest, AppSettings, AutomationProfile, AutomationStep } from '../shared/types';
+import { DocsIndexService } from '../main/services/DocsIndexService';
+import { EnvironmentLog, KarafDeployRequest, AppSettings, AutomationProfile, AutomationStep, DocsIndexProgress } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -69,6 +70,7 @@ const karafService = new KarafService(configService);
 const windowsService = new WindowsService(configService, karafService);
 const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
+const docsIndexService = new DocsIndexService(configService, gitAzureService);
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
 const wsClients = new Set<WebSocket>();
@@ -396,7 +398,29 @@ app.post('/api/routines/favorite', (req, res) => {
   res.json(configService.toggleFavoriteRoutine(id));
 });
 
-// 6. Configurações
+// 6. Documentação (RAG local)
+app.post('/api/docs/reindex', async (_req, res) => {
+  const result = await docsIndexService.reindex((progress: DocsIndexProgress) => {
+    broadcastWs('docs:index-progress', progress);
+  });
+  res.json(result);
+});
+
+app.get('/api/docs/search', async (req, res) => {
+  const query = (req.query.query as string) || '';
+  const projectName = req.query.projectName as string | undefined;
+  const topK = req.query.topK ? Number(req.query.topK) : undefined;
+  if (!query.trim()) {
+    return res.status(400).json({ error: 'Parâmetro query é obrigatório.' });
+  }
+  res.json(await docsIndexService.search(query, { projectName, topK }));
+});
+
+app.get('/api/docs/status', (_req, res) => {
+  res.json(docsIndexService.getStatus());
+});
+
+// 7. Configurações
 app.get('/api/settings', (_req, res) => {
   res.json(configService.getSettings());
 });

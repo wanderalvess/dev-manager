@@ -16,7 +16,10 @@ import type {
   RoutineItem,
   PathStatusInfo,
   SelectFileOptions,
-  SystemAppInfo
+  SystemAppInfo,
+  DocSearchResult,
+  DocsIndexStatus,
+  DocsIndexProgress
 } from '../shared/types';
 
 const electronAPI = {
@@ -128,6 +131,18 @@ const electronAPI = {
   launchRoutine: (fullPath: string): Promise<boolean> => ipcRenderer.invoke('routines:launch', fullPath),
   launchMappedProgram: (id: string): Promise<boolean> => ipcRenderer.invoke('routines:launch-mapped', id),
   toggleFavoriteRoutine: (id: string): Promise<AppSettings> => ipcRenderer.invoke('routines:toggle-favorite', id),
+
+  // Índice de Documentação (RAG local)
+  reindexDocs: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:reindex'),
+  searchDocs: (query: string, options?: { projectName?: string; topK?: number }): Promise<DocSearchResult[]> =>
+    ipcRenderer.invoke('docs:search', query, options),
+  getDocsIndexStatus: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:get-status'),
+  openDocFile: (filePath: string): Promise<boolean> => ipcRenderer.invoke('docs:open-file', filePath),
+  onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => {
+    const subscription = (_: any, progress: DocsIndexProgress) => callback(progress);
+    ipcRenderer.on('docs:index-progress', subscription);
+    return () => ipcRenderer.removeListener('docs:index-progress', subscription);
+  },
 
   // Configurações
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),

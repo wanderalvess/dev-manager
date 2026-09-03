@@ -7,6 +7,7 @@ import { WindowsService } from './services/WindowsService';
 import { KarafService } from './services/KarafService';
 import { GitAzureService } from './services/GitAzureService';
 import { RoutinesService } from './services/RoutinesService';
+import { DocsIndexService } from './services/DocsIndexService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +49,7 @@ function createWindow() {
   const windowsService = new WindowsService(configService, karafService);
   const gitAzureService = new GitAzureService(configService, karafService);
   const routinesService = new RoutinesService(configService);
+  const docsIndexService = new DocsIndexService(configService, gitAzureService);
 
   registerIpcHandlers(
     mainWindow,
@@ -55,7 +57,8 @@ function createWindow() {
     karafService,
     gitAzureService,
     routinesService,
-    configService
+    configService,
+    docsIndexService
   );
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';

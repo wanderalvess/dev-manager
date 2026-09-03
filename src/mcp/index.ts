@@ -8,6 +8,7 @@ import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
+import { DocsIndexService } from '../main/services/DocsIndexService';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand } from '../main/utils/security';
 import type { AppSettings } from '../shared/types';
 
@@ -17,6 +18,7 @@ const karafService = new KarafService(configService);
 const windowsService = new WindowsService(configService, karafService);
 const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
+const docsIndexService = new DocsIndexService(configService, gitAzureService);
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -549,7 +551,44 @@ server.registerTool(
   async ({ routineId }) => ok(configService.toggleFavoriteRoutine(routineId))
 );
 
-// --- 6. Configurações ---
+// --- 6. Documentação (RAG local) ---
+server.registerTool(
+  'rag_reindex_docs',
+  {
+    title: 'Reindexar documentação',
+    description:
+      'Escaneia os projetos configurados em busca de README/docs (.md, .mdx, .txt), gera embeddings locais e atualiza o índice de busca. Na primeira vez baixa o modelo de IA da internet. Bloqueia até concluir.'
+  },
+  async () => ok(await docsIndexService.reindex())
+);
+
+server.registerTool(
+  'rag_search_docs',
+  {
+    title: 'Buscar na documentação',
+    description: 'Busca semântica (RAG) nos trechos de documentação já indexados dos projetos.',
+    inputSchema: {
+      query: z.string().min(1),
+      projectName: z.string().optional(),
+      topK: z.number().int().min(1).max(50).optional()
+    }
+  },
+  async ({ query, projectName, topK }) => {
+    const status = docsIndexService.getStatus();
+    if (status.totalChunks === 0) {
+      return fail('Índice de documentação vazio. Rode rag_reindex_docs primeiro.');
+    }
+    return ok(await docsIndexService.search(query, { projectName, topK }));
+  }
+);
+
+server.registerTool(
+  'rag_index_status',
+  { title: 'Status do índice de documentação', description: 'Retorna metadados do índice de busca (nº de trechos, arquivos, projetos, última indexação).' },
+  async () => ok(docsIndexService.getStatus())
+);
+
+// --- 7. Configurações ---
 server.registerTool(
   'settings_get',
   { title: 'Ler configurações', description: 'Retorna as configurações atuais do Dev Manager.' },

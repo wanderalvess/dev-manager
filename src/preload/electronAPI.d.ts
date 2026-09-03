@@ -16,7 +16,10 @@ import type {
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
-  SystemAppInfo
+  SystemAppInfo,
+  DocSearchResult,
+  DocsIndexStatus,
+  DocsIndexProgress
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -90,6 +93,13 @@ export interface ElectronAPI {
   launchRoutine: (fullPath: string) => Promise<boolean>;
   launchMappedProgram: (id: string) => Promise<boolean>;
   toggleFavoriteRoutine: (id: string) => Promise<AppSettings>;
+
+  // Índice de Documentação (RAG local)
+  reindexDocs: () => Promise<DocsIndexStatus>;
+  searchDocs: (query: string, options?: { projectName?: string; topK?: number }) => Promise<DocSearchResult[]>;
+  getDocsIndexStatus: () => Promise<DocsIndexStatus>;
+  openDocFile: (filePath: string) => Promise<boolean>;
+  onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => () => void;
 
   // Configurações
   getSettings: () => Promise<AppSettings>;

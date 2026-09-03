@@ -7,6 +7,7 @@ import { KarafService } from '../services/KarafService';
 import { GitAzureService } from '../services/GitAzureService';
 import { RoutinesService } from '../services/RoutinesService';
 import { ConfigService } from '../services/ConfigService';
+import { DocsIndexService } from '../services/DocsIndexService';
 import {
   AppSettings,
   KarafDeployRequest,
@@ -16,9 +17,10 @@ import {
   TrackedServiceConfig,
   TrackedProcessConfig,
   AutomationProfile,
-  AutomationStep
+  AutomationStep,
+  DocsIndexProgress
 } from '../../shared/types';
-import { isSafeUrl, isValidIdentifier } from '../utils/security';
+import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
 export function registerIpcHandlers(
   mainWindow: BrowserWindow,
@@ -26,7 +28,8 @@ export function registerIpcHandlers(
   karafService: KarafService,
   gitAzureService: GitAzureService,
   routinesService: RoutinesService,
-  configService: ConfigService
+  configService: ConfigService,
+  docsIndexService: DocsIndexService
 ) {
   // --- Diálogos Nativos do Sistema & Verificação de Caminhos ---
   ipcMain.handle('dialog:select-directory', async (_, defaultPath?: string) => {
@@ -290,6 +293,31 @@ export function registerIpcHandlers(
 
   ipcMain.handle('routines:toggle-favorite', async (_, routineId: string) => {
     return configService.toggleFavoriteRoutine(routineId);
+  });
+
+  // --- Índice de Documentação (RAG local) ---
+  ipcMain.handle('docs:reindex', async () => {
+    return await docsIndexService.reindex((progress: DocsIndexProgress) => {
+      mainWindow.webContents.send('docs:index-progress', progress);
+    });
+  });
+
+  ipcMain.handle('docs:search', async (_, query: string, options?: { projectName?: string; topK?: number }) => {
+    return await docsIndexService.search(query, options);
+  });
+
+  ipcMain.handle('docs:get-status', async () => {
+    return docsIndexService.getStatus();
+  });
+
+  ipcMain.handle('docs:open-file', async (_, filePath: string) => {
+    const settings = configService.getSettings();
+    if (!isSafePath(filePath, settings.projectsPath)) {
+      console.warn('[Segurança] Bloqueada tentativa de abrir arquivo fora da pasta de projetos:', filePath);
+      return false;
+    }
+    shell.showItemInFolder(filePath);
+    return true;
   });
 
   // --- Configurações ---

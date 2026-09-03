@@ -191,6 +191,39 @@ export interface AppSettings {
   mappedPrograms?: MappedProgram[];
 }
 
+export interface DocChunk {
+  id: string;
+  projectName: string;
+  projectPath: string;
+  filePath: string;
+  chunkIndex: number;
+  text: string;
+  mtimeMs: number;
+}
+
+export interface DocSearchResult {
+  chunk: DocChunk;
+  score: number;
+}
+
+export type DocsIndexPhase = 'loading-model' | 'scanning' | 'embedding' | 'saving' | 'done';
+
+export interface DocsIndexProgress {
+  phase: DocsIndexPhase;
+  current: number;
+  total: number;
+  currentFile?: string;
+}
+
+export interface DocsIndexStatus {
+  totalChunks: number;
+  totalFiles: number;
+  totalProjects: number;
+  projectNames: string[];
+  lastIndexedAt?: string;
+  modelDownloaded: boolean;
+}
+
 export interface MappedProgram {
   id: string;
   name: string;

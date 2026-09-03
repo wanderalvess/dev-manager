@@ -15,7 +15,13 @@ export default defineConfig({
         vite: {
           build: {
             outDir: 'dist-electron/main',
-            minify: false
+            minify: false,
+            rolldownOptions: {
+              // Dependências nativas do RAG local (embeddings) — devem ficar como
+              // require() em tempo de execução, nunca inlineadas pelo bundler
+              // (o binário .node não é um módulo JS válido pra empacotar).
+              external: ['fastembed', 'onnxruntime-node', /^@anush008\/tokenizers/, /\.node$/]
+            }
           }
         }
       },

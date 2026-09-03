@@ -241,32 +241,38 @@ export function getDynamicDefaultConfig(): AppSettings {
   };
 }
 
+/**
+ * Diretório de dados persistentes do app (config, índice de documentação, cache de modelos).
+ * Independente do Electron pra funcionar igual em src/main, src/server e src/mcp.
+ */
+export function getAppDataDir(): string {
+  const configDir =
+    process.env.CONFIG_DIR ||
+    process.env.APPDATA ||
+    path.join(os.homedir(), '.config');
+  const newDir = process.env.CONFIG_DIR ? configDir : path.join(configDir, 'dev-manager');
+
+  if (!fs.existsSync(newDir)) {
+    fs.mkdirSync(newDir, { recursive: true });
+  }
+  return newDir;
+}
+
 export class ConfigService {
   private configPath: string;
 
   constructor() {
-    const configDir =
-      process.env.CONFIG_DIR ||
-      process.env.APPDATA ||
-      path.join(os.homedir(), '.config');
-    const newDir = process.env.CONFIG_DIR
-      ? configDir
-      : process.env.APPDATA
-      ? path.join(configDir, 'dev-manager')
-      : path.join(configDir, 'dev-manager');
+    const newDir = getAppDataDir();
 
-    if (!fs.existsSync(newDir)) {
-      fs.mkdirSync(newDir, { recursive: true });
-      // Migração suave: se existir pasta legada winthor-dev-manager, copiar config.json
-      if (process.env.APPDATA) {
-        const oldFile = path.join(process.env.APPDATA, 'winthor-dev-manager', 'config.json');
-        const newFile = path.join(newDir, 'config.json');
-        if (fs.existsSync(oldFile) && !fs.existsSync(newFile)) {
-          try {
-            fs.copyFileSync(oldFile, newFile);
-          } catch (err) {
-            console.warn('[ConfigService] Falha ao migrar config.json legado:', (err as Error).message);
-          }
+    // Migração suave: se existir pasta legada winthor-dev-manager, copiar config.json
+    if (process.env.APPDATA) {
+      const oldFile = path.join(process.env.APPDATA, 'winthor-dev-manager', 'config.json');
+      const newFile = path.join(newDir, 'config.json');
+      if (fs.existsSync(oldFile) && !fs.existsSync(newFile)) {
+        try {
+          fs.copyFileSync(oldFile, newFile);
+        } catch (err) {
+          console.warn('[ConfigService] Falha ao migrar config.json legado:', (err as Error).message);
         }
       }
     }

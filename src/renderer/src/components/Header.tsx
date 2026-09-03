@@ -8,7 +8,8 @@ import {
   Settings,
   Activity,
   HelpCircle,
-  Search
+  Search,
+  FileSearch
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -47,6 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'karaf', label: 'Deploy OSGi', shortLabel: 'Deploy', icon: Layers, title: 'Deployer de Módulos & Features Karaf OSGi' },
     { id: 'git', label: 'Git & Azure', shortLabel: 'Git', icon: GitPullRequest, title: 'Repositórios Git & Azure DevOps' },
     { id: 'routines', label: 'Rotinas', shortLabel: 'Rotinas', icon: Grid, title: 'Catálogo de Executáveis e Rotinas' },
+    { id: 'docs', label: 'Documentação', shortLabel: 'Docs', icon: FileSearch, title: 'Busca semântica na documentação dos projetos' },
     { id: 'settings', label: 'Configurações', shortLabel: 'Config', icon: Settings, title: 'Configurações do Sistema e Portas' },
     { id: 'help', label: 'Ajuda', shortLabel: 'Ajuda', icon: HelpCircle, title: 'Central de Ajuda e Diagnósticos' }
   ];

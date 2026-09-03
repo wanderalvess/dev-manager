@@ -4,6 +4,7 @@ import { EnvironmentPage } from './pages/EnvironmentPage';
 import { KarafDeployPage } from './pages/KarafDeployPage';
 import { GitAzurePage } from './pages/GitAzurePage';
 import { RoutinesPage } from './pages/RoutinesPage';
+import { DocsPage } from './pages/DocsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { HelpPage } from './pages/HelpPage';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
@@ -64,6 +65,7 @@ export const App: React.FC = () => {
         else if (e.key === '4') setActiveTab('routines');
         else if (e.key === '5') setActiveTab('settings');
         else if (e.key === '6') setActiveTab('help');
+        else if (e.key === '7') setActiveTab('docs');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -118,6 +120,7 @@ export const App: React.FC = () => {
         {activeTab === 'routines' && (
           <RoutinesPage onNavigateToSettings={() => setActiveTab('settings')} />
         )}
+        {activeTab === 'docs' && <DocsPage onNavigateToSettings={() => setActiveTab('settings')} />}
         {activeTab === 'settings' && <SettingsPage onSettingsSaved={refreshAll} />}
         {activeTab === 'help' && <HelpPage onNavigate={(tab) => setActiveTab(tab)} />}
       </main>

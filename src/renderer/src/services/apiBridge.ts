@@ -16,7 +16,10 @@ import type {
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
-  SystemAppInfo
+  SystemAppInfo,
+  DocSearchResult,
+  DocsIndexStatus,
+  DocsIndexProgress
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -453,6 +456,31 @@ export function initApiBridge() {
         method: 'POST',
         body: JSON.stringify({ id })
       });
+    },
+
+    // Índice de Documentação (RAG local)
+    reindexDocs: async (): Promise<DocsIndexStatus> => {
+      return apiFetch('/api/docs/reindex', { method: 'POST' });
+    },
+
+    searchDocs: async (query: string, options?: { projectName?: string; topK?: number }): Promise<DocSearchResult[]> => {
+      const params = new URLSearchParams({ query });
+      if (options?.projectName) params.set('projectName', options.projectName);
+      if (options?.topK) params.set('topK', String(options.topK));
+      return apiFetch(`/api/docs/search?${params.toString()}`);
+    },
+
+    getDocsIndexStatus: async (): Promise<DocsIndexStatus> => {
+      return apiFetch('/api/docs/status');
+    },
+
+    openDocFile: async (filePath: string): Promise<boolean> => {
+      window.prompt('Caminho do arquivo (copie e abra manualmente):', filePath);
+      return true;
+    },
+
+    onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => {
+      return wsManager.subscribe('docs:index-progress', callback);
     },
 
     // Configurações
