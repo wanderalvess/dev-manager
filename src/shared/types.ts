@@ -115,6 +115,7 @@ export interface KarafDeployRequest {
   pass: string;
   repoUrl: string;
   featureInstall: string;
+  port?: number;
 }
 
 export interface PomInfo {
@@ -149,8 +150,6 @@ export interface RoutineItem {
   isFavorite: boolean;
 }
 
-export type WinthorRoutine = RoutineItem;
-
 export interface PathStatusInfo {
   path: string;
   exists: boolean;
@@ -166,7 +165,6 @@ export interface SelectFileOptions {
 
 export interface AppSettings {
   appPath?: string;
-  winthorPath?: string;
   karafPath: string;
   karafUser: string;
   karafPass: string;
@@ -177,8 +175,6 @@ export interface AppSettings {
   favoriteRoutines: string[];
   webPort?: number;
   webPath?: string;
-  winthorWebPort?: number;
-  winthorWebPath?: string;
   karafSshPort?: number;
   karafDebugPort?: number;
   monitoredPorts?: MonitoredPortConfig[];
@@ -187,6 +183,18 @@ export interface AppSettings {
   automationDefaults?: EnvironmentAutomationConfig;
   automationProfiles?: AutomationProfile[];
   activeProfileId?: string;
+  /** Extensões de arquivo reconhecidas como rotina executável no Catálogo de Rotinas (padrão: ['.EXE']) */
+  routineFileExtensions?: string[];
+  /** Mapa de extensão -> caminho de executável launcher, para formatos de rotina que não rodam sozinhos (ex: ".PC" -> caminho de um launcher configurado pelo usuário) */
+  routineLauncherMap?: Record<string, string>;
+  /** Programas mapeados manualmente pelo usuário para abrir com um clique */
+  mappedPrograms?: MappedProgram[];
+}
+
+export interface MappedProgram {
+  id: string;
+  name: string;
+  fullPath: string;
 }
 
 export interface IdeInfo {
@@ -375,13 +383,13 @@ export interface SystemAppInfo {
 
 /**
  * Obtém a porta HTTP/Web do Portal Local de forma dinâmica.
- * Prioridade: settings.webPort / winthorWebPort -> primeira porta monitorada rotulada como Web/HTTP/Portal -> 8889.
+ * Prioridade: settings.webPort -> primeira porta monitorada rotulada como Web/HTTP/Portal -> 8889.
  */
 export function getWebPort(
   settings?: AppSettings | null,
   monitoredPorts?: (MonitoredPortConfig | PortStatus)[] | null
 ): number {
-  const custom = settings?.webPort ?? settings?.winthorWebPort;
+  const custom = settings?.webPort;
   if (custom && Number(custom) > 0) {
     return Number(custom);
   }
@@ -400,8 +408,6 @@ export function getWebPort(
   }
   return 8889;
 }
-
-export const getWinThorWebPort = getWebPort;
 
 /**
  * Obtém a porta SSH do Karaf (usada no client.bat) de forma dinâmica.
@@ -437,12 +443,10 @@ export function getWebUrl(
   monitoredPorts?: (MonitoredPortConfig | PortStatus)[] | null
 ): string {
   const port = getWebPort(settings, monitoredPorts);
-  const path = settings?.webPath ?? settings?.winthorWebPath ?? subPath;
+  const path = settings?.webPath ?? subPath;
   const normalized = path ? (path.startsWith('/') ? path : `/${path}`) : '';
   return `http://localhost:${port}${normalized}`;
 }
-
-export const getWinThorWebUrl = getWebUrl;
 
 
 

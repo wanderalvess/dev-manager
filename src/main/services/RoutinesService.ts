@@ -1,9 +1,11 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { RoutineItem, WinthorRoutine } from '../../shared/types';
+import { RoutineItem } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { isSafePath } from '../utils/security';
+
+const DEFAULT_ROUTINE_EXTENSIONS = ['.EXE'];
 
 export class RoutinesService {
   private configService: ConfigService;
@@ -14,11 +16,17 @@ export class RoutinesService {
 
   public listRoutines(): RoutineItem[] {
     const settings = this.configService.getSettings();
-    const basePath = settings.appPath || settings.winthorPath;
+    const basePath = settings.appPath;
     const routines: RoutineItem[] = [];
     if (!basePath) {
       return routines;
     }
+
+    const extensions = (
+      settings.routineFileExtensions && settings.routineFileExtensions.length > 0
+        ? settings.routineFileExtensions
+        : DEFAULT_ROUTINE_EXTENSIONS
+    ).map((ext) => ext.toUpperCase());
 
     const prodDir = fs.existsSync(path.join(basePath, 'Prod'))
       ? path.join(basePath, 'Prod')
@@ -38,7 +46,7 @@ export class RoutinesService {
             scanDirectory(fullPath, entry.name);
           } else if (entry.isFile()) {
             const ext = path.extname(entry.name).toUpperCase();
-            if (ext === '.EXE' || ext === '.PC') {
+            if (extensions.includes(ext)) {
               const stat = fs.statSync(fullPath);
               const sizeMb = (stat.size / (1024 * 1024)).toFixed(1) + ' MB';
               const id = entry.name;
@@ -73,7 +81,7 @@ export class RoutinesService {
         return false;
       }
       const settings = this.configService.getSettings();
-      const basePath = settings.appPath || settings.winthorPath;
+      const basePath = settings.appPath;
       if (!basePath) {
         return false;
       }
@@ -90,32 +98,55 @@ export class RoutinesService {
 
       const dir = path.dirname(normalizedPath);
       const ext = path.extname(normalizedPath).toUpperCase();
+      const launcherMap = settings.routineLauncherMap || {};
+      const launcher = launcherMap[ext] || launcherMap[ext.toLowerCase()];
 
-      if (ext === '.EXE') {
-        spawn(normalizedPath, [], {
-          cwd: dir,
+      if (launcher) {
+        if (!fs.existsSync(launcher)) {
+          console.warn(`[RoutinesService] Launcher configurado para ${ext} não encontrado: ${launcher}`);
+          return false;
+        }
+        spawn(launcher, [normalizedPath], {
+          cwd: path.dirname(launcher),
           detached: true,
           stdio: 'ignore'
         }).unref();
         return true;
-      } else if (ext === '.PC') {
-        const mainExeCandidates = [
-          path.join(basePath, 'Prod', 'PCINF000.EXE'),
-          path.join(basePath, 'PCINF000.EXE')
-        ];
-        const mainExe = mainExeCandidates.find((c) => fs.existsSync(c));
-        if (mainExe) {
-          spawn(mainExe, [normalizedPath], {
-            cwd: path.dirname(mainExe),
-            detached: true,
-            stdio: 'ignore'
-          }).unref();
-          return true;
-        }
       }
-      return false;
+
+      spawn(normalizedPath, [], {
+        cwd: dir,
+        detached: true,
+        stdio: 'ignore'
+      }).unref();
+      return true;
     } catch (err) {
       console.error('Erro ao iniciar rotina:', err);
+      return false;
+    }
+  }
+
+  public launchMappedProgram(id: string): boolean {
+    try {
+      if (!id || typeof id !== 'string') return false;
+      const settings = this.configService.getSettings();
+      const program = (settings.mappedPrograms || []).find((p) => p.id === id);
+      if (!program) return false;
+
+      const normalizedPath = path.normalize(path.resolve(program.fullPath));
+      if (!fs.existsSync(normalizedPath)) {
+        console.warn(`[RoutinesService] Programa mapeado não encontrado no disco: ${normalizedPath}`);
+        return false;
+      }
+
+      spawn(normalizedPath, [], {
+        cwd: path.dirname(normalizedPath),
+        detached: true,
+        stdio: 'ignore'
+      }).unref();
+      return true;
+    } catch (err) {
+      console.error('Erro ao iniciar programa mapeado:', err);
       return false;
     }
   }

@@ -267,7 +267,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: SoftClinic Genesys, Minha Stack, Frontend + Backend..."
+              placeholder="Ex: Minha Stack, Frontend + Backend..."
               className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
@@ -290,7 +290,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
           {/* Coluna Esquerda: Lista de Passos Sequenciais */}
           <div className="w-80 border-r border-border flex flex-col bg-muted/10">
             <div className="p-3 border-b border-border flex items-center justify-between bg-muted/30">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                 Etapas na Sequência ({steps.length})
               </span>
               <button
@@ -479,7 +479,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                         type="text"
                         value={editingStep.cwd || ''}
                         onChange={(e) => handleUpdateCurrentStep({ cwd: e.target.value })}
-                        placeholder="Ex: C:\projetos\softclinic-genesys-sso ou bats\softclinic-genesys-sso"
+                        placeholder="Ex: C:\projetos\minha-api ou .\minha-api"
                         className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                     </div>
@@ -554,7 +554,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                       type="text"
                       value={editingStep.targetName || ''}
                       onChange={(e) => handleUpdateCurrentStep({ targetName: e.target.value })}
-                      placeholder="Ex: WinThor, PDVSync.Client.API, pdvsyncclientservicocontrole.exe..."
+                      placeholder="Ex: MeuServico.API, servico-controle.exe..."
                       className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>

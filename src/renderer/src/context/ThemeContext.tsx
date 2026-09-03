@@ -31,7 +31,7 @@ const getInitialMode = (): ThemeMode => {
   } catch (e) {
     console.error('Erro ao ler preferência de tema do localStorage:', e);
   }
-  return 'dark'; // Fallback padrão dark para o ambiente dev WinThor
+  return 'dark'; // Fallback padrão dark para o ambiente de desenvolvimento
 };
 
 const getInitialVariant = (): ThemeVariant => {

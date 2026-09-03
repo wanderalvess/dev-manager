@@ -51,16 +51,9 @@ const DEFAULT_PORTS: MonitoredPortConfig[] = [
   { port: 1521, label: 'Oracle DB Listener', enabled: true }
 ];
 
-const DEFAULT_SERVICES: TrackedServiceConfig[] = [
-  { name: 'PDVSync.Client.API', displayName: 'Serviço API Local', enabled: true, autoStop: true, autoStart: false },
-  { name: 'PDVSync.Client.Down', displayName: 'Serviço Sync Down', enabled: true, autoStop: true, autoStart: false },
-  { name: 'PDVSync.Client.Up', displayName: 'Serviço Sync Up', enabled: true, autoStop: true, autoStart: false },
-  { name: 'WinThor', displayName: 'Serviço Web Local', enabled: true, autoStop: true, autoStart: false }
-];
+const DEFAULT_SERVICES: TrackedServiceConfig[] = [];
 
-const DEFAULT_PROCESSES: TrackedProcessConfig[] = [
-  { name: 'pdvsyncclientservicocontrole.exe', displayName: 'PDV Sync Controle', enabled: true, autoKill: true }
-];
+const DEFAULT_PROCESSES: TrackedProcessConfig[] = [];
 
 const DEFAULT_AUTOMATION: EnvironmentAutomationConfig = {
   stopServices: true,
@@ -69,8 +62,8 @@ const DEFAULT_AUTOMATION: EnvironmentAutomationConfig = {
   startKaraf: true,
   openBrowser: false,
   launchMode: 'embedded',
-  selectedServiceNames: ['PDVSync.Client.API', 'PDVSync.Client.Down', 'PDVSync.Client.Up', 'WinThor'],
-  selectedProcesses: ['pdvsyncclientservicocontrole.exe'],
+  selectedServiceNames: [],
+  selectedProcesses: [],
   selectedStartServiceNames: []
 };
 
@@ -80,7 +73,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
   const [activeTab, setActiveTab] = useState<SettingsTab>('dirs');
   const [settings, setSettings] = useState<AppSettings>({
     appPath: '',
-    winthorPath: '',
     karafPath: '',
     karafUser: 'karaf',
     karafPass: 'karaf',
@@ -90,8 +82,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
     favoriteRoutines: [],
     webPort: 8889,
     webPath: '',
-    winthorWebPort: 8889,
-    winthorWebPath: '',
     karafSshPort: 8101,
     karafDebugPort: 5005,
     monitoredPorts: DEFAULT_PORTS,
@@ -105,11 +95,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
   const [isSaving, setIsSaving] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [launcherRows, setLauncherRows] = useState<{ ext: string; path: string }[]>([]);
+
+  useEffect(() => {
+    const map: Record<string, string> = {};
+    for (const row of launcherRows) {
+      if (row.ext.trim()) {
+        const key = row.ext.trim().startsWith('.') ? row.ext.trim().toUpperCase() : `.${row.ext.trim().toUpperCase()}`;
+        map[key] = row.path.trim();
+      }
+    }
+    setSettings((prev) => ({ ...prev, routineLauncherMap: map }));
+  }, [launcherRows]);
 
   // Validação de Caminhos
   const validateAllPaths = useCallback(async (st: AppSettings) => {
     if (window.electronAPI && window.electronAPI.checkPath) {
-      const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'winthorPath', 'intellijPath'];
+      const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'appPath', 'intellijPath'];
       const results: Record<string, PathStatusInfo> = {};
       for (const key of keys) {
         const val = st[key];
@@ -133,8 +135,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
       window.electronAPI.getSettings().then((st) => {
         const loaded: AppSettings = {
           ...st,
-          winthorWebPort: st.winthorWebPort || 8889,
-          winthorWebPath: st.winthorWebPath || '/winthor',
+          webPort: st.webPort || 8889,
           karafSshPort: st.karafSshPort || 8101,
           karafDebugPort: st.karafDebugPort || 5005,
           monitoredPorts: st.monitoredPorts && st.monitoredPorts.length > 0 ? st.monitoredPorts : DEFAULT_PORTS,
@@ -143,10 +144,32 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
           automationDefaults: st.automationDefaults || DEFAULT_AUTOMATION
         };
         setSettings(loaded);
+        setLauncherRows(Object.entries(st.routineLauncherMap || {}).map(([ext, path]) => ({ ext, path })));
         validateAllPaths(loaded);
       });
     }
   }, [validateAllPaths]);
+
+  const handleAddLauncherRow = () => {
+    setLauncherRows((prev) => [...prev, { ext: '', path: '' }]);
+  };
+
+  const handleUpdateLauncherRow = (index: number, field: 'ext' | 'path', value: string) => {
+    setLauncherRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  };
+
+  const handleRemoveLauncherRow = (index: number) => {
+    setLauncherRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleBrowseLauncherPath = async (index: number) => {
+    if (window.electronAPI && window.electronAPI.selectFile) {
+      const selected = await window.electronAPI.selectFile();
+      if (selected) {
+        handleUpdateLauncherRow(index, 'path', selected);
+      }
+    }
+  };
 
   const handleBrowseDirectory = async (field: keyof AppSettings) => {
     if (window.electronAPI && window.electronAPI.selectDirectory) {
@@ -323,7 +346,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
             <Settings className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
               Configurações do Ambiente & Diretórios
               <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                 Perfil Local
@@ -340,7 +363,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
             type="button"
             onClick={handleAutoDetect}
             disabled={isDetecting}
-            className="px-3.5 py-2.5 bg-card hover:bg-muted text-primary border border-primary/30 hover:border-primary/60 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-sm"
+            className="px-3 py-2.5 bg-card hover:bg-muted text-primary border border-primary/30 hover:border-primary/60 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-sm"
             title="Escanear automaticamente o disco local e identificar os diretórios instalados"
           >
             <Sparkles className={`w-3.5 h-3.5 text-primary ${isDetecting ? 'animate-spin' : ''}`} />
@@ -371,7 +394,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
       <div className="flex items-center space-x-2 border-b border-border pb-2 text-xs flex-wrap gap-y-2">
         <button
           onClick={() => setActiveTab('dirs')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
             activeTab === 'dirs'
               ? 'bg-primary text-primary-foreground border-primary shadow-md'
               : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
@@ -383,7 +406,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
 
         <button
           onClick={() => setActiveTab('karaf')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
             activeTab === 'karaf'
               ? 'bg-primary text-primary-foreground border-primary shadow-md'
               : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
@@ -395,7 +418,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
 
         <button
           onClick={() => setActiveTab('azure')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
             activeTab === 'azure'
               ? 'bg-primary text-primary-foreground border-primary shadow-md'
               : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
@@ -407,7 +430,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
 
         <button
           onClick={() => setActiveTab('services')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
             activeTab === 'services'
               ? 'bg-primary text-primary-foreground border-primary shadow-md'
               : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
@@ -422,7 +445,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
 
         <button
           onClick={() => setActiveTab('ports')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
             activeTab === 'ports'
               ? 'bg-primary text-primary-foreground border-primary shadow-md'
               : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
@@ -437,7 +460,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
 
         <button
           onClick={() => setActiveTab('automation')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
             activeTab === 'automation'
               ? 'bg-primary text-primary-foreground border-primary shadow-md'
               : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
@@ -454,7 +477,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
           <div className="lg:col-span-12 space-y-4 flex flex-col">
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                   <Folder className="w-4 h-4 text-primary" /> Diretórios e Executáveis Locais
                 </h3>
                 <span className="text-[10px] text-muted-foreground font-mono">Windows Explorer</span>
@@ -534,23 +557,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                       <Folder className="w-3.5 h-3.5 text-emerald-500" />
                       Diretório Raiz das Rotinas / Binários (Prod):
                     </label>
-                    {renderPathStatusBadge('winthorPath')}
+                    {renderPathStatusBadge('appPath')}
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
                       type="text"
-                      value={settings.winthorPath}
+                      value={settings.appPath}
                       onChange={(e) => {
                         const val = e.target.value;
-                        setSettings({ ...settings, winthorPath: val, appPath: val });
-                        validateSinglePath('winthorPath', val);
+                        setSettings({ ...settings, appPath: val });
+                        validateSinglePath('appPath', val);
                       }}
                       className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
                       placeholder="Ex: C:\app ou C:\ERP"
                     />
                     <button
                       type="button"
-                      onClick={() => handleBrowseDirectory('winthorPath')}
+                      onClick={() => handleBrowseDirectory('appPath')}
                       className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
                       title="Selecionar pasta das Rotinas"
                     >
@@ -558,6 +581,86 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                       <span>Procurar...</span>
                     </button>
                   </div>
+                </div>
+
+                {/* Extensões e Launchers do Catálogo de Rotinas */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <FileCode2 className="w-3.5 h-3.5 text-purple-500" />
+                    Extensões Reconhecidas como Rotina:
+                  </label>
+                  <input
+                    type="text"
+                    value={(settings.routineFileExtensions || ['.EXE']).join(', ')}
+                    onChange={(e) => {
+                      const list = e.target.value
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .map((s) => (s.startsWith('.') ? s.toUpperCase() : `.${s.toUpperCase()}`));
+                      setSettings({ ...settings, routineFileExtensions: list });
+                    }}
+                    className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                    placeholder=".EXE, .BAT"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Separadas por vírgula. Arquivos com essas extensões aparecem no Catálogo de Rotinas.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                      <FileCode2 className="w-3.5 h-3.5 text-purple-500" />
+                      Launchers por Extensão (opcional):
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleAddLauncherRow}
+                      className="px-2 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[10px] font-semibold text-foreground transition-all flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Adicionar</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Para formatos que não rodam sozinhos (ex: um arquivo de rotina que precisa ser aberto por outro
+                    programa), aponte aqui a extensão e o executável que deve abri-lo.
+                  </p>
+                  {launcherRows.map((row, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={row.ext}
+                        onChange={(e) => handleUpdateLauncherRow(index, 'ext', e.target.value)}
+                        placeholder=".PC"
+                        className="w-20 bg-card border border-border rounded-lg px-2 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary shadow-sm"
+                      />
+                      <input
+                        type="text"
+                        value={row.path}
+                        onChange={(e) => handleUpdateLauncherRow(index, 'path', e.target.value)}
+                        placeholder="Caminho do executável launcher"
+                        className="flex-1 bg-card border border-border rounded-lg px-2 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleBrowseLauncherPath(index)}
+                        className="p-1.5 bg-card hover:bg-muted border border-border rounded-lg shrink-0"
+                        title="Selecionar executável"
+                      >
+                        <FolderOpen className="w-3.5 h-3.5 text-emerald-500" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLauncherRow(index)}
+                        className="p-1.5 text-muted-foreground hover:text-rose-500 transition-colors shrink-0"
+                        title="Remover"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Executável da IDE */}
@@ -621,7 +724,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                     <KeyRound className="w-4 h-4 text-amber-500" /> Credenciais & Autenticação do Apache Karaf
                   </h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -722,7 +825,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                     <GitBranch className="w-4 h-4 text-blue-500" /> Configurações do Git & Azure DevOps
                   </h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -827,7 +930,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                     <Server className="w-4 h-4 text-primary" /> Serviços Windows Monitorados
                   </h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -893,7 +996,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                           value={srv.name}
                           onChange={(e) => handleUpdateService(index, 'name', e.target.value)}
                           className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs font-mono text-muted-foreground focus:outline-none focus:border-primary"
-                          placeholder="Nome do Serviço (ex: PDVSync.Client.API)"
+                          placeholder="Nome do Serviço (ex: MeuServico.API)"
                         />
                       </div>
 
@@ -940,7 +1043,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                     <Flame className="w-4 h-4 text-rose-500" /> Processos Conflitantes (Kill)
                   </h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -1032,7 +1135,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
           <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
             <div className="flex items-center justify-between pb-1 border-b border-border/60">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                   <Globe className="w-4 h-4 text-primary" /> Portas Principais de Integração
                 </h3>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -1056,10 +1159,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                   <span className="text-primary font-mono text-xs select-none mr-1 font-bold">:</span>
                   <input
                     type="number"
-                    value={settings.webPort ?? settings.winthorWebPort ?? 8889}
+                    value={settings.webPort ?? 8889}
                     onChange={(e) => {
                       const portNum = parseInt(e.target.value) || 0;
-                      setSettings({ ...settings, webPort: portNum, winthorWebPort: portNum });
+                      setSettings({ ...settings, webPort: portNum });
                     }}
                     className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
                     placeholder="8889"
@@ -1069,17 +1172,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                   <span className="text-primary font-mono text-xs select-none mr-1 font-bold">/</span>
                   <input
                     type="text"
-                    value={settings.webPath?.replace(/^\//, '') ?? settings.winthorWebPath?.replace(/^\//, '') ?? ''}
+                    value={settings.webPath?.replace(/^\//, '') ?? ''}
                     onChange={(e) => {
                       const val = e.target.value ? `/${e.target.value.replace(/^\//, '')}` : '';
-                      setSettings({ ...settings, webPath: val, winthorWebPath: val });
+                      setSettings({ ...settings, webPath: val });
                     }}
                     className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
                     placeholder="web"
                   />
                 </div>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Usada para abrir o Portal Web no navegador (<code>http://localhost:{settings.webPort || settings.winthorWebPort || 8889}{settings.webPath || settings.winthorWebPath || ''}</code>) e verificar o status ativo.
+                  Usada para abrir o Portal Web no navegador (<code>http://localhost:{settings.webPort || 8889}{settings.webPath || ''}</code>) e verificar o status ativo.
                 </p>
               </div>
 
@@ -1143,7 +1246,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
           <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
             <div className="flex items-center justify-between pb-1 border-b border-border/60">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                   <Radio className="w-4 h-4 text-primary" /> Lista Geral de Portas TCP Monitoradas
                 </h3>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -1216,7 +1319,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                       value={portCfg.label}
                       onChange={(e) => handleUpdatePort(index, 'label', e.target.value)}
                       className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
-                      placeholder="Descrição do serviço (ex: WinThor Web, Oracle DB...)"
+                      placeholder="Descrição do serviço (ex: Portal Web, Banco de Dados...)"
                     />
                   </div>
 
@@ -1306,7 +1409,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
         <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+              <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                 <Zap className="w-4 h-4 text-primary" /> Preferências Padrão de Automação
               </h3>
               <p className="text-[11px] text-muted-foreground mt-0.5">

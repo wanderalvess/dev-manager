@@ -48,8 +48,8 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
   useEffect(() => {
     if (window.electronAPI) {
       window.electronAPI.getSettings().then(async (st) => {
-        setKarafUser(st.karafUser || 'winthor');
-        setKarafPass(st.karafPass || 'winthor');
+        setKarafUser(st.karafUser || 'karaf');
+        setKarafPass(st.karafPass || 'karaf');
         setKarafPort(st.karafSshPort || 8101);
         setKarafPath(st.karafPath || '');
         if (st.karafPath) {
@@ -130,11 +130,11 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500">
+            <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500">
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 Publicação de Features OSGi (Apache Karaf)
                 <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   client.bat
@@ -353,7 +353,7 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
 
           {/* Ferramentas de Diagnóstico Rápido do Karaf */}
           <div className="cockpit-panel rounded-2xl p-4 space-y-2.5 shadow-xl border border-border">
-            <div className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+            <div className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos OSGi (client.bat)
             </div>
 

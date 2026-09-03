@@ -126,10 +126,6 @@ export function registerIpcHandlers(
     return await windowsService.batchStopServices(validNames);
   });
 
-  ipcMain.handle('env:kill-control-process', async () => {
-    return await windowsService.killProcess('pdvsyncclientservicocontrole.exe');
-  });
-
   ipcMain.handle('env:batch-kill-processes', async (_, processNames: string[]) => {
     const validNames = (processNames || []).filter(isValidIdentifier);
     return await windowsService.batchKillProcesses(validNames);
@@ -140,10 +136,6 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('env:launch-server-debug', async () => {
-    return windowsService.launchServerDebug();
-  });
-
-  ipcMain.handle('env:launch-winthor-debug', async () => {
     return windowsService.launchServerDebug();
   });
 
@@ -290,6 +282,10 @@ export function registerIpcHandlers(
 
   ipcMain.handle('routines:launch', async (_, fullPath: string) => {
     return routinesService.launchRoutine(fullPath);
+  });
+
+  ipcMain.handle('routines:launch-mapped', async (_, id: string) => {
+    return routinesService.launchMappedProgram(id);
   });
 
   ipcMain.handle('routines:toggle-favorite', async (_, routineId: string) => {

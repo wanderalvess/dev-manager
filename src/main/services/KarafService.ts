@@ -82,19 +82,12 @@ export class KarafService {
     const candidates = [
       path.join(settings.karafPath, 'bin', 'karaf.bat'),
       path.join(settings.karafPath, 'bin', 'karaf.sh'),
-      path.join(settings.karafPath, 'bin', 'karaf'),
-      path.join(settings.karafPath, 'bin', 'winthor.bat'),
-      path.join(settings.karafPath, 'bin', 'winthor.sh'),
-      path.join(settings.karafPath, 'bin', 'winthor')
+      path.join(settings.karafPath, 'bin', 'karaf')
     ];
     for (const c of candidates) {
       if (fs.existsSync(c)) return c;
     }
     return null;
-  }
-
-  public getKarafWinthorExecutable(): string | null {
-    return this.getKarafServerExecutable();
   }
 
   public executeKarafCommand(
@@ -226,6 +219,7 @@ export class KarafService {
   public sendEmbeddedInput(input: string): boolean {
     if (this.embeddedKarafProcess && this.embeddedKarafProcess.stdin) {
       if (!input || typeof input !== 'string') return false;
+      // eslint-disable-next-line no-control-regex -- remove intencionalmente caracteres de controle do input do terminal
       this.embeddedKarafProcess.stdin.write(input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '') + '\n');
       return true;
     }
@@ -314,7 +308,7 @@ export class KarafService {
       const mvnwSh = path.join(projectPath, 'mvnw');
 
       let cmd = 'mvn';
-      let args = ['clean', 'install'];
+      const args = ['clean', 'install'];
       if (skipTests) {
         args.push('-DskipTests');
       }

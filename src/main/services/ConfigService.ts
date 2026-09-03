@@ -20,120 +20,26 @@ export const DEFAULT_MONITORED_PORTS: MonitoredPortConfig[] = [
 
 export const DEFAULT_AUTOMATION_PROFILES: AutomationProfile[] = [
   {
-    id: 'profile-softclinic',
-    name: 'SoftClinic Genesys (Microsserviços)',
-    description: 'Docker PostgreSQL, SSO, Gateway, API Backend e App Frontend em sequência',
-    isDefault: true,
-    steps: [
-      {
-        id: 'step-docker',
-        name: 'Docker Desktop & PostgreSQL (5432)',
-        type: 'command',
-        enabled: true,
-        command: 'docker start banco-re || docker run -d --name banco-re -p 5432:5432 -e POSTGRES_PASSWORD=postgres vtzndv/banco-re:latest',
-        port: 5432,
-        launchMode: 'background',
-        delayAfterSeconds: 2
-      },
-      {
-        id: 'step-sso',
-        name: 'SSO Auth Server (8787)',
-        type: 'command',
-        enabled: true,
-        command: '.\\gradlew.bat bootRun',
-        cwd: 'bats\\softclinic-genesys-sso',
-        port: 8787,
-        launchMode: 'wt',
-        delayAfterSeconds: 3
-      },
-      {
-        id: 'step-gateway',
-        name: 'Gateway de Rotas (8080)',
-        type: 'command',
-        enabled: true,
-        command: '.\\gradlew.bat bootRun',
-        cwd: 'bats\\softclinic-genesys-gateway',
-        port: 8080,
-        launchMode: 'wt',
-        delayAfterSeconds: 3
-      },
-      {
-        id: 'step-api',
-        name: 'API Backend Spring Boot (8888)',
-        type: 'command',
-        enabled: true,
-        command: '.\\mvnw.cmd spring-boot:run',
-        cwd: 'bats\\softclinic-genesys-api',
-        port: 8888,
-        launchMode: 'wt',
-        delayAfterSeconds: 3
-      },
-      {
-        id: 'step-app',
-        name: 'App Frontend Vite (3000)',
-        type: 'command',
-        enabled: true,
-        command: 'npm run dev',
-        cwd: 'bats\\softclinic-genesys-app',
-        port: 3000,
-        launchMode: 'wt',
-        delayAfterSeconds: 1
-      }
-    ]
-  },
-  {
-    id: 'profile-winthor-karaf',
-    name: 'WinThor / Karaf OSGi Clássico',
-    description: 'Parada de serviços do Windows, liberação de portas, IDE e Servidor Karaf Debug',
+    id: 'profile-example',
+    name: 'Perfil de Exemplo',
+    description: 'Modelo inicial — edite ou substitua pelos passos reais do seu ambiente',
     isDefault: false,
     steps: [
       {
-        id: 'step-stop-services',
-        name: 'Parar Serviços Windows Conflitantes',
-        type: 'service-stop',
-        enabled: true
-      },
-      {
-        id: 'step-kill-processes',
-        name: 'Liberar Portas Conflitantes (taskkill)',
-        type: 'kill-process',
-        enabled: true
-      },
-      {
-        id: 'step-launch-ide',
-        name: 'Inicializar IDE (IntelliJ / VSCode / Cursor)',
-        type: 'ide',
-        enabled: true
-      },
-      {
-        id: 'step-start-karaf',
-        name: 'Karaf OSGi Debug Server',
-        type: 'karaf',
-        enabled: true,
-        launchMode: 'background',
-        port: 8101
-      },
-      {
-        id: 'step-open-browser',
-        name: 'Abrir Portal Web Local',
-        type: 'browser',
+        id: 'step-example-command',
+        name: 'Comando de Exemplo',
+        type: 'command',
         enabled: false,
-        browserUrl: 'http://localhost:8889/web'
+        command: 'echo "Configure aqui os passos da sua esteira"',
+        launchMode: 'wt'
       }
     ]
   }
 ];
 
-export const DEFAULT_TRACKED_SERVICES: TrackedServiceConfig[] = [
-  { name: 'PDVSync.Client.API', displayName: 'Serviço API Local', enabled: true, autoStop: true, autoStart: false },
-  { name: 'PDVSync.Client.Down', displayName: 'Serviço Sync Down', enabled: true, autoStop: true, autoStart: false },
-  { name: 'PDVSync.Client.Up', displayName: 'Serviço Sync Up', enabled: true, autoStop: true, autoStart: false },
-  { name: 'WinThor', displayName: 'Serviço Web Local', enabled: true, autoStop: true, autoStart: false }
-];
+export const DEFAULT_TRACKED_SERVICES: TrackedServiceConfig[] = [];
 
-export const DEFAULT_TRACKED_PROCESSES: TrackedProcessConfig[] = [
-  { name: 'pdvsyncclientservicocontrole.exe', displayName: 'Serviço Sync Controle', enabled: true, autoKill: true }
-];
+export const DEFAULT_TRACKED_PROCESSES: TrackedProcessConfig[] = [];
 
 export const DEFAULT_AUTOMATION_CONFIG: EnvironmentAutomationConfig = {
   stopServices: true,
@@ -142,8 +48,8 @@ export const DEFAULT_AUTOMATION_CONFIG: EnvironmentAutomationConfig = {
   startKaraf: true,
   openBrowser: false,
   launchMode: 'embedded',
-  selectedServiceNames: ['PDVSync.Client.API', 'PDVSync.Client.Down', 'PDVSync.Client.Up', 'WinThor'],
-  selectedProcesses: ['pdvsyncclientservicocontrole.exe'],
+  selectedServiceNames: [],
+  selectedProcesses: [],
   selectedStartServiceNames: []
 };
 
@@ -268,9 +174,7 @@ export function detectDefaultKarafPath(): string {
     '/karaf',
     path.join(userHome, 'karaf'),
     'C:\\karaf',
-    'D:\\karaf',
-    'C:\\pcsist\\produtos\\winthor',
-    path.join(userHome, 'pcsist', 'produtos', 'winthor')
+    'D:\\karaf'
   ];
 
   for (const candidate of candidates) {
@@ -287,7 +191,7 @@ export function detectDefaultKarafPath(): string {
 }
 
 export function detectDefaultAppPath(): string {
-  const envDir = process.env.APP_DIR || process.env.WINTHOR_DIR;
+  const envDir = process.env.APP_DIR;
   if (envDir && fs.existsSync(envDir)) {
     return envDir;
   }
@@ -297,9 +201,7 @@ export function detectDefaultAppPath(): string {
     '/app',
     path.join(userHome, 'app'),
     'C:\\app',
-    'D:\\app',
-    'C:\\Winthor',
-    path.join(userHome, 'Winthor')
+    'D:\\app'
   ];
 
   for (const candidate of candidates) {
@@ -315,13 +217,10 @@ export function detectDefaultAppPath(): string {
   return '';
 }
 
-export const detectDefaultWinthorPath = detectDefaultAppPath;
-
 export function getDynamicDefaultConfig(): AppSettings {
   const appPath = detectDefaultAppPath();
   return {
     appPath,
-    winthorPath: appPath,
     karafPath: detectDefaultKarafPath(),
     karafUser: process.env.KARAF_USER || 'karaf',
     karafPass: process.env.KARAF_PASS || 'karaf',
@@ -331,8 +230,6 @@ export function getDynamicDefaultConfig(): AppSettings {
     favoriteRoutines: [],
     webPort: 8889,
     webPath: '',
-    winthorWebPort: 8889,
-    winthorWebPath: '',
     karafSshPort: 8101,
     karafDebugPort: 5005,
     monitoredPorts: DEFAULT_MONITORED_PORTS,
@@ -340,7 +237,7 @@ export function getDynamicDefaultConfig(): AppSettings {
     trackedProcesses: DEFAULT_TRACKED_PROCESSES,
     automationDefaults: DEFAULT_AUTOMATION_CONFIG,
     automationProfiles: DEFAULT_AUTOMATION_PROFILES,
-    activeProfileId: 'profile-softclinic'
+    activeProfileId: DEFAULT_AUTOMATION_PROFILES[0]?.id
   };
 }
 
@@ -367,7 +264,9 @@ export class ConfigService {
         if (fs.existsSync(oldFile) && !fs.existsSync(newFile)) {
           try {
             fs.copyFileSync(oldFile, newFile);
-          } catch {}
+          } catch (err) {
+            console.warn('[ConfigService] Falha ao migrar config.json legado:', (err as Error).message);
+          }
         }
       }
     }
@@ -384,18 +283,25 @@ export class ConfigService {
           parsed.automationProfiles && Array.isArray(parsed.automationProfiles) && parsed.automationProfiles.length > 0
             ? parsed.automationProfiles
             : DEFAULT_AUTOMATION_PROFILES;
-        const activeProfileId =
-          parsed.activeProfileId || (automationProfiles[0]?.id) || 'profile-softclinic';
+        const activeProfileId = parsed.activeProfileId || automationProfiles[0]?.id;
+
+        // Migração de compatibilidade: config.json salvo por versões antigas podia usar as
+        // chaves legadas "winthorPath"/"winthorWebPort"/"winthorWebPath". Lidas aqui apenas
+        // como fallback — removidas do objeto logo em seguida para nunca serem gravadas de
+        // volta no disco (senão sobrevivem indefinidamente a cada save() futuro).
+        const legacyAppPath = parsed.winthorPath;
+        const legacyWebPort = parsed.winthorWebPort;
+        const legacyWebPath = parsed.winthorWebPath;
+        delete parsed.winthorPath;
+        delete parsed.winthorWebPort;
+        delete parsed.winthorWebPath;
 
         return {
           ...defaultConfig,
           ...parsed,
-          appPath: parsed.appPath || parsed.winthorPath || defaultConfig.appPath,
-          winthorPath: parsed.appPath || parsed.winthorPath || defaultConfig.winthorPath,
-          webPort: parsed.webPort || parsed.winthorWebPort || defaultConfig.webPort,
-          webPath: parsed.webPath !== undefined ? parsed.webPath : (parsed.winthorWebPath !== undefined ? parsed.winthorWebPath : defaultConfig.webPath),
-          winthorWebPort: parsed.webPort || parsed.winthorWebPort || defaultConfig.winthorWebPort,
-          winthorWebPath: parsed.webPath !== undefined ? parsed.webPath : (parsed.winthorWebPath !== undefined ? parsed.winthorWebPath : defaultConfig.winthorWebPath),
+          appPath: parsed.appPath || legacyAppPath || defaultConfig.appPath,
+          webPort: parsed.webPort || legacyWebPort || defaultConfig.webPort,
+          webPath: parsed.webPath !== undefined ? parsed.webPath : (legacyWebPath !== undefined ? legacyWebPath : defaultConfig.webPath),
           karafSshPort: parsed.karafSshPort || defaultConfig.karafSshPort,
           karafDebugPort: parsed.karafDebugPort || defaultConfig.karafDebugPort,
           monitoredPorts: parsed.monitoredPorts && parsed.monitoredPorts.length > 0 ? parsed.monitoredPorts : DEFAULT_MONITORED_PORTS,
@@ -415,12 +321,6 @@ export class ConfigService {
   public saveSettings(settings: Partial<AppSettings>): AppSettings {
     const current = this.getSettings();
     const updated = { ...current, ...settings };
-    if (settings.appPath && !settings.winthorPath) {
-      updated.winthorPath = settings.appPath;
-    }
-    if (settings.webPort && !settings.winthorWebPort) {
-      updated.winthorWebPort = settings.webPort;
-    }
     try {
       fs.writeFileSync(this.configPath, JSON.stringify(updated, null, 2), 'utf-8');
     } catch (err) {
@@ -433,7 +333,6 @@ export class ConfigService {
     const appPath = detectDefaultAppPath();
     return {
       appPath,
-      winthorPath: appPath,
       karafPath: detectDefaultKarafPath(),
       intellijPath: detectDefaultIntelliJPath(),
       projectsPath: detectDefaultProjectsPath()

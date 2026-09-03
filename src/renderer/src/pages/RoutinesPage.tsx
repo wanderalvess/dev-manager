@@ -8,9 +8,12 @@ import {
   Layers,
   X,
   Settings,
-  FolderOpen
+  FolderOpen,
+  Plus,
+  Trash2,
+  AppWindow
 } from 'lucide-react';
-import { RoutineItem } from '../../../shared/types';
+import { RoutineItem, MappedProgram } from '../../../shared/types';
 
 interface RoutinesPageProps {
   onNavigateToSettings?: () => void;
@@ -22,6 +25,10 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
   const [selectedModule, setSelectedModule] = useState<string>('TODOS');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [runningId, setRunningId] = useState<string | null>(null);
+
+  const [mappedPrograms, setMappedPrograms] = useState<MappedProgram[]>([]);
+  const [runningMappedId, setRunningMappedId] = useState<string | null>(null);
+  const [isAddingProgram, setIsAddingProgram] = useState(false);
 
   const loadRoutines = async () => {
     setIsLoading(true);
@@ -35,8 +42,16 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
     }
   };
 
+  const loadMappedPrograms = async () => {
+    if (window.electronAPI) {
+      const st = await window.electronAPI.getSettings();
+      setMappedPrograms(st.mappedPrograms || []);
+    }
+  };
+
   useEffect(() => {
     loadRoutines();
+    loadMappedPrograms();
   }, []);
 
   const handleToggleFavorite = async (id: string) => {
@@ -59,6 +74,53 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
     }
   };
 
+  const persistMappedPrograms = async (updated: MappedProgram[]) => {
+    setMappedPrograms(updated);
+    if (window.electronAPI) {
+      await window.electronAPI.saveSettings({ mappedPrograms: updated });
+    }
+  };
+
+  const handleAddMappedProgram = async () => {
+    if (!window.electronAPI) return;
+    setIsAddingProgram(true);
+    try {
+      const picked = await window.electronAPI.selectFile({
+        filters: [{ name: 'Executáveis', extensions: ['exe', 'bat', 'cmd'] }]
+      });
+      if (!picked) return;
+      const baseName = picked.split(/[\\/]/).pop() || picked;
+      const name = baseName.replace(/\.[^.]+$/, '');
+      const entry: MappedProgram = { id: `mp-${Date.now()}`, name, fullPath: picked };
+      await persistMappedPrograms([...mappedPrograms, entry]);
+    } finally {
+      setIsAddingProgram(false);
+    }
+  };
+
+  const handleRenameMappedProgram = (id: string, name: string) => {
+    setMappedPrograms((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
+  };
+
+  const handleRenameMappedProgramBlur = () => {
+    persistMappedPrograms(mappedPrograms);
+  };
+
+  const handleRemoveMappedProgram = (id: string) => {
+    persistMappedPrograms(mappedPrograms.filter((p) => p.id !== id));
+  };
+
+  const handleLaunchMappedProgram = async (id: string) => {
+    setRunningMappedId(id);
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.launchMappedProgram(id);
+      }
+    } finally {
+      setTimeout(() => setRunningMappedId(null), 1500);
+    }
+  };
+
   const modules = ['TODOS', ...Array.from(new Set(routines.map((r) => r.module)))];
 
   const filteredRoutines = routines.filter((r) => {
@@ -74,22 +136,89 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
 
   return (
     <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
+      {/* Programas Mapeados */}
+      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+              <AppWindow className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">Programas Mapeados</h2>
+              <p className="text-[11px] text-muted-foreground">
+                Atalhos pra qualquer programa que você escolher — não depende de pasta configurada.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleAddMappedProgram}
+            disabled={isAddingProgram}
+            className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0"
+            title="Selecionar um executável para mapear"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Adicionar Programa</span>
+          </button>
+        </div>
+
+        {mappedPrograms.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Nenhum programa mapeado ainda. Clique em "Adicionar Programa" e escolha um executável.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+            {mappedPrograms.map((program) => (
+              <div
+                key={program.id}
+                className="cockpit-card rounded-xl p-2.5 flex items-center gap-2 border border-border shadow-sm"
+              >
+                <input
+                  type="text"
+                  value={program.name}
+                  onChange={(e) => handleRenameMappedProgram(program.id, e.target.value)}
+                  onBlur={handleRenameMappedProgramBlur}
+                  title={program.fullPath}
+                  className="flex-1 min-w-0 bg-transparent text-xs font-bold text-foreground focus:outline-none focus:underline"
+                />
+                <button
+                  onClick={() => handleLaunchMappedProgram(program.id)}
+                  disabled={runningMappedId === program.id}
+                  className={`p-1.5 rounded-lg transition-all shrink-0 ${
+                    runningMappedId === program.id
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-card hover:bg-primary text-foreground hover:text-primary-foreground border border-border'
+                  }`}
+                  title="Executar"
+                >
+                  <Play className="w-3 h-3 fill-current" />
+                </button>
+                <button
+                  onClick={() => handleRemoveMappedProgram(program.id)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-500 transition-colors shrink-0"
+                  title="Remover"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Topo / Filtros Cockpit */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
               <Grid className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 Catálogo de Rotinas
                 <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   {routines.length} {routines.length === 1 ? 'Rotina Catalogada' : 'Rotinas Catalogadas'}
                 </span>
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Execução de executáveis (.exe e .pc) com busca instantânea e marcação de favoritas.
+                Escaneia a pasta configurada em busca de executáveis, com busca instantânea e favoritos.
               </p>
             </div>
           </div>
@@ -111,7 +240,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
             <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
               type="text"
-              placeholder="Buscar rotina por número ou nome (ex: 1301, 1406, 4116, PCINF000)..."
+              placeholder="Buscar rotina por número ou nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-card border border-border rounded-xl pl-10 pr-9 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary font-mono"
@@ -151,7 +280,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
           <div className="space-y-2.5">
             <div className="flex items-center space-x-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <h3 className="text-[13px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                 Rotinas Favoritas ({favoriteRoutines.length})
               </h3>
             </div>
@@ -173,7 +302,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
         <div className="space-y-2.5">
           <div className="flex items-center space-x-2">
             <Layers className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <h3 className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
               Todas as Rotinas ({otherRoutines.length})
             </h3>
           </div>
@@ -184,7 +313,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
               <div>
                 <h4 className="text-sm font-bold text-foreground">Nenhuma rotina encontrada</h4>
                 <p className="text-xs text-muted-foreground mt-1 max-w-md">
-                  Nenhum executável (.exe ou .pc) foi localizado no diretório de rotinas configurado.
+                  Nenhum executável foi localizado no diretório de rotinas configurado.
                 </p>
               </div>
               {onNavigateToSettings && (
@@ -218,7 +347,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
 };
 
 interface RoutineCardProps {
-  routine: WinthorRoutine;
+  routine: RoutineItem;
   onToggleFavorite: () => void;
   onLaunch: () => void;
   isRunning: boolean;
@@ -230,7 +359,7 @@ const RoutineCard: React.FC<RoutineCardProps> = ({
   onLaunch,
   isRunning
 }) => {
-  const isExe = routine.name.toUpperCase().endsWith('.EXE');
+  const extension = routine.name.split('.').pop()?.toUpperCase() || '';
 
   return (
     <div className="cockpit-card rounded-2xl p-3.5 flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md border border-border">
@@ -240,15 +369,11 @@ const RoutineCard: React.FC<RoutineCardProps> = ({
             <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/80">
               {routine.module}
             </span>
-            <span
-              className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${
-                isExe
-                  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30'
-                  : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30'
-              }`}
-            >
-              {isExe ? 'EXE' : 'PC'}
-            </span>
+            {extension && (
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                {extension}
+              </span>
+            )}
           </div>
 
           <button
