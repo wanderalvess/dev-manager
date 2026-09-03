@@ -102,6 +102,7 @@ docker run -d \
 | `KARAF_USER` | `karaf` | Usuário para login no `client` Karaf |
 | `KARAF_PASS` | `karaf` | Senha para login no `client` Karaf |
 | `TARGET_PR_BRANCH` | `develop` | Branch de destino padrão nos PRs do Azure DevOps |
+| `API_KEY` | *(vazio)* | Chave exigida no header `x-api-key` em toda rota `/api/*`. **Recomendado sempre que o painel for acessado além de `localhost`** — sem ela, qualquer pessoa na rede controla serviços do Windows, mata processos e dispara deploys sem autenticação. |
 
 ---
 

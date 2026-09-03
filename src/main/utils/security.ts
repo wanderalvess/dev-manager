@@ -10,7 +10,7 @@ export const execFileAsync = util.promisify(execFile);
  */
 export function isValidIdentifier(name: string): boolean {
   if (!name || typeof name !== 'string') return false;
-  return /^[a-zA-Z0-9_\-\.\s]+$/.test(name.trim());
+  return /^[a-zA-Z0-9_\-. ]+$/.test(name.trim());
 }
 
 /**

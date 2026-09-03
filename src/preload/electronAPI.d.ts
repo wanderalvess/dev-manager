@@ -13,7 +13,6 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   RoutineItem,
-  WinthorRoutine,
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
@@ -37,11 +36,9 @@ export interface ElectronAPI {
   stopService: (name: string) => Promise<boolean>;
   batchStartServices: (serviceNames: string[]) => Promise<Record<string, boolean>>;
   batchStopServices: (serviceNames: string[]) => Promise<Record<string, boolean>>;
-  killControlProcess: () => Promise<boolean>;
   batchKillProcesses: (processNames: string[]) => Promise<Record<string, boolean>>;
   launchIntelliJ: () => Promise<boolean>;
   launchServerDebug: () => Promise<boolean>;
-  launchWinThorDebug: () => Promise<boolean>;
   resetEnvironment: (
     options?: 'embedded' | 'external' | EnvironmentAutomationConfig
   ) => Promise<{ success: boolean; logs: EnvironmentLog[]; error?: string }>;
@@ -91,6 +88,7 @@ export interface ElectronAPI {
   // Catálogo de Rotinas
   listRoutines: () => Promise<RoutineItem[]>;
   launchRoutine: (fullPath: string) => Promise<boolean>;
+  launchMappedProgram: (id: string) => Promise<boolean>;
   toggleFavoriteRoutine: (id: string) => Promise<AppSettings>;
 
   // Configurações

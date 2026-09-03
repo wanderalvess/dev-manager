@@ -20,7 +20,6 @@ function createWindow() {
     path.join(app.getAppPath(), 'dist-electron/preload/index.cjs'),
     path.join(__dirname, '../preload/index.cjs'),
     path.join(process.cwd(), 'dist-electron/preload/index.cjs'),
-    path.join(process.cwd(), 'src/preload/index.cjs'),
     path.join(__dirname, '../preload/index.js'),
     path.join(process.cwd(), 'dist-electron/preload/index.js')
   ];
@@ -125,7 +124,7 @@ function createWindow() {
         {
           label: '⚡ Preparar Ambiente Dev',
           click: () => {
-            windowsService.resetEnvironment((log) => {
+            windowsService.resetEnvironment('embedded', (log) => {
               if (mainWindow) mainWindow.webContents.send('env:log-event', log);
             });
           }

@@ -14,7 +14,6 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   RoutineItem,
-  WinthorRoutine,
   PathStatusInfo,
   SelectFileOptions,
   SystemAppInfo
@@ -46,12 +45,10 @@ const electronAPI = {
     ipcRenderer.invoke('env:batch-start-services', serviceNames),
   batchStopServices: (serviceNames: string[]): Promise<Record<string, boolean>> =>
     ipcRenderer.invoke('env:batch-stop-services', serviceNames),
-  killControlProcess: (): Promise<boolean> => ipcRenderer.invoke('env:kill-control-process'),
   batchKillProcesses: (processNames: string[]): Promise<Record<string, boolean>> =>
     ipcRenderer.invoke('env:batch-kill-processes', processNames),
   launchIntelliJ: (): Promise<boolean> => ipcRenderer.invoke('env:launch-intellij'),
   launchServerDebug: (): Promise<boolean> => ipcRenderer.invoke('env:launch-server-debug'),
-  launchWinThorDebug: (): Promise<boolean> => ipcRenderer.invoke('env:launch-server-debug'),
   resetEnvironment: (
     options?: 'embedded' | 'external' | EnvironmentAutomationConfig
   ): Promise<{ success: boolean; logs: EnvironmentLog[]; error?: string }> =>
@@ -129,6 +126,7 @@ const electronAPI = {
   // Catálogo de Rotinas
   listRoutines: (): Promise<RoutineItem[]> => ipcRenderer.invoke('routines:list'),
   launchRoutine: (fullPath: string): Promise<boolean> => ipcRenderer.invoke('routines:launch', fullPath),
+  launchMappedProgram: (id: string): Promise<boolean> => ipcRenderer.invoke('routines:launch-mapped', id),
   toggleFavoriteRoutine: (id: string): Promise<AppSettings> => ipcRenderer.invoke('routines:toggle-favorite', id),
 
   // Configurações

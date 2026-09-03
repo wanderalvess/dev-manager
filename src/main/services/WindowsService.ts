@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
+import net from 'net';
 import path from 'path';
 import fs from 'fs';
-import { Notification } from 'electron';
 import {
   EnvironmentLog,
   EnvironmentResetResult,
@@ -16,8 +16,7 @@ import {
   AutomationStep,
   ProfileExecutionResult,
   detectIdeInfo,
-  getWebUrl,
-  getWinThorWebUrl
+  getWebUrl
 } from '../../shared/types';
 import {
   ConfigService,
@@ -37,6 +36,21 @@ export class WindowsService {
   constructor(configService: ConfigService, karafService: KarafService) {
     this.configService = configService;
     this.karafService = karafService;
+  }
+
+  /**
+   * Dispara uma notificação nativa do sistema. Sem efeito fora do processo principal do
+   * Electron (ex: modo servidor Web/Docker via tsx), onde o módulo 'electron' não expõe essa API.
+   */
+  private async showNativeNotification(title: string, body: string): Promise<void> {
+    try {
+      const { Notification } = await import('electron');
+      if (Notification && Notification.isSupported()) {
+        new Notification({ title, body, silent: false }).show();
+      }
+    } catch {
+      // Fora do processo principal do Electron — ignora silenciosamente
+    }
   }
 
   public async checkAdminPrivileges(): Promise<boolean> {
@@ -249,10 +263,6 @@ export class WindowsService {
     return false;
   }
 
-  public launchWinThorDebug(): boolean {
-    return this.launchServerDebug();
-  }
-
   public async checkPorts(): Promise<PortStatus[]> {
     const settings = this.configService.getSettings();
     const monitoredPorts = (settings.monitoredPorts && settings.monitoredPorts.length > 0
@@ -312,7 +322,6 @@ export class WindowsService {
 
   private checkPortSocket(port: number): Promise<boolean> {
     return new Promise((resolve) => {
-      const net = require('net');
       const socket = new net.Socket();
       socket.setTimeout(400);
       socket.on('connect', () => {
@@ -510,13 +519,7 @@ export class WindowsService {
 
       pushLog('success', '🎉 Ambiente preparado com sucesso! Bom trabalho!');
 
-      if (Notification.isSupported()) {
-        new Notification({
-          title: 'Dev Manager',
-          body: 'Ambiente de desenvolvimento preparado com sucesso!',
-          silent: false
-        }).show();
-      }
+      await this.showNativeNotification('Dev Manager', 'Ambiente de desenvolvimento preparado com sucesso!');
 
       return { success: true, logs };
     } catch (err: any) {
@@ -732,7 +735,9 @@ export class WindowsService {
             pushLog('success', `Navegador aberto em ${url}`);
             return true;
           }
-        } catch {}
+        } catch (err) {
+          pushLog('warning', `Falha ao abrir navegador: ${(err as Error).message}`);
+        }
         return false;
       }
 
@@ -773,7 +778,9 @@ export class WindowsService {
           await execFileAsync('docker.exe', ['stop', container]);
           pushLog('success', `Container ${container} parado com sucesso.`);
           stopped = true;
-        } catch {}
+        } catch (err) {
+          pushLog('warning', `Falha ao parar container ${container}: ${(err as Error).message}`);
+        }
       }
     }
 
@@ -844,21 +851,16 @@ export class WindowsService {
           }
         }
 
-        if (step.delayAfterSeconds && step.delayAfterSeconds > 0 && i < total - 1) {
-          pushLog('info', `Aguardando ${step.delayAfterSeconds}s antes da próxima etapa...`);
-          await new Promise((r) => setTimeout(r, step.delayAfterSeconds * 1000));
+        const delaySeconds = step.delayAfterSeconds;
+        if (delaySeconds && delaySeconds > 0 && i < total - 1) {
+          pushLog('info', `Aguardando ${delaySeconds}s antes da próxima etapa...`);
+          await new Promise((r) => setTimeout(r, delaySeconds * 1000));
         }
       }
 
       pushLog('success', `🎉 Perfil "${profile.name}" executado com sucesso! Todos os passos disparados.`);
 
-      if (Notification.isSupported()) {
-        new Notification({
-          title: 'Dev Manager',
-          body: `Perfil "${profile.name}" iniciado com sucesso!`,
-          silent: false
-        }).show();
-      }
+      await this.showNativeNotification('Dev Manager', `Perfil "${profile.name}" iniciado com sucesso!`);
 
       return { success: true, logs };
     } catch (err: any) {

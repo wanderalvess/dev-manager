@@ -17,6 +17,7 @@ services:
       - DOCKER_CONTAINER=true
       - PORT=3000
       - HOST=0.0.0.0
+      - API_KEY=${API_KEY:-}
       - CONFIG_DIR=/workspace/config
       - PROJECTS_DIR=/workspace/projects
       - KARAF_DIR=/workspace/karaf

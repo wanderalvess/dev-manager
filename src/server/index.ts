@@ -6,13 +6,17 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import { ConfigService } from '../main/services/ConfigService';
 import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
-import { EnvironmentLog, KarafDeployRequest, AppSettings } from '../shared/types';
+import { EnvironmentLog, KarafDeployRequest, AppSettings, AutomationProfile, AutomationStep } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -38,6 +42,26 @@ app.use(
 );
 
 app.use(express.json());
+
+// Autenticação por API Key (opcional, mas fortemente recomendada quando o painel
+// é exposto além de localhost — todas as rotas abaixo controlam serviços do SO,
+// processos e execução de comandos locais).
+const API_KEY = process.env.API_KEY?.trim();
+const configuredHost = process.env.HOST || (process.env.DOCKER_CONTAINER ? '0.0.0.0' : '127.0.0.1');
+const exposedBeyondLocalhost = configuredHost !== '127.0.0.1' && configuredHost !== 'localhost';
+if (!API_KEY && exposedBeyondLocalhost) {
+  console.warn(
+    '[Segurança] API_KEY não definida e HOST não está restrito a localhost. ' +
+      'Qualquer pessoa na rede pode controlar este painel sem autenticação. Defina API_KEY no .env.'
+  );
+}
+
+app.use((req, res, next) => {
+  if (!API_KEY || !req.path.startsWith('/api/')) return next();
+  const provided = req.header('x-api-key');
+  if (provided === API_KEY) return next();
+  res.status(401).json({ error: 'API key ausente ou inválida. Envie o header x-api-key.' });
+});
 
 // Inicializa os serviços
 const configService = new ConfigService();
@@ -166,10 +190,6 @@ app.post('/api/env/services/batch-stop', async (req, res) => {
   res.json(await windowsService.batchStopServices(validNames));
 });
 
-app.post('/api/env/kill-process', async (_req, res) => {
-  res.json({ success: await windowsService.killProcess('pdvsyncclientservicocontrole.exe') });
-});
-
 app.post('/api/env/processes/batch-kill', async (req, res) => {
   const { names } = req.body;
   const validNames = (names || []).filter(isValidIdentifier);
@@ -180,7 +200,7 @@ app.post('/api/env/launch-ide', async (_req, res) => {
   res.json({ success: await windowsService.launchIntelliJ() });
 });
 
-app.post(['/api/env/launch-server-debug', '/api/env/launch-winthor-debug'], (_req, res) => {
+app.post('/api/env/launch-server-debug', (_req, res) => {
   res.json({ success: windowsService.launchServerDebug() });
 });
 
@@ -196,6 +216,51 @@ app.post('/api/env/reset', async (req, res) => {
     }
   );
   res.json(result);
+});
+
+// 2b. Orquestrador de Perfis de Automação
+app.post('/api/profile/run', async (req, res) => {
+  const profile: AutomationProfile = req.body?.profile;
+  const result = await windowsService.executeProfile(
+    profile,
+    (log) => broadcastWs('env:log-event', log),
+    (stepIndex, totalSteps, step) => broadcastWs('profile:step-progress', { stepIndex, totalSteps, step })
+  );
+  res.json(result);
+});
+
+app.post('/api/profile/stop', async (req, res) => {
+  const profile: AutomationProfile = req.body?.profile;
+  const result = await windowsService.stopProfile(profile, (log) => broadcastWs('env:log-event', log));
+  res.json(result);
+});
+
+app.post('/api/profile/run-step', async (req, res) => {
+  const step: AutomationStep = req.body?.step;
+  const profileName: string | undefined = req.body?.profileName;
+  const success = await windowsService.runProfileStep(step, profileName, (log) => broadcastWs('env:log-event', log));
+  res.json({ success });
+});
+
+app.post('/api/profile/stop-step', async (req, res) => {
+  const step: AutomationStep = req.body?.step;
+  const success = await windowsService.stopProfileStep(step, (log) => broadcastWs('env:log-event', log));
+  res.json({ success });
+});
+
+app.post('/api/profile/restart-step', async (req, res) => {
+  const step: AutomationStep = req.body?.step;
+  const profileName: string | undefined = req.body?.profileName;
+  const success = await windowsService.restartProfileStep(step, profileName, (log) => broadcastWs('env:log-event', log));
+  res.json({ success });
+});
+
+app.post('/api/profile/kill-port', async (req, res) => {
+  const port = Number(req.body?.port);
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+    return res.status(400).json({ error: 'Porta inválida.' });
+  }
+  res.json({ success: await windowsService.killPortProcess(port) });
 });
 
 // 3. Karaf Deployer & Console Embutido
@@ -233,6 +298,32 @@ app.post('/api/karaf/exec', async (req, res) => {
     return res.status(400).json({ error: 'Comando contém caracteres não permitidos ou formato inválido.' });
   }
   const result = await karafService.executeKarafCommand(command, (chunk) => {
+    broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+app.post('/api/karaf/build-and-deploy', async (req, res) => {
+  const { request, projectPath, skipTests } = req.body as {
+    request: KarafDeployRequest;
+    projectPath: string;
+    skipTests?: boolean;
+  };
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json({ success: false, error: 'Caminho de projeto inválido.' });
+  }
+  const result = await karafService.buildAndDeployMaven(request, projectPath, skipTests !== false, (chunk) => {
+    broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+app.post('/api/karaf/run-maven-build', async (req, res) => {
+  const { projectPath, skipTests } = req.body as { projectPath: string; skipTests?: boolean };
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json({ code: 1, stdout: '', stderr: 'Caminho de projeto inválido.' });
+  }
+  const result = await karafService.runMavenBuild(projectPath, skipTests !== false, (chunk) => {
     broadcastWs('karaf:log-chunk', chunk);
   });
   res.json(result);
@@ -276,7 +367,7 @@ app.post('/api/git/command', async (req, res) => {
   res.json(await gitAzureService.executeGitCommand(projectPath, command));
 });
 
-// 5. Rotinas WinThor
+// 5. Catálogo de Rotinas
 app.get('/api/routines', (_req, res) => {
   res.json(routinesService.listRoutines());
 });
@@ -287,6 +378,14 @@ app.post('/api/routines/launch', (req, res) => {
     return res.status(400).json({ success: false, error: 'Caminho inválido.' });
   }
   res.json({ success: routinesService.launchRoutine(fullPath) });
+});
+
+app.post('/api/routines/launch-mapped', (req, res) => {
+  const { id } = req.body;
+  if (!id || typeof id !== 'string') {
+    return res.status(400).json({ success: false, error: 'ID inválido.' });
+  }
+  res.json({ success: routinesService.launchMappedProgram(id) });
 });
 
 app.post('/api/routines/favorite', (req, res) => {
@@ -304,7 +403,7 @@ app.get('/api/settings', (_req, res) => {
 
 app.post('/api/settings', (req, res) => {
   const candidate = req.body || {};
-  const pathKeys: (keyof AppSettings)[] = ['winthorPath', 'karafPath', 'intellijPath', 'projectsPath'];
+  const pathKeys: (keyof AppSettings)[] = ['appPath', 'karafPath', 'intellijPath', 'projectsPath'];
   for (const key of pathKeys) {
     if (candidate[key] && typeof candidate[key] === 'string') {
       if (!isSafeLocalPath(candidate[key])) {

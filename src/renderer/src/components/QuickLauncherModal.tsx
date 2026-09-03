@@ -12,7 +12,7 @@ import {
   X,
   Star
 } from 'lucide-react';
-import { GitProjectInfo, RoutineItem } from '../../shared/types';
+import { GitProjectInfo, RoutineItem } from '../../../shared/types';
 
 interface QuickLauncherItem {
   id: string;

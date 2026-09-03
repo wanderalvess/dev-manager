@@ -13,7 +13,6 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   RoutineItem,
-  WinthorRoutine,
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
@@ -107,18 +106,39 @@ export function initApiBridge() {
 
   const wsManager = new WebSocketManager();
 
+  const API_KEY_STORAGE = 'devManagerApiKey';
+
+  const doFetch = (url: string, options?: RequestInit): Promise<Response> => {
+    const apiKey = window.localStorage.getItem(API_KEY_STORAGE);
+    return fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { 'x-api-key': apiKey } : {}),
+        ...(options?.headers || {})
+      }
+    });
+  };
+
   const apiFetch = async <T>(url: string, options?: RequestInit): Promise<T> => {
     let res: Response;
     try {
-      res = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options?.headers || {})
+      res = await doFetch(url, options);
+      if (res.status === 401) {
+        const key = window.prompt(
+          'Este painel exige uma API key (servidor iniciado com API_KEY definida).\nDigite a API key:'
+        );
+        if (key && key.trim()) {
+          window.localStorage.setItem(API_KEY_STORAGE, key.trim());
+          res = await doFetch(url, options);
         }
-      });
+      }
     } catch (err: any) {
       throw new Error(`Falha de rede ao contatar servidor Web/Docker. O backend está rodando? Erro: ${err.message}`);
+    }
+
+    if (res.status === 401) {
+      throw new Error('Não autenticado: API key inválida ou não informada.');
     }
 
     if (!res.ok) {
@@ -212,13 +232,6 @@ export function initApiBridge() {
       });
     },
 
-    killControlProcess: async (): Promise<boolean> => {
-      const data = await apiFetch<{ success: boolean }>('/api/env/kill-process', {
-        method: 'POST'
-      });
-      return data.success;
-    },
-
     batchKillProcesses: async (processNames: string[]): Promise<Record<string, boolean>> => {
       return apiFetch<Record<string, boolean>>('/api/env/processes/batch-kill', {
         method: 'POST',
@@ -240,12 +253,6 @@ export function initApiBridge() {
       return data.success;
     },
 
-    launchWinThorDebug: async (): Promise<boolean> => {
-      const data = await apiFetch<{ success: boolean }>('/api/env/launch-server-debug', {
-        method: 'POST'
-      });
-      return data.success;
-    },
 
     resetEnvironment: async (
       options?: 'embedded' | 'external' | EnvironmentAutomationConfig
@@ -354,6 +361,27 @@ export function initApiBridge() {
       });
     },
 
+    buildAndDeployKaraf: async (
+      request: KarafDeployRequest,
+      projectPath: string,
+      skipTests: boolean = true
+    ): Promise<{ success: boolean; error?: string }> => {
+      return apiFetch('/api/karaf/build-and-deploy', {
+        method: 'POST',
+        body: JSON.stringify({ request, projectPath, skipTests })
+      });
+    },
+
+    runMavenBuild: async (
+      projectPath: string,
+      skipTests: boolean = true
+    ): Promise<{ code: number; stdout: string; stderr: string }> => {
+      return apiFetch('/api/karaf/run-maven-build', {
+        method: 'POST',
+        body: JSON.stringify({ projectPath, skipTests })
+      });
+    },
+
     execKarafDiagnostic: async (command: string): Promise<{ code: number; stdout: string; stderr: string }> => {
       return apiFetch('/api/karaf/exec', {
         method: 'POST',
@@ -408,6 +436,14 @@ export function initApiBridge() {
       const data = await apiFetch<{ success: boolean }>('/api/routines/launch', {
         method: 'POST',
         body: JSON.stringify({ fullPath })
+      });
+      return data.success;
+    },
+
+    launchMappedProgram: async (id: string): Promise<boolean> => {
+      const data = await apiFetch<{ success: boolean }>('/api/routines/launch-mapped', {
+        method: 'POST',
+        body: JSON.stringify({ id })
       });
       return data.success;
     },
