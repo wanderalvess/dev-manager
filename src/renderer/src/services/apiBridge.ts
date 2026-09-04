@@ -29,7 +29,8 @@ import type {
   KarafBundleInfo,
   GitCommitInfo,
   SystemMetrics,
-  HttpHealthResult
+  HttpHealthResult,
+  DeployProfile
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -426,6 +427,18 @@ export function initApiBridge() {
 
     onKarafLogChunk: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('karaf:log-chunk', callback);
+    },
+
+    // Perfis de Deploy (Karaf / Docker / Comando Genérico)
+    runDeployProfile: async (profile: DeployProfile): Promise<{ success: boolean; error?: string }> => {
+      return apiFetch('/api/deploy/run-profile', {
+        method: 'POST',
+        body: JSON.stringify(profile)
+      });
+    },
+
+    onDeployLogChunk: (callback: (chunk: string) => void) => {
+      return wsManager.subscribe('deploy:log-chunk', callback);
     },
 
     // Git & Azure DevOps

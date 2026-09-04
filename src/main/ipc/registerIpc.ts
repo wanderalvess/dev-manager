@@ -11,6 +11,7 @@ import { DocsIndexService } from '../services/DocsIndexService';
 import { DatabaseService } from '../services/DatabaseService';
 import { DockerService } from '../services/DockerService';
 import { NetworkService } from '../services/NetworkService';
+import { DeployService } from '../services/DeployService';
 import {
   AppSettings,
   KarafDeployRequest,
@@ -22,7 +23,8 @@ import {
   AutomationProfile,
   AutomationStep,
   DocsIndexProgress,
-  DatabaseConnectionConfig
+  DatabaseConnectionConfig,
+  DeployProfile
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
@@ -36,7 +38,8 @@ export function registerIpcHandlers(
   docsIndexService: DocsIndexService,
   databaseService: DatabaseService,
   dockerService: DockerService,
-  networkService: NetworkService
+  networkService: NetworkService,
+  deployService: DeployService
 ) {
   // --- Diálogos Nativos do Sistema & Verificação de Caminhos ---
   ipcMain.handle('dialog:select-directory', async (_, defaultPath?: string) => {
@@ -273,6 +276,13 @@ export function registerIpcHandlers(
 
   ipcMain.handle('karaf:parse-pom', async (_, projectPath: string) => {
     return karafService.parseProjectPomOrBat(projectPath);
+  });
+
+  // --- Orquestrador de Perfis de Deploy (Karaf / Docker / Comando Genérico) ---
+  ipcMain.handle('deploy:run-profile', async (_, profile: DeployProfile) => {
+    return await deployService.executeProfile(profile, (chunk) => {
+      mainWindow.webContents.send('deploy:log-chunk', chunk);
+    });
   });
 
   // --- Git & Azure DevOps ---

@@ -39,6 +39,17 @@ export function isSafeKarafCommand(command: string): boolean {
 }
 
 /**
+ * Valida se uma tag/referência de imagem Docker é segura (sem metacaracteres de shell).
+ * Aceita registry/namespace/repo:tag (ex: meuregistro.com:5000/ns/app:1.0.0).
+ */
+export function isSafeDockerImageTag(tag: string): boolean {
+  if (!tag || typeof tag !== 'string') return false;
+  const trimmed = tag.trim();
+  if (!trimmed || trimmed.length > 256) return false;
+  return /^[a-zA-Z0-9][a-zA-Z0-9_.\-/:]*$/.test(trimmed);
+}
+
+/**
  * Valida se um caminho é local e seguro (rejeitando caminhos de rede UNC \\servidor\share e bytes nulos).
  */
 export function isSafeLocalPath(targetPath: string): boolean {

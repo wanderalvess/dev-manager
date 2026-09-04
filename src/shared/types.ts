@@ -118,6 +118,40 @@ export interface KarafDeployRequest {
   port?: number;
 }
 
+export type DeployStepType =
+  | 'maven-build'
+  | 'karaf-command'
+  | 'docker-build'
+  | 'docker-push'
+  | 'docker-restart'
+  | 'command';
+
+export interface DeployStep {
+  id: string;
+  name: string;
+  type: DeployStepType;
+  enabled: boolean;
+  // maven-build
+  projectPath?: string;
+  skipTests?: boolean;
+  // karaf-command / command (genérico)
+  command?: string;
+  cwd?: string;
+  // docker-build / docker-push
+  dockerContextPath?: string;
+  dockerFile?: string;
+  dockerImageTag?: string;
+  // docker-restart
+  dockerContainer?: string;
+}
+
+export interface DeployProfile {
+  id: string;
+  name: string;
+  description?: string;
+  steps: DeployStep[];
+}
+
 export interface PomInfo {
   groupId: string;
   artifactId: string;
@@ -185,6 +219,9 @@ export interface AppSettings {
   automationDefaults?: EnvironmentAutomationConfig;
   automationProfiles?: AutomationProfile[];
   activeProfileId?: string;
+  /** Perfis de deploy (Karaf/Docker/comando genérico) com etapas sequenciais */
+  deployProfiles?: DeployProfile[];
+  activeDeployProfileId?: string;
   /** Extensões de arquivo reconhecidas como rotina executável no Catálogo de Rotinas (padrão: ['.EXE']) */
   routineFileExtensions?: string[];
   /** Mapa de extensão -> caminho de executável launcher, para formatos de rotina que não rodam sozinhos (ex: ".PC" -> caminho de um launcher configurado pelo usuário) */

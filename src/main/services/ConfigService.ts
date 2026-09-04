@@ -8,7 +8,8 @@ import {
   TrackedServiceConfig,
   TrackedProcessConfig,
   EnvironmentAutomationConfig,
-  AutomationProfile
+  AutomationProfile,
+  DeployProfile
 } from '../../shared/types';
 
 export const DEFAULT_MONITORED_PORTS: MonitoredPortConfig[] = [
@@ -32,6 +33,30 @@ export const DEFAULT_AUTOMATION_PROFILES: AutomationProfile[] = [
         enabled: false,
         command: 'echo "Configure aqui os passos da sua esteira"',
         launchMode: 'wt'
+      }
+    ]
+  }
+];
+
+export const DEFAULT_DEPLOY_PROFILES: DeployProfile[] = [
+  {
+    id: 'deploy-profile-karaf-osgi',
+    name: 'Deploy Karaf OSGi',
+    description: 'Registra o repositório Maven e instala/atualiza a feature no Karaf local',
+    steps: [
+      {
+        id: 'deploy-step-karaf-repo-add',
+        name: 'Registrar Repositório Maven',
+        type: 'karaf-command',
+        enabled: true,
+        command: 'feature:repo-add mvn:com.empresa.service/meu-servico/0.0.1-SNAPSHOT/xml/features'
+      },
+      {
+        id: 'deploy-step-karaf-feature-install',
+        name: 'Instalar / Atualizar Feature',
+        type: 'karaf-command',
+        enabled: true,
+        command: 'feature:install -r -u meu-servico/0.0.1-SNAPSHOT'
       }
     ]
   }
@@ -281,7 +306,9 @@ export function getDynamicDefaultConfig(): AppSettings {
     trackedProcesses: DEFAULT_TRACKED_PROCESSES,
     automationDefaults: DEFAULT_AUTOMATION_CONFIG,
     automationProfiles: DEFAULT_AUTOMATION_PROFILES,
-    activeProfileId: DEFAULT_AUTOMATION_PROFILES[0]?.id
+    activeProfileId: DEFAULT_AUTOMATION_PROFILES[0]?.id,
+    deployProfiles: DEFAULT_DEPLOY_PROFILES,
+    activeDeployProfileId: DEFAULT_DEPLOY_PROFILES[0]?.id
   };
 }
 
@@ -334,6 +361,11 @@ export class ConfigService {
             ? parsed.automationProfiles
             : DEFAULT_AUTOMATION_PROFILES;
         const activeProfileId = parsed.activeProfileId || automationProfiles[0]?.id;
+        const deployProfiles =
+          parsed.deployProfiles && Array.isArray(parsed.deployProfiles) && parsed.deployProfiles.length > 0
+            ? parsed.deployProfiles
+            : DEFAULT_DEPLOY_PROFILES;
+        const activeDeployProfileId = parsed.activeDeployProfileId || deployProfiles[0]?.id;
 
         // Migração de compatibilidade: config.json salvo por versões antigas podia usar as
         // chaves legadas "winthorPath"/"winthorWebPort"/"winthorWebPath". Lidas aqui apenas
@@ -359,7 +391,9 @@ export class ConfigService {
           trackedProcesses: parsed.trackedProcesses && parsed.trackedProcesses.length > 0 ? parsed.trackedProcesses : DEFAULT_TRACKED_PROCESSES,
           automationDefaults: parsed.automationDefaults ? { ...DEFAULT_AUTOMATION_CONFIG, ...parsed.automationDefaults } : DEFAULT_AUTOMATION_CONFIG,
           automationProfiles,
-          activeProfileId
+          activeProfileId,
+          deployProfiles,
+          activeDeployProfileId
         };
       }
     } catch (err) {

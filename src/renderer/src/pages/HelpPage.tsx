@@ -158,7 +158,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
     },
     {
       id: 'karaf-client-bat',
-      question: 'O Deploy OSGi informa que o executável client.bat não foi localizado. O que fazer?',
+      question: 'A aba Deploy informa que o executável client.bat não foi localizado. O que fazer?',
       category: 'Karaf OSGi',
       tags: ['karaf', 'client.bat', 'deploy', 'caminho', 'diretório'],
       answer: (
@@ -380,7 +380,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
     { key: 'Alt + 1', desc: 'Navegar para a aba "Ambiente Dev" (Cockpit de Serviços e Automação)', category: 'Navegação' },
     { key: 'Alt + 2', desc: 'Navegar para a aba "Banco de Dados" (Oracle, MySQL, Postgres)', category: 'Navegação' },
     { key: 'Alt + 3', desc: 'Navegar para a aba "Containers" (Gerenciador Docker)', category: 'Navegação' },
-    { key: 'Alt + 4', desc: 'Navegar para a aba "Deploy OSGi Karaf" (client.bat & Features)', category: 'Navegação' },
+    { key: 'Alt + 4', desc: 'Navegar para a aba "Deploy" (Perfis Karaf, Docker & comandos genéricos)', category: 'Navegação' },
     { key: 'Alt + 5', desc: 'Navegar para a aba "Git & Azure DevOps" (Branches & Pull Requests)', category: 'Navegação' },
     { key: 'Alt + 6', desc: 'Navegar para a aba "Catálogo de Rotinas" (Executáveis Delphi)', category: 'Navegação' },
     { key: 'Alt + 7', desc: 'Navegar para a aba "Documentação" (Busca semântica RAG)', category: 'Navegação' },
@@ -509,16 +509,16 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                     <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-xs border border-amber-500/20">
                       2
                     </div>
-                    <h4 className="text-xs font-bold text-foreground">Deploy de Features</h4>
+                    <h4 className="text-xs font-bold text-foreground">Perfis de Deploy</h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Auto-detecta coordenadas do pom.xml e executa o <code className="font-mono text-primary">client.bat</code> com streaming de saída.
+                      Monte etapas sequenciais de build e publicação — Karaf (<code className="font-mono text-primary">client.bat</code>), Docker (build/push/restart) ou comando genérico — com streaming de saída.
                     </p>
                     {onNavigate && (
                       <button
-                        onClick={() => onNavigate('karaf')}
+                        onClick={() => onNavigate('deploy')}
                         className="text-[11px] text-amber-500 font-semibold flex items-center gap-1 hover:underline pt-1"
                       >
-                        <span>Ir para Deploy OSGi</span> <ArrowRight className="w-3 h-3" />
+                        <span>Ir para Deploy</span> <ArrowRight className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -669,28 +669,32 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                 </div>
                 <div>
                   <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
-                    2. Deploy OSGi Karaf (client.bat)
+                    2. Deploy (Perfis multi-alvo)
                   </h3>
-                  <span className="text-[10px] text-muted-foreground font-mono">Maven Feature Deployer</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">Karaf OSGi · Docker · Comando Genérico</span>
                 </div>
               </div>
 
               <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
                 <p>
-                  Permite implantar e atualizar pacotes OSGi Maven diretamente no contêiner Apache Karaf em execução:
+                  Monte perfis com etapas sequenciais de build e publicação — misture etapas Karaf, Docker e comandos genéricos no mesmo perfil, cada uma com saída em streaming:
                 </p>
                 <ul className="space-y-1.5 pl-2">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span><strong>Detecção Inteligente do POM:</strong> Lê o <code className="font-mono text-primary">pom.xml</code> e <code className="font-mono text-primary">deploy-local.bat</code> do projeto selecionado para pré-preencher GroupID, ArtifactID e Versão automaticamente.</span>
+                    <span><strong>Karaf OSGi:</strong> etapas <code className="font-mono text-primary">feature:repo-add</code> / <code className="font-mono text-primary">feature:install -r -u</code> (ou qualquer comando de shell), com sugestão automática a partir do <code className="font-mono text-primary">pom.xml</code> do projeto.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span><strong>Comandos Maven em 1 Clique:</strong> Executa <code className="font-mono text-primary">feature:repo-add</code> e <code className="font-mono text-primary">feature:install -r -u</code> de forma assíncrona.</span>
+                    <span><strong>Docker:</strong> build de imagem, push para o registry e restart de container, cada um como etapa independente.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span><strong>Diagnósticos Rápidos:</strong> Botões dedicados para listar features ativas (<code className="font-mono text-primary">feature:list -i</code>), bundles (<code className="font-mono text-primary">bundle:list -s</code>) e visualizar logs recentes (<code className="font-mono text-primary">log:display</code>).</span>
+                    <span><strong>Build Maven &amp; Comando Genérico:</strong> compila o projeto (<code className="font-mono text-primary">mvn clean install</code>) ou roda qualquer script antes/depois das outras etapas.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    <span><strong>Diagnósticos Rápidos Karaf:</strong> Botões dedicados para listar features ativas (<code className="font-mono text-primary">feature:list -i</code>), bundles (<code className="font-mono text-primary">bundle:list -s</code>) e visualizar logs recentes (<code className="font-mono text-primary">log:display</code>).</span>
                   </li>
                 </ul>
               </div>

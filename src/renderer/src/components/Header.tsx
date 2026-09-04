@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'env', label: 'Ambiente Dev', shortLabel: 'Ambiente', icon: Terminal, title: 'Ambiente de Desenvolvimento & Serviços' },
     { id: 'database', label: 'Banco de Dados', shortLabel: 'Banco', icon: Database, title: 'Conexão e Consultas Oracle, MySQL, Postgres' },
     { id: 'containers', label: 'Containers', shortLabel: 'Docker', icon: Box, title: 'Gerenciador de Containers Docker' },
-    { id: 'karaf', label: 'Deploy OSGi', shortLabel: 'Deploy', icon: Layers, title: 'Deployer de Módulos & Features Karaf OSGi' },
+    { id: 'deploy', label: 'Deploy', shortLabel: 'Deploy', icon: Layers, title: 'Perfis de Deploy — Karaf OSGi, Docker & Comandos Genéricos' },
     { id: 'git', label: 'Git & Azure', shortLabel: 'Git', icon: GitPullRequest, title: 'Repositórios Git & Azure DevOps' },
     { id: 'routines', label: 'Rotinas', shortLabel: 'Rotinas', icon: Grid, title: 'Catálogo de Executáveis e Rotinas' },
     { id: 'docs', label: 'Documentação', shortLabel: 'Docs', icon: FileSearch, title: 'Busca semântica na documentação dos projetos' },

@@ -29,7 +29,8 @@ import type {
   KarafBundleInfo,
   GitCommitInfo,
   SystemMetrics,
-  HttpHealthResult
+  HttpHealthResult,
+  DeployProfile
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -95,6 +96,10 @@ export interface ElectronAPI {
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }
   ) => Promise<{ success: boolean; output: string }>;
+
+  // Perfis de Deploy (Karaf / Docker / Comando Genérico)
+  runDeployProfile: (profile: DeployProfile) => Promise<{ success: boolean; error?: string }>;
+  onDeployLogChunk: (callback: (chunk: string) => void) => () => void;
 
   // Git & Azure DevOps
   listProjects: () => Promise<GitProjectInfo[]>;

@@ -3,7 +3,7 @@ import { Header } from './components/Header';
 import { EnvironmentPage } from './pages/EnvironmentPage';
 import { DatabasePage } from './pages/DatabasePage';
 import { ContainersPage } from './pages/ContainersPage';
-import { KarafDeployPage } from './pages/KarafDeployPage';
+import { DeployPage } from './pages/DeployPage';
 import { GitAzurePage } from './pages/GitAzurePage';
 import { RoutinesPage } from './pages/RoutinesPage';
 import { DocsPage } from './pages/DocsPage';
@@ -64,7 +64,7 @@ export const App: React.FC = () => {
         if (e.key === '1') setActiveTab('env');
         else if (e.key === '2') setActiveTab('database');
         else if (e.key === '3') setActiveTab('containers');
-        else if (e.key === '4') setActiveTab('karaf');
+        else if (e.key === '4') setActiveTab('deploy');
         else if (e.key === '5') setActiveTab('git');
         else if (e.key === '6') setActiveTab('routines');
         else if (e.key === '7') setActiveTab('docs');
@@ -109,8 +109,8 @@ export const App: React.FC = () => {
         )}
         {activeTab === 'database' && <DatabasePage />}
         {activeTab === 'containers' && <ContainersPage />}
-        {activeTab === 'karaf' && (
-          <KarafDeployPage
+        {activeTab === 'deploy' && (
+          <DeployPage
             projects={projects}
             onNavigateToSettings={() => setActiveTab('settings')}
           />

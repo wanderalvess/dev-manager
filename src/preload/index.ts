@@ -24,7 +24,11 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
-  NetworkIpInfo
+  NetworkIpInfo,
+  ExplainPlanResult,
+  SystemMetrics,
+  HttpHealthResult,
+  DeployProfile
 } from '../shared/types';
 
 const electronAPI = {
@@ -125,6 +129,15 @@ const electronAPI = {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('karaf:log-chunk', subscription);
     return () => ipcRenderer.removeListener('karaf:log-chunk', subscription);
+  },
+
+  // Perfis de Deploy (Karaf / Docker / Comando Genérico)
+  runDeployProfile: (profile: DeployProfile): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('deploy:run-profile', profile),
+  onDeployLogChunk: (callback: (chunk: string) => void) => {
+    const subscription = (_: any, chunk: string) => callback(chunk);
+    ipcRenderer.on('deploy:log-chunk', subscription);
+    return () => ipcRenderer.removeListener('deploy:log-chunk', subscription);
   },
 
   // Git & Azure DevOps

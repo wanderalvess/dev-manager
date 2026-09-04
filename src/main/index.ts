@@ -11,6 +11,7 @@ import { DocsIndexService } from './services/DocsIndexService';
 import { DatabaseService } from './services/DatabaseService';
 import { DockerService } from './services/DockerService';
 import { NetworkService } from './services/NetworkService';
+import { DeployService } from './services/DeployService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +57,7 @@ function createWindow() {
   const databaseService = new DatabaseService();
   const dockerService = new DockerService();
   const networkService = new NetworkService();
+  const deployService = new DeployService(configService, karafService, dockerService, windowsService);
 
   registerIpcHandlers(
     mainWindow,
@@ -67,7 +69,8 @@ function createWindow() {
     docsIndexService,
     databaseService,
     dockerService,
-    networkService
+    networkService,
+    deployService
   );
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';

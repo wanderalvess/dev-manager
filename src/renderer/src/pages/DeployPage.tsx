@@ -3,46 +3,42 @@ import {
   Layers,
   Play,
   AlertTriangle,
-  Sparkles,
+  Plus,
+  Pencil,
   Copy,
-  Check,
+  ListTree,
   Package,
   FileText,
-  ListTree,
   RotateCcw,
   RotateCw,
   Zap,
   Settings,
-  Hammer,
+  ChevronDown,
   Search,
   Square,
   X
 } from 'lucide-react';
-import { GitProjectInfo, KarafDeployRequest, KarafBundleInfo } from '../../../shared/types';
+import { GitProjectInfo, DeployProfile, KarafBundleInfo } from '../../../shared/types';
 import { TerminalViewer } from '../components/TerminalViewer';
+import { DeployProfileEditorModal } from '../components/DeployProfileEditorModal';
 
-interface KarafDeployPageProps {
+interface DeployPageProps {
   projects: GitProjectInfo[];
   onNavigateToSettings?: () => void;
 }
 
-export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNavigateToSettings }) => {
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [repoCommand, setRepoCommand] = useState<string>(
-    'feature:repo-add mvn:com.empresa.service/meu-servico/0.0.1-SNAPSHOT/xml/features'
-  );
-  const [installCommand, setInstallCommand] = useState<string>(
-    'feature:install -r -u meu-servico/0.0.1-SNAPSHOT'
-  );
-  const [karafUser, setKarafUser] = useState<string>('karaf');
-  const [karafPass, setKarafPass] = useState<string>('karaf');
-  const [karafPort, setKarafPort] = useState<number>(8101);
+export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSettings }) => {
+  const [profiles, setProfiles] = useState<DeployProfile[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState<string>('');
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<DeployProfile | null>(null);
+
   const [karafPath, setKarafPath] = useState<string>('');
   const [karafValid, setKarafValid] = useState<boolean | null>(null);
-  const [runMavenBeforeDeploy, setRunMavenBeforeDeploy] = useState<boolean>(false);
-  const [skipTests, setSkipTests] = useState<boolean>(true);
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
-  const [isBuildingMaven, setIsBuildingMaven] = useState<boolean>(false);
+  const [isDiagRunning, setIsDiagRunning] = useState<string | null>(null);
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Modal e Gestão de Bundles OSGi
   const [isBundlesModalOpen, setIsBundlesModalOpen] = useState<boolean>(false);
@@ -51,76 +47,89 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
   const [isLoadingBundles, setIsLoadingBundles] = useState<boolean>(false);
   const [bundleActionLoading, setBundleActionLoading] = useState<Record<string, string>>({});
 
-  const [isDiagRunning, setIsDiagRunning] = useState<string | null>(null);
-  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
-  const [copiedPill, setCopiedPill] = useState<string | null>(null);
-
-  const selectedProjObj = projects.find((p) => p.path === selectedProject);
+  const activeProfile = useMemo(() => {
+    if (!profiles || profiles.length === 0) return null;
+    return profiles.find((p) => p.id === activeProfileId) || profiles[0];
+  }, [profiles, activeProfileId]);
 
   useEffect(() => {
     if (window.electronAPI) {
       window.electronAPI.getSettings().then(async (st) => {
-        setKarafUser(st.karafUser || 'karaf');
-        setKarafPass(st.karafPass || 'karaf');
-        setKarafPort(st.karafSshPort || 8101);
         setKarafPath(st.karafPath || '');
         if (st.karafPath) {
           const check = await window.electronAPI.checkPath(`${st.karafPath}\\bin\\client.bat`);
           setKarafValid(check.exists);
         }
+        if (st.deployProfiles && st.deployProfiles.length > 0) {
+          setProfiles(st.deployProfiles);
+          setActiveProfileId(st.activeDeployProfileId || st.deployProfiles[0].id);
+        }
       });
 
-      const unsubscribe = window.electronAPI.onKarafLogChunk((chunk) => {
+      const unsubDeploy = window.electronAPI.onDeployLogChunk((chunk) => {
         setTerminalLogs((prev) => [...prev, chunk]);
       });
-      return () => unsubscribe();
+      const unsubKaraf = window.electronAPI.onKarafLogChunk((chunk) => {
+        setTerminalLogs((prev) => [...prev, chunk]);
+      });
+      return () => {
+        unsubDeploy();
+        unsubKaraf();
+      };
     }
   }, []);
 
-  const handleSelectProject = (projectPath: string) => {
-    setSelectedProject(projectPath);
-    const proj = projects.find((p) => p.path === projectPath);
-    if (proj?.pomInfo) {
-      const { groupId, artifactId, version } = proj.pomInfo;
-      setRepoCommand(`feature:repo-add mvn:${groupId}/${artifactId}/${version}/xml/features`);
-      setInstallCommand(`feature:install -r -u ${artifactId}/${version}`);
+  const persistProfiles = async (updated: DeployProfile[], activeId: string) => {
+    setProfiles(updated);
+    setActiveProfileId(activeId);
+    if (window.electronAPI && window.electronAPI.saveSettings) {
+      await window.electronAPI.saveSettings({ deployProfiles: updated, activeDeployProfileId: activeId });
     }
   };
 
-  const copyToClipboard = (text: string, pillId: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedPill(pillId);
-    setTimeout(() => setCopiedPill(null), 1800);
+  const handleSelectProfile = (id: string) => {
+    persistProfiles(profiles, id);
   };
 
-  const handleRunDeploy = async () => {
-    if (isDeploying) return;
+  const handleSaveProfile = async (saved: DeployProfile) => {
+    const exists = profiles.some((p) => p.id === saved.id);
+    const updated = exists ? profiles.map((p) => (p.id === saved.id ? saved : p)) : [...profiles, saved];
+    await persistProfiles(updated, saved.id);
+  };
+
+  const handleDeleteProfile = async (id: string) => {
+    if (profiles.length <= 1) {
+      alert('Mantenha ao menos um perfil de deploy.');
+      return;
+    }
+    const remaining = profiles.filter((p) => p.id !== id);
+    await persistProfiles(remaining, remaining[0]?.id || '');
+  };
+
+  const handleDuplicateProfile = async () => {
+    if (!activeProfile) return;
+    const duplicated: DeployProfile = {
+      ...activeProfile,
+      id: `deploy-profile-${Date.now()}`,
+      name: `${activeProfile.name} (Cópia)`,
+      steps: activeProfile.steps.map((s) => ({ ...s, id: `deploy-step-${Date.now()}-${Math.random().toString(36).substring(2, 7)}` }))
+    };
+    await persistProfiles([...profiles, duplicated], duplicated.id);
+  };
+
+  const handleRunActiveProfile = async () => {
+    if (isDeploying || isDiagRunning || !activeProfile) return;
     setIsDeploying(true);
     setTerminalLogs([]);
 
     try {
-      const settings = await window.electronAPI.getSettings();
-      const request: KarafDeployRequest = {
-        karafClientPath: `${settings.karafPath}\\bin\\client.bat`,
-        user: karafUser,
-        pass: karafPass,
-        port: karafPort,
-        repoUrl: repoCommand,
-        featureInstall: installCommand
-      };
-
-      if (runMavenBeforeDeploy && selectedProject) {
-        await window.electronAPI.buildAndDeployKaraf(request, selectedProject, skipTests);
-      } else {
-        await window.electronAPI.deployKaraf(request);
-      }
+      await window.electronAPI.runDeployProfile(activeProfile);
     } catch (err: any) {
       setTerminalLogs((prev) => [...prev, `[ERRO FATAL] ${err?.message || err}\r\n`]);
     } finally {
       setIsDeploying(false);
     }
   };
-
 
   const handleRunDiagnostic = async (cmd: string, label: string) => {
     if (isDeploying || isDiagRunning) return;
@@ -136,30 +145,10 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
     }
   };
 
-  const handleRunOnlyMavenBuild = async () => {
-    if (!selectedProject) {
-      alert('Selecione um projeto antes de iniciar a compilação Maven.');
-      return;
-    }
-    setIsBuildingMaven(true);
-    setTerminalLogs((prev) => [...prev, `\r\n--- Disparando Compilação Maven Manual (mvn clean install) ---\r\n`]);
-    try {
-      await window.electronAPI.runMavenBuild(selectedProject, skipTests);
-    } catch (err: any) {
-      setTerminalLogs((prev) => [...prev, `[ERRO MAVEN] ${err?.message || err}\r\n`]);
-    } finally {
-      setIsBuildingMaven(false);
-    }
-  };
-
   const fetchBundles = async () => {
     setIsLoadingBundles(true);
     try {
-      const data = await window.electronAPI.listKarafBundles({
-        user: karafUser,
-        pass: karafPass,
-        port: karafPort
-      });
+      const data = await window.electronAPI.listKarafBundles();
       setBundles(data || []);
     } catch (err: any) {
       console.error('Erro ao buscar bundles do Karaf:', err);
@@ -176,11 +165,7 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
   const handleBundleAction = async (action: 'start' | 'stop' | 'restart' | 'uninstall', bundleId: string) => {
     setBundleActionLoading((prev) => ({ ...prev, [bundleId]: action }));
     try {
-      await window.electronAPI.manageKarafBundle(action, bundleId, {
-        user: karafUser,
-        pass: karafPass,
-        port: karafPort
-      });
+      await window.electronAPI.manageKarafBundle(action, bundleId);
       await fetchBundles();
     } catch (err: any) {
       alert(`Falha ao executar ação no bundle: ${err?.message || err}`);
@@ -207,7 +192,7 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
 
   return (
     <div className="h-full flex flex-col p-5 pb-8 space-y-4 overflow-y-auto">
-      {/* Cabeçalho de Deploy Karaf */}
+      {/* Cabeçalho de Deploy */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
@@ -216,28 +201,79 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
             </div>
             <div>
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                Publicação de Features OSGi (Apache Karaf)
+                Perfis de Deploy
                 <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
-                  client.bat
+                  Karaf · Docker · Genérico
                 </span>
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Instalação, atualização e diagnósticos de pacotes Maven no runtime Karaf local.
+                {activeProfile?.description || 'Monte etapas sequenciais de build e publicação para qualquer alvo.'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handleRunOnlyMavenBuild}
-              disabled={isDeploying || isBuildingMaven || !selectedProject}
-              className="px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground disabled:opacity-50 shadow-xs"
-              title="Executar apenas compilação Maven (mvn clean install) no projeto selecionado"
+          <div className="flex items-center gap-2">
+            <select
+              value={activeProfileId}
+              onChange={(e) => handleSelectProfile(e.target.value)}
+              disabled={isDeploying}
+              className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary transition-colors font-mono max-w-[220px]"
             >
-              <Hammer className={`w-3.5 h-3.5 text-amber-500 ${isBuildingMaven ? 'animate-spin' : ''}`} />
-              <span>{isBuildingMaven ? 'Compilando...' : 'Compilar Maven'}</span>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={() => {
+                setEditingProfile(activeProfile);
+                setIsProfileModalOpen(true);
+              }}
+              disabled={!activeProfile}
+              className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors disabled:opacity-40"
+              title="Editar Perfil"
+            >
+              <Pencil className="w-3.5 h-3.5" />
             </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors flex items-center gap-1"
+                title="Mais opções"
+              >
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isProfileMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)} />
+                  <div className="absolute right-0 mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden">
+                    <button
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        setEditingProfile(null);
+                        setIsProfileModalOpen(true);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Novo Perfil
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        handleDuplicateProfile();
+                      }}
+                      disabled={!activeProfile}
+                      className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2 disabled:opacity-40"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Duplicar Perfil
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
 
             <button
               type="button"
@@ -250,33 +286,24 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
             </button>
 
             <button
-              onClick={handleRunDeploy}
-              disabled={isDeploying || !repoCommand || !installCommand}
-              className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg ${
+              onClick={handleRunActiveProfile}
+              disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
+              className={`px-6 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg ${
                 isDeploying
                   ? 'bg-primary/40 text-muted-foreground cursor-not-allowed border border-primary/30'
                   : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.02] border border-primary/40'
               }`}
             >
               <Play className={`w-4 h-4 fill-current ${isDeploying ? 'animate-pulse' : ''}`} />
-              <span>
-                {isDeploying
-                  ? runMavenBeforeDeploy
-                    ? 'Compilando & Publicando...'
-                    : 'Publicando Feature...'
-                  : runMavenBeforeDeploy
-                  ? 'Compilar & Publicar Feature'
-                  : 'Executar Publicação'}
-              </span>
+              <span>{isDeploying ? 'Executando Perfil...' : 'Executar Perfil'}</span>
             </button>
           </div>
-
         </div>
       </div>
 
       {/* Grid Principal */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[480px]">
-        {/* Coluna Esquerda: Configuração e Coordenadas Maven */}
+        {/* Coluna Esquerda: Etapas do Perfil & Diagnósticos */}
         <div className="lg:col-span-5 flex flex-col space-y-3">
           {karafValid === false && (
             <div className="bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
@@ -284,7 +311,7 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
               <div className="flex-1">
                 <span className="font-bold block">Executável client.bat não localizado</span>
                 <span className="text-[11px] text-muted-foreground block mt-0.5">
-                  Não foi possível encontrar <code className="font-mono text-foreground">{karafPath}\bin\client.bat</code>.
+                  Não foi possível encontrar <code className="font-mono text-foreground">{karafPath}\bin\client.bat</code>. Isso só afeta etapas do tipo Karaf.
                 </span>
                 {onNavigateToSettings && (
                   <button
@@ -300,165 +327,56 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
             </div>
           )}
 
-          {/* Seletor do Projeto */}
-          <div className="cockpit-panel rounded-2xl p-4 space-y-3.5 border border-border">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5 text-amber-500" />
-                  Projeto Selecionado para Publicação:
-                </label>
-                <span className="text-[10px] text-primary font-mono flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Detecção Automática (pom.xml)
-                </span>
-              </div>
-
-              <select
-                value={selectedProject}
-                onChange={(e) => handleSelectProject(e.target.value)}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary transition-colors font-mono"
+          {/* Etapas do Perfil Ativo */}
+          <div className="cockpit-panel rounded-2xl p-4 space-y-2.5 border border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] font-bold uppercase tracking-wider text-foreground">
+                Etapas ({activeProfile?.steps?.length || 0})
+              </span>
+              <button
+                onClick={() => {
+                  setEditingProfile(activeProfile);
+                  setIsProfileModalOpen(true);
+                }}
+                disabled={!activeProfile}
+                className="text-[11px] text-primary hover:underline flex items-center gap-1 disabled:opacity-40"
               >
-                <option value="">-- Selecione o projeto para carregar comandos --</option>
-                {projects.map((p) => (
-                  <option key={p.path} value={p.path}>
-                    {p.name} {p.pomInfo?.version ? `[${p.pomInfo.version}]` : ''}
-                  </option>
-                ))}
-              </select>
+                <Pencil className="w-3 h-3" /> Editar Etapas
+              </button>
             </div>
 
-            {/* Coordenadas Maven Detectadas */}
-            {selectedProjObj?.pomInfo && (
-              <div className="bg-muted/40 border border-border/70 rounded-xl p-3 space-y-2">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  Coordenadas Maven Identificadas:
-                </div>
-                <div className="flex flex-wrap gap-1.5 text-[11px] font-mono">
-                  <button
-                    onClick={() => copyToClipboard(selectedProjObj.pomInfo!.groupId, 'group')}
-                    className="px-2 py-0.5 rounded bg-card hover:bg-muted text-foreground border border-border flex items-center gap-1 transition-colors"
-                    title="Copiar GroupID"
+            {!activeProfile || activeProfile.steps.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-4 text-center">
+                Nenhuma etapa configurada. Clique em "Editar Etapas" para montar a sequência de deploy.
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                {activeProfile.steps.map((step, idx) => (
+                  <div
+                    key={step.id}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs ${
+                      step.enabled === false
+                        ? 'border-border/40 bg-muted/20 opacity-50'
+                        : 'border-border/70 bg-card'
+                    }`}
                   >
-                    <span className="text-muted-foreground">g:</span>
-                    <span className="text-primary truncate max-w-[140px]">{selectedProjObj.pomInfo.groupId}</span>
-                    {copiedPill === 'group' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
-                  </button>
-
-                  <button
-                    onClick={() => copyToClipboard(selectedProjObj.pomInfo!.version, 'ver')}
-                    className="px-2 py-0.5 rounded bg-card hover:bg-muted text-foreground border border-border flex items-center gap-1 transition-colors"
-                    title="Copiar Versão"
-                  >
-                    <span className="text-muted-foreground">v:</span>
-                    <span className="text-amber-500 font-bold">{selectedProjObj.pomInfo.version}</span>
-                    {copiedPill === 'ver' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
-                  </button>
-                </div>
+                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
+                      {idx + 1}
+                    </span>
+                    <div className="truncate flex-1">
+                      <p className="font-semibold text-foreground truncate">{step.name}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">{step.type}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-
-            {/* Opções de Compilação Maven pre-deploy */}
-            <div className="p-3 bg-card/60 border border-border/80 rounded-xl space-y-2">
-              <label className="flex items-center space-x-2 text-xs font-semibold text-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={runMavenBeforeDeploy}
-                  onChange={(e) => setRunMavenBeforeDeploy(e.target.checked)}
-                  className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                />
-                <span className="flex items-center gap-1.5 font-bold">
-                  <Hammer className="w-3.5 h-3.5 text-primary" />
-                  Executar Maven Build (<code className="font-mono text-primary">mvn clean install</code>) antes de instalar
-                </span>
-              </label>
-
-              {runMavenBeforeDeploy && (
-                <div className="pl-6 pt-1 flex items-center space-x-4 text-[11px] text-muted-foreground">
-                  <label className="flex items-center space-x-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={skipTests}
-                      onChange={(e) => setSkipTests(e.target.checked)}
-                      className="rounded border-border text-amber-500 focus:ring-amber-500 h-3.5 w-3.5"
-                    />
-                    <span>Pular testes unitários (<code className="font-mono text-amber-500">-DskipTests</code>)</span>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* Credenciais & Porta Karaf */}
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Usuário Karaf
-                </label>
-                <input
-                  type="text"
-                  value={karafUser}
-                  onChange={(e) => setKarafUser(e.target.value)}
-                  className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Senha Karaf
-                </label>
-                <input
-                  type="password"
-                  value={karafPass}
-                  onChange={(e) => setKarafPass(e.target.value)}
-                  className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                  Porta SSH (client.bat)
-                </label>
-                <input
-                  type="number"
-                  value={karafPort}
-                  onChange={(e) => setKarafPort(parseInt(e.target.value) || 0)}
-                  className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
-                  placeholder="8101"
-                />
-              </div>
-            </div>
-
-            {/* Comando 1: feature:repo-add */}
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
-                Etapa 1: Registrar Repositório Maven (<code className="font-mono text-primary">feature:repo-add</code>)
-              </label>
-              <textarea
-                value={repoCommand}
-                onChange={(e) => setRepoCommand(e.target.value)}
-                rows={2}
-                className="w-full bg-card border border-border rounded-xl p-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary resize-none leading-relaxed"
-                placeholder='feature:repo-add mvn:com.empresa.service/meu-servico/0.0.1-SNAPSHOT/xml/features'
-              />
-            </div>
-
-            {/* Comando 2: feature:install */}
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
-                Etapa 2: Instalar / Atualizar Feature (<code className="font-mono text-amber-500">feature:install -r -u</code>)
-              </label>
-              <textarea
-                value={installCommand}
-                onChange={(e) => setInstallCommand(e.target.value)}
-                rows={2}
-                className="w-full bg-card border border-border rounded-xl p-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary resize-none leading-relaxed"
-                placeholder='feature:install -r -u meu-servico/0.0.1-SNAPSHOT'
-              />
-            </div>
           </div>
 
           {/* Ferramentas de Diagnóstico Rápido do Karaf */}
           <div className="cockpit-panel rounded-2xl p-4 space-y-2.5 shadow-xl border border-border">
             <div className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos OSGi (client.bat)
+              <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos Karaf OSGi (client.bat)
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -513,16 +431,28 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
           </div>
         </div>
 
-        {/* Coluna Direita: Terminal com Streaming de Saída do client.bat */}
+        {/* Coluna Direita: Terminal com Streaming de Saída */}
         <div className="lg:col-span-7 min-h-[450px] lg:min-h-full flex flex-col">
           <TerminalViewer
             logs={terminalLogs}
             onClear={() => setTerminalLogs([])}
-            title="Console OSGi Karaf (client.bat)"
+            title="Console de Deploy"
             isRunning={isDeploying || isDiagRunning !== null}
           />
         </div>
       </div>
+
+      <DeployProfileEditorModal
+        isOpen={isProfileModalOpen}
+        onClose={() => {
+          setIsProfileModalOpen(false);
+          setEditingProfile(null);
+        }}
+        profile={editingProfile}
+        projects={projects}
+        onSave={handleSaveProfile}
+        onDelete={handleDeleteProfile}
+      />
 
       {/* Modal Gerenciador de Bundles OSGi */}
       {isBundlesModalOpen && (

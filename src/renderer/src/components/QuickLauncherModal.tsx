@@ -80,14 +80,14 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         }
       },
       {
-        id: 'act-karaf',
+        id: 'act-deploy',
         category: 'action',
-        title: 'Deploy OSGi Karaf',
-        subtitle: 'Publicar e atualizar features Maven com client.bat',
-        badge: 'Alt+2',
+        title: 'Deploy',
+        subtitle: 'Perfis de deploy sequenciais — Karaf, Docker ou comando genérico',
+        badge: 'Alt+4',
         icon: Layers,
         onSelect: () => {
-          onNavigate('karaf');
+          onNavigate('deploy');
           onClose();
         }
       },

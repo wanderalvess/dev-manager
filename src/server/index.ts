@@ -16,7 +16,8 @@ import { DocsIndexService } from '../main/services/DocsIndexService';
 import { DatabaseService } from '../main/services/DatabaseService';
 import { DockerService } from '../main/services/DockerService';
 import { NetworkService } from '../main/services/NetworkService';
-import { EnvironmentLog, KarafDeployRequest, AppSettings, AutomationProfile, AutomationStep, DocsIndexProgress } from '../shared/types';
+import { DeployService } from '../main/services/DeployService';
+import { EnvironmentLog, KarafDeployRequest, AppSettings, AutomationProfile, AutomationStep, DocsIndexProgress, DeployProfile } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -77,6 +78,7 @@ const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const databaseService = new DatabaseService();
 const dockerService = new DockerService();
 const networkService = new NetworkService();
+const deployService = new DeployService(configService, karafService, dockerService, windowsService);
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
 const wsClients = new Set<WebSocket>();
@@ -333,6 +335,14 @@ app.post('/api/karaf/run-maven-build', async (req, res) => {
   }
   const result = await karafService.runMavenBuild(projectPath, skipTests !== false, (chunk) => {
     broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+app.post('/api/deploy/run-profile', async (req, res) => {
+  const profile: DeployProfile = req.body;
+  const result = await deployService.executeProfile(profile, (chunk) => {
+    broadcastWs('deploy:log-chunk', chunk);
   });
   res.json(result);
 });
