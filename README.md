@@ -108,8 +108,8 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 ### 6. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
   * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code — pode chamar diretamente, sem passar pela interface gráfica.
-* **41 Tools Organizadas por Domínio:**
-  * `system_*`, `env_*`, `profile_*`, `karaf_*`, `git_*`, `routines_*` e `settings_*` — desde consultas de status até o pipeline completo de deploy Karaf e execução de perfis de automação.
+* **73 Tools Organizadas por Domínio:**
+  * `system_*`, `env_*`, `profile_*`, `karaf_*` (inclui gerência de bundles: listar, instalar, reinstalar, atualizar versão, desinstalar e checar dependências), `docker_*`, `git_*`, `routines_*`, `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL), `deploy_*` e `network_*` — desde consultas de status até o pipeline completo de deploy Karaf e execução de perfis de automação.
 * **Terceiro Consumidor da Mesma Camada de Serviços:**
   * Reaproveita exatamente as mesmas classes de serviço e validações de segurança (`isValidIdentifier`, `isSafeLocalPath`, `isSafeKarafCommand`) já usadas pelo IPC do Electron e pela API REST (`src/server`) — nenhuma lógica de negócio duplicada.
 * **Protocolo Aberto — Funciona em Qualquer Cliente MCP:**

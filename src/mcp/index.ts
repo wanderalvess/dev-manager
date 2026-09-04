@@ -325,6 +325,20 @@ server.registerTool(
 );
 
 server.registerTool(
+  'env_launch_app',
+  {
+    title: 'Abrir aplicativo externo',
+    description:
+      'Abre qualquer aplicativo local pelo caminho completo do executável (ex: Postman, terminal), sem restrição de pasta.',
+    inputSchema: { fullPath: z.string() }
+  },
+  async ({ fullPath }) => {
+    if (!isSafeLocalPath(fullPath)) return fail('Caminho inválido ou remoto não permitido.');
+    return ok({ success: windowsService.launchExternalApp(fullPath) });
+  }
+);
+
+server.registerTool(
   'env_reset_environment',
   {
     title: 'Resetar ambiente dev',
@@ -555,6 +569,143 @@ server.registerTool(
   }
 );
 
+// --- 3b. Karaf - Gerência de Bundles ---
+const KarafCredentialsSchema = z.object({
+  user: z.string().optional(),
+  pass: z.string().optional(),
+  port: z.number().int().optional()
+});
+
+const BundleActionSchema = z.enum(['start', 'stop', 'restart', 'uninstall', 'refresh']);
+
+server.registerTool(
+  'karaf_list_bundles',
+  {
+    title: 'Listar bundles',
+    description: 'Executa "bundle:list -s" e retorna a lista estruturada de bundles OSGi instalados.',
+    inputSchema: { credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ credentials }) => ok(await karafService.listBundlesParsed(credentials))
+);
+
+server.registerTool(
+  'karaf_get_bundle_details',
+  {
+    title: 'Detalhes do bundle',
+    description: 'Inspeciona cabeçalhos do manifesto e fiações OSGi de um bundle específico pelo ID.',
+    inputSchema: { bundleId: z.string(), credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ bundleId, credentials }) => {
+    const details = await karafService.getBundleDetails(bundleId, credentials);
+    if (!details) return fail('Bundle não encontrado ou ID inválido.');
+    return ok(details);
+  }
+);
+
+server.registerTool(
+  'karaf_check_bundle_dependencies',
+  {
+    title: 'Checar dependentes do bundle',
+    description: 'Verifica bundles dependentes antes de desinstalar/alterar um bundle existente, com nível de risco.',
+    inputSchema: { bundleId: z.string(), credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ bundleId, credentials }) => ok(await karafService.checkBundleDependencies(bundleId, credentials))
+);
+
+server.registerTool(
+  'karaf_check_install_dependencies',
+  {
+    title: 'Checar colisão antes de instalar',
+    description: 'Verifica se já existe um bundle com o mesmo nome/localização instalado antes de instalar/atualizar.',
+    inputSchema: {
+      location: z.string().optional(),
+      symbolicName: z.string().optional(),
+      version: z.string().optional(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ location, symbolicName, version, credentials }) =>
+    ok(await karafService.checkInstallDependencies({ location, symbolicName, version }, credentials))
+);
+
+server.registerTool(
+  'karaf_manage_bundle',
+  {
+    title: 'Gerenciar ciclo de vida do bundle',
+    description: 'Executa start, stop, restart, uninstall ou refresh em um bundle pelo ID.',
+    inputSchema: { action: BundleActionSchema, bundleId: z.string(), credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ action, bundleId, credentials }) => ok(await karafService.manageBundle(action, bundleId, credentials))
+);
+
+server.registerTool(
+  'karaf_install_bundle',
+  {
+    title: 'Instalar novo bundle',
+    description: 'Instala um bundle no Karaf a partir de coordenada Maven (mvn:...) ou caminho de arquivo local.',
+    inputSchema: {
+      location: z.string(),
+      startImmediately: z.boolean().optional(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ location, startImmediately, credentials }) => {
+    const { events, push } = collect();
+    const result = await karafService.installBundle({ location, startImmediately, credentials }, push('chunk'));
+    return ok({ result, events });
+  }
+);
+
+server.registerTool(
+  'karaf_uninstall_bundle',
+  {
+    title: 'Desinstalar bundle',
+    description: 'Desinstala um bundle existente do runtime OSGi e atualiza fiações (bundle:refresh).',
+    inputSchema: { bundleId: z.string(), credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ bundleId, credentials }) => ok(await karafService.uninstallBundle(bundleId, credentials))
+);
+
+server.registerTool(
+  'karaf_reinstall_bundle',
+  {
+    title: 'Reinstalar/atualizar bundle',
+    description:
+      'Atualiza um bundle já instalado (bundle:update + refresh + start). Opcionalmente roda "mvn clean install" antes (rebuild+projectPath). Bloqueia até concluir.',
+    inputSchema: {
+      bundleId: z.string(),
+      location: z.string().optional(),
+      projectPath: z.string().optional(),
+      rebuild: z.boolean().optional(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ bundleId, location, projectPath, rebuild, credentials }) => {
+    if (projectPath && !isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
+    const { events, push } = collect();
+    const result = await karafService.reinstallBundle(
+      { bundleId, location, projectPath, rebuild, credentials },
+      push('chunk')
+    );
+    return ok({ result, events });
+  }
+);
+
+server.registerTool(
+  'karaf_update_bundle_version',
+  {
+    title: 'Atualizar versão do bundle',
+    description: 'Atualiza um bundle para uma nova versão/localização (bundle:update + refresh + start). Bloqueia até concluir.',
+    inputSchema: {
+      bundleId: z.string(),
+      newVersionOrLocation: z.string(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ bundleId, newVersionOrLocation, credentials }) =>
+    ok(await karafService.updateBundleVersion({ bundleId, newVersionOrLocation }, credentials))
+);
+
 // --- 3.5. Docker ---
 server.registerTool(
   'docker_status',
@@ -694,6 +845,19 @@ server.registerTool(
   async ({ projectPath, command }) => {
     if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
     return ok(await gitAzureService.executeGitCommand(projectPath, command));
+  }
+);
+
+server.registerTool(
+  'git_checkout_branch',
+  {
+    title: 'Trocar/criar branch',
+    description: 'Faz checkout de uma branch existente ou cria uma nova (createNew) no repositório informado.',
+    inputSchema: { projectPath: z.string(), branchName: z.string(), createNew: z.boolean().optional() }
+  },
+  async ({ projectPath, branchName, createNew }) => {
+    if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
+    return ok(await gitAzureService.checkoutBranch(projectPath, branchName, createNew ?? false));
   }
 );
 
