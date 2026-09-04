@@ -10,8 +10,11 @@ import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
 import { DocsIndexService } from '../main/services/DocsIndexService';
 import { DockerService } from '../main/services/DockerService';
-import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand } from '../main/utils/security';
-import type { AppSettings } from '../shared/types';
+import { DatabaseService } from '../main/services/DatabaseService';
+import { NetworkService } from '../main/services/NetworkService';
+import { DeployService } from '../main/services/DeployService';
+import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
+import type { AppSettings, DatabaseConnectionConfig, DeployProfile } from '../shared/types';
 
 // --- Composição dos serviços (mesma ordem usada em src/server/index.ts e src/main/index.ts) ---
 const configService = new ConfigService();
@@ -21,6 +24,9 @@ const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const dockerService = new DockerService();
+const databaseService = new DatabaseService();
+const networkService = new NetworkService();
+const deployService = new DeployService(configService, karafService, dockerService, windowsService);
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -115,6 +121,72 @@ const KarafDeployRequestSchema = z.object({
 
 const SETTINGS_PATH_KEYS = ['appPath', 'karafPath', 'intellijPath', 'projectsPath'] as const;
 
+const DatabaseTypeSchema = z.enum(['oracle', 'mysql', 'postgres']);
+
+const DatabaseConnectionConfigSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().optional(),
+  type: DatabaseTypeSchema,
+  host: z.string(),
+  port: z.number().int(),
+  database: z.string(),
+  user: z.string(),
+  password: z.string().optional(),
+  oracleMode: z.enum(['serviceName', 'sid']).optional(),
+  ssl: z.boolean().optional(),
+  isDefault: z.boolean().optional()
+});
+
+const DeployStepTypeSchema = z.enum([
+  'maven-build',
+  'karaf-command',
+  'docker-build',
+  'docker-push',
+  'docker-restart',
+  'command'
+]);
+
+const DeployStepSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: DeployStepTypeSchema,
+  enabled: z.boolean(),
+  projectPath: z.string().optional(),
+  skipTests: z.boolean().optional(),
+  command: z.string().optional(),
+  cwd: z.string().optional(),
+  dockerContextPath: z.string().optional(),
+  dockerFile: z.string().optional(),
+  dockerImageTag: z.string().optional(),
+  dockerContainer: z.string().optional()
+});
+
+const DeployProfileSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  steps: z.array(DeployStepSchema)
+});
+
+function resolveDbConfig(connectionId?: string, customConfig?: any): DatabaseConnectionConfig | null {
+  if (customConfig && customConfig.type && customConfig.host && customConfig.user) {
+    return {
+      id: customConfig.id || 'custom',
+      name: customConfig.name || 'Conexão Informada',
+      ...customConfig
+    };
+  }
+  const settings = configService.getSettings();
+  const conns = settings.databaseConnections || [];
+  if (connectionId) {
+    const found = conns.find(
+      (c) => c.id === connectionId || c.name.toLowerCase() === connectionId.toLowerCase()
+    );
+    if (found) return found;
+  }
+  return conns.find((c) => c.isDefault) || conns[0] || null;
+}
+
 const server = new McpServer({ name: 'dev-manager', version: '1.0.0' });
 
 // --- 1. Sistema ---
@@ -123,8 +195,7 @@ server.registerTool(
   { title: 'Info do sistema', description: 'Informações de SO, runtime Node e status de administrador.' },
   async () => {
     const isAdmin = await windowsService.checkAdminPrivileges();
-    const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
-    const configPath = path.join(appData, 'dev-manager', 'config.json');
+    const configPath = configService.getConfigFilePath();
     return ok({
       appName: 'Dev Manager (MCP)',
       appVersion: '1.0.0',
@@ -726,6 +797,193 @@ server.registerTool(
     }
     return ok(configService.saveSettings(settings as Partial<AppSettings>));
   }
+);
+
+// --- 8. Banco de Dados ---
+server.registerTool(
+  'db_list_connections',
+  {
+    title: 'Listar conexões de banco',
+    description: 'Lista as conexões de banco de dados configuradas no Dev Manager (com senhas ocultadas).'
+  },
+  async () => {
+    const settings = configService.getSettings();
+    const connections = (settings.databaseConnections || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      host: c.host,
+      port: c.port,
+      database: c.database,
+      user: c.user,
+      oracleMode: c.oracleMode,
+      ssl: c.ssl,
+      isDefault: c.isDefault
+    }));
+    return ok({ connections });
+  }
+);
+
+server.registerTool(
+  'db_test_connection',
+  {
+    title: 'Testar conexão de banco',
+    description: 'Testa conectividade com Oracle, PostgreSQL ou MySQL usando ID salvo ou configuração direta.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional()
+    }
+  },
+  async ({ connectionId, config }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const result = await databaseService.testConnection(targetConfig);
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_execute_query',
+  {
+    title: 'Executar SQL no banco',
+    description: 'Executa comando SQL (SELECT, INSERT, UPDATE, DELETE) e retorna linhas, colunas e tempo de resposta.',
+    inputSchema: {
+      sql: z.string(),
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      maxRows: z.number().int().positive().optional()
+    }
+  },
+  async ({ sql, connectionId, config, maxRows }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const result = await databaseService.executeQuery(targetConfig, sql, maxRows ?? 200);
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_explain_plan',
+  {
+    title: 'Explain Plan no banco',
+    description: 'Obtém o plano de execução SQL no Oracle (DBMS_XPLAN), PostgreSQL ou MySQL.',
+    inputSchema: {
+      sql: z.string(),
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional()
+    }
+  },
+  async ({ sql, connectionId, config }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const result = await databaseService.explainPlan(targetConfig, sql);
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_list_tables',
+  {
+    title: 'Listar tabelas do banco',
+    description: 'Lista as tabelas disponíveis no schema/banco de dados conectado.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional()
+    }
+  },
+  async ({ connectionId, config }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const tables = await databaseService.listTables(targetConfig);
+    return ok({ tables, count: tables.length });
+  }
+);
+
+// --- 9. Perfis de Deploy ---
+server.registerTool(
+  'deploy_list_profiles',
+  {
+    title: 'Listar perfis de deploy',
+    description: 'Retorna todos os perfis de deploy configurados (Maven, Karaf, Docker).'
+  },
+  async () => {
+    const settings = configService.getSettings();
+    return ok({
+      activeDeployProfileId: settings.activeDeployProfileId,
+      deployProfiles: settings.deployProfiles || []
+    });
+  }
+);
+
+server.registerTool(
+  'deploy_run_profile',
+  {
+    title: 'Executar perfil de deploy',
+    description: 'Executa uma esteira de deploy configurada (Maven build, comandos Karaf, build/restart Docker).',
+    inputSchema: {
+      profileId: z.string().optional(),
+      profile: DeployProfileSchema.optional()
+    }
+  },
+  async ({ profileId, profile }) => {
+    let targetProfile: DeployProfile | undefined = profile;
+    if (!targetProfile) {
+      const settings = configService.getSettings();
+      const profiles = settings.deployProfiles || [];
+      targetProfile = profileId
+        ? profiles.find((p) => p.id === profileId || p.name.toLowerCase() === profileId.toLowerCase())
+        : profiles.find((p) => p.id === settings.activeDeployProfileId) || profiles[0];
+    }
+    if (!targetProfile) {
+      return fail('Nenhum perfil de deploy especificado ou encontrado.');
+    }
+    const { events, push } = collect();
+    const result = await deployService.executeProfile(targetProfile, push('chunk'));
+    return ok({ result, events });
+  }
+);
+
+// --- 10. Rede e Métricas ---
+server.registerTool(
+  'network_get_ips',
+  {
+    title: 'Obter IPs de rede e WSL',
+    description: 'Retorna a lista de interfaces de rede físicas/virtuais, o IP principal da máquina e o IP da VM WSL2.'
+  },
+  async () => ok(await networkService.getNetworkIps())
+);
+
+server.registerTool(
+  'network_check_health',
+  {
+    title: 'Checar saúde de URL HTTP',
+    description: 'Faz uma requisição HTTP para testar disponibilidade, status HTTP e tempo de resposta.',
+    inputSchema: {
+      url: z.string(),
+      timeoutMs: z.number().int().positive().optional()
+    }
+  },
+  async ({ url, timeoutMs }) => {
+    if (!isSafeUrl(url)) return fail('URL inválida ou protocolo inseguro (apenas http/https permitidos).');
+    return ok(await networkService.checkHttpHealth(url, timeoutMs));
+  }
+);
+
+server.registerTool(
+  'system_get_metrics',
+  {
+    title: 'Obter métricas do sistema',
+    description: 'Retorna uso de CPU (%), consumo de memória RAM (MB e %) e tempo de atividade do sistema.'
+  },
+  async () => ok(await networkService.getSystemMetrics())
 );
 
 // --- Inicialização ---

@@ -103,7 +103,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
   const webPort = getWebPort(settings);
   const sshPort = getKarafSshPort(settings);
   const debugPort = settings?.karafDebugPort || 5005;
-  const winthorUrl = getWebUrl(settings, '');
+  const portalWebUrl = getWebUrl(settings, '');
   const consoleUrl = getWebUrl(settings, '/system/console');
 
   const faqList: FaqItem[] = [
@@ -559,14 +559,14 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
             {/* Links Rápidos Oficiais */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <button
-                onClick={() => handleOpenLink(winthorUrl)}
+                onClick={() => handleOpenLink(portalWebUrl)}
                 className="p-3.5 rounded-xl bg-card/60 border border-border hover:border-primary/50 text-left transition-all flex items-center justify-between group shadow-sm"
               >
                 <div>
                   <span className="text-xs font-bold text-foreground block group-hover:text-primary transition-colors">
                     Portal Web Local
                   </span>
-                  <span className="text-[11px] text-muted-foreground font-mono truncate max-w-[150px] inline-block" title={winthorUrl}>{winthorUrl.replace('http://', '')}</span>
+                  <span className="text-[11px] text-muted-foreground font-mono truncate max-w-[150px] inline-block" title={portalWebUrl}>{portalWebUrl.replace('http://', '')}</span>
                 </div>
                 <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
               </button>

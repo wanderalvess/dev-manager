@@ -268,7 +268,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `winthor-dev-settings-${sanitizePasswords ? 'seguro' : 'completo'}.json`;
+      a.download = `dev-manager-settings-${sanitizePasswords ? 'seguro' : 'completo'}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -691,7 +691,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                         validateSinglePath('karafPath', val);
                       }}
                       className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
-                      placeholder="Ex: C:\karaf ou C:\pcsist\produtos\winthor"
+                      placeholder="Ex: C:\servers\runtime ou C:\app\server"
                     />
                     <button
                       type="button"
@@ -724,7 +724,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                         validateSinglePath('jdkPath', val);
                       }}
                       className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
-                      placeholder="Ex: C:\pcsist\produtos\winthor-jdk ou C:\Program Files\Java\jdk1.8..."
+                      placeholder="Ex: C:\Program Files\Java\jdk-17 ou C:\tools\jdk..."
                     />
                     <button
                       type="button"
@@ -737,7 +737,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Utilizado pelo Karaf, WinThor, compilador Maven e scripts. Se vazio, detecta o JAVA_HOME do SO ou C:\pcsist\produtos\winthor-jdk.
+                    Utilizado pelo runtime, compilador Maven e scripts. Se vazio, detecta o JAVA_HOME padrão do sistema operacional.
                   </p>
                 </div>
 
@@ -758,7 +758,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                         setSettings({ ...settings, karafScript: val });
                       }}
                       className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
-                      placeholder="Ex: winthor.bat, karaf.bat ou caminho completo"
+                      placeholder="Ex: start.bat, run.bat ou caminho completo"
                     />
                     <button
                       type="button"
@@ -771,7 +771,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Script usado para subir o servidor Karaf na automação. Se vazio, prioriza automaticamente <code className="font-mono text-primary">winthor.bat</code> e depois <code className="font-mono text-primary">karaf.bat</code>.
+                    Script usado para subir o servidor na automação. Se vazio, prioriza os scripts padrão detectados na raiz.
                   </p>
                 </div>
 

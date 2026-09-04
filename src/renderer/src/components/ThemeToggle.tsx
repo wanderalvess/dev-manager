@@ -62,7 +62,7 @@ export const ThemeToggle: React.FC = () => {
       {/* Botão Acionador */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg border transition-all duration-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+        className={`h-9 flex items-center space-x-2 px-2.5 rounded-lg border transition-all duration-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer ${
           isOpen
             ? 'bg-primary/15 border-primary/40 text-primary shadow-sm'
             : 'bg-card/70 hover:bg-card border-border/70 hover:border-border text-foreground'
@@ -94,7 +94,8 @@ export const ThemeToggle: React.FC = () => {
       {/* Painel Dropdown */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-72 origin-top-right rounded-xl bg-card border border-border/80 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl"
+          style={{ backgroundColor: 'hsl(var(--card))' }}
+          className="absolute right-0 mt-2 w-72 origin-top-right rounded-xl bg-card border border-border/80 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
           role="menu"
         >
           {/* Cabeçalho */}

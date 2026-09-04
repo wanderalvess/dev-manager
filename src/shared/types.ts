@@ -121,6 +121,7 @@ export interface KarafDeployRequest {
 export type DeployStepType =
   | 'maven-build'
   | 'karaf-command'
+  | 'karaf-bundle'
   | 'docker-build'
   | 'docker-push'
   | 'docker-restart'
@@ -137,6 +138,11 @@ export interface DeployStep {
   // karaf-command / command (genérico)
   command?: string;
   cwd?: string;
+  // karaf-bundle
+  bundleAction?: 'install' | 'reinstall' | 'uninstall' | 'update' | 'restart' | 'refresh' | 'start' | 'stop';
+  bundleId?: string;
+  bundleLocation?: string;
+  bundleStart?: boolean;
   // docker-build / docker-push
   dockerContextPath?: string;
   dockerFile?: string;
@@ -517,8 +523,8 @@ export function getWebUrl(
   monitoredPorts?: (MonitoredPortConfig | PortStatus)[] | null
 ): string {
   const port = getWebPort(settings, monitoredPorts);
-  const path = settings?.webPath ?? subPath;
-  const normalized = path ? (path.startsWith('/') ? path : `/${path}`) : '';
+  const targetPath = subPath ? subPath : (settings?.webPath || '');
+  const normalized = targetPath ? (targetPath.startsWith('/') ? targetPath : `/${targetPath}`) : '';
   return `http://localhost:${port}${normalized}`;
 }
 
@@ -637,6 +643,70 @@ export interface KarafBundleInfo {
   level?: string;
   name: string;
   version: string;
+  symbolicName?: string;
+  location?: string;
+  updateUrl?: string;
+}
+
+export interface KarafBundleDependent {
+  id: string;
+  name: string;
+  version?: string;
+  state?: string;
+  reason: string;
+}
+
+export interface KarafBundleDetails {
+  id: string;
+  name: string;
+  symbolicName?: string;
+  version: string;
+  state: string;
+  location?: string;
+  exportedPackages: string[];
+  importedPackages: string[];
+  requiredBundles: string[];
+  dependentBundles: KarafBundleDependent[];
+  unresolvedRequirements?: string[];
+  rawHeaders?: Record<string, string>;
+  diag?: string;
+}
+
+export interface BundleDependencyCheckResult {
+  bundleId?: string;
+  targetUrl?: string;
+  targetVersion?: string;
+  name?: string;
+  symbolicName?: string;
+  alreadyInstalled: boolean;
+  existingBundle?: KarafBundleInfo;
+  dependentBundles: KarafBundleDependent[];
+  exportedPackages: string[];
+  missingDependencies?: string[];
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  warningMessage?: string;
+  canProceed: boolean;
+}
+
+export interface InstallBundleRequest {
+  location: string;
+  version?: string;
+  startImmediately?: boolean;
+  credentials?: { user?: string; pass?: string; port?: number };
+}
+
+export interface ReinstallBundleRequest {
+  bundleId: string;
+  location?: string;
+  projectPath?: string;
+  rebuild?: boolean;
+  credentials?: { user?: string; pass?: string; port?: number };
+}
+
+export interface UpdateBundleVersionRequest {
+  bundleId: string;
+  newVersionOrLocation: string;
+  credentials?: { user?: string; pass?: string; port?: number };
 }
 
 export interface MavenBuildRequest {
@@ -654,6 +724,19 @@ export interface GitCommitInfo {
   author: string;
   date: string;
   message: string;
+}
+
+export interface GitFileStatus {
+  path: string;
+  status: 'modified' | 'added' | 'deleted' | 'untracked' | 'renamed' | 'copied';
+  staged: boolean;
+}
+
+export interface GitDiffResult {
+  success: boolean;
+  diff: string;
+  files: string[];
+  error?: string;
 }
 
 // ==========================================

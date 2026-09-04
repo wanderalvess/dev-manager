@@ -33,9 +33,25 @@ export class WindowsService {
   private configService: ConfigService;
   private karafService: KarafService;
 
+  // Cache de curta duração (2.5s) e deduplicação de chamadas em voo
+  private cachedPortsStatus: { data: PortStatus[]; timestamp: number } | null = null;
+  private inFlightPortsCheck: Promise<PortStatus[]> | null = null;
+
+  private cachedProcessesStatus: { data: ProcessStatus[]; timestamp: number } | null = null;
+  private inFlightProcessesCheck: Promise<ProcessStatus[]> | null = null;
+
+  private cachedServicesStatus: { data: ServiceStatus[]; timestamp: number } | null = null;
+  private inFlightServicesCheck: Promise<ServiceStatus[]> | null = null;
+
   constructor(configService: ConfigService, karafService: KarafService) {
     this.configService = configService;
     this.karafService = karafService;
+  }
+
+  public invalidateStatusCaches(): void {
+    this.cachedPortsStatus = null;
+    this.cachedProcessesStatus = null;
+    this.cachedServicesStatus = null;
   }
 
   /**
@@ -105,31 +121,105 @@ export class WindowsService {
   }
 
   public async getAllServicesStatus(customServices?: TrackedServiceConfig[]): Promise<ServiceStatus[]> {
-    const settings = this.configService.getSettings();
-    const serviceList = (customServices || settings.trackedServices || DEFAULT_TRACKED_SERVICES).filter(
-      (s) => s.enabled !== false
-    );
-    return Promise.all(
-      serviceList.map(async (srv) => ({
-        name: srv.name,
-        displayName: srv.displayName,
-        state: await this.getServiceStatus(srv.name)
-      }))
-    );
+    if (!customServices && this.cachedServicesStatus && Date.now() - this.cachedServicesStatus.timestamp < 2500) {
+      return this.cachedServicesStatus.data;
+    }
+    if (!customServices && this.inFlightServicesCheck) {
+      return this.inFlightServicesCheck;
+    }
+
+    const runCheck = async () => {
+      const settings = this.configService.getSettings();
+      const serviceList = (customServices || settings.trackedServices || DEFAULT_TRACKED_SERVICES).filter(
+        (s) => s.enabled !== false
+      );
+      const results = await Promise.all(
+        serviceList.map(async (srv) => ({
+          name: srv.name,
+          displayName: srv.displayName,
+          state: await this.getServiceStatus(srv.name)
+        }))
+      );
+      if (!customServices) {
+        this.cachedServicesStatus = { data: results, timestamp: Date.now() };
+      }
+      return results;
+    };
+
+    if (customServices) {
+      return runCheck();
+    }
+
+    this.inFlightServicesCheck = runCheck().finally(() => {
+      this.inFlightServicesCheck = null;
+    });
+    return this.inFlightServicesCheck;
   }
 
   public async getProcessesStatus(customProcesses?: TrackedProcessConfig[]): Promise<ProcessStatus[]> {
-    const settings = this.configService.getSettings();
-    const processList = (customProcesses || settings.trackedProcesses || DEFAULT_TRACKED_PROCESSES).filter(
-      (p) => p.enabled !== false
-    );
-    return Promise.all(
-      processList.map(async (proc) => ({
-        name: proc.name,
-        displayName: proc.displayName,
-        isRunning: await this.isProcessRunning(proc.name)
-      }))
-    );
+    if (!customProcesses && this.cachedProcessesStatus && Date.now() - this.cachedProcessesStatus.timestamp < 2500) {
+      return this.cachedProcessesStatus.data;
+    }
+    if (!customProcesses && this.inFlightProcessesCheck) {
+      return this.inFlightProcessesCheck;
+    }
+
+    const runCheck = async () => {
+      const settings = this.configService.getSettings();
+      const processList = (customProcesses || settings.trackedProcesses || DEFAULT_TRACKED_PROCESSES).filter(
+        (p) => p.enabled !== false
+      );
+
+      if (process.platform === 'win32') {
+        // Otimização: Uma única chamada ao tasklist.exe obtém todos os processos em execução
+        const runningImages = new Set<string>();
+        try {
+          const { stdout } = await execFileAsync('tasklist.exe', ['/FO', 'CSV', '/NH']);
+          const lines = stdout.split(/\r?\n/);
+          for (const line of lines) {
+            const match = line.match(/^"([^"]+)"/);
+            if (match) {
+              runningImages.add(match[1].toLowerCase());
+            }
+          }
+        } catch {
+          // fallback silencioso
+        }
+
+        const results = processList.map((proc) => ({
+          name: proc.name,
+          displayName: proc.displayName,
+          isRunning: runningImages.has(proc.name.toLowerCase())
+        }));
+
+        if (!customProcesses) {
+          this.cachedProcessesStatus = { data: results, timestamp: Date.now() };
+        }
+        return results;
+      }
+
+      const results = await Promise.all(
+        processList.map(async (proc) => ({
+          name: proc.name,
+          displayName: proc.displayName,
+          isRunning: await this.isProcessRunning(proc.name)
+        }))
+      );
+
+      if (!customProcesses) {
+        this.cachedProcessesStatus = { data: results, timestamp: Date.now() };
+      }
+      return results;
+    };
+
+    if (customProcesses) {
+      return runCheck();
+    }
+
+    this.inFlightProcessesCheck = runCheck().finally(() => {
+      this.inFlightProcessesCheck = null;
+    });
+    return this.inFlightProcessesCheck;
   }
 
   private async batchRun(names: string[], fn: (name: string) => Promise<boolean>): Promise<Record<string, boolean>> {
@@ -155,6 +245,7 @@ export class WindowsService {
   }
 
   public async stopService(serviceName: string): Promise<boolean> {
+    this.invalidateStatusCaches();
     if (process.platform !== 'win32') {
       return true;
     }
@@ -164,6 +255,7 @@ export class WindowsService {
     }
     try {
       await execFileAsync('net.exe', ['stop', serviceName, '/y']);
+      this.invalidateStatusCaches();
       return true;
     } catch (err) {
       console.warn(`Aviso ao parar serviço ${serviceName}:`, err);
@@ -172,6 +264,7 @@ export class WindowsService {
   }
 
   public async startService(serviceName: string): Promise<boolean> {
+    this.invalidateStatusCaches();
     if (process.platform !== 'win32') {
       return true;
     }
@@ -181,6 +274,7 @@ export class WindowsService {
     }
     try {
       await execFileAsync('net.exe', ['start', serviceName]);
+      this.invalidateStatusCaches();
       return true;
     } catch (err) {
       console.error(`Erro ao iniciar serviço ${serviceName}:`, err);
@@ -189,6 +283,7 @@ export class WindowsService {
   }
 
   public async killProcess(imageName: string): Promise<boolean> {
+    this.invalidateStatusCaches();
     if (!isValidIdentifier(imageName)) {
       console.warn(`[Segurança] Nome de processo inválido para finalização: ${imageName}`);
       return false;
@@ -200,6 +295,7 @@ export class WindowsService {
         const procName = imageName.replace(/\.exe$/i, '');
         await execFileAsync('pkill', ['-f', procName]);
       }
+      this.invalidateStatusCaches();
       return true;
     } catch (err) {
       console.error(`Erro ao finalizar processo ${imageName}:`, err);
@@ -256,7 +352,7 @@ export class WindowsService {
         const childEnv = this.karafService.getResolvedJavaEnv();
         if (process.platform === 'win32') {
           const scriptName = path.basename(exe);
-          spawn('cmd.exe', ['/c', 'start', '"WinThor Karaf Debug"', '/d', `"${karafBin}"`, 'cmd.exe', '/k', `"${scriptName}" debug`], {
+          spawn('cmd.exe', ['/c', 'start', '"Server Debug Console"', '/d', `"${karafBin}"`, 'cmd.exe', '/k', `"${scriptName}" debug`], {
             cwd: karafBin,
             detached: true,
             stdio: 'ignore',
@@ -275,57 +371,73 @@ export class WindowsService {
   }
 
   public async checkPorts(): Promise<PortStatus[]> {
-    const settings = this.configService.getSettings();
-    const monitoredPorts = (settings.monitoredPorts && settings.monitoredPorts.length > 0
-      ? settings.monitoredPorts
-      : DEFAULT_MONITORED_PORTS
-    ).filter((p) => p.enabled !== false);
-
-    if (process.platform !== 'win32') {
-      return Promise.all(
-        monitoredPorts.map(async (item) => {
-          const inUse = await this.checkPortSocket(item.port);
-          // PID real não é obtido via socket puro fora do Windows (sem netstat/PID aqui);
-          // deixa indefinido em vez de forjar um valor não-numérico como "Ativo".
-          return { port: item.port, label: item.label, inUse, pid: undefined };
-        })
-      );
+    if (this.cachedPortsStatus && Date.now() - this.cachedPortsStatus.timestamp < 2500) {
+      return this.cachedPortsStatus.data;
+    }
+    if (this.inFlightPortsCheck) {
+      return this.inFlightPortsCheck;
     }
 
-    const results: PortStatus[] = [];
-    let netstatOutput = '';
-    try {
-      const { stdout } = await execFileAsync('netstat.exe', ['-ano']);
-      netstatOutput = stdout;
-    } catch {
-      netstatOutput = '';
-    }
+    this.inFlightPortsCheck = (async () => {
+      try {
+        const settings = this.configService.getSettings();
+        const monitoredPorts = (settings.monitoredPorts && settings.monitoredPorts.length > 0
+          ? settings.monitoredPorts
+          : DEFAULT_MONITORED_PORTS
+        ).filter((p) => p.enabled !== false);
 
-    const lines = netstatOutput.split('\n');
+        if (process.platform !== 'win32') {
+          const res = await Promise.all(
+            monitoredPorts.map(async (item) => {
+              const inUse = await this.checkPortSocket(item.port);
+              return { port: item.port, label: item.label, inUse, pid: undefined };
+            })
+          );
+          this.cachedPortsStatus = { data: res, timestamp: Date.now() };
+          return res;
+        }
 
-    for (const item of monitoredPorts) {
-      let inUse = false;
-      let pid: string | undefined = undefined;
+        const results: PortStatus[] = [];
+        let netstatOutput = '';
+        try {
+          const { stdout } = await execFileAsync('netstat.exe', ['-ano']);
+          netstatOutput = stdout;
+        } catch {
+          netstatOutput = '';
+        }
 
-      const matchingLine = lines.find(
-        (l) => l.includes(`:${item.port} `) || l.includes(`:${item.port}\t`) || l.includes(`:${item.port}\r`)
-      );
+        const lines = netstatOutput.split('\n');
 
-      if (matchingLine && matchingLine.includes('LISTENING')) {
-        inUse = true;
-        const tokens = matchingLine.trim().split(/\s+/);
-        pid = tokens[tokens.length - 1];
+        for (const item of monitoredPorts) {
+          let inUse = false;
+          let pid: string | undefined = undefined;
+
+          const matchingLine = lines.find(
+            (l) => l.includes(`:${item.port} `) || l.includes(`:${item.port}\t`) || l.includes(`:${item.port}\r`)
+          );
+
+          if (matchingLine && matchingLine.includes('LISTENING')) {
+            inUse = true;
+            const tokens = matchingLine.trim().split(/\s+/);
+            pid = tokens[tokens.length - 1];
+          }
+
+          results.push({
+            port: item.port,
+            label: item.label,
+            inUse,
+            pid
+          });
+        }
+
+        this.cachedPortsStatus = { data: results, timestamp: Date.now() };
+        return results;
+      } finally {
+        this.inFlightPortsCheck = null;
       }
+    })();
 
-      results.push({
-        port: item.port,
-        label: item.label,
-        inUse,
-        pid
-      });
-    }
-
-    return results;
+    return this.inFlightPortsCheck;
   }
 
   private checkPortSocket(port: number): Promise<boolean> {
@@ -560,6 +672,7 @@ export class WindowsService {
           allOk = false;
         }
       }
+      this.invalidateStatusCaches();
       return allOk;
     } catch (err) {
       console.error(`Erro ao encerrar processo da porta ${port}:`, err);

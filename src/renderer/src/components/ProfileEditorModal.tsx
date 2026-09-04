@@ -14,7 +14,8 @@ import {
   Flame,
   Save,
   Clock,
-  Layers
+  Layers,
+  Download
 } from 'lucide-react';
 import {
   AutomationProfile,
@@ -28,6 +29,7 @@ interface ProfileEditorModalProps {
   profile: AutomationProfile | null;
   onSave: (savedProfile: AutomationProfile) => Promise<void>;
   onDelete?: (profileId: string) => Promise<void>;
+  onExport?: (profile: AutomationProfile) => void;
 }
 
 const STEP_TYPE_OPTIONS: { type: AutomationStepType; label: string; desc: string; icon: any }[] = [
@@ -86,7 +88,8 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
   onClose,
   profile,
   onSave,
-  onDelete
+  onDelete,
+  onExport
 }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -287,6 +290,22 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
       onClose();
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleExportProfileCurrent = () => {
+    if (!name.trim()) {
+      alert('Por favor, informe ao menos um nome para o perfil antes de exportar.');
+      return;
+    }
+    if (onExport) {
+      onExport({
+        id: profile?.id || `profile-${Date.now()}`,
+        name: name.trim(),
+        description: description.trim(),
+        steps: steps,
+        isDefault: profile?.isDefault ?? false
+      });
     }
   };
 
@@ -617,7 +636,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                       type="text"
                       value={editingStep.targetName || ''}
                       onChange={(e) => handleUpdateCurrentStep({ targetName: e.target.value })}
-                      placeholder="Ex: PDVSync.Client.API, WinThor, Spooler... (se vazio, usa o Nome da Etapa)"
+                      placeholder="Ex: CoreService.API, AppServer, Spooler... (se vazio, usa o Nome da Etapa)"
                       className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">
@@ -732,6 +751,17 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {onExport && (
+              <button
+                type="button"
+                onClick={handleExportProfileCurrent}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors border border-border/60 shadow-sm"
+                title="Exportar este perfil como arquivo JSON"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Exportar Perfil</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}

@@ -18,9 +18,10 @@ import {
   Square,
   X
 } from 'lucide-react';
-import { GitProjectInfo, DeployProfile, KarafBundleInfo } from '../../../shared/types';
+import { GitProjectInfo, DeployProfile } from '../../../shared/types';
 import { TerminalViewer } from '../components/TerminalViewer';
 import { DeployProfileEditorModal } from '../components/DeployProfileEditorModal';
+import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
 
 interface DeployPageProps {
   projects: GitProjectInfo[];
@@ -42,10 +43,6 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
 
   // Modal e Gestão de Bundles OSGi
   const [isBundlesModalOpen, setIsBundlesModalOpen] = useState<boolean>(false);
-  const [bundles, setBundles] = useState<KarafBundleInfo[]>([]);
-  const [bundleSearch, setBundleSearch] = useState<string>('');
-  const [isLoadingBundles, setIsLoadingBundles] = useState<boolean>(false);
-  const [bundleActionLoading, setBundleActionLoading] = useState<Record<string, string>>({});
 
   const activeProfile = useMemo(() => {
     if (!profiles || profiles.length === 0) return null;
@@ -57,8 +54,20 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
       window.electronAPI.getSettings().then(async (st) => {
         setKarafPath(st.karafPath || '');
         if (st.karafPath) {
-          const check = await window.electronAPI.checkPath(`${st.karafPath}\\bin\\client.bat`);
-          setKarafValid(check.exists);
+          const candidates = [
+            `${st.karafPath}/bin/client.bat`,
+            `${st.karafPath}/bin/client`,
+            `${st.karafPath}/bin/client.sh`
+          ];
+          let found = false;
+          for (const cand of candidates) {
+            const check = await window.electronAPI.checkPath(cand);
+            if (check && check.exists) {
+              found = true;
+              break;
+            }
+          }
+          setKarafValid(found);
         }
         if (st.deployProfiles && st.deployProfiles.length > 0) {
           setProfiles(st.deployProfiles);
@@ -145,50 +154,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     }
   };
 
-  const fetchBundles = async () => {
-    setIsLoadingBundles(true);
-    try {
-      const data = await window.electronAPI.listKarafBundles();
-      setBundles(data || []);
-    } catch (err: any) {
-      console.error('Erro ao buscar bundles do Karaf:', err);
-    } finally {
-      setIsLoadingBundles(false);
-    }
-  };
 
-  const handleOpenBundlesModal = async () => {
-    setIsBundlesModalOpen(true);
-    await fetchBundles();
-  };
-
-  const handleBundleAction = async (action: 'start' | 'stop' | 'restart' | 'uninstall', bundleId: string) => {
-    setBundleActionLoading((prev) => ({ ...prev, [bundleId]: action }));
-    try {
-      await window.electronAPI.manageKarafBundle(action, bundleId);
-      await fetchBundles();
-    } catch (err: any) {
-      alert(`Falha ao executar ação no bundle: ${err?.message || err}`);
-    } finally {
-      setBundleActionLoading((prev) => {
-        const next = { ...prev };
-        delete next[bundleId];
-        return next;
-      });
-    }
-  };
-
-  const filteredBundles = useMemo(() => {
-    if (!bundleSearch.trim()) return bundles;
-    const term = bundleSearch.toLowerCase();
-    return bundles.filter(
-      (b) =>
-        b.id.toLowerCase().includes(term) ||
-        b.name.toLowerCase().includes(term) ||
-        b.version.toLowerCase().includes(term) ||
-        b.state.toLowerCase().includes(term)
-    );
-  }, [bundles, bundleSearch]);
 
   return (
     <div className="h-full flex flex-col p-5 pb-8 space-y-4 overflow-y-auto">
@@ -277,7 +243,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
 
             <button
               type="button"
-              onClick={handleOpenBundlesModal}
+              onClick={() => setIsBundlesModalOpen(true)}
               className="px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground shadow-xs"
               title="Abrir gerenciador visual de bundles OSGi"
             >
@@ -454,160 +420,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         onDelete={handleDeleteProfile}
       />
 
-      {/* Modal Gerenciador de Bundles OSGi */}
-      {isBundlesModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in">
-            {/* Header do Modal */}
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
-                  <ListTree className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                    Gerenciador de Bundles OSGi
-                    <span className="text-[10px] bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono">
-                      {bundles.length} bundles instalados
-                    </span>
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground">
-                    Inspecione status, reinicie ou controle bundles ativos no runtime Karaf via client.bat.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={fetchBundles}
-                  disabled={isLoadingBundles}
-                  className="p-2 bg-card hover:bg-muted border border-border rounded-lg text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
-                  title="Atualizar lista de bundles"
-                >
-                  <RotateCw className={`w-4 h-4 ${isLoadingBundles ? 'animate-spin text-primary' : ''}`} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsBundlesModalOpen(false)}
-                  className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Barra de Filtro */}
-            <div className="p-3 border-b border-border/70 bg-card/60 flex items-center gap-3 shrink-0">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={bundleSearch}
-                  onChange={(e) => setBundleSearch(e.target.value)}
-                  placeholder="Pesquisar por ID, nome do bundle ou versão..."
-                  className="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
-                />
-              </div>
-              <span className="text-xs text-muted-foreground shrink-0 font-mono">
-                {filteredBundles.length} de {bundles.length}
-              </span>
-            </div>
-
-            {/* Tabela de Bundles */}
-            <div className="flex-1 overflow-auto p-2">
-              {isLoadingBundles ? (
-                <div className="h-64 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
-                  <RotateCw className="w-6 h-6 animate-spin text-primary" />
-                  <span>Consultando bundles via Karaf client.bat...</span>
-                </div>
-              ) : filteredBundles.length === 0 ? (
-                <div className="h-48 flex flex-col items-center justify-center text-xs text-muted-foreground">
-                  <Package className="w-8 h-8 opacity-30 mb-2" />
-                  <p>Nenhum bundle encontrado para o termo pesquisado.</p>
-                </div>
-              ) : (
-                <div className="min-w-full inline-block align-middle">
-                  <table className="min-w-full divide-y divide-border/60 text-xs font-mono">
-                    <thead className="bg-muted/70 sticky top-0 z-10 text-[11px]">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-muted-foreground uppercase w-16">ID</th>
-                        <th className="px-3 py-2 text-left text-muted-foreground uppercase w-28">Estado</th>
-                        <th className="px-3 py-2 text-left text-muted-foreground uppercase">Nome do Bundle</th>
-                        <th className="px-3 py-2 text-left text-muted-foreground uppercase w-28">Versão</th>
-                        <th className="px-3 py-2 text-right text-muted-foreground uppercase w-32">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/40">
-                      {filteredBundles.map((b) => {
-                        const isLoading = Boolean(bundleActionLoading[b.id]);
-                        return (
-                          <tr key={b.id} className="hover:bg-muted/40 transition">
-                            <td className="px-3 py-2 text-primary font-bold">{b.id}</td>
-                            <td className="px-3 py-2">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                  b.state === 'Active'
-                                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                                    : b.state === 'Resolved'
-                                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                                    : b.state === 'Installed'
-                                    ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
-                                    : 'bg-muted text-muted-foreground border-border'
-                                }`}
-                              >
-                                {b.state}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 text-foreground font-medium truncate max-w-[360px]" title={b.name}>
-                              {b.name}
-                            </td>
-                            <td className="px-3 py-2 text-muted-foreground truncate">{b.version || '-'}</td>
-                            <td className="px-3 py-2 text-right">
-                              <div className="flex items-center justify-end space-x-1">
-                                <button
-                                  type="button"
-                                  onClick={() => handleBundleAction('restart', b.id)}
-                                  disabled={isLoading}
-                                  title="Reiniciar bundle"
-                                  className="p-1 rounded bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
-                                >
-                                  <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                                </button>
-                                {b.state === 'Active' ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleBundleAction('stop', b.id)}
-                                    disabled={isLoading}
-                                    title="Parar bundle"
-                                    className="p-1 rounded bg-card hover:bg-muted border border-border text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer"
-                                  >
-                                    <Square className="w-3.5 h-3.5 fill-current" />
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleBundleAction('start', b.id)}
-                                    disabled={isLoading}
-                                    title="Iniciar bundle"
-                                    className="p-1 rounded bg-card hover:bg-muted border border-border text-emerald-400 hover:text-emerald-300 transition disabled:opacity-50 cursor-pointer"
-                                  >
-                                    <Play className="w-3.5 h-3.5 fill-current" />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Gerenciador de Bundles OSGi com Verificação de Dependências e Confirmação */}
+      <KarafBundleManagerModal
+        isOpen={isBundlesModalOpen}
+        onClose={() => setIsBundlesModalOpen(false)}
+        projects={projects}
+      />
     </div>
   );
 };

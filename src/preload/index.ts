@@ -28,7 +28,10 @@ import type {
   ExplainPlanResult,
   SystemMetrics,
   HttpHealthResult,
-  DeployProfile
+  DeployProfile,
+  InstallBundleRequest,
+  ReinstallBundleRequest,
+  UpdateBundleVersionRequest
 } from '../shared/types';
 
 const electronAPI = {
@@ -120,10 +123,30 @@ const electronAPI = {
   listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) =>
     ipcRenderer.invoke('karaf:list-bundles', credentials),
   manageKarafBundle: (
-    action: 'start' | 'stop' | 'restart' | 'uninstall',
+    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }
   ) => ipcRenderer.invoke('karaf:manage-bundle', action, bundleId, credentials),
+  getKarafBundleDetails: (
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => ipcRenderer.invoke('karaf:get-bundle-details', bundleId, credentials),
+  checkKarafBundleDeps: (
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => ipcRenderer.invoke('karaf:check-bundle-deps', bundleId, credentials),
+  checkKarafInstallDeps: (
+    target: { location?: string; symbolicName?: string; version?: string },
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => ipcRenderer.invoke('karaf:check-install-deps', target, credentials),
+  installKarafBundle: (request: InstallBundleRequest) =>
+    ipcRenderer.invoke('karaf:install-bundle', request),
+  uninstallKarafBundle: (bundleId: string, credentials?: { user?: string; pass?: string; port?: number }) =>
+    ipcRenderer.invoke('karaf:uninstall-bundle', bundleId, credentials),
+  reinstallKarafBundle: (request: ReinstallBundleRequest) =>
+    ipcRenderer.invoke('karaf:reinstall-bundle', request),
+  updateKarafBundleVersion: (request: UpdateBundleVersionRequest) =>
+    ipcRenderer.invoke('karaf:update-bundle-version', request),
   parsePom: (projectPath: string) => ipcRenderer.invoke('karaf:parse-pom', projectPath),
   onKarafLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
@@ -154,6 +177,10 @@ const electronAPI = {
     ipcRenderer.invoke('git:commit-and-push', projectPath, message),
   getCommitHistory: (projectPath: string, limit?: number) =>
     ipcRenderer.invoke('git:get-commit-history', projectPath, limit),
+  getGitStatusDetails: (projectPath: string) =>
+    ipcRenderer.invoke('git:get-status-details', projectPath),
+  getGitDiff: (projectPath: string, targetFile?: string) =>
+    ipcRenderer.invoke('git:get-diff', projectPath, targetFile),
   openExternal: (url: string): Promise<boolean> => ipcRenderer.invoke('shell:open-external', url),
 
   // Catálogo de Rotinas

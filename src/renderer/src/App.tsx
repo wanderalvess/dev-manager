@@ -19,17 +19,41 @@ export const App: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isQuickLauncherOpen, setIsQuickLauncherOpen] = useState<boolean>(false);
 
+  const isFetchingServicesRef = React.useRef(false);
   const fetchServices = useCallback(async () => {
+    if (isFetchingServicesRef.current) return;
     if (window.electronAPI) {
-      const data = await window.electronAPI.getServicesStatus();
-      setServices(data);
+      isFetchingServicesRef.current = true;
+      try {
+        const data = await window.electronAPI.getServicesStatus();
+        setServices((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+          return data || [];
+        });
+      } catch (err) {
+        console.warn('[App] Erro ao carregar status dos serviços:', err);
+      } finally {
+        isFetchingServicesRef.current = false;
+      }
     }
   }, []);
 
+  const isFetchingProjectsRef = React.useRef(false);
   const fetchProjects = useCallback(async () => {
+    if (isFetchingProjectsRef.current) return;
     if (window.electronAPI) {
-      const data = await window.electronAPI.listProjects();
-      setProjects(data);
+      isFetchingProjectsRef.current = true;
+      try {
+        const data = await window.electronAPI.listProjects();
+        setProjects((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+          return data || [];
+        });
+      } catch (err) {
+        console.warn('[App] Erro ao carregar projetos:', err);
+      } finally {
+        isFetchingProjectsRef.current = false;
+      }
     }
   }, []);
 
@@ -44,12 +68,16 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     refreshAll();
-    // Polling a cada 8 segundos para status dos serviços
+  }, [refreshAll]);
+
+  // Polling inteligente: atualiza status de serviços a cada 8 segundos apenas se a aba ativa for 'env'
+  useEffect(() => {
+    if (activeTab !== 'env') return;
     const interval = setInterval(() => {
       fetchServices();
     }, 8000);
     return () => clearInterval(interval);
-  }, [refreshAll, fetchServices]);
+  }, [activeTab, fetchServices]);
 
   // Suporte a atalhos de teclado (Alt+1 .. Alt+9 e Ctrl+K)
   useEffect(() => {

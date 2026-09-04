@@ -360,6 +360,10 @@ export class ConfigService {
     this.configPath = path.join(newDir, 'config.json');
   }
 
+  public getConfigFilePath(): string {
+    return this.configPath;
+  }
+
   public getSettings(): AppSettings {
     const defaultConfig = getDynamicDefaultConfig();
     try {
@@ -521,11 +525,24 @@ export class ConfigService {
       const merged: Partial<AppSettings> = {};
 
       if (Array.isArray(parsed.automationProfiles)) merged.automationProfiles = parsed.automationProfiles;
+      if (typeof parsed.activeProfileId === 'string') merged.activeProfileId = parsed.activeProfileId;
+      if (Array.isArray(parsed.deployProfiles)) merged.deployProfiles = parsed.deployProfiles;
+      if (typeof parsed.activeDeployProfileId === 'string') merged.activeDeployProfileId = parsed.activeDeployProfileId;
       if (Array.isArray(parsed.monitoredPorts)) merged.monitoredPorts = parsed.monitoredPorts;
       if (Array.isArray(parsed.trackedServices)) merged.trackedServices = parsed.trackedServices;
       if (Array.isArray(parsed.trackedProcesses)) merged.trackedProcesses = parsed.trackedProcesses;
       if (Array.isArray(parsed.favoriteRoutines)) merged.favoriteRoutines = parsed.favoriteRoutines;
       if (Array.isArray(parsed.mappedPrograms)) merged.mappedPrograms = parsed.mappedPrograms;
+      if (Array.isArray(parsed.routineFileExtensions)) merged.routineFileExtensions = parsed.routineFileExtensions;
+      if (parsed.routineLauncherMap && typeof parsed.routineLauncherMap === 'object' && !Array.isArray(parsed.routineLauncherMap)) {
+        merged.routineLauncherMap = parsed.routineLauncherMap;
+      }
+      if (typeof parsed.webPort === 'number') merged.webPort = parsed.webPort;
+      if (typeof parsed.webPath === 'string') merged.webPath = parsed.webPath;
+      if (typeof parsed.karafSshPort === 'number') merged.karafSshPort = parsed.karafSshPort;
+      if (typeof parsed.karafDebugPort === 'number') merged.karafDebugPort = parsed.karafDebugPort;
+      if (typeof parsed.ideName === 'string') merged.ideName = parsed.ideName;
+      if (typeof parsed.karafScript === 'string') merged.karafScript = parsed.karafScript;
 
       if (Array.isArray(parsed.databaseConnections)) {
         merged.databaseConnections = parsed.databaseConnections.map((newConn: any) => {

@@ -141,7 +141,7 @@ app.get('/api/system/info', async (_req, res) => {
     osHostname: os.hostname(),
     totalMemoryMb: Math.round(os.totalmem() / 1024 / 1024),
     freeMemoryMb: Math.round(os.freemem() / 1024 / 1024),
-    configPath: (configService as any).configPath || '',
+    configPath: configService.getConfigFilePath(),
     isAdmin
   });
 });
@@ -582,6 +582,45 @@ app.post('/api/karaf/bundles/manage', async (req, res) => {
   res.json(result);
 });
 
+app.post('/api/karaf/bundles/details', async (req, res) => {
+  const { bundleId, credentials } = req.body;
+  const result = await karafService.getBundleDetails(bundleId, credentials);
+  res.json(result);
+});
+
+app.post('/api/karaf/bundles/check-deps', async (req, res) => {
+  const { bundleId, credentials } = req.body;
+  const result = await karafService.checkBundleDependencies(bundleId, credentials);
+  res.json(result);
+});
+
+app.post('/api/karaf/bundles/check-install-deps', async (req, res) => {
+  const { target, credentials } = req.body;
+  const result = await karafService.checkInstallDependencies(target, credentials);
+  res.json(result);
+});
+
+app.post('/api/karaf/bundles/install', async (req, res) => {
+  const result = await karafService.installBundle(req.body);
+  res.json(result);
+});
+
+app.post('/api/karaf/bundles/uninstall', async (req, res) => {
+  const { bundleId, credentials } = req.body;
+  const result = await karafService.uninstallBundle(bundleId, credentials);
+  res.json(result);
+});
+
+app.post('/api/karaf/bundles/reinstall', async (req, res) => {
+  const result = await karafService.reinstallBundle(req.body);
+  res.json(result);
+});
+
+app.post('/api/karaf/bundles/update-version', async (req, res) => {
+  const result = await karafService.updateBundleVersion(req.body);
+  res.json(result);
+});
+
 // 13. Operações Git Avançadas
 app.post('/api/git/checkout', async (req, res) => {
   const { projectPath, branchName, createNew } = req.body;
@@ -600,6 +639,25 @@ app.get('/api/git/commits', async (req, res) => {
   const limit = Number(req.query.limit) || 10;
   const commits = await gitAzureService.getCommitHistory(projectPath, limit);
   res.json(commits);
+});
+
+app.get('/api/git/status-details', async (req, res) => {
+  const projectPath = String(req.query.path || '');
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json([]);
+  }
+  const statuses = await gitAzureService.getStatusDetails(projectPath);
+  res.json(statuses);
+});
+
+app.get('/api/git/diff', async (req, res) => {
+  const projectPath = String(req.query.path || '');
+  const targetFile = req.query.file ? String(req.query.file) : undefined;
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json({ success: false, diff: '', files: [], error: 'Caminho inválido' });
+  }
+  const result = await gitAzureService.getDiff(projectPath, targetFile);
+  res.json(result);
 });
 
 // 14. Exportação / Importação de Configurações

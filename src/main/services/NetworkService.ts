@@ -65,49 +65,90 @@ export class NetworkService {
     };
   }
 
+  private cachedWslIp: { ip: string | null; checkedAt: number } | null = null;
+  private isDetectingWsl = false;
+  private lastCpuMeasure: { idle: number; total: number; time: number } | null = null;
+
   /**
    * Executa comando para obter o IP atribuído à interface eth0 do WSL2.
+   * Utiliza cache em memória, verificação prévia de placa de rede virtual do WSL
+   * e timeout com Promise.race para evitar travamento da fila de processos no Windows.
    */
   public async detectWslIp(): Promise<string | null> {
     if (process.platform !== 'win32') {
       return null;
     }
 
-    try {
-      // Método 1: hostname -I no WSL
-      const { stdout } = await execFileAsync('wsl.exe', ['hostname', '-I'], {
-        timeout: 4000,
-        windowsHide: true
-      });
-
-      const ips = stdout.trim().split(/\s+/);
-      const ipv4 = ips.find((ip) => /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip) && !ip.startsWith('127.'));
-      if (ipv4) {
-        return ipv4;
-      }
-    } catch {
-      // WSL pode estar desligado ou não instalado
+    // Retorna cache de até 60 segundos se válido
+    if (this.cachedWslIp && Date.now() - this.cachedWslIp.checkedAt < 60_000) {
+      return this.cachedWslIp.ip;
     }
 
-    try {
-      // Método 2: wsl -e ip -4 addr show eth0
-      const { stdout } = await execFileAsync('wsl.exe', ['-e', 'ip', '-4', 'addr', 'show', 'eth0'], {
-        timeout: 4000,
-        windowsHide: true
-      });
-
-      const match = stdout.match(/inet\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
-      if (match && match[1]) {
-        return match[1];
-      }
-    } catch {
-      // Ignora falha silenciosamente
+    // Evita múltiplas chamadas concorrentes a wsl.exe caso já haja uma rodando
+    if (this.isDetectingWsl) {
+      return this.cachedWslIp?.ip ?? null;
     }
 
-    return null;
+    // Checagem em memória: se nenhuma interface de rede tiver 'wsl' no nome,
+    // o subsistema WSL2 nem sequer possui placa virtual ativa no Windows.
+    const ifaces = os.networkInterfaces();
+    const hasWslAdapter = Object.keys(ifaces).some((name) =>
+      name.toLowerCase().includes('wsl')
+    );
+
+    if (!hasWslAdapter) {
+      this.cachedWslIp = { ip: null, checkedAt: Date.now() };
+      return null;
+    }
+
+    this.isDetectingWsl = true;
+    try {
+      const runWsl = async (): Promise<string | null> => {
+        try {
+          const { stdout } = await execFileAsync('wsl.exe', ['hostname', '-I'], {
+            timeout: 1500,
+            windowsHide: true
+          });
+
+          const ips = stdout.trim().split(/\s+/);
+          const ipv4 = ips.find((ip) => /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip) && !ip.startsWith('127.'));
+          if (ipv4) {
+            return ipv4;
+          }
+        } catch {
+          // WSL pode estar desligado ou não instalado
+        }
+
+        try {
+          const { stdout } = await execFileAsync('wsl.exe', ['-e', 'ip', '-4', 'addr', 'show', 'eth0'], {
+            timeout: 1200,
+            windowsHide: true
+          });
+
+          const match = stdout.match(/inet\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+          if (match && match[1]) {
+            return match[1];
+          }
+        } catch {
+          // Ignora falha silenciosamente
+        }
+
+        return null;
+      };
+
+      // Trava de segurança absoluta em JS para garantir retorno rápido mesmo se o processo filho travar no Windows
+      const timeoutGuard = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
+      const detected = await Promise.race([runWsl(), timeoutGuard]);
+
+      this.cachedWslIp = { ip: detected, checkedAt: Date.now() };
+      return detected;
+    } catch {
+      this.cachedWslIp = { ip: null, checkedAt: Date.now() };
+      return null;
+    } finally {
+      this.isDetectingWsl = false;
+    }
   }
-
-  private lastCpuMeasure: { idle: number; total: number; time: number } | null = null;
 
   /**
    * Coleta métricas de consumo de CPU, RAM e tempo de atividade da máquina.

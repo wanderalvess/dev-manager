@@ -40,36 +40,36 @@ const DEFAULT_PORTS: Record<DatabaseType, number> = {
   postgres: 5432
 };
 
-export const WINTHOR_SNIPPETS: SqlSnippet[] = [
+export const DEFAULT_SQL_SNIPPETS: SqlSnippet[] = [
   {
     id: 'pcparam-search',
     title: 'Consultar Parâmetros (PCPARAMETRO)',
-    category: 'WinThor - Parâmetros',
-    description: 'Pesquisa parâmetros do WinThor por termo chave',
+    category: 'Parâmetros - Configuração',
+    description: 'Pesquisa parâmetros do sistema por termo chave',
     sql: "SELECT NOME, VALOR, DESCRICAO FROM PCPARAMETRO WHERE UPPER(NOME) LIKE '%ESTOQUE%' ORDER BY NOME;",
     dbType: 'oracle'
   },
   {
     id: 'pcrotina-list',
     title: 'Cadastro de Rotinas (PCROTINACAD)',
-    category: 'WinThor - Rotinas',
-    description: 'Lista rotinas ativas no sistema WinThor',
+    category: 'Rotinas - Catálogo',
+    description: 'Lista rotinas cadastradas no sistema',
     sql: "SELECT CODROTINA, NOME, NOMEROTINA FROM PCROTINACAD WHERE ATIVO = 'S' ORDER BY CODROTINA;",
     dbType: 'oracle'
   },
   {
     id: 'pccontroi-perms',
     title: 'Permissões por Rotina (PCCONTROI)',
-    category: 'WinThor - Segurança',
+    category: 'Segurança - Permissões',
     description: 'Verifica acessos concedidos para a rotina especificada',
     sql: "SELECT CODUSUARIO, CODROTINA, ACESSO FROM PCCONTROI WHERE CODROTINA = 1400;",
     dbType: 'oracle'
   },
   {
     id: 'pcclient-sample',
-    title: 'Amostra de Clientes (PCCLIENT)',
-    category: 'WinThor - Dados',
-    description: 'Consulta primeiros 50 clientes ativos no ERP',
+    title: 'Amostra de Cadastros (PCCLIENT)',
+    category: 'Dados - Amostra',
+    description: 'Consulta primeiros 50 registros cadastrais ativos',
     sql: "SELECT CODCLI, CLIENTE, FANTASIA, CGCENT, TELENT FROM PCCLIENT WHERE BLOQUEIO = 'N' AND ROWNUM <= 50;",
     dbType: 'oracle'
   },
@@ -138,7 +138,7 @@ export const DatabasePage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingConn, setEditingConn] = useState<Partial<DatabaseConnectionConfig>>({
     type: 'oracle',
-    name: 'Oracle WinThor',
+    name: 'Oracle Principal',
     host: 'localhost',
     port: 1521,
     database: 'XEPDB1',
@@ -294,7 +294,7 @@ export const DatabasePage: React.FC = () => {
   const handleOpenCreateModal = () => {
     setEditingConn({
       type: 'oracle',
-      name: 'Oracle WinThor Local',
+      name: 'Oracle Local',
       host: 'localhost',
       port: 1521,
       database: 'XEPDB1',
@@ -639,16 +639,16 @@ export const DatabasePage: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Menu Dropdown de Snippets WinThor */}
+            {/* Menu Dropdown de Snippets Prontos */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowSnippetsMenu((prev) => !prev)}
                 className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs"
-                title="Inserir Consultas e Diagnósticos Prontos do WinThor"
+                title="Inserir Consultas e Diagnósticos Rápidos de Banco"
               >
                 <BookOpen className="w-3.5 h-3.5 text-primary" />
-                <span>Snippets WinThor</span>
+                <span>Consultas Rápidas</span>
               </button>
 
               {showSnippetsMenu && (
@@ -657,7 +657,7 @@ export const DatabasePage: React.FC = () => {
                   <div className="absolute right-0 mt-1 w-80 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-1 text-xs">
                   <div className="text-[10px] uppercase font-bold text-muted-foreground px-2 py-1 flex items-center justify-between border-b border-border/60 pb-1.5">
                     <span className="flex items-center gap-1">
-                      <FileCode className="w-3 h-3 text-primary" /> Consultas Prontas WinThor
+                      <FileCode className="w-3 h-3 text-primary" /> Consultas Rápidas SQL
                     </span>
                     <button
                       onClick={() => setShowSnippetsMenu(false)}
@@ -667,7 +667,7 @@ export const DatabasePage: React.FC = () => {
                     </button>
                   </div>
                   <div className="max-h-64 overflow-y-auto space-y-1 pt-1">
-                    {WINTHOR_SNIPPETS.map((s) => (
+                    {DEFAULT_SQL_SNIPPETS.map((s) => (
                       <button
                         key={s.id}
                         type="button"
@@ -1068,7 +1068,7 @@ export const DatabasePage: React.FC = () => {
                   required
                   value={editingConn.name || ''}
                   onChange={(e) => setEditingConn({ ...editingConn, name: e.target.value })}
-                  placeholder="Ex: Oracle WinThor Produção"
+                  placeholder="Ex: Oracle Produção"
                   className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
                 />
               </div>

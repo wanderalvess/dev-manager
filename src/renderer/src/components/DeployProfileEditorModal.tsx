@@ -13,7 +13,8 @@ import {
   RotateCcw,
   Save,
   Layers,
-  Sparkles
+  Sparkles,
+  ListTree
 } from 'lucide-react';
 import {
   DeployProfile,
@@ -43,6 +44,12 @@ const STEP_TYPE_OPTIONS: { type: DeployStepType; label: string; desc: string; ic
     label: 'Comando Karaf OSGi (client.bat)',
     desc: 'feature:repo-add, feature:install, bundle:*, ou qualquer comando de shell Karaf',
     icon: Layers
+  },
+  {
+    type: 'karaf-bundle',
+    label: 'Bundle OSGi: Ciclo de Vida',
+    desc: 'Instalar, reinstalar, reiniciar ou desinstalar um bundle OSGi',
+    icon: ListTree
   },
   {
     type: 'docker-build',
@@ -76,6 +83,8 @@ const stepTypeDefaultName = (type: DeployStepType): string => {
       return 'Build Maven';
     case 'karaf-command':
       return 'Comando Karaf';
+    case 'karaf-bundle':
+      return 'Ação de Bundle OSGi';
     case 'docker-build':
       return 'Docker Build';
     case 'docker-push':
@@ -544,6 +553,74 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                       </div>
                     </div>
                   </>
+                )}
+
+                {/* Campos: Bundle OSGi */}
+                {editingStep.type === 'karaf-bundle' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                        Ação no Bundle
+                      </label>
+                      <select
+                        value={editingStep.bundleAction || 'reinstall'}
+                        onChange={(e) => handleUpdateCurrentStep({ bundleAction: e.target.value as any })}
+                        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="reinstall">Reinstalar (bundle:update + refresh + start)</option>
+                        <option value="install">Instalar Novo (bundle:install)</option>
+                        <option value="restart">Reiniciar (bundle:restart)</option>
+                        <option value="refresh">Atualizar Fiações (bundle:refresh)</option>
+                        <option value="start">Iniciar (bundle:start)</option>
+                        <option value="stop">Parar (bundle:stop)</option>
+                        <option value="uninstall">Desinstalar (bundle:uninstall)</option>
+                      </select>
+                    </div>
+
+                    {editingStep.bundleAction !== 'install' && (
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                          ID do Bundle OSGi (numérico)
+                        </label>
+                        <input
+                          type="text"
+                          value={editingStep.bundleId || ''}
+                          onChange={(e) => handleUpdateCurrentStep({ bundleId: e.target.value })}
+                          placeholder="Ex: 154"
+                          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                    )}
+
+                    {(editingStep.bundleAction === 'install' || editingStep.bundleAction === 'reinstall') && (
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                          Localização / Coordenada Maven {editingStep.bundleAction === 'reinstall' ? '(opcional)' : ''}
+                        </label>
+                        <input
+                          type="text"
+                          value={editingStep.bundleLocation || ''}
+                          onChange={(e) => handleUpdateCurrentStep({ bundleLocation: e.target.value })}
+                          placeholder="mvn:br.com.totvs.winthor/meu-modulo/1.0.0 ou file:/..."
+                          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                    )}
+
+                    {editingStep.bundleAction === 'install' && (
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground">
+                        <input
+                          type="checkbox"
+                          checked={editingStep.bundleStart ?? true}
+                          onChange={(e) => handleUpdateCurrentStep({ bundleStart: e.target.checked })}
+                          className="rounded border-border text-primary focus:ring-primary"
+                        />
+                        <span>
+                          Iniciar bundle automaticamente após instalação (<code className="font-mono text-primary">-s</code>)
+                        </span>
+                      </label>
+                    )}
+                  </div>
                 )}
 
                 {/* Campos: Docker Build */}

@@ -27,7 +27,14 @@ import type {
   NetworkIpInfo,
   ExplainPlanResult,
   KarafBundleInfo,
+  KarafBundleDetails,
+  BundleDependencyCheckResult,
+  InstallBundleRequest,
+  ReinstallBundleRequest,
+  UpdateBundleVersionRequest,
   GitCommitInfo,
+  GitFileStatus,
+  GitDiffResult,
   SystemMetrics,
   HttpHealthResult,
   DeployProfile
@@ -92,9 +99,34 @@ export interface ElectronAPI {
   // Karaf Deployer & Bundles
   listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) => Promise<KarafBundleInfo[]>;
   manageKarafBundle: (
-    action: 'start' | 'stop' | 'restart' | 'uninstall',
+    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<{ success: boolean; output: string }>;
+  getKarafBundleDetails: (
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<KarafBundleDetails | null>;
+  checkKarafBundleDeps: (
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<BundleDependencyCheckResult>;
+  checkKarafInstallDeps: (
+    target: { location?: string; symbolicName?: string; version?: string },
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<BundleDependencyCheckResult>;
+  installKarafBundle: (
+    request: InstallBundleRequest
+  ) => Promise<{ success: boolean; bundleId?: string; state?: string; diag?: string; output: string }>;
+  uninstallKarafBundle: (
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<{ success: boolean; output: string }>;
+  reinstallKarafBundle: (
+    request: ReinstallBundleRequest
+  ) => Promise<{ success: boolean; state?: string; diag?: string; output: string }>;
+  updateKarafBundleVersion: (
+    request: UpdateBundleVersionRequest
   ) => Promise<{ success: boolean; output: string }>;
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
@@ -112,6 +144,8 @@ export interface ElectronAPI {
   checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean) => Promise<{ success: boolean; output: string }>;
   commitAndPush: (projectPath: string, message: string) => Promise<{ success: boolean; output: string }>;
   getCommitHistory: (projectPath: string, limit?: number) => Promise<GitCommitInfo[]>;
+  getGitStatusDetails: (projectPath: string) => Promise<GitFileStatus[]>;
+  getGitDiff: (projectPath: string, targetFile?: string) => Promise<GitDiffResult>;
   openExternal: (url: string) => Promise<boolean>;
 
   // Catálogo de Rotinas

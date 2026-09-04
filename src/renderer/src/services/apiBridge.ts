@@ -27,7 +27,14 @@ import type {
   NetworkIpInfo,
   ExplainPlanResult,
   KarafBundleInfo,
+  KarafBundleDetails,
+  BundleDependencyCheckResult,
+  InstallBundleRequest,
+  ReinstallBundleRequest,
+  UpdateBundleVersionRequest,
   GitCommitInfo,
+  GitFileStatus,
+  GitDiffResult,
   SystemMetrics,
   HttpHealthResult,
   DeployProfile
@@ -411,13 +418,80 @@ export function initApiBridge() {
     },
 
     manageKarafBundle: async (
-      action: 'start' | 'stop' | 'restart' | 'uninstall',
+      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
       bundleId: string,
       credentials?: { user?: string; pass?: string; port?: number }
     ): Promise<{ success: boolean; output: string }> => {
       return apiFetch('/api/karaf/bundles/manage', {
         method: 'POST',
         body: JSON.stringify({ action, bundleId, credentials })
+      });
+    },
+
+    getKarafBundleDetails: async (
+      bundleId: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<KarafBundleDetails | null> => {
+      return apiFetch('/api/karaf/bundles/details', {
+        method: 'POST',
+        body: JSON.stringify({ bundleId, credentials })
+      });
+    },
+
+    checkKarafBundleDeps: async (
+      bundleId: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<BundleDependencyCheckResult> => {
+      return apiFetch('/api/karaf/bundles/check-deps', {
+        method: 'POST',
+        body: JSON.stringify({ bundleId, credentials })
+      });
+    },
+
+    checkKarafInstallDeps: async (
+      target: { location?: string; symbolicName?: string; version?: string },
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<BundleDependencyCheckResult> => {
+      return apiFetch('/api/karaf/bundles/check-install-deps', {
+        method: 'POST',
+        body: JSON.stringify({ target, credentials })
+      });
+    },
+
+    installKarafBundle: async (
+      request: InstallBundleRequest
+    ): Promise<{ success: boolean; bundleId?: string; state?: string; diag?: string; output: string }> => {
+      return apiFetch('/api/karaf/bundles/install', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
+    },
+
+    uninstallKarafBundle: async (
+      bundleId: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/bundles/uninstall', {
+        method: 'POST',
+        body: JSON.stringify({ bundleId, credentials })
+      });
+    },
+
+    reinstallKarafBundle: async (
+      request: ReinstallBundleRequest
+    ): Promise<{ success: boolean; state?: string; diag?: string; output: string }> => {
+      return apiFetch('/api/karaf/bundles/reinstall', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
+    },
+
+    updateKarafBundleVersion: async (
+      request: UpdateBundleVersionRequest
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/bundles/update-version', {
+        method: 'POST',
+        body: JSON.stringify(request)
       });
     },
 
@@ -482,6 +556,15 @@ export function initApiBridge() {
 
     getCommitHistory: async (projectPath: string, limit?: number): Promise<GitCommitInfo[]> => {
       return apiFetch(`/api/git/commits?path=${encodeURIComponent(projectPath)}&limit=${limit || 10}`);
+    },
+
+    getGitStatusDetails: async (projectPath: string): Promise<GitFileStatus[]> => {
+      return apiFetch(`/api/git/status-details?path=${encodeURIComponent(projectPath)}`);
+    },
+
+    getGitDiff: async (projectPath: string, targetFile?: string): Promise<GitDiffResult> => {
+      const fileParam = targetFile ? `&file=${encodeURIComponent(targetFile)}` : '';
+      return apiFetch(`/api/git/diff?path=${encodeURIComponent(projectPath)}${fileParam}`);
     },
 
     openExternal: async (url: string): Promise<boolean> => {
@@ -631,19 +714,54 @@ export function initApiBridge() {
 
     // Rede & Detecção de IPs (Local e WSL)
     getNetworkIps: async (): Promise<NetworkIpInfo> => {
-      return apiFetch('/api/network/ips');
+      try {
+        return await apiFetch('/api/network/ips');
+      } catch {
+        return {
+          primaryLocalIp: '127.0.0.1',
+          localIps: [{ interface: 'Loopback', ip: '127.0.0.1', mac: '00:00:00:00:00:00', type: 'LAN' }],
+          wslIp: null,
+          hostname: typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+        };
+      }
     },
 
     checkHttpHealth: async (url: string, timeoutMs?: number): Promise<HttpHealthResult> => {
-      return apiFetch('/api/network/health', {
-        method: 'POST',
-        body: JSON.stringify({ url, timeoutMs })
-      });
+      try {
+        return await apiFetch('/api/network/health', {
+          method: 'POST',
+          body: JSON.stringify({ url, timeoutMs })
+        });
+      } catch {
+        return {
+          url,
+          reachable: false,
+          isHealthy: false,
+          timeMs: 0,
+          responseTimeMs: 0,
+          error: 'Servidor Web/Docker offline'
+        };
+      }
     },
 
     // Métricas do Sistema
     getSystemMetrics: async (): Promise<SystemMetrics> => {
-      return apiFetch('/api/system/metrics');
+      try {
+        return await apiFetch('/api/system/metrics');
+      } catch {
+        return {
+          cpuUsagePercent: 0,
+          totalMemMb: 8192,
+          freeMemMb: 4096,
+          usedMemMb: 4096,
+          memUsagePercent: 50,
+          uptimeSeconds: 0,
+          totalMemoryMb: 8192,
+          freeMemoryMb: 4096,
+          usedMemoryMb: 4096,
+          memoryUsagePercent: 50
+        };
+      }
     }
   };
 }

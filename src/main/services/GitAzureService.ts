@@ -1,13 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import { GitProjectInfo, GitCommitInfo } from '../../shared/types';
+import { GitProjectInfo, GitCommitInfo, GitFileStatus, GitDiffResult } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { KarafService } from './KarafService';
-import { execFileAsync } from '../utils/security';
+import { execFileAsync, isSafeLocalPath } from '../utils/security';
 
 export class GitAzureService {
   private configService: ConfigService;
   private karafService: KarafService;
+  private uncommittedCache = new Map<string, number>();
 
   constructor(configService: ConfigService, karafService: KarafService) {
     this.configService = configService;
@@ -30,9 +31,9 @@ export class GitAzureService {
         .map((entry) => path.join(baseDir, entry.name))
         .filter((projectDir) => fs.existsSync(path.join(projectDir, '.git')));
 
-      // getProjectInfo já reconfirma o .git internamente; roda em paralelo pois
-      // cada projeto spawna seu próprio `git status` independente dos demais.
-      const infos = await Promise.all(gitDirs.map((projectDir) => this.getProjectInfo(projectDir)));
+      // Leitura ultrarrápida via filesystem (HEAD, config, pom) sem disparar
+      // dezenas de processos git.exe concorrentes que congelariam o sistema no arranque.
+      const infos = await Promise.all(gitDirs.map((projectDir) => this.getProjectInfo(projectDir, false)));
       results.push(...infos.filter((info): info is GitProjectInfo => info !== null));
     } catch (err) {
       console.error('Erro ao listar projetos Git:', err);
@@ -41,7 +42,7 @@ export class GitAzureService {
     return results;
   }
 
-  public async getProjectInfo(projectPath: string): Promise<GitProjectInfo | null> {
+  public async getProjectInfo(projectPath: string, includeUncommittedCount = true): Promise<GitProjectInfo | null> {
     try {
       if (!projectPath || !fs.existsSync(projectPath)) return null;
       const gitDir = path.join(projectPath, '.git');
@@ -115,14 +116,19 @@ export class GitAzureService {
       }
 
       // 4. Alterações não commitadas (git status --porcelain)
-      let uncommittedCount = 0;
-      try {
-        const { stdout } = await execFileAsync('git', ['status', '--porcelain'], { cwd: projectPath });
-        if (stdout) {
-          uncommittedCount = stdout.trim().split('\n').filter(Boolean).length;
+      let uncommittedCount = this.uncommittedCache.get(projectPath) ?? 0;
+      if (includeUncommittedCount) {
+        try {
+          const { stdout } = await execFileAsync('git', ['status', '--porcelain'], { cwd: projectPath });
+          if (stdout) {
+            uncommittedCount = stdout.trim().split('\n').filter(Boolean).length;
+          } else {
+            uncommittedCount = 0;
+          }
+          this.uncommittedCache.set(projectPath, uncommittedCount);
+        } catch {
+          uncommittedCount = 0;
         }
-      } catch {
-        uncommittedCount = 0;
       }
 
       const pomInfo = this.karafService.parseProjectPomOrBat(projectPath) || undefined;
@@ -237,7 +243,23 @@ export class GitAzureService {
         const pushRes = await execFileAsync('git', ['push'], { cwd: projectPath });
         pushOutput = pushRes.stdout || pushRes.stderr || 'Push realizado com sucesso!';
       } catch (pushErr: any) {
-        pushOutput = `Commit realizado, mas o push falhou: ${pushErr?.message || pushErr}`;
+        const pushMsg = pushErr?.stdout || pushErr?.stderr || pushErr?.message || '';
+        if (pushMsg.includes('no upstream branch') || pushMsg.includes('--set-upstream')) {
+          try {
+            const info = await this.getProjectInfo(projectPath);
+            const branch = info?.currentBranch;
+            if (branch && branch !== 'unknown') {
+              const upstreamRes = await execFileAsync('git', ['push', '--set-upstream', 'origin', branch], { cwd: projectPath });
+              pushOutput = upstreamRes.stdout || upstreamRes.stderr || `Push realizado com sucesso configurando upstream origin/${branch}!`;
+            } else {
+              pushOutput = `Commit realizado, mas o push falhou: ${pushMsg}`;
+            }
+          } catch (upstreamErr: any) {
+            pushOutput = `Commit realizado, mas o push com upstream falhou: ${upstreamErr?.stdout || upstreamErr?.stderr || upstreamErr?.message || upstreamErr}`;
+          }
+        } else {
+          pushOutput = `Commit realizado, mas o push falhou: ${pushMsg}`;
+        }
       }
 
       return {
@@ -287,6 +309,109 @@ export class GitAzureService {
       });
     } catch {
       return [];
+    }
+  }
+
+  /**
+   * Retorna a lista detalhada de arquivos modificados, novos ou removidos no repositório.
+   */
+  public async getStatusDetails(projectPath: string): Promise<GitFileStatus[]> {
+    try {
+      if (!projectPath || !fs.existsSync(projectPath)) {
+        return [];
+      }
+      const { stdout } = await execFileAsync('git', ['status', '--porcelain', '-u'], { cwd: projectPath });
+      if (!stdout) return [];
+
+      const lines = stdout.split(/\r?\n/).filter(Boolean);
+      const fileStatuses: GitFileStatus[] = [];
+
+      for (const line of lines) {
+        if (line.length < 4) continue;
+        const x = line[0];
+        const y = line[1];
+        const filePath = line.substring(3).trim();
+
+        let status: GitFileStatus['status'] = 'modified';
+        let staged = false;
+
+        if (x === '?' && y === '?') {
+          status = 'untracked';
+        } else if (x === 'A' || y === 'A') {
+          status = 'added';
+          staged = x === 'A';
+        } else if (x === 'D' || y === 'D') {
+          status = 'deleted';
+          staged = x === 'D';
+        } else if (x === 'R' || y === 'R') {
+          status = 'renamed';
+          staged = x === 'R';
+        } else if (x === 'C' || y === 'C') {
+          status = 'copied';
+          staged = x === 'C';
+        } else {
+          status = 'modified';
+          staged = x !== ' ' && x !== '?';
+        }
+
+        fileStatuses.push({
+          path: filePath,
+          status,
+          staged
+        });
+      }
+
+      this.uncommittedCache.set(projectPath, fileStatuses.length);
+      return fileStatuses;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Obtém o diff unificado de arquivos alterados (geral ou para um arquivo específico).
+   */
+  public async getDiff(projectPath: string, targetFile?: string): Promise<GitDiffResult> {
+    try {
+      if (!projectPath || !fs.existsSync(projectPath)) {
+        return { success: false, diff: '', files: [], error: 'Diretório do projeto não encontrado.' };
+      }
+
+      if (targetFile && !isSafeLocalPath(targetFile)) {
+        return { success: false, diff: '', files: [], error: 'Caminho de arquivo inválido para diff.' };
+      }
+
+      const args = ['diff', 'HEAD'];
+      if (targetFile) {
+        args.push('--', targetFile);
+      }
+
+      let diffOutput = '';
+      try {
+        const { stdout } = await execFileAsync('git', args, { cwd: projectPath, maxBuffer: 10 * 1024 * 1024 });
+        diffOutput = stdout;
+      } catch {
+        // Fallback caso HEAD ainda não exista (ex: repositório sem commits iniciais)
+        const fallbackArgs = ['diff'];
+        if (targetFile) fallbackArgs.push('--', targetFile);
+        const { stdout } = await execFileAsync('git', fallbackArgs, { cwd: projectPath, maxBuffer: 10 * 1024 * 1024 });
+        diffOutput = stdout;
+      }
+
+      const fileMatches = Array.from(diffOutput.matchAll(/diff --git a\/(.+) b\/(.+)/g)).map((m) => m[1]);
+
+      return {
+        success: true,
+        diff: diffOutput,
+        files: Array.from(new Set(fileMatches))
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        diff: '',
+        files: [],
+        error: err?.message || String(err)
+      };
     }
   }
 }

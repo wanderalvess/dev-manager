@@ -1,12 +1,23 @@
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { KarafDeployRequest, PomInfo, getKarafSshPort, KarafBundleInfo } from '../../shared/types';
+import {
+  KarafDeployRequest,
+  PomInfo,
+  getKarafSshPort,
+  KarafBundleInfo,
+  KarafBundleDetails,
+  BundleDependencyCheckResult,
+  InstallBundleRequest,
+  ReinstallBundleRequest,
+  UpdateBundleVersionRequest,
+  KarafBundleDependent
+} from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
 import { runCapturedProcess } from '../utils/process';
 
-const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall'] as const;
+const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall', 'refresh'] as const;
 type BundleAction = (typeof BUNDLE_ACTIONS)[number];
 
 /**
@@ -442,7 +453,7 @@ export class KarafService {
           const id = parts[0];
           const version = parts[parts.length - 2] || '';
           const name = parts[parts.length - 1] || '';
-          bundles.push({ id, state: parseBundleState(parts[1]), level: parts[2], version, name });
+          bundles.push({ id, state: parseBundleState(parts[1]), level: parts[2], version, name, symbolicName: name });
           continue;
         }
       }
@@ -458,7 +469,7 @@ export class KarafService {
         const name = bracketMatch[5]?.trim() || '';
         const version = bracketMatch[6]?.trim() || '';
 
-        bundles.push({ id, state: parseBundleState(bracketMatch[2].trim()), blueprint, level, name, version });
+        bundles.push({ id, state: parseBundleState(bracketMatch[2].trim()), blueprint, level, name, version, symbolicName: name });
       }
     }
 
@@ -496,4 +507,488 @@ export class KarafService {
       output: output || res.stdout || res.stderr
     };
   }
+
+  /**
+   * Obtém detalhes estruturados do bundle inspecionando cabeçalhos do manifesto
+   * e fiações de capacidades OSGi.
+   */
+  public async getBundleDetails(
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<KarafBundleDetails | null> {
+    const cleanId = bundleId.trim();
+    if (!/^\d+$/.test(cleanId)) return null;
+
+    const dummyChunk = () => {};
+    const headersRes = await this.executeKarafCommand(`bundle:headers ${cleanId}`, dummyChunk, credentials);
+    const capsRes = await this.executeKarafCommand(`bundle:capabilities ${cleanId}`, dummyChunk, credentials);
+
+    const rawHeaders = parseManifestHeaders(headersRes.stdout);
+    const dependentBundles = parseCapabilitiesWiredBundles(capsRes.stdout);
+
+    const symbolicName = rawHeaders['Bundle-SymbolicName']?.split(';')[0]?.trim() || '';
+    const name = rawHeaders['Bundle-Name']?.trim() || symbolicName || `Bundle ${cleanId}`;
+    const version = rawHeaders['Bundle-Version']?.trim() || '0.0.0';
+    const location = rawHeaders['Bundle-Update-Location'] || rawHeaders['Bundle-Location'] || '';
+
+    const exportedPackages = parseClauseList(rawHeaders['Export-Package']);
+    const importedPackages = parseClauseList(rawHeaders['Import-Package']);
+    const requiredBundles = parseClauseList(rawHeaders['Require-Bundle']);
+
+    // Diagnóstico se o bundle estiver em estado não-ativo ou se diag estiver disponível
+    let diag: string | undefined;
+    const diagRes = await this.executeKarafCommand(`bundle:diag ${cleanId}`, dummyChunk, credentials);
+    if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
+      diag = diagRes.stdout.trim();
+    }
+
+    return {
+      id: cleanId,
+      name,
+      symbolicName,
+      version,
+      state: 'Active', // Atualizado pelo chamador se houver lista
+      location,
+      exportedPackages,
+      importedPackages,
+      requiredBundles,
+      dependentBundles,
+      rawHeaders,
+      diag
+    };
+  }
+
+  /**
+   * Verifica dependências de um bundle existente antes de desinstalar ou alterar,
+   * alertando sobre potenciais impactos no runtime OSGi.
+   */
+  public async checkBundleDependencies(
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<BundleDependencyCheckResult> {
+    const cleanId = bundleId.trim();
+    const details = await this.getBundleDetails(cleanId, credentials);
+
+    if (!details) {
+      return {
+        bundleId: cleanId,
+        alreadyInstalled: false,
+        dependentBundles: [],
+        exportedPackages: [],
+        riskLevel: 'LOW',
+        warningMessage: 'Bundle não encontrado no runtime OSGi.',
+        canProceed: true
+      };
+    }
+
+    const hasDependents = details.dependentBundles.length > 0;
+    const hasExports = details.exportedPackages.length > 0;
+
+    let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
+    let warningMessage = 'Nenhum bundle dependente detectado. É seguro prosseguir com a operação.';
+
+    if (hasDependents) {
+      riskLevel = 'HIGH';
+      warningMessage = `Atenção: ${details.dependentBundles.length} bundle(s) dependem diretamente deste módulo. Desinstalá-lo quebrará esses módulos ativos.`;
+    } else if (hasExports) {
+      riskLevel = 'MEDIUM';
+      warningMessage = `Este bundle exporta ${details.exportedPackages.length} pacote(s) OSGi. Outros módulos que utilizem essas classes podem ser afetados.`;
+    }
+
+    return {
+      bundleId: cleanId,
+      name: details.name,
+      symbolicName: details.symbolicName,
+      targetVersion: details.version,
+      alreadyInstalled: true,
+      dependentBundles: details.dependentBundles,
+      exportedPackages: details.exportedPackages,
+      riskLevel,
+      warningMessage,
+      canProceed: true
+    };
+  }
+
+  /**
+   * Verifica dependências e conflitos antes de instalar um novo bundle ou outra versão.
+   * Identifica se já existe uma versão instalada e avalia o impacto da substituição.
+   */
+  public async checkInstallDependencies(
+    target: { location?: string; symbolicName?: string; version?: string },
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<BundleDependencyCheckResult> {
+    const installed = await this.listBundlesParsed(credentials);
+    const targetLoc = (target.location || '').trim();
+
+    // Tentar extrair artifactId ou symbolicName a partir de mvn:groupId/artifactId/version
+    let derivedName = (target.symbolicName || '').trim().toLowerCase();
+    if (!derivedName && targetLoc.startsWith('mvn:')) {
+      const parts = targetLoc.replace(/^mvn:/, '').split('/');
+      if (parts.length >= 2) {
+        derivedName = parts[1].toLowerCase();
+      }
+    }
+
+    // Busca se já existe um bundle com mesmo nome/symbolicName no container
+    const existing = installed.find((b) => {
+      const bSym = (b.symbolicName || b.name || '').toLowerCase();
+      if (derivedName && (bSym === derivedName || bSym.includes(derivedName) || derivedName.includes(bSym))) {
+        return true;
+      }
+      return false;
+    });
+
+    if (existing) {
+      const existingDetails = await this.getBundleDetails(existing.id, credentials);
+      const dependents = existingDetails?.dependentBundles || [];
+      const hasDependents = dependents.length > 0;
+
+      return {
+        bundleId: existing.id,
+        targetUrl: target.location,
+        targetVersion: target.version || 'desconhecida',
+        name: existing.name,
+        symbolicName: existing.symbolicName,
+        alreadyInstalled: true,
+        existingBundle: existing,
+        dependentBundles: dependents,
+        exportedPackages: existingDetails?.exportedPackages || [],
+        riskLevel: hasDependents ? 'HIGH' : 'MEDIUM',
+        warningMessage: `O bundle "${existing.name}" já está instalado (versão atual: ${existing.version}, nova versão alvo: ${target.version || 'desconhecida'}). ${
+          hasDependents
+            ? `${dependents.length} bundle(s) dependente(s) serão reconectados.`
+            : 'Nenhum dependente ativo no momento.'
+        }`,
+        canProceed: true
+      };
+    }
+
+    return {
+      targetUrl: target.location,
+      targetVersion: target.version,
+      alreadyInstalled: false,
+      dependentBundles: [],
+      exportedPackages: [],
+      riskLevel: 'LOW',
+      warningMessage: 'Novo bundle no container OSGi. Nenhuma colisão com versão existente detectada.',
+      canProceed: true
+    };
+  }
+
+  /**
+   * Instala um novo bundle no Karaf a partir de coordenada Maven ou arquivo local.
+   */
+  public async installBundle(
+    request: InstallBundleRequest,
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; bundleId?: string; state?: string; diag?: string; output: string }> {
+    let loc = (request.location || '').trim();
+    if (!loc) {
+      return { success: false, output: 'Localização ou coordenada do bundle não informada.' };
+    }
+
+    // Normaliza caminhos de arquivo locais no Windows para file:/
+    if (!loc.startsWith('mvn:') && !loc.startsWith('file:') && !loc.startsWith('http:') && !loc.startsWith('https:')) {
+      loc = `file:/${loc.replace(/\\/g, '/')}`;
+    }
+
+    const flag = request.startImmediately !== false ? '-s ' : '';
+    const cmd = `bundle:install ${flag}"${loc}"`;
+
+    if (!isSafeKarafCommand(cmd)) {
+      return { success: false, output: 'Comando de instalação contém caracteres inválidos.' };
+    }
+
+    onChunk(`> ${cmd}\r\n`);
+    let output = '';
+    const res = await this.executeKarafCommand(
+      cmd,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      request.credentials
+    );
+
+    if (res.code !== 0) {
+      return { success: false, output: output || res.stderr || 'Falha ao instalar bundle' };
+    }
+
+    // Tentar extrair o ID do novo bundle retornado pelo Karaf (ex: "Bundle ID: 123" ou apenas "123")
+    const match = (res.stdout || '').match(/(?:Bundle ID:\s*|ID:\s*|^)\s*(\d+)/m);
+    const newId = match ? match[1] : undefined;
+
+    let diag: string | undefined;
+    if (newId) {
+      await this.executeKarafCommand(`bundle:refresh ${newId}`, () => {}, request.credentials);
+      const diagRes = await this.executeKarafCommand(`bundle:diag ${newId}`, () => {}, request.credentials);
+      if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
+        diag = diagRes.stdout.trim();
+      }
+    }
+
+    return {
+      success: true,
+      bundleId: newId,
+      diag,
+      output: output || res.stdout
+    };
+  }
+
+  /**
+   * Desinstala um bundle existente do runtime OSGi e limpa fiações via bundle:refresh.
+   */
+  public async uninstallBundle(
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanId = bundleId.trim();
+    if (!/^\d+$/.test(cleanId)) {
+      return { success: false, output: 'ID do bundle inválido.' };
+    }
+
+    let output = '';
+    const res = await this.executeKarafCommand(
+      `bundle:uninstall ${cleanId}`,
+      (chunk) => {
+        output += chunk;
+      },
+      credentials
+    );
+
+    if (res.code === 0) {
+      await this.executeKarafCommand('bundle:refresh', (chunk) => {
+        output += chunk;
+      }, credentials);
+    }
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
+  }
+
+  /**
+   * Reinstala / atualiza um bundle no runtime OSGi.
+   * Opcionalmente executa mvn clean install previamente e recarrega o bundle via bundle:update.
+   */
+  public async reinstallBundle(
+    request: ReinstallBundleRequest,
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; state?: string; diag?: string; output: string }> {
+    const cleanId = request.bundleId.trim();
+    if (!/^\d+$/.test(cleanId)) {
+      return { success: false, output: 'ID do bundle inválido.' };
+    }
+
+    // 1. Compilação Maven opcional se solicitado
+    if (request.rebuild && request.projectPath) {
+      onChunk(`\r\n[1/3] Compilando projeto Maven antes de reinstalar...\r\n`);
+      const buildRes = await this.runMavenBuild(request.projectPath, true, onChunk);
+      if (buildRes.code !== 0) {
+        return { success: false, output: 'Falha na compilação Maven prévia. Reinstalação cancelada.' };
+      }
+    }
+
+    // 2. Atualização do bundle via Karaf
+    onChunk(`\r\n[2/3] Atualizando bundle ${cleanId} no container OSGi...\r\n`);
+    let updateCmd = `bundle:update ${cleanId}`;
+    if (request.location && request.location.trim()) {
+      let loc = request.location.trim();
+      if (!loc.startsWith('mvn:') && !loc.startsWith('file:') && !loc.startsWith('http:')) {
+        loc = `file:/${loc.replace(/\\/g, '/')}`;
+      }
+      updateCmd = `bundle:update ${cleanId} "${loc}"`;
+    }
+
+    let output = '';
+    const updateRes = await this.executeKarafCommand(
+      updateCmd,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      request.credentials
+    );
+
+    if (updateRes.code !== 0) {
+      return { success: false, output: output || updateRes.stderr || 'Falha no bundle:update' };
+    }
+
+    // 3. Atualizar fiações e garantir inicialização
+    onChunk(`\r\n[3/3] Atualizando fiações (bundle:refresh) e iniciando bundle...\r\n`);
+    await this.executeKarafCommand(`bundle:refresh ${cleanId}`, onChunk, request.credentials);
+    await this.executeKarafCommand(`bundle:start ${cleanId}`, onChunk, request.credentials);
+
+    // Checagem de diagnóstico
+    let diag: string | undefined;
+    const diagRes = await this.executeKarafCommand(`bundle:diag ${cleanId}`, () => {}, request.credentials);
+    if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
+      diag = diagRes.stdout.trim();
+    }
+
+    return {
+      success: true,
+      diag,
+      output
+    };
+  }
+
+  /**
+   * Atualiza a versão de um bundle existente especificando uma nova versão ou localização.
+   */
+  public async updateBundleVersion(
+    request: UpdateBundleVersionRequest,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanId = request.bundleId.trim();
+    if (!/^\d+$/.test(cleanId)) {
+      return { success: false, output: 'ID do bundle inválido.' };
+    }
+
+    let target = request.newVersionOrLocation.trim();
+    if (!target) {
+      return { success: false, output: 'Nova versão ou localização não informada.' };
+    }
+
+    if (!target.startsWith('mvn:') && !target.startsWith('file:') && !target.startsWith('http:')) {
+      target = `file:/${target.replace(/\\/g, '/')}`;
+    }
+
+    const cmd = `bundle:update ${cleanId} "${target}"`;
+    let output = '';
+    const res = await this.executeKarafCommand(
+      cmd,
+      (chunk) => {
+        output += chunk;
+      },
+      credentials
+    );
+
+    if (res.code === 0) {
+      await this.executeKarafCommand(`bundle:refresh ${cleanId}`, (chunk) => {
+        output += chunk;
+      }, credentials);
+      await this.executeKarafCommand(`bundle:start ${cleanId}`, (chunk) => {
+        output += chunk;
+      }, credentials);
+    }
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
+  }
+}
+
+/**
+ * Utilitário: quebra cláusulas de pacotes do manifesto OSGi respeitando aspas e parênteses.
+ */
+export function parseClauseList(val?: string): string[] {
+  if (!val || typeof val !== 'string') return [];
+  const results: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  let inParentheses = 0;
+
+  for (let i = 0; i < val.length; i++) {
+    const char = val[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === '(' || char === '[') {
+      inParentheses++;
+    } else if (char === ')' || char === ']') {
+      if (inParentheses > 0) inParentheses--;
+    }
+
+    if (char === ',' && !inQuotes && inParentheses === 0) {
+      const trimmed = current.trim();
+      if (trimmed) results.push(trimmed);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  const lastTrimmed = current.trim();
+  if (lastTrimmed) results.push(lastTrimmed);
+
+  return results;
+}
+
+/**
+ * Utilitário: analisa saída do comando bundle:headers e extrai mapa de chaves/valores.
+ */
+export function parseManifestHeaders(stdout: string): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (!stdout) return headers;
+  const lines = stdout.split(/\r?\n/);
+  let currentKey = '';
+
+  for (const line of lines) {
+    const match = line.match(/^([a-zA-Z0-9_\-]+)\s*=\s*(.*)$/);
+    if (match) {
+      currentKey = match[1].trim();
+      headers[currentKey] = match[2].trim();
+    } else if (currentKey && (line.startsWith('\t') || line.startsWith('  '))) {
+      const continuation = line.trim();
+      if (continuation) {
+        headers[currentKey] = headers[currentKey]
+          ? `${headers[currentKey]} ${continuation}`
+          : continuation;
+      }
+    }
+  }
+
+  return headers;
+}
+
+/**
+ * Utilitário: analisa saída de bundle:capabilities e extrai lista de bundles dependentes conectados.
+ */
+export function parseCapabilitiesWiredBundles(stdout: string): KarafBundleDependent[] {
+  const dependents: KarafBundleDependent[] = [];
+  if (!stdout) return dependents;
+
+  const lines = stdout.split(/\r?\n/);
+  let inWiredSection = false;
+  let currentReason = 'osgi.wiring';
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    if (trimmed.startsWith('osgi.')) {
+      currentReason = trimmed.split(';')[0] || 'osgi.wiring';
+      inWiredSection = false;
+    }
+
+    if (trimmed.toLowerCase().includes('wired to:')) {
+      inWiredSection = true;
+      continue;
+    }
+
+    if (inWiredSection) {
+      if (!line.startsWith(' ') && !line.startsWith('\t') && !trimmed.startsWith('[')) {
+        inWiredSection = false;
+        continue;
+      }
+
+      const match = trimmed.match(/^\[\s*(\d+)\s*\]\s*([^(\[\r\n]+)(?:\s*\(([^)]+)\))?/);
+      if (match) {
+        const id = match[1].trim();
+        const name = match[2].trim();
+        const version = match[3]?.trim();
+        if (!dependents.some((d) => d.id === id)) {
+          dependents.push({
+            id,
+            name: name || `Bundle ${id}`,
+            version,
+            reason: currentReason
+          });
+        }
+      }
+    }
+  }
+
+  return dependents;
 }

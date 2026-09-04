@@ -24,7 +24,10 @@ import {
   AutomationStep,
   DocsIndexProgress,
   DatabaseConnectionConfig,
-  DeployProfile
+  DeployProfile,
+  InstallBundleRequest,
+  ReinstallBundleRequest,
+  UpdateBundleVersionRequest
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
@@ -83,8 +86,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle('system:get-app-info', async (): Promise<SystemAppInfo> => {
     const isAdmin = await windowsService.checkAdminPrivileges();
-    const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
-    const configPath = path.join(appData, 'dev-manager', 'config.json');
+    const configPath = configService.getConfigFilePath();
 
     return {
       appName: 'Dev Manager',
@@ -266,13 +268,58 @@ export function registerIpcHandlers(
     'karaf:manage-bundle',
     async (
       _,
-      action: 'start' | 'stop' | 'restart' | 'uninstall',
+      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
       bundleId: string,
       credentials?: { user?: string; pass?: string; port?: number }
     ) => {
       return await karafService.manageBundle(action, bundleId, credentials);
     }
   );
+
+  ipcMain.handle(
+    'karaf:get-bundle-details',
+    async (_, bundleId: string, credentials?: { user?: string; pass?: string; port?: number }) => {
+      return await karafService.getBundleDetails(bundleId, credentials);
+    }
+  );
+
+  ipcMain.handle(
+    'karaf:check-bundle-deps',
+    async (_, bundleId: string, credentials?: { user?: string; pass?: string; port?: number }) => {
+      return await karafService.checkBundleDependencies(bundleId, credentials);
+    }
+  );
+
+  ipcMain.handle(
+    'karaf:check-install-deps',
+    async (
+      _,
+      target: { location?: string; symbolicName?: string; version?: string },
+      credentials?: { user?: string; pass?: string; port?: number }
+    ) => {
+      return await karafService.checkInstallDependencies(target, credentials);
+    }
+  );
+
+  ipcMain.handle('karaf:install-bundle', async (_, request: InstallBundleRequest) => {
+    return await karafService.installBundle(request, (chunk) => {
+      mainWindow.webContents.send('karaf:log-chunk', chunk);
+    });
+  });
+
+  ipcMain.handle('karaf:uninstall-bundle', async (_, bundleId: string, credentials?: { user?: string; pass?: string; port?: number }) => {
+    return await karafService.uninstallBundle(bundleId, credentials);
+  });
+
+  ipcMain.handle('karaf:reinstall-bundle', async (_, request: ReinstallBundleRequest) => {
+    return await karafService.reinstallBundle(request, (chunk) => {
+      mainWindow.webContents.send('karaf:log-chunk', chunk);
+    });
+  });
+
+  ipcMain.handle('karaf:update-bundle-version', async (_, request: UpdateBundleVersionRequest) => {
+    return await karafService.updateBundleVersion(request);
+  });
 
   ipcMain.handle('karaf:parse-pom', async (_, projectPath: string) => {
     return karafService.parseProjectPomOrBat(projectPath);
@@ -315,6 +362,14 @@ export function registerIpcHandlers(
 
   ipcMain.handle('git:get-commit-history', async (_, projectPath: string, limit?: number) => {
     return await gitAzureService.getCommitHistory(projectPath, limit);
+  });
+
+  ipcMain.handle('git:get-status-details', async (_, projectPath: string) => {
+    return await gitAzureService.getStatusDetails(projectPath);
+  });
+
+  ipcMain.handle('git:get-diff', async (_, projectPath: string, targetFile?: string) => {
+    return await gitAzureService.getDiff(projectPath, targetFile);
   });
 
   ipcMain.handle('shell:open-external', async (_, url: string) => {

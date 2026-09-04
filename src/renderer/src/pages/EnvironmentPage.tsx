@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Play,
   Square,
@@ -26,7 +26,10 @@ import {
   FolderOpen,
   Wifi,
   Cpu,
-  Check
+  Check,
+  Trash2,
+  Download,
+  Upload
 } from 'lucide-react';
 import {
   ServiceStatus,
@@ -87,16 +90,28 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     return profiles.find((p) => p.id === activeProfileId) || profiles[0];
   }, [profiles, activeProfileId]);
 
+  // Referências para valores voláteis usados em checagens periódicas (evita recriar callbacks)
+  const settingsRef = useRef<AppSettings | null>(settings);
+  settingsRef.current = settings;
+
+  const portsRef = useRef<PortStatus[]>(ports);
+  portsRef.current = ports;
+
+  const profilesRef = useRef<AutomationProfile[]>(profiles);
+  profilesRef.current = profiles;
+
   // Carregar Configurações e Perfis
   const fetchSettings = useCallback(async () => {
     if (window.electronAPI && window.electronAPI.getSettings) {
       try {
         const st = await window.electronAPI.getSettings();
         setSettings(st);
+        settingsRef.current = st;
 
         if (st.automationProfiles && st.automationProfiles.length > 0) {
           setProfiles(st.automationProfiles);
-          setActiveProfileId(st.activeProfileId || st.automationProfiles[0].id);
+          profilesRef.current = st.automationProfiles;
+          setActiveProfileId((curr) => curr || st.activeProfileId || st.automationProfiles[0].id);
         }
       } catch (err) {
         console.error('Erro ao buscar configurações:', err);
@@ -104,37 +119,58 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     }
   }, []);
 
-  // Verificar Portas
+  // Verificar Portas com trava contra chamadas sobrepostas e verificação de igualdade
+  const isCheckingPortsRef = useRef(false);
   const fetchPorts = useCallback(async () => {
+    if (isCheckingPortsRef.current) return;
     if (window.electronAPI && window.electronAPI.checkPorts) {
+      isCheckingPortsRef.current = true;
       setIsCheckingPorts(true);
       try {
         const portData = await window.electronAPI.checkPorts();
-        setPorts(portData);
+        setPorts((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(portData)) return prev;
+          return portData || [];
+        });
       } finally {
         setIsCheckingPorts(false);
+        isCheckingPortsRef.current = false;
       }
     }
   }, []);
 
-  // Verificar Processos
+  // Verificar Processos com trava contra chamadas sobrepostas e verificação de igualdade
+  const isCheckingProcessesRef = useRef(false);
   const fetchProcesses = useCallback(async () => {
+    if (isCheckingProcessesRef.current) return;
     if (window.electronAPI && window.electronAPI.getProcessesStatus) {
+      isCheckingProcessesRef.current = true;
       setIsCheckingProcesses(true);
       try {
         const procData = await window.electronAPI.getProcessesStatus();
-        setProcesses(procData);
+        setProcesses((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(procData)) return prev;
+          return procData || [];
+        });
       } finally {
         setIsCheckingProcesses(false);
+        isCheckingProcessesRef.current = false;
       }
     }
   }, []);
 
   // Verificar Karaf
+  const isCheckingKarafRef = useRef(false);
   const checkKarafRunning = useCallback(async () => {
+    if (isCheckingKarafRef.current) return;
     if (window.electronAPI && window.electronAPI.isEmbeddedKarafRunning) {
-      const running = await window.electronAPI.isEmbeddedKarafRunning();
-      setIsKarafEmbeddedRunning(running);
+      isCheckingKarafRef.current = true;
+      try {
+        const running = await window.electronAPI.isEmbeddedKarafRunning();
+        setIsKarafEmbeddedRunning((prev) => (prev === running ? prev : running));
+      } finally {
+        isCheckingKarafRef.current = false;
+      }
     }
   }, []);
 
@@ -143,28 +179,45 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const { copy: copyIp, copiedKey: copiedIp } = useCopyToClipboard();
   const [webHealth, setWebHealth] = useState<HttpHealthResult | null>(null);
 
+  const isCheckingNetworkRef = useRef(false);
   const fetchNetworkIps = useCallback(async () => {
+    if (isCheckingNetworkRef.current) return;
     if (window.electronAPI && window.electronAPI.getNetworkIps) {
+      isCheckingNetworkRef.current = true;
       try {
         const data = await window.electronAPI.getNetworkIps();
-        setNetworkIps(data);
+        setNetworkIps((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+          return data;
+        });
       } catch (err) {
         console.error('Erro ao buscar IPs de rede:', err);
+      } finally {
+        isCheckingNetworkRef.current = false;
       }
     }
   }, []);
 
+  // Checagem Web Health estável com URL computada via refs atuais
+  const isCheckingWebHealthRef = useRef(false);
   const checkWebHealth = useCallback(async () => {
+    if (isCheckingWebHealthRef.current) return;
     if (window.electronAPI && window.electronAPI.checkHttpHealth) {
+      isCheckingWebHealthRef.current = true;
       try {
-        const url = getWebUrl(settings, '', ports);
-        const res = await window.electronAPI.checkHttpHealth(url, 2500);
-        setWebHealth(res);
+        const url = getWebUrl(settingsRef.current, '', portsRef.current);
+        const res = await window.electronAPI.checkHttpHealth(url, 2000);
+        setWebHealth((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(res)) return prev;
+          return res;
+        });
       } catch {
         setWebHealth(null);
+      } finally {
+        isCheckingWebHealthRef.current = false;
       }
     }
-  }, [settings, ports]);
+  }, []);
 
   const refreshAllStatus = useCallback(() => {
     onRefreshServices();
@@ -175,6 +228,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     checkWebHealth();
   }, [onRefreshServices, fetchPorts, fetchProcesses, checkKarafRunning, fetchNetworkIps, checkWebHealth]);
 
+  // Montagem estável: executa carga inicial UMA VEZ e define polling de 8s sem loop infinito
   useEffect(() => {
     fetchSettings();
     refreshAllStatus();
@@ -184,23 +238,29 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       fetchProcesses();
       checkKarafRunning();
       checkWebHealth();
-    }, 6000);
+    }, 8000);
     return () => clearInterval(interval);
-  }, [fetchSettings, refreshAllStatus, fetchPorts, fetchProcesses, checkKarafRunning, checkWebHealth]);
+  }, []);
 
-  // Ouvir logs e progresso de passos
+  // Ouvir logs e progresso de passos com buffer controlado para evitar estouro de memória
   useEffect(() => {
     if (!window.electronAPI) return;
 
     const unsubEnv = window.electronAPI.onEnvLog((newLog) => {
-      setLogs((prev) => [...prev, newLog]);
+      setLogs((prev) => {
+        const next = [...prev, newLog];
+        return next.length > 1000 ? next.slice(next.length - 1000) : next;
+      });
       if (newLog.message.includes('sucesso') || newLog.message.includes('🎉')) {
         refreshAllStatus();
       }
     });
 
     const unsubKaraf = window.electronAPI.onKarafStdout((chunk) => {
-      setLogs((prev) => [...prev, chunk]);
+      setLogs((prev) => {
+        const next = [...prev, chunk];
+        return next.length > 1000 ? next.slice(next.length - 1000) : next;
+      });
       checkKarafRunning();
     });
 
@@ -217,74 +277,216 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     };
   }, [refreshAllStatus, checkKarafRunning]);
 
-  // Gestão de Perfis (Salvar / Selecionar / Duplicar / Excluir)
-  const handleSelectProfile = async (id: string) => {
-    setActiveProfileId(id);
-    if (window.electronAPI && window.electronAPI.saveProfiles) {
-      await window.electronAPI.saveProfiles(profiles, id);
-    }
-  };
+  // Persistência Centralizada de Perfis (Sem risco de closure defasada / sobreposição)
+  const persistProfiles = useCallback(
+    async (newProfiles: AutomationProfile[], newActiveId: string) => {
+      setProfiles(newProfiles);
+      profilesRef.current = newProfiles;
+      setActiveProfileId(newActiveId);
 
-  const handleSaveProfile = async (saved: AutomationProfile) => {
-    let updatedProfiles: AutomationProfile[];
-    const exists = profiles.some((p) => p.id === saved.id);
+      if (window.electronAPI && window.electronAPI.saveProfiles) {
+        try {
+          const updatedSettings = await window.electronAPI.saveProfiles(newProfiles, newActiveId);
+          if (updatedSettings) {
+            setSettings(updatedSettings);
+            settingsRef.current = updatedSettings;
+          }
+        } catch (err) {
+          console.error('Erro ao persistir perfis:', err);
+        }
+      }
+    },
+    []
+  );
 
-    if (exists) {
-      updatedProfiles = profiles.map((p) => (p.id === saved.id ? saved : p));
-    } else {
-      updatedProfiles = [...profiles, saved];
-    }
+  // Gestão de Perfis (Salvar / Selecionar / Duplicar / Excluir / Exportar / Importar)
+  const handleSelectProfile = useCallback(
+    async (id: string) => {
+      const currentList = profilesRef.current;
+      await persistProfiles(currentList, id);
+    },
+    [persistProfiles]
+  );
 
-    setProfiles(updatedProfiles);
-    setActiveProfileId(saved.id);
+  const handleSaveProfile = useCallback(
+    async (saved: AutomationProfile) => {
+      const currentList = profilesRef.current;
+      const exists = currentList.some((p) => p.id === saved.id);
+      const updated = exists
+        ? currentList.map((p) => (p.id === saved.id ? saved : p))
+        : [...currentList, saved];
+      await persistProfiles(updated, saved.id);
+    },
+    [persistProfiles]
+  );
 
-    if (window.electronAPI && window.electronAPI.saveProfiles) {
-      await window.electronAPI.saveProfiles(updatedProfiles, saved.id);
-    }
-  };
+  const handleDeleteProfile = useCallback(
+    async (id: string, skipConfirm = false) => {
+      const currentList = profilesRef.current;
+      if (currentList.length <= 1) {
+        alert('Não é possível excluir o único perfil existente.');
+        return;
+      }
+      const target = currentList.find((p) => p.id === id);
+      if (!target) return;
 
-  const handleDeleteProfile = async (id: string) => {
-    if (profiles.length <= 1) {
-      alert('Não é possível excluir o único perfil existente.');
-      return;
-    }
-    const remaining = profiles.filter((p) => p.id !== id);
-    setProfiles(remaining);
-    const nextId = remaining[0]?.id || '';
-    setActiveProfileId(nextId);
+      if (!skipConfirm) {
+        if (!confirm(`Tem certeza que deseja excluir o perfil "${target.name}"?`)) {
+          return;
+        }
+      }
 
-    if (window.electronAPI && window.electronAPI.saveProfiles) {
-      await window.electronAPI.saveProfiles(remaining, nextId);
-    }
-  };
+      const remaining = currentList.filter((p) => p.id !== id);
+      const nextActiveId = remaining[0]?.id || '';
+      await persistProfiles(remaining, nextActiveId);
+    },
+    [persistProfiles]
+  );
 
-  const handleDuplicateProfile = async () => {
-    if (!activeProfile) return;
+  const handleDuplicateProfile = useCallback(async () => {
+    const currentActive = activeProfile;
+    if (!currentActive) return;
+
+    const newId = `profile-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const duplicated: AutomationProfile = {
-      ...activeProfile,
-      id: `profile-${Date.now()}`,
-      name: `${activeProfile.name} (Cópia)`,
+      ...currentActive,
+      id: newId,
+      name: `${currentActive.name} (Cópia)`,
       isDefault: false,
-      steps: activeProfile.steps.map((s) => ({
+      steps: (currentActive.steps || []).map((s) => ({
         ...s,
         id: `step-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
       }))
     };
-    await handleSaveProfile(duplicated);
-  };
+
+    const currentList = profilesRef.current;
+    await persistProfiles([...currentList, duplicated], newId);
+  }, [activeProfile, persistProfiles]);
+
+  // Exportar Perfil Pronto como JSON
+  const handleExportProfile = useCallback(
+    (profileToExport?: AutomationProfile) => {
+      const target = profileToExport || activeProfile;
+      if (!target) {
+        alert('Nenhum perfil selecionado para exportação.');
+        return;
+      }
+
+      try {
+        const exportData = {
+          version: 1,
+          type: 'dev-manager-automation-profile',
+          exportedAt: new Date().toISOString(),
+          profile: {
+            name: target.name,
+            description: target.description || '',
+            steps: (target.steps || []).map((s) => ({
+              name: s.name,
+              type: s.type,
+              enabled: s.enabled !== false,
+              command: s.command || '',
+              cwd: s.cwd || '',
+              port: s.port,
+              waitForPort: s.waitForPort ?? false,
+              delayAfterSeconds: s.delayAfterSeconds ?? 2,
+              targetName: s.targetName || '',
+              browserUrl: s.browserUrl || '',
+              launchMode: s.launchMode || 'wt'
+            }))
+          }
+        };
+
+        const jsonStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const safeName = (target.name || 'perfil')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9_-]/gi, '_')
+          .replace(/_+/g, '_');
+        a.href = url;
+        a.download = `perfil-${safeName}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err: any) {
+        alert(`Erro ao exportar perfil: ${err?.message || err}`);
+      }
+    },
+    [activeProfile]
+  );
+
+  // Importar Perfil a partir de JSON
+  const importFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+
+        // Suporta formato exportado padrão { profile: { ... } } ou direto { name, steps }
+        const rawProfile = parsed.profile || (parsed.steps ? parsed : null);
+
+        if (!rawProfile || !Array.isArray(rawProfile.steps)) {
+          alert('Arquivo JSON inválido. O arquivo deve conter uma lista de etapas (steps) válida.');
+          return;
+        }
+
+        const newId = `profile-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        const importedProfile: AutomationProfile = {
+          id: newId,
+          name: rawProfile.name ? `${rawProfile.name} (Importado)` : 'Perfil Importado',
+          description: rawProfile.description || '',
+          isDefault: false,
+          steps: (rawProfile.steps || []).map((s: any, idx: number) => ({
+            id: `step-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+            name: s.name || `Etapa ${idx + 1}`,
+            type: s.type || 'command',
+            enabled: s.enabled !== false,
+            command: s.command || '',
+            cwd: s.cwd || '',
+            port: s.port,
+            waitForPort: s.waitForPort ?? false,
+            delayAfterSeconds: s.delayAfterSeconds ?? 2,
+            targetName: s.targetName || '',
+            browserUrl: s.browserUrl || '',
+            launchMode: s.launchMode || 'wt'
+          }))
+        };
+
+        const currentList = profilesRef.current;
+        await persistProfiles([...currentList, importedProfile], newId);
+        alert(`Perfil "${importedProfile.name}" importado com sucesso!`);
+      } catch (err: any) {
+        alert(`Falha ao importar perfil: ${err?.message || err}`);
+      } finally {
+        if (e.target) e.target.value = '';
+      }
+    },
+    [persistProfiles]
+  );
 
   // Toggle de Habilitação do Passo no Perfil Ativo
-  const handleToggleStepEnabled = async (stepId: string, enabled: boolean) => {
-    if (!activeProfile) return;
-    const updatedSteps = activeProfile.steps.map((s) => (s.id === stepId ? { ...s, enabled } : s));
-    const updatedProfile = { ...activeProfile, steps: updatedSteps };
-    const updatedProfiles = profiles.map((p) => (p.id === activeProfile.id ? updatedProfile : p));
+  const handleToggleStepEnabled = useCallback(
+    async (stepId: string, enabled: boolean) => {
+      if (!activeProfile) return;
+      const currentList = profilesRef.current;
+      const currentActive = currentList.find((p) => p.id === activeProfile.id) || activeProfile;
+      const updatedSteps = (currentActive.steps || []).map((s) => (s.id === stepId ? { ...s, enabled } : s));
+      const updatedProfile = { ...currentActive, steps: updatedSteps };
+      const updatedProfiles = currentList.map((p) => (p.id === currentActive.id ? updatedProfile : p));
 
-    setProfiles(updatedProfiles);
-    if (window.electronAPI && window.electronAPI.saveProfiles) {
-      await window.electronAPI.saveProfiles(updatedProfiles, activeProfile.id);
-    }
-  };
+      await persistProfiles(updatedProfiles, currentActive.id);
+    },
+    [activeProfile, persistProfiles]
+  );
 
   // Execução do Perfil Completo em Sequência
   const handleRunActiveProfile = async () => {
@@ -559,8 +761,8 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
           {/* Ações de Gestão do Perfil e Botões Principais */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Botões do Perfil: Novo, Editar, Duplicar */}
-            <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border/60 text-xs">
+            {/* Botões do Perfil: Novo, Editar, Duplicar, Exportar, Importar, Excluir */}
+            <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border/60 text-xs gap-0.5">
               <button
                 type="button"
                 onClick={() => {
@@ -591,11 +793,52 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                 type="button"
                 onClick={handleDuplicateProfile}
                 className="flex items-center gap-1 px-2 py-1 text-muted-foreground hover:text-foreground font-semibold rounded-lg hover:bg-card transition-colors"
-                title="Duplicar este perfil"
+                title="Duplicar este perfil ativo"
               >
                 <Copy className="w-3.5 h-3.5" />
+                <span>Duplicar</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => handleExportProfile(activeProfile || undefined)}
+                className="flex items-center gap-1 px-2 py-1 text-muted-foreground hover:text-foreground font-semibold rounded-lg hover:bg-card transition-colors"
+                title="Exportar este perfil como arquivo JSON"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Exportar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => importFileInputRef.current?.click()}
+                className="flex items-center gap-1 px-2 py-1 text-muted-foreground hover:text-foreground font-semibold rounded-lg hover:bg-card transition-colors"
+                title="Importar perfil a partir de arquivo JSON"
+              >
+                <Upload className="w-3.5 h-3.5 text-blue-500" />
+                <span>Importar</span>
+              </button>
+
+              {profiles.length > 1 && activeProfile && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteProfile(activeProfile.id)}
+                  className="flex items-center gap-1 px-2 py-1 text-rose-500 hover:text-rose-600 font-semibold rounded-lg hover:bg-rose-500/10 transition-colors"
+                  title={`Excluir perfil "${activeProfile.name}"`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Excluir</span>
+                </button>
+              )}
             </div>
+
+            <input
+              type="file"
+              ref={importFileInputRef}
+              accept=".json,application/json"
+              onChange={handleImportFileChange}
+              className="hidden"
+            />
 
             {/* Menu de Ações do Perfil: Parar Tudo / Reiniciar Tudo */}
             <div className="relative">
@@ -1266,7 +1509,8 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         }}
         profile={editingProfile}
         onSave={handleSaveProfile}
-        onDelete={handleDeleteProfile}
+        onDelete={(id) => handleDeleteProfile(id, true)}
+        onExport={handleExportProfile}
       />
     </div>
   );

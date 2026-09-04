@@ -21,9 +21,13 @@ import {
   Plus,
   Check,
   X,
-  AlertCircle
+  AlertCircle,
+  Split,
+  Eye,
+  Copy,
+  FileCode
 } from 'lucide-react';
-import { GitProjectInfo, GitCommitInfo } from '../../../shared/types';
+import { GitProjectInfo, GitCommitInfo, GitFileStatus } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface GitAzurePageProps {
@@ -70,13 +74,36 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const [historyError, setHistoryError] = useState<string | null>(null);
   const { copy: copyHash, copiedKey: copiedHash } = useCopyToClipboard();
 
+  // Estados de Diff e Inspeção de Arquivos Alterados
+  const [isDiffModalOpen, setIsDiffModalOpen] = useState<boolean>(false);
+  const [diffFiles, setDiffFiles] = useState<GitFileStatus[]>([]);
+  const [selectedDiffFile, setSelectedDiffFile] = useState<string | null>(null);
+  const [diffText, setDiffText] = useState<string>('');
+  const [isLoadingDiff, setIsLoadingDiff] = useState<boolean>(false);
+  const [diffError, setDiffError] = useState<string | null>(null);
+  const { copy: copyDiff, copiedKey: copiedDiffKey } = useCopyToClipboard();
+
+  const [activeProjectOverride, setActiveProjectOverride] = useState<GitProjectInfo | null>(null);
+
+  useEffect(() => {
+    if (!selectedPath) return;
+    if (window.electronAPI && window.electronAPI.getProjectInfo) {
+      window.electronAPI.getProjectInfo(selectedPath).then((info) => {
+        if (info) setActiveProjectOverride(info);
+      });
+    }
+  }, [selectedPath]);
+
   const filteredProjects = projects.filter(
     (p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.currentBranch.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentProject = projects.find((p) => p.path === selectedPath) || filteredProjects[0];
+  const currentProject =
+    (activeProjectOverride && activeProjectOverride.path === selectedPath)
+      ? activeProjectOverride
+      : (projects.find((p) => p.path === selectedPath) || filteredProjects[0]);
 
   const handleOpenPr = async () => {
     if (!currentProject) return;
@@ -171,6 +198,40 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
       setHistoryError(err?.message || String(err));
     } finally {
       setIsLoadingHistory(false);
+    }
+  };
+
+  const handleOpenDiff = async (targetFilePath?: string) => {
+    if (!currentProject) return;
+    setIsDiffModalOpen(true);
+    setIsLoadingDiff(true);
+    setDiffError(null);
+    setSelectedDiffFile(targetFilePath || null);
+    try {
+      const [files, diffRes] = await Promise.all([
+        window.electronAPI.getGitStatusDetails(currentProject.path),
+        window.electronAPI.getGitDiff(currentProject.path, targetFilePath)
+      ]);
+      setDiffFiles(files || []);
+      setDiffText(diffRes?.diff || (diffRes?.error ? `Erro: ${diffRes.error}` : 'Nenhuma alteração encontrada.'));
+    } catch (err: any) {
+      setDiffError(err?.message || String(err));
+    } finally {
+      setIsLoadingDiff(false);
+    }
+  };
+
+  const handleSelectDiffFile = async (filePath: string | null) => {
+    if (!currentProject) return;
+    setSelectedDiffFile(filePath);
+    setIsLoadingDiff(true);
+    try {
+      const diffRes = await window.electronAPI.getGitDiff(currentProject.path, filePath || undefined);
+      setDiffText(diffRes?.diff || (diffRes?.error ? `Erro: ${diffRes.error}` : 'Nenhuma alteração encontrada neste arquivo.'));
+    } catch (err: any) {
+      setDiffError(err?.message || String(err));
+    } finally {
+      setIsLoadingDiff(false);
     }
   };
 
@@ -338,15 +399,30 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                     </div>
 
                     {(currentProject.uncommittedCount || 0) > 0 && (
-                      <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[11px] font-mono">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDiff()}
+                        className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[11px] font-mono transition cursor-pointer"
+                        title="Inspecionar arquivos alterados e visualizador de diff"
+                      >
                         <FileEdit className="w-3.5 h-3.5" />
-                        <span>{currentProject.uncommittedCount} alteração(ões) pendente(s)</span>
-                      </div>
+                        <span>{currentProject.uncommittedCount} alteração(ões)</span>
+                        <Eye className="w-3 h-3 ml-1 opacity-70" />
+                      </button>
                     )}
                   </div>
 
                   {/* Ações Rápidas de Git */}
                   <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDiff()}
+                      className="px-2.5 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+                      title="Visualizar diff e arquivos alterados"
+                    >
+                      <Split className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Diff</span>
+                    </button>
                     <button
                       type="button"
                       onClick={handleOpenHistory}
@@ -730,6 +806,176 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Inspeção de Diff */}
+      {isDiffModalOpen && currentProject && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-fade-in">
+            {/* Cabeçalho do Modal de Diff */}
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-2">
+                <Split className="w-5 h-5 text-amber-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">
+                    Alterações e Diff - {currentProject.name}
+                  </h3>
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    {diffFiles.length} arquivo(s) modificado(s) em relação a HEAD
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => copyDiff(diffText)}
+                  disabled={!diffText || isLoadingDiff}
+                  className="px-2.5 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-40"
+                  title="Copiar diff unificado para a área de transferência"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedDiffKey === diffText ? 'Copiado!' : 'Copiar Diff'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDiffModalOpen(false);
+                    setIsCommitModalOpen(true);
+                  }}
+                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                  title="Prosseguir para commit destas alterações"
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Commitar</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDiffModalOpen(false)}
+                  className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
+                  title="Fechar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Corpo do Modal: Split entre lista de arquivos e visualizador */}
+            <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+              {/* Painel lateral: lista de arquivos alterados */}
+              <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-border bg-muted/20 flex flex-col shrink-0">
+                <div className="p-3 border-b border-border flex items-center justify-between text-xs font-bold text-muted-foreground shrink-0">
+                  <span>Arquivos Alterados</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectDiffFile(null)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition cursor-pointer ${
+                      selectedDiffFile === null
+                        ? 'bg-primary text-primary-foreground font-bold'
+                        : 'bg-muted hover:bg-muted/80 text-foreground'
+                    }`}
+                  >
+                    Ver Todos
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {diffFiles.length === 0 ? (
+                    <div className="h-32 flex flex-col items-center justify-center text-xs text-muted-foreground text-center p-3">
+                      <Check className="w-6 h-6 text-emerald-500 mb-1" />
+                      <span>Árvore de trabalho limpa.</span>
+                    </div>
+                  ) : (
+                    diffFiles.map((file) => {
+                      const isSelected = selectedDiffFile === file.path;
+                      const badgeColor =
+                        file.status === 'added'
+                          ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'
+                          : file.status === 'deleted'
+                          ? 'bg-rose-500/15 text-rose-500 border-rose-500/30'
+                          : file.status === 'untracked'
+                          ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
+                          : 'bg-amber-500/15 text-amber-500 border-amber-500/30';
+                      const badgeLabel =
+                        file.status === 'added'
+                          ? 'A'
+                          : file.status === 'deleted'
+                          ? 'D'
+                          : file.status === 'untracked'
+                          ? '?'
+                          : 'M';
+
+                      return (
+                        <button
+                          key={file.path}
+                          type="button"
+                          onClick={() => handleSelectDiffFile(file.path)}
+                          className={`w-full text-left p-2 rounded-lg text-xs font-mono flex items-center gap-2 transition cursor-pointer ${
+                            isSelected
+                              ? 'bg-primary/15 border border-primary/40 text-foreground font-semibold'
+                              : 'hover:bg-muted/60 text-muted-foreground hover:text-foreground border border-transparent'
+                          }`}
+                        >
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border shrink-0 ${badgeColor}`}
+                          >
+                            {badgeLabel}
+                          </span>
+                          <span className="truncate flex-1" title={file.path}>
+                            {file.path}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Painel Principal: Visualizador de Diff com coloração de sintaxe */}
+              <div className="flex-1 bg-background/80 flex flex-col min-h-0 overflow-hidden">
+                {isLoadingDiff ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
+                    <RefreshCw className="w-6 h-6 animate-spin text-primary" />
+                    <span>Carregando diff do Git...</span>
+                  </div>
+                ) : diffError ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-xs text-rose-500 p-6 space-y-2 text-center">
+                    <AlertCircle className="w-8 h-8 opacity-70" />
+                    <p className="font-bold text-foreground">Erro ao carregar diff</p>
+                    <p className="font-mono text-muted-foreground">{diffError}</p>
+                  </div>
+                ) : !diffText || diffText.trim() === '' ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
+                    <FileCode className="w-8 h-8 opacity-30" />
+                    <p>Nenhuma alteração detectada para este arquivo.</p>
+                  </div>
+                ) : (
+                  <div className="flex-1 overflow-auto p-3 font-mono text-xs select-text">
+                    <pre className="whitespace-pre font-mono">
+                      {diffText.split(/\r?\n/).map((line, idx) => {
+                        let lineStyle = 'text-muted-foreground';
+                        if (line.startsWith('+++') || line.startsWith('---')) {
+                          lineStyle = 'text-foreground font-bold';
+                        } else if (line.startsWith('+')) {
+                          lineStyle = 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded-xs block';
+                        } else if (line.startsWith('-')) {
+                          lineStyle = 'text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1 rounded-xs block';
+                        } else if (line.startsWith('@@')) {
+                          lineStyle = 'text-sky-600 dark:text-sky-400 bg-sky-500/10 px-1 rounded-xs font-bold block my-1';
+                        } else if (line.startsWith('diff --git')) {
+                          lineStyle = 'text-foreground font-bold border-t border-border pt-2 mt-2 block';
+                        }
+                        return (
+                          <div key={idx} className={lineStyle}>
+                            {line || ' '}
+                          </div>
+                        );
+                      })}
+                    </pre>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

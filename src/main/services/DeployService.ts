@@ -64,6 +64,60 @@ export class DeployService {
         return { code: res.code, stderr: res.stderr };
       }
 
+      case 'karaf-bundle': {
+        const action = step.bundleAction || 'restart';
+        const bundleId = step.bundleId || '';
+        const location = step.bundleLocation || '';
+
+        if (action === 'install') {
+          if (!location) {
+            const err = `[ERRO] Etapa "${step.name}": localização do bundle não informada.\r\n`;
+            onChunk(err);
+            return { code: 1, stderr: err };
+          }
+          const res = await this.karafService.installBundle(
+            { location, startImmediately: step.bundleStart ?? true },
+            onChunk
+          );
+          return { code: res.success ? 0 : 1, stderr: res.success ? undefined : res.output };
+        }
+
+        if (action === 'reinstall') {
+          if (!bundleId) {
+            const err = `[ERRO] Etapa "${step.name}": ID do bundle não informado para reinstalação.\r\n`;
+            onChunk(err);
+            return { code: 1, stderr: err };
+          }
+          const res = await this.karafService.reinstallBundle(
+            { bundleId, location: location || undefined },
+            onChunk
+          );
+          return { code: res.success ? 0 : 1, stderr: res.success ? undefined : res.output };
+        }
+
+        if (action === 'uninstall') {
+          if (!bundleId) {
+            const err = `[ERRO] Etapa "${step.name}": ID do bundle não informado para desinstalação.\r\n`;
+            onChunk(err);
+            return { code: 1, stderr: err };
+          }
+          const res = await this.karafService.uninstallBundle(bundleId);
+          onChunk(res.output + '\r\n');
+          return { code: res.success ? 0 : 1, stderr: res.success ? undefined : res.output };
+        }
+
+        // Ações de manageBundle (start, stop, restart, refresh)
+        if (!bundleId) {
+          const err = `[ERRO] Etapa "${step.name}": ID do bundle não informado.\r\n`;
+          onChunk(err);
+          return { code: 1, stderr: err };
+        }
+        const bAction = (action === 'refresh' || action === 'start' || action === 'stop' ? action : 'restart') as any;
+        const res = await this.karafService.manageBundle(bAction, bundleId);
+        onChunk(res.output + '\r\n');
+        return { code: res.success ? 0 : 1, stderr: res.success ? undefined : res.output };
+      }
+
       case 'docker-build': {
         if (!step.dockerContextPath || !step.dockerImageTag) {
           const err = `[ERRO] Etapa "${step.name}": diretório de contexto ou tag da imagem ausente.\r\n`;
