@@ -43,6 +43,7 @@ import {
 } from '../../../shared/types';
 import { TerminalViewer } from '../components/TerminalViewer';
 import { ProfileEditorModal } from '../components/ProfileEditorModal';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface EnvironmentPageProps {
   services: ServiceStatus[];
@@ -139,7 +140,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
   // Verificar IPs de Rede
   const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
-  const [copiedIp, setCopiedIp] = useState<string | null>(null);
+  const { copy: copyIp, copiedKey: copiedIp } = useCopyToClipboard();
   const [webHealth, setWebHealth] = useState<HttpHealthResult | null>(null);
 
   const fetchNetworkIps = useCallback(async () => {
@@ -152,12 +153,6 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       }
     }
   }, []);
-
-  const copyIp = (ip: string, id: string) => {
-    navigator.clipboard.writeText(ip);
-    setCopiedIp(id);
-    setTimeout(() => setCopiedIp(null), 1500);
-  };
 
   const checkWebHealth = useCallback(async () => {
     if (window.electronAPI && window.electronAPI.checkHttpHealth) {

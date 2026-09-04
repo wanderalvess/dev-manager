@@ -29,6 +29,7 @@ import {
   Bot
 } from 'lucide-react';
 import { SystemAppInfo, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface HelpPageProps {
   onNavigate?: (tab: string) => void;
@@ -50,8 +51,9 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
   const [expandedFaqs, setExpandedFaqs] = useState<Record<string, boolean>>({});
   const [appInfo, setAppInfo] = useState<SystemAppInfo | null>(null);
   const [settings, setSettings] = useState<any>(null);
-  const [copiedDiag, setCopiedDiag] = useState(false);
-  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+  const { copy: copyDiag, copiedKey: copiedDiagKey } = useCopyToClipboard(2500);
+  const copiedDiag = copiedDiagKey === 'diag';
+  const { copy: copyToClipboard, copiedKey: copiedItem } = useCopyToClipboard(2000);
 
   useEffect(() => {
     if (window.electronAPI) {
@@ -69,12 +71,6 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       ...prev,
       [id]: !prev[id]
     }));
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedItem(id);
-    setTimeout(() => setCopiedItem(null), 2000);
   };
 
   const handleCopyDiagnostic = () => {
@@ -95,9 +91,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       `====================================================`
     ].join('\n');
 
-    navigator.clipboard.writeText(report);
-    setCopiedDiag(true);
-    setTimeout(() => setCopiedDiag(false), 2500);
+    copyDiag(report, 'diag');
   };
 
   const handleOpenLink = (url: string) => {

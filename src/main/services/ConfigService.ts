@@ -329,6 +329,16 @@ export function getAppDataDir(): string {
   return newDir;
 }
 
+/**
+ * Retorna `parsedValue` se for um array não vazio, senão `fallback`. Usado por
+ * getSettings() para os vários campos de lista persistidos (perfis, portas
+ * monitoradas, serviços/processos rastreados), que antes repetiam a mesma
+ * checagem `Array.isArray(...) && ...length > 0 ? ... : DEFAULT` uma a uma.
+ */
+function pickNonEmptyArray<T>(parsedValue: unknown, fallback: T[]): T[] {
+  return Array.isArray(parsedValue) && parsedValue.length > 0 ? (parsedValue as T[]) : fallback;
+}
+
 export class ConfigService {
   private configPath: string;
 
@@ -356,15 +366,9 @@ export class ConfigService {
       if (fs.existsSync(this.configPath)) {
         const raw = fs.readFileSync(this.configPath, 'utf-8');
         const parsed = JSON.parse(raw);
-        const automationProfiles =
-          parsed.automationProfiles && Array.isArray(parsed.automationProfiles) && parsed.automationProfiles.length > 0
-            ? parsed.automationProfiles
-            : DEFAULT_AUTOMATION_PROFILES;
+        const automationProfiles = pickNonEmptyArray(parsed.automationProfiles, DEFAULT_AUTOMATION_PROFILES);
         const activeProfileId = parsed.activeProfileId || automationProfiles[0]?.id;
-        const deployProfiles =
-          parsed.deployProfiles && Array.isArray(parsed.deployProfiles) && parsed.deployProfiles.length > 0
-            ? parsed.deployProfiles
-            : DEFAULT_DEPLOY_PROFILES;
+        const deployProfiles = pickNonEmptyArray(parsed.deployProfiles, DEFAULT_DEPLOY_PROFILES);
         const activeDeployProfileId = parsed.activeDeployProfileId || deployProfiles[0]?.id;
 
         // Migração de compatibilidade: config.json salvo por versões antigas podia usar as
@@ -382,13 +386,14 @@ export class ConfigService {
           ...defaultConfig,
           ...parsed,
           appPath: parsed.appPath || legacyAppPath || defaultConfig.appPath,
-          webPort: parsed.webPort || legacyWebPort || defaultConfig.webPort,
+          // Usa ?? em vez de || para não tratar uma porta salva como 0 como "não definida".
+          webPort: parsed.webPort ?? legacyWebPort ?? defaultConfig.webPort,
           webPath: parsed.webPath !== undefined ? parsed.webPath : (legacyWebPath !== undefined ? legacyWebPath : defaultConfig.webPath),
-          karafSshPort: parsed.karafSshPort || defaultConfig.karafSshPort,
-          karafDebugPort: parsed.karafDebugPort || defaultConfig.karafDebugPort,
-          monitoredPorts: parsed.monitoredPorts && parsed.monitoredPorts.length > 0 ? parsed.monitoredPorts : DEFAULT_MONITORED_PORTS,
-          trackedServices: parsed.trackedServices && parsed.trackedServices.length > 0 ? parsed.trackedServices : DEFAULT_TRACKED_SERVICES,
-          trackedProcesses: parsed.trackedProcesses && parsed.trackedProcesses.length > 0 ? parsed.trackedProcesses : DEFAULT_TRACKED_PROCESSES,
+          karafSshPort: parsed.karafSshPort ?? defaultConfig.karafSshPort,
+          karafDebugPort: parsed.karafDebugPort ?? defaultConfig.karafDebugPort,
+          monitoredPorts: pickNonEmptyArray(parsed.monitoredPorts, DEFAULT_MONITORED_PORTS),
+          trackedServices: pickNonEmptyArray(parsed.trackedServices, DEFAULT_TRACKED_SERVICES),
+          trackedProcesses: pickNonEmptyArray(parsed.trackedProcesses, DEFAULT_TRACKED_PROCESSES),
           automationDefaults: parsed.automationDefaults ? { ...DEFAULT_AUTOMATION_CONFIG, ...parsed.automationDefaults } : DEFAULT_AUTOMATION_CONFIG,
           automationProfiles,
           activeProfileId,
@@ -467,7 +472,7 @@ export class ConfigService {
    * Exporta as configurações atuais como JSON, opcionalmente limpando senhas sensíveis.
    */
   public exportSettings(sanitizePasswords = true): string {
-    const current: AppSettings = JSON.parse(JSON.stringify(this.getSettings()));
+    const current: AppSettings = structuredClone(this.getSettings());
     if (sanitizePasswords) {
       current.karafPass = '';
       if (current.databaseConnections) {
@@ -481,9 +486,31 @@ export class ConfigService {
   }
 
   /**
+   * Sinaliza perfis importados que contêm passos do tipo "comando" — estes executam
+   * texto arbitrário no SO quando o perfil é rodado. O import em si não bloqueia
+   * (é a finalidade da feature de compartilhar automações entre colegas), mas o
+   * chamador deve exibir este aviso antes do usuário rodar o perfil importado.
+   */
+  private collectCommandStepWarnings(profiles: unknown, kind: string): string[] {
+    if (!Array.isArray(profiles)) return [];
+    const warnings: string[] = [];
+    for (const profile of profiles) {
+      const steps = Array.isArray((profile as any)?.steps) ? (profile as any).steps : [];
+      const commandStep = steps.find((s: any) => s?.type === 'command' && s?.command);
+      if (commandStep) {
+        const label = (profile as any)?.name || (profile as any)?.id || '?';
+        warnings.push(`${kind} "${label}" executa um comando do sistema ("${commandStep.command}") quando rodado.`);
+      }
+    }
+    return warnings;
+  }
+
+  /**
    * Importa e mescla configurações a partir de um JSON exportado.
    */
-  public importSettings(jsonString: string): { success: boolean; error?: string; settings?: AppSettings } {
+  public importSettings(
+    jsonString: string
+  ): { success: boolean; error?: string; settings?: AppSettings; warnings?: string[] } {
     try {
       const parsed = JSON.parse(jsonString);
       if (!parsed || typeof parsed !== 'object') {
@@ -524,8 +551,13 @@ export class ConfigService {
       if (typeof parsed.karafUser === 'string') merged.karafUser = parsed.karafUser;
       if (typeof parsed.karafPass === 'string' && parsed.karafPass) merged.karafPass = parsed.karafPass;
 
+      const warnings = [
+        ...this.collectCommandStepWarnings(merged.automationProfiles, 'Perfil de automação'),
+        ...this.collectCommandStepWarnings(merged.deployProfiles, 'Perfil de deploy')
+      ];
+
       const saved = this.saveSettings(merged);
-      return { success: true, settings: saved };
+      return { success: true, settings: saved, warnings: warnings.length > 0 ? warnings : undefined };
     } catch (err: any) {
       return { success: false, error: `Falha ao processar arquivo JSON: ${err?.message || err}` };
     }

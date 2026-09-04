@@ -116,17 +116,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
 
   // Validação de Caminhos
   const validateAllPaths = useCallback(async (st: AppSettings) => {
-    if (window.electronAPI && window.electronAPI.checkPath) {
-      const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'jdkPath', 'appPath', 'intellijPath'];
-      const results: Record<string, PathStatusInfo> = {};
-      for (const key of keys) {
+    const checkPath = window.electronAPI?.checkPath;
+    if (!checkPath) return;
+
+    const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'jdkPath', 'appPath', 'intellijPath'];
+    const entries = await Promise.all(
+      keys.map(async (key) => {
         const val = st[key];
         if (typeof val === 'string' && val.trim()) {
-          results[key] = await window.electronAPI.checkPath(val);
+          return [key, await checkPath(val)] as const;
         }
-      }
-      setPathStatuses(results);
+        return null;
+      })
+    );
+    const results: Record<string, PathStatusInfo> = {};
+    for (const entry of entries) {
+      if (entry) results[entry[0]] = entry[1];
     }
+    setPathStatuses(results);
   }, []);
 
   const validateSinglePath = async (key: string, val: string) => {
@@ -291,6 +298,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
       setSettings(imported);
       await validateAllPaths(imported);
       if (onSettingsSaved) onSettingsSaved();
+      if (res?.warnings?.length) {
+        alert(
+          `Configurações importadas, mas atenção:\n\n${res.warnings.join('\n')}\n\n` +
+            'Revise esses perfis antes de executá-los — eles rodam comandos no seu computador.'
+        );
+      }
       setImportStatusMessage('Configurações importadas e aplicadas com sucesso!');
       setTimeout(() => setImportStatusMessage(null), 4000);
     } catch (err: any) {

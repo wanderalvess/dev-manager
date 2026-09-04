@@ -125,7 +125,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     try {
       await window.electronAPI.runDeployProfile(activeProfile);
     } catch (err: any) {
-      setTerminalLogs((prev) => [...prev, `[ERRO FATAL] ${err?.message || err}\r\n`]);
+      setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
     } finally {
       setIsDeploying(false);
     }

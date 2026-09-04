@@ -25,18 +25,15 @@ export class GitAzureService {
 
     try {
       const entries = fs.readdirSync(baseDir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          const projectDir = path.join(baseDir, entry.name);
-          const gitDir = path.join(projectDir, '.git');
-          if (fs.existsSync(gitDir)) {
-            const info = await this.getProjectInfo(projectDir);
-            if (info) {
-              results.push(info);
-            }
-          }
-        }
-      }
+      const gitDirs = entries
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => path.join(baseDir, entry.name))
+        .filter((projectDir) => fs.existsSync(path.join(projectDir, '.git')));
+
+      // getProjectInfo já reconfirma o .git internamente; roda em paralelo pois
+      // cada projeto spawna seu próprio `git status` independente dos demais.
+      const infos = await Promise.all(gitDirs.map((projectDir) => this.getProjectInfo(projectDir)));
+      results.push(...infos.filter((info): info is GitProjectInfo => info !== null));
     } catch (err) {
       console.error('Erro ao listar projetos Git:', err);
     }
@@ -71,7 +68,12 @@ export class GitAzureService {
       if (fs.existsSync(configFile)) {
         const configContent = fs.readFileSync(configFile, 'utf-8');
 
-        const urlMatch = configContent.match(/url\s*=\s*(.+)/);
+        // Prioriza a URL do remote "origin"; só recorre ao primeiro "url =" do arquivo
+        // se não houver remote "origin" (evita pegar um remote "upstream" listado antes
+        // em repositórios com múltiplos remotes, ex: fluxo de fork).
+        const originMatch = configContent.match(/\[remote "origin"\][^[]*?url\s*=\s*(.+)/);
+        const anyUrlMatch = configContent.match(/url\s*=\s*(.+)/);
+        const urlMatch = originMatch || anyUrlMatch;
         if (urlMatch) {
           remoteUrl = urlMatch[1].trim();
         }

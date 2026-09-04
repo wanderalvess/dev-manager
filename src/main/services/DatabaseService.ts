@@ -7,7 +7,11 @@ interface CachedConnection {
 }
 
 export class DatabaseService {
-  private connCache = new Map<string, CachedConnection>();
+  // Guarda a Promise da conexão (não o valor já resolvido) para que duas chamadas
+  // concorrentes com a mesma cacheKey (ex: testConnection + listTables disparados
+  // juntos pela UI) aguardem a MESMA conexão em vez de cada uma abrir a sua e uma
+  // sobrescrever silenciosamente a outra no Map (vazando um handle nunca fechado).
+  private connCache = new Map<string, Promise<CachedConnection>>();
   private static readonly IDLE_MS = 30000;
 
   private cacheKey(config: DatabaseConnectionConfig): string {
@@ -37,16 +41,24 @@ export class DatabaseService {
     }
 
     const key = this.cacheKey(config);
-    let cached = this.connCache.get(key);
-    if (!cached) {
-      const conn = await getConn();
-      cached = { conn, close: closeConn as (c: any) => Promise<void>, timer: undefined as any };
-      this.connCache.set(key, cached);
+    let cachedPromise = this.connCache.get(key);
+    if (!cachedPromise) {
+      cachedPromise = getConn().then((conn) => ({
+        conn,
+        close: closeConn as (c: any) => Promise<void>,
+        timer: undefined as any
+      }));
+      // Se a conexão falhar, remove a entrada para permitir uma nova tentativa
+      // (sem consumir a rejeição de quem está aguardando `cachedPromise` abaixo).
+      cachedPromise.catch(() => this.connCache.delete(key));
+      this.connCache.set(key, cachedPromise);
     }
+
+    const cached = await cachedPromise;
     clearTimeout(cached.timer);
     cached.timer = setTimeout(() => {
       this.connCache.delete(key);
-      cached!.close(cached!.conn).catch(() => {});
+      cached.close(cached.conn).catch(() => {});
     }, DatabaseService.IDLE_MS);
 
     try {

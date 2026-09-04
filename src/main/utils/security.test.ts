@@ -72,4 +72,15 @@ describe('isSafePath', () => {
   it('aceita caminhos dentro do diretório base permitido', () => {
     expect(isSafePath('C:/workspace/projects/app', 'C:/workspace/projects')).toBe(true);
   });
+
+  it('aceita o próprio diretório base', () => {
+    expect(isSafePath('C:/workspace/projects', 'C:/workspace/projects')).toBe(true);
+  });
+
+  it('rejeita diretório irmão cujo nome apenas começa com o prefixo do base (sem separador)', () => {
+    // Regressão: startsWith() puro deixava "projects-evil" passar como se estivesse
+    // dentro de "projects", por ser um prefixo textual válido.
+    expect(isSafePath('C:/workspace/projects-evil/payload.exe', 'C:/workspace/projects')).toBe(false);
+    expect(isSafePath('C:/workspace/projectsevil', 'C:/workspace/projects')).toBe(false);
+  });
 });

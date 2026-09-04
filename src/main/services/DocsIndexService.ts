@@ -165,11 +165,23 @@ export class DocsIndexService {
 
   /** Embedding de documento (chunk indexado) — usa o encoder assimétrico "passage" do modelo. */
   private async embedPassage(text: string): Promise<number[]> {
+    const [vector] = await this.embedPassages([text]);
+    return vector || [];
+  }
+
+  /**
+   * Embedding em lote de vários chunks de uma vez, na ordem de entrada. fastembed
+   * já suporta lote nativamente — chamar um texto por vez (como antes) serializa
+   * round-trips que poderiam ser um único lote por arquivo durante a reindexação.
+   */
+  private async embedPassages(texts: string[]): Promise<number[][]> {
+    if (texts.length === 0) return [];
     const embedder = await this.getEmbedder();
-    for await (const batch of embedder.passageEmbed([text], 1)) {
-      return batch[0];
+    const vectors: number[][] = [];
+    for await (const batch of embedder.passageEmbed(texts, Math.min(texts.length, 32))) {
+      vectors.push(...batch);
     }
-    return [];
+    return vectors;
   }
 
   /** Embedding de consulta de busca — usa o encoder assimétrico "query" do modelo. */
@@ -259,8 +271,8 @@ export class DocsIndexService {
           }
 
           const pieces = chunkText(content);
+          const vectors = await this.embedPassages(pieces);
           for (let i = 0; i < pieces.length; i++) {
-            const vector = await this.embedPassage(pieces[i]);
             newChunks.push({
               id: `${filePath}#${i}`,
               projectName: project.name,
@@ -269,7 +281,7 @@ export class DocsIndexService {
               chunkIndex: i,
               text: pieces[i],
               mtimeMs: stat.mtimeMs,
-              vector
+              vector: vectors[i] || []
             });
           }
         }

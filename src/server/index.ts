@@ -55,10 +55,13 @@ const API_KEY = process.env.API_KEY?.trim();
 const configuredHost = process.env.HOST || (process.env.DOCKER_CONTAINER ? '0.0.0.0' : '127.0.0.1');
 const exposedBeyondLocalhost = configuredHost !== '127.0.0.1' && configuredHost !== 'localhost';
 if (!API_KEY && exposedBeyondLocalhost) {
-  console.warn(
+  console.error(
     '[Segurança] API_KEY não definida e HOST não está restrito a localhost. ' +
-      'Qualquer pessoa na rede pode controlar este painel sem autenticação. Defina API_KEY no .env.'
+      'Este painel controla execução de comandos, serviços do SO e bancos de dados — ' +
+      'expô-lo sem autenticação permitiria a qualquer host na rede executar comandos arbitrários. ' +
+      'Defina API_KEY no .env antes de expor além de localhost.'
   );
+  process.exit(1);
 }
 
 app.use((req, res, next) => {

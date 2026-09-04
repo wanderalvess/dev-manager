@@ -4,6 +4,24 @@ import fs from 'fs';
 import { KarafDeployRequest, PomInfo, getKarafSshPort, KarafBundleInfo } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
+import { runCapturedProcess } from '../utils/process';
+
+const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall'] as const;
+type BundleAction = (typeof BUNDLE_ACTIONS)[number];
+
+/**
+ * Mapeia a coluna de estado textual do Karaf (ex: "Active", "Resolved") para o
+ * enum tipado de KarafBundleInfo. Compartilhado pelos dois formatos de saída
+ * de "bundle:list" (colunas por pipe e por colchetes) parseados em listBundlesParsed.
+ */
+function parseBundleState(stateStr: string): KarafBundleInfo['state'] {
+  if (/Active/i.test(stateStr)) return 'Active';
+  if (/Resolved/i.test(stateStr)) return 'Resolved';
+  if (/Installed/i.test(stateStr)) return 'Installed';
+  if (/Starting/i.test(stateStr)) return 'Starting';
+  if (/Stopping/i.test(stateStr)) return 'Stopping';
+  return 'Unknown';
+}
 
 export class KarafService {
   private configService: ConfigService;
@@ -125,77 +143,43 @@ export class KarafService {
     return childEnv;
   }
 
-  public executeKarafCommand(
+  public async executeKarafCommand(
     command: string,
     onChunk: (chunk: string) => void,
     credentials?: { user?: string; pass?: string; port?: number }
   ): Promise<{ code: number; stdout: string; stderr: string }> {
-    return new Promise((resolve) => {
-      if (!isSafeKarafCommand(command)) {
-        const errMsg = `[ERRO DE SEGURANÇA] Comando Karaf rejeitado: contém caracteres de controle proibidos ou formato inválido.\r\n`;
-        onChunk(errMsg);
-        return resolve({ code: 1, stdout: '', stderr: errMsg });
-      }
+    if (!isSafeKarafCommand(command)) {
+      const errMsg = `[ERRO DE SEGURANÇA] Comando Karaf rejeitado: contém caracteres de controle proibidos ou formato inválido.\r\n`;
+      onChunk(errMsg);
+      return { code: 1, stdout: '', stderr: errMsg };
+    }
 
-      const settings = this.configService.getSettings();
-      const karafClient = this.getKarafClientExecutable();
-      const user = credentials?.user || settings.karafUser || 'karaf';
-      const pass = credentials?.pass || settings.karafPass || 'karaf';
-      const sshPort = credentials?.port || getKarafSshPort(settings);
+    const settings = this.configService.getSettings();
+    const karafClient = this.getKarafClientExecutable();
+    const user = credentials?.user || settings.karafUser || 'karaf';
+    const pass = credentials?.pass || settings.karafPass || 'karaf';
+    const sshPort = credentials?.port || getKarafSshPort(settings);
 
-      const scriptName = karafClient ? path.basename(karafClient) : 'client.bat';
-      const portDesc = sshPort && sshPort !== 8101 ? ` -a ${sshPort}` : '';
-      onChunk(`> ${scriptName} -u ${user} -p ****${portDesc} "${command}"\r\n`);
+    const scriptName = karafClient ? path.basename(karafClient) : 'client.bat';
+    const portDesc = sshPort && sshPort !== 8101 ? ` -a ${sshPort}` : '';
+    onChunk(`> ${scriptName} -u ${user} -p ****${portDesc} "${command}"\r\n`);
 
-      if (!karafClient) {
-        const errMsg = `[ERRO] Executável client do Karaf não encontrado em: ${path.join(settings.karafPath, 'bin')}\r\n`;
-        onChunk(errMsg);
-        return resolve({ code: 1, stdout: '', stderr: errMsg });
-      }
+    if (!karafClient) {
+      const errMsg = `[ERRO] Executável client do Karaf não encontrado em: ${path.join(settings.karafPath, 'bin')}\r\n`;
+      onChunk(errMsg);
+      return { code: 1, stdout: '', stderr: errMsg };
+    }
 
-      const clientArgs = sshPort && sshPort !== 8101
-        ? ['-u', user, '-p', pass, '-a', String(sshPort), command]
-        : ['-u', user, '-p', pass, command];
+    const clientArgs = sshPort && sshPort !== 8101
+      ? ['-u', user, '-p', pass, '-a', String(sshPort), command]
+      : ['-u', user, '-p', pass, command];
 
-      const isWin = process.platform === 'win32';
-      const childEnv = this.getResolvedJavaEnv();
-      const proc = isWin
-        ? spawn('cmd.exe', ['/c', karafClient, ...clientArgs], {
-            cwd: path.dirname(karafClient),
-            shell: false,
-            env: childEnv
-          })
-        : spawn(karafClient, clientArgs, {
-            cwd: path.dirname(karafClient),
-            shell: false,
-            env: childEnv
-          });
+    const isWin = process.platform === 'win32';
+    const childEnv = this.getResolvedJavaEnv();
 
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout?.on('data', (data) => {
-        const text = data.toString();
-        stdout += text;
-        onChunk(text);
-      });
-
-      proc.stderr?.on('data', (data) => {
-        const text = data.toString();
-        stderr += text;
-        onChunk(text);
-      });
-
-      proc.on('close', (code) => {
-        resolve({ code: code || 0, stdout, stderr });
-      });
-
-      proc.on('error', (err) => {
-        const errMsg = `[FALHA] ${err.message}\r\n`;
-        onChunk(errMsg);
-        resolve({ code: 1, stdout, stderr: errMsg });
-      });
-    });
+    return isWin
+      ? runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk)
+      : runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk);
   }
 
   /**
@@ -259,6 +243,11 @@ export class KarafService {
         : spawn(exeFile, ['debug'], {
             cwd: karafBin,
             shell: false,
+            // detached: true cria o processo em seu próprio grupo, permitindo que
+            // stopEmbeddedKaraf mate a árvore inteira via process.kill(-pid) no
+            // Linux/macOS (sem isso, o kill de grupo falhava silenciosamente e
+            // os subprocessos JVM/OSGi filhos sobreviviam).
+            detached: true,
             env: childEnv
           });
 
@@ -358,75 +347,50 @@ export class KarafService {
     }
   }
 
-  public runMavenBuild(
+  public async runMavenBuild(
     projectPath: string,
     skipTests: boolean = true,
     onChunk: (chunk: string) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
-    return new Promise((resolve) => {
-      onChunk(`\r\n==========================================\r\n`);
-      onChunk(`🔨 EXECUTANDO COMPILAÇÃO MAVEN (mvn clean install)\r\n`);
-      onChunk(`Diretório: ${projectPath}\r\n`);
-      onChunk(`==========================================\r\n`);
+    onChunk(`\r\n==========================================\r\n`);
+    onChunk(`🔨 EXECUTANDO COMPILAÇÃO MAVEN (mvn clean install)\r\n`);
+    onChunk(`Diretório: ${projectPath}\r\n`);
+    onChunk(`==========================================\r\n`);
 
-      if (!fs.existsSync(projectPath)) {
-        const err = `[ERRO] Diretório do projeto não encontrado: ${projectPath}\r\n`;
-        onChunk(err);
-        return resolve({ code: 1, stdout: '', stderr: err });
-      }
+    if (!fs.existsSync(projectPath)) {
+      const err = `[ERRO] Diretório do projeto não encontrado: ${projectPath}\r\n`;
+      onChunk(err);
+      return { code: 1, stdout: '', stderr: err };
+    }
 
-      const isWin = process.platform === 'win32';
-      const mvnwBat = path.join(projectPath, 'mvnw.cmd');
-      const mvnwSh = path.join(projectPath, 'mvnw');
+    const isWin = process.platform === 'win32';
+    const mvnwBat = path.join(projectPath, 'mvnw.cmd');
+    const mvnwSh = path.join(projectPath, 'mvnw');
 
-      let cmd = 'mvn';
-      const args = ['clean', 'install'];
-      if (skipTests) {
-        args.push('-DskipTests');
-      }
+    let cmd = 'mvn';
+    const args = ['clean', 'install'];
+    if (skipTests) {
+      args.push('-DskipTests');
+    }
 
-      if (isWin && fs.existsSync(mvnwBat)) {
-        cmd = mvnwBat;
-      } else if (!isWin && fs.existsSync(mvnwSh)) {
-        cmd = mvnwSh;
-      }
+    if (isWin && fs.existsSync(mvnwBat)) {
+      cmd = mvnwBat;
+    } else if (!isWin && fs.existsSync(mvnwSh)) {
+      cmd = mvnwSh;
+    }
 
-      onChunk(`> ${cmd} ${args.join(' ')}\r\n\r\n`);
+    onChunk(`> ${cmd} ${args.join(' ')}\r\n\r\n`);
 
-      const proc = isWin
-        ? spawn('cmd.exe', ['/c', cmd, ...args], { cwd: projectPath, shell: false })
-        : spawn(cmd, args, { cwd: projectPath, shell: false });
+    const result = isWin
+      ? await runCapturedProcess('cmd.exe', ['/c', cmd, ...args], { cwd: projectPath }, onChunk)
+      : await runCapturedProcess(cmd, args, { cwd: projectPath }, onChunk);
 
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout?.on('data', (data) => {
-        const text = data.toString();
-        stdout += text;
-        onChunk(text);
-      });
-
-      proc.stderr?.on('data', (data) => {
-        const text = data.toString();
-        stderr += text;
-        onChunk(text);
-      });
-
-      proc.on('close', (code) => {
-        if (code === 0) {
-          onChunk(`\r\n[SUCESSO] Compilação Maven concluída com sucesso!\r\n`);
-        } else {
-          onChunk(`\r\n[ERRO] Falha na compilação Maven (Código de saída: ${code}).\r\n`);
-        }
-        resolve({ code: code || 0, stdout, stderr });
-      });
-
-      proc.on('error', (err) => {
-        const errMsg = `[FALHA] Não foi possível executar o comando Maven: ${err.message}\r\n`;
-        onChunk(errMsg);
-        resolve({ code: 1, stdout, stderr: errMsg });
-      });
-    });
+    onChunk(
+      result.code === 0
+        ? `\r\n[SUCESSO] Compilação Maven concluída com sucesso!\r\n`
+        : `\r\n[ERRO] Falha na compilação Maven (Código de saída: ${result.code}).\r\n`
+    );
+    return result;
   }
 
   public async buildAndDeployMaven(
@@ -476,17 +440,9 @@ export class KarafService {
         const parts = trimmed.split(/[|│]/).map((p) => p.trim());
         if (parts.length >= 4 && /^\d+$/.test(parts[0])) {
           const id = parts[0];
-          const stateStr = parts[1];
           const version = parts[parts.length - 2] || '';
           const name = parts[parts.length - 1] || '';
-          let state: KarafBundleInfo['state'] = 'Unknown';
-          if (/Active/i.test(stateStr)) state = 'Active';
-          else if (/Resolved/i.test(stateStr)) state = 'Resolved';
-          else if (/Installed/i.test(stateStr)) state = 'Installed';
-          else if (/Starting/i.test(stateStr)) state = 'Starting';
-          else if (/Stopping/i.test(stateStr)) state = 'Stopping';
-
-          bundles.push({ id, state, level: parts[2], version, name });
+          bundles.push({ id, state: parseBundleState(parts[1]), level: parts[2], version, name });
           continue;
         }
       }
@@ -497,20 +453,12 @@ export class KarafService {
       );
       if (bracketMatch) {
         const id = bracketMatch[1];
-        const stateStr = bracketMatch[2].trim();
         const blueprint = bracketMatch[3]?.trim();
         const level = bracketMatch[4]?.trim();
         const name = bracketMatch[5]?.trim() || '';
         const version = bracketMatch[6]?.trim() || '';
 
-        let state: KarafBundleInfo['state'] = 'Unknown';
-        if (/Active/i.test(stateStr)) state = 'Active';
-        else if (/Resolved/i.test(stateStr)) state = 'Resolved';
-        else if (/Installed/i.test(stateStr)) state = 'Installed';
-        else if (/Starting/i.test(stateStr)) state = 'Starting';
-        else if (/Stopping/i.test(stateStr)) state = 'Stopping';
-
-        bundles.push({ id, state, blueprint, level, name, version });
+        bundles.push({ id, state: parseBundleState(bracketMatch[2].trim()), blueprint, level, name, version });
       }
     }
 
@@ -521,10 +469,13 @@ export class KarafService {
    * Executa ação de ciclo de vida em um bundle específico (start, stop, restart, uninstall).
    */
   public async manageBundle(
-    action: 'start' | 'stop' | 'restart' | 'uninstall',
+    action: BundleAction,
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }
   ): Promise<{ success: boolean; output: string }> {
+    if (!BUNDLE_ACTIONS.includes(action)) {
+      return { success: false, output: 'Ação de bundle não permitida.' };
+    }
     const cleanId = bundleId.trim();
     if (!/^\d+$/.test(cleanId)) {
       return { success: false, output: 'ID do bundle inválido (deve ser numérico).' };

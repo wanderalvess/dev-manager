@@ -1,5 +1,4 @@
 import { spawn } from 'child_process';
-import net from 'net';
 import path from 'path';
 import fs from 'fs';
 import {
@@ -26,6 +25,7 @@ import {
 } from './ConfigService';
 import { KarafService } from './KarafService';
 import { execFileAsync, isValidIdentifier } from '../utils/security';
+import { checkPortOpen } from '../utils/network';
 
 export const TRACKED_SERVICES = DEFAULT_TRACKED_SERVICES;
 
@@ -36,6 +36,22 @@ export class WindowsService {
   constructor(configService: ConfigService, karafService: KarafService) {
     this.configService = configService;
     this.karafService = karafService;
+  }
+
+  /**
+   * Cria uma função de log que registra a entrada no array `logs` (se informado)
+   * e repassa para o callback onLog. Evita redefinir o mesmo closure em cada
+   * método de execução de perfil/ambiente.
+   */
+  private makeLogger(
+    onLog?: (log: EnvironmentLog) => void,
+    logs?: EnvironmentLog[]
+  ): (type: EnvironmentLog['type'], message: string) => void {
+    return (type, message) => {
+      const entry: EnvironmentLog = { timestamp: new Date().toLocaleTimeString(), type, message };
+      logs?.push(entry);
+      onLog?.(entry);
+    };
   }
 
   /**
@@ -93,16 +109,13 @@ export class WindowsService {
     const serviceList = (customServices || settings.trackedServices || DEFAULT_TRACKED_SERVICES).filter(
       (s) => s.enabled !== false
     );
-    const results: ServiceStatus[] = [];
-    for (const srv of serviceList) {
-      const state = await this.getServiceStatus(srv.name);
-      results.push({
+    return Promise.all(
+      serviceList.map(async (srv) => ({
         name: srv.name,
         displayName: srv.displayName,
-        state
-      });
-    }
-    return results;
+        state: await this.getServiceStatus(srv.name)
+      }))
+    );
   }
 
   public async getProcessesStatus(customProcesses?: TrackedProcessConfig[]): Promise<ProcessStatus[]> {
@@ -110,41 +123,35 @@ export class WindowsService {
     const processList = (customProcesses || settings.trackedProcesses || DEFAULT_TRACKED_PROCESSES).filter(
       (p) => p.enabled !== false
     );
-    const results: ProcessStatus[] = [];
-
-    for (const proc of processList) {
-      const isRunning = await this.isProcessRunning(proc.name);
-      results.push({
+    return Promise.all(
+      processList.map(async (proc) => ({
         name: proc.name,
         displayName: proc.displayName,
-        isRunning
-      });
-    }
+        isRunning: await this.isProcessRunning(proc.name)
+      }))
+    );
+  }
+
+  private async batchRun(names: string[], fn: (name: string) => Promise<boolean>): Promise<Record<string, boolean>> {
+    const results: Record<string, boolean> = {};
+    await Promise.all(
+      names.map(async (name) => {
+        results[name] = await fn(name);
+      })
+    );
     return results;
   }
 
-  public async batchStopServices(serviceNames: string[]): Promise<Record<string, boolean>> {
-    const results: Record<string, boolean> = {};
-    for (const name of serviceNames) {
-      results[name] = await this.stopService(name);
-    }
-    return results;
+  public batchStopServices(serviceNames: string[]): Promise<Record<string, boolean>> {
+    return this.batchRun(serviceNames, (name) => this.stopService(name));
   }
 
-  public async batchStartServices(serviceNames: string[]): Promise<Record<string, boolean>> {
-    const results: Record<string, boolean> = {};
-    for (const name of serviceNames) {
-      results[name] = await this.startService(name);
-    }
-    return results;
+  public batchStartServices(serviceNames: string[]): Promise<Record<string, boolean>> {
+    return this.batchRun(serviceNames, (name) => this.startService(name));
   }
 
-  public async batchKillProcesses(imageNames: string[]): Promise<Record<string, boolean>> {
-    const results: Record<string, boolean> = {};
-    for (const name of imageNames) {
-      results[name] = await this.killProcess(name);
-    }
-    return results;
+  public batchKillProcesses(imageNames: string[]): Promise<Record<string, boolean>> {
+    return this.batchRun(imageNames, (name) => this.killProcess(name));
   }
 
   public async stopService(serviceName: string): Promise<boolean> {
@@ -275,17 +282,14 @@ export class WindowsService {
     ).filter((p) => p.enabled !== false);
 
     if (process.platform !== 'win32') {
-      const results: PortStatus[] = [];
-      for (const item of monitoredPorts) {
-        const inUse = await this.checkPortSocket(item.port);
-        results.push({
-          port: item.port,
-          label: item.label,
-          inUse,
-          pid: inUse ? 'Ativo' : undefined
-        });
-      }
-      return results;
+      return Promise.all(
+        monitoredPorts.map(async (item) => {
+          const inUse = await this.checkPortSocket(item.port);
+          // PID real não é obtido via socket puro fora do Windows (sem netstat/PID aqui);
+          // deixa indefinido em vez de forjar um valor não-numérico como "Ativo".
+          return { port: item.port, label: item.label, inUse, pid: undefined };
+        })
+      );
     }
 
     const results: PortStatus[] = [];
@@ -325,23 +329,7 @@ export class WindowsService {
   }
 
   private checkPortSocket(port: number): Promise<boolean> {
-    return new Promise((resolve) => {
-      const socket = new net.Socket();
-      socket.setTimeout(400);
-      socket.on('connect', () => {
-        socket.destroy();
-        resolve(true);
-      });
-      socket.on('timeout', () => {
-        socket.destroy();
-        resolve(false);
-      });
-      socket.on('error', () => {
-        socket.destroy();
-        resolve(false);
-      });
-      socket.connect(port, '127.0.0.1');
-    });
+    return checkPortOpen(port);
   }
 
   public async resetEnvironment(
@@ -362,15 +350,7 @@ export class WindowsService {
         : options;
 
     const logs: EnvironmentLog[] = [];
-    const pushLog = (type: EnvironmentLog['type'], message: string) => {
-      const entry: EnvironmentLog = {
-        timestamp: new Date().toLocaleTimeString(),
-        type,
-        message
-      };
-      logs.push(entry);
-      if (onLog) onLog(entry);
-    };
+    const pushLog = this.makeLogger(onLog, logs);
 
     try {
       pushLog('info', 'Iniciando Assistente de Preparação de Ambiente...');
@@ -616,11 +596,7 @@ export class WindowsService {
     profileName?: string,
     onLog?: (log: EnvironmentLog) => void
   ): Promise<boolean> {
-    const pushLog = (type: EnvironmentLog['type'], message: string) => {
-      if (onLog) {
-        onLog({ timestamp: new Date().toLocaleTimeString(), type, message });
-      }
-    };
+    const pushLog = this.makeLogger(onLog);
 
     const settings = this.configService.getSettings();
 
@@ -754,11 +730,7 @@ export class WindowsService {
     step: AutomationStep,
     onLog?: (log: EnvironmentLog) => void
   ): Promise<boolean> {
-    const pushLog = (type: EnvironmentLog['type'], message: string) => {
-      if (onLog) {
-        onLog({ timestamp: new Date().toLocaleTimeString(), type, message });
-      }
-    };
+    const pushLog = this.makeLogger(onLog);
 
     let stopped = false;
     if (step.port) {
@@ -810,11 +782,7 @@ export class WindowsService {
     profileName?: string,
     onLog?: (log: EnvironmentLog) => void
   ): Promise<boolean> {
-    const pushLog = (type: EnvironmentLog['type'], message: string) => {
-      if (onLog) {
-        onLog({ timestamp: new Date().toLocaleTimeString(), type, message });
-      }
-    };
+    const pushLog = this.makeLogger(onLog);
     pushLog('info', `Reiniciando etapa "${step.name}"...`);
     await this.stopProfileStep(step, onLog);
     await new Promise((r) => setTimeout(r, 1500));
@@ -827,11 +795,7 @@ export class WindowsService {
     onStepProgress?: (stepIndex: number, totalSteps: number, step: AutomationStep) => void
   ): Promise<ProfileExecutionResult> {
     const logs: EnvironmentLog[] = [];
-    const pushLog = (type: EnvironmentLog['type'], message: string) => {
-      const entry: EnvironmentLog = { timestamp: new Date().toLocaleTimeString(), type, message };
-      logs.push(entry);
-      if (onLog) onLog(entry);
-    };
+    const pushLog = this.makeLogger(onLog, logs);
 
     try {
       pushLog('info', `🚀 Iniciando execução do Perfil: "${profile.name}"...`);
@@ -892,11 +856,7 @@ export class WindowsService {
     onLog?: (log: EnvironmentLog) => void
   ): Promise<{ success: boolean; logs: EnvironmentLog[] }> {
     const logs: EnvironmentLog[] = [];
-    const pushLog = (type: EnvironmentLog['type'], message: string) => {
-      const entry: EnvironmentLog = { timestamp: new Date().toLocaleTimeString(), type, message };
-      logs.push(entry);
-      if (onLog) onLog(entry);
-    };
+    const pushLog = this.makeLogger(onLog, logs);
 
     pushLog('info', `⏹ Parando serviços do perfil "${profile.name}"...`);
     const steps = (profile.steps || []).filter((s) => s.enabled !== false);

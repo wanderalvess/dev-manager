@@ -131,7 +131,7 @@ export interface ElectronAPI {
   getSettings: () => Promise<AppSettings>;
   saveSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
   exportSettings: (sanitizePasswords?: boolean) => Promise<string>;
-  importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings }>;
+  importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }>;
 
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;

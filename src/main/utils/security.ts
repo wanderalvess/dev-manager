@@ -72,7 +72,9 @@ export function isSafePath(targetPath: string, allowedBaseDir?: string): boolean
       const normalizedBase = path.normalize(path.resolve(allowedBaseDir));
       const targetCheck = process.platform === 'win32' ? normalizedTarget.toLowerCase() : normalizedTarget;
       const baseCheck = process.platform === 'win32' ? normalizedBase.toLowerCase() : normalizedBase;
-      return targetCheck.startsWith(baseCheck);
+      // Exige que o alvo seja o próprio diretório base ou esteja dentro dele (com separador),
+      // evitando que "C:\...\projects-evil" passe no prefixo de "C:\...\projects".
+      return targetCheck === baseCheck || targetCheck.startsWith(baseCheck + path.sep);
     }
     return fs.existsSync(normalizedTarget);
   } catch {

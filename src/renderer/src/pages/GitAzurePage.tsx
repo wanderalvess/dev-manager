@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   GitPullRequest,
   GitBranch,
@@ -20,9 +20,11 @@ import {
   GitCommit,
   Plus,
   Check,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 import { GitProjectInfo, GitCommitInfo } from '../../../shared/types';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface GitAzurePageProps {
   projects: GitProjectInfo[];
@@ -38,9 +40,19 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   onNavigateToSettings
 }) => {
   const [selectedPath, setSelectedPath] = useState<string>(projects[0]?.path || '');
+
+  // `projects` chega vazio no primeiro render e é populado depois de um fetch
+  // assíncrono; sincroniza a seleção assim que a lista chegar, caso o usuário
+  // ainda não tenha escolhido um projeto manualmente.
+  useEffect(() => {
+    if (!selectedPath && projects.length > 0) {
+      setSelectedPath(projects[0].path);
+    }
+  }, [projects, selectedPath]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [targetBranch, setTargetBranch] = useState<string>('develop');
   const [gitOutput, setGitOutput] = useState<string | null>(null);
+  const [gitOutputIsError, setGitOutputIsError] = useState<boolean>(false);
   const [isExecutingGit, setIsExecutingGit] = useState<boolean>(false);
 
   // Estados de Modais Avançados
@@ -55,13 +67,8 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [commitHistory, setCommitHistory] = useState<GitCommitInfo[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
-  const [copiedHash, setCopiedHash] = useState<string | null>(null);
-
-  const copyHash = (hash: string) => {
-    navigator.clipboard.writeText(hash);
-    setCopiedHash(hash);
-    setTimeout(() => setCopiedHash(null), 1500);
-  };
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const { copy: copyHash, copiedKey: copiedHash } = useCopyToClipboard();
 
   const filteredProjects = projects.filter(
     (p) =>
@@ -98,12 +105,14 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const handleExecGit = async (command: 'fetch' | 'pull' | 'stash' | 'stash-pop') => {
     if (!currentProject || isExecutingGit) return;
     setIsExecutingGit(true);
+    setGitOutputIsError(false);
     setGitOutput(`Executando git ${command} no repositório ${currentProject.name}...`);
     try {
       const res = await window.electronAPI.execGitCommand(currentProject.path, command);
       setGitOutput(res.output);
       onRefreshProjects();
     } catch (err: any) {
+      setGitOutputIsError(true);
       setGitOutput(`Erro: ${err?.message || err}`);
     } finally {
       setIsExecutingGit(false);
@@ -113,6 +122,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const handleCheckoutBranch = async (branchName: string, createNew = false) => {
     if (!currentProject) return;
     setIsExecutingGit(true);
+    setGitOutputIsError(false);
     setGitOutput(`Alternando branch para '${branchName}' no repositório ${currentProject.name}...`);
     try {
       const res = await window.electronAPI.checkoutBranch(currentProject.path, branchName, createNew);
@@ -121,6 +131,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
       setIsBranchModalOpen(false);
       setNewBranchName('');
     } catch (err: any) {
+      setGitOutputIsError(true);
       setGitOutput(`Erro ao alternar branch: ${err?.message || err}`);
     } finally {
       setIsExecutingGit(false);
@@ -130,6 +141,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const handleCommitAndPush = async () => {
     if (!currentProject || !commitMessage.trim()) return;
     setIsCommitting(true);
+    setGitOutputIsError(false);
     setGitOutput(`Executando commit & push no repositório ${currentProject.name}...`);
     try {
       const res = await window.electronAPI.commitAndPush(currentProject.path, commitMessage.trim());
@@ -138,6 +150,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
       setIsCommitModalOpen(false);
       setCommitMessage('');
     } catch (err: any) {
+      setGitOutputIsError(true);
       setGitOutput(`Erro no commit/push: ${err?.message || err}`);
     } finally {
       setIsCommitting(false);
@@ -148,11 +161,14 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
     if (!currentProject) return;
     setIsHistoryModalOpen(true);
     setIsLoadingHistory(true);
+    setHistoryError(null);
+    setCommitHistory([]);
     try {
       const history = await window.electronAPI.getCommitHistory(currentProject.path, 15);
       setCommitHistory(history || []);
     } catch (err: any) {
       console.error('Erro ao buscar histórico de commits:', err);
+      setHistoryError(err?.message || String(err));
     } finally {
       setIsLoadingHistory(false);
     }
@@ -460,9 +476,20 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
               {/* Console de Saída do Git */}
               {gitOutput && (
-                <div className="bg-card border border-border rounded-xl p-3 font-mono text-xs text-foreground whitespace-pre-wrap">
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                    Terminal Git:
+                <div
+                  className={`rounded-xl p-3 font-mono text-xs whitespace-pre-wrap border ${
+                    gitOutputIsError
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                      : 'bg-card border-border text-foreground'
+                  }`}
+                >
+                  <div
+                    className={`flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider mb-1 ${
+                      gitOutputIsError ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {gitOutputIsError && <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
+                    <span>{gitOutputIsError ? 'Erro no Git:' : 'Terminal Git:'}</span>
                   </div>
                   {gitOutput}
                 </div>
@@ -667,6 +694,12 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                 <div className="h-48 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
                   <RefreshCw className="w-6 h-6 animate-spin text-primary" />
                   <span>Carregando histórico do Git...</span>
+                </div>
+              ) : historyError ? (
+                <div className="h-48 flex flex-col items-center justify-center text-xs text-rose-600 dark:text-rose-400 space-y-2 text-center px-4">
+                  <AlertCircle className="w-8 h-8 opacity-70" />
+                  <p className="font-semibold text-foreground">Falha ao carregar histórico</p>
+                  <p className="text-muted-foreground font-mono">{historyError}</p>
                 </div>
               ) : commitHistory.length === 0 ? (
                 <div className="h-36 flex flex-col items-center justify-center text-xs text-muted-foreground">

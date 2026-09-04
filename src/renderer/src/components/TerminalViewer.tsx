@@ -9,6 +9,7 @@ import {
   CornerDownLeft
 } from 'lucide-react';
 import { EnvironmentLog } from '../../../shared/types';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface TerminalViewerProps {
   logs: (string | EnvironmentLog)[];
@@ -28,7 +29,8 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   inputPlaceholder = 'Digite um comando OSGi Karaf (ex: bundle:list, la, feature:list, log:tail)...'
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
+  const { copy: copyLogs, copiedKey } = useCopyToClipboard(2000);
+  const copied = copiedKey === 'logs';
   const [filterType, setFilterType] = useState<'all' | 'info' | 'success' | 'warning' | 'error'>('all');
   const [searchFilter, setSearchFilter] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
@@ -48,9 +50,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
     const text = logs
       .map((l) => (typeof l === 'string' ? l : `[${l.timestamp}] [${l.type.toUpperCase()}] ${l.message}`))
       .join('\n');
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copyLogs(text, 'logs');
   };
 
   const handleSend = (e?: React.FormEvent) => {

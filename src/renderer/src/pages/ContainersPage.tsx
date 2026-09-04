@@ -19,6 +19,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { DockerContainerInfo, DockerDaemonStatus } from '../../../shared/types';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 export const ContainersPage: React.FC = () => {
   const [containers, setContainers] = useState<DockerContainerInfo[]>([]);
@@ -32,7 +33,7 @@ export const ContainersPage: React.FC = () => {
   const [logs, setLogs] = useState<string>('');
   const [isLoadingLogs, setIsLoadingLogs] = useState<boolean>(false);
   const [logLines, setLogLines] = useState<number>(200);
-  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const { copy: copyLogsToClipboard, copiedKey: copyFeedback } = useCopyToClipboard();
 
   // Carregar Status do Docker e Containers
   const loadDockerData = useCallback(async () => {
@@ -128,11 +129,7 @@ export const ContainersPage: React.FC = () => {
   };
 
   // Copiar Logs
-  const handleCopyLogs = () => {
-    navigator.clipboard.writeText(logs);
-    setCopyFeedback('Logs copiados!');
-    setTimeout(() => setCopyFeedback(null), 1500);
-  };
+  const handleCopyLogs = () => copyLogsToClipboard(logs, 'Logs copiados!');
 
   // Filtro
   const filteredContainers = useMemo(() => {

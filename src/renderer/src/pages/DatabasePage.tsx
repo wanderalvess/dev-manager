@@ -32,6 +32,7 @@ import {
   SqlSnippet,
   ExplainPlanResult
 } from '../../../shared/types';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 const DEFAULT_PORTS: Record<DatabaseType, number> = {
   oracle: 1521,
@@ -147,7 +148,7 @@ export const DatabasePage: React.FC = () => {
   });
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; version?: string } | null>(null);
   const [isTesting, setIsTesting] = useState<boolean>(false);
-  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const { copy: copyCellToClipboard, copiedKey: copyFeedback } = useCopyToClipboard();
 
   const activeConnection = useMemo(() => {
     return connections.find((c) => c.id === activeConnectionId) || connections[0] || null;
@@ -448,9 +449,7 @@ export const DatabasePage: React.FC = () => {
   // Copiar Conteúdo de Célula
   const handleCopyCell = (text: any) => {
     const str = typeof text === 'object' ? JSON.stringify(text) : String(text ?? '');
-    navigator.clipboard.writeText(str);
-    setCopyFeedback('Copiado!');
-    setTimeout(() => setCopyFeedback(null), 1500);
+    copyCellToClipboard(str, 'Copiado!');
   };
 
   const filteredTables = useMemo(() => {

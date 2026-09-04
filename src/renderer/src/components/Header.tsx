@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { NetworkIpInfo, SystemMetrics } from '../../../shared/types';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface HeaderProps {
   activeTab: string;
@@ -37,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const [timeStr, setTimeStr] = useState<string>('');
   const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
-  const [copiedIp, setCopiedIp] = useState<string | null>(null);
+  const { copy: copyToClipboard, copiedKey: copiedIp } = useCopyToClipboard(1800);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
 
   const fetchMetrics = useCallback(async () => {
@@ -85,12 +86,6 @@ export const Header: React.FC<HeaderProps> = ({
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIp(label);
-    setTimeout(() => setCopiedIp(null), 1800);
-  };
 
   const navItems = [
     { id: 'env', label: 'Ambiente Dev', shortLabel: 'Ambiente', icon: Terminal, title: 'Ambiente de Desenvolvimento & Serviços' },

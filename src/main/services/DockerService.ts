@@ -1,10 +1,7 @@
-import { execFile, spawn } from 'child_process';
-import { promisify } from 'util';
 import fs from 'fs';
 import { DockerContainerInfo, DockerDaemonStatus } from '../../shared/types';
-import { isValidIdentifier, isSafeDockerImageTag, isSafeLocalPath } from '../utils/security';
-
-const execFileAsync = promisify(execFile);
+import { execFileAsync, isValidIdentifier, isSafeDockerImageTag, isSafeLocalPath } from '../utils/security';
+import { runCapturedProcess } from '../utils/process';
 
 export class DockerService {
   /**
@@ -211,105 +208,61 @@ export class DockerService {
   /**
    * Builda uma imagem Docker a partir de um diretório de contexto, com saída em streaming.
    */
-  public buildImage(
+  public async buildImage(
     contextPath: string,
     imageTag: string,
     dockerfile: string | undefined,
     onChunk: (chunk: string) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
-    return new Promise((resolve) => {
-      if (!isSafeLocalPath(contextPath) || !fs.existsSync(contextPath)) {
-        const err = `[ERRO] Diretório de contexto Docker não encontrado: ${contextPath}\r\n`;
-        onChunk(err);
-        return resolve({ code: 1, stdout: '', stderr: err });
-      }
-      if (!isSafeDockerImageTag(imageTag)) {
-        const err = `[ERRO] Tag de imagem Docker inválida: ${imageTag}\r\n`;
-        onChunk(err);
-        return resolve({ code: 1, stdout: '', stderr: err });
-      }
+    if (!isSafeLocalPath(contextPath) || !fs.existsSync(contextPath)) {
+      const err = `[ERRO] Diretório de contexto Docker não encontrado: ${contextPath}\r\n`;
+      onChunk(err);
+      return { code: 1, stdout: '', stderr: err };
+    }
+    if (!isSafeDockerImageTag(imageTag)) {
+      const err = `[ERRO] Tag de imagem Docker inválida: ${imageTag}\r\n`;
+      onChunk(err);
+      return { code: 1, stdout: '', stderr: err };
+    }
 
-      const args = ['build', '-t', imageTag];
-      if (dockerfile && dockerfile.trim()) {
-        args.push('-f', dockerfile.trim());
-      }
-      args.push(contextPath);
+    const args = ['build', '-t', imageTag];
+    if (dockerfile && dockerfile.trim()) {
+      args.push('-f', dockerfile.trim());
+    }
+    args.push(contextPath);
 
-      onChunk(`> docker ${args.join(' ')}\r\n\r\n`);
+    onChunk(`> docker ${args.join(' ')}\r\n\r\n`);
 
-      const proc = spawn('docker', args, { cwd: contextPath, shell: false, windowsHide: true });
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout?.on('data', (data) => {
-        const text = data.toString();
-        stdout += text;
-        onChunk(text);
-      });
-      proc.stderr?.on('data', (data) => {
-        const text = data.toString();
-        stderr += text;
-        onChunk(text);
-      });
-      proc.on('close', (code) => {
-        onChunk(
-          code === 0
-            ? `\r\n[SUCESSO] Imagem "${imageTag}" construída com sucesso!\r\n`
-            : `\r\n[ERRO] Falha ao construir imagem "${imageTag}" (Código ${code}).\r\n`
-        );
-        resolve({ code: code || 0, stdout, stderr });
-      });
-      proc.on('error', (err) => {
-        const errMsg = `[FALHA] Não foi possível executar o Docker: ${err.message}\r\n`;
-        onChunk(errMsg);
-        resolve({ code: 1, stdout, stderr: errMsg });
-      });
-    });
+    const result = await runCapturedProcess('docker', args, { cwd: contextPath, windowsHide: true }, onChunk);
+    onChunk(
+      result.code === 0
+        ? `\r\n[SUCESSO] Imagem "${imageTag}" construída com sucesso!\r\n`
+        : `\r\n[ERRO] Falha ao construir imagem "${imageTag}" (Código ${result.code}).\r\n`
+    );
+    return result;
   }
 
   /**
    * Envia (push) uma imagem Docker para o registry configurado na tag, com saída em streaming.
    */
-  public pushImage(
+  public async pushImage(
     imageTag: string,
     onChunk: (chunk: string) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
-    return new Promise((resolve) => {
-      if (!isSafeDockerImageTag(imageTag)) {
-        const err = `[ERRO] Tag de imagem Docker inválida: ${imageTag}\r\n`;
-        onChunk(err);
-        return resolve({ code: 1, stdout: '', stderr: err });
-      }
+    if (!isSafeDockerImageTag(imageTag)) {
+      const err = `[ERRO] Tag de imagem Docker inválida: ${imageTag}\r\n`;
+      onChunk(err);
+      return { code: 1, stdout: '', stderr: err };
+    }
 
-      onChunk(`> docker push ${imageTag}\r\n\r\n`);
+    onChunk(`> docker push ${imageTag}\r\n\r\n`);
 
-      const proc = spawn('docker', ['push', imageTag], { shell: false, windowsHide: true });
-      let stdout = '';
-      let stderr = '';
-
-      proc.stdout?.on('data', (data) => {
-        const text = data.toString();
-        stdout += text;
-        onChunk(text);
-      });
-      proc.stderr?.on('data', (data) => {
-        const text = data.toString();
-        stderr += text;
-        onChunk(text);
-      });
-      proc.on('close', (code) => {
-        onChunk(
-          code === 0
-            ? `\r\n[SUCESSO] Imagem "${imageTag}" enviada com sucesso!\r\n`
-            : `\r\n[ERRO] Falha ao enviar imagem "${imageTag}" (Código ${code}).\r\n`
-        );
-        resolve({ code: code || 0, stdout, stderr });
-      });
-      proc.on('error', (err) => {
-        const errMsg = `[FALHA] Não foi possível executar o Docker: ${err.message}\r\n`;
-        onChunk(errMsg);
-        resolve({ code: 1, stdout, stderr: errMsg });
-      });
-    });
+    const result = await runCapturedProcess('docker', ['push', imageTag], { windowsHide: true }, onChunk);
+    onChunk(
+      result.code === 0
+        ? `\r\n[SUCESSO] Imagem "${imageTag}" enviada com sucesso!\r\n`
+        : `\r\n[ERRO] Falha ao enviar imagem "${imageTag}" (Código ${result.code}).\r\n`
+    );
+    return result;
   }
 }

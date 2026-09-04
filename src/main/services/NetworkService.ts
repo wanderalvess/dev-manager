@@ -1,9 +1,6 @@
 import os from 'os';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import { NetworkIpInfo, NetworkInterfaceItem, SystemMetrics, HttpHealthResult } from '../../shared/types';
-
-const execFileAsync = promisify(execFile);
+import { execFileAsync, isSafeUrl } from '../utils/security';
 
 export class NetworkService {
   /**
@@ -174,6 +171,16 @@ export class NetworkService {
    */
   public async checkHttpHealth(url: string, timeoutMs = 3500): Promise<HttpHealthResult> {
     const startTime = Date.now();
+    if (!isSafeUrl(url)) {
+      return {
+        url,
+        reachable: false,
+        isHealthy: false,
+        timeMs: 0,
+        responseTimeMs: 0,
+        error: 'URL insegura ou não permitida.'
+      };
+    }
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);

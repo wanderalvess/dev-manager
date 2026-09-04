@@ -180,7 +180,7 @@ const electronAPI = {
     ipcRenderer.invoke('settings:save', settings),
   exportSettings: (sanitizePasswords?: boolean): Promise<string> =>
     ipcRenderer.invoke('settings:export', sanitizePasswords),
-  importSettings: (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings }> =>
+  importSettings: (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }> =>
     ipcRenderer.invoke('settings:import', jsonString),
 
   // Banco de Dados (Oracle, MySQL, Postgres)

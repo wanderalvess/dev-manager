@@ -559,7 +559,7 @@ export function initApiBridge() {
       return data.json;
     },
 
-    importSettings: async (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings }> => {
+    importSettings: async (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }> => {
       return apiFetch('/api/settings/import', {
         method: 'POST',
         body: JSON.stringify({ json: jsonString })

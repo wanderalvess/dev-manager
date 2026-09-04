@@ -98,7 +98,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
     if (profile) {
       setName(profile.name || '');
       setDescription(profile.description || '');
-      setSteps(profile.steps ? JSON.parse(JSON.stringify(profile.steps)) : []);
+      setSteps(profile.steps ? structuredClone(profile.steps) : []);
       setEditingStepIndex(profile.steps && profile.steps.length > 0 ? 0 : null);
     } else {
       setName('Novo Perfil de Ambiente');
