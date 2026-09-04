@@ -16,7 +16,7 @@
   ],
   "win": {
     "target": ["nsis", "portable"],
-    "requestedExecutionLevel": "requireAdministrator"
+    "requestedExecutionLevel": "asInvoker"
   },
   "nsis": {
     "oneClick": false,

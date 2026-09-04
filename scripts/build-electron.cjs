@@ -1,7 +1,9 @@
 /**
  * Script de empacotamento com suporte a proxy corporativo (SSL inspection / certificados autoassinados e mirrors estáveis).
  */
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+if (process.env.CORP_PROXY_INSECURE === '1') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 process.env.ELECTRON_MIRROR = process.env.ELECTRON_MIRROR || 'https://npmmirror.com/mirrors/electron/';
 process.env.ELECTRON_BUILDER_BINARIES_MIRROR =
   process.env.ELECTRON_BUILDER_BINARIES_MIRROR || 'https://npmmirror.com/mirrors/electron-builder-binaries/';
@@ -110,7 +112,6 @@ async function start() {
     shell: true,
     env: {
       ...process.env,
-      NODE_TLS_REJECT_UNAUTHORIZED: '0',
       ELECTRON_MIRROR: process.env.ELECTRON_MIRROR,
       ELECTRON_BUILDER_BINARIES_MIRROR: process.env.ELECTRON_BUILDER_BINARIES_MIRROR
     }
