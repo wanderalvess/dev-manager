@@ -79,8 +79,23 @@ export class KarafService {
   public getKarafServerExecutable(): string | null {
     const settings = this.configService.getSettings();
     if (!settings.karafPath) return null;
+
+    // Se o desenvolvedor informou um script customizado nas configurações:
+    if (settings.karafScript && settings.karafScript.trim()) {
+      const custom = settings.karafScript.trim();
+      if (path.isAbsolute(custom) && fs.existsSync(custom)) {
+        return custom;
+      }
+      const inBin = path.join(settings.karafPath, 'bin', custom);
+      if (fs.existsSync(inBin)) {
+        return inBin;
+      }
+    }
+
     const candidates = [
+      path.join(settings.karafPath, 'bin', 'winthor.bat'),
       path.join(settings.karafPath, 'bin', 'karaf.bat'),
+      path.join(settings.karafPath, 'bin', 'winthor'),
       path.join(settings.karafPath, 'bin', 'karaf.sh'),
       path.join(settings.karafPath, 'bin', 'karaf')
     ];
@@ -88,6 +103,26 @@ export class KarafService {
       if (fs.existsSync(c)) return c;
     }
     return null;
+  }
+
+  public getResolvedJavaEnv(): NodeJS.ProcessEnv {
+    const settings = this.configService.getSettings();
+    const configuredJdk = settings.jdkPath && fs.existsSync(settings.jdkPath) ? settings.jdkPath : null;
+    const defaultJdk = 'C:\\pcsist\\produtos\\winthor-jdk';
+    const fallbackJdk = fs.existsSync(defaultJdk) ? defaultJdk : null;
+    const chosenJdk = configuredJdk || process.env.JAVA_HOME || fallbackJdk;
+
+    const childEnv: NodeJS.ProcessEnv = { ...process.env };
+    if (chosenJdk) {
+      childEnv.JAVA_HOME = chosenJdk;
+    }
+    if (childEnv.JAVA_HOME && process.platform === 'win32') {
+      const jdkBin = path.join(childEnv.JAVA_HOME, 'bin');
+      if (!childEnv.PATH?.includes(jdkBin)) {
+        childEnv.PATH = `${jdkBin};${childEnv.PATH || ''}`;
+      }
+    }
+    return childEnv;
   }
 
   public executeKarafCommand(
@@ -123,14 +158,17 @@ export class KarafService {
         : ['-u', user, '-p', pass, command];
 
       const isWin = process.platform === 'win32';
+      const childEnv = this.getResolvedJavaEnv();
       const proc = isWin
         ? spawn('cmd.exe', ['/c', karafClient, ...clientArgs], {
             cwd: path.dirname(karafClient),
-            shell: false
+            shell: false,
+            env: childEnv
           })
         : spawn(karafClient, clientArgs, {
             cwd: path.dirname(karafClient),
-            shell: false
+            shell: false,
+            env: childEnv
           });
 
       let stdout = '';
@@ -180,14 +218,17 @@ export class KarafService {
 
     try {
       const isWin = process.platform === 'win32';
+      const childEnv = this.getResolvedJavaEnv();
       this.embeddedKarafProcess = isWin
         ? spawn('cmd.exe', ['/c', path.basename(exeFile), 'debug'], {
             cwd: karafBin,
-            shell: false
+            shell: false,
+            env: childEnv
           })
         : spawn(exeFile, ['debug'], {
             cwd: karafBin,
-            shell: false
+            shell: false,
+            env: childEnv
           });
 
       this.embeddedKarafProcess.stdout?.on('data', (data) => {

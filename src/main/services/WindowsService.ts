@@ -246,14 +246,17 @@ export class WindowsService {
     if (exe && fs.existsSync(exe)) {
       const karafBin = path.dirname(exe);
       try {
+        const childEnv = this.karafService.getResolvedJavaEnv();
         if (process.platform === 'win32') {
-          spawn('cmd.exe', ['/c', 'start', 'ServerDebug', '/d', `"${karafBin}"`, `"${path.basename(exe)}"`, 'debug'], {
+          const scriptName = path.basename(exe);
+          spawn('cmd.exe', ['/c', 'start', '"WinThor Karaf Debug"', '/d', `"${karafBin}"`, 'cmd.exe', '/k', `"${scriptName}" debug`], {
             cwd: karafBin,
             detached: true,
-            stdio: 'ignore'
+            stdio: 'ignore',
+            env: childEnv
           }).unref();
         } else {
-          spawn(exe, ['debug'], { cwd: karafBin, detached: true, stdio: 'ignore' }).unref();
+          spawn(exe, ['debug'], { cwd: karafBin, detached: true, stdio: 'ignore', env: childEnv }).unref();
         }
         return true;
       } catch (err) {
@@ -764,9 +767,24 @@ export class WindowsService {
       pushLog(stopped ? 'success' : 'info', `Porta ${step.port} liberada.`);
     }
 
-    if (step.type === 'service-start' && step.targetName) {
-      pushLog('info', `Parando serviço ${step.targetName}...`);
-      await this.stopService(step.targetName);
+    if (step.type === 'service-start' && (step.targetName || step.name)) {
+      const srv = step.targetName || step.name;
+      pushLog('info', `Parando serviço ${srv}...`);
+      await this.stopService(srv);
+      stopped = true;
+    }
+
+    if (step.type === 'service-stop' && (step.targetName || step.name)) {
+      const srv = step.targetName || step.name;
+      pushLog('info', `Garantindo parada do serviço ${srv}...`);
+      await this.stopService(srv);
+      stopped = true;
+    }
+
+    if (step.type === 'kill-process' && (step.targetName || step.name)) {
+      const proc = step.targetName || step.name;
+      pushLog('info', `Encerrando processo ${proc}...`);
+      await this.killProcess(proc);
       stopped = true;
     }
 

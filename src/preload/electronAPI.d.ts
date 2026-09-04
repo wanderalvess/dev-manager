@@ -19,7 +19,12 @@ import type {
   SystemAppInfo,
   DocSearchResult,
   DocsIndexStatus,
-  DocsIndexProgress
+  DocsIndexProgress,
+  DatabaseConnectionConfig,
+  QueryResult,
+  DockerContainerInfo,
+  DockerDaemonStatus,
+  NetworkIpInfo
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -104,6 +109,23 @@ export interface ElectronAPI {
   // Configurações
   getSettings: () => Promise<AppSettings>;
   saveSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
+
+  // Banco de Dados (Oracle, MySQL, Postgres)
+  testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;
+  executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number) => Promise<QueryResult>;
+  listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
+
+  // Gerenciador de Containers Docker
+  getDockerStatus: () => Promise<DockerDaemonStatus>;
+  listDockerContainers: () => Promise<DockerContainerInfo[]>;
+  startDockerContainer: (containerId: string) => Promise<boolean>;
+  stopDockerContainer: (containerId: string) => Promise<boolean>;
+  restartDockerContainer: (containerId: string) => Promise<boolean>;
+  getDockerLogs: (containerId: string, lines?: number) => Promise<string>;
+  removeDockerContainer: (containerId: string) => Promise<boolean>;
+
+  // Rede & Detecção de IPs (Local e WSL)
+  getNetworkIps: () => Promise<NetworkIpInfo>;
 }
 
 declare global {

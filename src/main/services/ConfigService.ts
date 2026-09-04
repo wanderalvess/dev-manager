@@ -170,6 +170,7 @@ export function detectDefaultKarafPath(): string {
   }
   const userHome = os.homedir();
   const candidates = [
+    'C:\\pcsist\\produtos\\winthor',
     '/workspace/karaf',
     '/karaf',
     path.join(userHome, 'karaf'),
@@ -217,11 +218,54 @@ export function detectDefaultAppPath(): string {
   return '';
 }
 
+export function detectDefaultJdkPath(): string {
+  if (process.env.JAVA_HOME && fs.existsSync(process.env.JAVA_HOME)) {
+    return process.env.JAVA_HOME;
+  }
+  const candidates = [
+    'C:\\pcsist\\produtos\\winthor-jdk',
+    'C:\\Program Files\\Java\\jdk1.8.0_202',
+    'C:\\Program Files\\Java\\jdk1.8.0_232',
+    'C:\\Program Files\\Java\\jdk-8',
+    'C:\\Program Files\\Eclipse Adoptium\\jdk-8.0.0.0-hotspot',
+    'C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.0.0-hotspot',
+    'C:\\Program Files\\Zulu\\zulu-8',
+    'C:\\Program Files\\BellSoft\\LibericaJDK-8'
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  const javaRoots = ['C:\\Program Files\\Java', 'C:\\Program Files (x86)\\Java'];
+  for (const root of javaRoots) {
+    try {
+      if (fs.existsSync(root)) {
+        const dirs = fs.readdirSync(root);
+        for (const d of dirs) {
+          const full = path.join(root, d);
+          if (fs.existsSync(path.join(full, 'bin', 'java.exe'))) {
+            return full;
+          }
+        }
+      }
+    } catch {
+      // Ignora erro
+    }
+  }
+
+  return '';
+}
+
 export function getDynamicDefaultConfig(): AppSettings {
   const appPath = detectDefaultAppPath();
   return {
     appPath,
     karafPath: detectDefaultKarafPath(),
+    jdkPath: detectDefaultJdkPath(),
+    karafScript: '',
     karafUser: process.env.KARAF_USER || 'karaf',
     karafPass: process.env.KARAF_PASS || 'karaf',
     intellijPath: detectDefaultIntelliJPath(),
@@ -340,6 +384,7 @@ export class ConfigService {
     return {
       appPath,
       karafPath: detectDefaultKarafPath(),
+      jdkPath: detectDefaultJdkPath(),
       intellijPath: detectDefaultIntelliJPath(),
       projectsPath: detectDefaultProjectsPath()
     };

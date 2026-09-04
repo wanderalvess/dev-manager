@@ -200,7 +200,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
       </div>
 
       {/* Resultados */}
-      <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1">
         {!hasIndex && !isIndexing && (
           <div className="cockpit-panel rounded-2xl p-10 text-center flex flex-col items-center justify-center space-y-3 border border-border">
             <FolderOpen className="w-10 h-10 text-primary/50" />

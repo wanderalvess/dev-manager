@@ -352,7 +352,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
   return (
     <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
       {/* Topo / Header da Página de Ajuda */}
-      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-wrap items-center justify-between gap-3">
+      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
             <HelpCircle className="w-5 h-5" />
@@ -406,7 +406,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Conteúdo Principal Rolável */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
         {/* 1. VISÃO GERAL & INÍCIO RÁPIDO */}
         {activeCategory === 'overview' && (
           <div className="space-y-4">

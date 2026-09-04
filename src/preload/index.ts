@@ -19,7 +19,12 @@ import type {
   SystemAppInfo,
   DocSearchResult,
   DocsIndexStatus,
-  DocsIndexProgress
+  DocsIndexProgress,
+  DatabaseConnectionConfig,
+  QueryResult,
+  DockerContainerInfo,
+  DockerDaemonStatus,
+  NetworkIpInfo
 } from '../shared/types';
 
 const electronAPI = {
@@ -147,7 +152,28 @@ const electronAPI = {
   // Configurações
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
   saveSettings: (settings: Partial<AppSettings>): Promise<AppSettings> =>
-    ipcRenderer.invoke('settings:save', settings)
+    ipcRenderer.invoke('settings:save', settings),
+
+  // Banco de Dados (Oracle, MySQL, Postgres)
+  testDbConnection: (config: DatabaseConnectionConfig): Promise<{ success: boolean; message: string; version?: string }> =>
+    ipcRenderer.invoke('db:test-connection', config),
+  executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number): Promise<QueryResult> =>
+    ipcRenderer.invoke('db:execute-query', config, sql, maxRows),
+  listDbTables: (config: DatabaseConnectionConfig): Promise<string[]> =>
+    ipcRenderer.invoke('db:list-tables', config),
+
+  // Gerenciador de Containers Docker
+  getDockerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('docker:get-status'),
+  listDockerContainers: (): Promise<DockerContainerInfo[]> => ipcRenderer.invoke('docker:list-containers'),
+  startDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:start', containerId),
+  stopDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:stop', containerId),
+  restartDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:restart', containerId),
+  getDockerLogs: (containerId: string, lines?: number): Promise<string> =>
+    ipcRenderer.invoke('docker:logs', containerId, lines),
+  removeDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:remove', containerId),
+
+  // Rede & Detecção de IPs (Local e WSL)
+  getNetworkIps: (): Promise<NetworkIpInfo> => ipcRenderer.invoke('network:get-ips')
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

@@ -125,9 +125,9 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
   };
 
   return (
-    <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
+    <div className="h-full flex flex-col p-5 pb-8 space-y-4 overflow-y-auto">
       {/* Cabeçalho de Deploy Karaf */}
-      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border">
+      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500">
@@ -171,9 +171,9 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
       </div>
 
       {/* Grid Principal */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[480px]">
         {/* Coluna Esquerda: Configuração e Coordenadas Maven */}
-        <div className="lg:col-span-5 flex flex-col space-y-3 overflow-y-auto pr-1">
+        <div className="lg:col-span-5 flex flex-col space-y-3">
           {karafValid === false && (
             <div className="bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
               <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
@@ -410,7 +410,7 @@ export const KarafDeployPage: React.FC<KarafDeployPageProps> = ({ projects, onNa
         </div>
 
         {/* Coluna Direita: Terminal com Streaming de Saída do client.bat */}
-        <div className="lg:col-span-7 h-full">
+        <div className="lg:col-span-7 min-h-[450px] lg:min-h-full flex flex-col">
           <TerminalViewer
             logs={terminalLogs}
             onClear={() => setTerminalLogs([])}

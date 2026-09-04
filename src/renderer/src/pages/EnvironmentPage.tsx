@@ -23,7 +23,10 @@ import {
   Edit3,
   Copy,
   Clock,
-  FolderOpen
+  FolderOpen,
+  Wifi,
+  Cpu,
+  Check
 } from 'lucide-react';
 import {
   ServiceStatus,
@@ -33,6 +36,7 @@ import {
   AppSettings,
   AutomationProfile,
   AutomationStep,
+  NetworkIpInfo,
   getWebPort,
   getWebUrl
 } from '../../../shared/types';
@@ -132,12 +136,34 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     }
   }, []);
 
+  // Verificar IPs de Rede
+  const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
+  const [copiedIp, setCopiedIp] = useState<string | null>(null);
+
+  const fetchNetworkIps = useCallback(async () => {
+    if (window.electronAPI && window.electronAPI.getNetworkIps) {
+      try {
+        const data = await window.electronAPI.getNetworkIps();
+        setNetworkIps(data);
+      } catch (err) {
+        console.error('Erro ao buscar IPs de rede:', err);
+      }
+    }
+  }, []);
+
+  const copyIp = (ip: string, id: string) => {
+    navigator.clipboard.writeText(ip);
+    setCopiedIp(id);
+    setTimeout(() => setCopiedIp(null), 1500);
+  };
+
   const refreshAllStatus = useCallback(() => {
     onRefreshServices();
     fetchPorts();
     fetchProcesses();
     checkKarafRunning();
-  }, [onRefreshServices, fetchPorts, fetchProcesses, checkKarafRunning]);
+    fetchNetworkIps();
+  }, [onRefreshServices, fetchPorts, fetchProcesses, checkKarafRunning, fetchNetworkIps]);
 
   useEffect(() => {
     fetchSettings();
@@ -477,9 +503,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 space-y-3.5 overflow-hidden">
+    <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto">
       {/* 1. Cockpit Unificado: Seletor de Perfis & Orquestrador */}
-      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-col space-y-3.5">
+      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-col space-y-3.5 shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Título, Ícone e Seletor de Perfil */}
           <div className="flex items-center space-x-3">
@@ -646,7 +672,18 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                 const isPast = isRunningProfile && activeStepIndex > stepNum;
                 const portStatus = step.port ? ports.find((p) => p.port === step.port) : undefined;
                 const isPortUp = portStatus?.inUse ?? false;
-                const isDone = isPast || isPortUp;
+                const srvName = step.targetName || step.name;
+                const srvStatus = services.find((s) => s.name.toLowerCase() === srvName.toLowerCase());
+                const procStatus = processes.find((p) => p.name.toLowerCase() === (step.targetName || step.name).toLowerCase());
+                const isServiceSatisfied =
+                  step.type === 'service-stop'
+                    ? srvStatus?.state === 'STOPPED'
+                    : step.type === 'service-start'
+                    ? srvStatus?.state === 'RUNNING'
+                    : step.type === 'kill-process'
+                    ? procStatus?.isRunning === false
+                    : false;
+                const isDone = isPast || isPortUp || isServiceSatisfied;
 
                 let dotStyle = 'bg-muted text-muted-foreground border-border';
                 if (isCurrent) {
@@ -692,7 +729,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       </div>
 
       {/* 2. Barra de Portas e Links Rápidos */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 shrink-0">
         {/* Monitor de Portas */}
         <div className="md:col-span-8 bg-card border border-border/80 rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-sm">
           <div className="flex items-center space-x-2">
@@ -754,9 +791,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       </div>
 
       {/* 3. Grid Principal: Cards das Etapas do Perfil à Esquerda / Console à Direita */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-[480px]">
         {/* Coluna Esquerda: Cards de cada Serviço / Etapa do Perfil + Diagnósticos */}
-        <div className="lg:col-span-6 flex flex-col space-y-3 overflow-y-auto pr-1">
+        <div className="lg:col-span-6 flex flex-col space-y-3">
           {/* Cartões dos Passos do Perfil Ativo */}
           <div className="cockpit-panel rounded-2xl p-4 flex flex-col border border-border space-y-3">
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
@@ -790,13 +827,18 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                   const loadingAction = stepActionLoading[step.id];
                   const StepIcon = getStepIcon(step.type);
 
+                  const srvTarget = (step.type === 'service-start' || step.type === 'service-stop') ? (step.targetName || step.name) : null;
+                  const procTarget = step.type === 'kill-process' ? (step.targetName || step.name) : null;
+                  const srvFound = srvTarget ? services.find((s) => s.name.toLowerCase() === srvTarget.toLowerCase()) : undefined;
+                  const procFound = procTarget ? processes.find((p) => p.name.toLowerCase() === procTarget.toLowerCase()) : undefined;
+
                   return (
                     <div
                       key={step.id}
                       className={`p-3 bg-card border rounded-xl flex flex-col gap-2 transition-all shadow-sm ${
                         step.enabled === false
                           ? 'opacity-50 border-border/40 bg-muted/20'
-                          : isPortActive
+                          : isPortActive || (srvFound && srvFound.state === 'RUNNING')
                           ? 'border-emerald-500/40 hover:border-emerald-500/60'
                           : 'border-border/80 hover:border-border'
                       }`}
@@ -821,33 +863,101 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                                 <StepIcon className="w-3 h-3" />
                                 {step.type}
                               </span>
-                              {step.launchMode && (
+                              {step.type === 'command' && step.launchMode && (
                                 <span className="text-[9px] font-mono text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded border border-primary/20">
                                   {step.launchMode === 'wt' ? 'WT Abas' : step.launchMode === 'cmd' ? 'CMD' : 'Background'}
                                 </span>
                               )}
                             </div>
 
-                            {/* Pasta e Comando */}
+                            {/* Detalhes Contextuais por Tipo de Etapa */}
                             <div className="mt-1 space-y-0.5 text-[10px] font-mono text-muted-foreground truncate">
-                              {step.cwd && (
-                                <p className="truncate text-muted-foreground/80 flex items-center gap-1">
-                                  <FolderOpen className="w-3 h-3 text-muted-foreground shrink-0" />
-                                  <span className="truncate">{step.cwd}</span>
+                              {/* 1. Comando */}
+                              {step.type === 'command' && (
+                                <>
+                                  {step.cwd && (
+                                    <p className="truncate text-muted-foreground/80 flex items-center gap-1">
+                                      <FolderOpen className="w-3 h-3 text-muted-foreground shrink-0" />
+                                      <span className="truncate">{step.cwd}</span>
+                                    </p>
+                                  )}
+                                  {step.command && (
+                                    <p className="truncate text-foreground/80 font-mono bg-muted/40 px-1.5 py-0.5 rounded max-w-md">
+                                      $ {step.command}
+                                    </p>
+                                  )}
+                                </>
+                              )}
+
+                              {/* 2. Serviços Windows (Start / Stop) */}
+                              {(step.type === 'service-start' || step.type === 'service-stop') && (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-muted-foreground">Serviço:</span>
+                                  <span className="text-foreground font-semibold bg-muted/50 px-1.5 py-0.5 rounded">
+                                    {srvTarget}
+                                  </span>
+                                  {srvFound && (
+                                    <span
+                                      className={`text-[9px] px-1.5 py-0.2 rounded font-sans font-bold ${
+                                        srvFound.state === 'RUNNING'
+                                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                      }`}
+                                    >
+                                      {srvFound.state === 'RUNNING' ? 'Em Execução' : srvFound.state === 'STOPPED' ? 'Parado' : srvFound.state}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* 3. Finalizar Processo */}
+                              {step.type === 'kill-process' && (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-muted-foreground">Processo alvo:</span>
+                                  <span className="text-foreground font-semibold bg-muted/50 px-1.5 py-0.5 rounded">
+                                    {procTarget}
+                                  </span>
+                                  {procFound && (
+                                    <span
+                                      className={`text-[9px] px-1.5 py-0.2 rounded font-sans font-bold ${
+                                        procFound.isRunning
+                                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                          : 'bg-muted text-muted-foreground'
+                                      }`}
+                                    >
+                                      {procFound.isRunning ? `Ativo (PID ${procFound.pid})` : 'Inativo'}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* 4. Liberar Porta */}
+                              {step.type === 'kill-port' && step.port && (
+                                <p className="text-muted-foreground">
+                                  Porta alvo para liberação imediata: <span className="text-foreground font-bold">:{step.port}</span>
                                 </p>
                               )}
-                              {step.command && (
-                                <p className="truncate text-foreground/80 font-mono bg-muted/40 px-1.5 py-0.5 rounded max-w-md">
-                                  $ {step.command}
+
+                              {/* 5. IDE */}
+                              {step.type === 'ide' && (
+                                <p className="text-muted-foreground">
+                                  Inicializa o editor ou IDE configurado no Cockpit
+                                </p>
+                              )}
+
+                              {/* 6. Navegador */}
+                              {step.type === 'browser' && step.browserUrl && (
+                                <p className="truncate text-primary">
+                                  {step.browserUrl}
                                 </p>
                               )}
                             </div>
                           </div>
                         </div>
 
-                        {/* Status da Porta & Botões Individuais */}
+                        {/* Status da Porta / Serviço & Botões Individuais */}
                         <div className="flex flex-col items-end gap-1.5 shrink-0">
-                          {step.port ? (
+                          {step.type === 'command' && step.port ? (
                             <span
                               className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
                                 isPortActive
@@ -865,40 +975,48 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                           ) : null}
 
                           <div className="flex items-center space-x-1">
-                            {/* Botão Individual Play */}
+                            {/* Botão Individual Executar / Subir / Iniciar */}
                             <button
                               type="button"
                               onClick={() => handleRunStep(step)}
                               disabled={loadingAction === 'run' || isRunningProfile}
                               className="p-1 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
-                              title="Iniciar apenas este serviço"
+                              title={
+                                step.type === 'service-stop'
+                                  ? 'Executar ação (parar serviço)'
+                                  : step.type === 'service-start'
+                                  ? 'Iniciar serviço'
+                                  : 'Executar esta etapa'
+                              }
                             >
                               <Play className="w-3 h-3 fill-current" />
-                              <span>Subir</span>
+                              <span>{step.type === 'service-stop' ? 'Executar' : 'Subir'}</span>
                             </button>
 
-                            {/* Botão Individual Stop */}
+                            {/* Botão Individual Parar */}
                             <button
                               type="button"
                               onClick={() => handleStopStep(step)}
                               disabled={loadingAction === 'stop' || isRunningProfile}
                               className="p-1 px-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
-                              title="Encerrar porta / processo deste serviço"
+                              title="Encerrar processo ou garantir serviço parado"
                             >
                               <Square className="w-3 h-3" />
                               <span>Parar</span>
                             </button>
 
                             {/* Botão Individual Restart */}
-                            <button
-                              type="button"
-                              onClick={() => handleRestartStep(step)}
-                              disabled={loadingAction === 'restart' || isRunningProfile}
-                              className="p-1 px-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
-                              title="Reiniciar este serviço (mata a porta e sobe de novo)"
-                            >
-                              <RefreshCw className={`w-3 h-3 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />
-                            </button>
+                            {step.type !== 'service-stop' && step.type !== 'kill-process' && (
+                              <button
+                                type="button"
+                                onClick={() => handleRestartStep(step)}
+                                disabled={loadingAction === 'restart' || isRunningProfile}
+                                className="p-1 px-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                                title="Reiniciar esta etapa"
+                              >
+                                <RefreshCw className={`w-3 h-3 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -912,6 +1030,76 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
               )}
             </div>
           </div>
+
+          {/* Card de Informações de Rede (IP Local e IP WSL) */}
+          {networkIps && (
+            <div className="cockpit-panel rounded-2xl p-3 border border-border flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <Wifi className="w-3.5 h-3.5 text-primary" />
+                  <span>Endereços IP e Conectividade de Rede</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchNetworkIps}
+                  title="Atualizar IPs de rede"
+                  className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                {/* IP Local */}
+                <div className="p-2.5 bg-card/60 border border-border/70 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center space-x-2.5 truncate">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                      <Wifi className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex flex-col truncate">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">IP Local (Windows)</span>
+                      <span className="font-mono text-xs font-bold text-foreground truncate">{networkIps.primaryLocalIp}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyIp(networkIps.primaryLocalIp, 'main_lan')}
+                    className="p-1.5 px-2 bg-muted hover:bg-muted/80 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground transition flex items-center gap-1 shrink-0 cursor-pointer"
+                    title="Copiar IP Local"
+                  >
+                    {copiedIp === 'main_lan' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span className="text-[10px]">{copiedIp === 'main_lan' ? 'Copiado' : 'Copiar'}</span>
+                  </button>
+                </div>
+
+                {/* IP WSL */}
+                <div className="p-2.5 bg-card/60 border border-border/70 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center space-x-2.5 truncate">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                      <Cpu className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex flex-col truncate">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">IP WSL2 / Linux</span>
+                      <span className="font-mono text-xs font-bold text-foreground truncate">
+                        {networkIps.wslIp || 'Não detectado / inativo'}
+                      </span>
+                    </div>
+                  </div>
+                  {networkIps.wslIp && (
+                    <button
+                      type="button"
+                      onClick={() => copyIp(networkIps.wslIp!, 'main_wsl')}
+                      className="p-1.5 px-2 bg-muted hover:bg-muted/80 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground transition flex items-center gap-1 shrink-0 cursor-pointer"
+                      title="Copiar IP WSL"
+                    >
+                      {copiedIp === 'main_wsl' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span className="text-[10px]">{copiedIp === 'main_wsl' ? 'Copiado' : 'Copiar'}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Seção Colapsável: Diagnósticos do Sistema (Serviços e Processos do Windows) */}
           <div className="cockpit-panel rounded-2xl p-3 border border-border flex flex-col space-y-2">
@@ -1029,7 +1217,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         </div>
 
         {/* Coluna Direita: Console / Terminal Integrado */}
-        <div className="lg:col-span-6 h-full">
+        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col">
           <TerminalViewer
             logs={logs}
             onClear={() => setLogs([])}

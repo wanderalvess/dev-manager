@@ -166,6 +166,8 @@ export interface SelectFileOptions {
 export interface AppSettings {
   appPath?: string;
   karafPath: string;
+  jdkPath?: string;
+  karafScript?: string;
   karafUser: string;
   karafPass: string;
   intellijPath: string;
@@ -189,6 +191,8 @@ export interface AppSettings {
   routineLauncherMap?: Record<string, string>;
   /** Programas mapeados manualmente pelo usuário para abrir com um clique */
   mappedPrograms?: MappedProgram[];
+  /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
+  databaseConnections?: DatabaseConnectionConfig[];
 }
 
 export interface DocChunk {
@@ -481,5 +485,86 @@ export function getWebUrl(
   return `http://localhost:${port}${normalized}`;
 }
 
+// ==========================================
+// Módulo de Banco de Dados (Oracle, MySQL, Postgres)
+// ==========================================
 
+export type DatabaseType = 'oracle' | 'mysql' | 'postgres';
 
+export interface DatabaseConnectionConfig {
+  id: string;
+  name: string;
+  type: DatabaseType;
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password?: string;
+  /** Para Oracle: se a conexão deve usar Service Name (ex: 'XEPDB1') ou SID (padrão: serviceName) */
+  oracleMode?: 'serviceName' | 'sid';
+  /** Flag para SSL/TLS (PostgreSQL e MySQL) */
+  ssl?: boolean;
+  isDefault?: boolean;
+}
+
+export interface QueryRequest {
+  connectionId: string;
+  sql: string;
+  maxRows?: number;
+}
+
+export interface QueryResult {
+  success: boolean;
+  columns: string[];
+  rows: Record<string, any>[];
+  rowCount: number;
+  affectedRows?: number;
+  executionTimeMs: number;
+  isQuery: boolean;
+  error?: string;
+}
+
+export interface TableInfo {
+  name: string;
+  schema?: string;
+  type?: string;
+}
+
+// ==========================================
+// Módulo de Gerenciamento de Containers Docker
+// ==========================================
+
+export interface DockerContainerInfo {
+  id: string;
+  names: string;
+  image: string;
+  state: 'running' | 'exited' | 'paused' | 'restarting' | 'created' | 'dead' | 'unknown';
+  status: string;
+  ports: string;
+  created: string;
+}
+
+export interface DockerDaemonStatus {
+  installed: boolean;
+  running: boolean;
+  version?: string;
+  error?: string;
+}
+
+// ==========================================
+// Módulo de Rede & IPs (Local e WSL)
+// ==========================================
+
+export interface NetworkInterfaceItem {
+  interface: string;
+  ip: string;
+  mac?: string;
+  type?: string;
+}
+
+export interface NetworkIpInfo {
+  primaryLocalIp: string;
+  localIps: NetworkInterfaceItem[];
+  wslIp: string | null;
+  hostname: string;
+}

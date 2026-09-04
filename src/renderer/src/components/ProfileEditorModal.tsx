@@ -130,15 +130,26 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
           ? 'Novo Comando'
           : type === 'kill-port'
           ? 'Liberar Porta'
+          : type === 'service-start'
+          ? 'Iniciar Serviço'
+          : type === 'service-stop'
+          ? 'Parar Serviço'
+          : type === 'kill-process'
+          ? 'Finalizar Processo'
+          : type === 'ide'
+          ? 'Iniciar IDE'
+          : type === 'karaf'
+          ? 'Iniciar Karaf Debug'
           : type === 'browser'
           ? 'Abrir Navegador'
           : 'Novo Passo',
       type,
       enabled: true,
-      command: type === 'command' ? 'npm run dev' : '',
+      command: type === 'command' ? '' : undefined,
       cwd: '',
-      port: type === 'command' || type === 'kill-port' ? 8080 : undefined,
-      launchMode: 'wt',
+      port: type === 'kill-port' ? 8080 : undefined,
+      targetName: '',
+      launchMode: type === 'command' ? 'wt' : undefined,
       delayAfterSeconds: 2
     };
     setSteps((prev) => [...prev, newStep]);
@@ -177,7 +188,30 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
     if (editingStepIndex === null || !steps[editingStepIndex]) return;
     setSteps((prev) => {
       const copy = [...prev];
-      copy[editingStepIndex] = { ...copy[editingStepIndex], ...fields };
+      const current = copy[editingStepIndex];
+      let updated = { ...current, ...fields };
+
+      // Se mudou o tipo da etapa, limpar campos incompatíveis
+      if (fields.type && fields.type !== current.type) {
+        const newType = fields.type;
+        if (newType !== 'command' && newType !== 'kill-port') {
+          updated.port = undefined;
+          updated.waitForPort = false;
+        }
+        if (newType !== 'command') {
+          updated.command = undefined;
+          updated.cwd = '';
+          updated.launchMode = undefined;
+        }
+        if (newType !== 'browser') {
+          updated.browserUrl = undefined;
+        }
+        if (newType !== 'service-start' && newType !== 'service-stop' && newType !== 'kill-process') {
+          updated.targetName = undefined;
+        }
+      }
+
+      copy[editingStepIndex] = updated;
       return copy;
     });
   };
@@ -212,13 +246,41 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
       return;
     }
 
+    // Normalizar passos antes de salvar: garantir que targetName seja preenchido se for serviço/processo
+    const cleanedSteps = steps.map((s) => {
+      const cleaned = { ...s };
+      if (cleaned.type === 'service-start' || cleaned.type === 'service-stop' || cleaned.type === 'kill-process') {
+        if (!cleaned.targetName || !cleaned.targetName.trim()) {
+          cleaned.targetName = cleaned.name.trim();
+        }
+        cleaned.command = undefined;
+        cleaned.port = undefined;
+        cleaned.waitForPort = false;
+        cleaned.cwd = '';
+      } else if (cleaned.type === 'kill-port') {
+        cleaned.command = undefined;
+        cleaned.targetName = undefined;
+        cleaned.cwd = '';
+      } else if (cleaned.type === 'ide' || cleaned.type === 'karaf') {
+        cleaned.command = undefined;
+        cleaned.port = undefined;
+        cleaned.targetName = undefined;
+        cleaned.cwd = '';
+      } else if (cleaned.type === 'browser') {
+        cleaned.command = undefined;
+        cleaned.port = undefined;
+        cleaned.targetName = undefined;
+      }
+      return cleaned;
+    });
+
     setIsSaving(true);
     try {
       const savedProfile: AutomationProfile = {
         id: profile?.id || `profile-${Date.now()}`,
         name: name.trim(),
         description: description.trim(),
-        steps,
+        steps: cleanedSteps,
         isDefault: profile?.isDefault ?? false
       };
       await onSave(savedProfile);
@@ -326,7 +388,11 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                         <div className="truncate">
                           <p className="font-semibold text-foreground truncate">{step.name || 'Sem nome'}</p>
                           <p className="text-[10px] text-muted-foreground truncate">
-                            {step.type} {step.port ? `• :${step.port}` : ''}
+                            {step.type}
+                            {step.port ? ` • :${step.port}` : ''}
+                            {(step.type === 'service-start' || step.type === 'service-stop' || step.type === 'kill-process') && (step.targetName || step.name)
+                              ? ` • ${step.targetName || step.name}`
+                              : ''}
                           </p>
                         </div>
                       </div>
@@ -541,21 +607,41 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                   </div>
                 )}
 
-                {/* Campos para Serviço Windows ou Kill Process */}
-                {(editingStep.type === 'service-start' ||
-                  editingStep.type === 'service-stop' ||
-                  editingStep.type === 'kill-process') && (
+                {/* Campos para Serviço Windows (Start / Stop) */}
+                {(editingStep.type === 'service-start' || editingStep.type === 'service-stop') && (
                   <div>
                     <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                      Nome do Serviço ou Executável (opcional se vazio usa padrão)
+                      Nome Exato do Serviço do Windows
                     </label>
                     <input
                       type="text"
                       value={editingStep.targetName || ''}
                       onChange={(e) => handleUpdateCurrentStep({ targetName: e.target.value })}
-                      placeholder="Ex: MeuServico.API, servico-controle.exe..."
-                      className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Ex: PDVSync.Client.API, WinThor, Spooler... (se vazio, usa o Nome da Etapa)"
+                      className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
                     />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Identificador do serviço registrado no Windows (como visto em services.msc ou net start).
+                    </p>
+                  </div>
+                )}
+
+                {/* Campos para Finalizar Processo por Nome */}
+                {editingStep.type === 'kill-process' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                      Nome do Processo / Executável (.exe)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingStep.targetName || ''}
+                      onChange={(e) => handleUpdateCurrentStep({ targetName: e.target.value })}
+                      placeholder="Ex: pdvsyncclientservicocontrole.exe, node.exe... (se vazio, usa o Nome da Etapa)"
+                      className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Nome do processo que será encerrado via taskkill /F /IM.
+                    </p>
                   </div>
                 )}
 

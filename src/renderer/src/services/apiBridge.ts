@@ -19,7 +19,12 @@ import type {
   SystemAppInfo,
   DocSearchResult,
   DocsIndexStatus,
-  DocsIndexProgress
+  DocsIndexProgress,
+  DatabaseConnectionConfig,
+  QueryResult,
+  DockerContainerInfo,
+  DockerDaemonStatus,
+  NetworkIpInfo
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -493,6 +498,67 @@ export function initApiBridge() {
         method: 'POST',
         body: JSON.stringify(settings)
       });
+    },
+
+    // Banco de Dados (Oracle, MySQL, Postgres)
+    testDbConnection: async (config: DatabaseConnectionConfig): Promise<{ success: boolean; message: string; version?: string }> => {
+      return apiFetch('/api/db/test', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+    },
+
+    executeDbQuery: async (config: DatabaseConnectionConfig, sql: string, maxRows?: number): Promise<QueryResult> => {
+      return apiFetch('/api/db/query', {
+        method: 'POST',
+        body: JSON.stringify({ config, sql, maxRows })
+      });
+    },
+
+    listDbTables: async (config: DatabaseConnectionConfig): Promise<string[]> => {
+      return apiFetch('/api/db/tables', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+    },
+
+    // Gerenciador de Containers Docker
+    getDockerStatus: async (): Promise<DockerDaemonStatus> => {
+      return apiFetch('/api/docker/status');
+    },
+
+    listDockerContainers: async (): Promise<DockerContainerInfo[]> => {
+      return apiFetch('/api/docker/containers');
+    },
+
+    startDockerContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/start`, { method: 'POST' });
+      return res.success;
+    },
+
+    stopDockerContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/stop`, { method: 'POST' });
+      return res.success;
+    },
+
+    restartDockerContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/restart`, { method: 'POST' });
+      return res.success;
+    },
+
+    getDockerLogs: async (containerId: string, lines?: number): Promise<string> => {
+      const res = await apiFetch<{ logs: string }>(`/api/docker/containers/${containerId}/logs?lines=${lines || 200}`);
+      return res.logs;
+    },
+
+    removeDockerContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}`, { method: 'DELETE' });
+      return res.success;
+    },
+
+    // Rede & Detecção de IPs (Local e WSL)
+    getNetworkIps: async (): Promise<NetworkIpInfo> => {
+      return apiFetch('/api/network/ips');
     }
   };
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   RefreshCw,
   Layers,
@@ -9,9 +9,15 @@ import {
   Activity,
   HelpCircle,
   Search,
-  FileSearch
+  FileSearch,
+  Database,
+  Box,
+  Wifi,
+  Check,
+  Cpu
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { NetworkIpInfo } from '../../../shared/types';
 
 interface HeaderProps {
   activeTab: string;
@@ -30,6 +36,25 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
 
   const [timeStr, setTimeStr] = useState<string>('');
+  const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
+  const [copiedIp, setCopiedIp] = useState<string | null>(null);
+
+  const fetchNetworkIps = useCallback(async () => {
+    if (window.electronAPI?.getNetworkIps) {
+      try {
+        const ips = await window.electronAPI.getNetworkIps();
+        setNetworkIps(ips);
+      } catch (err) {
+        console.error('Erro ao buscar IPs de rede:', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNetworkIps();
+    const ipInterval = setInterval(fetchNetworkIps, 30000);
+    return () => clearInterval(ipInterval);
+  }, [fetchNetworkIps]);
 
   useEffect(() => {
     const updateClock = () => {
@@ -43,8 +68,16 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIp(label);
+    setTimeout(() => setCopiedIp(null), 1800);
+  };
+
   const navItems = [
     { id: 'env', label: 'Ambiente Dev', shortLabel: 'Ambiente', icon: Terminal, title: 'Ambiente de Desenvolvimento & Serviços' },
+    { id: 'database', label: 'Banco de Dados', shortLabel: 'Banco', icon: Database, title: 'Conexão e Consultas Oracle, MySQL, Postgres' },
+    { id: 'containers', label: 'Containers', shortLabel: 'Docker', icon: Box, title: 'Gerenciador de Containers Docker' },
     { id: 'karaf', label: 'Deploy OSGi', shortLabel: 'Deploy', icon: Layers, title: 'Deployer de Módulos & Features Karaf OSGi' },
     { id: 'git', label: 'Git & Azure', shortLabel: 'Git', icon: GitPullRequest, title: 'Repositórios Git & Azure DevOps' },
     { id: 'routines', label: 'Rotinas', shortLabel: 'Rotinas', icon: Grid, title: 'Catálogo de Executáveis e Rotinas' },
@@ -107,6 +140,51 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Status do Sistema e Ações (Direita) */}
       <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+        {/* Badges de IPs de Rede (Local e WSL) com 1-click copy */}
+        {networkIps && (
+          <div className="hidden lg:flex items-center space-x-1 font-mono text-[11px]">
+            {/* IP Local (Windows) */}
+            <button
+              onClick={() => copyToClipboard(networkIps.primaryLocalIp, 'lan')}
+              title={`IP Local da Máquina: ${networkIps.primaryLocalIp} (Clique para copiar)`}
+              className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-muted/60 hover:bg-muted border border-border/80 text-muted-foreground hover:text-foreground transition cursor-pointer"
+            >
+              {copiedIp === 'lan' ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-400" />
+                  <span className="text-emerald-400 font-bold">Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Wifi className="w-3 h-3 text-primary" />
+                  <span>LAN: <strong className="text-foreground">{networkIps.primaryLocalIp}</strong></span>
+                </>
+              )}
+            </button>
+
+            {/* IP do WSL (se detectado) */}
+            {networkIps.wslIp && (
+              <button
+                onClick={() => copyToClipboard(networkIps.wslIp!, 'wsl')}
+                title={`IP da Distribuição WSL: ${networkIps.wslIp} (Clique para copiar)`}
+                className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-muted/60 hover:bg-muted border border-border/80 text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                {copiedIp === 'wsl' ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    <span className="text-emerald-400 font-bold">Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Cpu className="w-3 h-3 text-amber-400" />
+                    <span>WSL: <strong className="text-foreground">{networkIps.wslIp}</strong></span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Botão de Busca Rápida (Ctrl+K) */}
         {onOpenQuickLauncher && (
           <button

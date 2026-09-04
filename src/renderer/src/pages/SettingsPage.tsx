@@ -71,6 +71,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
   const [settings, setSettings] = useState<AppSettings>({
     appPath: '',
     karafPath: '',
+    jdkPath: '',
+    karafScript: '',
     karafUser: 'karaf',
     karafPass: 'karaf',
     intellijPath: '',
@@ -108,11 +110,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
   // Validação de Caminhos
   const validateAllPaths = useCallback(async (st: AppSettings) => {
     if (window.electronAPI && window.electronAPI.checkPath) {
-      const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'appPath', 'intellijPath'];
+      const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'jdkPath', 'appPath', 'intellijPath'];
       const results: Record<string, PathStatusInfo> = {};
       for (const key of keys) {
         const val = st[key];
-        if (typeof val === 'string') {
+        if (typeof val === 'string' && val.trim()) {
           results[key] = await window.electronAPI.checkPath(val);
         }
       }
@@ -122,6 +124,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
 
   const validateSinglePath = async (key: string, val: string) => {
     if (window.electronAPI && window.electronAPI.checkPath) {
+      if (!val || !val.trim()) {
+        setPathStatuses((prev) => {
+          const copy = { ...prev };
+          delete copy[key];
+          return copy;
+        });
+        return;
+      }
       const status = await window.electronAPI.checkPath(val);
       setPathStatuses((prev) => ({ ...prev, [key]: status }));
     }
@@ -132,6 +142,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
       window.electronAPI.getSettings().then((st) => {
         const loaded: AppSettings = {
           ...st,
+          jdkPath: st.jdkPath || '',
+          karafScript: st.karafScript || '',
           webPort: st.webPort || 8889,
           karafSshPort: st.karafSshPort || 8101,
           karafDebugPort: st.karafDebugPort || 5005,
@@ -183,12 +195,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
   const handleBrowseFile = async (field: keyof AppSettings) => {
     if (window.electronAPI && window.electronAPI.selectFile) {
       const current = (settings[field] as string) || '';
+      const isScript = field === 'karafScript';
       const selected = await window.electronAPI.selectFile({
         defaultPath: current,
-        filters: [
-          { name: 'Executáveis da IDE (*.exe)', extensions: ['exe'] },
-          { name: 'Todos os arquivos (*.*)', extensions: ['*'] }
-        ]
+        filters: isScript
+          ? [
+              { name: 'Scripts de Inicialização (*.bat, *.cmd, *.sh)', extensions: ['bat', 'cmd', 'sh'] },
+              { name: 'Todos os arquivos (*.*)', extensions: ['*'] }
+            ]
+          : [
+              { name: 'Executáveis da IDE (*.exe)', extensions: ['exe'] },
+              { name: 'Todos os arquivos (*.*)', extensions: ['*'] }
+            ]
       });
       if (selected) {
         const updated = { ...settings, [field]: selected };
@@ -533,7 +551,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                         validateSinglePath('karafPath', val);
                       }}
                       className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
-                      placeholder="Ex: C:\karaf ou C:\apache-karaf"
+                      placeholder="Ex: C:\karaf ou C:\pcsist\produtos\winthor"
                     />
                     <button
                       type="button"
@@ -545,6 +563,76 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                       <span>Procurar...</span>
                     </button>
                   </div>
+                </div>
+
+                {/* Diretório Java JDK / JRE (JAVA_HOME) */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                      <HardDrive className="w-3.5 h-3.5 text-orange-500" />
+                      Diretório Java JDK (JAVA_HOME):
+                    </label>
+                    {renderPathStatusBadge('jdkPath')}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.jdkPath || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSettings({ ...settings, jdkPath: val });
+                        validateSinglePath('jdkPath', val);
+                      }}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: C:\pcsist\produtos\winthor-jdk ou C:\Program Files\Java\jdk1.8..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseDirectory('jdkPath')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+                      title="Selecionar pasta do JDK"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-orange-500" />
+                      <span>Procurar...</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Utilizado pelo Karaf, WinThor, compilador Maven e scripts. Se vazio, detecta o JAVA_HOME do SO ou C:\pcsist\produtos\winthor-jdk.
+                  </p>
+                </div>
+
+                {/* Script de Inicialização Customizado do Karaf */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                      <FileCode2 className="w-3.5 h-3.5 text-amber-500" />
+                      Script de Inicialização do Karaf (Opcional):
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.karafScript || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSettings({ ...settings, karafScript: val });
+                      }}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: winthor.bat, karaf.bat ou caminho completo"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseFile('karafScript')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+                      title="Selecionar script .bat / .cmd"
+                    >
+                      <FileCode2 className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Procurar...</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Script usado para subir o servidor Karaf na automação. Se vazio, prioriza automaticamente <code className="font-mono text-primary">winthor.bat</code> e depois <code className="font-mono text-primary">karaf.bat</code>.
+                  </p>
                 </div>
 
                 {/* Diretório Base das Rotinas (Prod) */}

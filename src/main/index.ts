@@ -8,6 +8,9 @@ import { KarafService } from './services/KarafService';
 import { GitAzureService } from './services/GitAzureService';
 import { RoutinesService } from './services/RoutinesService';
 import { DocsIndexService } from './services/DocsIndexService';
+import { DatabaseService } from './services/DatabaseService';
+import { DockerService } from './services/DockerService';
+import { NetworkService } from './services/NetworkService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -50,6 +53,9 @@ function createWindow() {
   const gitAzureService = new GitAzureService(configService, karafService);
   const routinesService = new RoutinesService(configService);
   const docsIndexService = new DocsIndexService(configService, gitAzureService);
+  const databaseService = new DatabaseService();
+  const dockerService = new DockerService();
+  const networkService = new NetworkService();
 
   registerIpcHandlers(
     mainWindow,
@@ -58,7 +64,10 @@ function createWindow() {
     gitAzureService,
     routinesService,
     configService,
-    docsIndexService
+    docsIndexService,
+    databaseService,
+    dockerService,
+    networkService
   );
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';

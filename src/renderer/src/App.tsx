@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/Header';
 import { EnvironmentPage } from './pages/EnvironmentPage';
+import { DatabasePage } from './pages/DatabasePage';
+import { ContainersPage } from './pages/ContainersPage';
 import { KarafDeployPage } from './pages/KarafDeployPage';
 import { GitAzurePage } from './pages/GitAzurePage';
 import { RoutinesPage } from './pages/RoutinesPage';
@@ -60,12 +62,14 @@ export const App: React.FC = () => {
 
       if (e.altKey) {
         if (e.key === '1') setActiveTab('env');
-        else if (e.key === '2') setActiveTab('karaf');
-        else if (e.key === '3') setActiveTab('git');
-        else if (e.key === '4') setActiveTab('routines');
-        else if (e.key === '5') setActiveTab('settings');
-        else if (e.key === '6') setActiveTab('help');
+        else if (e.key === '2') setActiveTab('database');
+        else if (e.key === '3') setActiveTab('containers');
+        else if (e.key === '4') setActiveTab('karaf');
+        else if (e.key === '5') setActiveTab('git');
+        else if (e.key === '6') setActiveTab('routines');
         else if (e.key === '7') setActiveTab('docs');
+        else if (e.key === '8') setActiveTab('settings');
+        else if (e.key === '9') setActiveTab('help');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -103,6 +107,8 @@ export const App: React.FC = () => {
             onNavigateToSettings={() => setActiveTab('settings')}
           />
         )}
+        {activeTab === 'database' && <DatabasePage />}
+        {activeTab === 'containers' && <ContainersPage />}
         {activeTab === 'karaf' && (
           <KarafDeployPage
             projects={projects}

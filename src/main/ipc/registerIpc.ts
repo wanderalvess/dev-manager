@@ -8,6 +8,9 @@ import { GitAzureService } from '../services/GitAzureService';
 import { RoutinesService } from '../services/RoutinesService';
 import { ConfigService } from '../services/ConfigService';
 import { DocsIndexService } from '../services/DocsIndexService';
+import { DatabaseService } from '../services/DatabaseService';
+import { DockerService } from '../services/DockerService';
+import { NetworkService } from '../services/NetworkService';
 import {
   AppSettings,
   KarafDeployRequest,
@@ -18,7 +21,8 @@ import {
   TrackedProcessConfig,
   AutomationProfile,
   AutomationStep,
-  DocsIndexProgress
+  DocsIndexProgress,
+  DatabaseConnectionConfig
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
@@ -29,7 +33,10 @@ export function registerIpcHandlers(
   gitAzureService: GitAzureService,
   routinesService: RoutinesService,
   configService: ConfigService,
-  docsIndexService: DocsIndexService
+  docsIndexService: DocsIndexService,
+  databaseService: DatabaseService,
+  dockerService: DockerService,
+  networkService: NetworkService
 ) {
   // --- Diálogos Nativos do Sistema & Verificação de Caminhos ---
   ipcMain.handle('dialog:select-directory', async (_, defaultPath?: string) => {
@@ -327,5 +334,52 @@ export function registerIpcHandlers(
 
   ipcMain.handle('settings:save', async (_, settings: Partial<AppSettings>) => {
     return configService.saveSettings(settings);
+  });
+
+  // --- Banco de Dados (Oracle, MySQL, Postgres) ---
+  ipcMain.handle('db:test-connection', async (_, config: DatabaseConnectionConfig) => {
+    return await databaseService.testConnection(config);
+  });
+
+  ipcMain.handle('db:execute-query', async (_, config: DatabaseConnectionConfig, sql: string, maxRows?: number) => {
+    return await databaseService.executeQuery(config, sql, maxRows);
+  });
+
+  ipcMain.handle('db:list-tables', async (_, config: DatabaseConnectionConfig) => {
+    return await databaseService.listTables(config);
+  });
+
+  // --- Gerenciador de Containers Docker ---
+  ipcMain.handle('docker:get-status', async () => {
+    return await dockerService.checkDockerStatus();
+  });
+
+  ipcMain.handle('docker:list-containers', async () => {
+    return await dockerService.listContainers();
+  });
+
+  ipcMain.handle('docker:start', async (_, containerId: string) => {
+    return await dockerService.startContainer(containerId);
+  });
+
+  ipcMain.handle('docker:stop', async (_, containerId: string) => {
+    return await dockerService.stopContainer(containerId);
+  });
+
+  ipcMain.handle('docker:restart', async (_, containerId: string) => {
+    return await dockerService.restartContainer(containerId);
+  });
+
+  ipcMain.handle('docker:logs', async (_, containerId: string, lines?: number) => {
+    return await dockerService.getContainerLogs(containerId, lines);
+  });
+
+  ipcMain.handle('docker:remove', async (_, containerId: string) => {
+    return await dockerService.removeContainer(containerId);
+  });
+
+  // --- Rede & Detecção de IPs (Local e WSL) ---
+  ipcMain.handle('network:get-ips', async () => {
+    return await networkService.getNetworkIps();
   });
 }

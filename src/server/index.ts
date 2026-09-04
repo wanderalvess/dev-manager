@@ -13,6 +13,9 @@ import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
 import { DocsIndexService } from '../main/services/DocsIndexService';
+import { DatabaseService } from '../main/services/DatabaseService';
+import { DockerService } from '../main/services/DockerService';
+import { NetworkService } from '../main/services/NetworkService';
 import { EnvironmentLog, KarafDeployRequest, AppSettings, AutomationProfile, AutomationStep, DocsIndexProgress } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 
@@ -58,10 +61,13 @@ if (!API_KEY && exposedBeyondLocalhost) {
 }
 
 app.use((req, res, next) => {
-  if (!API_KEY || !req.path.startsWith('/api/')) return next();
-  const provided = req.header('x-api-key');
-  if (provided === API_KEY) return next();
-  res.status(401).json({ error: 'API key ausente ou inválida. Envie o header x-api-key.' });
+  if (API_KEY && exposedBeyondLocalhost) {
+    const provided = req.headers['x-api-key'] || req.query.apiKey;
+    if (provided !== API_KEY) {
+      return res.status(401).json({ error: 'Acesso não autorizado: API_KEY inválida.' });
+    }
+  }
+  next();
 });
 
 // Inicializa os serviços
@@ -71,6 +77,9 @@ const windowsService = new WindowsService(configService, karafService);
 const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
+const databaseService = new DatabaseService();
+const dockerService = new DockerService();
+const networkService = new NetworkService();
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
 const wsClients = new Set<WebSocket>();
@@ -445,6 +454,98 @@ app.post('/api/shell/open', (req, res) => {
     return res.status(400).json({ error: 'URL insegura ou não permitida.' });
   }
   res.json({ success: true, url });
+});
+
+// 8. Banco de Dados (Oracle, MySQL, Postgres)
+app.post('/api/db/test', async (req, res) => {
+  try {
+    const result = await databaseService.testConnection(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'Erro ao testar conexão' });
+  }
+});
+
+app.post('/api/db/query', async (req, res) => {
+  try {
+    const { config, sql, maxRows } = req.body;
+    const result = await databaseService.executeQuery(config, sql, maxRows);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || 'Erro ao executar consulta' });
+  }
+});
+
+app.post('/api/db/tables', async (req, res) => {
+  try {
+    const result = await databaseService.listTables(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json([]);
+  }
+});
+
+// 9. Gerenciador de Containers Docker
+app.get('/api/docker/status', async (_req, res) => {
+  const status = await dockerService.checkDockerStatus();
+  res.json(status);
+});
+
+app.get('/api/docker/containers', async (_req, res) => {
+  const containers = await dockerService.listContainers();
+  res.json(containers);
+});
+
+app.post('/api/docker/containers/:id/start', async (req, res) => {
+  try {
+    const success = await dockerService.startContainer(req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/docker/containers/:id/stop', async (req, res) => {
+  try {
+    const success = await dockerService.stopContainer(req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/docker/containers/:id/restart', async (req, res) => {
+  try {
+    const success = await dockerService.restartContainer(req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/docker/containers/:id/logs', async (req, res) => {
+  try {
+    const lines = req.query.lines ? Number(req.query.lines) : 200;
+    const logs = await dockerService.getContainerLogs(req.params.id, lines);
+    res.json({ logs });
+  } catch (err: any) {
+    res.status(500).json({ logs: `Erro: ${err.message}` });
+  }
+});
+
+app.delete('/api/docker/containers/:id', async (req, res) => {
+  try {
+    const success = await dockerService.removeContainer(req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10. Informações de Rede e IPs (Local e WSL)
+app.get('/api/network/ips', async (_req, res) => {
+  const ips = await networkService.getNetworkIps();
+  res.json(ips);
 });
 
 // Servir Frontend SPA estático se compilado
