@@ -29,7 +29,9 @@ import {
   Check,
   Trash2,
   Download,
-  Upload
+  Upload,
+  AlertTriangle,
+  HelpCircle
 } from 'lucide-react';
 import {
   ServiceStatus,
@@ -52,12 +54,14 @@ interface EnvironmentPageProps {
   services: ServiceStatus[];
   onRefreshServices: () => void;
   onNavigateToSettings?: () => void;
+  onNavigateToHelp?: (search?: string) => void;
 }
 
 export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   services,
   onRefreshServices,
-  onNavigateToSettings
+  onNavigateToSettings,
+  onNavigateToHelp
 }) => {
   const [logs, setLogs] = useState<(string | EnvironmentLog)[]>([]);
   const [ports, setPorts] = useState<PortStatus[]>([]);
@@ -89,6 +93,17 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     if (!profiles || profiles.length === 0) return null;
     return profiles.find((p) => p.id === activeProfileId) || profiles[0];
   }, [profiles, activeProfileId]);
+
+  // Diretórios essenciais ainda não configurados (detecção automática não achou nada no disco).
+  // Usado para orientar quem está usando o programa pela primeira vez direto para as Configurações.
+  const missingRequiredPaths = useMemo(() => {
+    if (!settings) return [];
+    const missing: string[] = [];
+    if (!settings.projectsPath) missing.push('Diretório de Repositórios Git');
+    if (!settings.karafPath) missing.push('Diretório do Karaf');
+    if (!settings.intellijPath) missing.push('IDE (IntelliJ)');
+    return missing;
+  }, [settings]);
 
   // Referências para valores voláteis usados em checagens periódicas (evita recriar callbacks)
   const settingsRef = useRef<AppSettings | null>(settings);
@@ -717,6 +732,29 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
   return (
     <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto">
+      {/* Aviso de Configuração Incompleta: orienta o primeiro uso para as Configurações */}
+      {missingRequiredPaths.length > 0 && (
+        <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <span className="font-bold block">Configuração incompleta</span>
+            <span className="text-[11px] text-muted-foreground block mt-0.5">
+              Não encontramos automaticamente: {missingRequiredPaths.join(', ')}. Alguns recursos do Cockpit (subir serviços, abrir a IDE, deploy) não vão funcionar até esses caminhos serem definidos.
+            </span>
+            {onNavigateToSettings && (
+              <button
+                type="button"
+                onClick={onNavigateToSettings}
+                className="mt-2 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-[11px] font-bold text-amber-700 dark:text-amber-200 flex items-center gap-1 transition-all"
+              >
+                <Settings className="w-3 h-3" />
+                <span>Configurar Agora</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 1. Cockpit Unificado: Seletor de Perfis & Orquestrador */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-col space-y-3.5 shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -991,6 +1029,15 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Portas Monitoradas ({activePortsCount}/{ports.length} ativas):
             </span>
+            {onNavigateToHelp && (
+              <button
+                onClick={() => onNavigateToHelp('em uso')}
+                className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-muted"
+                title="O que significa uma porta 'Em uso'? Ver na Central de Ajuda"
+              >
+                <HelpCircle className="w-3 h-3" />
+              </button>
+            )}
             {onNavigateToSettings && (
               <button
                 onClick={onNavigateToSettings}
@@ -1016,6 +1063,16 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                 <span className={`w-1.5 h-1.5 rounded-full ${p.inUse ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/50'}`} />
                 <span>:{p.port}</span>
                 <span className="text-[9px] text-muted-foreground font-sans hidden sm:inline">({p.label.split(' ')[0]})</span>
+                {onNavigateToHelp && p.label.toLowerCase().includes('debug') && (
+                  <HelpCircle
+                    className="w-2.5 h-2.5 opacity-60 hover:opacity-100 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigateToHelp('breakpoints');
+                    }}
+                    aria-label="Como conectar o debug remoto do IntelliJ nesta porta"
+                  />
+                )}
               </div>
             ))}
           </div>
