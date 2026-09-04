@@ -199,8 +199,6 @@ export class DockerService {
    * Validação de segurança para ID ou nome do container (evita injection de argumentos)
    */
   private isValidContainerId(id: string): boolean {
-    if (!id || typeof id !== 'string') return false;
-    // Docker IDs são hex (12 a 64 caracteres) ou nomes com [a-zA-Z0-9_.-]
-    return /^[a-zA-Z0-9_.-]{2,128}$/.test(id.trim());
+    return isValidIdentifier(id) && id.trim().length >= 2 && id.trim().length <= 128;
   }
 }

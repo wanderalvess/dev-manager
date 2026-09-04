@@ -1,6 +1,63 @@
 import { DatabaseConnectionConfig, QueryResult, TableInfo } from '../../shared/types';
 
+interface CachedConnection {
+  conn: any;
+  close: (conn: any) => Promise<void>;
+  timer: ReturnType<typeof setTimeout>;
+}
+
 export class DatabaseService {
+  private connCache = new Map<string, CachedConnection>();
+  private static readonly IDLE_MS = 30000;
+
+  private cacheKey(config: DatabaseConnectionConfig): string {
+    return `${config.type}|${config.host}|${config.port}|${config.database}|${config.user}`;
+  }
+
+  /**
+   * Executa fn contra uma conexão do banco. Quando reuse=true, mantém a conexão
+   * aberta e a compartilha entre chamadas subsequentes com a mesma config
+   * (evita reabrir handshake em test -> listTables -> executeQuery), fechando-a
+   * após IDLE_MS sem uso ou imediatamente em caso de erro.
+   */
+  private async withConnection<T, R>(
+    config: DatabaseConnectionConfig,
+    getConn: () => Promise<T>,
+    closeConn: (conn: T) => Promise<void>,
+    fn: (conn: T) => Promise<R>,
+    reuse = false
+  ): Promise<R> {
+    if (!reuse) {
+      const conn = await getConn();
+      try {
+        return await fn(conn);
+      } finally {
+        await closeConn(conn).catch(() => {});
+      }
+    }
+
+    const key = this.cacheKey(config);
+    let cached = this.connCache.get(key);
+    if (!cached) {
+      const conn = await getConn();
+      cached = { conn, close: closeConn as (c: any) => Promise<void>, timer: undefined as any };
+      this.connCache.set(key, cached);
+    }
+    clearTimeout(cached.timer);
+    cached.timer = setTimeout(() => {
+      this.connCache.delete(key);
+      cached!.close(cached!.conn).catch(() => {});
+    }, DatabaseService.IDLE_MS);
+
+    try {
+      return await fn(cached.conn as T);
+    } catch (err) {
+      clearTimeout(cached.timer);
+      this.connCache.delete(key);
+      await closeConn(cached.conn as T).catch(() => {});
+      throw err;
+    }
+  }
   /**
    * Testa a conectividade com o banco de dados especificado.
    */
@@ -41,6 +98,7 @@ export class DatabaseService {
     sql: string,
     maxRows = 200
   ): Promise<QueryResult> {
+    maxRows = Number.isFinite(maxRows) && maxRows > 0 ? Math.floor(maxRows) : 200;
     const startTime = Date.now();
     const trimmedSql = sql.trim();
 
@@ -135,14 +193,16 @@ export class DatabaseService {
   }
 
   private async testPostgres(config: DatabaseConnectionConfig) {
-    const client = await this.getPgClient(config);
-    try {
-      const res = await client.query('SELECT version();');
-      const version = res.rows[0]?.version || 'PostgreSQL Conectado com Sucesso';
-      return { success: true, message: 'Conexão bem-sucedida ao PostgreSQL!', version };
-    } finally {
-      await client.end().catch(() => {});
-    }
+    return this.withConnection(
+      config,
+      () => this.getPgClient(config),
+      (client) => client.end(),
+      async (client) => {
+        const res = await client.query('SELECT version();');
+        const version = res.rows[0]?.version || 'PostgreSQL Conectado com Sucesso';
+        return { success: true, message: 'Conexão bem-sucedida ao PostgreSQL!', version };
+      }
+    );
   }
 
   private async executePostgres(
@@ -151,39 +211,42 @@ export class DatabaseService {
     maxRows: number,
     startTime: number
   ): Promise<QueryResult> {
-    const client = await this.getPgClient(config);
-    try {
-      const res = await client.query(sql);
-      const executionTimeMs = Date.now() - startTime;
+    return this.withConnection(
+      config,
+      () => this.getPgClient(config),
+      (client) => client.end(),
+      async (client) => {
+        const res = await client.query(sql);
+        const executionTimeMs = Date.now() - startTime;
 
-      if (Array.isArray(res)) {
-        // Múltiplos comandos
-        const last = res[res.length - 1];
-        const isQuery = Boolean(last.fields && last.fields.length > 0);
+        if (Array.isArray(res)) {
+          // Múltiplos comandos
+          const last = res[res.length - 1];
+          const isQuery = Boolean(last.fields && last.fields.length > 0);
+          return {
+            success: true,
+            columns: isQuery ? last.fields.map((f: any) => f.name) : [],
+            rows: isQuery ? (last.rows || []).slice(0, maxRows) : [],
+            rowCount: isQuery ? (last.rows ? last.rows.length : 0) : 0,
+            affectedRows: !isQuery ? last.rowCount ?? undefined : undefined,
+            executionTimeMs,
+            isQuery
+          };
+        }
+
+        const isQuery = Boolean(res.fields && res.fields.length > 0);
         return {
           success: true,
-          columns: isQuery ? last.fields.map((f: any) => f.name) : [],
-          rows: isQuery ? (last.rows || []).slice(0, maxRows) : [],
-          rowCount: isQuery ? (last.rows ? last.rows.length : 0) : 0,
-          affectedRows: !isQuery ? last.rowCount ?? undefined : undefined,
+          columns: isQuery ? res.fields.map((f: any) => f.name) : [],
+          rows: isQuery ? (res.rows || []).slice(0, maxRows) : [],
+          rowCount: isQuery ? (res.rows ? res.rows.length : 0) : 0,
+          affectedRows: !isQuery ? res.rowCount ?? undefined : undefined,
           executionTimeMs,
           isQuery
         };
-      }
-
-      const isQuery = Boolean(res.fields && res.fields.length > 0);
-      return {
-        success: true,
-        columns: isQuery ? res.fields.map((f: any) => f.name) : [],
-        rows: isQuery ? (res.rows || []).slice(0, maxRows) : [],
-        rowCount: isQuery ? (res.rows ? res.rows.length : 0) : 0,
-        affectedRows: !isQuery ? res.rowCount ?? undefined : undefined,
-        executionTimeMs,
-        isQuery
-      };
-    } finally {
-      await client.end().catch(() => {});
-    }
+      },
+      true
+    );
   }
 
   // =========================================================================
@@ -211,14 +274,16 @@ export class DatabaseService {
   }
 
   private async testMysql(config: DatabaseConnectionConfig) {
-    const conn = await this.getMysqlConnection(config);
-    try {
-      const [rows] = await conn.query('SELECT VERSION() as version;');
-      const version = (rows as any)?.[0]?.version || 'MySQL Conectado com Sucesso';
-      return { success: true, message: 'Conexão bem-sucedida ao MySQL!', version: `MySQL ${version}` };
-    } finally {
-      await conn.end().catch(() => {});
-    }
+    return this.withConnection(
+      config,
+      () => this.getMysqlConnection(config),
+      (conn) => conn.end(),
+      async (conn) => {
+        const [rows] = await conn.query('SELECT VERSION() as version;');
+        const version = (rows as any)?.[0]?.version || 'MySQL Conectado com Sucesso';
+        return { success: true, message: 'Conexão bem-sucedida ao MySQL!', version: `MySQL ${version}` };
+      }
+    );
   }
 
   private async executeMysql(
@@ -227,39 +292,42 @@ export class DatabaseService {
     maxRows: number,
     startTime: number
   ): Promise<QueryResult> {
-    const conn = await this.getMysqlConnection(config);
-    try {
-      const [result, fields] = await conn.query(sql);
-      const executionTimeMs = Date.now() - startTime;
+    return this.withConnection(
+      config,
+      () => this.getMysqlConnection(config),
+      (conn) => conn.end(),
+      async (conn) => {
+        const [result, fields] = await conn.query(sql);
+        const executionTimeMs = Date.now() - startTime;
 
-      if (Array.isArray(result) && fields) {
-        // É um SELECT / resultado com colunas
-        const columns = (fields as any[]).map((f) => f.name);
-        const rows = (result as Record<string, any>[]).slice(0, maxRows);
+        if (Array.isArray(result) && fields) {
+          // É um SELECT / resultado com colunas
+          const columns = (fields as any[]).map((f) => f.name);
+          const rows = (result as Record<string, any>[]).slice(0, maxRows);
+          return {
+            success: true,
+            columns,
+            rows,
+            rowCount: result.length,
+            executionTimeMs,
+            isQuery: true
+          };
+        }
+
+        // É um UPDATE / INSERT / DELETE (OkPacket)
+        const affectedRows = (result as any)?.affectedRows ?? 0;
         return {
           success: true,
-          columns,
-          rows,
-          rowCount: result.length,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          affectedRows,
           executionTimeMs,
-          isQuery: true
+          isQuery: false
         };
-      }
-
-      // É um UPDATE / INSERT / DELETE (OkPacket)
-      const affectedRows = (result as any)?.affectedRows ?? 0;
-      return {
-        success: true,
-        columns: [],
-        rows: [],
-        rowCount: 0,
-        affectedRows,
-        executionTimeMs,
-        isQuery: false
-      };
-    } finally {
-      await conn.end().catch(() => {});
-    }
+      },
+      true
+    );
   }
 
   // =========================================================================
@@ -293,19 +361,23 @@ export class DatabaseService {
   }
 
   private async testOracle(config: DatabaseConnectionConfig) {
-    const { conn, oracledb } = await this.getOracleConnection(config);
-    try {
-      const result = await conn.execute('SELECT * FROM v$version WHERE banner LIKE \'Oracle%\'', [], {
-        outFormat: oracledb.OUT_FORMAT_OBJECT
-      });
-      const banner = (result.rows as any[])?.[0]?.BANNER || 'Oracle Database Conectado (Thin Mode)';
-      return { success: true, message: 'Conexão bem-sucedida ao Oracle!', version: banner };
-    } catch {
-      // Fallback caso usuário não tenha permissão no v$version
-      return { success: true, message: 'Conexão bem-sucedida ao Oracle Database!' };
-    } finally {
-      await conn.close().catch(() => {});
-    }
+    return this.withConnection(
+      config,
+      () => this.getOracleConnection(config),
+      ({ conn }) => conn.close(),
+      async ({ conn, oracledb }) => {
+        try {
+          const result = await conn.execute('SELECT * FROM v$version WHERE banner LIKE \'Oracle%\'', [], {
+            outFormat: oracledb.OUT_FORMAT_OBJECT
+          });
+          const banner = (result.rows as any[])?.[0]?.BANNER || 'Oracle Database Conectado (Thin Mode)';
+          return { success: true, message: 'Conexão bem-sucedida ao Oracle!', version: banner };
+        } catch {
+          // Fallback caso usuário não tenha permissão no v$version
+          return { success: true, message: 'Conexão bem-sucedida ao Oracle Database!' };
+        }
+      }
+    );
   }
 
   private async executeOracle(
@@ -314,47 +386,46 @@ export class DatabaseService {
     maxRows: number,
     startTime: number
   ): Promise<QueryResult> {
-    const { conn, oracledb } = await this.getOracleConnection(config);
-    try {
-      const isSelect = /^\s*(SELECT|WITH)\s+/i.test(sql);
+    return this.withConnection(
+      config,
+      () => this.getOracleConnection(config),
+      ({ conn }) => conn.close(),
+      async ({ conn, oracledb }) => {
+        const isSelect = /^\s*(SELECT|WITH)\s+/i.test(sql);
 
-      const result = await conn.execute(
-        sql,
-        [],
-        {
+        const result = await conn.execute(sql, [], {
           outFormat: oracledb.OUT_FORMAT_OBJECT,
           autoCommit: true,
           maxRows: isSelect ? maxRows : undefined
+        });
+
+        const executionTimeMs = Date.now() - startTime;
+
+        if (result.rows && result.metaData) {
+          const columns = result.metaData.map((m: any) => m.name);
+          const rows = (result.rows as Record<string, any>[]).slice(0, maxRows);
+          return {
+            success: true,
+            columns,
+            rows,
+            rowCount: result.rows.length,
+            executionTimeMs,
+            isQuery: true
+          };
         }
-      );
 
-      const executionTimeMs = Date.now() - startTime;
-
-      if (result.rows && result.metaData) {
-        const columns = result.metaData.map((m: any) => m.name);
-        const rows = (result.rows as Record<string, any>[]).slice(0, maxRows);
         return {
           success: true,
-          columns,
-          rows,
-          rowCount: result.rows.length,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          affectedRows: result.rowsAffected ?? 0,
           executionTimeMs,
-          isQuery: true
+          isQuery: false
         };
-      }
-
-      return {
-        success: true,
-        columns: [],
-        rows: [],
-        rowCount: 0,
-        affectedRows: result.rowsAffected ?? 0,
-        executionTimeMs,
-        isQuery: false
-      };
-    } finally {
-      await conn.close().catch(() => {});
-    }
+      },
+      true
+    );
   }
 
   private formatErrorMessage(err: any, type: string): string {

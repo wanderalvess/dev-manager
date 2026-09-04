@@ -61,13 +61,10 @@ if (!API_KEY && exposedBeyondLocalhost) {
 }
 
 app.use((req, res, next) => {
-  if (API_KEY && exposedBeyondLocalhost) {
-    const provided = req.headers['x-api-key'] || req.query.apiKey;
-    if (provided !== API_KEY) {
-      return res.status(401).json({ error: 'Acesso não autorizado: API_KEY inválida.' });
-    }
-  }
-  next();
+  if (!API_KEY || !req.path.startsWith('/api/')) return next();
+  const provided = req.header('x-api-key');
+  if (provided === API_KEY) return next();
+  res.status(401).json({ error: 'API key ausente ou inválida. Envie o header x-api-key.' });
 });
 
 // Inicializa os serviços

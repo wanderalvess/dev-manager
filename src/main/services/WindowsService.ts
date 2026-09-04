@@ -767,10 +767,9 @@ export class WindowsService {
       pushLog(stopped ? 'success' : 'info', `Porta ${step.port} liberada.`);
     }
 
-    if (step.type === 'service-start' && (step.targetName || step.name)) {
-      const srv = step.targetName || step.name;
-      pushLog('info', `Parando serviço ${srv}...`);
-      await this.stopService(srv);
+    if (step.type === 'service-start' && step.targetName) {
+      pushLog('info', `Parando serviço ${step.targetName}...`);
+      await this.stopService(step.targetName);
       stopped = true;
     }
 
