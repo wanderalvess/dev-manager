@@ -348,6 +348,25 @@ export class WindowsService {
     }
   }
 
+  /**
+   * Abre qualquer aplicativo local pelo caminho completo do executável (ex: Postman, terminal),
+   * sem restrição de pasta como as rotinas (RoutinesService.launchRoutine) — uso previsto para
+   * ferramentas externas ao ecossistema Karaf/IDE já cobertas pelos outros launchers.
+   */
+  public launchExternalApp(fullPath: string): boolean {
+    try {
+      if (!fullPath || !fs.existsSync(fullPath)) {
+        return false;
+      }
+      const dir = path.dirname(fullPath);
+      spawn(fullPath, [], { cwd: dir, detached: true, stdio: 'ignore' }).unref();
+      return true;
+    } catch (err) {
+      console.error('Erro ao abrir aplicativo externo:', err);
+      return false;
+    }
+  }
+
   public launchServerDebug(): boolean {
     const exe = this.karafService.getKarafServerExecutable();
     if (exe && fs.existsSync(exe)) {
