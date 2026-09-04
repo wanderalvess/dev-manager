@@ -629,14 +629,19 @@ export class KarafService {
       }
     }
 
-    // Busca se já existe um bundle com mesmo nome/symbolicName no container
-    const existing = installed.find((b) => {
-      const bSym = (b.symbolicName || b.name || '').toLowerCase();
-      if (derivedName && (bSym === derivedName || bSym.includes(derivedName) || derivedName.includes(bSym))) {
-        return true;
-      }
-      return false;
-    });
+    // Busca se já existe um bundle com mesmo nome ou symbolicName no container.
+    // Checa os dois campos (não só symbolicName): o artifactId Maven do target
+    // costuma bater com o "Name" exibido pelo bundle:list, mas raramente bate
+    // com o Bundle-SymbolicName OSGi completo (ex: "br.com.totvs.winthor.faturamento"
+    // vs artifactId "rotina-faturamento-service") — usar só um dos dois deixava
+    // colisões reais passando batido.
+    const matchesDerivedName = (value?: string): boolean => {
+      const v = (value || '').toLowerCase();
+      return !!derivedName && !!v && (v === derivedName || v.includes(derivedName) || derivedName.includes(v));
+    };
+    const existing = installed.find(
+      (b) => matchesDerivedName(b.symbolicName) || matchesDerivedName(b.name)
+    );
 
     if (existing) {
       const existingDetails = await this.getBundleDetails(existing.id, credentials);

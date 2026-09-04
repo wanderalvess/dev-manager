@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Settings,
   Save,
@@ -43,6 +43,7 @@ import {
 
 interface SettingsPageProps {
   onSettingsSaved?: () => void;
+  onNavigate?: (tab: string) => void;
 }
 
 const DEFAULT_PORTS: MonitoredPortConfig[] = [
@@ -70,7 +71,7 @@ const DEFAULT_AUTOMATION: EnvironmentAutomationConfig = {
 
 type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation';
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onNavigate }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('dirs');
   const [settings, setSettings] = useState<AppSettings>({
     appPath: '',
@@ -113,6 +114,38 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
     }
     setSettings((prev) => ({ ...prev, routineLauncherMap: map }));
   }, [launcherRows]);
+
+  // Checklist de Primeira Configuração: orienta o usuário novo pelas etapas essenciais
+  const setupChecklist = useMemo(
+    () => [
+      {
+        id: 'dirs',
+        label: 'Diretórios de Repositórios & Karaf',
+        done: Boolean(pathStatuses.projectsPath?.exists && pathStatuses.karafPath?.exists),
+        action: () => setActiveTab('dirs')
+      },
+      {
+        id: 'ide',
+        label: 'IDE detectada (IntelliJ)',
+        done: Boolean(pathStatuses.intellijPath?.exists),
+        action: () => setActiveTab('dirs')
+      },
+      {
+        id: 'karaf-creds',
+        label: 'Credenciais do Karaf',
+        done: Boolean(settings.karafUser?.trim() && settings.karafPass?.trim()),
+        action: () => setActiveTab('karaf')
+      },
+      {
+        id: 'database',
+        label: 'Conexão de Banco de Dados',
+        done: Boolean(settings.databaseConnections && settings.databaseConnections.length > 0),
+        action: () => onNavigate?.('database')
+      }
+    ],
+    [pathStatuses, settings.karafUser, settings.karafPass, settings.databaseConnections, onNavigate]
+  );
+  const pendingChecklistCount = setupChecklist.filter((item) => !item.done).length;
 
   // Validação de Caminhos
   const validateAllPaths = useCallback(async (st: AppSettings) => {
@@ -545,6 +578,39 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
         </div>
       )}
 
+      {/* Checklist de Primeira Configuração */}
+      {pendingChecklistCount > 0 && (
+        <div className="px-4 py-3 rounded-xl bg-card border border-border/80 shadow-sm shrink-0 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              Checklist de Configuração Inicial
+            </span>
+            <span className="text-[10px] text-muted-foreground font-mono">
+              {setupChecklist.length - pendingChecklistCount}/{setupChecklist.length} concluídos
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {setupChecklist.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={item.action}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
+                  item.done
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-300'
+                    : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
+                }`}
+                title={item.done ? `${item.label} - configurado` : `${item.label} - clique para configurar`}
+              >
+                {item.done ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Abas de Navegação Interna das Configurações */}
       <div className="flex items-center space-x-2 border-b border-border pb-2 text-xs flex-wrap gap-y-2">
         <button
@@ -642,7 +708,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                 {/* Diretório de Repositórios Git */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <label
+                      className="font-bold text-foreground flex items-center gap-1.5"
+                      title="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Dev Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
+                    >
                       <HardDrive className="w-3.5 h-3.5 text-primary" />
                       Diretório Base dos Repositórios Git:
                     </label>
@@ -675,7 +744,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                 {/* Diretório do Apache Karaf */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <label
+                      className="font-bold text-foreground flex items-center gap-1.5"
+                      title="Raiz da instalação do servidor Apache Karaf (a pasta que contém bin/client.bat). Usado para iniciar/parar o Karaf, abrir o console e rodar deploys."
+                    >
                       <Layers className="w-3.5 h-3.5 text-amber-500" />
                       Diretório do Servidor Apache Karaf (OSGi):
                     </label>
@@ -708,7 +780,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                 {/* Diretório Java JDK / JRE (JAVA_HOME) */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <label
+                      className="font-bold text-foreground flex items-center gap-1.5"
+                      title="JDK usado para compilar/rodar o Karaf embutido e builds Maven. Equivalente à variável de ambiente JAVA_HOME."
+                    >
                       <HardDrive className="w-3.5 h-3.5 text-orange-500" />
                       Diretório Java JDK (JAVA_HOME):
                     </label>
@@ -891,7 +966,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                 {/* Executável da IDE */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <label
+                      className="font-bold text-foreground flex items-center gap-1.5"
+                      title="Caminho do .exe da sua IDE (IntelliJ IDEA, VS Code, etc). Usado pelo botão 'Abrir na IDE' para abrir projetos com um clique."
+                    >
                       <Code2 className="w-3.5 h-3.5 text-primary" />
                       Executável da IDE / Editor de Código:
                     </label>
@@ -1065,7 +1143,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
               <div className="space-y-4 text-xs">
                 {/* Branch Padrão para Pull Requests */}
                 <div className="space-y-2">
-                  <label className="block font-bold text-foreground flex items-center gap-1.5">
+                  <label
+                    className="block font-bold text-foreground flex items-center gap-1.5"
+                    title="Branch de destino sugerido ao criar um novo Pull Request no Azure DevOps (ex: develop, main)."
+                  >
                     <GitBranch className="w-3.5 h-3.5 text-primary" /> Branch Padrão para Pull Requests:
                   </label>
                   <div className="flex flex-wrap items-center gap-2">
@@ -1099,7 +1180,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
                 {/* Diretório de Repositórios Git */}
                 <div className="space-y-1.5 pt-2 border-t border-border/60">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <label
+                      className="font-bold text-foreground flex items-center gap-1.5"
+                      title="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Dev Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
+                    >
                       <HardDrive className="w-3.5 h-3.5 text-primary" />
                       Diretório Base dos Repositórios Git:
                     </label>

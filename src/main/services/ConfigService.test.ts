@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -131,5 +131,58 @@ describe('ConfigService', () => {
     expect(res.settings?.karafSshPort).toBe(8102);
     expect(res.settings?.routineFileExtensions).toEqual(['.EXE', '.PC']);
     expect(res.settings?.routineLauncherMap).toEqual({ '.PC': 'C:/launcher.exe' });
+  });
+
+  describe('cache em memória de getSettings', () => {
+    it('não relê o disco em chamadas repetidas enquanto o arquivo não muda', () => {
+      const service = new ConfigService();
+      service.saveSettings({ appPath: 'C:/app-1' });
+
+      const readSpy = vi.spyOn(fs, 'readFileSync');
+      const first = service.getSettings();
+      const second = service.getSettings();
+
+      expect(readSpy).not.toHaveBeenCalled();
+      expect(first).toEqual(second);
+      readSpy.mockRestore();
+    });
+
+    it('saveSettings atualiza o cache imediatamente, sem exigir nova leitura de disco', () => {
+      const service = new ConfigService();
+      service.saveSettings({ appPath: 'C:/app-1' });
+
+      const readSpy = vi.spyOn(fs, 'readFileSync');
+      const settings = service.getSettings();
+
+      expect(settings.appPath).toBe('C:/app-1');
+      expect(readSpy).not.toHaveBeenCalled();
+      readSpy.mockRestore();
+    });
+
+    it('invalida o cache e relê quando o arquivo é modificado externamente (mtime muda)', () => {
+      const service = new ConfigService();
+      service.saveSettings({ appPath: 'C:/app-1' });
+      expect(service.getSettings().appPath).toBe('C:/app-1');
+
+      const configPath = service.getConfigFilePath();
+      fs.writeFileSync(configPath, JSON.stringify({ appPath: 'C:/app-2' }), 'utf-8');
+      // Garante mtime estritamente maior, independente da resolução do relógio do FS.
+      const future = new Date(Date.now() + 5000);
+      fs.utimesSync(configPath, future, future);
+
+      expect(service.getSettings().appPath).toBe('C:/app-2');
+    });
+
+    it('cada instância de ConfigService tem seu próprio cache (não vaza entre instâncias)', () => {
+      const serviceA = new ConfigService();
+      serviceA.saveSettings({ appPath: 'C:/de-a' });
+
+      const serviceB = new ConfigService();
+      expect(serviceB.getSettings().appPath).toBe('C:/de-a');
+
+      serviceB.saveSettings({ appPath: 'C:/de-b' });
+      // serviceA só deve enxergar a mudança externa após seu próprio cache expirar por mtime.
+      expect(serviceA.getSettings().appPath).toBe('C:/de-b');
+    });
   });
 });

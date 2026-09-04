@@ -12,12 +12,38 @@ import { HelpPage } from './pages/HelpPage';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
 
+// Marca se o usuário já viu a tela de Ajuda/Visão Geral pelo menos uma vez.
+// Usado para decidir a aba inicial no primeiro uso (onboarding).
+const ONBOARDING_SEEN_KEY = 'devManager:onboardingSeen';
+
+const getInitialTab = (): string => {
+  try {
+    return window.localStorage.getItem(ONBOARDING_SEEN_KEY) ? 'env' : 'help';
+  } catch {
+    return 'env';
+  }
+};
+
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('env');
+  const [activeTab, setActiveTab] = useState<string>(getInitialTab);
   const [services, setServices] = useState<ServiceStatus[]>([]);
   const [projects, setProjects] = useState<GitProjectInfo[]>([]);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isQuickLauncherOpen, setIsQuickLauncherOpen] = useState<boolean>(false);
+  const [helpSearch, setHelpSearch] = useState<string>('');
+
+  const navigateToHelp = useCallback((search?: string) => {
+    setHelpSearch(search || '');
+    setActiveTab('help');
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(ONBOARDING_SEEN_KEY, '1');
+    } catch {
+      // localStorage indisponível (ex: modo privado) - onboarding reaparece a cada abertura, sem problema
+    }
+  }, []);
 
   const isFetchingServicesRef = React.useRef(false);
   const fetchServices = useCallback(async () => {
@@ -133,6 +159,7 @@ export const App: React.FC = () => {
             services={services}
             onRefreshServices={fetchServices}
             onNavigateToSettings={() => setActiveTab('settings')}
+            onNavigateToHelp={navigateToHelp}
           />
         )}
         {activeTab === 'database' && <DatabasePage />}
@@ -155,8 +182,12 @@ export const App: React.FC = () => {
           <RoutinesPage onNavigateToSettings={() => setActiveTab('settings')} />
         )}
         {activeTab === 'docs' && <DocsPage onNavigateToSettings={() => setActiveTab('settings')} />}
-        {activeTab === 'settings' && <SettingsPage onSettingsSaved={refreshAll} />}
-        {activeTab === 'help' && <HelpPage onNavigate={(tab) => setActiveTab(tab)} />}
+        {activeTab === 'settings' && (
+          <SettingsPage onSettingsSaved={refreshAll} onNavigate={(tab) => setActiveTab(tab)} />
+        )}
+        {activeTab === 'help' && (
+          <HelpPage onNavigate={(tab) => setActiveTab(tab)} initialSearch={helpSearch} />
+        )}
       </main>
     </div>
   );

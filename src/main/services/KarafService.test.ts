@@ -180,7 +180,8 @@ client.bat "feature:install -r custom-feature/2.0.0"
         state: 'Active',
         level: '80',
         version: '4.4.6',
-        name: 'Apache Karaf :: OSGi Services'
+        name: 'Apache Karaf :: OSGi Services',
+        symbolicName: 'Apache Karaf :: OSGi Services'
       });
 
       expect(bundles[1]).toEqual({
@@ -188,7 +189,8 @@ client.bat "feature:install -r custom-feature/2.0.0"
         state: 'Resolved',
         level: '80',
         version: '1.2.3',
-        name: 'TOTVS :: WinThor Service Core'
+        name: 'TOTVS :: WinThor Service Core',
+        symbolicName: 'TOTVS :: WinThor Service Core'
       });
 
       expect(bundles[2]).toEqual({
@@ -196,7 +198,8 @@ client.bat "feature:install -r custom-feature/2.0.0"
         state: 'Installed',
         level: '60',
         version: '0.9.0',
-        name: 'Inactive Bundle'
+        name: 'Inactive Bundle',
+        symbolicName: 'Inactive Bundle'
       });
     });
 

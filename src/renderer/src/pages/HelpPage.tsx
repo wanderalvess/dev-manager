@@ -33,6 +33,8 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface HelpPageProps {
   onNavigate?: (tab: string) => void;
+  /** Termo de busca vindo de um hint contextual de outra tela (ex: "?" ao lado das portas monitoradas) */
+  initialSearch?: string;
 }
 
 type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
@@ -45,9 +47,9 @@ interface FaqItem {
   tags: string[];
 }
 
-export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
-  const [activeCategory, setActiveCategory] = useState<HelpCategory>('overview');
-  const [searchQuery, setSearchQuery] = useState('');
+export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch }) => {
+  const [activeCategory, setActiveCategory] = useState<HelpCategory>(initialSearch ? 'faq' : 'overview');
+  const [searchQuery, setSearchQuery] = useState(initialSearch || '');
   const [expandedFaqs, setExpandedFaqs] = useState<Record<string, boolean>>({});
   const [appInfo, setAppInfo] = useState<SystemAppInfo | null>(null);
   const [settings, setSettings] = useState<any>(null);
