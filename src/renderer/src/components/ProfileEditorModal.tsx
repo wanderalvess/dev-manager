@@ -189,7 +189,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
     setSteps((prev) => {
       const copy = [...prev];
       const current = copy[editingStepIndex];
-      let updated = { ...current, ...fields };
+      const updated = { ...current, ...fields };
 
       // Se mudou o tipo da etapa, limpar campos incompatíveis
       if (fields.type && fields.type !== current.type) {

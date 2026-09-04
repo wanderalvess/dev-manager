@@ -173,7 +173,7 @@ export class DatabaseService {
     sql: string
   ): Promise<ExplainPlanResult> {
     const startTime = Date.now();
-    let cleanSql = sql.trim().replace(/;+$/, '');
+    const cleanSql = sql.trim().replace(/;+$/, '');
 
     if (!cleanSql) {
       return {
@@ -439,7 +439,7 @@ export class DatabaseService {
   private async getOracleConnection(config: DatabaseConnectionConfig) {
     let oracleModule: any;
     try {
-      // @ts-ignore - oracledb é carregado dinamicamente
+      // oracledb é carregado dinamicamente
       oracleModule = await import('oracledb');
     } catch {
       throw new Error("Driver do Oracle não instalado. Execute: npm install oracledb");
