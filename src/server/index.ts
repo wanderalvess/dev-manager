@@ -545,6 +545,70 @@ app.get('/api/network/ips', async (_req, res) => {
   res.json(ips);
 });
 
+app.post('/api/network/health', async (req, res) => {
+  const { url, timeoutMs } = req.body;
+  const result = await networkService.checkHttpHealth(url, timeoutMs);
+  res.json(result);
+});
+
+// 11. Métricas do Sistema
+app.get('/api/system/metrics', async (_req, res) => {
+  const metrics = await networkService.getSystemMetrics();
+  res.json(metrics);
+});
+
+// 12. Bundles Karaf
+app.post('/api/karaf/bundles', async (req, res) => {
+  const bundles = await karafService.listBundlesParsed(req.body);
+  res.json(bundles);
+});
+
+app.post('/api/karaf/bundles/manage', async (req, res) => {
+  const { action, bundleId, credentials } = req.body;
+  const result = await karafService.manageBundle(action, bundleId, credentials);
+  res.json(result);
+});
+
+// 13. Operações Git Avançadas
+app.post('/api/git/checkout', async (req, res) => {
+  const { projectPath, branchName, createNew } = req.body;
+  const result = await gitAzureService.checkoutBranch(projectPath, branchName, createNew);
+  res.json(result);
+});
+
+app.post('/api/git/commit-push', async (req, res) => {
+  const { projectPath, message } = req.body;
+  const result = await gitAzureService.commitAndPush(projectPath, message);
+  res.json(result);
+});
+
+app.get('/api/git/commits', async (req, res) => {
+  const projectPath = String(req.query.path || '');
+  const limit = Number(req.query.limit) || 10;
+  const commits = await gitAzureService.getCommitHistory(projectPath, limit);
+  res.json(commits);
+});
+
+// 14. Exportação / Importação de Configurações
+app.get('/api/settings/export', async (req, res) => {
+  const sanitize = req.query.sanitize !== 'false';
+  const json = configService.exportSettings(sanitize);
+  res.json({ json });
+});
+
+app.post('/api/settings/import', async (req, res) => {
+  const { json } = req.body;
+  const result = configService.importSettings(json);
+  res.json(result);
+});
+
+// 15. Explain Plan do Banco de Dados
+app.post('/api/db/explain', async (req, res) => {
+  const { config, sql } = req.body;
+  const result = await databaseService.explainPlan(config, sql);
+  res.json(result);
+});
+
 // Servir Frontend SPA estático se compilado
 const clientDist = path.resolve(__dirname, '../../dist');
 if (fs.existsSync(clientDist)) {

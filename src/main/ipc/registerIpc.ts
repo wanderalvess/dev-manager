@@ -255,6 +255,22 @@ export function registerIpcHandlers(
     });
   });
 
+  ipcMain.handle('karaf:list-bundles', async (_, credentials?: { user?: string; pass?: string; port?: number }) => {
+    return await karafService.listBundlesParsed(credentials);
+  });
+
+  ipcMain.handle(
+    'karaf:manage-bundle',
+    async (
+      _,
+      action: 'start' | 'stop' | 'restart' | 'uninstall',
+      bundleId: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ) => {
+      return await karafService.manageBundle(action, bundleId, credentials);
+    }
+  );
+
   ipcMain.handle('karaf:parse-pom', async (_, projectPath: string) => {
     return karafService.parseProjectPomOrBat(projectPath);
   });
@@ -274,6 +290,21 @@ export function registerIpcHandlers(
 
   ipcMain.handle('git:exec-command', async (_, projectPath: string, command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop') => {
     return await gitAzureService.executeGitCommand(projectPath, command);
+  });
+
+  ipcMain.handle(
+    'git:checkout-branch',
+    async (_, projectPath: string, branchName: string, createNew?: boolean) => {
+      return await gitAzureService.checkoutBranch(projectPath, branchName, createNew);
+    }
+  );
+
+  ipcMain.handle('git:commit-and-push', async (_, projectPath: string, message: string) => {
+    return await gitAzureService.commitAndPush(projectPath, message);
+  });
+
+  ipcMain.handle('git:get-commit-history', async (_, projectPath: string, limit?: number) => {
+    return await gitAzureService.getCommitHistory(projectPath, limit);
   });
 
   ipcMain.handle('shell:open-external', async (_, url: string) => {
@@ -336,6 +367,14 @@ export function registerIpcHandlers(
     return configService.saveSettings(settings);
   });
 
+  ipcMain.handle('settings:export', async (_, sanitizePasswords?: boolean) => {
+    return configService.exportSettings(sanitizePasswords ?? true);
+  });
+
+  ipcMain.handle('settings:import', async (_, jsonString: string) => {
+    return configService.importSettings(jsonString);
+  });
+
   // --- Banco de Dados (Oracle, MySQL, Postgres) ---
   ipcMain.handle('db:test-connection', async (_, config: DatabaseConnectionConfig) => {
     return await databaseService.testConnection(config);
@@ -343,6 +382,10 @@ export function registerIpcHandlers(
 
   ipcMain.handle('db:execute-query', async (_, config: DatabaseConnectionConfig, sql: string, maxRows?: number) => {
     return await databaseService.executeQuery(config, sql, maxRows);
+  });
+
+  ipcMain.handle('db:explain-plan', async (_, config: DatabaseConnectionConfig, sql: string) => {
+    return await databaseService.explainPlan(config, sql);
   });
 
   ipcMain.handle('db:list-tables', async (_, config: DatabaseConnectionConfig) => {
@@ -381,5 +424,14 @@ export function registerIpcHandlers(
   // --- Rede & Detecção de IPs (Local e WSL) ---
   ipcMain.handle('network:get-ips', async () => {
     return await networkService.getNetworkIps();
+  });
+
+  ipcMain.handle('network:check-http-health', async (_, url: string, timeoutMs?: number) => {
+    return await networkService.checkHttpHealth(url, timeoutMs);
+  });
+
+  // --- Métricas do Sistema (CPU, RAM, Uptime) ---
+  ipcMain.handle('system:get-metrics', async () => {
+    return await networkService.getSystemMetrics();
   });
 }

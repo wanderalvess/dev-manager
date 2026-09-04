@@ -568,3 +568,83 @@ export interface NetworkIpInfo {
   wslIp: string | null;
   hostname: string;
 }
+
+// ==========================================
+// Explain Plan & SQL Snippets
+// ==========================================
+
+export interface ExplainPlanResult {
+  success: boolean;
+  planLines: string[];
+  executionTimeMs: number;
+  error?: string;
+}
+
+export interface SqlSnippet {
+  id: string;
+  title: string;
+  category: string;
+  description?: string;
+  sql: string;
+  dbType?: DatabaseType | 'all';
+}
+
+// ==========================================
+// Karaf Bundles & Maven Build
+// ==========================================
+
+export interface KarafBundleInfo {
+  id: string;
+  state: 'Active' | 'Resolved' | 'Installed' | 'Starting' | 'Stopping' | 'Unknown';
+  blueprint?: string;
+  level?: string;
+  name: string;
+  version: string;
+}
+
+export interface MavenBuildRequest {
+  projectPath: string;
+  goals?: string[];
+  skipTests?: boolean;
+}
+
+// ==========================================
+// Git Commits & Branching
+// ==========================================
+
+export interface GitCommitInfo {
+  hash: string;
+  author: string;
+  date: string;
+  message: string;
+}
+
+// ==========================================
+// Observabilidade & Métricas do Sistema
+// ==========================================
+
+export interface SystemMetrics {
+  cpuUsagePercent: number;
+  totalMemMb: number;
+  freeMemMb: number;
+  usedMemMb: number;
+  memUsagePercent: number;
+  uptimeSeconds: number;
+  // Aliases de compatibilidade
+  totalMemoryMb?: number;
+  freeMemoryMb?: number;
+  usedMemoryMb?: number;
+  memoryUsagePercent?: number;
+}
+
+export interface HttpHealthResult {
+  url: string;
+  reachable: boolean;
+  isHealthy?: boolean;
+  status?: number;
+  statusCode?: number;
+  statusText?: string;
+  timeMs: number;
+  responseTimeMs?: number;
+  error?: string;
+}

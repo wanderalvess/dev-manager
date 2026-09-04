@@ -83,7 +83,12 @@ export class DockerService {
 
       return containers;
     } catch (err: any) {
-      console.error('[DockerService] Erro ao listar containers:', err);
+      const msg = String(err?.message || '');
+      if (err?.code === 'ENOENT' || msg.includes('ENOENT')) {
+        // Docker não está instalado ou não está no PATH
+        return [];
+      }
+      console.warn('[DockerService] Docker indisponível ou offline:', err?.message || err);
       return [];
     }
   }

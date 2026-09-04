@@ -24,7 +24,12 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
-  NetworkIpInfo
+  NetworkIpInfo,
+  ExplainPlanResult,
+  KarafBundleInfo,
+  GitCommitInfo,
+  SystemMetrics,
+  HttpHealthResult
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -397,6 +402,24 @@ export function initApiBridge() {
       });
     },
 
+    listKarafBundles: async (credentials?: { user?: string; pass?: string; port?: number }): Promise<KarafBundleInfo[]> => {
+      return apiFetch('/api/karaf/bundles', {
+        method: 'POST',
+        body: JSON.stringify(credentials || {})
+      });
+    },
+
+    manageKarafBundle: async (
+      action: 'start' | 'stop' | 'restart' | 'uninstall',
+      bundleId: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/bundles/manage', {
+        method: 'POST',
+        body: JSON.stringify({ action, bundleId, credentials })
+      });
+    },
+
     parsePom: async (projectPath: string): Promise<PomInfo | null> => {
       return apiFetch(`/api/karaf/parse-pom?path=${encodeURIComponent(projectPath)}`);
     },
@@ -428,6 +451,24 @@ export function initApiBridge() {
         method: 'POST',
         body: JSON.stringify({ projectPath, command })
       });
+    },
+
+    checkoutBranch: async (projectPath: string, branchName: string, createNew?: boolean): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/git/checkout', {
+        method: 'POST',
+        body: JSON.stringify({ projectPath, branchName, createNew })
+      });
+    },
+
+    commitAndPush: async (projectPath: string, message: string): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/git/commit-push', {
+        method: 'POST',
+        body: JSON.stringify({ projectPath, message })
+      });
+    },
+
+    getCommitHistory: async (projectPath: string, limit?: number): Promise<GitCommitInfo[]> => {
+      return apiFetch(`/api/git/commits?path=${encodeURIComponent(projectPath)}&limit=${limit || 10}`);
     },
 
     openExternal: async (url: string): Promise<boolean> => {
@@ -500,6 +541,18 @@ export function initApiBridge() {
       });
     },
 
+    exportSettings: async (sanitizePasswords?: boolean): Promise<string> => {
+      const data = await apiFetch<{ json: string }>(`/api/settings/export?sanitize=${sanitizePasswords ?? true}`);
+      return data.json;
+    },
+
+    importSettings: async (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings }> => {
+      return apiFetch('/api/settings/import', {
+        method: 'POST',
+        body: JSON.stringify({ json: jsonString })
+      });
+    },
+
     // Banco de Dados (Oracle, MySQL, Postgres)
     testDbConnection: async (config: DatabaseConnectionConfig): Promise<{ success: boolean; message: string; version?: string }> => {
       return apiFetch('/api/db/test', {
@@ -512,6 +565,13 @@ export function initApiBridge() {
       return apiFetch('/api/db/query', {
         method: 'POST',
         body: JSON.stringify({ config, sql, maxRows })
+      });
+    },
+
+    explainDbPlan: async (config: DatabaseConnectionConfig, sql: string): Promise<ExplainPlanResult> => {
+      return apiFetch('/api/db/explain', {
+        method: 'POST',
+        body: JSON.stringify({ config, sql })
       });
     },
 
@@ -559,6 +619,18 @@ export function initApiBridge() {
     // Rede & Detecção de IPs (Local e WSL)
     getNetworkIps: async (): Promise<NetworkIpInfo> => {
       return apiFetch('/api/network/ips');
+    },
+
+    checkHttpHealth: async (url: string, timeoutMs?: number): Promise<HttpHealthResult> => {
+      return apiFetch('/api/network/health', {
+        method: 'POST',
+        body: JSON.stringify({ url, timeoutMs })
+      });
+    },
+
+    // Métricas do Sistema
+    getSystemMetrics: async (): Promise<SystemMetrics> => {
+      return apiFetch('/api/system/metrics');
     }
   };
 }

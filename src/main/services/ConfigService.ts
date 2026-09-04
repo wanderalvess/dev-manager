@@ -428,4 +428,72 @@ export class ConfigService {
     }
     return this.saveSettings({ favoriteRoutines: Array.from(favs) });
   }
+
+  /**
+   * Exporta as configurações atuais como JSON, opcionalmente limpando senhas sensíveis.
+   */
+  public exportSettings(sanitizePasswords = true): string {
+    const current: AppSettings = JSON.parse(JSON.stringify(this.getSettings()));
+    if (sanitizePasswords) {
+      current.karafPass = '';
+      if (current.databaseConnections) {
+        current.databaseConnections = current.databaseConnections.map((conn) => ({
+          ...conn,
+          password: ''
+        }));
+      }
+    }
+    return JSON.stringify(current, null, 2);
+  }
+
+  /**
+   * Importa e mescla configurações a partir de um JSON exportado.
+   */
+  public importSettings(jsonString: string): { success: boolean; error?: string; settings?: AppSettings } {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (!parsed || typeof parsed !== 'object') {
+        return { success: false, error: 'Formato JSON inválido.' };
+      }
+
+      const current = this.getSettings();
+      const merged: Partial<AppSettings> = {};
+
+      if (Array.isArray(parsed.automationProfiles)) merged.automationProfiles = parsed.automationProfiles;
+      if (Array.isArray(parsed.monitoredPorts)) merged.monitoredPorts = parsed.monitoredPorts;
+      if (Array.isArray(parsed.trackedServices)) merged.trackedServices = parsed.trackedServices;
+      if (Array.isArray(parsed.trackedProcesses)) merged.trackedProcesses = parsed.trackedProcesses;
+      if (Array.isArray(parsed.favoriteRoutines)) merged.favoriteRoutines = parsed.favoriteRoutines;
+      if (Array.isArray(parsed.mappedPrograms)) merged.mappedPrograms = parsed.mappedPrograms;
+
+      if (Array.isArray(parsed.databaseConnections)) {
+        merged.databaseConnections = parsed.databaseConnections.map((newConn: any) => {
+          const existing = current.databaseConnections?.find(
+            (c) => c.id === newConn.id || (c.host === newConn.host && c.user === newConn.user && c.database === newConn.database)
+          );
+          return {
+            ...newConn,
+            password: newConn.password || existing?.password || ''
+          };
+        });
+      }
+
+      if (parsed.automationDefaults && typeof parsed.automationDefaults === 'object') {
+        merged.automationDefaults = parsed.automationDefaults;
+      }
+      if (typeof parsed.appPath === 'string') merged.appPath = parsed.appPath;
+      if (typeof parsed.karafPath === 'string') merged.karafPath = parsed.karafPath;
+      if (typeof parsed.jdkPath === 'string') merged.jdkPath = parsed.jdkPath;
+      if (typeof parsed.intellijPath === 'string') merged.intellijPath = parsed.intellijPath;
+      if (typeof parsed.projectsPath === 'string') merged.projectsPath = parsed.projectsPath;
+      if (typeof parsed.targetPrBranch === 'string') merged.targetPrBranch = parsed.targetPrBranch;
+      if (typeof parsed.karafUser === 'string') merged.karafUser = parsed.karafUser;
+      if (typeof parsed.karafPass === 'string' && parsed.karafPass) merged.karafPass = parsed.karafPass;
+
+      const saved = this.saveSettings(merged);
+      return { success: true, settings: saved };
+    } catch (err: any) {
+      return { success: false, error: `Falha ao processar arquivo JSON: ${err?.message || err}` };
+    }
+  }
 }

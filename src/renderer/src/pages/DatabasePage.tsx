@@ -19,13 +19,18 @@ import {
   Server,
   Layers,
   ChevronRight,
-  Info
+  Info,
+  BookOpen,
+  FileCode,
+  Zap
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
   DatabaseType,
   QueryResult,
-  AppSettings
+  AppSettings,
+  SqlSnippet,
+  ExplainPlanResult
 } from '../../../shared/types';
 
 const DEFAULT_PORTS: Record<DatabaseType, number> = {
@@ -33,6 +38,65 @@ const DEFAULT_PORTS: Record<DatabaseType, number> = {
   mysql: 3306,
   postgres: 5432
 };
+
+export const WINTHOR_SNIPPETS: SqlSnippet[] = [
+  {
+    id: 'pcparam-search',
+    title: 'Consultar Parâmetros (PCPARAMETRO)',
+    category: 'WinThor - Parâmetros',
+    description: 'Pesquisa parâmetros do WinThor por termo chave',
+    sql: "SELECT NOME, VALOR, DESCRICAO FROM PCPARAMETRO WHERE UPPER(NOME) LIKE '%ESTOQUE%' ORDER BY NOME;",
+    dbType: 'oracle'
+  },
+  {
+    id: 'pcrotina-list',
+    title: 'Cadastro de Rotinas (PCROTINACAD)',
+    category: 'WinThor - Rotinas',
+    description: 'Lista rotinas ativas no sistema WinThor',
+    sql: "SELECT CODROTINA, NOME, NOMEROTINA FROM PCROTINACAD WHERE ATIVO = 'S' ORDER BY CODROTINA;",
+    dbType: 'oracle'
+  },
+  {
+    id: 'pccontroi-perms',
+    title: 'Permissões por Rotina (PCCONTROI)',
+    category: 'WinThor - Segurança',
+    description: 'Verifica acessos concedidos para a rotina especificada',
+    sql: "SELECT CODUSUARIO, CODROTINA, ACESSO FROM PCCONTROI WHERE CODROTINA = 1400;",
+    dbType: 'oracle'
+  },
+  {
+    id: 'pcclient-sample',
+    title: 'Amostra de Clientes (PCCLIENT)',
+    category: 'WinThor - Dados',
+    description: 'Consulta primeiros 50 clientes ativos no ERP',
+    sql: "SELECT CODCLI, CLIENTE, FANTASIA, CGCENT, TELENT FROM PCCLIENT WHERE BLOQUEIO = 'N' AND ROWNUM <= 50;",
+    dbType: 'oracle'
+  },
+  {
+    id: 'oracle-active-sessions',
+    title: 'Sessões Ativas no Banco (V$SESSION)',
+    category: 'Oracle - Diagnóstico',
+    description: 'Identifica sessões em execução no banco de dados',
+    sql: "SELECT SID, SERIAL#, USERNAME, STATUS, OSUSER, MACHINE, PROGRAM, SQL_ID FROM V$SESSION WHERE STATUS = 'ACTIVE' AND USERNAME IS NOT NULL;",
+    dbType: 'oracle'
+  },
+  {
+    id: 'oracle-locks',
+    title: 'Objetos e Tabelas Bloqueadas (Locks)',
+    category: 'Oracle - Diagnóstico',
+    description: 'Diagnostica bloqueios em tabelas e concorrência no Oracle',
+    sql: "SELECT L.SESSION_ID, S.SERIAL#, S.USERNAME, S.OSUSER, O.OBJECT_NAME, L.LOCKED_MODE FROM V$LOCKED_OBJECT L JOIN DBA_OBJECTS O ON L.OBJECT_ID = O.OBJECT_ID JOIN V$SESSION S ON L.SESSION_ID = S.SID;",
+    dbType: 'oracle'
+  },
+  {
+    id: 'oracle-tablespaces',
+    title: 'Uso de Tablespaces e Disco',
+    category: 'Oracle - Infraestrutura',
+    description: 'Verifica espaço alocado por tablespace',
+    sql: "SELECT TABLESPACE_NAME, ROUND(SUM(BYTES)/(1024*1024), 2) AS TOTAL_MB FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME;",
+    dbType: 'oracle'
+  }
+];
 
 interface ExecutionHistoryItem {
   id: string;
@@ -56,7 +120,10 @@ export const DatabasePage: React.FC = () => {
   const [maxRows, setMaxRows] = useState<number>(100);
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
-  const [activeResultTab, setActiveResultTab] = useState<'grid' | 'history'>('grid');
+  const [activeResultTab, setActiveResultTab] = useState<'grid' | 'history' | 'explain'>('grid');
+  const [isExplaining, setIsExplaining] = useState<boolean>(false);
+  const [explainResult, setExplainResult] = useState<ExplainPlanResult | null>(null);
+  const [showSnippetsMenu, setShowSnippetsMenu] = useState<boolean>(false);
 
   // Histórico
   const [history, setHistory] = useState<ExecutionHistoryItem[]>([]);
@@ -289,12 +356,51 @@ export const DatabasePage: React.FC = () => {
     }
   };
 
-  // Atalho de Teclado Ctrl+Enter para Executar
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       handleExecuteSql();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const target = e.currentTarget;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const newSql = sql.substring(0, start) + '  ' + sql.substring(end);
+      setSql(newSql);
+      setTimeout(() => {
+        target.selectionStart = target.selectionEnd = start + 2;
+      }, 0);
     }
+  };
+
+  // Gerar Explain Plan (Plano de Execução)
+  const handleExplainPlan = async () => {
+    if (!activeConnection) {
+      alert('Selecione ou crie uma conexão antes de gerar o Explain Plan.');
+      return;
+    }
+    if (!sql.trim()) return;
+
+    setIsExplaining(true);
+    setActiveResultTab('explain');
+    try {
+      const res = await window.electronAPI.explainDbPlan(activeConnection, sql);
+      setExplainResult(res);
+    } catch (err: any) {
+      setExplainResult({
+        success: false,
+        planLines: [],
+        executionTimeMs: 0,
+        error: err?.message || 'Erro inesperado ao gerar Explain Plan.'
+      });
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+
+  const handleSelectSnippet = (snip: SqlSnippet) => {
+    setSql(snip.sql);
+    setShowSnippetsMenu(false);
   };
 
   // Snippet rápido de consulta para tabela
@@ -534,27 +640,71 @@ export const DatabasePage: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Snippets rápidos */}
-            <div className="hidden lg:flex items-center space-x-1 text-[11px]">
+            {/* Menu Dropdown de Snippets WinThor */}
+            <div className="relative">
               <button
-                onClick={() => setSql(activeConnection?.type === 'oracle' ? 'SELECT * FROM DUAL;' : 'SELECT 1;')}
-                className="px-2 py-1 bg-card hover:bg-muted border border-border/60 rounded text-muted-foreground hover:text-foreground font-mono transition"
+                type="button"
+                onClick={() => setShowSnippetsMenu((prev) => !prev)}
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs"
+                title="Inserir Consultas e Diagnósticos Prontos do WinThor"
               >
-                SELECT
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                <span>Snippets WinThor</span>
               </button>
-              <button
-                onClick={() => setSql('UPDATE tabela SET coluna = valor WHERE condicao;')}
-                className="px-2 py-1 bg-card hover:bg-muted border border-border/60 rounded text-muted-foreground hover:text-foreground font-mono transition"
-              >
-                UPDATE
-              </button>
-              <button
-                onClick={() => setSql('INSERT INTO tabela (col1, col2) VALUES (val1, val2);')}
-                className="px-2 py-1 bg-card hover:bg-muted border border-border/60 rounded text-muted-foreground hover:text-foreground font-mono transition"
-              >
-                INSERT
-              </button>
+
+              {showSnippetsMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowSnippetsMenu(false)} />
+                  <div className="absolute right-0 mt-1 w-80 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-1 text-xs">
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground px-2 py-1 flex items-center justify-between border-b border-border/60 pb-1.5">
+                    <span className="flex items-center gap-1">
+                      <FileCode className="w-3 h-3 text-primary" /> Consultas Prontas WinThor
+                    </span>
+                    <button
+                      onClick={() => setShowSnippetsMenu(false)}
+                      className="text-muted-foreground hover:text-foreground p-0.5 rounded"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto space-y-1 pt-1">
+                    {WINTHOR_SNIPPETS.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => handleSelectSnippet(s)}
+                        className="w-full text-left p-2 rounded-lg hover:bg-muted/80 text-foreground transition flex flex-col group border border-transparent hover:border-border"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[11px] group-hover:text-primary">{s.title}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+                            {s.category.split('-')[0].trim()}
+                          </span>
+                        </div>
+                        {s.description && (
+                          <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                            {s.description}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
             </div>
+
+            {/* Botão Explain Plan */}
+            <button
+              type="button"
+              onClick={handleExplainPlan}
+              disabled={isExplaining || isExecuting || !activeConnection}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold shadow-xs transition disabled:opacity-50 cursor-pointer"
+              title="Explicar plano de execução da consulta selecionada (Oracle, Postgres, MySQL)"
+            >
+              <Zap className={`w-3.5 h-3.5 ${isExplaining ? 'animate-spin' : ''}`} />
+              <span>{isExplaining ? 'Explicando...' : 'Explain Plan'}</span>
+            </button>
 
             {/* Limite de Linhas */}
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
@@ -623,6 +773,18 @@ export const DatabasePage: React.FC = () => {
             >
               <Table className="w-3 h-3" />
               <span>Resultado</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveResultTab('explain')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition ${
+                activeResultTab === 'explain'
+                  ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Zap className="w-3 h-3" />
+              <span>Explain Plan</span>
             </button>
             <button
               onClick={() => setActiveResultTab('history')}
@@ -762,6 +924,46 @@ export const DatabasePage: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </div>
+          ) : activeResultTab === 'explain' ? (
+            /* Tab de Explain Plan */
+            <div className="p-4 h-full overflow-auto font-mono text-xs">
+              {!explainResult ? (
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-xs space-y-2">
+                  <Zap className="w-8 h-8 opacity-40 text-amber-500" />
+                  <p>Clique em "Explain Plan" na barra superior para analisar o plano de execução e custo da query.</p>
+                  <span className="text-[11px] opacity-60">Suporta Oracle (DBMS_XPLAN), PostgreSQL e MySQL.</span>
+                </div>
+              ) : !explainResult.success ? (
+                <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+                  <div className="flex items-center space-x-2 font-bold mb-1">
+                    <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <span>Falha ao gerar Explain Plan:</span>
+                  </div>
+                  <pre className="font-mono text-[11px] whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-rose-700 dark:text-rose-300 mt-2">
+                    {explainResult.error}
+                  </pre>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pb-2 border-b border-border/70">
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-500" />
+                      Plano de Execução Analisado
+                    </span>
+                    <span>
+                      Tempo de Análise: <strong className="text-foreground">{explainResult.executionTimeMs} ms</strong>
+                    </span>
+                  </div>
+                  <div className="bg-[#0B0F17] border border-border/80 rounded-xl p-3.5 overflow-x-auto shadow-inner">
+                    <pre className="text-[11px] leading-relaxed font-mono text-amber-300/90 whitespace-pre">
+                      {explainResult.planLines.length > 0
+                        ? explainResult.planLines.join('\n')
+                        : 'Nenhuma linha retornada pelo plano de execução.'}
+                    </pre>
+                  </div>
                 </div>
               )}
             </div>

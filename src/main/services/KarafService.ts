@@ -1,7 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { KarafDeployRequest, PomInfo, getKarafSshPort } from '../../shared/types';
+import { KarafDeployRequest, PomInfo, getKarafSshPort, KarafBundleInfo } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
 
@@ -444,5 +444,105 @@ export class KarafService {
     }
 
     return this.deploy(request, onChunk);
+  }
+
+  /**
+   * Executa 'bundle:list -s' e retorna a lista de bundles OSGi estruturada.
+   */
+  public async listBundlesParsed(
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<KarafBundleInfo[]> {
+    const dummyChunk = () => {};
+    const res = await this.executeKarafCommand('bundle:list -s', dummyChunk, credentials);
+    if (res.code !== 0 || !res.stdout) return [];
+
+    const lines = res.stdout.split(/\r?\n/);
+    const bundles: KarafBundleInfo[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (
+        !trimmed ||
+        trimmed.startsWith('START LEVEL') ||
+        trimmed.includes('ID |') ||
+        trimmed.includes('ID │') ||
+        trimmed.startsWith('===')
+      ) {
+        continue;
+      }
+
+      // Formato colunas por pipe (| ou │)
+      if (trimmed.includes('|') || trimmed.includes('│')) {
+        const parts = trimmed.split(/[|│]/).map((p) => p.trim());
+        if (parts.length >= 4 && /^\d+$/.test(parts[0])) {
+          const id = parts[0];
+          const stateStr = parts[1];
+          const version = parts[parts.length - 2] || '';
+          const name = parts[parts.length - 1] || '';
+          let state: KarafBundleInfo['state'] = 'Unknown';
+          if (/Active/i.test(stateStr)) state = 'Active';
+          else if (/Resolved/i.test(stateStr)) state = 'Resolved';
+          else if (/Installed/i.test(stateStr)) state = 'Installed';
+          else if (/Starting/i.test(stateStr)) state = 'Starting';
+          else if (/Stopping/i.test(stateStr)) state = 'Stopping';
+
+          bundles.push({ id, state, level: parts[2], version, name });
+          continue;
+        }
+      }
+
+      // Formato colchetes: [ 123] [Active     ] [            ] [   80] My Name (1.0.0)
+      const bracketMatch = trimmed.match(
+        /^\[\s*(\d+)\]\s*\[([^\]]+)\]\s*(?:\[([^\]]*)\])?\s*\[\s*(\d+)\s*\]\s*(.+?)(?:\s*\(([^)]+)\))?$/
+      );
+      if (bracketMatch) {
+        const id = bracketMatch[1];
+        const stateStr = bracketMatch[2].trim();
+        const blueprint = bracketMatch[3]?.trim();
+        const level = bracketMatch[4]?.trim();
+        const name = bracketMatch[5]?.trim() || '';
+        const version = bracketMatch[6]?.trim() || '';
+
+        let state: KarafBundleInfo['state'] = 'Unknown';
+        if (/Active/i.test(stateStr)) state = 'Active';
+        else if (/Resolved/i.test(stateStr)) state = 'Resolved';
+        else if (/Installed/i.test(stateStr)) state = 'Installed';
+        else if (/Starting/i.test(stateStr)) state = 'Starting';
+        else if (/Stopping/i.test(stateStr)) state = 'Stopping';
+
+        bundles.push({ id, state, blueprint, level, name, version });
+      }
+    }
+
+    return bundles;
+  }
+
+  /**
+   * Executa ação de ciclo de vida em um bundle específico (start, stop, restart, uninstall).
+   */
+  public async manageBundle(
+    action: 'start' | 'stop' | 'restart' | 'uninstall',
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanId = bundleId.trim();
+    if (!/^\d+$/.test(cleanId)) {
+      return { success: false, output: 'ID do bundle inválido (deve ser numérico).' };
+    }
+
+    const command = `bundle:${action} ${cleanId}`;
+    let output = '';
+    const res = await this.executeKarafCommand(
+      command,
+      (chunk) => {
+        output += chunk;
+      },
+      credentials
+    );
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
   }
 }

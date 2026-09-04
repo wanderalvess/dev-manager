@@ -37,6 +37,7 @@ import {
   AutomationProfile,
   AutomationStep,
   NetworkIpInfo,
+  HttpHealthResult,
   getWebPort,
   getWebUrl
 } from '../../../shared/types';
@@ -139,6 +140,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   // Verificar IPs de Rede
   const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
   const [copiedIp, setCopiedIp] = useState<string | null>(null);
+  const [webHealth, setWebHealth] = useState<HttpHealthResult | null>(null);
 
   const fetchNetworkIps = useCallback(async () => {
     if (window.electronAPI && window.electronAPI.getNetworkIps) {
@@ -157,13 +159,26 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     setTimeout(() => setCopiedIp(null), 1500);
   };
 
+  const checkWebHealth = useCallback(async () => {
+    if (window.electronAPI && window.electronAPI.checkHttpHealth) {
+      try {
+        const url = getWebUrl(settings, '', ports);
+        const res = await window.electronAPI.checkHttpHealth(url, 2500);
+        setWebHealth(res);
+      } catch {
+        setWebHealth(null);
+      }
+    }
+  }, [settings, ports]);
+
   const refreshAllStatus = useCallback(() => {
     onRefreshServices();
     fetchPorts();
     fetchProcesses();
     checkKarafRunning();
     fetchNetworkIps();
-  }, [onRefreshServices, fetchPorts, fetchProcesses, checkKarafRunning, fetchNetworkIps]);
+    checkWebHealth();
+  }, [onRefreshServices, fetchPorts, fetchProcesses, checkKarafRunning, fetchNetworkIps, checkWebHealth]);
 
   useEffect(() => {
     fetchSettings();
@@ -173,9 +188,10 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       fetchPorts();
       fetchProcesses();
       checkKarafRunning();
+      checkWebHealth();
     }, 6000);
     return () => clearInterval(interval);
-  }, [fetchSettings, refreshAllStatus, fetchPorts, fetchProcesses, checkKarafRunning]);
+  }, [fetchSettings, refreshAllStatus, fetchPorts, fetchProcesses, checkKarafRunning, checkWebHealth]);
 
   // Ouvir logs e progresso de passos
   useEffect(() => {
@@ -771,12 +787,29 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         <div className="md:col-span-4 flex items-center space-x-2">
           <button
             onClick={() => handleOpenLink(webPortalUrl)}
-            className="flex-1 py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all shadow-sm"
-            title={`Abrir Portal Web no navegador (${webPortalUrl})`}
+            className="flex-1 py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-between gap-1.5 transition-all shadow-sm group"
+            title={`Abrir Portal Web no navegador (${webPortalUrl}) - ${(webHealth?.reachable ?? webHealth?.isHealthy) ? `Ativo: HTTP ${webHealth?.status ?? webHealth?.statusCode ?? 200} (${webHealth?.timeMs ?? webHealth?.responseTimeMs ?? 0}ms)` : 'Serviço HTTP indisponível ou iniciando'}`}
           >
-            <Globe className="w-3.5 h-3.5 text-primary" />
-            <span className="truncate">Portal Web (:{webPort})</span>
-            <ExternalLink className="w-3 h-3 text-muted-foreground" />
+            <div className="flex items-center gap-1.5 truncate">
+              <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="truncate">Portal Web (:{webPort})</span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {webHealth && (
+                (webHealth.reachable ?? webHealth.isHealthy) ? (
+                  <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {webHealth.status ?? webHealth.statusCode ?? 200} ({webHealth.timeMs ?? webHealth.responseTimeMs ?? 0}ms)
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] font-mono text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Off
+                  </span>
+                )
+              )}
+              <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </div>
           </button>
 
           <button

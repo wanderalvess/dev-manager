@@ -112,8 +112,14 @@ const electronAPI = {
   ): Promise<{ code: number; stdout: string; stderr: string }> =>
     ipcRenderer.invoke('karaf:run-maven-build', projectPath, skipTests),
   execKarafDiagnostic: (command: string): Promise<{ code: number; stdout: string; stderr: string }> =>
-
     ipcRenderer.invoke('karaf:exec-diagnostic', command),
+  listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) =>
+    ipcRenderer.invoke('karaf:list-bundles', credentials),
+  manageKarafBundle: (
+    action: 'start' | 'stop' | 'restart' | 'uninstall',
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => ipcRenderer.invoke('karaf:manage-bundle', action, bundleId, credentials),
   parsePom: (projectPath: string) => ipcRenderer.invoke('karaf:parse-pom', projectPath),
   onKarafLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
@@ -129,6 +135,12 @@ const electronAPI = {
     ipcRenderer.invoke('git:build-pr-url', projectPath, targetBranch),
   execGitCommand: (projectPath: string, command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop'): Promise<{ success: boolean; output: string }> =>
     ipcRenderer.invoke('git:exec-command', projectPath, command),
+  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean) =>
+    ipcRenderer.invoke('git:checkout-branch', projectPath, branchName, createNew),
+  commitAndPush: (projectPath: string, message: string) =>
+    ipcRenderer.invoke('git:commit-and-push', projectPath, message),
+  getCommitHistory: (projectPath: string, limit?: number) =>
+    ipcRenderer.invoke('git:get-commit-history', projectPath, limit),
   openExternal: (url: string): Promise<boolean> => ipcRenderer.invoke('shell:open-external', url),
 
   // Catálogo de Rotinas
@@ -153,12 +165,18 @@ const electronAPI = {
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
   saveSettings: (settings: Partial<AppSettings>): Promise<AppSettings> =>
     ipcRenderer.invoke('settings:save', settings),
+  exportSettings: (sanitizePasswords?: boolean): Promise<string> =>
+    ipcRenderer.invoke('settings:export', sanitizePasswords),
+  importSettings: (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings }> =>
+    ipcRenderer.invoke('settings:import', jsonString),
 
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig): Promise<{ success: boolean; message: string; version?: string }> =>
     ipcRenderer.invoke('db:test-connection', config),
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number): Promise<QueryResult> =>
     ipcRenderer.invoke('db:execute-query', config, sql, maxRows),
+  explainDbPlan: (config: DatabaseConnectionConfig, sql: string): Promise<ExplainPlanResult> =>
+    ipcRenderer.invoke('db:explain-plan', config, sql),
   listDbTables: (config: DatabaseConnectionConfig): Promise<string[]> =>
     ipcRenderer.invoke('db:list-tables', config),
 
@@ -173,7 +191,12 @@ const electronAPI = {
   removeDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:remove', containerId),
 
   // Rede & Detecção de IPs (Local e WSL)
-  getNetworkIps: (): Promise<NetworkIpInfo> => ipcRenderer.invoke('network:get-ips')
+  getNetworkIps: (): Promise<NetworkIpInfo> => ipcRenderer.invoke('network:get-ips'),
+  checkHttpHealth: (url: string, timeoutMs?: number): Promise<HttpHealthResult> =>
+    ipcRenderer.invoke('network:check-http-health', url, timeoutMs),
+
+  // Métricas do Sistema
+  getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics')
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

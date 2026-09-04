@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Settings,
   Save,
@@ -25,7 +25,11 @@ import {
   Flame,
   Zap,
   Globe,
-  Terminal
+  Terminal,
+  Download,
+  Upload,
+  ShieldCheck,
+  ChevronDown
 } from 'lucide-react';
 import {
   AppSettings,
@@ -95,6 +99,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
   const [isDetecting, setIsDetecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [launcherRows, setLauncherRows] = useState<{ ext: string; path: string }[]>([]);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [importStatusMessage, setImportStatusMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const map: Record<string, string> = {};
@@ -245,6 +252,54 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
     }
   };
 
+  const handleExportSettings = async (sanitizePasswords: boolean) => {
+    try {
+      setExportMenuOpen(false);
+      if (!window.electronAPI?.exportSettings) return;
+      const json = await window.electronAPI.exportSettings(sanitizePasswords);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `winthor-dev-settings-${sanitizePasswords ? 'seguro' : 'completo'}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setImportStatusMessage(
+        sanitizePasswords
+          ? 'Configurações exportadas com segurança (senhas omitidas)!'
+          : 'Backup completo de configurações exportado!'
+      );
+      setTimeout(() => setImportStatusMessage(null), 3500);
+    } catch (err: any) {
+      alert(`Falha ao exportar configurações: ${err?.message || err}`);
+    }
+  };
+
+  const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      if (!window.electronAPI?.importSettings) return;
+      const res: any = await window.electronAPI.importSettings(text);
+      if (res && res.success === false) {
+        throw new Error(res.error || 'Falha ao validar arquivo JSON');
+      }
+      const imported: AppSettings = (res?.settings || res) as AppSettings;
+      setSettings(imported);
+      await validateAllPaths(imported);
+      if (onSettingsSaved) onSettingsSaved();
+      setImportStatusMessage('Configurações importadas e aplicadas com sucesso!');
+      setTimeout(() => setImportStatusMessage(null), 4000);
+    } catch (err: any) {
+      alert(`Erro ao importar arquivo de configurações: ${err?.message || err}`);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   // Gerenciamento de Serviços Windows
   const handleAddService = (name = 'NovoServico', displayName = 'Novo Serviço Windows') => {
     const current = settings.trackedServices || DEFAULT_SERVICES;
@@ -374,6 +429,70 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Input oculto para importação de JSON */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".json,application/json"
+            onChange={handleImportFileChange}
+            className="hidden"
+          />
+
+          {/* Importar Configurações */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-2.5 bg-card hover:bg-muted text-foreground border border-border hover:border-primary/50 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm"
+            title="Importar configurações de um arquivo JSON compartilhado pela equipe"
+          >
+            <Upload className="w-3.5 h-3.5 text-blue-500" />
+            <span>Importar</span>
+          </button>
+
+          {/* Menu de Exportação de Configurações */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setExportMenuOpen((prev) => !prev)}
+              className="px-3 py-2.5 bg-card hover:bg-muted text-foreground border border-border hover:border-primary/50 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm"
+              title="Exportar configurações para compartilhar com o time ou criar backup"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Exportar</span>
+              <ChevronDown className="w-3 h-3 text-muted-foreground" />
+            </button>
+
+            {exportMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setExportMenuOpen(false)} />
+                <div className="absolute right-0 mt-2 w-72 origin-top-right rounded-xl bg-card border border-border shadow-2xl p-1.5 z-50 flex flex-col space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => handleExportSettings(true)}
+                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors hover:bg-muted text-left"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div>
+                      <div className="font-bold text-foreground">Exportação Segura (JSON)</div>
+                      <div className="text-[10px] text-muted-foreground">Omite senhas do banco e Karaf (P/ Time)</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExportSettings(false)}
+                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors hover:bg-muted text-left"
+                  >
+                    <Download className="w-4 h-4 text-amber-500 shrink-0" />
+                    <div>
+                      <div className="font-bold text-foreground">Backup Completo (JSON)</div>
+                      <div className="text-[10px] text-muted-foreground">Inclui todas as credenciais locais</div>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleAutoDetect}
@@ -404,6 +523,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved }) =
           </button>
         </div>
       </div>
+
+      {/* Banner de Feedback de Importação / Exportação */}
+      {importStatusMessage && (
+        <div className="px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-200 shadow-sm shrink-0">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          <span>{importStatusMessage}</span>
+        </div>
+      )}
 
       {/* Abas de Navegação Interna das Configurações */}
       <div className="flex items-center space-x-2 border-b border-border pb-2 text-xs flex-wrap gap-y-2">

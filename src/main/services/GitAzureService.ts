@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { GitProjectInfo } from '../../shared/types';
+import { GitProjectInfo, GitCommitInfo } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { KarafService } from './KarafService';
 import { execFileAsync } from '../utils/security';
@@ -184,6 +184,107 @@ export class GitAzureService {
         success: false,
         output: err?.stdout || err?.stderr || err?.message || 'Erro ao executar comando git'
       };
+    }
+  }
+
+  public async checkoutBranch(
+    projectPath: string,
+    branchName: string,
+    createNew: boolean = false
+  ): Promise<{ success: boolean; output: string }> {
+    try {
+      if (!projectPath || !fs.existsSync(projectPath)) {
+        return { success: false, output: 'Diretório do projeto não encontrado.' };
+      }
+      const cleanBranch = branchName.trim();
+      if (!cleanBranch || cleanBranch.includes(' ') || cleanBranch.startsWith('-')) {
+        return { success: false, output: 'Nome de branch inválido.' };
+      }
+
+      const args = createNew ? ['checkout', '-b', cleanBranch] : ['checkout', cleanBranch];
+      const { stdout, stderr } = await execFileAsync('git', args, { cwd: projectPath });
+      return {
+        success: true,
+        output: stdout || stderr || `Branch alterada para '${cleanBranch}'.`
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        output: err?.stdout || err?.stderr || err?.message || 'Erro ao trocar de branch'
+      };
+    }
+  }
+
+  public async commitAndPush(
+    projectPath: string,
+    message: string
+  ): Promise<{ success: boolean; output: string }> {
+    try {
+      if (!projectPath || !fs.existsSync(projectPath)) {
+        return { success: false, output: 'Diretório do projeto não encontrado.' };
+      }
+      const cleanMsg = message.trim();
+      if (!cleanMsg) {
+        return { success: false, output: 'Mensagem de commit não pode ser vazia.' };
+      }
+
+      await execFileAsync('git', ['add', '-A'], { cwd: projectPath });
+      const commitRes = await execFileAsync('git', ['commit', '-m', cleanMsg], { cwd: projectPath });
+      let pushOutput = '';
+      try {
+        const pushRes = await execFileAsync('git', ['push'], { cwd: projectPath });
+        pushOutput = pushRes.stdout || pushRes.stderr || 'Push realizado com sucesso!';
+      } catch (pushErr: any) {
+        pushOutput = `Commit realizado, mas o push falhou: ${pushErr?.message || pushErr}`;
+      }
+
+      return {
+        success: true,
+        output: [commitRes.stdout, pushOutput].filter(Boolean).join('\n')
+      };
+    } catch (err: any) {
+      const errText = err?.stdout || err?.stderr || err?.message || '';
+      if (errText.includes('nothing to commit') || errText.includes('clean')) {
+        return {
+          success: false,
+          output: 'Nenhuma alteração pendente para commitar (árvore de trabalho limpa).'
+        };
+      }
+      return {
+        success: false,
+        output: errText || 'Erro ao realizar commit'
+      };
+    }
+  }
+
+  public async getCommitHistory(
+    projectPath: string,
+    limit: number = 10
+  ): Promise<GitCommitInfo[]> {
+    try {
+      if (!projectPath || !fs.existsSync(projectPath)) {
+        return [];
+      }
+      const num = Math.min(Math.max(1, limit), 50);
+      const { stdout } = await execFileAsync(
+        'git',
+        ['log', `-n`, String(num), '--pretty=format:%h|%an|%ad|%s', '--date=short'],
+        { cwd: projectPath }
+      );
+      if (!stdout) return [];
+
+      const lines = stdout.split(/\r?\n/).filter(Boolean);
+      return lines.map((line) => {
+        const [hash, author, date, ...rest] = line.split('|');
+        return {
+          hash: hash || '',
+          author: author || '',
+          date: date || '',
+          message: rest.join('|') || ''
+        };
+      });
+    } catch {
+      return [];
     }
   }
 }

@@ -17,7 +17,7 @@ import {
   Cpu
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { NetworkIpInfo } from '../../../shared/types';
+import { NetworkIpInfo, SystemMetrics } from '../../../shared/types';
 
 interface HeaderProps {
   activeTab: string;
@@ -38,6 +38,24 @@ export const Header: React.FC<HeaderProps> = ({
   const [timeStr, setTimeStr] = useState<string>('');
   const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
   const [copiedIp, setCopiedIp] = useState<string | null>(null);
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
+
+  const fetchMetrics = useCallback(async () => {
+    if (window.electronAPI?.getSystemMetrics) {
+      try {
+        const metrics = await window.electronAPI.getSystemMetrics();
+        setSystemMetrics(metrics);
+      } catch (err) {
+        // Silencioso em caso de indisponibilidade
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMetrics();
+    const metricsInterval = setInterval(fetchMetrics, 5000);
+    return () => clearInterval(metricsInterval);
+  }, [fetchMetrics]);
 
   const fetchNetworkIps = useCallback(async () => {
     if (window.electronAPI?.getNetworkIps) {
@@ -198,6 +216,37 @@ export const Header: React.FC<HeaderProps> = ({
             </kbd>
           </button>
         )}
+
+        {/* Recursos do Sistema (CPU / RAM) */}
+        {systemMetrics && (() => {
+          const usedMb = systemMetrics.usedMemMb ?? systemMetrics.usedMemoryMb ?? 0;
+          const totalMb = systemMetrics.totalMemMb ?? systemMetrics.totalMemoryMb ?? 1;
+          const memPercent = systemMetrics.memUsagePercent ?? systemMetrics.memoryUsagePercent ?? 0;
+          const cpu = systemMetrics.cpuUsagePercent ?? 0;
+          const uptimeHours = Math.floor((systemMetrics.uptimeSeconds || 0) / 3600);
+          const uptimeMinutes = Math.floor(((systemMetrics.uptimeSeconds || 0) % 3600) / 60);
+
+          return (
+            <div
+              className="hidden 2xl:flex items-center space-x-2 px-2.5 py-1 rounded-lg bg-muted/60 border border-border/80 text-[11px] font-mono text-muted-foreground select-none"
+              title={`Uso do Sistema:\nCPU: ${cpu}%\nRAM: ${(usedMb / 1024).toFixed(1)} GB / ${(totalMb / 1024).toFixed(1)} GB (${memPercent}%)\nUptime SO: ${uptimeHours}h ${uptimeMinutes}m`}
+            >
+              <div className="flex items-center space-x-1">
+                <Cpu className={`w-3 h-3 ${cpu > 80 ? 'text-rose-400 animate-pulse' : 'text-primary'}`} />
+                <span className={cpu > 80 ? 'text-rose-400 font-bold' : 'text-foreground'}>
+                  {cpu}%
+                </span>
+              </div>
+              <span className="text-border">|</span>
+              <div className="flex items-center space-x-1">
+                <span className="text-[10px] text-muted-foreground font-sans font-medium">RAM</span>
+                <span className={memPercent > 85 ? 'text-amber-400 font-bold' : 'text-foreground'}>
+                  {memPercent}%
+                </span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Relógio Local */}
         <div className="hidden xl:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-muted/60 border border-border/60 text-[11px] font-mono text-muted-foreground">

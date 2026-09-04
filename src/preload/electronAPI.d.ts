@@ -24,7 +24,12 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
-  NetworkIpInfo
+  NetworkIpInfo,
+  ExplainPlanResult,
+  KarafBundleInfo,
+  GitCommitInfo,
+  SystemMetrics,
+  HttpHealthResult
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -83,6 +88,14 @@ export interface ElectronAPI {
   parsePom: (projectPath: string) => Promise<PomInfo | null>;
   onKarafLogChunk: (callback: (chunk: string) => void) => () => void;
 
+  // Karaf Deployer & Bundles
+  listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) => Promise<KarafBundleInfo[]>;
+  manageKarafBundle: (
+    action: 'start' | 'stop' | 'restart' | 'uninstall',
+    bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<{ success: boolean; output: string }>;
+
   // Git & Azure DevOps
   listProjects: () => Promise<GitProjectInfo[]>;
   getProjectInfo: (projectPath: string) => Promise<GitProjectInfo | null>;
@@ -91,6 +104,9 @@ export interface ElectronAPI {
     projectPath: string,
     command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop'
   ) => Promise<{ success: boolean; output: string }>;
+  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean) => Promise<{ success: boolean; output: string }>;
+  commitAndPush: (projectPath: string, message: string) => Promise<{ success: boolean; output: string }>;
+  getCommitHistory: (projectPath: string, limit?: number) => Promise<GitCommitInfo[]>;
   openExternal: (url: string) => Promise<boolean>;
 
   // Catálogo de Rotinas
@@ -109,10 +125,13 @@ export interface ElectronAPI {
   // Configurações
   getSettings: () => Promise<AppSettings>;
   saveSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
+  exportSettings: (sanitizePasswords?: boolean) => Promise<string>;
+  importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings }>;
 
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number) => Promise<QueryResult>;
+  explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
 
   // Gerenciador de Containers Docker
@@ -126,6 +145,10 @@ export interface ElectronAPI {
 
   // Rede & Detecção de IPs (Local e WSL)
   getNetworkIps: () => Promise<NetworkIpInfo>;
+  checkHttpHealth: (url: string, timeoutMs?: number) => Promise<HttpHealthResult>;
+
+  // Métricas do Sistema
+  getSystemMetrics: () => Promise<SystemMetrics>;
 }
 
 declare global {

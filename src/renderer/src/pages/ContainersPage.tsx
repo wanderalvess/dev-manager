@@ -39,12 +39,19 @@ export const ContainersPage: React.FC = () => {
     setIsLoading(true);
     try {
       if (window.electronAPI) {
-        const [status, list] = await Promise.all([
-          window.electronAPI.getDockerStatus ? window.electronAPI.getDockerStatus() : Promise.resolve({ installed: true, running: true }),
-          window.electronAPI.listDockerContainers ? window.electronAPI.listDockerContainers() : Promise.resolve([])
-        ]);
+        const status = window.electronAPI.getDockerStatus
+          ? await window.electronAPI.getDockerStatus()
+          : { installed: true, running: true };
         setDaemonStatus(status);
-        setContainers(list || []);
+
+        if (status.installed && status.running) {
+          const list = window.electronAPI.listDockerContainers
+            ? await window.electronAPI.listDockerContainers()
+            : [];
+          setContainers(list || []);
+        } else {
+          setContainers([]);
+        }
       }
     } catch (err) {
       console.error('Erro ao carregar informações do Docker:', err);
