@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Box,
   Play,
@@ -36,7 +36,10 @@ export const ContainersPage: React.FC = () => {
   const { copy: copyLogsToClipboard, copiedKey: copyFeedback } = useCopyToClipboard();
 
   // Carregar Status do Docker e Containers
+  const isLoadingDockerRef = useRef(false);
   const loadDockerData = useCallback(async () => {
+    if (isLoadingDockerRef.current) return;
+    isLoadingDockerRef.current = true;
     setIsLoading(true);
     try {
       if (window.electronAPI) {
@@ -58,6 +61,7 @@ export const ContainersPage: React.FC = () => {
       console.error('Erro ao carregar informações do Docker:', err);
     } finally {
       setIsLoading(false);
+      isLoadingDockerRef.current = false;
     }
   }, []);
 

@@ -76,10 +76,16 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
       });
 
       const unsubDeploy = window.electronAPI.onDeployLogChunk((chunk) => {
-        setTerminalLogs((prev) => [...prev, chunk]);
+        setTerminalLogs((prev) => {
+          const next = [...prev, chunk];
+          return next.length > 1000 ? next.slice(next.length - 1000) : next;
+        });
       });
       const unsubKaraf = window.electronAPI.onKarafLogChunk((chunk) => {
-        setTerminalLogs((prev) => [...prev, chunk]);
+        setTerminalLogs((prev) => {
+          const next = [...prev, chunk];
+          return next.length > 1000 ? next.slice(next.length - 1000) : next;
+        });
       });
       return () => {
         unsubDeploy();

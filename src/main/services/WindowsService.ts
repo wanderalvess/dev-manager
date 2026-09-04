@@ -43,6 +43,10 @@ export class WindowsService {
   private cachedServicesStatus: { data: ServiceStatus[]; timestamp: number } | null = null;
   private inFlightServicesCheck: Promise<ServiceStatus[]> | null = null;
 
+  // Cache de disponibilidade de comando (ex: wt.exe) — evita spawn de where.exe
+  // repetido a cada etapa de um perfil multi-step
+  private commandAvailabilityCache: Map<string, boolean> = new Map();
+
   constructor(configService: ConfigService, karafService: KarafService) {
     this.configService = configService;
     this.karafService = karafService;
@@ -626,12 +630,17 @@ export class WindowsService {
 
   public async isCommandAvailable(command: string): Promise<boolean> {
     if (process.platform !== 'win32') return true;
+    const cached = this.commandAvailabilityCache.get(command);
+    if (cached !== undefined) return cached;
+    let available: boolean;
     try {
       await execFileAsync('where.exe', [command]);
-      return true;
+      available = true;
     } catch {
-      return false;
+      available = false;
     }
+    this.commandAvailabilityCache.set(command, available);
+    return available;
   }
 
   public async killPortProcess(port: number): Promise<boolean> {

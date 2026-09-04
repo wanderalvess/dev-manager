@@ -342,6 +342,12 @@ function pickNonEmptyArray<T>(parsedValue: unknown, fallback: T[]): T[] {
 export class ConfigService {
   private configPath: string;
 
+  // getDynamicDefaultConfig() varre disco (IDE/JDK/projects) e getSettings() é chamado
+  // com muita frequência (polling de status, cada IPC de settings); cachear evita repetir
+  // esse custo e o readFileSync+JSON.parse do config.json em máquinas com disco/CPU carregados.
+  private cachedDefaultConfig: AppSettings | null = null;
+  private cachedSettings: { data: AppSettings; mtimeMs: number } | null = null;
+
   constructor() {
     const newDir = getAppDataDir();
 
@@ -364,10 +370,23 @@ export class ConfigService {
     return this.configPath;
   }
 
+  private getDefaultConfigCached(): AppSettings {
+    if (!this.cachedDefaultConfig) {
+      this.cachedDefaultConfig = getDynamicDefaultConfig();
+    }
+    return this.cachedDefaultConfig;
+  }
+
   public getSettings(): AppSettings {
-    const defaultConfig = getDynamicDefaultConfig();
     try {
-      if (fs.existsSync(this.configPath)) {
+      const stat = fs.existsSync(this.configPath) ? fs.statSync(this.configPath) : null;
+      if (stat && this.cachedSettings && this.cachedSettings.mtimeMs === stat.mtimeMs) {
+        return this.cachedSettings.data;
+      }
+
+      const defaultConfig = this.getDefaultConfigCached();
+
+      if (stat) {
         const raw = fs.readFileSync(this.configPath, 'utf-8');
         const parsed = JSON.parse(raw);
         const automationProfiles = pickNonEmptyArray(parsed.automationProfiles, DEFAULT_AUTOMATION_PROFILES);
@@ -386,7 +405,7 @@ export class ConfigService {
         delete parsed.winthorWebPort;
         delete parsed.winthorWebPath;
 
-        return {
+        const result: AppSettings = {
           ...defaultConfig,
           ...parsed,
           appPath: parsed.appPath || legacyAppPath || defaultConfig.appPath,
@@ -404,11 +423,14 @@ export class ConfigService {
           deployProfiles,
           activeDeployProfileId
         };
+        this.cachedSettings = { data: result, mtimeMs: stat.mtimeMs };
+        return result;
       }
+      return defaultConfig;
     } catch (err) {
       console.error('Erro ao ler configurações:', err);
     }
-    return defaultConfig;
+    return this.getDefaultConfigCached();
   }
 
   public saveSettings(settings: Partial<AppSettings>): AppSettings {
@@ -416,6 +438,8 @@ export class ConfigService {
     const updated = { ...current, ...settings };
     try {
       fs.writeFileSync(this.configPath, JSON.stringify(updated, null, 2), 'utf-8');
+      const stat = fs.statSync(this.configPath);
+      this.cachedSettings = { data: updated, mtimeMs: stat.mtimeMs };
     } catch (err) {
       console.error('Erro ao salvar configurações:', err);
     }
