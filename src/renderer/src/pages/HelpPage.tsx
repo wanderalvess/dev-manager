@@ -279,7 +279,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
             </ul>
             <span className="font-bold text-foreground block pt-1">Privilégios de Administrador (UAC):</span>
             <p>
-              Ambos os executáveis já incluem elevação de privilégios (<code className="font-mono text-primary">requireAdministrator</code>) para garantir o controle total de parada/inicialização de serviços Windows e liberação de portas sem erros.
+              O app abre sem elevação (<code className="font-mono text-primary">asInvoker</code>), compatível com usuários sem admin local em máquinas corporativas. Ações que dependem de privilégio elevado (parar/iniciar serviços Windows, liberar portas) podem falhar silenciosamente em modo padrão — o app sinaliza o status de admin na tela e recomenda "Executar como administrador" quando necessário.
             </p>
           </div>
         </div>
@@ -293,10 +293,25 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit — Ambiente, Perfis, Karaf, Git &amp; Azure, Rotinas e Configurações — como 41 <em>tools</em> que um assistente de IA pode chamar diretamente, sem passar pela interface gráfica.
+            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">52 tools</strong> que um assistente de IA (Claude Code, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica, sem clique, sem espera de build.
           </p>
+
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-1.5">
+            <span className="font-bold text-foreground block">O que dá pra pedir pro agente fazer:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li><strong className="text-foreground">Ambiente</strong> (12): status/start/stop de serviços Windows e processos, checar portas ocupadas, abrir IDE, subir Karaf em debug, resetar ambiente.</li>
+              <li><strong className="text-foreground">Perfis de automação</strong> (6): rodar/parar um perfil inteiro ou um passo específico, matar porta.</li>
+              <li><strong className="text-foreground">Karaf</strong> (11): console embutido, <code className="font-mono text-primary">feature:repo-add</code> + <code className="font-mono text-primary">install</code>, build Maven, build+deploy num só passo, <strong className="text-foreground">verificar se o bundle instalou e ficou ativo</strong>, ler pom.xml e sugerir comando.</li>
+              <li><strong className="text-foreground">Docker</strong> (7): status do daemon, listar/iniciar/parar/reiniciar container, ler logs, remover.</li>
+              <li><strong className="text-foreground">Git &amp; Azure DevOps</strong> (4): listar repositórios do workspace, branch/remote atual, montar URL de PR, comandos git arbitrários (validados).</li>
+              <li><strong className="text-foreground">Rotinas</strong> (4): listar, executar, executar mapeada, favoritar executáveis Delphi.</li>
+              <li><strong className="text-foreground">Documentação (RAG local)</strong> (3): reindexar docs de todos os projetos do workspace, busca semântica por trecho, status do índice — cobre qualquer <code className="font-mono text-primary">.md/.mdx/.txt</code>, incluindo pastas <code className="font-mono text-primary">/docs</code> dentro de cada repo.</li>
+              <li><strong className="text-foreground">Sistema &amp; Configurações</strong> (5): info do SO, auto-detectar caminhos (IntelliJ/Karaf), ler/salvar settings.</li>
+            </ul>
+          </div>
+
           <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-2">
-            <span className="font-bold text-foreground block">Ativar no Claude Code:</span>
+            <span className="font-bold text-foreground block">Ativar no Claude Code (dentro deste repo):</span>
             <p>
               O arquivo <code className="font-mono text-primary">.mcp.json</code> na raiz do projeto já registra o servidor. Basta abrir esta pasta no Claude Code e rodar <code className="font-mono text-primary">/mcp</code> para conectar — nenhuma configuração manual é necessária.
             </p>
@@ -312,10 +327,41 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
               </button>
             </div>
           </div>
-          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-300 space-y-1">
-            <span className="font-bold block">Importante:</span>
+
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-2">
+            <span className="font-bold text-foreground block">Usar a partir de outro projeto (ex: junto do MCP do Jira):</span>
             <p>
-              O servidor MCP tem o mesmo poder do Cockpit — pode iniciar/parar serviços, matar processos e rodar builds/deploys. Ele roda só localmente via stdio (sem porta de rede exposta) e reaproveita as mesmas validações de segurança do REST/IPC.
+              Adicione uma entrada <code className="font-mono text-primary">dev-manager</code> no <code className="font-mono text-primary">mcp.json</code> desse outro projeto, com caminho absoluto (não roda de dentro dele, então <code className="font-mono text-primary">${'{workspaceFolder}'}</code> não resolve):
+            </p>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60 whitespace-pre-wrap break-all">
+              <code>{`"dev-manager": { "command": "npx", "args": ["tsx", "C:\\\\caminho\\\\dev-manager\\\\src\\\\mcp\\\\index.ts"] }`}</code>
+              <button
+                onClick={() =>
+                  copyToClipboard(
+                    '"dev-manager": { "command": "npx", "args": ["tsx", "C:\\\\caminho\\\\dev-manager\\\\src\\\\mcp\\\\index.ts"] }',
+                    'cmd-mcp-external'
+                  )
+                }
+                className="p-1 hover:text-foreground transition-colors shrink-0"
+                title="Copiar trecho"
+              >
+                {copiedItem === 'cmd-mcp-external' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <p>Requer <code className="font-mono text-primary">npm install</code> já rodado uma vez neste repo na máquina em questão. A sessão do agente passa a enxergar as duas listas de tools juntas.</p>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-300 space-y-1">
+            <span className="font-bold block">Segurança:</span>
+            <p>
+              O servidor MCP tem o mesmo poder do Cockpit — pode iniciar/parar serviços, matar processos, controlar containers e rodar builds/deploys. Ele roda só localmente via stdio (sem porta de rede exposta) e reaproveita as mesmas validações de segurança do REST/IPC: nomes de serviço/processo/container passam por whitelist de caracteres, caminhos de projeto são travados dentro da pasta de workspace configurada (sem <em>path traversal</em>), e comandos Karaf bloqueiam quebra de linha e operadores de shell. Ainda assim, qualquer agente conectado herda esse poder — não registre este MCP em sessões que não sejam suas.
+            </p>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-1">
+            <span className="font-bold text-foreground block">Fora do MCP (só pela interface gráfica):</span>
+            <p>
+              Seletor de arquivo/pasta nativo, execução de SQL contra bancos configurados (Postgres/MySQL/Oracle) e edição visual de perfis de automação ainda não têm tool equivalente — ficam restritos ao Cockpit por enquanto.
             </p>
           </div>
         </div>
@@ -332,11 +378,15 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
 
   const keyboardShortcuts = [
     { key: 'Alt + 1', desc: 'Navegar para a aba "Ambiente Dev" (Cockpit de Serviços e Automação)', category: 'Navegação' },
-    { key: 'Alt + 2', desc: 'Navegar para a aba "Deploy OSGi Karaf" (client.bat & Features)', category: 'Navegação' },
-    { key: 'Alt + 3', desc: 'Navegar para a aba "Git & Azure DevOps" (Branches & Pull Requests)', category: 'Navegação' },
-    { key: 'Alt + 4', desc: 'Navegar para a aba "Catálogo de Rotinas" (Executáveis Delphi)', category: 'Navegação' },
-    { key: 'Alt + 5', desc: 'Navegar para a aba "Configurações" (Diretórios, IDEs e Portas)', category: 'Navegação' },
-    { key: 'Alt + 6', desc: 'Navegar para esta aba de "Ajuda & Sobre o Programa"', category: 'Navegação' },
+    { key: 'Alt + 2', desc: 'Navegar para a aba "Banco de Dados" (Oracle, MySQL, Postgres)', category: 'Navegação' },
+    { key: 'Alt + 3', desc: 'Navegar para a aba "Containers" (Gerenciador Docker)', category: 'Navegação' },
+    { key: 'Alt + 4', desc: 'Navegar para a aba "Deploy OSGi Karaf" (client.bat & Features)', category: 'Navegação' },
+    { key: 'Alt + 5', desc: 'Navegar para a aba "Git & Azure DevOps" (Branches & Pull Requests)', category: 'Navegação' },
+    { key: 'Alt + 6', desc: 'Navegar para a aba "Catálogo de Rotinas" (Executáveis Delphi)', category: 'Navegação' },
+    { key: 'Alt + 7', desc: 'Navegar para a aba "Documentação" (Busca semântica RAG)', category: 'Navegação' },
+    { key: 'Alt + 8', desc: 'Navegar para a aba "Configurações" (Diretórios, IDEs e Portas)', category: 'Navegação' },
+    { key: 'Alt + 9', desc: 'Navegar para esta aba de "Ajuda & Sobre o Programa"', category: 'Navegação' },
+    { key: 'Ctrl + K', desc: 'Abrir o Buscador Rápido (Quick Launcher)', category: 'Navegação' },
     { key: 'Shift + F9', desc: `Atalho padrão do IntelliJ IDEA para iniciar o Remote JVM Debug (:${debugPort})`, category: 'Desenvolvimento' },
     { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Karaf Shell', category: 'Console' }
   ];

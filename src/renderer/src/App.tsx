@@ -51,7 +51,7 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [refreshAll, fetchServices]);
 
-  // Suporte a atalhos de teclado (Alt+1 .. Alt+6 e Ctrl+K)
+  // Suporte a atalhos de teclado (Alt+1 .. Alt+9 e Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {

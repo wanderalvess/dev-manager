@@ -198,6 +198,37 @@ export class KarafService {
     });
   }
 
+  /**
+   * Verifica se a feature/bundle foi de fato instalada e está ativa após um deploy,
+   * filtrando a saída de "feature:list -i" e "bundle:list" pelo termo informado
+   * (artifactId ou nome da feature). Evita depender de flags de filtro nativas do
+   * Karaf, que variam entre versões.
+   */
+  public async verifyInstallation(
+    matchTerm: string,
+    onChunk: (chunk: string) => void,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ featureInstalled: boolean; featureLines: string[]; bundleLines: string[] }> {
+    const featureRes = await this.executeKarafCommand('feature:list -i', onChunk, credentials);
+    const bundleRes = await this.executeKarafCommand('bundle:list', onChunk, credentials);
+
+    const term = matchTerm.trim().toLowerCase();
+    const filterLines = (text: string) =>
+      text
+        .split(/\r?\n/)
+        .filter((line) => line.toLowerCase().includes(term))
+        .map((line) => line.trim());
+
+    const featureLines = term ? filterLines(featureRes.stdout) : [];
+    const bundleLines = term ? filterLines(bundleRes.stdout) : [];
+
+    return {
+      featureInstalled: featureLines.length > 0,
+      featureLines,
+      bundleLines
+    };
+  }
+
   // --- Karaf Embutido no Painel ---
   public startEmbeddedKarafDebug(onLog: (chunk: string) => void): boolean {
     if (this.embeddedKarafProcess) {

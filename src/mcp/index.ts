@@ -9,6 +9,7 @@ import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
 import { DocsIndexService } from '../main/services/DocsIndexService';
+import { DockerService } from '../main/services/DockerService';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand } from '../main/utils/security';
 import type { AppSettings } from '../shared/types';
 
@@ -19,6 +20,7 @@ const windowsService = new WindowsService(configService, karafService);
 const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
+const dockerService = new DockerService();
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -450,6 +452,26 @@ server.registerTool(
 );
 
 server.registerTool(
+  'karaf_verify_bundle',
+  {
+    title: 'Verificar instalação no Karaf',
+    description:
+      'Confirma se a feature/bundle está instalada e ativa após o deploy. Roda "feature:list -i" e "bundle:list" e filtra as linhas pelo termo informado (artifactId ou nome da feature). Bloqueia até concluir.',
+    inputSchema: {
+      matchTerm: z.string(),
+      user: z.string().optional(),
+      pass: z.string().optional(),
+      port: z.number().int().optional()
+    }
+  },
+  async ({ matchTerm, user, pass, port }) => {
+    const { events, push } = collect();
+    const result = await karafService.verifyInstallation(matchTerm, push('chunk'), { user, pass, port });
+    return ok({ result, events });
+  }
+);
+
+server.registerTool(
   'karaf_parse_pom',
   {
     title: 'Parsear pom.xml',
@@ -459,6 +481,99 @@ server.registerTool(
   async ({ projectPath }) => {
     if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
     return ok(karafService.parseProjectPomOrBat(projectPath));
+  }
+);
+
+// --- 3.5. Docker ---
+server.registerTool(
+  'docker_status',
+  { title: 'Status do Docker', description: 'Verifica se o Docker está instalado e se o daemon está em execução.' },
+  async () => ok(await dockerService.checkDockerStatus())
+);
+
+server.registerTool(
+  'docker_list_containers',
+  { title: 'Listar containers', description: 'Lista todos os containers Docker locais (em execução e parados).' },
+  async () => ok(await dockerService.listContainers())
+);
+
+server.registerTool(
+  'docker_start_container',
+  {
+    title: 'Iniciar container',
+    description: 'Inicia um container Docker existente pelo ID ou nome.',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.startContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao iniciar container');
+    }
+  }
+);
+
+server.registerTool(
+  'docker_stop_container',
+  {
+    title: 'Parar container',
+    description: 'Para um container Docker em execução pelo ID ou nome.',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.stopContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao parar container');
+    }
+  }
+);
+
+server.registerTool(
+  'docker_restart_container',
+  {
+    title: 'Reiniciar container',
+    description: 'Reinicia um container Docker pelo ID ou nome.',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.restartContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao reiniciar container');
+    }
+  }
+);
+
+server.registerTool(
+  'docker_get_container_logs',
+  {
+    title: 'Logs do container',
+    description: 'Retorna as últimas linhas de log de um container Docker.',
+    inputSchema: { containerId: z.string(), lines: z.number().int().optional() }
+  },
+  async ({ containerId, lines }) => {
+    try {
+      return ok({ logs: await dockerService.getContainerLogs(containerId, lines) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao obter logs do container');
+    }
+  }
+);
+
+server.registerTool(
+  'docker_remove_container',
+  {
+    title: 'Remover container',
+    description: 'Remove forçadamente um container Docker pelo ID ou nome (irreversível).',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.removeContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao remover container');
+    }
   }
 );
 

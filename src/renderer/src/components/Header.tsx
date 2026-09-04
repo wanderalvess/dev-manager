@@ -82,7 +82,6 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'git', label: 'Git & Azure', shortLabel: 'Git', icon: GitPullRequest, title: 'Repositórios Git & Azure DevOps' },
     { id: 'routines', label: 'Rotinas', shortLabel: 'Rotinas', icon: Grid, title: 'Catálogo de Executáveis e Rotinas' },
     { id: 'docs', label: 'Documentação', shortLabel: 'Docs', icon: FileSearch, title: 'Busca semântica na documentação dos projetos' },
-    { id: 'settings', label: 'Configurações', shortLabel: 'Config', icon: Settings, title: 'Configurações do Sistema e Portas' },
     { id: 'help', label: 'Ajuda', shortLabel: 'Ajuda', icon: HelpCircle, title: 'Central de Ajuda e Diagnósticos' }
   ];
 
@@ -115,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Navegação Principal (Centro) - Sem barra de rolagem */}
-      <nav className="flex items-center space-x-1 bg-muted/60 p-1 rounded-xl border border-border/60 shadow-inner max-w-full overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="flex items-center space-x-1 bg-muted/60 p-1 rounded-xl border border-border/60 shadow-inner max-w-full min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -208,6 +207,19 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Seletor de Temas */}
         <ThemeToggle />
+
+        {/* Configurações — fixo, fora do nav central (nunca fica escondido/cortado) */}
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`p-1.5 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+            activeTab === 'settings'
+              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted border-border/60'
+          }`}
+          title="Configurações do Sistema e Portas (Alt+8)"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
 
         {/* Botão de Atualização Geral */}
         <button
