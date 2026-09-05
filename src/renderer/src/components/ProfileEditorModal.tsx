@@ -16,7 +16,8 @@ import {
   Clock,
   Layers,
   Download,
-  Database
+  Database,
+  AlertTriangle
 } from 'lucide-react';
 import {
   AutomationProfile,
@@ -276,6 +277,15 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
       return;
     }
 
+    const incompleteSteps = steps.filter(isStepIncomplete);
+    if (incompleteSteps.length > 0) {
+      const nomes = incompleteSteps.map((s) => s.name || 'Sem nome').join(', ');
+      alert(
+        `As seguintes etapas de "Executar SQL" estão incompletas (falta conexão de banco e/ou SQL): ${nomes}. Preencha-as antes de salvar.`
+      );
+      return;
+    }
+
     // Normalizar passos antes de salvar: garantir que targetName seja preenchido se for serviço/processo
     const cleanedSteps = steps.map((s) => {
       const cleaned = { ...s };
@@ -342,6 +352,9 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
   };
 
   const editingStep = editingStepIndex !== null ? steps[editingStepIndex] : null;
+
+  const isStepIncomplete = (step: AutomationStep): boolean =>
+    step.type === 'db-query' && (!step.dbConnectionId || !step.sql || !step.sql.trim());
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
@@ -422,6 +435,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
               ) : (
                 steps.map((step, idx) => {
                   const isSelected = editingStepIndex === idx;
+                  const incomplete = isStepIncomplete(step);
                   return (
                     <div
                       key={step.id}
@@ -429,6 +443,8 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                       className={`flex items-center justify-between p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
                         isSelected
                           ? 'border-primary bg-primary/10 shadow-sm'
+                          : incomplete
+                          ? 'border-destructive/50 bg-destructive/5 hover:bg-destructive/10'
                           : 'border-border/60 bg-card hover:bg-muted/40'
                       }`}
                     >
@@ -437,7 +453,15 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                           {idx + 1}
                         </span>
                         <div className="truncate">
-                          <p className="font-semibold text-foreground truncate">{step.name || 'Sem nome'}</p>
+                          <p className="font-semibold text-foreground truncate flex items-center gap-1">
+                            {step.name || 'Sem nome'}
+                            {incomplete && (
+                              <AlertTriangle
+                                className="w-3 h-3 text-destructive shrink-0"
+                                aria-label="Etapa incompleta: selecione uma conexão de banco e informe o SQL"
+                              />
+                            )}
+                          </p>
                           <p className="text-[10px] text-muted-foreground truncate">
                             {step.type}
                             {step.port ? ` • :${step.port}` : ''}
