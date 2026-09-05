@@ -54,6 +54,7 @@ describe('DeployService', () => {
             id: 'm1',
             name: 'Compilar Projeto',
             type: 'maven-build',
+            enabled: true,
             projectPath: '/mock/project',
             skipTests: true
           }
@@ -84,6 +85,7 @@ describe('DeployService', () => {
             id: 'm1',
             name: 'Compilar Projeto',
             type: 'maven-build',
+            enabled: true,
             projectPath: '/mock/project',
             skipTests: true
           }
@@ -108,6 +110,7 @@ describe('DeployService', () => {
             id: 'k1',
             name: 'Comando Injetado',
             type: 'karaf-command',
+            enabled: true,
             command: 'bundle:list; rm -rf /'
           }
         ]
@@ -135,6 +138,7 @@ describe('DeployService', () => {
             id: 'k1',
             name: 'Adicionar Repo',
             type: 'karaf-command',
+            enabled: true,
             command: 'feature:repo-add mvn:br.com.totvs/repo/1.0/xml/features'
           }
         ]
@@ -158,6 +162,7 @@ describe('DeployService', () => {
             id: 'd1',
             name: 'Build Docker Incompleto',
             type: 'docker-build',
+            enabled: true,
             dockerImageTag: 'meu-app:latest'
             // dockerContextPath faltando propositalmente
           }
@@ -179,7 +184,8 @@ describe('DeployService', () => {
           {
             id: 'd1',
             name: 'Push Sem Tag',
-            type: 'docker-push'
+            type: 'docker-push',
+            enabled: true
           }
         ]
       };
@@ -202,6 +208,7 @@ describe('DeployService', () => {
             id: 'd1',
             name: 'Restart Container',
             type: 'docker-restart',
+            enabled: true,
             dockerContainer: 'oracle-xe'
           }
         ]
@@ -226,6 +233,7 @@ describe('DeployService', () => {
             id: 'c1',
             name: 'Passo Vazio',
             type: 'command',
+            enabled: true,
             command: '   '
           }
         ]

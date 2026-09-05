@@ -123,10 +123,11 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         setSettings(st);
         settingsRef.current = st;
 
-        if (st.automationProfiles && st.automationProfiles.length > 0) {
-          setProfiles(st.automationProfiles);
-          profilesRef.current = st.automationProfiles;
-          setActiveProfileId((curr) => curr || st.activeProfileId || st.automationProfiles[0].id);
+        const loadedProfiles = st.automationProfiles;
+        if (loadedProfiles && loadedProfiles.length > 0) {
+          setProfiles(loadedProfiles);
+          profilesRef.current = loadedProfiles;
+          setActiveProfileId((curr) => curr || st.activeProfileId || loadedProfiles[0].id);
         }
       } catch (err) {
         console.error('Erro ao buscar configurações:', err);
