@@ -50,7 +50,8 @@ export type AutomationStepType =
   | 'kill-process'
   | 'ide'
   | 'karaf'
-  | 'browser';
+  | 'browser'
+  | 'db-query';
 
 export interface AutomationStep {
   id: string;
@@ -67,6 +68,10 @@ export interface AutomationStep {
   waitForPort?: boolean;
   browserUrl?: string;
   targetName?: string;
+  /** Para type 'db-query': id de uma DatabaseConnectionConfig salva nas configurações. */
+  dbConnectionId?: string;
+  /** Para type 'db-query': SQL a executar. Suporta os placeholders {{localIp}} e {{wslIp}}. */
+  sql?: string;
 }
 
 export interface AutomationProfile {

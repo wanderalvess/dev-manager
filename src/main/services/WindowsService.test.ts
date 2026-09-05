@@ -6,6 +6,9 @@ import * as security from '../utils/security';
 import { WindowsService } from './WindowsService';
 import { ConfigService } from './ConfigService';
 import { KarafService } from './KarafService';
+import type { DatabaseService } from './DatabaseService';
+import type { NetworkService } from './NetworkService';
+import type { AutomationStep } from '../../shared/types';
 
 vi.mock('../utils/security', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../utils/security')>();
@@ -90,5 +93,115 @@ describe('WindowsService.isCommandAvailable', () => {
 
     expect(security.execFileAsync).toHaveBeenCalledTimes(2);
     platformSpy.mockRestore();
+  });
+});
+
+describe('WindowsService.runProfileStep — db-query', () => {
+  let tmpDir: string;
+  let originalConfigDir: string | undefined;
+  let originalAppData: string | undefined;
+  let configService: ConfigService;
+  let fakeDatabaseService: { executeQuery: ReturnType<typeof vi.fn> };
+  let fakeNetworkService: { getNetworkIps: ReturnType<typeof vi.fn> };
+  let service: WindowsService;
+
+  const baseStep: AutomationStep = {
+    id: 'step-1',
+    name: 'Atualizar IP',
+    type: 'db-query',
+    enabled: true,
+    dbConnectionId: 'conn-1',
+    sql: "UPDATE tb_parametro SET valor = '{{localIp}}' WHERE valor LIKE '%{{wslIp}}%'"
+  };
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dev-manager-test-'));
+    originalConfigDir = process.env.CONFIG_DIR;
+    originalAppData = process.env.APPDATA;
+    process.env.CONFIG_DIR = tmpDir;
+    delete process.env.APPDATA;
+
+    configService = new ConfigService();
+    configService.saveSettings({
+      databaseConnections: [
+        { id: 'conn-1', name: 'MySQL Local', type: 'mysql', host: 'localhost', port: 3306, database: 'consinco', user: 'consinco' }
+      ]
+    });
+    const karafService = new KarafService(configService);
+    fakeDatabaseService = { executeQuery: vi.fn() };
+    fakeNetworkService = { getNetworkIps: vi.fn().mockResolvedValue({ primaryLocalIp: '10.0.0.5', wslIp: '172.20.1.2', localIps: [], hostname: 'host' }) };
+    service = new WindowsService(
+      configService,
+      karafService,
+      fakeDatabaseService as unknown as DatabaseService,
+      fakeNetworkService as unknown as NetworkService
+    );
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    if (originalConfigDir === undefined) delete process.env.CONFIG_DIR;
+    else process.env.CONFIG_DIR = originalConfigDir;
+    if (originalAppData === undefined) delete process.env.APPDATA;
+    else process.env.APPDATA = originalAppData;
+  });
+
+  it('substitui {{localIp}} e {{wslIp}} pelos valores detectados antes de executar', async () => {
+    fakeDatabaseService.executeQuery.mockResolvedValue({
+      success: true,
+      columns: [],
+      rows: [],
+      rowCount: 1,
+      affectedRows: 1,
+      executionTimeMs: 5,
+      isQuery: false
+    });
+
+    const ok = await service.runProfileStep(baseStep);
+
+    expect(ok).toBe(true);
+    expect(fakeDatabaseService.executeQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'conn-1' }),
+      "UPDATE tb_parametro SET valor = '10.0.0.5' WHERE valor LIKE '%172.20.1.2%'"
+    );
+  });
+
+  it('retorna false e não executa SQL quando dbConnectionId não corresponde a nenhuma conexão salva', async () => {
+    const ok = await service.runProfileStep({ ...baseStep, dbConnectionId: 'conn-inexistente' });
+
+    expect(ok).toBe(false);
+    expect(fakeDatabaseService.executeQuery).not.toHaveBeenCalled();
+  });
+
+  it('retorna false e não executa SQL quando o sql está vazio', async () => {
+    const ok = await service.runProfileStep({ ...baseStep, sql: '   ' });
+
+    expect(ok).toBe(false);
+    expect(fakeDatabaseService.executeQuery).not.toHaveBeenCalled();
+  });
+
+  it('retorna false quando executeQuery reporta falha', async () => {
+    fakeDatabaseService.executeQuery.mockResolvedValue({
+      success: false,
+      columns: [],
+      rows: [],
+      rowCount: 0,
+      executionTimeMs: 5,
+      isQuery: false,
+      error: 'ORA-00001'
+    });
+
+    const ok = await service.runProfileStep(baseStep);
+
+    expect(ok).toBe(false);
+  });
+
+  it('retorna false sem lançar quando databaseService/networkService não foram injetados', async () => {
+    const karafService = new KarafService(configService);
+    const serviceSemDb = new WindowsService(configService, karafService);
+
+    const ok = await serviceSemDb.runProfileStep(baseStep);
+
+    expect(ok).toBe(false);
   });
 });

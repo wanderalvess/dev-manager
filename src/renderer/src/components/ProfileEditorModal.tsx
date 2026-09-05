@@ -15,12 +15,14 @@ import {
   Save,
   Clock,
   Layers,
-  Download
+  Download,
+  Database
 } from 'lucide-react';
 import {
   AutomationProfile,
   AutomationStep,
-  AutomationStepType
+  AutomationStepType,
+  DatabaseConnectionConfig
 } from '../../../shared/types';
 
 interface ProfileEditorModalProps {
@@ -80,6 +82,12 @@ const STEP_TYPE_OPTIONS: { type: AutomationStepType; label: string; desc: string
     label: 'Abrir Navegador Web',
     desc: 'Abre uma URL específica no navegador padrão',
     icon: Globe
+  },
+  {
+    type: 'db-query',
+    label: 'Executar SQL em Banco de Dados',
+    desc: 'Roda um UPDATE/INSERT/SELECT em uma conexão salva',
+    icon: Database
   }
 ];
 
@@ -96,6 +104,17 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
   const [steps, setSteps] = useState<AutomationStep[]>([]);
   const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [dbConnections, setDbConnections] = useState<DatabaseConnectionConfig[]>([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (window.electronAPI && window.electronAPI.getSettings) {
+      window.electronAPI
+        .getSettings()
+        .then((st) => setDbConnections(st.databaseConnections || []))
+        .catch(() => setDbConnections([]));
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (profile) {
@@ -145,6 +164,8 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
           ? 'Iniciar Karaf Debug'
           : type === 'browser'
           ? 'Abrir Navegador'
+          : type === 'db-query'
+          ? 'Executar SQL'
           : 'Novo Passo',
       type,
       enabled: true,
@@ -153,7 +174,9 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
       port: type === 'kill-port' ? 8080 : undefined,
       targetName: '',
       launchMode: type === 'command' ? 'wt' : undefined,
-      delayAfterSeconds: 2
+      delayAfterSeconds: 2,
+      dbConnectionId: type === 'db-query' ? '' : undefined,
+      sql: type === 'db-query' ? '' : undefined
     };
     setSteps((prev) => [...prev, newStep]);
     setEditingStepIndex(steps.length);
@@ -211,6 +234,10 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
         }
         if (newType !== 'service-start' && newType !== 'service-stop' && newType !== 'kill-process') {
           updated.targetName = undefined;
+        }
+        if (newType !== 'db-query') {
+          updated.dbConnectionId = undefined;
+          updated.sql = undefined;
         }
       }
 
@@ -273,6 +300,11 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
         cleaned.command = undefined;
         cleaned.port = undefined;
         cleaned.targetName = undefined;
+      } else if (cleaned.type === 'db-query') {
+        cleaned.command = undefined;
+        cleaned.port = undefined;
+        cleaned.targetName = undefined;
+        cleaned.cwd = '';
       }
       return cleaned;
     });
@@ -678,6 +710,51 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                       className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
+                )}
+
+                {/* Campos para Consulta SQL em Banco */}
+                {editingStep.type === 'db-query' && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                        Conexão de Banco de Dados
+                      </label>
+                      <select
+                        value={editingStep.dbConnectionId || ''}
+                        onChange={(e) => handleUpdateCurrentStep({ dbConnectionId: e.target.value })}
+                        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="">Selecione uma conexão salva...</option>
+                        {dbConnections.map((conn) => (
+                          <option key={conn.id} value={conn.id}>
+                            {conn.name} ({conn.type})
+                          </option>
+                        ))}
+                      </select>
+                      {dbConnections.length === 0 && (
+                        <p className="text-[10px] text-amber-500 mt-1">
+                          Nenhuma conexão salva. Cadastre uma na página "Banco de Dados" primeiro.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                        SQL a Executar
+                      </label>
+                      <textarea
+                        value={editingStep.sql || ''}
+                        onChange={(e) => handleUpdateCurrentStep({ sql: e.target.value })}
+                        rows={5}
+                        placeholder={`UPDATE tb_parametro SET valor = '{{localIp}}' WHERE parametro LIKE 'IP';`}
+                        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Placeholders disponíveis: <code className="font-mono">{'{{localIp}}'}</code> (IP local da
+                        máquina) e <code className="font-mono">{'{{wslIp}}'}</code> (IP da distro WSL ativa).
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 {/* Regras de Sequenciamento / Delay */}
