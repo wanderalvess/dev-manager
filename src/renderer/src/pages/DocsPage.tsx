@@ -7,9 +7,11 @@ import {
   FileText,
   Settings,
   X,
-  Download
+  Download,
+  Plus,
+  Trash2
 } from 'lucide-react';
-import { DocSearchResult, DocsIndexProgress, DocsIndexStatus } from '../../../shared/types';
+import { DocFolderConfig, DocSearchResult, DocsIndexProgress, DocsIndexStatus } from '../../../shared/types';
 
 interface DocsPageProps {
   onNavigateToSettings?: () => void;
@@ -26,12 +28,14 @@ const PHASE_LABELS: Record<DocsIndexProgress['phase'], string> = {
 export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
   const [status, setStatus] = useState<DocsIndexStatus | null>(null);
   const [query, setQuery] = useState<string>('');
-  const [projectFilter, setProjectFilter] = useState<string>('TODOS');
+  const [sourceFilter, setSourceFilter] = useState<string>('TODOS');
   const [results, setResults] = useState<DocSearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isIndexing, setIsIndexing] = useState<boolean>(false);
   const [progress, setProgress] = useState<DocsIndexProgress | null>(null);
+  const [docFolders, setDocFolders] = useState<DocFolderConfig[]>([]);
+  const [isAddingFolder, setIsAddingFolder] = useState<boolean>(false);
 
   const loadStatus = async () => {
     if (window.electronAPI) {
@@ -39,13 +43,42 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
     }
   };
 
+  const loadDocFolders = async () => {
+    if (window.electronAPI) {
+      const settings = await window.electronAPI.getSettings();
+      setDocFolders(settings.docFolders || []);
+    }
+  };
+
   useEffect(() => {
     loadStatus();
+    loadDocFolders();
     if (window.electronAPI?.onDocsIndexProgress) {
       return window.electronAPI.onDocsIndexProgress(setProgress);
     }
     return undefined;
   }, []);
+
+  const handleAddFolder = async () => {
+    if (!window.electronAPI?.selectDirectory) return;
+    const selected = await window.electronAPI.selectDirectory();
+    if (!selected) return;
+    if (docFolders.some((f) => f.path === selected)) return;
+    setIsAddingFolder(true);
+    try {
+      const updated = [...docFolders, { path: selected }];
+      await window.electronAPI.saveSettings({ docFolders: updated });
+      setDocFolders(updated);
+    } finally {
+      setIsAddingFolder(false);
+    }
+  };
+
+  const handleRemoveFolder = async (path: string) => {
+    const updated = docFolders.filter((f) => f.path !== path);
+    await window.electronAPI?.saveSettings({ docFolders: updated });
+    setDocFolders(updated);
+  };
 
   const handleReindex = async () => {
     if (!window.electronAPI) return;
@@ -66,7 +99,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
     setIsSearching(true);
     setHasSearched(true);
     try {
-      const options = projectFilter !== 'TODOS' ? { projectName: projectFilter } : undefined;
+      const options = sourceFilter !== 'TODOS' ? { sourceLabel: sourceFilter } : undefined;
       const data = await window.electronAPI.searchDocs(query.trim(), options);
       setResults(data);
     } finally {
@@ -94,12 +127,12 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
                 Documentação
                 {hasIndex && (
                   <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
-                    {status.totalChunks} trechos · {status.totalFiles} arquivos · {status.totalProjects} projetos
+                    {status.totalChunks} trechos · {status.totalFiles} arquivos · {status.totalSources} fontes
                   </span>
                 )}
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Busca semântica local (RAG) sobre o README e /docs dos projetos configurados.
+                Busca semântica local (RAG) sobre o README/docs dos projetos e das pastas adicionais configuradas.
               </p>
             </div>
           </div>
@@ -150,6 +183,48 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
         )}
       </div>
 
+      {/* Pastas adicionais */}
+      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
+        <div className="flex items-center justify-between gap-3 mb-2.5">
+          <div>
+            <h3 className="text-xs font-bold text-foreground">Pastas adicionais</h3>
+            <p className="text-[11px] text-muted-foreground">
+              Pastas fora da Pasta de Projetos que também entram na indexação (RAG).
+            </p>
+          </div>
+          <button
+            onClick={handleAddFolder}
+            disabled={isAddingFolder}
+            className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shrink-0 disabled:opacity-60"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Adicionar pasta</span>
+          </button>
+        </div>
+
+        {docFolders.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground">Nenhuma pasta adicional configurada.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {docFolders.map((folder) => (
+              <li
+                key={folder.path}
+                className="flex items-center justify-between gap-2 text-xs bg-card border border-border/80 rounded-lg px-3 py-1.5"
+              >
+                <span className="font-mono text-foreground truncate">{folder.path}</span>
+                <button
+                  onClick={() => handleRemoveFolder(folder.path)}
+                  className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                  title="Remover pasta"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       {/* Barra de Busca */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
@@ -174,16 +249,16 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
             )}
           </div>
 
-          {status && status.projectNames.length > 0 && (
+          {status && status.sourceLabels.length > 0 && (
             <select
-              value={projectFilter}
-              onChange={(e) => setProjectFilter(e.target.value)}
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
               className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
             >
-              <option value="TODOS">Todos os projetos</option>
-              {status.projectNames.map((name) => (
-                <option key={name} value={name}>
-                  {name}
+              <option value="TODOS">Todas as fontes</option>
+              {status.sourceLabels.map((label) => (
+                <option key={label} value={label}>
+                  {label}
                 </option>
               ))}
             </select>
@@ -238,11 +313,11 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/80 shrink-0">
-                  {result.chunk.projectName}
+                  {result.chunk.sourceLabel}
                 </span>
-                <span className="text-xs font-semibold text-foreground truncate flex items-center gap-1">
+                <span className="text-xs font-semibold text-foreground truncate flex items-center gap-1" title={result.chunk.entryTitle}>
                   <FileText className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                  {result.chunk.filePath.split(/[\\/]/).pop()}
+                  {result.chunk.entryTitle}
                 </span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -250,7 +325,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
                   {(result.score * 100).toFixed(0)}% relevante
                 </span>
                 <button
-                  onClick={() => handleOpenFile(result.chunk.filePath)}
+                  onClick={() => handleOpenFile(result.chunk.entryId)}
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   title="Abrir localização do arquivo"
                 >

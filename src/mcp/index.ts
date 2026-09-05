@@ -910,7 +910,7 @@ server.registerTool(
   {
     title: 'Reindexar documentação',
     description:
-      'Escaneia os projetos configurados em busca de README/docs (.md, .mdx, .txt), gera embeddings locais e atualiza o índice de busca. Na primeira vez baixa o modelo de IA da internet. Bloqueia até concluir.'
+      'Escaneia os projetos configurados e as pastas de documentação adicionais em busca de README/docs (.md, .mdx, .txt), gera embeddings locais e atualiza o índice de busca. Na primeira vez baixa o modelo de IA da internet. Bloqueia até concluir.'
   },
   async () => ok(await docsIndexService.reindex())
 );
@@ -919,25 +919,25 @@ server.registerTool(
   'rag_search_docs',
   {
     title: 'Buscar na documentação',
-    description: 'Busca semântica (RAG) nos trechos de documentação já indexados dos projetos.',
+    description: 'Busca semântica (RAG) nos trechos de documentação já indexados (projetos e pastas configuradas).',
     inputSchema: {
       query: z.string().min(1),
-      projectName: z.string().optional(),
+      sourceLabel: z.string().optional(),
       topK: z.number().int().min(1).max(50).optional()
     }
   },
-  async ({ query, projectName, topK }) => {
+  async ({ query, sourceLabel, topK }) => {
     const status = docsIndexService.getStatus();
     if (status.totalChunks === 0) {
       return fail('Índice de documentação vazio. Rode rag_reindex_docs primeiro.');
     }
-    return ok(await docsIndexService.search(query, { projectName, topK }));
+    return ok(await docsIndexService.search(query, { sourceLabel, topK }));
   }
 );
 
 server.registerTool(
   'rag_index_status',
-  { title: 'Status do índice de documentação', description: 'Retorna metadados do índice de busca (nº de trechos, arquivos, projetos, última indexação).' },
+  { title: 'Status do índice de documentação', description: 'Retorna metadados do índice de busca (nº de trechos, arquivos, fontes, última indexação).' },
   async () => ok(docsIndexService.getStatus())
 );
 

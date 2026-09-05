@@ -156,7 +156,7 @@ export interface ElectronAPI {
 
   // Índice de Documentação (RAG local)
   reindexDocs: () => Promise<DocsIndexStatus>;
-  searchDocs: (query: string, options?: { projectName?: string; topK?: number }) => Promise<DocSearchResult[]>;
+  searchDocs: (query: string, options?: { sourceLabel?: string; topK?: number }) => Promise<DocSearchResult[]>;
   getDocsIndexStatus: () => Promise<DocsIndexStatus>;
   openDocFile: (filePath: string) => Promise<boolean>;
   onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => () => void;

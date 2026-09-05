@@ -605,9 +605,9 @@ export function initApiBridge() {
       return apiFetch('/api/docs/reindex', { method: 'POST' });
     },
 
-    searchDocs: async (query: string, options?: { projectName?: string; topK?: number }): Promise<DocSearchResult[]> => {
+    searchDocs: async (query: string, options?: { sourceLabel?: string; topK?: number }): Promise<DocSearchResult[]> => {
       const params = new URLSearchParams({ query });
-      if (options?.projectName) params.set('projectName', options.projectName);
+      if (options?.sourceLabel) params.set('sourceLabel', options.sourceLabel);
       if (options?.topK) params.set('topK', String(options.topK));
       return apiFetch(`/api/docs/search?${params.toString()}`);
     },

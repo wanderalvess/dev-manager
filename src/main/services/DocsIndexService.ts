@@ -3,27 +3,14 @@ import path from 'path';
 import { DocChunk, DocSearchResult, DocsIndexProgress, DocsIndexStatus } from '../../shared/types';
 import { ConfigService, getAppDataDir } from './ConfigService';
 import { GitAzureService } from './GitAzureService';
-import { isSafePath } from '../utils/security';
+import { DocSource } from './docSources/DocSource';
+import { LocalFolderSource } from './docSources/LocalFolderSource';
 
-const DOC_EXTENSIONS = ['.md', '.mdx', '.txt'];
-const IGNORED_DIR_NAMES = new Set([
-  'node_modules',
-  '.git',
-  'dist',
-  'build',
-  'target',
-  'out',
-  'bin',
-  'obj',
-  '.idea',
-  '.vscode',
-  'coverage',
-  '.next',
-  '.turbo'
-]);
-const MAX_FILE_SIZE_BYTES = 1_000_000;
 const CHUNK_MAX_CHARS = 800;
 const CHUNK_OVERLAP_CHARS = 100;
+// v2: chunk passou de projectName/projectPath/filePath para sourceId/sourceLabel/entryId/entryTitle
+// (suporte a múltiplas fontes de documentação, não só projetos git). Índices v1 são descartados.
+const INDEX_VERSION = 2;
 
 interface StoredChunk extends DocChunk {
   vector: number[];
@@ -84,9 +71,10 @@ function cosineSimilarity(a: number[], b: number[]): number {
 function stripVector(chunk: StoredChunk): DocChunk {
   return {
     id: chunk.id,
-    projectName: chunk.projectName,
-    projectPath: chunk.projectPath,
-    filePath: chunk.filePath,
+    sourceId: chunk.sourceId,
+    sourceLabel: chunk.sourceLabel,
+    entryId: chunk.entryId,
+    entryTitle: chunk.entryTitle,
     chunkIndex: chunk.chunkIndex,
     text: chunk.text,
     mtimeMs: chunk.mtimeMs
@@ -113,12 +101,12 @@ export class DocsIndexService {
       if (fs.existsSync(this.indexPath)) {
         const raw = fs.readFileSync(this.indexPath, 'utf-8');
         const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.chunks)) return parsed;
+        if (parsed && Array.isArray(parsed.chunks) && parsed.version === INDEX_VERSION) return parsed;
       }
     } catch (err) {
       console.error('[DocsIndexService] Erro ao ler índice de documentação:', err);
     }
-    return { version: 1, updatedAt: '', chunks: [] };
+    return { version: INDEX_VERSION, updatedAt: '', chunks: [] };
   }
 
   private saveIndex(index: DocsIndexFile) {
@@ -190,82 +178,69 @@ export class DocsIndexService {
     return embedder.queryEmbed(text);
   }
 
-  private discoverDocFiles(projectPath: string, projectsPath: string): string[] {
-    const found: string[] = [];
-    const walk = (dir: string) => {
-      let entries: fs.Dirent[];
-      try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-      } catch {
-        return;
+  /** Monta a lista de fontes a indexar: um projeto git = uma fonte, mais as pastas avulsas configuradas. */
+  private async buildSources(): Promise<DocSource[]> {
+    const settings = this.configService.getSettings();
+    const sources: DocSource[] = [];
+
+    if (settings.projectsPath) {
+      const projects = await this.gitAzureService.listProjects();
+      for (const project of projects) {
+        sources.push(new LocalFolderSource(project.path, project.name));
       }
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          if (IGNORED_DIR_NAMES.has(entry.name)) continue;
-          walk(path.join(dir, entry.name));
-        } else if (entry.isFile() && DOC_EXTENSIONS.includes(path.extname(entry.name).toLowerCase())) {
-          const filePath = path.join(dir, entry.name);
-          if (!isSafePath(filePath, projectsPath)) continue;
-          found.push(filePath);
-        }
-      }
-    };
-    walk(projectPath);
-    return found;
+    }
+
+    for (const folder of settings.docFolders || []) {
+      if (!folder.path) continue;
+      sources.push(new LocalFolderSource(folder.path, folder.label));
+    }
+
+    return sources;
   }
 
   public async reindex(onProgress?: (progress: DocsIndexProgress) => void): Promise<DocsIndexStatus> {
-    const settings = this.configService.getSettings();
-    const projectsPath = settings.projectsPath;
     const existingIndex = this.loadIndex();
-    const existingByFile = new Map<string, StoredChunk[]>();
+    const existingByEntry = new Map<string, StoredChunk[]>();
     for (const chunk of existingIndex.chunks) {
-      const list = existingByFile.get(chunk.filePath) || [];
+      const key = `${chunk.sourceId}::${chunk.entryId}`;
+      const list = existingByEntry.get(key) || [];
       list.push(chunk);
-      existingByFile.set(chunk.filePath, list);
+      existingByEntry.set(key, list);
     }
 
     onProgress?.({ phase: 'scanning', current: 0, total: 0 });
-    const projects = projectsPath ? await this.gitAzureService.listProjects() : [];
+    const sources = await this.buildSources();
 
-    const filesByProject = new Map<string, { name: string; path: string; files: string[] }>();
-    for (const project of projects) {
-      const files = this.discoverDocFiles(project.path, projectsPath);
-      filesByProject.set(project.path, { name: project.name, path: project.path, files });
+    const entriesBySource = new Map<DocSource, { title: string; id: string; mtimeMs: number }[]>();
+    for (const source of sources) {
+      entriesBySource.set(source, await source.listEntries());
     }
-    const allFiles = Array.from(filesByProject.values()).flatMap((p) => p.files);
+    const totalEntries = Array.from(entriesBySource.values()).reduce((sum, entries) => sum + entries.length, 0);
 
-    onProgress?.({ phase: 'loading-model', current: 0, total: allFiles.length });
+    onProgress?.({ phase: 'loading-model', current: 0, total: totalEntries });
 
     const newChunks: StoredChunk[] = [];
     try {
-      if (allFiles.length > 0) {
+      if (totalEntries > 0) {
         await this.getEmbedder();
       }
 
       let processed = 0;
-      for (const project of filesByProject.values()) {
-        for (const filePath of project.files) {
+      for (const [source, entries] of entriesBySource) {
+        for (const entry of entries) {
           processed++;
-          onProgress?.({ phase: 'embedding', current: processed, total: allFiles.length, currentFile: filePath });
+          onProgress?.({ phase: 'embedding', current: processed, total: totalEntries, currentFile: entry.id });
 
-          let stat: fs.Stats;
-          try {
-            stat = fs.statSync(filePath);
-          } catch {
-            continue;
-          }
-          if (stat.size > MAX_FILE_SIZE_BYTES) continue;
-
-          const cached = existingByFile.get(filePath);
-          if (cached && cached.length > 0 && cached[0].mtimeMs === stat.mtimeMs) {
+          const key = `${source.id}::${entry.id}`;
+          const cached = existingByEntry.get(key);
+          if (cached && cached.length > 0 && cached[0].mtimeMs === entry.mtimeMs) {
             newChunks.push(...cached);
             continue;
           }
 
           let content: string;
           try {
-            content = fs.readFileSync(filePath, 'utf-8');
+            content = await source.readContent(entry);
           } catch {
             continue;
           }
@@ -274,13 +249,14 @@ export class DocsIndexService {
           const vectors = await this.embedPassages(pieces);
           for (let i = 0; i < pieces.length; i++) {
             newChunks.push({
-              id: `${filePath}#${i}`,
-              projectName: project.name,
-              projectPath: project.path,
-              filePath,
+              id: `${key}#${i}`,
+              sourceId: source.id,
+              sourceLabel: source.label,
+              entryId: entry.id,
+              entryTitle: entry.title,
               chunkIndex: i,
               text: pieces[i],
-              mtimeMs: stat.mtimeMs,
+              mtimeMs: entry.mtimeMs,
               vector: vectors[i] || []
             });
           }
@@ -292,27 +268,27 @@ export class DocsIndexService {
       console.error('[DocsIndexService] Falha ao gerar embeddings, indexação interrompida:', err);
     }
 
-    onProgress?.({ phase: 'saving', current: allFiles.length, total: allFiles.length });
+    onProgress?.({ phase: 'saving', current: totalEntries, total: totalEntries });
     const updatedIndex: DocsIndexFile = {
-      version: 1,
+      version: INDEX_VERSION,
       updatedAt: new Date().toISOString(),
       chunks: newChunks
     };
     this.saveIndex(updatedIndex);
-    onProgress?.({ phase: 'done', current: allFiles.length, total: allFiles.length });
+    onProgress?.({ phase: 'done', current: totalEntries, total: totalEntries });
 
     return this.buildStatus(updatedIndex);
   }
 
   public async search(
     query: string,
-    options?: { projectName?: string; topK?: number }
+    options?: { sourceLabel?: string; topK?: number }
   ): Promise<DocSearchResult[]> {
     const index = this.loadIndex();
     if (index.chunks.length === 0 || !query.trim()) return [];
 
-    const candidates = options?.projectName
-      ? index.chunks.filter((c) => c.projectName === options.projectName)
+    const candidates = options?.sourceLabel
+      ? index.chunks.filter((c) => c.sourceLabel === options.sourceLabel)
       : index.chunks;
     if (candidates.length === 0) return [];
 
@@ -337,13 +313,13 @@ export class DocsIndexService {
   }
 
   private buildStatus(index: DocsIndexFile): DocsIndexStatus {
-    const files = new Set(index.chunks.map((c) => c.filePath));
-    const projects = Array.from(new Set(index.chunks.map((c) => c.projectName))).sort();
+    const files = new Set(index.chunks.map((c) => c.entryId));
+    const sourceLabels = Array.from(new Set(index.chunks.map((c) => c.sourceLabel))).sort();
     return {
       totalChunks: index.chunks.length,
       totalFiles: files.size,
-      totalProjects: projects.length,
-      projectNames: projects,
+      totalSources: sourceLabels.length,
+      sourceLabels,
       lastIndexedAt: index.updatedAt || undefined,
       modelDownloaded: this.isModelDownloaded()
     };

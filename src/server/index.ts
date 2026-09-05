@@ -427,12 +427,12 @@ app.post('/api/docs/reindex', async (_req, res) => {
 
 app.get('/api/docs/search', async (req, res) => {
   const query = (req.query.query as string) || '';
-  const projectName = req.query.projectName as string | undefined;
+  const sourceLabel = req.query.sourceLabel as string | undefined;
   const topK = req.query.topK ? Number(req.query.topK) : undefined;
   if (!query.trim()) {
     return res.status(400).json({ error: 'Parâmetro query é obrigatório.' });
   }
-  res.json(await docsIndexService.search(query, { projectName, topK }));
+  res.json(await docsIndexService.search(query, { sourceLabel, topK }));
 });
 
 app.get('/api/docs/status', (_req, res) => {
@@ -451,6 +451,13 @@ app.post('/api/settings', (req, res) => {
     if (candidate[key] && typeof candidate[key] === 'string') {
       if (!isSafeLocalPath(candidate[key])) {
         return res.status(400).json({ error: `Caminho inválido ou remoto não permitido para o campo ${key}.` });
+      }
+    }
+  }
+  if (Array.isArray(candidate.docFolders)) {
+    for (const folder of candidate.docFolders) {
+      if (!folder || typeof folder.path !== 'string' || !isSafeLocalPath(folder.path)) {
+        return res.status(400).json({ error: 'Caminho inválido ou remoto não permitido em docFolders.' });
       }
     }
   }

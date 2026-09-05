@@ -191,7 +191,7 @@ const electronAPI = {
 
   // Índice de Documentação (RAG local)
   reindexDocs: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:reindex'),
-  searchDocs: (query: string, options?: { projectName?: string; topK?: number }): Promise<DocSearchResult[]> =>
+  searchDocs: (query: string, options?: { sourceLabel?: string; topK?: number }): Promise<DocSearchResult[]> =>
     ipcRenderer.invoke('docs:search', query, options),
   getDocsIndexStatus: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:get-status'),
   openDocFile: (filePath: string): Promise<boolean> => ipcRenderer.invoke('docs:open-file', filePath),

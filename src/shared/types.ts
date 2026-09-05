@@ -241,13 +241,25 @@ export interface AppSettings {
   mappedPrograms?: MappedProgram[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
   databaseConnections?: DatabaseConnectionConfig[];
+  /** Pastas locais adicionais (fora da Pasta de Projetos) indexadas pelo RAG de documentação */
+  docFolders?: DocFolderConfig[];
+}
+
+export interface DocFolderConfig {
+  path: string;
+  label?: string;
 }
 
 export interface DocChunk {
   id: string;
-  projectName: string;
-  projectPath: string;
-  filePath: string;
+  /** Id estável da fonte que originou o chunk (ex: caminho do projeto git, "local-folder:C:\Docs") */
+  sourceId: string;
+  /** Rótulo exibido na UI/filtros (nome do projeto, ou o rótulo configurado da pasta) */
+  sourceLabel: string;
+  /** Id do item dentro da fonte — para fontes locais é o caminho absoluto do arquivo */
+  entryId: string;
+  /** Nome legível do item (caminho relativo à raiz da fonte) */
+  entryTitle: string;
   chunkIndex: number;
   text: string;
   mtimeMs: number;
@@ -270,8 +282,8 @@ export interface DocsIndexProgress {
 export interface DocsIndexStatus {
   totalChunks: number;
   totalFiles: number;
-  totalProjects: number;
-  projectNames: string[];
+  totalSources: number;
+  sourceLabels: string[];
   lastIndexedAt?: string;
   modelDownloaded: boolean;
 }

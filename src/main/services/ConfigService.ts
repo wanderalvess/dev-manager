@@ -568,6 +568,8 @@ export class ConfigService {
       if (typeof parsed.ideName === 'string') merged.ideName = parsed.ideName;
       if (typeof parsed.karafScript === 'string') merged.karafScript = parsed.karafScript;
 
+      if (Array.isArray(parsed.docFolders)) merged.docFolders = parsed.docFolders;
+
       if (Array.isArray(parsed.databaseConnections)) {
         merged.databaseConnections = parsed.databaseConnections.map((newConn: any) => {
           const existing = current.databaseConnections?.find(

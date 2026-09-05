@@ -405,7 +405,7 @@ export function registerIpcHandlers(
     });
   });
 
-  ipcMain.handle('docs:search', async (_, query: string, options?: { projectName?: string; topK?: number }) => {
+  ipcMain.handle('docs:search', async (_, query: string, options?: { sourceLabel?: string; topK?: number }) => {
     return await docsIndexService.search(query, options);
   });
 
@@ -415,8 +415,10 @@ export function registerIpcHandlers(
 
   ipcMain.handle('docs:open-file', async (_, filePath: string) => {
     const settings = configService.getSettings();
-    if (!isSafePath(filePath, settings.projectsPath)) {
-      console.warn('[Segurança] Bloqueada tentativa de abrir arquivo fora da pasta de projetos:', filePath);
+    const allowedBaseDirs = [settings.projectsPath, ...(settings.docFolders || []).map((f) => f.path)].filter(Boolean);
+    const isAllowed = allowedBaseDirs.some((base) => isSafePath(filePath, base));
+    if (!isAllowed) {
+      console.warn('[Segurança] Bloqueada tentativa de abrir arquivo fora das pastas de documentação configuradas:', filePath);
       return false;
     }
     shell.showItemInFolder(filePath);
