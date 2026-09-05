@@ -1,1 +1,0 @@
-1) usuario executar prepara_pdv.py para preparar ambiente antes de executar programa. Precisa analisar o arquivo para ver se conseguimos automatizar esse processo com o dev manager.
