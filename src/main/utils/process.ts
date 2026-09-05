@@ -36,7 +36,10 @@ export function runCapturedProcess(
   timeoutMs?: number
 ): Promise<CapturedProcessResult> {
   return new Promise((resolve) => {
-    const proc = spawn(command, args, { shell: false, ...options });
+    // detached no POSIX torna o filho líder do próprio grupo de processos, o que é
+    // exigido por killProcessTree para poder matar o grupo inteiro via `kill(-pid)`
+    // (sem isso o filho herda o grupo deste processo Node e o kill não acha nada pra matar).
+    const proc = spawn(command, args, { shell: false, detached: process.platform !== 'win32', ...options });
     let stdout = '';
     let stderr = '';
     let timedOut = false;
