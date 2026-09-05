@@ -74,13 +74,13 @@ app.use((req, res, next) => {
 // Inicializa os serviços
 const configService = new ConfigService();
 const karafService = new KarafService(configService);
-const windowsService = new WindowsService(configService, karafService);
+const databaseService = new DatabaseService();
+const networkService = new NetworkService();
+const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
 const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
-const databaseService = new DatabaseService();
 const dockerService = new DockerService();
-const networkService = new NetworkService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService);
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)

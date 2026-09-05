@@ -472,7 +472,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             delayAfterSeconds: s.delayAfterSeconds ?? 2,
             targetName: s.targetName || '',
             browserUrl: s.browserUrl || '',
-            launchMode: s.launchMode || 'wt'
+            launchMode: s.launchMode || 'wt',
+            dbConnectionId: s.dbConnectionId || '',
+            sql: s.sql || ''
           }))
         };
 

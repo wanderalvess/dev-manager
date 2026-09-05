@@ -24,6 +24,8 @@ import {
   DEFAULT_MONITORED_PORTS
 } from './ConfigService';
 import { KarafService } from './KarafService';
+import { DatabaseService } from './DatabaseService';
+import { NetworkService } from './NetworkService';
 import { execFileAsync, isValidIdentifier } from '../utils/security';
 import { checkPortOpen } from '../utils/network';
 
@@ -32,6 +34,8 @@ export const TRACKED_SERVICES = DEFAULT_TRACKED_SERVICES;
 export class WindowsService {
   private configService: ConfigService;
   private karafService: KarafService;
+  private databaseService?: DatabaseService;
+  private networkService?: NetworkService;
 
   // Cache de curta duração (2.5s) e deduplicação de chamadas em voo
   private cachedPortsStatus: { data: PortStatus[]; timestamp: number } | null = null;
@@ -47,9 +51,16 @@ export class WindowsService {
   // repetido a cada etapa de um perfil multi-step
   private commandAvailabilityCache: Map<string, boolean> = new Map();
 
-  constructor(configService: ConfigService, karafService: KarafService) {
+  constructor(
+    configService: ConfigService,
+    karafService: KarafService,
+    databaseService?: DatabaseService,
+    networkService?: NetworkService
+  ) {
     this.configService = configService;
     this.karafService = karafService;
+    this.databaseService = databaseService;
+    this.networkService = networkService;
   }
 
   public invalidateStatusCaches(): void {
@@ -860,6 +871,47 @@ export class WindowsService {
           pushLog('warning', `Falha ao abrir navegador: ${(err as Error).message}`);
         }
         return false;
+      }
+
+      case 'db-query': {
+        if (!this.databaseService || !this.networkService) {
+          pushLog('error', `Etapa "${step.name}": Suporte a consulta de banco não disponível neste contexto.`);
+          return false;
+        }
+        if (!step.dbConnectionId) {
+          pushLog('warning', `Etapa "${step.name}": Nenhuma conexão de banco selecionada.`);
+          return false;
+        }
+        if (!step.sql || !step.sql.trim()) {
+          pushLog('warning', `Etapa "${step.name}": Nenhum SQL informado.`);
+          return false;
+        }
+
+        const dbConfig = (settings.databaseConnections || []).find((c) => c.id === step.dbConnectionId);
+        if (!dbConfig) {
+          pushLog('error', `Etapa "${step.name}": Conexão de banco "${step.dbConnectionId}" não encontrada nas configurações.`);
+          return false;
+        }
+
+        pushLog('info', `Executando SQL em "${dbConfig.name}" (${dbConfig.type}) para "${step.name}"...`);
+        try {
+          const { primaryLocalIp, wslIp } = await this.networkService.getNetworkIps();
+          const resolvedSql = step.sql
+            .replace(/\{\{\s*localIp\s*\}\}/g, primaryLocalIp)
+            .replace(/\{\{\s*wslIp\s*\}\}/g, wslIp || '');
+
+          const result = await this.databaseService.executeQuery(dbConfig, resolvedSql);
+          if (result.success) {
+            const affected = result.affectedRows ?? result.rowCount;
+            pushLog('success', `"${step.name}": SQL executado com sucesso (${affected} linha(s) afetada(s)).`);
+            return true;
+          }
+          pushLog('error', `"${step.name}": Falha ao executar SQL: ${result.error}`);
+          return false;
+        } catch (err: any) {
+          pushLog('error', `"${step.name}": Falha ao executar SQL: ${err?.message || err}`);
+          return false;
+        }
       }
 
       default:

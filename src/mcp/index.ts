@@ -19,13 +19,13 @@ import type { AppSettings, DatabaseConnectionConfig, DeployProfile } from '../sh
 // --- Composição dos serviços (mesma ordem usada em src/server/index.ts e src/main/index.ts) ---
 const configService = new ConfigService();
 const karafService = new KarafService(configService);
-const windowsService = new WindowsService(configService, karafService);
+const databaseService = new DatabaseService();
+const networkService = new NetworkService();
+const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
 const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const dockerService = new DockerService();
-const databaseService = new DatabaseService();
-const networkService = new NetworkService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService);
 
 // --- Helpers de resposta MCP ---
@@ -70,7 +70,8 @@ const AutomationStepTypeSchema = z.enum([
   'kill-process',
   'ide',
   'karaf',
-  'browser'
+  'browser',
+  'db-query'
 ]);
 
 const AutomationStepSchema = z.object({
@@ -87,7 +88,9 @@ const AutomationStepSchema = z.object({
   delayAfterSeconds: z.number().optional(),
   waitForPort: z.boolean().optional(),
   browserUrl: z.string().optional(),
-  targetName: z.string().optional()
+  targetName: z.string().optional(),
+  dbConnectionId: z.string().optional(),
+  sql: z.string().optional()
 });
 
 const AutomationProfileSchema = z.object({
