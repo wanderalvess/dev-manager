@@ -930,7 +930,7 @@ export function parseManifestHeaders(stdout: string): Record<string, string> {
   let currentKey = '';
 
   for (const line of lines) {
-    const match = line.match(/^([a-zA-Z0-9_\-]+)\s*=\s*(.*)$/);
+    const match = line.match(/^([a-zA-Z0-9_-]+)\s*=\s*(.*)$/);
     if (match) {
       currentKey = match[1].trim();
       headers[currentKey] = match[2].trim();
@@ -978,7 +978,7 @@ export function parseCapabilitiesWiredBundles(stdout: string): KarafBundleDepend
         continue;
       }
 
-      const match = trimmed.match(/^\[\s*(\d+)\s*\]\s*([^(\[\r\n]+)(?:\s*\(([^)]+)\))?/);
+      const match = trimmed.match(/^\[\s*(\d+)\s*\]\s*([^([\r\n]+)(?:\s*\(([^)]+)\))?/);
       if (match) {
         const id = match[1].trim();
         const name = match[2].trim();
