@@ -3,7 +3,9 @@ import path from 'path';
 import { DocSource, DocSourceEntry } from './DocSource';
 import { isSafePath } from '../../utils/security';
 
-const DOC_EXTENSIONS = ['.md', '.mdx', '.txt'];
+const TEXT_EXTENSIONS = ['.md', '.mdx', '.txt'];
+const BINARY_EXTENSIONS = ['.pdf', '.docx'];
+const DOC_EXTENSIONS = [...TEXT_EXTENSIONS, ...BINARY_EXTENSIONS];
 const IGNORED_DIR_NAMES = new Set([
   'node_modules',
   '.git',
@@ -19,7 +21,29 @@ const IGNORED_DIR_NAMES = new Set([
   '.next',
   '.turbo'
 ]);
-const MAX_FILE_SIZE_BYTES = 1_000_000;
+const MAX_TEXT_FILE_SIZE_BYTES = 1_000_000;
+// PDF/DOCX carregam formatação, fontes e imagens embutidas que inflam o arquivo sem
+// relação com o tamanho do texto extraído — limite bem mais generoso que o de texto puro.
+const MAX_BINARY_FILE_SIZE_BYTES = 20_000_000;
+
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  const { PDFParse } = await import('pdf-parse');
+  const parser = new PDFParse({ data: buffer });
+  try {
+    // pageJoiner vazio evita que o marcador de página ("-- N of M --") vire ruído
+    // semântico nos chunks/embeddings.
+    const result = await parser.getText({ pageJoiner: '' });
+    return result.text;
+  } finally {
+    await parser.destroy();
+  }
+}
+
+async function extractDocxText(buffer: Buffer): Promise<string> {
+  const mammoth = await import('mammoth');
+  const { value } = await mammoth.extractRawText({ buffer });
+  return value;
+}
 
 /**
  * Fonte de documentação a partir de uma pasta local (recursiva). Usada tanto para
@@ -49,7 +73,9 @@ export class LocalFolderSource implements DocSource {
         if (dirent.isDirectory()) {
           if (IGNORED_DIR_NAMES.has(dirent.name)) continue;
           walk(full);
-        } else if (dirent.isFile() && DOC_EXTENSIONS.includes(path.extname(dirent.name).toLowerCase())) {
+        } else if (dirent.isFile()) {
+          const ext = path.extname(dirent.name).toLowerCase();
+          if (!DOC_EXTENSIONS.includes(ext)) continue;
           if (!isSafePath(full, this.rootPath)) continue;
           let stat: fs.Stats;
           try {
@@ -57,7 +83,8 @@ export class LocalFolderSource implements DocSource {
           } catch {
             continue;
           }
-          if (stat.size > MAX_FILE_SIZE_BYTES) continue;
+          const maxSize = BINARY_EXTENSIONS.includes(ext) ? MAX_BINARY_FILE_SIZE_BYTES : MAX_TEXT_FILE_SIZE_BYTES;
+          if (stat.size > maxSize) continue;
           entries.push({ id: full, title: path.relative(this.rootPath, full), mtimeMs: stat.mtimeMs });
         }
       }
@@ -67,6 +94,9 @@ export class LocalFolderSource implements DocSource {
   }
 
   async readContent(entry: DocSourceEntry): Promise<string> {
+    const ext = path.extname(entry.id).toLowerCase();
+    if (ext === '.pdf') return extractPdfText(fs.readFileSync(entry.id));
+    if (ext === '.docx') return extractDocxText(fs.readFileSync(entry.id));
     return fs.readFileSync(entry.id, 'utf-8');
   }
 }

@@ -910,7 +910,7 @@ server.registerTool(
   {
     title: 'Reindexar documentação',
     description:
-      'Escaneia os projetos configurados e as pastas de documentação adicionais em busca de README/docs (.md, .mdx, .txt), gera embeddings locais e atualiza o índice de busca. Na primeira vez baixa o modelo de IA da internet. Bloqueia até concluir.'
+      'Escaneia os projetos configurados e as pastas de documentação adicionais em busca de README/docs (.md, .mdx, .txt, .pdf, .docx), gera embeddings locais e atualiza o índice de busca. Na primeira vez baixa o modelo de IA da internet. Bloqueia até concluir.'
   },
   async () => ok(await docsIndexService.reindex())
 );
