@@ -9,19 +9,20 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 ## 📸 Visão Geral dos Recursos
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                      DEV MANAGER                                       │
-├───────────────┬──────────────────┬─────────────────┬──────────────┬──────────┬─────────┤
-│ ⚡ Ambiente   │ 📦 Karaf Deploy  │ 🔀 Git & Azure  │ 📑 Rotinas   │ ⚙️ Config│ ❓ Ajuda │
-├───────────────┴──────────────────┴─────────────────┴──────────────┴──────────┴─────────┤
-│ • Pipeline 1-Clique (Stop Srv -> Kill -> Launch IDE -> Servidor Debug)                 │
-│ • Console Integrado com Terminal Interativo OSGi (karaf@root)                         │
-│ • Monitor em Tempo Real de Portas (:8889, :8101, :5005, :1521, etc.) com PID          │
-│ • Auto-parser de pom.xml / deploy-local.bat para Deploy de Features Maven              │
-│ • Gestão Git (Branch, Diff, Fetch, Pull, Stash) e Criação de Pull Requests             │
-│ • Catálogo de Rotinas (.EXE e .PC) com Busca e Favoritos                              │
-│ • Central de Ajuda Completa, FAQ com Busca, Atalhos e Diagnóstico do Sistema          │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                   DEV MANAGER                                                    │
+├─────────────┬──────────────┬─────────────┬─────────────────┬──────────────┬────────────┬──────────┬────────┬─────────┤
+│ ⚡ Ambiente │ 🗄️ Database  │ 🐳 Docker   │ 📦 Karaf Deploy │ 🔀 Git/Azure │ 📑 Rotinas │ 📚 Docs  │⚙ Config│ ❓ Ajuda│
+├─────────────┴──────────────┴─────────────┴─────────────────┴──────────────┴────────────┴──────────┴────────┴─────────┤
+│ • Pipeline 1-Clique (Stop Srv -> Kill -> Launch IDE -> Servidor Debug)                                           │
+│ • Database Studio Multi-Vendor (Oracle, Postgres, MySQL) com Inspetor de Colunas, Histórico e Snippets Custom     │
+│ • Docker Cockpit: CPU/RAM em Tempo Real (docker stats), Terminal Interativo (docker exec) e Inspeção de Logs    │
+│ • Karaf OSGi Deployer: Snapshots & Comparativo de Estado (Diff), Árvore de Dependências e Fiações Wired          │
+│ • Hub Git & Azure DevOps: Sincronização rápida, detecção de branches e gerador de Pull Requests                  │
+│ • Catálogo de Rotinas (.EXE e .PC) com busca rápida e favoritos                                                  │
+│ • RAG Local com FastEmbed: Busca semântica vetorial sobre documentação, prévia rápida e abertura no editor      │
+│ • Quick Launcher Spotlight (Ctrl+K) e Navegação Global por Teclado (Alt+1 .. Alt+9)                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -39,28 +40,49 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 * **Monitor de Portas de Rede em Tempo Real:**
   * Monitoramento contínuo de status e PID de portas essenciais: `:8889` (Portal Web), `:8101` (Karaf SSH), `:5005` (Java Remote Debug), `:1521` (DB Listener) e portas customizadas.
 * **Controles Individuais:** Botões para iniciar/parar serviços separadamente, matar processos e abrir rotas web (`:8889` e `:8889/system/console`).
-* **Notificações Nativas do Windows:** Alertas de conclusão de pipeline diretamente na bandeja do sistema operacional.
 
 ---
 
-### 2. 📦 Deployer OSGi Apache Karaf (`client.bat`)
+### 2. 🗄️ Database Studio Multi-Vendor
+* **Suporte a Múltiplos Bancos de Dados:**
+  * Conexão e execução direta para **Oracle Database** (`oracledb`), **PostgreSQL** (`pg`) e **MySQL** (`mysql2`).
+* **Inspetor de Tabelas e Colunas:**
+  * Barra lateral com listagem dinâmica de tabelas e expansão sob demanda para exibir colunas, tipos de dados, chaves primárias (PK) e nulabilidade.
+  * Inserção rápida de nomes de colunas ou `SELECT` no editor com 1 clique.
+* **Histórico Persistente de Consultas:**
+  * Registro automático de queries executadas com tempo de resposta e quantidade de linhas retornadas, salvo localmente.
+  * Reutilização, cópia rápida ou reexecução direta do histórico.
+* **Biblioteca de Snippets Rápidos e Customizados:**
+  * Snippets de fábrica (`SELECT`, `COUNT`, `JOIN`, `DDL`) e criação de snippets próprios do desenvolvedor para acelerar consultas recorrentes.
+
+---
+
+### 3. 📦 Gerenciador de Containers (Docker & Podman)
+* **Compatibilidade Corporativa Multimotor (Docker & Podman):**
+  * Auto-detecção inteligente do motor disponível (`docker` ou `podman`), permitindo operação completa em redes corporativas com restrições ao Docker Desktop.
+* **Métricas de Recursos em Tempo Real:**
+  * Exibição de consumo de **CPU (%)** e **Memória RAM** (`uso / limite e %`) diretamente no card de cada container via `stats --no-stream`.
+* **Terminal Interativo Integrado (`exec -it`):**
+  * Disparo com 1 clique de uma janela de terminal interativa conectada ao container (`sh` ou `bash`).
+* **Controle de Ciclo de Vida & Logs:**
+  * Iniciar, parar, reiniciar, remover containers e inspecionar logs com seleção de quantidade de linhas e cópia para área de transferência.
+
+---
+
+### 4. 📦 Deployer OSGi Apache Karaf & Gerenciador de Bundles
 * **Auto-Detecção Inteligente via `pom.xml` e `deploy-local.bat`:**
   * Lê automaticamente `groupId`, `artifactId`, `version` e módulos ao selecionar qualquer projeto Git.
-  * Sugere automaticamente os comandos:
-    * `feature:repo-add mvn:<groupId>/<serviceModule>/<version>/xml/features`
-    * `feature:install -r -u <featureName>/<version>`
-* **Execução Assíncrona do `client.bat`:**
-  * Streaming da saída do console Karaf com tratamento de saída e erros.
-  * Credenciais de acesso configuráveis e salvas com segurança.
-* **Diagnósticos Rápidos com 1 Clique:**
-  * `feature:list -i`: Lista de features instaladas.
-  * `bundle:list -s`: Lista de bundles ativos.
-  * `log:display -n 50`: Visualização das últimas 50 linhas de log.
-  * `log:clear`: Limpeza do buffer de logs do contêiner.
+* **Snapshots de Estado e Comparativo Pós-Deploy (Diff):**
+  * Salve "fotos" do estado de todos os bundles do Karaf e compare com o estado atual.
+  * Identificação instantânea de versões atualizadas, novos bundles adicionados, bundles ausentes e componentes que mudaram de estado (ex: Active -> Resolved).
+* **Árvore Hierárquica de Dependências OSGi:**
+  * Visualização gráfica conectando o bundle selecionado aos seus bundles clientes dependentes (consumidores) e pacotes importados/exportados.
+* **Gerenciamento Seguro de Bundles:**
+  * Instalação via Maven/JAR/Projeto, atualização in-place de versão (`bundle:update`), reinstalação com rebuild Maven opcional e desinstalação com análise de risco de fiação.
 
 ---
 
-### 3. 🔀 Git & Azure DevOps Hub
+### 5. 🔀 Git & Azure DevOps Hub
 * **Varredura Automática de Repositórios:**
   * Localização automática de todos os projetos clonados na pasta de repositórios.
   * Detecção instantânea da branch atual ativa e contador de arquivos modificados (*uncommitted changes*).
@@ -69,39 +91,45 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 * **Gerador de Pull Request no Azure DevOps:**
   * Reconhece organizações, projetos e repositórios hospedados no Azure DevOps (HTTPS e SSH).
   * Monta a URL de criação de PR comparando a branch de trabalho com a branch de destino (`develop`, `master`, etc.) e abre diretamente no navegador.
-* **Acesso Rápido a Pipelines CI/CD:**
-  * Link direto para a página de builds e pipelines do repositório no Azure DevOps.
 
 ---
 
-### 4. 📑 Catálogo & Lançador de Rotinas
+### 6. 📑 Catálogo & Lançador de Rotinas
 * **Varredura Completa do Diretório Configurado:**
-  * Reconhece executáveis (`.EXE`) e rotinas compiladas (`.PC`) organizadas por módulos.
+  * Reconhece executáveis (`.EXE`) e rotinas compiladas (`.PC`) organizadas por módulos funcionais.
 * **Filtros e Busca Instantânea:**
-  * Busca por código da rotina ou nome e filtro por módulo funcional.
+  * Busca por código da rotina ou nome e filtro por módulo.
 * **Sistema de Favoritos:**
-  * Marcação de rotinas favoritas com estrelas fixadas no topo e salvas no `%APPDATA%`.
-* **Execução Direta:**
-  * Disparo com 1 clique em segundo plano desvinculado.
+  * Marcação de rotinas favoritas com estrelas fixadas no topo e salvas localmente.
 
 ---
 
-### 5. ⚙️ Configurações & Personalização
+### 7. 📚 RAG & Documentação Local Integrada
+* **Busca Semântica Vetorial Local:**
+  * Indexação e geração de embeddings locais via **FastEmbed** (`AllMiniLML6V2`), sem envio de dados para nuvem ou servidores externos.
+  * Varre automaticamente arquivos `README.md` e documentações dos projetos Git e pastas avulsas configuradas.
+* **Prévia Rápida de Documentos:**
+  * Modal integrado para leitura imediata de arquivos de documentação sem sair da aplicação.
+* **Abertura Flexível:**
+  * Abertura direta no editor de código padrão do sistema operacional ou revelação na pasta do explorador de arquivos.
+
+---
+
+### 8. ⚙️ Configurações & Personalização
 * **Detecção e Configuração Flexível de Diretórios:**
-  * Permite ao usuário configurar caminhos personalizados para diretórios de projetos, executáveis e servidor Karaf.
-* **Validação Visual de Caminhos em Tempo Real:**
-  * Indicadores dinâmicos de existência de diretórios e executáveis no disco com seletores visuais do Windows Explorer.
+  * Permite ao usuário configurar caminhos personalizados para diretórios de projetos, executáveis, banco de dados e servidor Karaf.
 * **Gerenciador de Portas de Rede Monitoradas:**
-  * Adição, remoção e alternância de portas monitoradas, com atalhos de adição rápida (`:8889`, `:8181`, `:8101`, `:5005`).
+  * Adição, remoção e alternância de portas monitoradas, com atalhos de adição rápida (`:8889`, `:8181`, `:8101`, `:5005`, `:1521`).
 * **Suporte a Temas:**
   * Alternador entre **Dark Mode**, **Light Mode** e variante **Midnight**.
-* **Atalhos de Teclado Globais:**
-  * `Alt+1`: Ambiente Dev
-  * `Alt+2`: Deploy OSGi Karaf
-  * `Alt+3`: Git & Azure DevOps
-  * `Alt+4`: Catálogo de Rotinas
-  * `Alt+5`: Configurações
-  * `Alt+6`: Ajuda & Sobre
+
+---
+
+### 9. ❓ Central de Ajuda, FAQ e Diagnóstico
+* **Diagnóstico do Sistema (Health Check):**
+  * Verificação de saúde de binários essenciais (Node.js, Git, Java, Docker, Karaf client).
+* **Base de Conhecimento e FAQ Integrado:**
+  * Guia rápido de resolução de problemas comuns e atalhos operacionais.
 
 ---
 
@@ -289,9 +317,12 @@ dev-manager/
     │       │   └── ThemeContext.tsx    # Contexto global de temas
     │       └── pages/          # Telas principais da aplicação
     │           ├── EnvironmentPage.tsx # Cockpit de preparação de ambiente e serviços
-    │           ├── KarafDeployPage.tsx # Deploy e diagnósticos de features Karaf OSGi
+    │           ├── DatabasePage.tsx    # Studio SQL Multi-Vendor, histórico e snippets
+    │           ├── ContainersPage.tsx  # Containers (Docker / Podman), métricas em tempo real e terminal
+    │           ├── DeployPage.tsx      # Deployer Karaf OSGi, snapshots e árvore de bundles
     │           ├── GitAzurePage.tsx    # Hub de repositórios Git e Pull Requests
     │           ├── RoutinesPage.tsx    # Catálogo e lançador de rotinas
+    │           ├── DocsPage.tsx        # Busca semântica RAG, preview e abertura em editor
     │           ├── SettingsPage.tsx    # Tela de configurações e portas monitoradas
     │           └── HelpPage.tsx        # Central de Ajuda, FAQ, atalhos e diagnóstico
     │
@@ -305,12 +336,16 @@ dev-manager/
 
 | Atalho | Ação |
 | :--- | :--- |
+| `Ctrl + K` / `Cmd + K` | Abre o **Quick Launcher (Spotlight)** com busca unificada e ações rápidas |
 | `Alt + 1` | Navega para a aba **Ambiente Dev** |
-| `Alt + 2` | Navega para a aba **Deploy OSGi Karaf** |
-| `Alt + 3` | Navega para a aba **Git & Azure DevOps** |
-| `Alt + 4` | Navega para a aba **Catálogo de Rotinas** |
-| `Alt + 5` | Navega para a aba **Configurações** |
-| `Alt + 6` | Navega para a aba **Ajuda & Sobre** |
+| `Alt + 2` | Navega para a aba **Database Studio** |
+| `Alt + 3` | Navega para a aba **Containers** |
+| `Alt + 4` | Navega para a aba **Deployer Karaf OSGi** |
+| `Alt + 5` | Navega para a aba **Git & Azure DevOps** |
+| `Alt + 6` | Navega para a aba **Catálogo de Rotinas** |
+| `Alt + 7` | Navega para a aba **Documentação & RAG** |
+| `Alt + 8` | Navega para a aba **Configurações** |
+| `Alt + 9` | Navega para a aba **Ajuda & Diagnóstico** |
 
 ---
 

@@ -590,9 +590,20 @@ export interface TableInfo {
   type?: string;
 }
 
+export interface TableColumnInfo {
+  name: string;
+  type: string;
+  nullable?: boolean;
+  isPrimaryKey?: boolean;
+  length?: number | string;
+  defaultValue?: string;
+}
+
 // ==========================================
-// Módulo de Gerenciamento de Containers Docker
+// Módulo de Gerenciamento de Containers (Docker / Podman)
 // ==========================================
+
+export type ContainerEngineType = 'docker' | 'podman' | 'containerd' | 'unknown';
 
 export interface DockerContainerInfo {
   id: string;
@@ -607,9 +618,24 @@ export interface DockerContainerInfo {
 export interface DockerDaemonStatus {
   installed: boolean;
   running: boolean;
+  engine?: ContainerEngineType;
   version?: string;
   error?: string;
 }
+
+export interface DockerContainerStats {
+  id: string;
+  name?: string;
+  cpu: string;
+  mem: string;
+  memPerc: string;
+  netIO: string;
+}
+
+// Aliases semânticos para compatibilidade genérica de containers
+export type ContainerInfo = DockerContainerInfo;
+export type ContainerDaemonStatus = DockerDaemonStatus;
+export type ContainerStats = DockerContainerStats;
 
 // ==========================================
 // Módulo de Rede & IPs (Local e WSL)
@@ -730,6 +756,37 @@ export interface MavenBuildRequest {
   projectPath: string;
   goals?: string[];
   skipTests?: boolean;
+}
+
+export interface BundleSnapshotItem {
+  id: string;
+  name: string;
+  version: string;
+  state: string;
+  symbolicName?: string;
+  location?: string;
+}
+
+export interface BundleSnapshot {
+  id: string;
+  label: string;
+  createdAt: string;
+  bundleCount: number;
+  bundles: BundleSnapshotItem[];
+}
+
+export interface BundleSnapshotDiff {
+  unchanged: BundleSnapshotItem[];
+  versionChanged: {
+    snapshot: BundleSnapshotItem;
+    current: KarafBundleInfo;
+  }[];
+  stateChanged: {
+    snapshot: BundleSnapshotItem;
+    current: KarafBundleInfo;
+  }[];
+  added: KarafBundleInfo[];
+  removed: BundleSnapshotItem[];
 }
 
 // ==========================================

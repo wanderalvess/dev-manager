@@ -22,7 +22,7 @@ interface DocsIndexFile {
   chunks: StoredChunk[];
 }
 
-function chunkText(text: string): string[] {
+export function chunkText(text: string): string[] {
   const paragraphs = text
     .split(/\n{2,}/)
     .map((p) => p.trim())
@@ -55,7 +55,7 @@ function chunkText(text: string): string[] {
   });
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
+export function cosineSimilarity(a: number[], b: number[]): number {
   let dot = 0;
   let normA = 0;
   let normB = 0;

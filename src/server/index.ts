@@ -439,6 +439,26 @@ app.get('/api/docs/status', (_req, res) => {
   res.json(docsIndexService.getStatus());
 });
 
+app.get('/api/docs/content', (req, res) => {
+  const targetPath = (req.query.path as string) || '';
+  const settings = configService.getSettings();
+  const allowedBaseDirs = [settings.projectsPath, ...(settings.docFolders || []).map((f) => f.path)].filter(Boolean);
+  const isAllowed = allowedBaseDirs.some((base) => isSafeLocalPath(targetPath) && targetPath.startsWith(base));
+  if (!isAllowed || !fs.existsSync(targetPath)) {
+    return res.status(404).json({ content: null, error: 'Arquivo não encontrado ou acesso negado' });
+  }
+  try {
+    const stats = fs.statSync(targetPath);
+    if (stats.size > 2 * 1024 * 1024) {
+      return res.json({ content: '(Arquivo muito grande para pré-visualização direta)' });
+    }
+    const content = fs.readFileSync(targetPath, 'utf-8');
+    res.json({ content });
+  } catch (err: any) {
+    res.status(500).json({ content: null, error: err.message });
+  }
+});
+
 // 7. Configurações
 app.get('/api/settings', (_req, res) => {
   res.json(configService.getSettings());
@@ -502,18 +522,33 @@ app.post('/api/db/tables', async (req, res) => {
   }
 });
 
-// 9. Gerenciador de Containers Docker
-app.get('/api/docker/status', async (_req, res) => {
+app.post('/api/db/columns', async (req, res) => {
+  try {
+    const { config, tableName } = req.body;
+    const result = await databaseService.getTableColumns(config, tableName);
+    res.json(result);
+  } catch {
+    res.status(500).json([]);
+  }
+});
+
+// 9. Gerenciador de Containers (Docker / Podman)
+app.get(['/api/docker/status', '/api/containers/status'], async (_req, res) => {
   const status = await dockerService.checkDockerStatus();
   res.json(status);
 });
 
-app.get('/api/docker/containers', async (_req, res) => {
+app.get(['/api/docker/containers', '/api/containers', '/api/containers/list'], async (_req, res) => {
   const containers = await dockerService.listContainers();
   res.json(containers);
 });
 
-app.post('/api/docker/containers/:id/start', async (req, res) => {
+app.get(['/api/docker/stats', '/api/containers/stats'], async (_req, res) => {
+  const stats = await dockerService.getContainerStats();
+  res.json(stats);
+});
+
+app.post(['/api/docker/containers/:id/start', '/api/containers/:id/start'], async (req, res) => {
   try {
     const success = await dockerService.startContainer(req.params.id);
     res.json({ success });
@@ -522,7 +557,7 @@ app.post('/api/docker/containers/:id/start', async (req, res) => {
   }
 });
 
-app.post('/api/docker/containers/:id/stop', async (req, res) => {
+app.post(['/api/docker/containers/:id/stop', '/api/containers/:id/stop'], async (req, res) => {
   try {
     const success = await dockerService.stopContainer(req.params.id);
     res.json({ success });
@@ -531,7 +566,7 @@ app.post('/api/docker/containers/:id/stop', async (req, res) => {
   }
 });
 
-app.post('/api/docker/containers/:id/restart', async (req, res) => {
+app.post(['/api/docker/containers/:id/restart', '/api/containers/:id/restart'], async (req, res) => {
   try {
     const success = await dockerService.restartContainer(req.params.id);
     res.json({ success });
@@ -540,7 +575,7 @@ app.post('/api/docker/containers/:id/restart', async (req, res) => {
   }
 });
 
-app.get('/api/docker/containers/:id/logs', async (req, res) => {
+app.get(['/api/docker/containers/:id/logs', '/api/containers/:id/logs'], async (req, res) => {
   try {
     const lines = req.query.lines ? Number(req.query.lines) : 200;
     const logs = await dockerService.getContainerLogs(req.params.id, lines);
@@ -550,7 +585,17 @@ app.get('/api/docker/containers/:id/logs', async (req, res) => {
   }
 });
 
-app.delete('/api/docker/containers/:id', async (req, res) => {
+app.post(['/api/docker/containers/:id/terminal', '/api/containers/:id/terminal'], async (req, res) => {
+  try {
+    const shellName = req.body?.shell || 'sh';
+    const success = await dockerService.openContainerTerminal(req.params.id, shellName);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete(['/api/docker/containers/:id', '/api/containers/:id'], async (req, res) => {
   try {
     const success = await dockerService.removeContainer(req.params.id);
     res.json({ success });

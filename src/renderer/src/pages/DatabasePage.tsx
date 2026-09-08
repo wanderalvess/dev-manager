@@ -19,10 +19,13 @@ import {
   Server,
   Layers,
   ChevronRight,
+  ChevronDown,
   Info,
   BookOpen,
   FileCode,
-  Zap
+  Zap,
+  Key,
+  BookmarkPlus
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -30,7 +33,8 @@ import {
   QueryResult,
   AppSettings,
   SqlSnippet,
-  ExplainPlanResult
+  ExplainPlanResult,
+  TableColumnInfo
 } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
@@ -126,13 +130,37 @@ export const DatabasePage: React.FC = () => {
   const [explainResult, setExplainResult] = useState<ExplainPlanResult | null>(null);
   const [showSnippetsMenu, setShowSnippetsMenu] = useState<boolean>(false);
 
-  // Histórico
-  const [history, setHistory] = useState<ExecutionHistoryItem[]>([]);
+  // Histórico persistente
+  const [history, setHistory] = useState<ExecutionHistoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('devManager:dbHistory');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  // Tabelas do Schema
+  // Snippets personalizados do desenvolvedor
+  const [customSnippets, setCustomSnippets] = useState<SqlSnippet[]>(() => {
+    try {
+      const saved = localStorage.getItem('devManager:customSnippets');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isSaveSnippetModalOpen, setIsSaveSnippetModalOpen] = useState<boolean>(false);
+  const [snippetTitle, setSnippetTitle] = useState<string>('');
+  const [snippetCategory, setSnippetCategory] = useState<string>('Meus Snippets');
+  const [snippetDesc, setSnippetDesc] = useState<string>('');
+
+  // Tabelas do Schema e Navegador de Colunas
   const [tables, setTables] = useState<string[]>([]);
   const [tableFilter, setTableFilter] = useState<string>('');
   const [isLoadingTables, setIsLoadingTables] = useState<boolean>(false);
+  const [expandedTable, setExpandedTable] = useState<string | null>(null);
+  const [tableColumns, setTableColumns] = useState<Record<string, TableColumnInfo[]>>({});
+  const [isLoadingColumns, setIsLoadingColumns] = useState<Record<string, boolean>>({});
 
   // Modal de Conexão
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -341,7 +369,13 @@ export const DatabasePage: React.FC = () => {
         error: res.error
       };
 
-      setHistory((prev) => [historyItem, ...prev.slice(0, 49)]);
+      setHistory((prev) => {
+        const updated = [historyItem, ...prev.filter((h) => h.sql !== historyItem.sql).slice(0, 49)];
+        try {
+          localStorage.setItem('devManager:dbHistory', JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
     } catch (err: any) {
       setQueryResult({
         success: false,
@@ -355,6 +389,69 @@ export const DatabasePage: React.FC = () => {
     } finally {
       setIsExecuting(false);
     }
+  };
+
+  const handleClearHistory = () => {
+    if (confirm('Deseja limpar todo o histórico de consultas salvas?')) {
+      setHistory([]);
+      try {
+        localStorage.removeItem('devManager:dbHistory');
+      } catch {}
+    }
+  };
+
+  const handleSaveCustomSnippet = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!snippetTitle.trim() || !sql.trim()) return;
+    const newSnip: SqlSnippet = {
+      id: `custom_${Date.now()}`,
+      title: snippetTitle.trim(),
+      category: snippetCategory.trim() || 'Meus Snippets',
+      description: snippetDesc.trim() || undefined,
+      sql: sql.trim(),
+      dbType: activeConnection?.type || 'all'
+    };
+    const updated = [newSnip, ...customSnippets];
+    setCustomSnippets(updated);
+    try {
+      localStorage.setItem('devManager:customSnippets', JSON.stringify(updated));
+    } catch {}
+    setIsSaveSnippetModalOpen(false);
+    setSnippetTitle('');
+    setSnippetDesc('');
+  };
+
+  const handleDeleteCustomSnippet = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = customSnippets.filter((s) => s.id !== id);
+    setCustomSnippets(updated);
+    try {
+      localStorage.setItem('devManager:customSnippets', JSON.stringify(updated));
+    } catch {}
+  };
+
+  const handleToggleTableExpand = async (tableName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (expandedTable === tableName) {
+      setExpandedTable(null);
+      return;
+    }
+    setExpandedTable(tableName);
+    if (!tableColumns[tableName] && activeConnection && window.electronAPI?.getDbTableColumns) {
+      setIsLoadingColumns((prev) => ({ ...prev, [tableName]: true }));
+      try {
+        const cols = await window.electronAPI.getDbTableColumns(activeConnection, tableName);
+        setTableColumns((prev) => ({ ...prev, [tableName]: cols || [] }));
+      } catch (err) {
+        console.error('Erro ao carregar colunas da tabela:', err);
+      } finally {
+        setIsLoadingColumns((prev) => ({ ...prev, [tableName]: false }));
+      }
+    }
+  };
+
+  const handleInsertColumnName = (colName: string) => {
+    setSql((prev) => (prev ? `${prev} ${colName}` : colName));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -602,17 +699,85 @@ export const DatabasePage: React.FC = () => {
                 )}
               </div>
             ) : (
-              filteredTables.map((tbl) => (
-                <button
-                  key={tbl}
-                  onClick={() => handleTableClick(tbl)}
-                  title={`Inserir query para ${tbl}`}
-                  className="w-full text-left px-2 py-1.5 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground flex items-center justify-between group transition truncate"
-                >
-                  <span className="truncate">{tbl}</span>
-                  <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-primary shrink-0 ml-1 transition" />
-                </button>
-              ))
+              filteredTables.map((tbl) => {
+                const isExpanded = expandedTable === tbl;
+              const cols = tableColumns[tbl];
+              const isLoadingCols = isLoadingColumns[tbl];
+
+              return (
+                <div key={tbl} className="rounded-lg border border-transparent hover:border-border/40 transition overflow-hidden">
+                  <div
+                    onClick={() => handleTableClick(tbl)}
+                    title={`Inserir query SELECT para ${tbl}`}
+                    className={`w-full text-left px-2 py-1.5 rounded text-muted-foreground hover:text-foreground flex items-center justify-between group cursor-pointer transition ${
+                      isExpanded ? 'bg-muted/70 text-foreground font-bold' : 'hover:bg-muted/50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-1 min-w-0 truncate">
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleTableExpand(tbl, e)}
+                        title={isExpanded ? 'Recolher colunas' : 'Inspecionar colunas'}
+                        className="p-0.5 rounded hover:bg-card text-muted-foreground hover:text-primary transition shrink-0"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="w-3.5 h-3.5 text-primary" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5 group-hover:text-primary" />
+                        )}
+                      </button>
+                      <span className="truncate">{tbl}</span>
+                    </div>
+                    {cols && (
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-muted/60 text-muted-foreground shrink-0 font-mono">
+                        {cols.length}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Lista de colunas expandida */}
+                  {isExpanded && (
+                    <div className="bg-background/80 border-t border-border/40 p-1 pl-4 space-y-0.5 text-[10px]">
+                      {isLoadingCols ? (
+                        <div className="py-2 text-center text-muted-foreground flex items-center justify-center gap-1">
+                          <RotateCw className="w-3 h-3 animate-spin text-primary" /> Carregando colunas...
+                        </div>
+                      ) : !cols || cols.length === 0 ? (
+                        <div className="py-1 text-center text-muted-foreground italic">Nenhuma coluna detectada.</div>
+                      ) : (
+                        cols.map((col) => (
+                          <div
+                            key={col.name}
+                            onClick={() => handleInsertColumnName(col.name)}
+                            title={`Clique para inserir '${col.name}' no editor`}
+                            className="flex items-center justify-between py-1 px-1.5 rounded hover:bg-muted cursor-pointer group/col transition"
+                          >
+                            <div className="flex items-center space-x-1.5 truncate">
+                              {col.isPrimaryKey && (
+                                <span title="Chave Primária (PK)" className="flex items-center justify-center shrink-0">
+                                  <Key className="w-2.5 h-2.5 text-amber-400" />
+                                </span>
+                              )}
+                              <span className="font-semibold text-foreground group-hover/col:text-primary truncate">
+                                {col.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1 shrink-0">
+                              <span className="text-[9px] text-muted-foreground font-mono">{col.type}</span>
+                              {col.nullable === false && (
+                                <span className="text-[8px] px-1 rounded bg-amber-500/10 text-amber-400 font-bold">
+                                  NOT NULL
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
             )}
           </div>
         </div>
@@ -654,44 +819,103 @@ export const DatabasePage: React.FC = () => {
               {showSnippetsMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSnippetsMenu(false)} />
-                  <div className="absolute right-0 mt-1 w-80 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-1 text-xs">
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground px-2 py-1 flex items-center justify-between border-b border-border/60 pb-1.5">
-                    <span className="flex items-center gap-1">
-                      <FileCode className="w-3 h-3 text-primary" /> Consultas Rápidas SQL
-                    </span>
-                    <button
-                      onClick={() => setShowSnippetsMenu(false)}
-                      className="text-muted-foreground hover:text-foreground p-0.5 rounded"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto space-y-1 pt-1">
-                    {DEFAULT_SQL_SNIPPETS.map((s) => (
+                  <div className="absolute right-0 mt-1 w-84 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-1 text-xs">
+                    <div className="text-[10px] uppercase font-bold text-muted-foreground px-2 py-1 flex items-center justify-between border-b border-border/60 pb-1.5">
+                      <span className="flex items-center gap-1">
+                        <FileCode className="w-3 h-3 text-primary" /> Consultas Rápidas SQL
+                      </span>
                       <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => handleSelectSnippet(s)}
-                        className="w-full text-left p-2 rounded-lg hover:bg-muted/80 text-foreground transition flex flex-col group border border-transparent hover:border-border"
+                        onClick={() => setShowSnippetsMenu(false)}
+                        className="text-muted-foreground hover:text-foreground p-0.5 rounded"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-[11px] group-hover:text-primary">{s.title}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
-                            {s.category.split('-')[0].trim()}
-                          </span>
-                        </div>
-                        {s.description && (
-                          <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
-                            {s.description}
-                          </span>
-                        )}
+                        ✕
                       </button>
-                    ))}
+                    </div>
+                    <div className="max-h-72 overflow-y-auto space-y-2 pt-1">
+                      {/* Meus Snippets Personalizados */}
+                      {customSnippets.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-[10px] font-bold text-amber-400 px-2 flex items-center gap-1">
+                            <BookmarkPlus className="w-3 h-3" /> Meus Snippets Salvos ({customSnippets.length})
+                          </div>
+                          {customSnippets.map((s) => (
+                            <div
+                              key={s.id}
+                              onClick={() => handleSelectSnippet(s)}
+                              className="w-full text-left p-2 rounded-lg hover:bg-muted/80 text-foreground transition flex items-center justify-between group border border-border/40 hover:border-amber-400/50 cursor-pointer"
+                            >
+                              <div className="min-w-0 flex-1 mr-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-[11px] group-hover:text-amber-400 truncate">{s.title}</span>
+                                  <span className="text-[8px] px-1 py-0.2 rounded bg-amber-500/15 text-amber-400 font-bold shrink-0">
+                                    Meu
+                                  </span>
+                                </div>
+                                {s.description && (
+                                  <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1 block">
+                                    {s.description}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteCustomSnippet(s.id, e)}
+                                className="p-1 rounded text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition shrink-0"
+                                title="Excluir snippet"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                          <div className="border-b border-border/50 my-1.5" />
+                        </div>
+                      )}
+
+                      {/* Snippets Padrão */}
+                      <div className="text-[10px] font-bold text-muted-foreground px-2">
+                        Snippets do Sistema
+                      </div>
+                      {DEFAULT_SQL_SNIPPETS.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => handleSelectSnippet(s)}
+                          className="w-full text-left p-2 rounded-lg hover:bg-muted/80 text-foreground transition flex flex-col group border border-transparent hover:border-border"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-[11px] group-hover:text-primary">{s.title}</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+                              {s.category.split('-')[0].trim()}
+                            </span>
+                          </div>
+                          {s.description && (
+                            <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                              {s.description}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
             </div>
+
+            {/* Botão Salvar Snippet */}
+            <button
+              type="button"
+              onClick={() => {
+                setSnippetTitle('');
+                setSnippetDesc('');
+                setIsSaveSnippetModalOpen(true);
+              }}
+              disabled={!sql.trim()}
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs disabled:opacity-50"
+              title="Salvar consulta atual nos meus snippets favoritos"
+            >
+              <BookmarkPlus className="w-3.5 h-3.5 text-amber-400" />
+              <span>Salvar Snippet</span>
+            </button>
 
             {/* Botão Explain Plan */}
             <button
@@ -969,9 +1193,22 @@ export const DatabasePage: React.FC = () => {
           ) : (
             /* Tab de Histórico */
             <div className="p-3 space-y-2">
+              <div className="flex items-center justify-between pb-1.5 border-b border-border/60 text-xs">
+                <span className="text-muted-foreground font-medium">
+                  {history.length} consulta(s) no histórico persistente
+                </span>
+                {history.length > 0 && (
+                  <button
+                    onClick={handleClearHistory}
+                    className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" /> Limpar Histórico
+                  </button>
+                )}
+              </div>
               {history.length === 0 ? (
                 <div className="text-center py-8 text-xs text-muted-foreground">
-                  Nenhuma consulta executada nesta sessão.
+                  Nenhuma consulta executada recentemente.
                 </div>
               ) : (
                 history.map((item) => (
@@ -982,20 +1219,38 @@ export const DatabasePage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         {item.success ? (
-                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                         ) : (
-                          <span className="w-2 h-2 rounded-full bg-red-500" />
+                          <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
                         )}
                         <span className="font-bold text-foreground">{item.connectionName}</span>
                         <span className="text-[10px] text-muted-foreground font-mono">{item.timestamp}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[10px] text-muted-foreground font-mono">{item.timeMs} ms</span>
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-[10px] text-muted-foreground font-mono mr-1">{item.timeMs} ms</span>
+                        <button
+                          onClick={() => copyCellToClipboard(item.sql, item.id)}
+                          className="px-2 py-0.5 bg-muted hover:bg-muted/80 text-foreground rounded text-[10px] font-semibold transition"
+                          title="Copiar SQL"
+                        >
+                          {copyFeedback === item.id ? 'Copiado!' : 'Copiar'}
+                        </button>
                         <button
                           onClick={() => setSql(item.sql)}
                           className="px-2 py-0.5 bg-primary/20 hover:bg-primary text-primary hover:text-primary-foreground rounded text-[10px] font-semibold transition"
+                          title="Carregar no editor"
                         >
                           Usar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSql(item.sql);
+                            setTimeout(() => handleExecuteSql(), 50);
+                          }}
+                          className="px-2 py-0.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded text-[10px] font-semibold transition"
+                          title="Executar imediatamente"
+                        >
+                          Executar
                         </button>
                       </div>
                     </div>
@@ -1220,6 +1475,80 @@ export const DatabasePage: React.FC = () => {
                     Salvar
                   </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modal de Salvar Snippet Personalizado */}
+      {isSaveSnippetModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
+              <div className="flex items-center space-x-2">
+                <BookmarkPlus className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-bold text-foreground">Salvar Snippet de Consulta</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSaveSnippetModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground text-sm font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleSaveCustomSnippet} className="p-4 space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-foreground mb-1">Título do Snippet</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: Consulta Clientes com Bloqueio"
+                  value={snippetTitle}
+                  onChange={(e) => setSnippetTitle(e.target.value)}
+                  className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-foreground mb-1">Categoria</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Vendas, Estoque, Auditoria"
+                  value={snippetCategory}
+                  onChange={(e) => setSnippetCategory(e.target.value)}
+                  className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-foreground mb-1">Descrição (opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Filtra apenas clientes ativos da filial 1"
+                  value={snippetDesc}
+                  onChange={(e) => setSnippetDesc(e.target.value)}
+                  className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-foreground mb-1">SQL a Salvar</label>
+                <pre className="p-2.5 rounded bg-[#0B0F17] font-mono text-emerald-300 text-[11px] max-h-24 overflow-auto whitespace-pre-wrap">
+                  {sql}
+                </pre>
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
+                <button
+                  type="button"
+                  onClick={() => setIsSaveSnippetModalOpen(false)}
+                  className="px-3 py-1.5 rounded-lg border border-border/70 text-muted-foreground hover:text-foreground transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition flex items-center gap-1.5"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5" /> Salvar Snippet
+                </button>
               </div>
             </form>
           </div>

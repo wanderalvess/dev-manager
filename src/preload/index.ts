@@ -31,7 +31,9 @@ import type {
   DeployProfile,
   InstallBundleRequest,
   ReinstallBundleRequest,
-  UpdateBundleVersionRequest
+  UpdateBundleVersionRequest,
+  TableColumnInfo,
+  DockerContainerStats
 } from '../shared/types';
 
 const electronAPI = {
@@ -194,7 +196,10 @@ const electronAPI = {
   searchDocs: (query: string, options?: { sourceLabel?: string; topK?: number }): Promise<DocSearchResult[]> =>
     ipcRenderer.invoke('docs:search', query, options),
   getDocsIndexStatus: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:get-status'),
-  openDocFile: (filePath: string): Promise<boolean> => ipcRenderer.invoke('docs:open-file', filePath),
+  openDocFile: (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> =>
+    ipcRenderer.invoke('docs:open-file', filePath, mode),
+  readDocContent: (filePath: string): Promise<string | null> =>
+    ipcRenderer.invoke('docs:read-content', filePath),
   onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => {
     const subscription = (_: any, progress: DocsIndexProgress) => callback(progress);
     ipcRenderer.on('docs:index-progress', subscription);
@@ -219,8 +224,10 @@ const electronAPI = {
     ipcRenderer.invoke('db:explain-plan', config, sql),
   listDbTables: (config: DatabaseConnectionConfig): Promise<string[]> =>
     ipcRenderer.invoke('db:list-tables', config),
+  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
+    ipcRenderer.invoke('db:get-table-columns', config, tableName),
 
-  // Gerenciador de Containers Docker
+  // Gerenciador de Containers (Docker / Podman)
   getDockerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('docker:get-status'),
   listDockerContainers: (): Promise<DockerContainerInfo[]> => ipcRenderer.invoke('docker:list-containers'),
   startDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:start', containerId),
@@ -229,6 +236,24 @@ const electronAPI = {
   getDockerLogs: (containerId: string, lines?: number): Promise<string> =>
     ipcRenderer.invoke('docker:logs', containerId, lines),
   removeDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:remove', containerId),
+  getDockerContainerStats: (): Promise<DockerContainerStats[]> =>
+    ipcRenderer.invoke('docker:get-stats'),
+  openDockerContainerTerminal: (containerId: string, shell?: string): Promise<boolean> =>
+    ipcRenderer.invoke('docker:open-terminal', containerId, shell),
+
+  // Métodos genéricos de containers
+  getContainerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('container:get-status'),
+  listContainers: (): Promise<DockerContainerInfo[]> => ipcRenderer.invoke('container:list-containers'),
+  startContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:start', containerId),
+  stopContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:stop', containerId),
+  restartContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:restart', containerId),
+  getContainerLogs: (containerId: string, lines?: number): Promise<string> =>
+    ipcRenderer.invoke('container:logs', containerId, lines),
+  removeContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:remove', containerId),
+  getContainerStats: (): Promise<DockerContainerStats[]> =>
+    ipcRenderer.invoke('container:get-stats'),
+  openContainerTerminal: (containerId: string, shell?: string): Promise<boolean> =>
+    ipcRenderer.invoke('container:open-terminal', containerId, shell),
 
   // Rede & Detecção de IPs (Local e WSL)
   getNetworkIps: (): Promise<NetworkIpInfo> => ipcRenderer.invoke('network:get-ips'),

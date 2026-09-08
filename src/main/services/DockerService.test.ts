@@ -16,4 +16,13 @@ describe('DockerService', () => {
     expect((service as any).isValidContainerId('container & echo test')).toBe(false);
     expect((service as any).isValidContainerId('container | cat')).toBe(false);
   });
+
+  it('permite definir e recuperar engine explicitamente (docker / podman)', async () => {
+    const service = new DockerService();
+    service.setEngineCommand('podman');
+    expect(await service.getEngineCommand()).toBe('podman');
+
+    service.setEngineCommand('docker');
+    expect(await service.getEngineCommand()).toBe('docker');
+  });
 });

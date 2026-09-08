@@ -37,7 +37,9 @@ import type {
   GitDiffResult,
   SystemMetrics,
   HttpHealthResult,
-  DeployProfile
+  DeployProfile,
+  TableColumnInfo,
+  DockerContainerStats
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -158,7 +160,8 @@ export interface ElectronAPI {
   reindexDocs: () => Promise<DocsIndexStatus>;
   searchDocs: (query: string, options?: { sourceLabel?: string; topK?: number }) => Promise<DocSearchResult[]>;
   getDocsIndexStatus: () => Promise<DocsIndexStatus>;
-  openDocFile: (filePath: string) => Promise<boolean>;
+  openDocFile: (filePath: string, mode?: 'editor' | 'folder') => Promise<boolean>;
+  readDocContent: (filePath: string) => Promise<string | null>;
   onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => () => void;
 
   // Configurações
@@ -172,8 +175,9 @@ export interface ElectronAPI {
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number) => Promise<QueryResult>;
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
+  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
 
-  // Gerenciador de Containers Docker
+  // Gerenciador de Containers (Docker / Podman)
   getDockerStatus: () => Promise<DockerDaemonStatus>;
   listDockerContainers: () => Promise<DockerContainerInfo[]>;
   startDockerContainer: (containerId: string) => Promise<boolean>;
@@ -181,6 +185,19 @@ export interface ElectronAPI {
   restartDockerContainer: (containerId: string) => Promise<boolean>;
   getDockerLogs: (containerId: string, lines?: number) => Promise<string>;
   removeDockerContainer: (containerId: string) => Promise<boolean>;
+  getDockerContainerStats: () => Promise<DockerContainerStats[]>;
+  openDockerContainerTerminal: (containerId: string, shell?: string) => Promise<boolean>;
+
+  // Métodos genéricos de containers
+  getContainerStatus?: () => Promise<DockerDaemonStatus>;
+  listContainers?: () => Promise<DockerContainerInfo[]>;
+  startContainer?: (containerId: string) => Promise<boolean>;
+  stopContainer?: (containerId: string) => Promise<boolean>;
+  restartContainer?: (containerId: string) => Promise<boolean>;
+  getContainerLogs?: (containerId: string, lines?: number) => Promise<string>;
+  removeContainer?: (containerId: string) => Promise<boolean>;
+  getContainerStats?: () => Promise<DockerContainerStats[]>;
+  openContainerTerminal?: (containerId: string, shell?: string) => Promise<boolean>;
 
   // Rede & Detecção de IPs (Local e WSL)
   getNetworkIps: () => Promise<NetworkIpInfo>;

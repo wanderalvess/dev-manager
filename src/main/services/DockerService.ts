@@ -1,13 +1,50 @@
 import fs from 'fs';
-import { DockerContainerInfo, DockerDaemonStatus } from '../../shared/types';
+import { spawn } from 'child_process';
+import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats } from '../../shared/types';
 import { execFileAsync, isValidIdentifier, isSafeDockerImageTag, isSafeLocalPath } from '../utils/security';
 import { runCapturedProcess } from '../utils/process';
 
 export class DockerService {
+  private detectedEngine: 'docker' | 'podman' | null = null;
+
   /**
-   * Verifica se o executável do Docker está instalado no sistema e se o Docker Daemon está em execução.
+   * Identifica e retorna o comando do motor de container disponível ('docker' ou 'podman').
+   * Permite operação transparente em redes corporativas com restrição ao Docker Desktop.
+   */
+  public async getEngineCommand(): Promise<'docker' | 'podman'> {
+    if (this.detectedEngine) {
+      return this.detectedEngine;
+    }
+
+    // Testa primeiro o Docker
+    try {
+      await execFileAsync('docker', ['--version'], { timeout: 3000, windowsHide: true });
+      this.detectedEngine = 'docker';
+      return 'docker';
+    } catch {
+      // Se docker falhar ou não estiver no PATH, tenta podman
+      try {
+        await execFileAsync('podman', ['--version'], { timeout: 3000, windowsHide: true });
+        this.detectedEngine = 'podman';
+        return 'podman';
+      } catch {
+        return 'docker';
+      }
+    }
+  }
+
+  /**
+   * Força a definição do comando de engine (útil para testes ou configurações customizadas).
+   */
+  public setEngineCommand(engine: 'docker' | 'podman' | null): void {
+    this.detectedEngine = engine;
+  }
+
+  /**
+   * Verifica se o executável do Docker ou Podman está instalado no sistema e se o serviço está em execução.
    */
   public async checkDockerStatus(): Promise<DockerDaemonStatus> {
+    // 1. Tentar Docker primeiro
     try {
       const { stdout } = await execFileAsync('docker', ['version', '--format', '{{.Server.Version}}'], {
         timeout: 5000,
@@ -15,28 +52,61 @@ export class DockerService {
       });
 
       const version = stdout.trim();
+      this.detectedEngine = 'docker';
       return {
         installed: true,
         running: true,
-        version: version || 'Instalado'
+        engine: 'docker',
+        version: version || 'Docker Ativo'
       };
-    } catch (err: any) {
-      const msg = String(err?.message || '');
-      // Se deu erro de ENOENT, não está no PATH / instalado
-      if (msg.includes('ENOENT') || err?.code === 'ENOENT') {
+    } catch (dockerErr: any) {
+      // 2. Se Docker falhou ou não existe, tentar Podman (comum em redes corporativas restritas)
+      try {
+        const { stdout } = await execFileAsync('podman', ['version', '--format', '{{.Server.Version}}'], {
+          timeout: 5000,
+          windowsHide: true
+        });
+
+        const version = stdout.trim();
+        this.detectedEngine = 'podman';
+        return {
+          installed: true,
+          running: true,
+          engine: 'podman',
+          version: version || 'Podman Ativo'
+        };
+      } catch (podmanErr: any) {
+        // Verificar se ao menos o binário de um deles está presente
+        let hasDockerBinary = false;
+        let hasPodmanBinary = false;
+
+        try {
+          await execFileAsync('docker', ['--version'], { timeout: 2000, windowsHide: true });
+          hasDockerBinary = true;
+        } catch {}
+
+        try {
+          await execFileAsync('podman', ['--version'], { timeout: 2000, windowsHide: true });
+          hasPodmanBinary = true;
+        } catch {}
+
+        if (hasDockerBinary || hasPodmanBinary) {
+          const engineName = hasPodmanBinary && !hasDockerBinary ? 'Podman' : 'Docker';
+          this.detectedEngine = hasPodmanBinary && !hasDockerBinary ? 'podman' : 'docker';
+          return {
+            installed: true,
+            running: false,
+            engine: this.detectedEngine,
+            error: `O serviço de containers (${engineName}) não está em execução. Inicie o serviço ou daemon local.`
+          };
+        }
+
         return {
           installed: false,
           running: false,
-          error: 'Docker não está instalado ou não foi encontrado no PATH do sistema.'
+          error: 'Nenhum motor de containers (Docker ou Podman) foi encontrado no PATH do sistema.'
         };
       }
-
-      // Docker está instalado, mas o daemon está desligado (ex: Docker Desktop fechado)
-      return {
-        installed: true,
-        running: false,
-        error: 'O serviço do Docker não está rodando. Inicie o Docker Desktop ou o serviço do Docker.'
-      };
     }
   }
 
@@ -45,8 +115,9 @@ export class DockerService {
    */
   public async listContainers(): Promise<DockerContainerInfo[]> {
     try {
+      const engine = await this.getEngineCommand();
       const { stdout } = await execFileAsync(
-        'docker',
+        engine,
         ['ps', '-a', '--format', '{"id":"{{.ID}}","names":"{{.Names}}","image":"{{.Image}}","state":"{{.State}}","status":"{{.Status}}","ports":"{{.Ports}}","created":"{{.CreatedAt}}"}'],
         {
           timeout: 8000,
@@ -83,10 +154,10 @@ export class DockerService {
     } catch (err: any) {
       const msg = String(err?.message || '');
       if (err?.code === 'ENOENT' || msg.includes('ENOENT')) {
-        // Docker não está instalado ou não está no PATH
+        // Engine não está instalada ou não está no PATH
         return [];
       }
-      console.warn('[DockerService] Docker indisponível ou offline:', err?.message || err);
+      console.warn('[DockerService] Motor de containers indisponível ou offline:', err?.message || err);
       return [];
     }
   }
@@ -100,7 +171,8 @@ export class DockerService {
     }
 
     try {
-      await execFileAsync('docker', ['start', containerId], {
+      const engine = await this.getEngineCommand();
+      await execFileAsync(engine, ['start', containerId], {
         timeout: 15000,
         windowsHide: true
       });
@@ -120,7 +192,8 @@ export class DockerService {
     }
 
     try {
-      await execFileAsync('docker', ['stop', containerId], {
+      const engine = await this.getEngineCommand();
+      await execFileAsync(engine, ['stop', containerId], {
         timeout: 20000,
         windowsHide: true
       });
@@ -140,7 +213,8 @@ export class DockerService {
     }
 
     try {
-      await execFileAsync('docker', ['restart', containerId], {
+      const engine = await this.getEngineCommand();
+      await execFileAsync(engine, ['restart', containerId], {
         timeout: 20000,
         windowsHide: true
       });
@@ -162,8 +236,9 @@ export class DockerService {
     const safeLines = Math.min(Math.max(Number(lines) || 200, 10), 1000);
 
     try {
+      const engine = await this.getEngineCommand();
       const { stdout, stderr } = await execFileAsync(
-        'docker',
+        engine,
         ['logs', '--tail', String(safeLines), containerId],
         {
           timeout: 10000,
@@ -187,7 +262,8 @@ export class DockerService {
     }
 
     try {
-      await execFileAsync('docker', ['rm', '-f', containerId], {
+      const engine = await this.getEngineCommand();
+      await execFileAsync(engine, ['rm', '-f', containerId], {
         timeout: 15000,
         windowsHide: true
       });
@@ -206,7 +282,7 @@ export class DockerService {
   }
 
   /**
-   * Builda uma imagem Docker a partir de um diretório de contexto, com saída em streaming.
+   * Builda uma imagem de container a partir de um diretório de contexto, com saída em streaming.
    */
   public async buildImage(
     contextPath: string,
@@ -215,54 +291,130 @@ export class DockerService {
     onChunk: (chunk: string) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
     if (!isSafeLocalPath(contextPath) || !fs.existsSync(contextPath)) {
-      const err = `[ERRO] Diretório de contexto Docker não encontrado: ${contextPath}\r\n`;
+      const err = `[ERRO] Diretório de contexto do container não encontrado: ${contextPath}\r\n`;
       onChunk(err);
       return { code: 1, stdout: '', stderr: err };
     }
     if (!isSafeDockerImageTag(imageTag)) {
-      const err = `[ERRO] Tag de imagem Docker inválida: ${imageTag}\r\n`;
+      const err = `[ERRO] Tag de imagem de container inválida: ${imageTag}\r\n`;
       onChunk(err);
       return { code: 1, stdout: '', stderr: err };
     }
 
+    const engine = await this.getEngineCommand();
     const args = ['build', '-t', imageTag];
     if (dockerfile && dockerfile.trim()) {
       args.push('-f', dockerfile.trim());
     }
     args.push(contextPath);
 
-    onChunk(`> docker ${args.join(' ')}\r\n\r\n`);
+    onChunk(`> ${engine} ${args.join(' ')}\r\n\r\n`);
 
-    const result = await runCapturedProcess('docker', args, { cwd: contextPath, windowsHide: true }, onChunk);
+    const result = await runCapturedProcess(engine, args, { cwd: contextPath, windowsHide: true }, onChunk);
     onChunk(
       result.code === 0
-        ? `\r\n[SUCESSO] Imagem "${imageTag}" construída com sucesso!\r\n`
-        : `\r\n[ERRO] Falha ao construir imagem "${imageTag}" (Código ${result.code}).\r\n`
+        ? `\r\n[SUCESSO] Imagem "${imageTag}" construída com sucesso via ${engine}!\r\n`
+        : `\r\n[ERRO] Falha ao construir imagem "${imageTag}" via ${engine} (Código ${result.code}).\r\n`
     );
     return result;
   }
 
   /**
-   * Envia (push) uma imagem Docker para o registry configurado na tag, com saída em streaming.
+   * Envia (push) uma imagem de container para o registry configurado na tag, com saída em streaming.
    */
   public async pushImage(
     imageTag: string,
     onChunk: (chunk: string) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
     if (!isSafeDockerImageTag(imageTag)) {
-      const err = `[ERRO] Tag de imagem Docker inválida: ${imageTag}\r\n`;
+      const err = `[ERRO] Tag de imagem de container inválida: ${imageTag}\r\n`;
       onChunk(err);
       return { code: 1, stdout: '', stderr: err };
     }
 
-    onChunk(`> docker push ${imageTag}\r\n\r\n`);
+    const engine = await this.getEngineCommand();
+    onChunk(`> ${engine} push ${imageTag}\r\n\r\n`);
 
-    const result = await runCapturedProcess('docker', ['push', imageTag], { windowsHide: true }, onChunk);
+    const result = await runCapturedProcess(engine, ['push', imageTag], { windowsHide: true }, onChunk);
     onChunk(
       result.code === 0
-        ? `\r\n[SUCESSO] Imagem "${imageTag}" enviada com sucesso!\r\n`
-        : `\r\n[ERRO] Falha ao enviar imagem "${imageTag}" (Código ${result.code}).\r\n`
+        ? `\r\n[SUCESSO] Imagem "${imageTag}" enviada com sucesso via ${engine}!\r\n`
+        : `\r\n[ERRO] Falha ao enviar imagem "${imageTag}" via ${engine} (Código ${result.code}).\r\n`
     );
     return result;
   }
+
+  /**
+   * Obtém as estatísticas de consumo de recursos (CPU, Memória, I/O) dos containers ativos.
+   */
+  public async getContainerStats(): Promise<DockerContainerStats[]> {
+    try {
+      const engine = await this.getEngineCommand();
+      const { stdout } = await execFileAsync(
+        engine,
+        ['stats', '--no-stream', '--format', '{"id":"{{.ID}}","name":"{{.Name}}","cpu":"{{.CPUPerc}}","mem":"{{.MemUsage}}","memPerc":"{{.MemPerc}}","netIO":"{{.NetIO}}"}'],
+        {
+          timeout: 8000,
+          windowsHide: true
+        }
+      );
+
+      const lines = stdout.trim().split('\n').filter((l) => l.trim().length > 0);
+      const stats: DockerContainerStats[] = [];
+
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line);
+          stats.push({
+            id: parsed.id || '',
+            name: parsed.name || '',
+            cpu: parsed.cpu || '0%',
+            mem: parsed.mem || '0B',
+            memPerc: parsed.memPerc || '0%',
+            netIO: parsed.netIO || '0B'
+          });
+        } catch {
+          // Linha ignorada
+        }
+      }
+
+      return stats;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Abre um terminal interativo conectado ao container selecionado.
+   */
+  public async openContainerTerminal(containerId: string, shellName = 'sh'): Promise<boolean> {
+    if (!this.isValidContainerId(containerId)) {
+      throw new Error('Identificador de container inválido.');
+    }
+
+    const safeShell = ['bash', 'sh', 'zsh', 'powershell', 'cmd'].includes(shellName) ? shellName : 'sh';
+
+    try {
+      const engine = await this.getEngineCommand();
+      const title = `Container (${engine}): ${containerId.slice(0, 12)}`;
+      const dockerArgs = `${engine} exec -it ${containerId} ${safeShell}`;
+
+      const child = spawn(
+        'cmd.exe',
+        ['/c', 'start', `"${title}"`, 'cmd.exe', '/k', dockerArgs],
+        {
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: false
+        }
+      );
+      child.unref();
+      return true;
+    } catch (err) {
+      console.error(`[DockerService] Falha ao abrir terminal para o container ${containerId}:`, err);
+      return false;
+    }
+  }
 }
+
+export const ContainerService = DockerService;

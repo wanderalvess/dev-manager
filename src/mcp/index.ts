@@ -709,16 +709,26 @@ server.registerTool(
     ok(await karafService.updateBundleVersion({ bundleId, newVersionOrLocation }, credentials))
 );
 
-// --- 3.5. Docker ---
+// --- 3.5. Containers (Docker / Podman) ---
 server.registerTool(
   'docker_status',
-  { title: 'Status do Docker', description: 'Verifica se o Docker está instalado e se o daemon está em execução.' },
+  { title: 'Status dos Containers', description: 'Verifica se o motor de containers (Docker ou Podman) está instalado e em execução.' },
+  async () => ok(await dockerService.checkDockerStatus())
+);
+server.registerTool(
+  'container_status',
+  { title: 'Status dos Containers', description: 'Verifica se o motor de containers (Docker ou Podman) está instalado e em execução.' },
   async () => ok(await dockerService.checkDockerStatus())
 );
 
 server.registerTool(
   'docker_list_containers',
-  { title: 'Listar containers', description: 'Lista todos os containers Docker locais (em execução e parados).' },
+  { title: 'Listar containers', description: 'Lista todos os containers locais (em execução e parados) via Docker ou Podman.' },
+  async () => ok(await dockerService.listContainers())
+);
+server.registerTool(
+  'container_list',
+  { title: 'Listar containers', description: 'Lista todos os containers locais (em execução e parados) via Docker ou Podman.' },
   async () => ok(await dockerService.listContainers())
 );
 
@@ -726,7 +736,22 @@ server.registerTool(
   'docker_start_container',
   {
     title: 'Iniciar container',
-    description: 'Inicia um container Docker existente pelo ID ou nome.',
+    description: 'Inicia um container existente pelo ID ou nome.',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.startContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao iniciar container');
+    }
+  }
+);
+server.registerTool(
+  'container_start',
+  {
+    title: 'Iniciar container',
+    description: 'Inicia um container existente pelo ID ou nome.',
     inputSchema: { containerId: z.string() }
   },
   async ({ containerId }) => {
@@ -742,7 +767,22 @@ server.registerTool(
   'docker_stop_container',
   {
     title: 'Parar container',
-    description: 'Para um container Docker em execução pelo ID ou nome.',
+    description: 'Para um container em execução pelo ID ou nome.',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.stopContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao parar container');
+    }
+  }
+);
+server.registerTool(
+  'container_stop',
+  {
+    title: 'Parar container',
+    description: 'Para um container em execução pelo ID ou nome.',
     inputSchema: { containerId: z.string() }
   },
   async ({ containerId }) => {
@@ -758,7 +798,22 @@ server.registerTool(
   'docker_restart_container',
   {
     title: 'Reiniciar container',
-    description: 'Reinicia um container Docker pelo ID ou nome.',
+    description: 'Reinicia um container pelo ID ou nome.',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.restartContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao reiniciar container');
+    }
+  }
+);
+server.registerTool(
+  'container_restart',
+  {
+    title: 'Reiniciar container',
+    description: 'Reinicia um container pelo ID ou nome.',
     inputSchema: { containerId: z.string() }
   },
   async ({ containerId }) => {
@@ -774,7 +829,22 @@ server.registerTool(
   'docker_get_container_logs',
   {
     title: 'Logs do container',
-    description: 'Retorna as últimas linhas de log de um container Docker.',
+    description: 'Retorna as últimas linhas de log de um container.',
+    inputSchema: { containerId: z.string(), lines: z.number().int().optional() }
+  },
+  async ({ containerId, lines }) => {
+    try {
+      return ok({ logs: await dockerService.getContainerLogs(containerId, lines) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao obter logs do container');
+    }
+  }
+);
+server.registerTool(
+  'container_logs',
+  {
+    title: 'Logs do container',
+    description: 'Retorna as últimas linhas de log de um container.',
     inputSchema: { containerId: z.string(), lines: z.number().int().optional() }
   },
   async ({ containerId, lines }) => {
@@ -790,7 +860,7 @@ server.registerTool(
   'docker_remove_container',
   {
     title: 'Remover container',
-    description: 'Remove forçadamente um container Docker pelo ID ou nome (irreversível).',
+    description: 'Remove forçadamente um container pelo ID ou nome (irreversível).',
     inputSchema: { containerId: z.string() }
   },
   async ({ containerId }) => {
@@ -800,6 +870,38 @@ server.registerTool(
       return fail(err.message || 'Falha ao remover container');
     }
   }
+);
+server.registerTool(
+  'container_remove',
+  {
+    title: 'Remover container',
+    description: 'Remove forçadamente um container pelo ID ou nome (irreversível).',
+    inputSchema: { containerId: z.string() }
+  },
+  async ({ containerId }) => {
+    try {
+      return ok({ success: await dockerService.removeContainer(containerId) });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao remover container');
+    }
+  }
+);
+
+server.registerTool(
+  'docker_get_stats',
+  {
+    title: 'Estatísticas dos containers',
+    description: 'Retorna estatísticas de uso de CPU, memória e rede dos containers ativos (Docker ou Podman).'
+  },
+  async () => ok(await dockerService.getContainerStats())
+);
+server.registerTool(
+  'container_get_stats',
+  {
+    title: 'Estatísticas dos containers',
+    description: 'Retorna estatísticas de uso de CPU, memória e rede dos containers ativos (Docker ou Podman).'
+  },
+  async () => ok(await dockerService.getContainerStats())
 );
 
 // --- 4. Git & Azure DevOps ---
@@ -1071,6 +1173,27 @@ server.registerTool(
     }
     const tables = await databaseService.listTables(targetConfig);
     return ok({ tables, count: tables.length });
+  }
+);
+
+server.registerTool(
+  'db_get_table_columns',
+  {
+    title: 'Obter colunas da tabela',
+    description: 'Lista as colunas, tipos de dados e chaves de uma tabela no Oracle, PostgreSQL ou MySQL.',
+    inputSchema: {
+      tableName: z.string(),
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional()
+    }
+  },
+  async ({ tableName, connectionId, config }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const columns = await databaseService.getTableColumns(targetConfig, tableName);
+    return ok({ tableName, columns, count: columns.length });
   }
 );
 

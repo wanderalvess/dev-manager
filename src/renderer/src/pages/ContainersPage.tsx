@@ -16,9 +16,10 @@ import {
   HardDrive,
   RefreshCw,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  Cpu
 } from 'lucide-react';
-import { DockerContainerInfo, DockerDaemonStatus } from '../../../shared/types';
+import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 export const ContainersPage: React.FC = () => {
@@ -27,6 +28,8 @@ export const ContainersPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<Record<string, 'start' | 'stop' | 'restart' | 'remove'>>({});
+  const [containerStats, setContainerStats] = useState<Record<string, DockerContainerStats>>({});
+  const [isOpeningTerminal, setIsOpeningTerminal] = useState<Record<string, boolean>>({});
 
   // Modal de Logs
   const [selectedContainer, setSelectedContainer] = useState<DockerContainerInfo | null>(null);
@@ -34,6 +37,37 @@ export const ContainersPage: React.FC = () => {
   const [isLoadingLogs, setIsLoadingLogs] = useState<boolean>(false);
   const [logLines, setLogLines] = useState<number>(200);
   const { copy: copyLogsToClipboard, copiedKey: copyFeedback } = useCopyToClipboard();
+
+  // Carregar Métricas de Recursos (docker stats)
+  const loadDockerStats = useCallback(async () => {
+    if (!window.electronAPI?.getDockerContainerStats) return;
+    try {
+      const statsList = await window.electronAPI.getDockerContainerStats();
+      if (Array.isArray(statsList)) {
+        const map: Record<string, DockerContainerStats> = {};
+        for (const s of statsList) {
+          map[s.id] = s;
+          if (s.name) map[s.name] = s;
+        }
+        setContainerStats(map);
+      }
+    } catch {
+      // Falha silenciosa caso o daemon esteja oscilando
+    }
+  }, []);
+
+  // Abrir Terminal Interativo no Container
+  const handleOpenTerminal = async (container: DockerContainerInfo) => {
+    if (!window.electronAPI?.openDockerContainerTerminal) return;
+    setIsOpeningTerminal((prev) => ({ ...prev, [container.id]: true }));
+    try {
+      await window.electronAPI.openDockerContainerTerminal(container.id);
+    } catch (err: any) {
+      setErrorMessage(`Falha ao abrir terminal do container: ${err?.message || err}`);
+    } finally {
+      setIsOpeningTerminal((prev) => ({ ...prev, [container.id]: false }));
+    }
+  };
 
   // Carregar Status do Docker e Containers
   const isLoadingDockerRef = useRef(false);
@@ -53,6 +87,7 @@ export const ContainersPage: React.FC = () => {
             ? await window.electronAPI.listDockerContainers()
             : [];
           setContainers(list || []);
+          loadDockerStats();
         } else {
           setContainers([]);
         }
@@ -63,13 +98,17 @@ export const ContainersPage: React.FC = () => {
       setIsLoading(false);
       isLoadingDockerRef.current = false;
     }
-  }, []);
+  }, [loadDockerStats]);
 
   useEffect(() => {
     loadDockerData();
     const interval = setInterval(loadDockerData, 12000);
-    return () => clearInterval(interval);
-  }, [loadDockerData]);
+    const statsInterval = setInterval(loadDockerStats, 6000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(statsInterval);
+    };
+  }, [loadDockerData, loadDockerStats]);
 
   // Modais de Confirmação e Erro
   const [containerToRemove, setContainerToRemove] = useState<DockerContainerInfo | null>(null);
@@ -203,15 +242,16 @@ export const ContainersPage: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h2 className="text-sm font-bold text-foreground">Gerenciador de Containers Docker</h2>
+              <h2 className="text-sm font-bold text-foreground">Gerenciador de Containers</h2>
               {daemonStatus && (
                 daemonStatus.running ? (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" /> Docker Ativo
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+                    {daemonStatus.engine === 'podman' ? 'Podman Ativo' : daemonStatus.engine === 'docker' ? 'Docker Ativo' : 'Containers Ativo'}
                   </span>
                 ) : (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30 flex items-center gap-1.5">
-                    <AlertCircle className="w-3 h-3" /> Docker Inativo
+                    <AlertCircle className="w-3 h-3" /> Containers Inativo
                   </span>
                 )
               )}
@@ -261,13 +301,13 @@ export const ContainersPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Alerta caso Docker não esteja rodando */}
+      {/* Alerta caso Docker/Podman não esteja rodando */}
       {daemonStatus && !daemonStatus.running && (
         <div className="p-3 m-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs text-amber-800 dark:text-amber-300">
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <span>
-              {daemonStatus.error || 'O Docker Daemon não está respondendo. Inicie o Docker Desktop ou verifique o serviço.'}
+              {daemonStatus.error || 'O serviço de containers (Docker / Podman) não está respondendo. Inicie o serviço ou daemon local.'}
             </span>
           </div>
           <button
@@ -287,7 +327,7 @@ export const ContainersPage: React.FC = () => {
             <p className="text-sm font-semibold text-foreground">Nenhum container encontrado</p>
             <p className="text-muted-foreground max-w-sm text-center">
               {containers.length === 0
-                ? 'Certifique-se de que o Docker está instalado e você possui containers criados ou use docker run / docker compose up.'
+                ? 'Certifique-se de que um motor de containers (Docker ou Podman) está instalado e em execução ou crie novos containers.'
                 : 'Nenhum container corresponde ao filtro informado.'}
             </p>
           </div>
@@ -296,6 +336,13 @@ export const ContainersPage: React.FC = () => {
             {filteredContainers.map((container) => {
               const isLoadingAction = actionLoading[container.id];
               const isRunning = container.state === 'running';
+              const cleanName = container.names.replace(/^\//, '');
+              const stats =
+                containerStats[container.id] ||
+                containerStats[cleanName] ||
+                Object.values(containerStats).find(
+                  (s) => s.id.startsWith(container.id.slice(0, 10)) || s.name === cleanName
+                );
 
               return (
                 <div
@@ -317,7 +364,7 @@ export const ContainersPage: React.FC = () => {
                     <div className="flex flex-col truncate min-w-0">
                       <div className="flex items-center space-x-2">
                         <span className="font-bold text-foreground text-xs truncate">
-                          {container.names.replace(/^\//, '')}
+                          {cleanName}
                         </span>
                         {getStateBadge(container.state)}
                         <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.2 rounded border border-border/40">
@@ -338,6 +385,26 @@ export const ContainersPage: React.FC = () => {
                           {container.status}
                         </span>
                       </div>
+
+                      {/* Métricas de Recursos em Tempo Real */}
+                      {isRunning && stats && (
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/30 font-semibold"
+                            title={`Uso de CPU: ${stats.cpu}`}
+                          >
+                            <Cpu className="w-3 h-3 text-sky-400" />
+                            <span>CPU: {stats.cpu}</span>
+                          </span>
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/30 font-semibold"
+                            title={`Uso de Memória: ${stats.mem} (${stats.memPerc})`}
+                          >
+                            <Activity className="w-3 h-3 text-purple-400" />
+                            <span>RAM: {stats.mem} ({stats.memPerc})</span>
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -372,6 +439,19 @@ export const ContainersPage: React.FC = () => {
                       >
                         <Play className="w-3 h-3 fill-current" />
                         <span>Iniciar</span>
+                      </button>
+                    )}
+
+                    {/* Terminal Interativo */}
+                    {isRunning && (
+                      <button
+                        onClick={() => handleOpenTerminal(container)}
+                        disabled={Boolean(isOpeningTerminal[container.id])}
+                        title="Abrir terminal interativo do container em nova janela (exec -it)"
+                        className="flex items-center space-x-1 px-2.5 py-1.5 bg-card hover:bg-muted text-sky-400 hover:text-sky-300 border border-sky-500/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+                      >
+                        <Terminal className="w-3.5 h-3.5" />
+                        <span>{isOpeningTerminal[container.id] ? 'Abrindo...' : 'Terminal'}</span>
                       </button>
                     )}
 

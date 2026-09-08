@@ -413,7 +413,7 @@ export function registerIpcHandlers(
     return docsIndexService.getStatus();
   });
 
-  ipcMain.handle('docs:open-file', async (_, filePath: string) => {
+  ipcMain.handle('docs:open-file', async (_, filePath: string, mode?: 'editor' | 'folder') => {
     const settings = configService.getSettings();
     const allowedBaseDirs = [settings.projectsPath, ...(settings.docFolders || []).map((f) => f.path)].filter(Boolean);
     const isAllowed = allowedBaseDirs.some((base) => isSafePath(filePath, base));
@@ -421,8 +421,39 @@ export function registerIpcHandlers(
       console.warn('[Segurança] Bloqueada tentativa de abrir arquivo fora das pastas de documentação configuradas:', filePath);
       return false;
     }
+    if (mode === 'editor') {
+      try {
+        await shell.openPath(filePath);
+        return true;
+      } catch {
+        shell.showItemInFolder(filePath);
+        return true;
+      }
+    }
     shell.showItemInFolder(filePath);
     return true;
+  });
+
+  ipcMain.handle('docs:read-content', async (_, filePath: string) => {
+    const settings = configService.getSettings();
+    const allowedBaseDirs = [settings.projectsPath, ...(settings.docFolders || []).map((f) => f.path)].filter(Boolean);
+    const isAllowed = allowedBaseDirs.some((base) => isSafePath(filePath, base));
+    if (!isAllowed) {
+      console.warn('[Segurança] Bloqueada leitura de arquivo fora das pastas permitidas:', filePath);
+      return null;
+    }
+    try {
+      if (fs.existsSync(filePath)) {
+        const stats = fs.statSync(filePath);
+        if (stats.size > 2 * 1024 * 1024) {
+          return '(Arquivo muito grande para pré-visualização direta. Abra no editor externo.)';
+        }
+        return fs.readFileSync(filePath, 'utf-8');
+      }
+    } catch (err) {
+      console.error('[Docs] Falha ao ler conteúdo do arquivo:', err);
+    }
+    return null;
   });
 
   // --- Configurações ---
@@ -459,33 +490,72 @@ export function registerIpcHandlers(
     return await databaseService.listTables(config);
   });
 
-  // --- Gerenciador de Containers Docker ---
+  ipcMain.handle('db:get-table-columns', async (_, config: DatabaseConnectionConfig, tableName: string) => {
+    return await databaseService.getTableColumns(config, tableName);
+  });
+
+  // --- Gerenciador de Containers (Docker / Podman) ---
   ipcMain.handle('docker:get-status', async () => {
+    return await dockerService.checkDockerStatus();
+  });
+  ipcMain.handle('container:get-status', async () => {
     return await dockerService.checkDockerStatus();
   });
 
   ipcMain.handle('docker:list-containers', async () => {
     return await dockerService.listContainers();
   });
+  ipcMain.handle('container:list-containers', async () => {
+    return await dockerService.listContainers();
+  });
 
   ipcMain.handle('docker:start', async (_, containerId: string) => {
+    return await dockerService.startContainer(containerId);
+  });
+  ipcMain.handle('container:start', async (_, containerId: string) => {
     return await dockerService.startContainer(containerId);
   });
 
   ipcMain.handle('docker:stop', async (_, containerId: string) => {
     return await dockerService.stopContainer(containerId);
   });
+  ipcMain.handle('container:stop', async (_, containerId: string) => {
+    return await dockerService.stopContainer(containerId);
+  });
 
   ipcMain.handle('docker:restart', async (_, containerId: string) => {
+    return await dockerService.restartContainer(containerId);
+  });
+  ipcMain.handle('container:restart', async (_, containerId: string) => {
     return await dockerService.restartContainer(containerId);
   });
 
   ipcMain.handle('docker:logs', async (_, containerId: string, lines?: number) => {
     return await dockerService.getContainerLogs(containerId, lines);
   });
+  ipcMain.handle('container:logs', async (_, containerId: string, lines?: number) => {
+    return await dockerService.getContainerLogs(containerId, lines);
+  });
 
   ipcMain.handle('docker:remove', async (_, containerId: string) => {
     return await dockerService.removeContainer(containerId);
+  });
+  ipcMain.handle('container:remove', async (_, containerId: string) => {
+    return await dockerService.removeContainer(containerId);
+  });
+
+  ipcMain.handle('docker:get-stats', async () => {
+    return await dockerService.getContainerStats();
+  });
+  ipcMain.handle('container:get-stats', async () => {
+    return await dockerService.getContainerStats();
+  });
+
+  ipcMain.handle('docker:open-terminal', async (_, containerId: string, shellName?: string) => {
+    return await dockerService.openContainerTerminal(containerId, shellName);
+  });
+  ipcMain.handle('container:open-terminal', async (_, containerId: string, shellName?: string) => {
+    return await dockerService.openContainerTerminal(containerId, shellName);
   });
 
   // --- Rede & Detecção de IPs (Local e WSL) ---

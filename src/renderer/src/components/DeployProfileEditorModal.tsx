@@ -53,19 +53,19 @@ const STEP_TYPE_OPTIONS: { type: DeployStepType; label: string; desc: string; ic
   },
   {
     type: 'docker-build',
-    label: 'Docker: Build de Imagem',
-    desc: 'Builda uma imagem a partir de um Dockerfile',
+    label: 'Container: Build de Imagem',
+    desc: 'Builda uma imagem a partir de um Dockerfile / Containerfile',
     icon: Package
   },
   {
     type: 'docker-push',
-    label: 'Docker: Push de Imagem',
-    desc: 'Envia a imagem construída para o registry',
+    label: 'Container: Push de Imagem',
+    desc: 'Envia a imagem construída para o registry de containers',
     icon: UploadCloud
   },
   {
     type: 'docker-restart',
-    label: 'Docker: Reiniciar Container',
+    label: 'Container: Reiniciar Container',
     desc: 'Reinicia um container já existente pelo nome ou ID',
     icon: RotateCcw
   },
@@ -86,9 +86,9 @@ const stepTypeDefaultName = (type: DeployStepType): string => {
     case 'karaf-bundle':
       return 'Ação de Bundle OSGi';
     case 'docker-build':
-      return 'Docker Build';
+      return 'Container Build';
     case 'docker-push':
-      return 'Docker Push';
+      return 'Container Push';
     case 'docker-restart':
       return 'Reiniciar Container';
     case 'command':
@@ -255,7 +255,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                 {profile ? 'Editar Perfil de Deploy' : 'Novo Perfil de Deploy'}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Defina a sequência de build e publicação (Karaf, Docker ou comandos genéricos)
+                Defina a sequência de build e publicação (Karaf, Containers ou comandos genéricos)
               </p>
             </div>
           </div>
@@ -277,7 +277,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Deploy Karaf OSGi, Deploy Docker Produção..."
+              placeholder="Ex: Deploy Karaf OSGi, Deploy Container Produção..."
               className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
@@ -440,7 +440,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                     type="text"
                     value={editingStep.name}
                     onChange={(e) => handleUpdateCurrentStep({ name: e.target.value })}
-                    placeholder="Ex: Build Maven, Instalar Feature, Build Imagem Docker..."
+                    placeholder="Ex: Build Maven, Instalar Feature, Build Imagem Container..."
                     className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
@@ -623,7 +623,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                   </div>
                 )}
 
-                {/* Campos: Docker Build */}
+                {/* Campos: Container Build */}
                 {editingStep.type === 'docker-build' && (
                   <>
                     <div>
@@ -650,7 +650,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                          Dockerfile (opcional)
+                          Dockerfile / Containerfile (opcional)
                         </label>
                         <input
                           type="text"

@@ -9,7 +9,11 @@ import {
   X,
   Download,
   Plus,
-  Trash2
+  Trash2,
+  Eye,
+  ExternalLink,
+  Copy,
+  Check
 } from 'lucide-react';
 import { DocFolderConfig, DocSearchResult, DocsIndexProgress, DocsIndexStatus } from '../../../shared/types';
 
@@ -36,6 +40,12 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
   const [progress, setProgress] = useState<DocsIndexProgress | null>(null);
   const [docFolders, setDocFolders] = useState<DocFolderConfig[]>([]);
   const [isAddingFolder, setIsAddingFolder] = useState<boolean>(false);
+
+  // Modal de Prévia de Documento
+  const [previewFile, setPreviewFile] = useState<{ path: string; title: string } | null>(null);
+  const [previewContent, setPreviewContent] = useState<string>('');
+  const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
+  const [copiedPreview, setCopiedPreview] = useState<boolean>(false);
 
   const loadStatus = async () => {
     if (window.electronAPI) {
@@ -107,8 +117,37 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
     }
   };
 
-  const handleOpenFile = (filePath: string) => {
-    window.electronAPI?.openDocFile(filePath);
+  const handleOpenInEditor = (filePath: string) => {
+    window.electronAPI?.openDocFile(filePath, 'editor');
+  };
+
+  const handleOpenInFolder = (filePath: string) => {
+    window.electronAPI?.openDocFile(filePath, 'folder');
+  };
+
+  const handleOpenPreview = async (filePath: string, title: string) => {
+    setPreviewFile({ path: filePath, title });
+    setIsLoadingPreview(true);
+    setPreviewContent('');
+    try {
+      if (window.electronAPI?.readDocContent) {
+        const text = await window.electronAPI.readDocContent(filePath);
+        setPreviewContent(text || '(Arquivo vazio)');
+      } else {
+        setPreviewContent('(Visualizador não disponível no ambiente web)');
+      }
+    } catch (err: any) {
+      setPreviewContent(`Erro ao ler arquivo: ${err?.message || err}`);
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  const handleCopyPreview = () => {
+    if (!previewContent) return;
+    navigator.clipboard.writeText(previewContent);
+    setCopiedPreview(true);
+    setTimeout(() => setCopiedPreview(false), 2000);
   };
 
   const hasIndex = !!status && status.totalChunks > 0;
@@ -320,14 +359,30 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
                   {result.chunk.entryTitle}
                 </span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[10px] font-mono text-muted-foreground">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-mono text-muted-foreground mr-1">
                   {(result.score * 100).toFixed(0)}% relevante
                 </span>
                 <button
-                  onClick={() => handleOpenFile(result.chunk.entryId)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                  title="Abrir localização do arquivo"
+                  onClick={() => handleOpenPreview(result.chunk.entryId, result.chunk.entryTitle)}
+                  className="px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+                  title="Pré-visualizar documento completo"
+                >
+                  <Eye className="w-3.5 h-3.5 text-primary" />
+                  <span className="hidden sm:inline">Prévia</span>
+                </button>
+                <button
+                  onClick={() => handleOpenInEditor(result.chunk.entryId)}
+                  className="px-2 py-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+                  title="Abrir arquivo no editor padrão do sistema / VS Code"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Editor</span>
+                </button>
+                <button
+                  onClick={() => handleOpenInFolder(result.chunk.entryId)}
+                  className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  title="Revelar na pasta"
                 >
                   <FolderOpen className="w-3.5 h-3.5" />
                 </button>
@@ -339,6 +394,70 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
           </div>
         ))}
       </div>
+
+      {/* Modal de Prévia do Documento */}
+      {previewFile && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-foreground truncate">{previewFile.title}</h4>
+                  <p className="text-[11px] text-muted-foreground font-mono truncate">{previewFile.path}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  onClick={handleCopyPreview}
+                  className="flex items-center space-x-1 px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs text-foreground transition cursor-pointer"
+                  title="Copiar conteúdo do documento"
+                >
+                  {copiedPreview ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedPreview ? 'Copiado!' : 'Copiar'}</span>
+                </button>
+                <button
+                  onClick={() => handleOpenInEditor(previewFile.path)}
+                  className="flex items-center space-x-1 px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-semibold transition cursor-pointer shadow-sm"
+                  title="Abrir no editor padrão do sistema"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Abrir no Editor</span>
+                </button>
+                <button
+                  onClick={() => setPreviewFile(null)}
+                  className="p-1.5 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-5 bg-background/50 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text text-foreground">
+              {isLoadingPreview ? (
+                <div className="h-full flex items-center justify-center text-muted-foreground gap-2">
+                  <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+                  <span>Carregando conteúdo do arquivo...</span>
+                </div>
+              ) : (
+                previewContent
+              )}
+            </div>
+
+            <div className="p-3 border-t border-border bg-muted/20 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPreviewFile(null)}
+                className="px-4 py-1.5 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 rounded-xl transition cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

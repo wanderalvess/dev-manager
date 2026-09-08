@@ -37,7 +37,9 @@ import type {
   GitDiffResult,
   SystemMetrics,
   HttpHealthResult,
-  DeployProfile
+  DeployProfile,
+  TableColumnInfo,
+  DockerContainerStats
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -616,9 +618,22 @@ export function initApiBridge() {
       return apiFetch('/api/docs/status');
     },
 
-    openDocFile: async (filePath: string): Promise<boolean> => {
-      window.prompt('Caminho do arquivo (copie e abra manualmente):', filePath);
+    openDocFile: async (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> => {
+      if (mode === 'folder') {
+        window.prompt('Localização do arquivo:', filePath);
+      } else {
+        window.prompt('Caminho do arquivo (copie e abra no seu editor):', filePath);
+      }
       return true;
+    },
+
+    readDocContent: async (filePath: string): Promise<string | null> => {
+      try {
+        const res = await apiFetch<{ content: string | null }>(`/api/docs/content?path=${encodeURIComponent(filePath)}`);
+        return res.content;
+      } catch {
+        return null;
+      }
     },
 
     onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => {
@@ -678,17 +693,34 @@ export function initApiBridge() {
       });
     },
 
-    // Gerenciador de Containers Docker
+    getDbTableColumns: async (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> => {
+      return apiFetch('/api/db/columns', {
+        method: 'POST',
+        body: JSON.stringify({ config, tableName })
+      });
+    },
+
+    // Gerenciador de Containers (Docker / Podman)
     getDockerStatus: async (): Promise<DockerDaemonStatus> => {
       return apiFetch('/api/docker/status');
+    },
+    getContainerStatus: async (): Promise<DockerDaemonStatus> => {
+      return apiFetch('/api/containers/status');
     },
 
     listDockerContainers: async (): Promise<DockerContainerInfo[]> => {
       return apiFetch('/api/docker/containers');
     },
+    listContainers: async (): Promise<DockerContainerInfo[]> => {
+      return apiFetch('/api/containers');
+    },
 
     startDockerContainer: async (containerId: string): Promise<boolean> => {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/start`, { method: 'POST' });
+      return res.success;
+    },
+    startContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/start`, { method: 'POST' });
       return res.success;
     },
 
@@ -696,9 +728,17 @@ export function initApiBridge() {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/stop`, { method: 'POST' });
       return res.success;
     },
+    stopContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/stop`, { method: 'POST' });
+      return res.success;
+    },
 
     restartDockerContainer: async (containerId: string): Promise<boolean> => {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/restart`, { method: 'POST' });
+      return res.success;
+    },
+    restartContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/restart`, { method: 'POST' });
       return res.success;
     },
 
@@ -706,10 +746,56 @@ export function initApiBridge() {
       const res = await apiFetch<{ logs: string }>(`/api/docker/containers/${containerId}/logs?lines=${lines || 200}`);
       return res.logs;
     },
+    getContainerLogs: async (containerId: string, lines?: number): Promise<string> => {
+      const res = await apiFetch<{ logs: string }>(`/api/containers/${containerId}/logs?lines=${lines || 200}`);
+      return res.logs;
+    },
 
     removeDockerContainer: async (containerId: string): Promise<boolean> => {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}`, { method: 'DELETE' });
       return res.success;
+    },
+    removeContainer: async (containerId: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}`, { method: 'DELETE' });
+      return res.success;
+    },
+
+    getDockerContainerStats: async (): Promise<DockerContainerStats[]> => {
+      try {
+        return await apiFetch<DockerContainerStats[]>('/api/docker/stats');
+      } catch {
+        return [];
+      }
+    },
+    getContainerStats: async (): Promise<DockerContainerStats[]> => {
+      try {
+        return await apiFetch<DockerContainerStats[]>('/api/containers/stats');
+      } catch {
+        return [];
+      }
+    },
+
+    openDockerContainerTerminal: async (containerId: string, shell?: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/terminal`, {
+          method: 'POST',
+          body: JSON.stringify({ shell })
+        });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    openContainerTerminal: async (containerId: string, shell?: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/terminal`, {
+          method: 'POST',
+          body: JSON.stringify({ shell })
+        });
+        return res.success;
+      } catch {
+        return false;
+      }
     },
 
     // Rede & Detecção de IPs (Local e WSL)

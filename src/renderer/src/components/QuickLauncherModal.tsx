@@ -10,7 +10,8 @@ import {
   RefreshCw,
   Zap,
   X,
-  Star
+  Star,
+  Box
 } from 'lucide-react';
 import { GitProjectInfo, RoutineItem } from '../../../shared/types';
 
@@ -80,10 +81,22 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         }
       },
       {
+        id: 'act-containers',
+        category: 'action',
+        title: 'Containers',
+        subtitle: 'Gerenciamento de containers (Docker / Podman), métricas e logs',
+        badge: 'Alt+3',
+        icon: Box,
+        onSelect: () => {
+          onNavigate('containers');
+          onClose();
+        }
+      },
+      {
         id: 'act-deploy',
         category: 'action',
         title: 'Deploy',
-        subtitle: 'Perfis de deploy sequenciais — Karaf, Docker ou comando genérico',
+        subtitle: 'Perfis de deploy sequenciais — Karaf, Containers ou comando genérico',
         badge: 'Alt+4',
         icon: Layers,
         onSelect: () => {
@@ -96,7 +109,7 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         category: 'action',
         title: 'Git & Azure DevOps Hub',
         subtitle: 'Sincronizar repositórios e gerar Pull Requests',
-        badge: 'Alt+3',
+        badge: 'Alt+5',
         icon: GitBranch,
         onSelect: () => {
           onNavigate('git');

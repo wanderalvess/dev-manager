@@ -146,10 +146,10 @@ export const Header: React.FC<HeaderProps> = ({
         },
         {
           id: 'containers',
-          label: 'Containers Docker',
-          shortLabel: 'Docker',
+          label: 'Containers',
+          shortLabel: 'Containers',
           icon: Box,
-          description: 'Gerenciador Docker daemon, containers & logs',
+          description: 'Gerenciador de containers, instâncias & logs',
           shortcut: 'Alt+3'
         },
         {
@@ -157,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
           label: 'Deploy & Esteiras',
           shortLabel: 'Deploy',
           icon: Layers,
-          description: 'Perfis de deploy, Docker & esteiras de automação',
+          description: 'Perfis de deploy, containers & esteiras de automação',
           shortcut: 'Alt+4'
         }
       ]

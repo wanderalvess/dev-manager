@@ -146,11 +146,11 @@ export class DeployService {
       case 'docker-restart': {
         const container = step.dockerContainer;
         if (!container) {
-          const err = `[ERRO] Etapa "${step.name}": container Docker não informado.\r\n`;
+          const err = `[ERRO] Etapa "${step.name}": container não informado.\r\n`;
           onChunk(err);
           return { code: 1, stderr: err };
         }
-        onChunk(`> docker restart ${container}\r\n`);
+        onChunk(`> reiniciando container ${container}...\r\n`);
         try {
           await this.dockerService.restartContainer(container);
           onChunk(`[SUCESSO] Container "${container}" reiniciado.\r\n`);
