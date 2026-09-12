@@ -22,8 +22,12 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.codesign
 *.local
 config.json
+
+# Certificado de assinatura de código (privado)
+certs/*.pfx
 
 # IDEs e Editores
 .idea/

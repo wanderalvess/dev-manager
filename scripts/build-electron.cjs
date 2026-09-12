@@ -15,6 +15,16 @@ const https = require('https');
 const http = require('http');
 const { spawn } = require('child_process');
 
+// Carrega credenciais de assinatura de código (CSC_LINK / CSC_KEY_PASSWORD), se existirem.
+// Gerado por scripts/generate-codesign-cert.ps1. Sem esse arquivo o build sai sem assinatura.
+const codesignEnvPath = path.join(__dirname, '..', '.env.codesign');
+if (fs.existsSync(codesignEnvPath)) {
+  require('dotenv').config({ path: codesignEnvPath });
+  console.log('[Build] Certificado de assinatura de código carregado (.env.codesign).');
+} else {
+  console.log('[Build] .env.codesign não encontrado — build sairá sem assinatura digital.');
+}
+
 // Função auxiliar para download com follow de redirects e suporte a proxy corporativo
 function downloadFile(url, destPath) {
   return new Promise((resolve, reject) => {

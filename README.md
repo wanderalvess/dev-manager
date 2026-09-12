@@ -283,6 +283,31 @@ Ambos os executáveis incluem manifesto interno configurado com `requestedExecut
 
 ---
 
+### 🔏 Assinatura de Código (Code Signing) — Distribuição para a Equipe
+
+Executáveis `.exe` sem assinatura digital disparam o aviso **"Windows protegeu seu PC" (SmartScreen)** em outros computadores, e o usuário pode desistir de instalar. Pra evitar isso na distribuição interna, o build assina automaticamente os binários com um **certificado self-signed** quando ele existe na máquina.
+
+**Como funciona:**
+- `scripts/build-electron.cjs` procura o arquivo `.env.codesign` na raiz do projeto. Se existir, carrega `CSC_LINK` e `CSC_KEY_PASSWORD` no ambiente antes de chamar o `electron-builder`, que assina o `.exe`, o instalador NSIS e o desinstalador automaticamente.
+- Sem o `.env.codesign`, o build funciona normalmente, só que sem assinatura (volta o aviso do SmartScreen).
+- O certificado (`certs/dev-manager-codesign.pfx`) e a senha (`.env.codesign`) **não vão pro Git** — são gerados uma vez por máquina de build e ficam só localmente. Faça backup deles em local seguro (ex: cofre de senhas), senão precisa gerar um novo certificado e reimportar em todo mundo.
+
+**Gerar (ou renovar) o certificado:**
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/generate-codesign-cert.ps1
+```
+Isso cria `certs/dev-manager-codesign.pfx` (privado), `certs/dev-manager-public.cer` (público) e `.env.codesign`. Validade: 5 anos.
+
+**Pra equipe não ver mais o aviso do SmartScreen**, cada pessoa importa o certificado público **uma vez**, em um PowerShell/Prompt como Administrador:
+```bash
+certutil -addstore -f "Root" dev-manager-public.cer
+```
+(arquivo `certs/dev-manager-public.cer` — pode compartilhar livremente, não contém chave privada). Depois disso, qualquer versão futura assinada com o mesmo certificado instala sem aviso nessa máquina.
+
+> Alternativa (sem mexer em nada): no aviso do SmartScreen, clicar em "Mais informações" → "Executar assim mesmo". Funciona, mas assusta usuário leigo e some a cada nova versão gerada sem esse ajuste.
+
+---
+
 ## 📂 Estrutura de Diretórios do Projeto
 
 ```
