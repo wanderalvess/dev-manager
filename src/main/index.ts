@@ -9,6 +9,7 @@ import { GitAzureService } from './services/GitAzureService';
 import { RoutinesService } from './services/RoutinesService';
 import { DocsIndexService } from './services/DocsIndexService';
 import { DatabaseService } from './services/DatabaseService';
+import { BackupService } from './services/BackupService';
 import { DockerService } from './services/DockerService';
 import { NetworkService } from './services/NetworkService';
 import { DeployService } from './services/DeployService';
@@ -59,6 +60,7 @@ function createWindow() {
   const configService = new ConfigService();
   const karafService = new KarafService(configService);
   const databaseService = new DatabaseService();
+  const backupService = new BackupService();
   const networkService = new NetworkService();
   const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
   const gitAzureService = new GitAzureService(configService, karafService);
@@ -77,6 +79,7 @@ function createWindow() {
     configService,
     docsIndexService,
     databaseService,
+    backupService,
     dockerService,
     networkService,
     deployService,

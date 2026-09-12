@@ -37,7 +37,9 @@ import type {
   TableColumnInfo,
   DockerContainerStats,
   LogWatchStatus,
-  LogChunkEvent
+  LogChunkEvent,
+  BackupResult,
+  BackupFileInfo
 } from '../shared/types';
 
 const electronAPI = {
@@ -237,6 +239,10 @@ const electronAPI = {
     ipcRenderer.invoke('db:list-tables', config),
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
     ipcRenderer.invoke('db:get-table-columns', config, tableName),
+  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:run-backup', config, destinationFolder),
+  listDbBackups: (destinationFolder: string): Promise<BackupFileInfo[]> =>
+    ipcRenderer.invoke('db:list-backups', destinationFolder),
 
   // Gerenciador de Containers (Docker / Podman)
   getDockerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('docker:get-status'),

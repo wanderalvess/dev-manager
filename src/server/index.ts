@@ -14,6 +14,7 @@ import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
 import { DocsIndexService, DocSyncService } from '../main/services/DocsIndexService';
 import { DatabaseService } from '../main/services/DatabaseService';
+import { BackupService } from '../main/services/BackupService';
 import { DockerService } from '../main/services/DockerService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
@@ -92,6 +93,7 @@ app.use((req, res, next) => {
 const configService = new ConfigService();
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService();
+const backupService = new BackupService();
 const networkService = new NetworkService();
 const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
 const gitAzureService = new GitAzureService(configService, karafService);
@@ -553,6 +555,39 @@ app.post('/api/db/columns', async (req, res) => {
   try {
     const { config, tableName } = req.body;
     const result = await databaseService.getTableColumns(config, tableName);
+    res.json(result);
+  } catch {
+    res.status(500).json([]);
+  }
+});
+
+app.post('/api/db/backup', async (req, res) => {
+  try {
+    const { config, destinationFolder } = req.body;
+    const settings = configService.getSettings();
+    const result = await backupService.runBackup(config, destinationFolder, settings.pgDumpPath);
+
+    const existing = settings.backupConfigs || [];
+    const entry = {
+      connectionId: config.id,
+      destinationFolder,
+      lastRunAt: new Date().toISOString(),
+      lastSuccess: result.success,
+      lastMessage: result.message
+    };
+    const updated = [entry, ...existing.filter((b) => b.connectionId !== config.id)];
+    configService.saveSettings({ backupConfigs: updated });
+
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'Erro ao executar backup' });
+  }
+});
+
+app.post('/api/db/backups', async (req, res) => {
+  try {
+    const { destinationFolder } = req.body;
+    const result = await backupService.listBackups(destinationFolder);
     res.json(result);
   } catch {
     res.status(500).json([]);

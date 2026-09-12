@@ -43,7 +43,9 @@ import type {
   TableColumnInfo,
   DockerContainerStats,
   LogWatchStatus,
-  LogChunkEvent
+  LogChunkEvent,
+  BackupResult,
+  BackupFileInfo
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -712,6 +714,20 @@ export function initApiBridge() {
       return apiFetch('/api/db/columns', {
         method: 'POST',
         body: JSON.stringify({ config, tableName })
+      });
+    },
+
+    runDbBackup: async (config: DatabaseConnectionConfig, destinationFolder: string): Promise<BackupResult> => {
+      return apiFetch('/api/db/backup', {
+        method: 'POST',
+        body: JSON.stringify({ config, destinationFolder })
+      });
+    },
+
+    listDbBackups: async (destinationFolder: string): Promise<BackupFileInfo[]> => {
+      return apiFetch('/api/db/backups', {
+        method: 'POST',
+        body: JSON.stringify({ destinationFolder })
       });
     },
 

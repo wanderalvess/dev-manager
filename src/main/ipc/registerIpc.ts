@@ -9,6 +9,7 @@ import { RoutinesService } from '../services/RoutinesService';
 import { ConfigService } from '../services/ConfigService';
 import { DocsIndexService, DocSyncService } from '../services/DocsIndexService';
 import { DatabaseService } from '../services/DatabaseService';
+import { BackupService } from '../services/BackupService';
 import { DockerService } from '../services/DockerService';
 import { NetworkService } from '../services/NetworkService';
 import { DeployService } from '../services/DeployService';
@@ -25,6 +26,7 @@ import {
   AutomationStep,
   DocsIndexProgress,
   DatabaseConnectionConfig,
+  BackupConfig,
   DeployProfile,
   InstallBundleRequest,
   ReinstallBundleRequest,
@@ -43,6 +45,7 @@ export function registerIpcHandlers(
   configService: ConfigService,
   docsIndexService: DocsIndexService,
   databaseService: DatabaseService,
+  backupService: BackupService,
   dockerService: DockerService,
   networkService: NetworkService,
   deployService: DeployService,
@@ -504,6 +507,28 @@ export function registerIpcHandlers(
 
   ipcMain.handle('db:get-table-columns', async (_, config: DatabaseConnectionConfig, tableName: string) => {
     return await databaseService.getTableColumns(config, tableName);
+  });
+
+  ipcMain.handle('db:run-backup', async (_, config: DatabaseConnectionConfig, destinationFolder: string) => {
+    const settings = configService.getSettings();
+    const result = await backupService.runBackup(config, destinationFolder, settings.pgDumpPath);
+
+    const existing = settings.backupConfigs || [];
+    const entry: BackupConfig = {
+      connectionId: config.id,
+      destinationFolder,
+      lastRunAt: new Date().toISOString(),
+      lastSuccess: result.success,
+      lastMessage: result.message
+    };
+    const updated = [entry, ...existing.filter((b) => b.connectionId !== config.id)];
+    configService.saveSettings({ backupConfigs: updated });
+
+    return result;
+  });
+
+  ipcMain.handle('db:list-backups', async (_, destinationFolder: string) => {
+    return await backupService.listBackups(destinationFolder);
   });
 
   // --- Gerenciador de Containers (Docker / Podman) ---

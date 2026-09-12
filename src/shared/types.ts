@@ -239,6 +239,10 @@ export interface AppSettings {
   routineLauncherMap?: Record<string, string>;
   /** Programas mapeados manualmente pelo usuário para abrir com um clique */
   mappedPrograms?: MappedProgram[];
+  /** Caminho do executável pg_dump, quando não estiver no PATH do sistema */
+  pgDumpPath?: string;
+  /** Pastas de destino de backup configuradas por conexão de banco */
+  backupConfigs?: BackupConfig[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
   databaseConnections?: DatabaseConnectionConfig[];
   /** Pastas locais dedicadas de documentação indexadas pelo RAG */
@@ -624,6 +628,32 @@ export interface DatabaseConnectionConfig {
   /** Flag para SSL/TLS (PostgreSQL e MySQL) */
   ssl?: boolean;
   isDefault?: boolean;
+}
+
+/** Configuração de backup persistida por conexão (pasta de destino escolhida pelo usuário). */
+export interface BackupConfig {
+  connectionId: string;
+  destinationFolder: string;
+  lastRunAt?: string;
+  lastSuccess?: boolean;
+  lastMessage?: string;
+}
+
+/** Resultado de uma execução de backup (manual). */
+export interface BackupResult {
+  success: boolean;
+  message: string;
+  filePath?: string;
+  sizeBytes?: number;
+  durationMs?: number;
+}
+
+/** Metadados de um arquivo de backup já existente na pasta de destino. */
+export interface BackupFileInfo {
+  fileName: string;
+  filePath: string;
+  sizeBytes: number;
+  createdAt: string;
 }
 
 export interface QueryRequest {

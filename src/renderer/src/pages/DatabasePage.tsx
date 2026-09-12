@@ -30,7 +30,10 @@ import {
   ArrowUp,
   ArrowDown,
   X,
-  FilterX
+  FilterX,
+  HardDriveDownload,
+  FolderOpen,
+  FileArchive
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -39,7 +42,10 @@ import {
   AppSettings,
   SqlSnippet,
   ExplainPlanResult,
-  TableColumnInfo
+  TableColumnInfo,
+  BackupConfig,
+  BackupResult,
+  BackupFileInfo
 } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
@@ -167,6 +173,14 @@ export const DatabasePage: React.FC = () => {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; version?: string } | null>(null);
   const [isTesting, setIsTesting] = useState<boolean>(false);
   const { copy: copyCellToClipboard, copiedKey: copyFeedback } = useCopyToClipboard();
+
+  // Backup de Banco de Dados
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
+  const [backupFolder, setBackupFolder] = useState<string>('');
+  const [isRunningBackup, setIsRunningBackup] = useState<boolean>(false);
+  const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
+  const [backupFiles, setBackupFiles] = useState<BackupFileInfo[]>([]);
+  const [isLoadingBackupFiles, setIsLoadingBackupFiles] = useState<boolean>(false);
 
   const activeConnection = useMemo(() => {
     return connections.find((c) => c.id === activeConnectionId) || connections[0] || null;
@@ -349,6 +363,80 @@ export const DatabasePage: React.FC = () => {
     setEditingConn({ ...conn });
     setTestResult(null);
     setIsModalOpen(true);
+  };
+
+  // Carregar arquivos de backup já existentes na pasta de destino
+  const refreshBackupFiles = useCallback(async (folder: string) => {
+    if (!folder || !window.electronAPI?.listDbBackups) {
+      setBackupFiles([]);
+      return;
+    }
+    setIsLoadingBackupFiles(true);
+    try {
+      const files = await window.electronAPI.listDbBackups(folder);
+      setBackupFiles(files || []);
+    } catch (err) {
+      console.error('Erro ao listar backups:', err);
+    } finally {
+      setIsLoadingBackupFiles(false);
+    }
+  }, []);
+
+  // Abrir Modal de Backup: pré-carrega a pasta salva para a conexão ativa
+  const handleOpenBackupModal = () => {
+    if (!activeConnection) return;
+    const saved = (settings?.backupConfigs || []).find((b) => b.connectionId === activeConnection.id);
+    const folder = saved?.destinationFolder || '';
+    setBackupFolder(folder);
+    setBackupResult(null);
+    setIsBackupModalOpen(true);
+    if (folder) refreshBackupFiles(folder);
+    else setBackupFiles([]);
+  };
+
+  // Selecionar Pasta de Destino do Backup
+  const handleSelectBackupFolder = async () => {
+    if (!window.electronAPI?.selectDirectory) return;
+    const picked = await window.electronAPI.selectDirectory(backupFolder || undefined);
+    if (picked) {
+      setBackupFolder(picked);
+      refreshBackupFiles(picked);
+    }
+  };
+
+  // Executar Backup Agora
+  const handleRunBackup = async () => {
+    if (!activeConnection || !backupFolder.trim() || !window.electronAPI?.runDbBackup) return;
+    setIsRunningBackup(true);
+    setBackupResult(null);
+    try {
+      const res = await window.electronAPI.runDbBackup(activeConnection, backupFolder.trim());
+      setBackupResult(res);
+      // Atualiza o cache local de settings para refletir a pasta salva sem precisar recarregar
+      setSettings((prev) => {
+        if (!prev) return prev;
+        const existing = prev.backupConfigs || [];
+        const entry: BackupConfig = {
+          connectionId: activeConnection.id,
+          destinationFolder: backupFolder.trim(),
+          lastRunAt: new Date().toISOString(),
+          lastSuccess: res.success,
+          lastMessage: res.message
+        };
+        return { ...prev, backupConfigs: [entry, ...existing.filter((b) => b.connectionId !== activeConnection.id)] };
+      });
+      if (res.success) refreshBackupFiles(backupFolder.trim());
+    } catch (err: any) {
+      setBackupResult({ success: false, message: err?.message || 'Erro inesperado ao executar backup.' });
+    } finally {
+      setIsRunningBackup(false);
+    }
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
   // Executar SQL
@@ -1324,6 +1412,18 @@ export const DatabasePage: React.FC = () => {
             >
               <BookmarkPlus className="w-3.5 h-3.5 text-amber-500" />
               <span>Salvar Consulta</span>
+            </button>
+
+            {/* Botão de Backup do Banco */}
+            <button
+              type="button"
+              onClick={handleOpenBackupModal}
+              disabled={!activeConnection}
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs disabled:opacity-50"
+              title="Fazer backup do banco de dados conectado"
+            >
+              <HardDriveDownload className="w-3.5 h-3.5 text-sky-400" />
+              <span>Backup</span>
             </button>
 
             {/* Botão Explain Plan */}
@@ -2315,6 +2415,150 @@ export const DatabasePage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Modal de Backup do Banco de Dados */}
+      {isBackupModalOpen && activeConnection && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-2">
+                <HardDriveDownload className="w-4 h-4 text-sky-400" />
+                <h3 className="text-sm font-bold text-foreground">
+                  Backup — {activeConnection.name} {getDbBadge(activeConnection.type)}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBackupModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground text-sm font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3 text-xs overflow-y-auto">
+              {activeConnection.type !== 'postgres' ? (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>
+                    Backup automático para {activeConnection.type === 'oracle' ? 'Oracle' : 'MySQL'} ainda não
+                    implementado. Por enquanto, apenas conexões PostgreSQL têm suporte a backup direto pelo Dev
+                    Manager.
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block font-bold text-foreground mb-1">Pasta de Destino</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={backupFolder}
+                        onChange={(e) => setBackupFolder(e.target.value)}
+                        placeholder="Ex: C:\Backups\Postgres"
+                        className="flex-1 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSelectBackupFolder}
+                        className="p-2 bg-muted hover:bg-muted/80 text-foreground rounded-md transition shrink-0"
+                        title="Selecionar pasta"
+                      >
+                        <FolderOpen className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      A pasta é lembrada por conexão. O arquivo gerado usa <code>pg_dump</code> (precisa estar
+                      instalado e acessível no PATH, ou configure o caminho em Configurações → pgDumpPath).
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRunBackup}
+                    disabled={isRunningBackup || !backupFolder.trim()}
+                    className="w-full flex items-center justify-center space-x-1.5 px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-bold shadow-xs transition disabled:opacity-50"
+                  >
+                    {isRunningBackup ? (
+                      <>
+                        <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Gerando backup...</span>
+                      </>
+                    ) : (
+                      <>
+                        <HardDriveDownload className="w-3.5 h-3.5" />
+                        <span>Fazer Backup Agora</span>
+                      </>
+                    )}
+                  </button>
+
+                  {backupResult && (
+                    <div
+                      className={`p-3 rounded-xl border ${
+                        backupResult.success
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2 font-bold">
+                        {backupResult.success ? (
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                        )}
+                        <span className="break-all">{backupResult.message}</span>
+                      </div>
+                      {backupResult.success && backupResult.sizeBytes !== undefined && (
+                        <p className="text-[10px] font-mono opacity-80 mt-1">
+                          {formatBytes(backupResult.sizeBytes)} · {backupResult.durationMs} ms
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                        <FileArchive className="w-3 h-3" /> Backups na Pasta
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => refreshBackupFiles(backupFolder)}
+                        disabled={!backupFolder.trim() || isLoadingBackupFiles}
+                        className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
+                        title="Recarregar lista"
+                      >
+                        <RotateCw className={`w-3 h-3 ${isLoadingBackupFiles ? 'animate-spin text-primary' : ''}`} />
+                      </button>
+                    </div>
+                    {backupFiles.length === 0 ? (
+                      <div className="text-center py-3 text-[11px] text-muted-foreground">
+                        Nenhum backup encontrado nesta pasta.
+                      </div>
+                    ) : (
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {backupFiles.map((f) => (
+                          <div
+                            key={f.filePath}
+                            className="flex items-center justify-between p-2 bg-background/60 border border-border/50 rounded-lg"
+                          >
+                            <span className="font-mono text-[10px] truncate pr-2" title={f.filePath}>
+                              {f.fileName}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground shrink-0 font-mono">
+                              {formatBytes(f.sizeBytes)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Salvar / Editar Consulta Personalizada */}
       {isSaveSnippetModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">

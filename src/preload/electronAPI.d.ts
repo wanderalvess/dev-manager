@@ -43,7 +43,9 @@ import type {
   TableColumnInfo,
   DockerContainerStats,
   LogWatchStatus,
-  LogChunkEvent
+  LogChunkEvent,
+  BackupResult,
+  BackupFileInfo
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -182,6 +184,8 @@ export interface ElectronAPI {
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
+  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string) => Promise<BackupResult>;
+  listDbBackups: (destinationFolder: string) => Promise<BackupFileInfo[]>;
 
   // Gerenciador de Containers (Docker / Podman)
   getDockerStatus: () => Promise<DockerDaemonStatus>;
