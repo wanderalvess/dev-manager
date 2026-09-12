@@ -58,6 +58,27 @@ export class BackupService {
     return infos.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
+  /**
+   * Apaga os backups mais antigos da pasta, mantendo apenas os `retentionCount` mais recentes.
+   */
+  public async applyRetention(destinationFolder: string, retentionCount: number): Promise<number> {
+    if (!retentionCount || retentionCount <= 0) return 0;
+
+    const files = await this.listBackups(destinationFolder);
+    const toDelete = files.slice(retentionCount);
+
+    let deleted = 0;
+    for (const file of toDelete) {
+      try {
+        await fs.promises.unlink(file.filePath);
+        deleted++;
+      } catch {
+        // Ignora falha ao remover um backup antigo específico
+      }
+    }
+    return deleted;
+  }
+
   private async backupPostgres(
     config: DatabaseConnectionConfig,
     destinationFolder: string,

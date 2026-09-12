@@ -44,6 +44,7 @@ import type {
   DockerContainerStats,
   LogWatchStatus,
   LogChunkEvent,
+  BackupConfig,
   BackupResult,
   BackupFileInfo
 } from '../../../shared/types';
@@ -728,6 +729,13 @@ export function initApiBridge() {
       return apiFetch('/api/db/backups', {
         method: 'POST',
         body: JSON.stringify({ destinationFolder })
+      });
+    },
+
+    saveDbBackupConfig: async (config: BackupConfig): Promise<{ success: boolean; message: string }> => {
+      return apiFetch('/api/db/backup-config', {
+        method: 'POST',
+        body: JSON.stringify(config)
       });
     },
 

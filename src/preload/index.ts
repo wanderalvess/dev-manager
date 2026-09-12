@@ -38,6 +38,7 @@ import type {
   DockerContainerStats,
   LogWatchStatus,
   LogChunkEvent,
+  BackupConfig,
   BackupResult,
   BackupFileInfo
 } from '../shared/types';
@@ -243,6 +244,8 @@ const electronAPI = {
     ipcRenderer.invoke('db:run-backup', config, destinationFolder),
   listDbBackups: (destinationFolder: string): Promise<BackupFileInfo[]> =>
     ipcRenderer.invoke('db:list-backups', destinationFolder),
+  saveDbBackupConfig: (config: BackupConfig): Promise<{ success: boolean; message: string }> =>
+    ipcRenderer.invoke('db:save-backup-config', config),
 
   // Gerenciador de Containers (Docker / Podman)
   getDockerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('docker:get-status'),

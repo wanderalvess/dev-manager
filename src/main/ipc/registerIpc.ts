@@ -10,6 +10,8 @@ import { ConfigService } from '../services/ConfigService';
 import { DocsIndexService, DocSyncService } from '../services/DocsIndexService';
 import { DatabaseService } from '../services/DatabaseService';
 import { BackupService } from '../services/BackupService';
+import { BackupSchedulerService } from '../services/BackupSchedulerService';
+import * as cron from 'node-cron';
 import { DockerService } from '../services/DockerService';
 import { NetworkService } from '../services/NetworkService';
 import { DeployService } from '../services/DeployService';
@@ -46,6 +48,7 @@ export function registerIpcHandlers(
   docsIndexService: DocsIndexService,
   databaseService: DatabaseService,
   backupService: BackupService,
+  backupSchedulerService: BackupSchedulerService,
   dockerService: DockerService,
   networkService: NetworkService,
   deployService: DeployService,
@@ -514,7 +517,13 @@ export function registerIpcHandlers(
     const result = await backupService.runBackup(config, destinationFolder, settings.pgDumpPath);
 
     const existing = settings.backupConfigs || [];
+    const previous = existing.find((b) => b.connectionId === config.id);
+    if (result.success && previous?.retentionCount) {
+      await backupService.applyRetention(destinationFolder, previous.retentionCount);
+    }
+
     const entry: BackupConfig = {
+      ...previous,
       connectionId: config.id,
       destinationFolder,
       lastRunAt: new Date().toISOString(),
@@ -529,6 +538,22 @@ export function registerIpcHandlers(
 
   ipcMain.handle('db:list-backups', async (_, destinationFolder: string) => {
     return await backupService.listBackups(destinationFolder);
+  });
+
+  ipcMain.handle('db:save-backup-config', async (_, config: BackupConfig) => {
+    if (config.cronExpression && !cron.validate(config.cronExpression)) {
+      return { success: false, message: 'Expressão cron inválida.' };
+    }
+
+    const settings = configService.getSettings();
+    const existing = settings.backupConfigs || [];
+    const previous = existing.find((b) => b.connectionId === config.connectionId);
+    const merged: BackupConfig = { ...previous, ...config };
+    const updated = [merged, ...existing.filter((b) => b.connectionId !== config.connectionId)];
+    configService.saveSettings({ backupConfigs: updated });
+    backupSchedulerService.rescheduleAll();
+
+    return { success: true, message: 'Agendamento salvo com sucesso.' };
   });
 
   // --- Gerenciador de Containers (Docker / Podman) ---

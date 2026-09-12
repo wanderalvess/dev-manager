@@ -15,6 +15,8 @@ import { RoutinesService } from '../main/services/RoutinesService';
 import { DocsIndexService, DocSyncService } from '../main/services/DocsIndexService';
 import { DatabaseService } from '../main/services/DatabaseService';
 import { BackupService } from '../main/services/BackupService';
+import { BackupSchedulerService } from '../main/services/BackupSchedulerService';
+import * as cron from 'node-cron';
 import { DockerService } from '../main/services/DockerService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
@@ -94,6 +96,8 @@ const configService = new ConfigService();
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService();
 const backupService = new BackupService();
+const backupSchedulerService = new BackupSchedulerService(configService, backupService);
+backupSchedulerService.rescheduleAll();
 const networkService = new NetworkService();
 const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
 const gitAzureService = new GitAzureService(configService, karafService);
@@ -568,7 +572,13 @@ app.post('/api/db/backup', async (req, res) => {
     const result = await backupService.runBackup(config, destinationFolder, settings.pgDumpPath);
 
     const existing = settings.backupConfigs || [];
+    const previous = existing.find((b) => b.connectionId === config.id);
+    if (result.success && previous?.retentionCount) {
+      await backupService.applyRetention(destinationFolder, previous.retentionCount);
+    }
+
     const entry = {
+      ...previous,
       connectionId: config.id,
       destinationFolder,
       lastRunAt: new Date().toISOString(),
@@ -591,6 +601,27 @@ app.post('/api/db/backups', async (req, res) => {
     res.json(result);
   } catch {
     res.status(500).json([]);
+  }
+});
+
+app.post('/api/db/backup-config', async (req, res) => {
+  try {
+    const config = req.body;
+    if (config.cronExpression && !cron.validate(config.cronExpression)) {
+      return res.json({ success: false, message: 'Expressão cron inválida.' });
+    }
+
+    const settings = configService.getSettings();
+    const existing = settings.backupConfigs || [];
+    const previous = existing.find((b) => b.connectionId === config.connectionId);
+    const merged = { ...previous, ...config };
+    const updated = [merged, ...existing.filter((b) => b.connectionId !== config.connectionId)];
+    configService.saveSettings({ backupConfigs: updated });
+    backupSchedulerService.rescheduleAll();
+
+    res.json({ success: true, message: 'Agendamento salvo com sucesso.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'Erro ao salvar agendamento' });
   }
 });
 

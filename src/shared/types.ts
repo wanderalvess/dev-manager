@@ -630,10 +630,16 @@ export interface DatabaseConnectionConfig {
   isDefault?: boolean;
 }
 
-/** Configuração de backup persistida por conexão (pasta de destino escolhida pelo usuário). */
+/** Configuração de backup persistida por conexão (pasta de destino, agendamento e retenção). */
 export interface BackupConfig {
   connectionId: string;
   destinationFolder: string;
+  /** Expressão cron (ex: "0 2 * * *" = todo dia às 02:00). Vazio/ausente = só backup manual. */
+  cronExpression?: string;
+  /** Se o agendamento está ativo. Ignorado quando cronExpression não está definido. */
+  enabled?: boolean;
+  /** Quantidade de backups a manter na pasta; os mais antigos são apagados após cada execução. Ausente = mantém todos. */
+  retentionCount?: number;
   lastRunAt?: string;
   lastSuccess?: boolean;
   lastMessage?: string;

@@ -10,6 +10,7 @@ import { RoutinesService } from './services/RoutinesService';
 import { DocsIndexService } from './services/DocsIndexService';
 import { DatabaseService } from './services/DatabaseService';
 import { BackupService } from './services/BackupService';
+import { BackupSchedulerService } from './services/BackupSchedulerService';
 import { DockerService } from './services/DockerService';
 import { NetworkService } from './services/NetworkService';
 import { DeployService } from './services/DeployService';
@@ -61,6 +62,7 @@ function createWindow() {
   const karafService = new KarafService(configService);
   const databaseService = new DatabaseService();
   const backupService = new BackupService();
+  const backupSchedulerService = new BackupSchedulerService(configService, backupService);
   const networkService = new NetworkService();
   const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
   const gitAzureService = new GitAzureService(configService, karafService);
@@ -80,11 +82,14 @@ function createWindow() {
     docsIndexService,
     databaseService,
     backupService,
+    backupSchedulerService,
     dockerService,
     networkService,
     deployService,
     logWatcherService
   );
+
+  backupSchedulerService.rescheduleAll();
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 

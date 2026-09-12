@@ -33,7 +33,8 @@ import {
   FilterX,
   HardDriveDownload,
   FolderOpen,
-  FileArchive
+  FileArchive,
+  CalendarClock
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -54,6 +55,8 @@ const DEFAULT_PORTS: Record<DatabaseType, number> = {
   mysql: 3306,
   postgres: 5432
 };
+
+const CRON_PRESETS = ['0 * * * *', '0 */6 * * *', '0 2 * * *', '0 2 * * 0'];
 
 export const DEFAULT_SQL_SNIPPETS: SqlSnippet[] = [
   {
@@ -181,6 +184,11 @@ export const DatabasePage: React.FC = () => {
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
   const [backupFiles, setBackupFiles] = useState<BackupFileInfo[]>([]);
   const [isLoadingBackupFiles, setIsLoadingBackupFiles] = useState<boolean>(false);
+  const [backupCron, setBackupCron] = useState<string>('');
+  const [backupScheduleEnabled, setBackupScheduleEnabled] = useState<boolean>(true);
+  const [backupRetentionCount, setBackupRetentionCount] = useState<string>('');
+  const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
+  const [scheduleSaveResult, setScheduleSaveResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const activeConnection = useMemo(() => {
     return connections.find((c) => c.id === activeConnectionId) || connections[0] || null;
@@ -382,13 +390,17 @@ export const DatabasePage: React.FC = () => {
     }
   }, []);
 
-  // Abrir Modal de Backup: pré-carrega a pasta salva para a conexão ativa
+  // Abrir Modal de Backup: pré-carrega a pasta e o agendamento salvos para a conexão ativa
   const handleOpenBackupModal = () => {
     if (!activeConnection) return;
     const saved = (settings?.backupConfigs || []).find((b) => b.connectionId === activeConnection.id);
     const folder = saved?.destinationFolder || '';
     setBackupFolder(folder);
+    setBackupCron(saved?.cronExpression || '');
+    setBackupScheduleEnabled(saved?.enabled !== false);
+    setBackupRetentionCount(saved?.retentionCount ? String(saved.retentionCount) : '');
     setBackupResult(null);
+    setScheduleSaveResult(null);
     setIsBackupModalOpen(true);
     if (folder) refreshBackupFiles(folder);
     else setBackupFiles([]);
@@ -416,7 +428,9 @@ export const DatabasePage: React.FC = () => {
       setSettings((prev) => {
         if (!prev) return prev;
         const existing = prev.backupConfigs || [];
+        const previous = existing.find((b) => b.connectionId === activeConnection.id);
         const entry: BackupConfig = {
+          ...previous,
           connectionId: activeConnection.id,
           destinationFolder: backupFolder.trim(),
           lastRunAt: new Date().toISOString(),
@@ -430,6 +444,37 @@ export const DatabasePage: React.FC = () => {
       setBackupResult({ success: false, message: err?.message || 'Erro inesperado ao executar backup.' });
     } finally {
       setIsRunningBackup(false);
+    }
+  };
+
+  // Salvar Agendamento de Backup (cron + retenção)
+  const handleSaveBackupSchedule = async () => {
+    if (!activeConnection || !backupFolder.trim() || !window.electronAPI?.saveDbBackupConfig) return;
+    setIsSavingSchedule(true);
+    setScheduleSaveResult(null);
+    try {
+      const config: BackupConfig = {
+        connectionId: activeConnection.id,
+        destinationFolder: backupFolder.trim(),
+        cronExpression: backupCron.trim() || undefined,
+        enabled: backupScheduleEnabled,
+        retentionCount: backupRetentionCount.trim() ? Number(backupRetentionCount.trim()) : undefined
+      };
+      const res = await window.electronAPI.saveDbBackupConfig(config);
+      setScheduleSaveResult(res);
+      if (res.success) {
+        setSettings((prev) => {
+          if (!prev) return prev;
+          const existing = prev.backupConfigs || [];
+          const previous = existing.find((b) => b.connectionId === activeConnection.id);
+          const merged = { ...previous, ...config };
+          return { ...prev, backupConfigs: [merged, ...existing.filter((b) => b.connectionId !== activeConnection.id)] };
+        });
+      }
+    } catch (err: any) {
+      setScheduleSaveResult({ success: false, message: err?.message || 'Erro inesperado ao salvar agendamento.' });
+    } finally {
+      setIsSavingSchedule(false);
     }
   };
 
@@ -2514,6 +2559,83 @@ export const DatabasePage: React.FC = () => {
                       )}
                     </div>
                   )}
+
+                  <div className="pt-2 border-t border-border/60 space-y-2">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                      <CalendarClock className="w-3 h-3" /> Agendamento Automático
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={backupCron}
+                        onChange={(e) => setBackupCron(e.target.value)}
+                        className="flex-1 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                      >
+                        <option value="">Sem agendamento (só manual)</option>
+                        <option value="0 * * * *">A cada hora</option>
+                        <option value="0 */6 * * *">A cada 6 horas</option>
+                        <option value="0 2 * * *">Diário às 02:00</option>
+                        <option value="0 2 * * 0">Semanal (domingo às 02:00)</option>
+                        {backupCron && !CRON_PRESETS.includes(backupCron) && (
+                          <option value={backupCron}>Personalizado: {backupCron}</option>
+                        )}
+                      </select>
+                      <input
+                        type="text"
+                        value={backupCron}
+                        onChange={(e) => setBackupCron(e.target.value)}
+                        placeholder="cron: 0 2 * * *"
+                        className="w-32 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={backupScheduleEnabled}
+                          onChange={(e) => setBackupScheduleEnabled(e.target.checked)}
+                          disabled={!backupCron.trim()}
+                          className="text-primary focus:ring-0"
+                        />
+                        <span>Ativo</span>
+                      </label>
+                      <div className="flex items-center gap-1.5 flex-1">
+                        <span className="text-muted-foreground shrink-0">Manter últimos</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={backupRetentionCount}
+                          onChange={(e) => setBackupRetentionCount(e.target.value)}
+                          placeholder="todos"
+                          className="w-16 bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono"
+                        />
+                        <span className="text-muted-foreground shrink-0">backups</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveBackupSchedule}
+                      disabled={isSavingSchedule || !backupFolder.trim()}
+                      className="w-full flex items-center justify-center space-x-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg font-bold shadow-xs transition disabled:opacity-50"
+                    >
+                      <CalendarClock className={`w-3.5 h-3.5 ${isSavingSchedule ? 'animate-spin' : ''}`} />
+                      <span>{isSavingSchedule ? 'Salvando...' : 'Salvar Agendamento'}</span>
+                    </button>
+
+                    {scheduleSaveResult && (
+                      <div
+                        className={`p-2 rounded-lg border text-[11px] ${
+                          scheduleSaveResult.success
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                        }`}
+                      >
+                        {scheduleSaveResult.message}
+                      </div>
+                    )}
+                  </div>
 
                   <div className="pt-2 border-t border-border/60">
                     <div className="flex items-center justify-between mb-1.5">
