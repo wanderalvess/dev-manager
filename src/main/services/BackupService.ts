@@ -7,6 +7,7 @@ import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
 export interface BackupOptions {
   pgDumpPath?: string;
   expdpPath?: string;
+  mysqldumpPath?: string;
   /** Nome do objeto DIRECTORY do Oracle (ex: DATA_PUMP_DIR) cujo caminho no servidor deve
    * corresponder a destinationFolder (expdp grava no servidor, não no cliente). */
   oracleDirectory?: string;
@@ -15,7 +16,7 @@ export interface BackupOptions {
 export class BackupService {
   /**
    * Executa um backup lógico da conexão informada, salvando o arquivo em destinationFolder.
-   * Suporta PostgreSQL (pg_dump) e Oracle (expdp); MySQL ainda retorna erro explícito.
+   * Suporta PostgreSQL (pg_dump), Oracle (expdp) e MySQL (mysqldump).
    */
   public async runBackup(
     config: DatabaseConnectionConfig,
@@ -32,7 +33,7 @@ export class BackupService {
       case 'oracle':
         return this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory);
       case 'mysql':
-        return { success: false, message: 'Backup automático para MySQL ainda não implementado (em breve via mysqldump).' };
+        return this.backupMysql(config, destinationFolder, options?.mysqldumpPath);
       default:
         return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para backup.` };
     }
@@ -163,6 +164,101 @@ export class BackupService {
         }
       );
     });
+  }
+
+  private async backupMysql(
+    config: DatabaseConnectionConfig,
+    destinationFolder: string,
+    mysqldumpPath?: string
+  ): Promise<BackupResult> {
+    const startTime = Date.now();
+
+    if (!config.database || !isValidIdentifier(config.database)) {
+      return { success: false, message: 'Nome do banco de dados inválido ou ausente na conexão.' };
+    }
+
+    try {
+      await fs.promises.mkdir(destinationFolder, { recursive: true });
+    } catch (err: any) {
+      return { success: false, message: `Não foi possível criar/acessar a pasta de destino: ${err.message}` };
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const safeConnName = (config.name || config.database).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `${safeConnName}_${config.database}_${timestamp}.sql`;
+    const filePath = path.join(destinationFolder, fileName);
+
+    const binary = mysqldumpPath && mysqldumpPath.trim() ? mysqldumpPath.trim() : 'mysqldump';
+    const args = [
+      '-h', config.host,
+      '-P', String(config.port || 3306),
+      '-u', config.user,
+      `--result-file=${filePath}`,
+      config.database
+    ];
+
+    return new Promise<BackupResult>((resolve) => {
+      execFile(
+        binary,
+        args,
+        {
+          // MYSQL_PWD evita expor a senha nos argumentos do processo (visível em listas de processos)
+          env: { ...process.env, MYSQL_PWD: config.password || '' },
+          maxBuffer: 20 * 1024 * 1024,
+          timeout: 10 * 60 * 1000
+        },
+        (error, _stdout, stderr) => {
+          const durationMs = Date.now() - startTime;
+
+          if (error) {
+            fs.promises.unlink(filePath).catch(() => {});
+            resolve({
+              success: false,
+              message: this.formatMysqldumpError(error, stderr),
+              durationMs
+            });
+            return;
+          }
+
+          fs.promises
+            .stat(filePath)
+            .then((stat) => {
+              resolve({
+                success: true,
+                message: `Backup gerado com sucesso em ${filePath}`,
+                filePath,
+                sizeBytes: stat.size,
+                durationMs
+              });
+            })
+            .catch(() => {
+              resolve({
+                success: true,
+                message: `Backup gerado com sucesso em ${filePath}`,
+                filePath,
+                durationMs
+              });
+            });
+        }
+      );
+    });
+  }
+
+  private formatMysqldumpError(error: { code?: string | number | null; message?: string }, stderr?: string): string {
+    if (error.code === 'ENOENT') {
+      return "mysqldump não encontrado. Instale o cliente MySQL/MariaDB (inclui mysqldump) ou configure o caminho do executável nas configurações.";
+    }
+    const msg = (stderr || error.message || '').trim();
+    if (msg.includes('Access denied')) {
+      return 'Falha de autenticação: usuário ou senha incorretos para o MySQL.';
+    }
+    if (msg.includes("Can't connect") || msg.includes('ECONNREFUSED') || msg.includes('2002')) {
+      return 'Não foi possível conectar ao servidor MySQL. Verifique host/porta e se o banco está ativo.';
+    }
+    if (msg.includes('Unknown database')) {
+      return 'Banco de dados não encontrado no servidor MySQL.';
+    }
+    return msg || 'Falha desconhecida ao executar mysqldump.';
   }
 
   /**

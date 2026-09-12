@@ -243,6 +243,8 @@ export interface AppSettings {
   pgDumpPath?: string;
   /** Caminho do executável expdp, quando não estiver no PATH do sistema */
   expdpPath?: string;
+  /** Caminho do executável mysqldump, quando não estiver no PATH do sistema */
+  mysqldumpPath?: string;
   /** Pastas de destino de backup configuradas por conexão de banco */
   backupConfigs?: BackupConfig[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */

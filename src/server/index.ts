@@ -575,6 +575,7 @@ app.post('/api/db/backup', async (req, res) => {
     const result = await backupService.runBackup(config, destinationFolder, {
       pgDumpPath: settings.pgDumpPath,
       expdpPath: settings.expdpPath,
+      mysqldumpPath: settings.mysqldumpPath,
       oracleDirectory: effectiveOracleDirectory
     });
 

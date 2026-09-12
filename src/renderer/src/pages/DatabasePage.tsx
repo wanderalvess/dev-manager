@@ -2489,20 +2489,11 @@ export const DatabasePage: React.FC = () => {
             </div>
 
             <div className="p-4 space-y-3 text-xs overflow-y-auto">
-              {activeConnection.type === 'mysql' ? (
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>
-                    Backup automático para MySQL ainda não implementado. Por enquanto, apenas conexões PostgreSQL
-                    e Oracle têm suporte a backup direto pelo Dev Manager.
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block font-bold text-foreground mb-1">
-                      {activeConnection.type === 'oracle' ? 'Pasta do DIRECTORY (no servidor Oracle)' : 'Pasta de Destino'}
-                    </label>
+              <>
+                <div>
+                  <label className="block font-bold text-foreground mb-1">
+                    {activeConnection.type === 'oracle' ? 'Pasta do DIRECTORY (no servidor Oracle)' : 'Pasta de Destino'}
+                  </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -2525,6 +2516,11 @@ export const DatabasePage: React.FC = () => {
                         O <code>expdp</code> grava o dump no servidor Oracle, não nesta máquina. Essa pasta precisa
                         ser o mesmo caminho físico usado pelo objeto DIRECTORY abaixo (funciona direto quando o
                         banco roda na própria máquina).
+                      </p>
+                    ) : activeConnection.type === 'mysql' ? (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        A pasta é lembrada por conexão. O arquivo gerado usa <code>mysqldump</code> (precisa estar
+                        instalado e acessível no PATH, ou configure o caminho em Configurações → mysqldumpPath).
                       </p>
                     ) : (
                       <p className="text-[10px] text-muted-foreground mt-1">
@@ -2709,8 +2705,7 @@ export const DatabasePage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </>
-              )}
+              </>
             </div>
           </div>
         </div>
