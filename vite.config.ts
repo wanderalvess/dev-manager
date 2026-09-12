@@ -16,11 +16,29 @@ export default defineConfig({
           build: {
             outDir: 'dist-electron/main',
             minify: false,
+            rollupOptions: {
+              // Dependências nativas e drivers de banco — devem ficar como
+              // require() em tempo de execução, nunca inlineadas pelo bundler.
+              external: [
+                'oracledb',
+                'pg',
+                'mysql2',
+                'fastembed',
+                'onnxruntime-node',
+                /^@anush008\/tokenizers/,
+                /\.node$/
+              ]
+            },
             rolldownOptions: {
-              // Dependências nativas do RAG local (embeddings) — devem ficar como
-              // require() em tempo de execução, nunca inlineadas pelo bundler
-              // (o binário .node não é um módulo JS válido pra empacotar).
-              external: ['fastembed', 'onnxruntime-node', /^@anush008\/tokenizers/, /\.node$/]
+              external: [
+                'oracledb',
+                'pg',
+                'mysql2',
+                'fastembed',
+                'onnxruntime-node',
+                /^@anush008\/tokenizers/,
+                /\.node$/
+              ]
             }
           }
         }

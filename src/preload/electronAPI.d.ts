@@ -20,6 +20,8 @@ import type {
   DocSearchResult,
   DocsIndexStatus,
   DocsIndexProgress,
+  DocSyncProgress,
+  DocSyncResult,
   DatabaseConnectionConfig,
   QueryResult,
   DockerContainerInfo,
@@ -39,7 +41,9 @@ import type {
   HttpHealthResult,
   DeployProfile,
   TableColumnInfo,
-  DockerContainerStats
+  DockerContainerStats,
+  LogWatchStatus,
+  LogChunkEvent
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -163,6 +167,8 @@ export interface ElectronAPI {
   openDocFile: (filePath: string, mode?: 'editor' | 'folder') => Promise<boolean>;
   readDocContent: (filePath: string) => Promise<string | null>;
   onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => () => void;
+  syncDocs: (targetId?: string) => Promise<DocSyncResult[]>;
+  onDocSyncProgress: (callback: (progress: DocSyncProgress) => void) => () => void;
 
   // Configurações
   getSettings: () => Promise<AppSettings>;
@@ -205,6 +211,18 @@ export interface ElectronAPI {
 
   // Métricas do Sistema
   getSystemMetrics: () => Promise<SystemMetrics>;
+
+  // Leitor e Monitor de Logs em Tempo Real (Tail -f)
+  startLogWatch: (
+    sourceId: string,
+    filePath: string,
+    initialLines?: number,
+    encoding?: string
+  ) => Promise<{ status: LogWatchStatus; initialLines: string[] }>;
+  stopLogWatch: (sourceId: string) => Promise<boolean>;
+  checkLogFile: (filePath: string, sourceId?: string) => Promise<LogWatchStatus>;
+  clearLogFile: (filePath: string) => Promise<boolean>;
+  onLogChunk: (callback: (event: LogChunkEvent) => void) => () => void;
 }
 
 declare global {

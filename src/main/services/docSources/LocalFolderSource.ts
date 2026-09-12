@@ -50,13 +50,28 @@ async function extractDocxText(buffer: Buffer): Promise<string> {
  * cada projeto git descoberto em `projectsPath` quanto para pastas arbitrárias que
  * o usuário adiciona manualmente (fora da Pasta de Projetos) — mesma lógica, raiz diferente.
  */
+export function extractCleanFolderLabel(folderPath: string, explicitLabel?: string): string {
+  if (explicitLabel && !explicitLabel.includes(':\\') && !explicitLabel.includes(':/') && !explicitLabel.includes('\\')) {
+    return explicitLabel.trim();
+  }
+  const normalized = folderPath.replace(/\\/g, '/').replace(/\/+$/, '');
+  const basename = normalized.split('/').pop() || 'docs';
+  if (['docs', 'doc', 'documentacao', 'documentation', 'wiki'].includes(basename.toLowerCase())) {
+    const parent = normalized.split('/').slice(-2, -1)[0];
+    if (parent && !parent.includes(':')) {
+      return parent;
+    }
+  }
+  return basename;
+}
+
 export class LocalFolderSource implements DocSource {
   readonly id: string;
   readonly label: string;
 
   constructor(private readonly rootPath: string, label?: string) {
     this.id = `local-folder:${rootPath}`;
-    this.label = label || rootPath;
+    this.label = extractCleanFolderLabel(rootPath, label);
   }
 
   async listEntries(): Promise<DocSourceEntry[]> {
@@ -84,8 +99,8 @@ export class LocalFolderSource implements DocSource {
             continue;
           }
           const maxSize = BINARY_EXTENSIONS.includes(ext) ? MAX_BINARY_FILE_SIZE_BYTES : MAX_TEXT_FILE_SIZE_BYTES;
-          if (stat.size > maxSize) continue;
-          entries.push({ id: full, title: path.relative(this.rootPath, full), mtimeMs: stat.mtimeMs });
+          const relTitle = path.relative(this.rootPath, full).replace(/\\/g, '/');
+          entries.push({ id: full, title: relTitle, mtimeMs: stat.mtimeMs });
         }
       }
     };

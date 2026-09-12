@@ -25,7 +25,12 @@ import {
   FileCode,
   Zap,
   Key,
-  BookmarkPlus
+  BookmarkPlus,
+  Filter,
+  ArrowUp,
+  ArrowDown,
+  X,
+  FilterX
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -46,51 +51,19 @@ const DEFAULT_PORTS: Record<DatabaseType, number> = {
 
 export const DEFAULT_SQL_SNIPPETS: SqlSnippet[] = [
   {
-    id: 'pcparam-search',
-    title: 'Consultar Parâmetros (PCPARAMETRO)',
-    category: 'Parâmetros - Configuração',
-    description: 'Pesquisa parâmetros do sistema por termo chave',
-    sql: "SELECT NOME, VALOR, DESCRICAO FROM PCPARAMETRO WHERE UPPER(NOME) LIKE '%ESTOQUE%' ORDER BY NOME;",
-    dbType: 'oracle'
-  },
-  {
-    id: 'pcrotina-list',
-    title: 'Cadastro de Rotinas (PCROTINACAD)',
-    category: 'Rotinas - Catálogo',
-    description: 'Lista rotinas cadastradas no sistema',
-    sql: "SELECT CODROTINA, NOME, NOMEROTINA FROM PCROTINACAD WHERE ATIVO = 'S' ORDER BY CODROTINA;",
-    dbType: 'oracle'
-  },
-  {
-    id: 'pccontroi-perms',
-    title: 'Permissões por Rotina (PCCONTROI)',
-    category: 'Segurança - Permissões',
-    description: 'Verifica acessos concedidos para a rotina especificada',
-    sql: "SELECT CODUSUARIO, CODROTINA, ACESSO FROM PCCONTROI WHERE CODROTINA = 1400;",
-    dbType: 'oracle'
-  },
-  {
-    id: 'pcclient-sample',
-    title: 'Amostra de Cadastros (PCCLIENT)',
-    category: 'Dados - Amostra',
-    description: 'Consulta primeiros 50 registros cadastrais ativos',
-    sql: "SELECT CODCLI, CLIENTE, FANTASIA, CGCENT, TELENT FROM PCCLIENT WHERE BLOQUEIO = 'N' AND ROWNUM <= 50;",
-    dbType: 'oracle'
-  },
-  {
     id: 'oracle-active-sessions',
     title: 'Sessões Ativas no Banco (V$SESSION)',
     category: 'Oracle - Diagnóstico',
     description: 'Identifica sessões em execução no banco de dados',
-    sql: "SELECT SID, SERIAL#, USERNAME, STATUS, OSUSER, MACHINE, PROGRAM, SQL_ID FROM V$SESSION WHERE STATUS = 'ACTIVE' AND USERNAME IS NOT NULL;",
+    sql: "SELECT SID, SERIAL#, USERNAME, STATUS, OSUSER, MACHINE, PROGRAM FROM V$SESSION WHERE STATUS = 'ACTIVE' AND USERNAME IS NOT NULL",
     dbType: 'oracle'
   },
   {
     id: 'oracle-locks',
-    title: 'Objetos e Tabelas Bloqueadas (Locks)',
+    title: 'Objetos Bloqueados (Locks)',
     category: 'Oracle - Diagnóstico',
     description: 'Diagnostica bloqueios em tabelas e concorrência no Oracle',
-    sql: "SELECT L.SESSION_ID, S.SERIAL#, S.USERNAME, S.OSUSER, O.OBJECT_NAME, L.LOCKED_MODE FROM V$LOCKED_OBJECT L JOIN DBA_OBJECTS O ON L.OBJECT_ID = O.OBJECT_ID JOIN V$SESSION S ON L.SESSION_ID = S.SID;",
+    sql: "SELECT L.SESSION_ID, S.SERIAL#, S.USERNAME, S.OSUSER, O.OBJECT_NAME, L.LOCKED_MODE FROM V$LOCKED_OBJECT L JOIN DBA_OBJECTS O ON L.OBJECT_ID = O.OBJECT_ID JOIN V$SESSION S ON L.SESSION_ID = S.SID",
     dbType: 'oracle'
   },
   {
@@ -98,7 +71,7 @@ export const DEFAULT_SQL_SNIPPETS: SqlSnippet[] = [
     title: 'Uso de Tablespaces e Disco',
     category: 'Oracle - Infraestrutura',
     description: 'Verifica espaço alocado por tablespace',
-    sql: "SELECT TABLESPACE_NAME, ROUND(SUM(BYTES)/(1024*1024), 2) AS TOTAL_MB FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME;",
+    sql: "SELECT TABLESPACE_NAME, ROUND(SUM(BYTES)/(1024*1024), 2) AS TOTAL_MB FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME",
     dbType: 'oracle'
   }
 ];
@@ -121,7 +94,7 @@ export const DatabasePage: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings | null>(null);
 
   // Editor e Execução
-  const [sql, setSql] = useState<string>('SELECT 1;');
+  const [sql, setSql] = useState<string>('SELECT 1 FROM DUAL');
   const [maxRows, setMaxRows] = useState<number>(100);
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
@@ -129,6 +102,20 @@ export const DatabasePage: React.FC = () => {
   const [isExplaining, setIsExplaining] = useState<boolean>(false);
   const [explainResult, setExplainResult] = useState<ExplainPlanResult | null>(null);
   const [showSnippetsMenu, setShowSnippetsMenu] = useState<boolean>(false);
+
+  // Filtros, ordenação e seleção da tabela de resultados
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [sortConfig, setSortConfig] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
+  const [activeColumnMenu, setActiveColumnMenu] = useState<string | null>(null);
+  const [cellContextMenu, setCellContextMenu] = useState<{
+    x: number;
+    y: number;
+    column: string;
+    value: any;
+    rowIndex: number;
+  } | null>(null);
 
   // Histórico persistente
   const [history, setHistory] = useState<ExecutionHistoryItem[]>(() => {
@@ -140,7 +127,7 @@ export const DatabasePage: React.FC = () => {
     }
   });
 
-  // Snippets personalizados do desenvolvedor
+  // Consultas salvas pelo desenvolvedor
   const [customSnippets, setCustomSnippets] = useState<SqlSnippet[]>(() => {
     try {
       const saved = localStorage.getItem('devManager:customSnippets');
@@ -149,10 +136,13 @@ export const DatabasePage: React.FC = () => {
       return [];
     }
   });
+  const [savedQuerySearch, setSavedQuerySearch] = useState<string>('');
   const [isSaveSnippetModalOpen, setIsSaveSnippetModalOpen] = useState<boolean>(false);
+  const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
   const [snippetTitle, setSnippetTitle] = useState<string>('');
-  const [snippetCategory, setSnippetCategory] = useState<string>('Meus Snippets');
+  const [snippetCategory, setSnippetCategory] = useState<string>('Minhas Consultas');
   const [snippetDesc, setSnippetDesc] = useState<string>('');
+  const [snippetSql, setSnippetSql] = useState<string>('');
 
   // Tabelas do Schema e Navegador de Colunas
   const [tables, setTables] = useState<string[]>([]);
@@ -191,14 +181,18 @@ export const DatabasePage: React.FC = () => {
         const conns = st.databaseConnections || [];
         setConnections(conns);
 
+        if (st.savedSqlSnippets && Array.isArray(st.savedSqlSnippets) && st.savedSqlSnippets.length > 0) {
+          setCustomSnippets(st.savedSqlSnippets);
+        }
+
         if (conns.length > 0 && !activeConnectionId) {
           const defaultConn = conns.find((c) => c.isDefault) || conns[0];
           setActiveConnectionId(defaultConn.id);
           // Pré-ajusta query inicial baseado no tipo de banco
           if (defaultConn.type === 'oracle') {
-            setSql('SELECT 1 FROM DUAL;');
+            setSql('SELECT 1 FROM DUAL');
           } else {
-            setSql('SELECT 1;');
+            setSql('SELECT 1');
           }
         }
       } catch (err) {
@@ -206,6 +200,16 @@ export const DatabasePage: React.FC = () => {
       }
     }
   }, [activeConnectionId]);
+
+  const saveSnippets = async (newSnippets: SqlSnippet[]) => {
+    setCustomSnippets(newSnippets);
+    try {
+      localStorage.setItem('devManager:customSnippets', JSON.stringify(newSnippets));
+    } catch {}
+    if (window.electronAPI?.saveSettings) {
+      await window.electronAPI.saveSettings({ savedSqlSnippets: newSnippets });
+    }
+  };
 
   useEffect(() => {
     loadSettings();
@@ -257,6 +261,8 @@ export const DatabasePage: React.FC = () => {
         user: editingConn.user || '',
         password: editingConn.password || '',
         oracleMode: editingConn.oracleMode || 'serviceName',
+        oracleClientPath: editingConn.oracleClientPath,
+        oracleThickMode: editingConn.oracleThickMode,
         ssl: editingConn.ssl
       };
 
@@ -287,6 +293,8 @@ export const DatabasePage: React.FC = () => {
       user: editingConn.user.trim(),
       password: editingConn.password || '',
       oracleMode: editingConn.oracleMode || 'serviceName',
+      oracleClientPath: editingConn.oracleClientPath?.trim() || undefined,
+      oracleThickMode: editingConn.oracleThickMode,
       ssl: editingConn.ssl,
       isDefault: editingConn.isDefault || false
     };
@@ -328,7 +336,9 @@ export const DatabasePage: React.FC = () => {
       database: 'XEPDB1',
       user: 'system',
       password: '',
-      oracleMode: 'serviceName'
+      oracleMode: 'serviceName',
+      oracleThickMode: false,
+      oracleClientPath: ''
     });
     setTestResult(null);
     setIsModalOpen(true);
@@ -348,18 +358,27 @@ export const DatabasePage: React.FC = () => {
       return;
     }
 
-    if (!sql.trim()) return;
+    const cleanSql = sql.trim().replace(/;+\s*$/, '');
+    if (!cleanSql) return;
 
     setIsExecuting(true);
     setActiveResultTab('grid');
+    // Resetar filtros e seleções anteriores para a nova consulta
+    setSearchTerm('');
+    setColumnFilters({});
+    setSortConfig(null);
+    setSelectedRowIndex(null);
+    setActiveColumnMenu(null);
+    setCellContextMenu(null);
+
     try {
-      const res = await window.electronAPI.executeDbQuery(activeConnection, sql, maxRows);
+      const res = await window.electronAPI.executeDbQuery(activeConnection, cleanSql, maxRows);
       setQueryResult(res);
 
       // Adicionar ao histórico
       const historyItem: ExecutionHistoryItem = {
         id: `hist_${Date.now()}`,
-        sql: sql.trim(),
+        sql: cleanSql,
         connectionName: activeConnection.name,
         timestamp: new Date().toLocaleTimeString('pt-BR'),
         success: res.success,
@@ -400,35 +419,80 @@ export const DatabasePage: React.FC = () => {
     }
   };
 
-  const handleSaveCustomSnippet = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!snippetTitle.trim() || !sql.trim()) return;
-    const newSnip: SqlSnippet = {
-      id: `custom_${Date.now()}`,
-      title: snippetTitle.trim(),
-      category: snippetCategory.trim() || 'Meus Snippets',
-      description: snippetDesc.trim() || undefined,
-      sql: sql.trim(),
-      dbType: activeConnection?.type || 'all'
-    };
-    const updated = [newSnip, ...customSnippets];
-    setCustomSnippets(updated);
-    try {
-      localStorage.setItem('devManager:customSnippets', JSON.stringify(updated));
-    } catch {}
-    setIsSaveSnippetModalOpen(false);
+  const handleOpenCreateSnippet = (initialSql?: string) => {
+    setEditingSnippetId(null);
     setSnippetTitle('');
+    setSnippetCategory('Minhas Consultas');
     setSnippetDesc('');
+    setSnippetSql((initialSql ?? sql).trim());
+    setIsSaveSnippetModalOpen(true);
   };
 
-  const handleDeleteCustomSnippet = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = customSnippets.filter((s) => s.id !== id);
-    setCustomSnippets(updated);
-    try {
-      localStorage.setItem('devManager:customSnippets', JSON.stringify(updated));
-    } catch {}
+  const handleOpenEditSnippet = (snip: SqlSnippet, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setEditingSnippetId(snip.id);
+    setSnippetTitle(snip.title);
+    setSnippetCategory(snip.category || 'Minhas Consultas');
+    setSnippetDesc(snip.description || '');
+    setSnippetSql(snip.sql);
+    setIsSaveSnippetModalOpen(true);
   };
+
+  const handleSaveCustomSnippet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!snippetTitle.trim() || !snippetSql.trim()) return;
+
+    if (editingSnippetId) {
+      const updated = customSnippets.map((s) =>
+        s.id === editingSnippetId
+          ? {
+              ...s,
+              title: snippetTitle.trim(),
+              category: snippetCategory.trim() || 'Minhas Consultas',
+              description: snippetDesc.trim() || undefined,
+              sql: snippetSql.trim()
+            }
+          : s
+      );
+      await saveSnippets(updated);
+    } else {
+      const newSnip: SqlSnippet = {
+        id: `custom_${Date.now()}`,
+        title: snippetTitle.trim(),
+        category: snippetCategory.trim() || 'Minhas Consultas',
+        description: snippetDesc.trim() || undefined,
+        sql: snippetSql.trim(),
+        dbType: activeConnection?.type || 'all'
+      };
+      await saveSnippets([newSnip, ...customSnippets]);
+    }
+
+    setIsSaveSnippetModalOpen(false);
+    setEditingSnippetId(null);
+    setSnippetTitle('');
+    setSnippetDesc('');
+    setSnippetSql('');
+  };
+
+  const handleDeleteCustomSnippet = async (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (confirm('Deseja excluir esta consulta salva?')) {
+      const updated = customSnippets.filter((s) => s.id !== id);
+      await saveSnippets(updated);
+    }
+  };
+
+  const filteredCustomSnippets = useMemo(() => {
+    if (!savedQuerySearch.trim()) return customSnippets;
+    const term = savedQuerySearch.toLowerCase();
+    return customSnippets.filter(
+      (s) =>
+        s.title.toLowerCase().includes(term) ||
+        s.category.toLowerCase().includes(term) ||
+        (s.description && s.description.toLowerCase().includes(term)) ||
+        s.sql.toLowerCase().includes(term)
+    );
+  }, [customSnippets, savedQuerySearch]);
 
   const handleToggleTableExpand = async (tableName: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -501,27 +565,251 @@ export const DatabasePage: React.FC = () => {
     setShowSnippetsMenu(false);
   };
 
+  const handleExecuteSnippetDirectly = (snip: SqlSnippet, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const clean = snip.sql.trim().replace(/;+\s*$/, '');
+    setSql(clean);
+    setShowSnippetsMenu(false);
+    if (!activeConnection) {
+      alert('Selecione uma conexão antes de executar.');
+      return;
+    }
+    // Executa diretamente
+    setIsExecuting(true);
+    setActiveResultTab('grid');
+    setSearchTerm('');
+    setColumnFilters({});
+    setSortConfig(null);
+    setSelectedRowIndex(null);
+    setActiveColumnMenu(null);
+    setCellContextMenu(null);
+
+    window.electronAPI
+      ?.executeDbQuery(activeConnection, clean, maxRows)
+      .then((res) => {
+        setQueryResult(res);
+        const historyItem: ExecutionHistoryItem = {
+          id: `hist_${Date.now()}`,
+          sql: clean,
+          connectionName: activeConnection.name,
+          timestamp: new Date().toLocaleTimeString('pt-BR'),
+          success: res.success,
+          timeMs: res.executionTimeMs,
+          rowCount: res.rowCount,
+          affectedRows: res.affectedRows,
+          error: res.error
+        };
+        setHistory((prev) => {
+          const updated = [historyItem, ...prev.filter((h) => h.sql !== historyItem.sql).slice(0, 49)];
+          try {
+            localStorage.setItem('devManager:dbHistory', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      })
+      .catch((err) => {
+        setQueryResult({
+          success: false,
+          columns: [],
+          rows: [],
+          rowCount: 0,
+          executionTimeMs: 0,
+          isQuery: false,
+          error: err.message || 'Erro inesperado ao executar comando.'
+        });
+      })
+      .finally(() => {
+        setIsExecuting(false);
+      });
+  };
+
   // Snippet rápido de consulta para tabela
   const handleTableClick = (tableName: string) => {
     let query = '';
     if (activeConnection?.type === 'oracle') {
-      query = `SELECT * FROM ${tableName} WHERE ROWNUM <= 100;`;
+      query = `SELECT * FROM ${tableName} WHERE ROWNUM <= 100`;
     } else if (activeConnection?.type === 'postgres' || activeConnection?.type === 'mysql') {
-      query = `SELECT * FROM ${tableName} LIMIT 100;`;
+      query = `SELECT * FROM ${tableName} LIMIT 100`;
     } else {
-      query = `SELECT * FROM ${tableName};`;
+      query = `SELECT * FROM ${tableName}`;
     }
     setSql(query);
   };
 
-  // Exportar para CSV
+  // Detecção de tipo de dado por coluna (para ícones e ordenação adequada no grid)
+  const columnDataTypes = useMemo<Record<string, 'number' | 'date' | 'boolean' | 'object' | 'string'>>(() => {
+    if (!queryResult || !queryResult.columns || !queryResult.rows) return {};
+    const types: Record<string, 'number' | 'date' | 'boolean' | 'object' | 'string'> = {};
+
+    for (const col of queryResult.columns) {
+      let detected: 'number' | 'date' | 'boolean' | 'object' | 'string' = 'string';
+      for (const row of queryResult.rows) {
+        const val = row[col];
+        if (val !== null && val !== undefined && val !== '') {
+          if (typeof val === 'number') {
+            detected = 'number';
+            break;
+          }
+          if (typeof val === 'boolean') {
+            detected = 'boolean';
+            break;
+          }
+          if (typeof val === 'object') {
+            if (val instanceof Date) {
+              detected = 'date';
+            } else {
+              detected = 'object';
+            }
+            break;
+          }
+          if (typeof val === 'string') {
+            const trimmed = val.trim();
+            if (/^-?\d+(\.\d+)?$/.test(trimmed) && !isNaN(Number(trimmed))) {
+              detected = 'number';
+              break;
+            }
+            if (/^\d{4}-\d{2}-\d{2}/.test(trimmed) || /^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+              detected = 'date';
+              break;
+            }
+            detected = 'string';
+            break;
+          }
+        }
+      }
+      types[col] = detected;
+    }
+    return types;
+  }, [queryResult]);
+
+  // Linhas processadas com busca global, filtros por coluna e ordenação
+  const processedRows = useMemo(() => {
+    if (!queryResult?.rows) return [];
+    let list = [...queryResult.rows];
+
+    // 1. Busca global (searchTerm)
+    if (searchTerm.trim()) {
+      const termLower = searchTerm.trim().toLowerCase();
+      list = list.filter((row) => {
+        return queryResult.columns.some((col) => {
+          const val = row[col];
+          if (val === null || val === undefined) return false;
+          return String(val).toLowerCase().includes(termLower);
+        });
+      });
+    }
+
+    // 2. Filtros por coluna específica
+    const activeFilters = Object.entries(columnFilters).filter(([, v]) => v && v.trim());
+    if (activeFilters.length > 0) {
+      list = list.filter((row) => {
+        return activeFilters.every(([col, filterVal]) => {
+          const val = row[col];
+          const lowerFilter = filterVal.trim().toLowerCase();
+          if (lowerFilter === '[null]' || lowerFilter === 'null') {
+            return val === null || val === undefined;
+          }
+          if (lowerFilter === 'not null' || lowerFilter === '!null') {
+            return val !== null && val !== undefined;
+          }
+          if (val === null || val === undefined) return false;
+          return String(val).toLowerCase().includes(lowerFilter);
+        });
+      });
+    }
+
+    // 3. Ordenação (sortConfig)
+    if (sortConfig) {
+      const { column, direction } = sortConfig;
+      const type = columnDataTypes[column] || 'string';
+
+      list.sort((a, b) => {
+        const valA = a[column];
+        const valB = b[column];
+
+        // Nulos sempre no final
+        if ((valA === null || valA === undefined) && (valB === null || valB === undefined)) return 0;
+        if (valA === null || valA === undefined) return 1;
+        if (valB === null || valB === undefined) return -1;
+
+        let comp = 0;
+        if (type === 'number') {
+          const numA = Number(valA);
+          const numB = Number(valB);
+          if (!isNaN(numA) && !isNaN(numB)) {
+            comp = numA - numB;
+          } else {
+            comp = String(valA).localeCompare(String(valB));
+          }
+        } else if (type === 'date') {
+          const dateA = new Date(valA).getTime();
+          const dateB = new Date(valB).getTime();
+          if (!isNaN(dateA) && !isNaN(dateB)) {
+            comp = dateA - dateB;
+          } else {
+            comp = String(valA).localeCompare(String(valB));
+          }
+        } else {
+          comp = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
+        }
+
+        return direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return list;
+  }, [queryResult, searchTerm, columnFilters, sortConfig, columnDataTypes]);
+
+  // Contagem de filtros ativos
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      searchTerm.trim() ||
+      sortConfig !== null ||
+      Object.values(columnFilters).some((v) => v && v.trim())
+    );
+  }, [searchTerm, sortConfig, columnFilters]);
+
+  // Limpar todos os filtros e ordenações
+  const handleClearAllFilters = () => {
+    setSearchTerm('');
+    setColumnFilters({});
+    setSortConfig(null);
+    setSelectedRowIndex(null);
+    setActiveColumnMenu(null);
+    setCellContextMenu(null);
+  };
+
+  // Alternar ordenação de uma coluna (clique no cabeçalho)
+  const handleToggleSort = (column: string) => {
+    setSortConfig((prev) => {
+      if (!prev || prev.column !== column) {
+        return { column, direction: 'asc' };
+      }
+      if (prev.direction === 'asc') {
+        return { column, direction: 'desc' };
+      }
+      return null;
+    });
+  };
+
+  // Aplicar filtro rápido por valor a partir de uma célula
+  const handleFilterByCellValue = (col: string, val: any) => {
+    const filterText = val === null || val === undefined ? '[null]' : String(val);
+    setColumnFilters((prev) => ({
+      ...prev,
+      [col]: filterText
+    }));
+    setCellContextMenu(null);
+  };
+
+  // Exportar para CSV (respeita dados filtrados e ordenados atuais)
   const handleExportCsv = () => {
-    if (!queryResult || !queryResult.rows || queryResult.rows.length === 0) return;
+    if (!queryResult || !queryResult.columns || processedRows.length === 0) return;
 
     const cols = queryResult.columns;
     const csvLines = [cols.join(',')];
 
-    for (const row of queryResult.rows) {
+    for (const row of processedRows) {
       const line = cols
         .map((col) => {
           const val = row[col];
@@ -544,9 +832,9 @@ export const DatabasePage: React.FC = () => {
   };
 
   // Copiar Conteúdo de Célula
-  const handleCopyCell = (text: any) => {
+  const handleCopyCell = (text: any, cellKey?: string) => {
     const str = typeof text === 'object' ? JSON.stringify(text) : String(text ?? '');
-    copyCellToClipboard(str, 'Copiado!');
+    copyCellToClipboard(str, cellKey || 'Copiado!');
   };
 
   const filteredTables = useMemo(() => {
@@ -804,117 +1092,238 @@ export const DatabasePage: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Menu Dropdown de Snippets Prontos */}
+            {/* Menu Dropdown de Consultas Salvas */}
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setShowSnippetsMenu((prev) => !prev)}
-                className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs"
-                title="Inserir Consultas e Diagnósticos Rápidos de Banco"
+                onClick={() => {
+                  setSavedQuerySearch('');
+                  setShowSnippetsMenu((prev) => !prev);
+                }}
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer ${
+                  showSnippetsMenu
+                    ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40'
+                    : 'bg-card hover:bg-muted border border-border/70 text-foreground'
+                }`}
+                title="Minhas consultas SQL salvas e modelos"
               >
-                <BookOpen className="w-3.5 h-3.5 text-primary" />
-                <span>Consultas Rápidas</span>
+                <BookmarkPlus className="w-3.5 h-3.5 text-amber-500" />
+                <span>Consultas Salvas</span>
+                {customSnippets.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    {customSnippets.length}
+                  </span>
+                )}
               </button>
 
               {showSnippetsMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSnippetsMenu(false)} />
-                  <div className="absolute right-0 mt-1 w-84 bg-card border border-border rounded-xl shadow-2xl z-50 p-2 space-y-1 text-xs">
-                    <div className="text-[10px] uppercase font-bold text-muted-foreground px-2 py-1 flex items-center justify-between border-b border-border/60 pb-1.5">
-                      <span className="flex items-center gap-1">
-                        <FileCode className="w-3 h-3 text-primary" /> Consultas Rápidas SQL
-                      </span>
-                      <button
-                        onClick={() => setShowSnippetsMenu(false)}
-                        className="text-muted-foreground hover:text-foreground p-0.5 rounded"
-                      >
-                        ✕
-                      </button>
+                  <div className="absolute right-0 mt-1 w-96 bg-card border border-border rounded-xl shadow-2xl z-50 p-2.5 space-y-2 text-xs animate-fade-in font-sans">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                      <div className="flex items-center space-x-1.5">
+                        <BookmarkPlus className="w-4 h-4 text-amber-500" />
+                        <span className="font-bold text-xs text-foreground">Consultas Salvas</span>
+                      </div>
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowSnippetsMenu(false);
+                            handleOpenCreateSnippet();
+                          }}
+                          className="flex items-center space-x-1 px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-black rounded text-[11px] font-bold transition"
+                          title="Salvar consulta atual do editor"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Nova</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowSnippetsMenu(false)}
+                          className="text-muted-foreground hover:text-foreground p-1 rounded"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="max-h-72 overflow-y-auto space-y-2 pt-1">
-                      {/* Meus Snippets Personalizados */}
-                      {customSnippets.length > 0 && (
-                        <div className="space-y-1">
-                          <div className="text-[10px] font-bold text-amber-400 px-2 flex items-center gap-1">
-                            <BookmarkPlus className="w-3 h-3" /> Meus Snippets Salvos ({customSnippets.length})
+
+                    {/* Campo de Busca em Consultas Salvas */}
+                    <div className="relative">
+                      <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={savedQuerySearch}
+                        onChange={(e) => setSavedQuerySearch(e.target.value)}
+                        placeholder="Buscar por nome, categoria ou comando..."
+                        className="w-full pl-7 pr-6 py-1 bg-background border border-border rounded text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                        autoFocus
+                      />
+                      {savedQuerySearch && (
+                        <button
+                          type="button"
+                          onClick={() => setSavedQuerySearch('')}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto space-y-2 pr-0.5">
+                      {/* Seção: Minhas Consultas Salvas */}
+                      <div>
+                        <div className="text-[10px] font-bold text-amber-500 uppercase tracking-wider px-1 mb-1">
+                          Minhas Consultas ({filteredCustomSnippets.length})
+                        </div>
+
+                        {filteredCustomSnippets.length === 0 ? (
+                          <div className="p-3 text-center bg-muted/20 border border-dashed border-border rounded-lg text-muted-foreground text-[11px] space-y-1.5">
+                            <p>
+                              {savedQuerySearch
+                                ? 'Nenhuma consulta salva encontrada para a busca.'
+                                : 'Nenhuma consulta personalizada salva ainda.'}
+                            </p>
+                            {!savedQuerySearch && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowSnippetsMenu(false);
+                                  handleOpenCreateSnippet();
+                                }}
+                                className="text-primary hover:underline font-bold text-[11px] block mx-auto"
+                              >
+                                + Salvar consulta atual do editor
+                              </button>
+                            )}
                           </div>
-                          {customSnippets.map((s) => (
+                        ) : (
+                          <div className="space-y-1.5">
+                            {filteredCustomSnippets.map((s) => (
+                              <div
+                                key={s.id}
+                                className="p-2 rounded-lg bg-card/60 hover:bg-muted/60 border border-border/60 hover:border-amber-500/40 transition flex flex-col space-y-1.5 group"
+                              >
+                                <div className="flex items-start justify-between gap-1.5">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center space-x-1.5 flex-wrap">
+                                      <span className="font-bold text-xs text-foreground group-hover:text-primary transition truncate">
+                                        {s.title}
+                                      </span>
+                                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold shrink-0">
+                                        {s.category || 'Geral'}
+                                      </span>
+                                    </div>
+                                    {s.description && (
+                                      <span className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5 block">
+                                        {s.description}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center space-x-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleExecuteSnippetDirectly(s, e)}
+                                      className="p-1 rounded bg-emerald-600/15 hover:bg-emerald-600 text-emerald-500 hover:text-white transition"
+                                      title="Executar imediatamente"
+                                    >
+                                      <Play className="w-3 h-3 fill-current" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSelectSnippet(s)}
+                                      className="p-1 rounded bg-primary/15 hover:bg-primary text-primary hover:text-primary-foreground transition"
+                                      title="Carregar no editor"
+                                    >
+                                      <FileCode className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        setShowSnippetsMenu(false);
+                                        handleOpenEditSnippet(s, e);
+                                      }}
+                                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                                      title="Editar consulta salva"
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleDeleteCustomSnippet(s.id, e)}
+                                      className="p-1 rounded text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 transition"
+                                      title="Excluir consulta"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <pre className="text-[10px] font-mono text-emerald-400/80 bg-[#0B0F17] p-1.5 rounded truncate max-h-12 overflow-hidden border border-border/40 select-none">
+                                  {s.sql}
+                                </pre>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Seção: Modelos de Diagnóstico do Sistema */}
+                      <div className="pt-2 border-t border-border/50">
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
+                          Modelos de Diagnóstico
+                        </div>
+                        <div className="space-y-1">
+                          {DEFAULT_SQL_SNIPPETS.map((s) => (
                             <div
                               key={s.id}
                               onClick={() => handleSelectSnippet(s)}
-                              className="w-full text-left p-2 rounded-lg hover:bg-muted/80 text-foreground transition flex items-center justify-between group border border-border/40 hover:border-amber-400/50 cursor-pointer"
+                              className="w-full text-left p-2 rounded-lg hover:bg-muted/70 text-foreground transition flex items-center justify-between group border border-transparent hover:border-border cursor-pointer"
                             >
                               <div className="min-w-0 flex-1 mr-2">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-bold text-[11px] group-hover:text-amber-400 truncate">{s.title}</span>
-                                  <span className="text-[8px] px-1 py-0.2 rounded bg-amber-500/15 text-amber-400 font-bold shrink-0">
-                                    Meu
+                                <div className="flex items-center justify-between">
+                                  <span className="font-bold text-[11px] group-hover:text-primary truncate">
+                                    {s.title}
+                                  </span>
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-mono shrink-0">
+                                    {s.category.split('-')[0].trim()}
                                   </span>
                                 </div>
                                 {s.description && (
-                                  <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1 block">
+                                  <span className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5 block">
                                     {s.description}
                                   </span>
                                 )}
                               </div>
                               <button
                                 type="button"
-                                onClick={(e) => handleDeleteCustomSnippet(s.id, e)}
-                                className="p-1 rounded text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition shrink-0"
-                                title="Excluir snippet"
+                                onClick={(e) => handleExecuteSnippetDirectly(s, e)}
+                                className="p-1 rounded hover:bg-emerald-600/20 text-emerald-500 transition shrink-0 opacity-0 group-hover:opacity-100"
+                                title="Executar imediatamente"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Play className="w-3 h-3 fill-current" />
                               </button>
                             </div>
                           ))}
-                          <div className="border-b border-border/50 my-1.5" />
                         </div>
-                      )}
-
-                      {/* Snippets Padrão */}
-                      <div className="text-[10px] font-bold text-muted-foreground px-2">
-                        Snippets do Sistema
                       </div>
-                      {DEFAULT_SQL_SNIPPETS.map((s) => (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => handleSelectSnippet(s)}
-                          className="w-full text-left p-2 rounded-lg hover:bg-muted/80 text-foreground transition flex flex-col group border border-transparent hover:border-border"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-[11px] group-hover:text-primary">{s.title}</span>
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
-                              {s.category.split('-')[0].trim()}
-                            </span>
-                          </div>
-                          {s.description && (
-                            <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
-                              {s.description}
-                            </span>
-                          )}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Botão Salvar Snippet */}
+            {/* Botão Salvar Consulta Atual */}
             <button
               type="button"
-              onClick={() => {
-                setSnippetTitle('');
-                setSnippetDesc('');
-                setIsSaveSnippetModalOpen(true);
-              }}
+              onClick={() => handleOpenCreateSnippet()}
               disabled={!sql.trim()}
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs disabled:opacity-50"
-              title="Salvar consulta atual nos meus snippets favoritos"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-semibold text-foreground transition shadow-xs disabled:opacity-50 cursor-pointer"
+              title="Salvar consulta atual do editor nas minhas consultas"
             >
-              <BookmarkPlus className="w-3.5 h-3.5 text-amber-400" />
-              <span>Salvar Snippet</span>
+              <BookmarkPlus className="w-3.5 h-3.5 text-amber-500" />
+              <span>Salvar Consulta</span>
             </button>
 
             {/* Botão Explain Plan */}
@@ -1097,56 +1506,435 @@ export const DatabasePage: React.FC = () => {
                   <p>A consulta não retornou nenhuma linha.</p>
                 </div>
               ) : (
-                /* Grid de Dados com Tabela */
-                <div className="min-w-full inline-block align-middle">
-                  <table className="min-w-full divide-y divide-border/60 text-xs font-mono">
-                    <thead className="bg-muted/80 sticky top-0 z-10">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-[10px] font-bold text-muted-foreground uppercase border-r border-border/40 w-12 text-center">
-                          #
-                        </th>
-                        {queryResult.columns.map((col) => (
-                          <th
-                            key={col}
-                            className="px-3 py-2 text-left text-[11px] font-bold text-foreground border-r border-border/40 whitespace-nowrap"
+                /* Grid de Dados com Tabela e Filtros */
+                <div className="flex flex-col h-full">
+                  {/* Barra de Filtro Rápido Superior (estilo DBeaver) */}
+                  <div className="px-3 py-2 bg-muted/40 border-b border-border/70 flex items-center justify-between gap-3 shrink-0 flex-wrap">
+                    <div className="relative flex-1 min-w-[240px] max-w-xl">
+                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Filtrar resultados... (digite qualquer termo para buscar em todas as colunas)"
+                        className="w-full pl-8 pr-7 py-1 text-xs bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                      />
+                      {searchTerm && (
+                        <button
+                          type="button"
+                          onClick={() => setSearchTerm('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          title="Limpar busca"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2 text-xs">
+                      {hasActiveFilters ? (
+                        <>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                            <Filter className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                            <span>
+                              {processedRows.length} de {queryResult.rowCount} linha(s)
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleClearAllFilters}
+                            className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 transition cursor-pointer"
+                            title="Remover todos os filtros e ordenações da tabela"
                           >
-                            {col}
+                            <FilterX className="w-3 h-3" />
+                            <span>Limpar filtros</span>
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground text-[11px] font-mono">
+                          {processedRows.length} linha(s)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tabela de Resultados */}
+                  <div className="flex-1 overflow-auto min-w-full relative">
+                    <table className="min-w-full divide-y divide-border/60 text-xs font-mono border-separate border-spacing-0">
+                      <thead className="bg-slate-100 dark:bg-[#181F2E] sticky top-0 z-10 border-b border-border shadow-xs">
+                        <tr>
+                          <th className="px-2.5 py-2 text-center text-[10px] font-bold text-muted-foreground uppercase border-b border-r border-border/50 w-12 bg-slate-100 dark:bg-[#181F2E] select-none">
+                            #
                           </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/40 bg-background/50">
-                      {queryResult.rows.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-muted/40 transition">
-                          <td className="px-2 py-1.5 text-center text-muted-foreground text-[10px] border-r border-border/30 select-none">
-                            {idx + 1}
-                          </td>
                           {queryResult.columns.map((col) => {
-                            const val = row[col];
-                            const isNull = val === null || val === undefined;
+                            const dType = columnDataTypes[col] || 'string';
+                            const isSorted = sortConfig?.column === col;
+                            const hasColFilter = Boolean(columnFilters[col]?.trim());
+                            const isMenuOpen = activeColumnMenu === col;
+
                             return (
-                              <td
+                              <th
                                 key={col}
-                                onClick={() => handleCopyCell(val)}
-                                title="Clique para copiar valor"
-                                className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate cursor-pointer hover:bg-primary/10 transition"
+                                className="px-2.5 py-1.5 text-left border-b border-r border-border/50 whitespace-nowrap bg-slate-100 dark:bg-[#181F2E] relative select-none group"
                               >
-                                {isNull ? (
-                                  <span className="text-muted-foreground/60 italic text-[10px]">NULL</span>
-                                ) : typeof val === 'object' ? (
-                                  <span className="text-sky-300">{JSON.stringify(val)}</span>
-                                ) : typeof val === 'number' ? (
-                                  <span className="text-amber-300">{val}</span>
-                                ) : (
-                                  <span>{String(val)}</span>
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <div
+                                    onClick={() => handleToggleSort(col)}
+                                    className="flex items-center space-x-1.5 cursor-pointer hover:text-primary transition flex-1 py-0.5"
+                                    title={`Clique para ordenar por ${col} (ASC / DESC)`}
+                                  >
+                                    {/* Indicador de Tipo de Dado (estilo DBeaver: 123, ABC, 📅) */}
+                                    {dType === 'number' ? (
+                                      <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/30">
+                                        123
+                                      </span>
+                                    ) : dType === 'date' ? (
+                                      <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                                        📅
+                                      </span>
+                                    ) : dType === 'boolean' ? (
+                                      <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                        0/1
+                                      </span>
+                                    ) : dType === 'object' ? (
+                                      <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-500/30">
+                                        {'{ }'}
+                                      </span>
+                                    ) : (
+                                      <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30">
+                                        ABC
+                                      </span>
+                                    )}
+
+                                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100">
+                                      {col}
+                                    </span>
+
+                                    {isSorted && (
+                                      sortConfig?.direction === 'asc' ? (
+                                        <ArrowUp className="w-3 h-3 text-primary shrink-0" />
+                                      ) : (
+                                        <ArrowDown className="w-3 h-3 text-primary shrink-0" />
+                                      )
+                                    )}
+                                  </div>
+
+                                  {/* Botão de Menu e Filtro da Coluna */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveColumnMenu(isMenuOpen ? null : col);
+                                    }}
+                                    className={`p-1 rounded transition ${
+                                      hasColFilter
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted/80 opacity-60 group-hover:opacity-100'
+                                    }`}
+                                    title={`Filtrar ou ordenar coluna ${col}`}
+                                  >
+                                    <Filter className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+
+                                {/* Menu Popover da Coluna (estilo DBeaver) */}
+                                {isMenuOpen && (
+                                  <>
+                                    <div
+                                      className="fixed inset-0 z-20 cursor-default"
+                                      onClick={() => setActiveColumnMenu(null)}
+                                    />
+                                    <div className="absolute left-0 top-full mt-1 w-64 bg-popover text-popover-foreground rounded-lg shadow-xl border border-border p-2.5 z-30 font-sans text-xs space-y-2">
+                                      <div className="font-bold text-[11px] text-muted-foreground pb-1 border-b border-border flex items-center justify-between">
+                                        <span>Opções: {col}</span>
+                                        <button
+                                          onClick={() => setActiveColumnMenu(null)}
+                                          className="hover:text-foreground text-muted-foreground"
+                                        >
+                                          <X className="w-3 h-3" />
+                                        </button>
+                                      </div>
+
+                                      <div className="space-y-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSortConfig({ column: col, direction: 'asc' });
+                                            setActiveColumnMenu(null);
+                                          }}
+                                          className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent transition text-left ${
+                                            sortConfig?.column === col && sortConfig.direction === 'asc'
+                                              ? 'font-bold text-primary bg-primary/10'
+                                              : ''
+                                          }`}
+                                        >
+                                          <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" />
+                                          <span>Order by {col} ASC</span>
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSortConfig({ column: col, direction: 'desc' });
+                                            setActiveColumnMenu(null);
+                                          }}
+                                          className={`w-full flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent transition text-left ${
+                                            sortConfig?.column === col && sortConfig.direction === 'desc'
+                                              ? 'font-bold text-primary bg-primary/10'
+                                              : ''
+                                          }`}
+                                        >
+                                          <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                                          <span>Order by {col} DESC</span>
+                                        </button>
+                                      </div>
+
+                                      <div className="pt-1.5 border-t border-border space-y-1.5">
+                                        <label className="text-[10px] font-semibold text-muted-foreground block">
+                                          Filtrar por valor nesta coluna:
+                                        </label>
+                                        <div className="relative">
+                                          <input
+                                            type="text"
+                                            value={columnFilters[col] || ''}
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              setColumnFilters((prev) => ({
+                                                ...prev,
+                                                [col]: val
+                                              }));
+                                            }}
+                                            placeholder="Ex: texto, [null], !null..."
+                                            className="w-full px-2 py-1 text-xs bg-background border border-border rounded font-mono"
+                                            autoFocus
+                                          />
+                                          {columnFilters[col] && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setColumnFilters((prev) => {
+                                                  const copy = { ...prev };
+                                                  delete copy[col];
+                                                  return copy;
+                                                });
+                                              }}
+                                              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            >
+                                              <X className="w-3 h-3" />
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <div className="pt-1.5 border-t border-border flex items-center justify-between text-[11px]">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setColumnFilters((prev) => ({
+                                              ...prev,
+                                              [col]: '[null]'
+                                            }));
+                                            setActiveColumnMenu(null);
+                                          }}
+                                          className="text-muted-foreground hover:text-foreground underline text-[10px]"
+                                        >
+                                          Apenas [NULL]
+                                        </button>
+
+                                        {(hasColFilter || isSorted) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (isSorted) setSortConfig(null);
+                                              setColumnFilters((prev) => {
+                                                const copy = { ...prev };
+                                                delete copy[col];
+                                                return copy;
+                                              });
+                                              setActiveColumnMenu(null);
+                                            }}
+                                            className="text-rose-500 hover:text-rose-600 font-semibold text-[10px]"
+                                          >
+                                            Limpar coluna
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </>
                                 )}
-                              </td>
+                              </th>
                             );
                           })}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+
+                      <tbody className="divide-y divide-border/40">
+                        {processedRows.length === 0 ? (
+                          <tr className="bg-background">
+                            <td
+                              colSpan={queryResult.columns.length + 1}
+                              className="py-12 text-center text-muted-foreground text-xs font-sans"
+                            >
+                              <div className="flex flex-col items-center justify-center space-y-2">
+                                <FilterX className="w-8 h-8 opacity-30 text-amber-500" />
+                                <p className="font-semibold text-foreground">Nenhum resultado corresponde aos filtros aplicados.</p>
+                                <span className="text-[11px] opacity-70">Tente ajustar o termo de busca ou filtros de coluna.</span>
+                                <button
+                                  type="button"
+                                  onClick={handleClearAllFilters}
+                                  className="mt-2 px-3 py-1 bg-primary/15 text-primary hover:bg-primary/25 rounded text-xs font-semibold transition"
+                                >
+                                  Remover todos os filtros
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          processedRows.map((row, idx) => {
+                            const isSelected = selectedRowIndex === idx;
+
+                            return (
+                              <tr
+                                key={idx}
+                                onClick={() => setSelectedRowIndex(idx)}
+                                className={`transition-colors select-text cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-sky-500/15 dark:bg-sky-500/25 border-l-4 border-sky-500 font-medium'
+                                    : idx % 2 === 0
+                                    ? 'bg-background hover:bg-muted/30'
+                                    : 'bg-muted/15 dark:bg-muted/10 hover:bg-muted/30'
+                                }`}
+                              >
+                                <td className="px-2 py-1.5 text-center text-muted-foreground text-[10px] border-r border-border/30 select-none">
+                                  {idx + 1}
+                                </td>
+                                {queryResult.columns.map((col) => {
+                                  const val = row[col];
+                                  const isNull = val === null || val === undefined;
+                                  const dType = columnDataTypes[col] || 'string';
+
+                                  return (
+                                    <td
+                                      key={col}
+                                      onClick={() => handleCopyCell(val, `cell_${idx}_${col}`)}
+                                      onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        setSelectedRowIndex(idx);
+                                        setCellContextMenu({
+                                          x: e.clientX,
+                                          y: e.clientY,
+                                          column: col,
+                                          value: val,
+                                          rowIndex: idx
+                                        });
+                                      }}
+                                      title="Clique para copiar | Botão direito para filtrar por valor"
+                                      className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate hover:bg-sky-500/10 dark:hover:bg-sky-500/20 transition-colors cursor-pointer"
+                                    >
+                                      {isNull ? (
+                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono select-none bg-slate-200/70 dark:bg-slate-800 text-slate-500 dark:text-slate-400 italic border border-slate-300/70 dark:border-slate-700/70">
+                                          [NULL]
+                                        </span>
+                                      ) : dType === 'number' || typeof val === 'number' ? (
+                                        <span className="text-blue-700 dark:text-sky-300 font-mono font-medium">
+                                          {String(val)}
+                                        </span>
+                                      ) : dType === 'date' ? (
+                                        <span className="text-purple-700 dark:text-purple-300 font-mono font-medium">
+                                          {String(val)}
+                                        </span>
+                                      ) : typeof val === 'boolean' ? (
+                                        <span className="text-amber-700 dark:text-amber-400 font-mono font-semibold">
+                                          {String(val)}
+                                        </span>
+                                      ) : typeof val === 'object' ? (
+                                        <span className="text-teal-700 dark:text-teal-300 font-mono text-[11px]">
+                                          {JSON.stringify(val)}
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-800 dark:text-slate-100 font-mono">
+                                          {String(val)}
+                                        </span>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Menu de Contexto ao Clicar com Botão Direito na Célula (estilo DBeaver: Filtrar por valor) */}
+                  {cellContextMenu && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40 cursor-default"
+                        onClick={() => setCellContextMenu(null)}
+                      />
+                      <div
+                        style={{
+                          top: Math.min(cellContextMenu.y, window.innerHeight - 180),
+                          left: Math.min(cellContextMenu.x, window.innerWidth - 250)
+                        }}
+                        className="fixed z-50 w-60 bg-popover text-popover-foreground rounded-lg shadow-2xl border border-border p-1.5 text-xs font-sans animate-fade-in space-y-1"
+                      >
+                        <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground border-b border-border/60">
+                          Célula: {cellContextMenu.column}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleFilterByCellValue(cellContextMenu.column, cellContextMenu.value)}
+                          className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-accent transition text-left text-foreground font-semibold"
+                        >
+                          <Filter className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span className="truncate">
+                            Filtrar por "{cellContextMenu.value === null || cellContextMenu.value === undefined ? '[NULL]' : String(cellContextMenu.value)}"
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleCopyCell(cellContextMenu.value);
+                            setCellContextMenu(null);
+                          }}
+                          className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-accent transition text-left text-muted-foreground hover:text-foreground"
+                        >
+                          <Copy className="w-3.5 h-3.5 shrink-0" />
+                          <span>Copiar valor</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const row = processedRows[cellContextMenu.rowIndex];
+                            if (row) {
+                              copyCellToClipboard(JSON.stringify(row, null, 2), 'Linha copiada!');
+                            }
+                            setCellContextMenu(null);
+                          }}
+                          className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-accent transition text-left text-muted-foreground hover:text-foreground"
+                        >
+                          <FileCode className="w-3.5 h-3.5 shrink-0" />
+                          <span>Copiar linha (JSON)</span>
+                        </button>
+
+                        <div className="pt-1 border-t border-border/60">
+                          <button
+                            type="button"
+                            onClick={() => setCellContextMenu(null)}
+                            className="w-full text-center py-1 text-[10px] text-muted-foreground hover:text-foreground"
+                          >
+                            Fechar
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -1251,6 +2039,14 @@ export const DatabasePage: React.FC = () => {
                           title="Executar imediatamente"
                         >
                           Executar
+                        </button>
+                        <button
+                          onClick={() => handleOpenCreateSnippet(item.sql)}
+                          className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-600 dark:text-amber-400 hover:text-black rounded text-[10px] font-semibold transition flex items-center gap-1"
+                          title="Salvar esta consulta nas Minhas Consultas"
+                        >
+                          <BookmarkPlus className="w-3 h-3" />
+                          <span>Salvar</span>
                         </button>
                       </div>
                     </div>
@@ -1370,28 +2166,67 @@ export const DatabasePage: React.FC = () => {
 
               {/* Oracle: Opção Service Name vs SID */}
               {editingConn.type === 'oracle' && (
-                <div className="flex items-center space-x-4 pt-1">
-                  <label className="flex items-center space-x-1.5 cursor-pointer text-muted-foreground">
-                    <input
-                      type="radio"
-                      name="oracleMode"
-                      checked={editingConn.oracleMode !== 'sid'}
-                      onChange={() => setEditingConn({ ...editingConn, oracleMode: 'serviceName' })}
-                      className="text-primary focus:ring-0"
-                    />
-                    <span>Service Name (Padrão)</span>
-                  </label>
-                  <label className="flex items-center space-x-1.5 cursor-pointer text-muted-foreground">
-                    <input
-                      type="radio"
-                      name="oracleMode"
-                      checked={editingConn.oracleMode === 'sid'}
-                      onChange={() => setEditingConn({ ...editingConn, oracleMode: 'sid' })}
-                      className="text-primary focus:ring-0"
-                    />
-                    <span>SID</span>
-                  </label>
-                </div>
+                <>
+                  <div className="flex items-center space-x-4 pt-1">
+                    <label className="flex items-center space-x-1.5 cursor-pointer text-muted-foreground">
+                      <input
+                        type="radio"
+                        name="oracleMode"
+                        checked={editingConn.oracleMode !== 'sid'}
+                        onChange={() => setEditingConn({ ...editingConn, oracleMode: 'serviceName' })}
+                        className="text-primary focus:ring-0"
+                      />
+                      <span>Service Name (Padrão)</span>
+                    </label>
+                    <label className="flex items-center space-x-1.5 cursor-pointer text-muted-foreground">
+                      <input
+                        type="radio"
+                        name="oracleMode"
+                        checked={editingConn.oracleMode === 'sid'}
+                        onChange={() => setEditingConn({ ...editingConn, oracleMode: 'sid' })}
+                        className="text-primary focus:ring-0"
+                      />
+                      <span>SID</span>
+                    </label>
+                  </div>
+
+                  {/* Oracle: Modo Thick / Suporte a Oracle 11g */}
+                  <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 space-y-2 text-xs">
+                    <label className="flex items-center space-x-2 cursor-pointer font-medium text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(editingConn.oracleThickMode || editingConn.oracleClientPath)}
+                        onChange={(e) =>
+                          setEditingConn({
+                            ...editingConn,
+                            oracleThickMode: e.target.checked
+                          })
+                        }
+                        className="rounded border-border text-primary focus:ring-0"
+                      />
+                      <span>Modo Thick / Suporte a Oracle 11g (Instant Client)</span>
+                    </label>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed pl-5">
+                      Obrigatório para Oracle 11g e anteriores para evitar o erro <span className="font-mono text-foreground font-semibold">NJS-138</span>. Requer bibliotecas nativas de 64 bits da Oracle.
+                    </p>
+                    {(editingConn.oracleThickMode || editingConn.oracleClientPath) && (
+                      <div className="pl-5 pt-1 space-y-1">
+                        <label className="block text-[11px] font-medium text-foreground">
+                          Diretório do Oracle Instant Client (opcional se estiver no PATH):
+                        </label>
+                        <input
+                          type="text"
+                          value={editingConn.oracleClientPath || ''}
+                          onChange={(e) =>
+                            setEditingConn({ ...editingConn, oracleClientPath: e.target.value })
+                          }
+                          placeholder="Ex: C:\oracle\instantclient_19_25"
+                          className="w-full bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
               {/* Usuário e Senha */}
@@ -1480,74 +2315,89 @@ export const DatabasePage: React.FC = () => {
           </div>
         </div>
       )}
-      {/* Modal de Salvar Snippet Personalizado */}
+      {/* Modal de Salvar / Editar Consulta Personalizada */}
       {isSaveSnippetModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in flex flex-col font-sans">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2">
-                <BookmarkPlus className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-bold text-foreground">Salvar Snippet de Consulta</h3>
+                <BookmarkPlus className="w-4 h-4 text-amber-500" />
+                <h3 className="text-sm font-bold text-foreground">
+                  {editingSnippetId ? 'Editar Consulta Salva' : 'Salvar Nova Consulta'}
+                </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsSaveSnippetModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground text-sm font-bold p-1"
+                className="text-muted-foreground hover:text-foreground text-sm font-bold p-1 rounded"
               >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleSaveCustomSnippet} className="p-4 space-y-3 text-xs">
+            <form onSubmit={handleSaveCustomSnippet} className="p-4 space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-foreground mb-1">Título do Snippet</label>
+                <label className="block font-bold text-foreground mb-1">Título da Consulta *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Consulta Clientes com Bloqueio"
+                  placeholder="Ex: Consulta de Clientes Ativos"
                   value={snippetTitle}
                   onChange={(e) => setSnippetTitle(e.target.value)}
-                  className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
+                  className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                  autoFocus
                 />
               </div>
-              <div>
-                <label className="block font-bold text-foreground mb-1">Categoria</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Vendas, Estoque, Auditoria"
-                  value={snippetCategory}
-                  onChange={(e) => setSnippetCategory(e.target.value)}
-                  className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-foreground mb-1">Categoria / Pasta</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: WinThor, Vendas, Auditoria"
+                    value={snippetCategory}
+                    onChange={(e) => setSnippetCategory(e.target.value)}
+                    className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-foreground mb-1">Descrição (opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Filtra por filial e status"
+                    value={snippetDesc}
+                    onChange={(e) => setSnippetDesc(e.target.value)}
+                    className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block font-bold text-foreground mb-1">Descrição (opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Filtra apenas clientes ativos da filial 1"
-                  value={snippetDesc}
-                  onChange={(e) => setSnippetDesc(e.target.value)}
-                  className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-foreground">Comando SQL *</label>
+                  <span className="text-[10px] text-muted-foreground">Você pode ajustar a query livremente</span>
+                </div>
+                <textarea
+                  required
+                  rows={5}
+                  value={snippetSql}
+                  onChange={(e) => setSnippetSql(e.target.value)}
+                  placeholder="SELECT * FROM ..."
+                  className="w-full bg-[#0B0F17] text-emerald-300 font-mono text-xs p-2.5 rounded-md border border-border/80 focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+                  spellCheck={false}
                 />
-              </div>
-              <div>
-                <label className="block font-bold text-foreground mb-1">SQL a Salvar</label>
-                <pre className="p-2.5 rounded bg-[#0B0F17] font-mono text-emerald-300 text-[11px] max-h-24 overflow-auto whitespace-pre-wrap">
-                  {sql}
-                </pre>
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
                 <button
                   type="button"
                   onClick={() => setIsSaveSnippetModalOpen(false)}
-                  className="px-3 py-1.5 rounded-lg border border-border/70 text-muted-foreground hover:text-foreground transition"
+                  className="px-3 py-1.5 rounded-lg border border-border/70 text-muted-foreground hover:text-foreground transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition flex items-center gap-1.5"
+                  className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <BookmarkPlus className="w-3.5 h-3.5" /> Salvar Snippet
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  <span>{editingSnippetId ? 'Atualizar Consulta' : 'Salvar Consulta'}</span>
                 </button>
               </div>
             </form>

@@ -282,6 +282,43 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
       )
     },
     {
+      id: 'docs-rag-search',
+      question: 'O que é a aba de Documentação (RAG) e para que serve a vetorização de documentos?',
+      category: 'Documentação & RAG',
+      tags: ['rag', 'docs', 'documentacao', 'vetorizacao', 'embeddings', 'busca semantica', 'fastembed', 'offline', 'ia'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            A aba <strong className="text-foreground">Documentação</strong> é a central de busca inteligente do Dev Manager. Ela indexa manuais, diagnósticos de projetos, mapeamentos de rotinas WinThor e contratos de API REST (<code className="font-mono text-primary">.md, .txt, .pdf, .docx</code>), permitindo encontrar informações técnicas em segundos.
+          </p>
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-1.5">
+            <span className="font-bold text-foreground block">Por que Vetorizar? (Busca Semântica vs. Ctrl+F tradicional):</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Busca comum (Ctrl+F):</strong> Faz correspondência cega de caracteres. Se você buscar por <em>"estoque"</em> e o documento falar em <em>"saldo de mercadoria"</em>, o Ctrl+F não acha nada.
+              </li>
+              <li>
+                <strong className="text-foreground">Busca Vetorizada (Embeddings / RAG):</strong> O modelo de IA local (<code className="font-mono text-primary">FastEmbed AllMiniLML6V2</code>) converte cada trecho em um vetor matemático de 384 números que representa o seu <strong>significado conceitual</strong>. Frases com temas semelhantes ficam com números próximos.
+              </li>
+              <li>
+                <strong className="text-foreground">Perguntas em linguagem natural:</strong> Ao buscar <em>"como consultar saldo disponível na filial?"</em>, o sistema calcula a similaridade matemática e traz os trechos exatos de contratos de API e rotinas correspondentes, mesmo com palavras diferentes.
+              </li>
+            </ul>
+          </div>
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-1.5">
+            <span className="font-bold text-foreground block">Controle Total de Fontes:</span>
+            <p>
+              Você pode desativar a varredura de projetos Git com um toggle na tela para focar apenas nas suas pastas centrais de documentação (como <code className="font-mono text-primary">prompt-hub/docs</code>), tornando a indexação rápida e precisa.
+            </p>
+            <span className="font-bold text-foreground block pt-1">Uso por Assistentes de IA (MCP):</span>
+            <p>
+              O servidor MCP do Dev Manager expõe as tools <code className="font-mono text-primary">rag_search_docs</code> e <code className="font-mono text-primary">rag_reindex_docs</code>, permitindo que agentes de IA (Claude Code, Cursor, Copilot) consultem essa base de conhecimento local em milissegundos enquanto programam para você.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'mcp-server',
       question: 'O que é o servidor MCP e como uso o Dev Manager a partir de um assistente de IA (Claude Code)?',
       category: 'Integração & MCP',

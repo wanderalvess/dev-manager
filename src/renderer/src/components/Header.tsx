@@ -16,7 +16,8 @@ import {
   Check,
   Cpu,
   ChevronDown,
-  Copy
+  Copy,
+  ScrollText
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { NetworkIpInfo, SystemMetrics } from '../../../shared/types';
@@ -159,6 +160,14 @@ export const Header: React.FC<HeaderProps> = ({
           icon: Layers,
           description: 'Perfis de deploy, containers & esteiras de automação',
           shortcut: 'Alt+4'
+        },
+        {
+          id: 'logs',
+          label: 'Logs em Tempo Real',
+          shortLabel: 'Logs',
+          icon: ScrollText,
+          description: 'Acompanhamento contínuo (tail -f) de logs do WinThor e microsserviços',
+          shortcut: 'Alt+8'
         }
       ]
     },

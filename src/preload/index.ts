@@ -20,6 +20,8 @@ import type {
   DocSearchResult,
   DocsIndexStatus,
   DocsIndexProgress,
+  DocSyncProgress,
+  DocSyncResult,
   DatabaseConnectionConfig,
   QueryResult,
   DockerContainerInfo,
@@ -33,7 +35,9 @@ import type {
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
   TableColumnInfo,
-  DockerContainerStats
+  DockerContainerStats,
+  LogWatchStatus,
+  LogChunkEvent
 } from '../shared/types';
 
 const electronAPI = {
@@ -205,6 +209,13 @@ const electronAPI = {
     ipcRenderer.on('docs:index-progress', subscription);
     return () => ipcRenderer.removeListener('docs:index-progress', subscription);
   },
+  syncDocs: (targetId?: string): Promise<DocSyncResult[]> =>
+    ipcRenderer.invoke('docs:sync', targetId),
+  onDocSyncProgress: (callback: (progress: DocSyncProgress) => void) => {
+    const subscription = (_: any, progress: DocSyncProgress) => callback(progress);
+    ipcRenderer.on('docs:sync-progress', subscription);
+    return () => ipcRenderer.removeListener('docs:sync-progress', subscription);
+  },
 
   // Configurações
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
@@ -261,7 +272,27 @@ const electronAPI = {
     ipcRenderer.invoke('network:check-http-health', url, timeoutMs),
 
   // Métricas do Sistema
-  getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics')
+  getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics'),
+
+  // Leitor e Monitor de Logs em Tempo Real (Tail -f)
+  startLogWatch: (
+    sourceId: string,
+    filePath: string,
+    initialLines?: number,
+    encoding?: string
+  ): Promise<{ status: LogWatchStatus; initialLines: string[] }> =>
+    ipcRenderer.invoke('logs:start-watch', sourceId, filePath, initialLines, encoding),
+  stopLogWatch: (sourceId: string): Promise<boolean> =>
+    ipcRenderer.invoke('logs:stop-watch', sourceId),
+  checkLogFile: (filePath: string, sourceId?: string): Promise<LogWatchStatus> =>
+    ipcRenderer.invoke('logs:check-file', filePath, sourceId),
+  clearLogFile: (filePath: string): Promise<boolean> =>
+    ipcRenderer.invoke('logs:clear-file', filePath),
+  onLogChunk: (callback: (event: LogChunkEvent) => void) => {
+    const subscription = (_: any, event: LogChunkEvent) => callback(event);
+    ipcRenderer.on('logs:chunk', subscription);
+    return () => ipcRenderer.removeListener('logs:chunk', subscription);
+  }
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

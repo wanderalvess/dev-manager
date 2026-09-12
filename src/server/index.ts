@@ -12,16 +12,33 @@ import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
-import { DocsIndexService } from '../main/services/DocsIndexService';
+import { DocsIndexService, DocSyncService } from '../main/services/DocsIndexService';
 import { DatabaseService } from '../main/services/DatabaseService';
 import { DockerService } from '../main/services/DockerService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
-import { EnvironmentLog, KarafDeployRequest, AppSettings, AutomationProfile, AutomationStep, DocsIndexProgress, DeployProfile } from '../shared/types';
+import { LogWatcherService } from '../main/services/LogWatcherService';
+import {
+  EnvironmentLog,
+  KarafDeployRequest,
+  AppSettings,
+  AutomationProfile,
+  AutomationStep,
+  DocsIndexProgress,
+  DocSyncProgress,
+  DeployProfile
+} from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+if (typeof (globalThis as any).__dirname === 'undefined') {
+  (globalThis as any).__dirname = __dirname;
+}
+if (typeof (globalThis as any).__filename === 'undefined') {
+  (globalThis as any).__filename = __filename;
+}
 
 dotenv.config();
 
@@ -80,8 +97,10 @@ const windowsService = new WindowsService(configService, karafService, databaseS
 const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
+const docSyncService = new DocSyncService(configService, docsIndexService);
 const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService);
+const logWatcherService = new LogWatcherService();
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
 const wsClients = new Set<WebSocket>();
@@ -439,6 +458,14 @@ app.get('/api/docs/status', (_req, res) => {
   res.json(docsIndexService.getStatus());
 });
 
+app.post('/api/docs/sync', async (req, res) => {
+  const targetId = req.body?.targetId as string | undefined;
+  const results = await docSyncService.syncToTarget(targetId, (progress: DocSyncProgress) => {
+    broadcastWs('docs:sync-progress', progress);
+  });
+  res.json(results);
+});
+
 app.get('/api/docs/content', (req, res) => {
   const targetPath = (req.query.path as string) || '';
   const settings = configService.getSettings();
@@ -730,6 +757,43 @@ app.post('/api/db/explain', async (req, res) => {
   const { config, sql } = req.body;
   const result = await databaseService.explainPlan(config, sql);
   res.json(result);
+});
+
+// 16. Monitoramento de Logs em Tempo Real (Tail -f)
+app.post('/api/logs/start-watch', async (req, res) => {
+  const { sourceId, filePath, initialLines, encoding } = req.body;
+  try {
+    const result = await logWatcherService.startWatch(
+      sourceId,
+      filePath,
+      (event) => {
+        broadcastWs('logs:chunk', event);
+      },
+      initialLines,
+      encoding
+    );
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Erro ao iniciar observação de log' });
+  }
+});
+
+app.post('/api/logs/stop-watch', (req, res) => {
+  const { sourceId } = req.body;
+  const success = logWatcherService.stopWatch(sourceId);
+  res.json({ success });
+});
+
+app.post('/api/logs/check-file', (req, res) => {
+  const { filePath, sourceId } = req.body;
+  const status = logWatcherService.checkFile(filePath, sourceId);
+  res.json(status);
+});
+
+app.post('/api/logs/clear-file', async (req, res) => {
+  const { filePath } = req.body;
+  const success = await logWatcherService.clearLogFile(filePath);
+  res.json({ success });
 });
 
 // Servir Frontend SPA estático se compilado

@@ -241,8 +241,54 @@ export interface AppSettings {
   mappedPrograms?: MappedProgram[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
   databaseConnections?: DatabaseConnectionConfig[];
-  /** Pastas locais adicionais (fora da Pasta de Projetos) indexadas pelo RAG de documentação */
+  /** Pastas locais dedicadas de documentação indexadas pelo RAG */
   docFolders?: DocFolderConfig[];
+  /** Se verdadeiro, também vasculha e indexa os projetos Git da pasta de projetos. Padrão: false */
+  indexProjectsDocs?: boolean;
+  /** Destinos de API configurados para sincronização agnóstica de documentações vetorizadas */
+  docSyncTargets?: DocSyncTargetConfig[];
+  /** Arquivos de log configurados para acompanhamento em tempo real (Tail) */
+  realtimeLogSources?: RealtimeLogSource[];
+  activeLogSourceId?: string;
+  /** Consultas SQL salvas e personalizadas pelo usuário */
+  savedSqlSnippets?: SqlSnippet[];
+}
+
+export interface DocSyncTargetConfig {
+  id: string;
+  name: string;
+  endpointUrl: string;
+  method?: 'POST' | 'PUT';
+  authHeader?: string;
+  authValue?: string;
+  batchSize?: number;
+  enabled: boolean;
+  /** Modo de sincronização: 'all' (Artigos + Chunks), 'articles' (Apenas Documentos KB), 'chunks' (Apenas Chunks Vetoriais) */
+  syncMode?: 'all' | 'articles' | 'chunks';
+  lastSyncedAt?: string;
+}
+
+export interface DocSyncProgress {
+  targetId: string;
+  targetName: string;
+  phase: 'preparing' | 'sending' | 'completed' | 'error';
+  sentChunks: number;
+  totalChunks: number;
+  sentArticles?: number;
+  totalArticles?: number;
+  currentBatch: number;
+  totalBatches: number;
+  error?: string;
+}
+
+export interface DocSyncResult {
+  success: boolean;
+  targetId: string;
+  targetName: string;
+  totalChunksSent: number;
+  totalArticlesSent?: number;
+  totalBatches: number;
+  error?: string;
 }
 
 export interface DocFolderConfig {
@@ -279,6 +325,13 @@ export interface DocsIndexProgress {
   currentFile?: string;
 }
 
+export interface DocFileInfo {
+  id: string;
+  title: string;
+  sourceLabel: string;
+  chunkCount: number;
+}
+
 export interface DocsIndexStatus {
   totalChunks: number;
   totalFiles: number;
@@ -286,6 +339,8 @@ export interface DocsIndexStatus {
   sourceLabels: string[];
   lastIndexedAt?: string;
   modelDownloaded: boolean;
+  isTextOnly?: boolean;
+  files?: DocFileInfo[];
 }
 
 export interface MappedProgram {
@@ -562,6 +617,10 @@ export interface DatabaseConnectionConfig {
   password?: string;
   /** Para Oracle: se a conexão deve usar Service Name (ex: 'XEPDB1') ou SID (padrão: serviceName) */
   oracleMode?: 'serviceName' | 'sid';
+  /** Para Oracle: caminho do diretório do Oracle Instant Client (Thick mode, ex: 'C:\oracle\instantclient_19_25') */
+  oracleClientPath?: string;
+  /** Para Oracle: força uso do Thick Mode com Oracle Instant Client (necessário para Oracle 11g e anteriores) */
+  oracleThickMode?: boolean;
   /** Flag para SSL/TLS (PostgreSQL e MySQL) */
   ssl?: boolean;
   isDefault?: boolean;
@@ -842,3 +901,35 @@ export interface HttpHealthResult {
   responseTimeMs?: number;
   error?: string;
 }
+
+// ==========================================
+// Monitoramento de Logs em Tempo Real (Tail -f)
+// ==========================================
+
+export interface RealtimeLogSource {
+  id: string;
+  name: string;
+  filePath: string;
+  encoding?: 'utf-8' | 'latin1' | 'windows-1252';
+  enabled?: boolean;
+  description?: string;
+}
+
+export interface LogWatchStatus {
+  sourceId: string;
+  filePath: string;
+  exists: boolean;
+  fileSizeBytes: number;
+  lastModified?: string;
+  watching: boolean;
+  error?: string;
+}
+
+export interface LogChunkEvent {
+  sourceId: string;
+  filePath: string;
+  lines: string[];
+  truncatedOrRotated?: boolean;
+  timestamp: string;
+}
+

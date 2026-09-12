@@ -11,7 +11,8 @@ import {
   Zap,
   X,
   Star,
-  Box
+  Box,
+  ScrollText
 } from 'lucide-react';
 import { GitProjectInfo, RoutineItem } from '../../../shared/types';
 
@@ -101,6 +102,18 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         icon: Layers,
         onSelect: () => {
           onNavigate('deploy');
+          onClose();
+        }
+      },
+      {
+        id: 'act-logs',
+        category: 'action',
+        title: 'Logs em Tempo Real (Tail -f)',
+        subtitle: 'Monitorar em tempo real winthor-integracao-core.out.log, winthor.log e serviços',
+        badge: 'Alt+8',
+        icon: ScrollText,
+        onSelect: () => {
+          onNavigate('logs');
           onClose();
         }
       },

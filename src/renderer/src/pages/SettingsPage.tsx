@@ -29,7 +29,8 @@ import {
   Download,
   Upload,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  ScrollText
 } from 'lucide-react';
 import {
   AppSettings,
@@ -38,7 +39,8 @@ import {
   TrackedProcessConfig,
   EnvironmentAutomationConfig,
   PathStatusInfo,
-  detectIdeInfo
+  detectIdeInfo,
+  RealtimeLogSource
 } from '../../../shared/types';
 
 interface SettingsPageProps {
@@ -69,7 +71,26 @@ const DEFAULT_AUTOMATION: EnvironmentAutomationConfig = {
   selectedStartServiceNames: []
 };
 
-type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation';
+const DEFAULT_LOG_SOURCES: RealtimeLogSource[] = [
+  {
+    id: 'winthor-integracao-core',
+    name: 'WinThor Integração Core',
+    filePath: 'C:\\pcsist\\produtos\\winthor-integracao-core\\logs\\winthor-integracao-core.out.log',
+    encoding: 'utf-8',
+    enabled: true,
+    description: 'Log de saída em tempo real do serviço WinThor Integração Core'
+  },
+  {
+    id: 'winthor-log',
+    name: 'WinThor ERP',
+    filePath: 'C:\\pcsist\\produtos\\winthor\\data\\log\\winthor.log',
+    encoding: 'utf-8',
+    enabled: true,
+    description: 'Log de execução geral e rotinas do WinThor'
+  }
+];
+
+type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs';
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onNavigate }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('dirs');
@@ -430,6 +451,61 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     setSettings({ ...settings, monitoredPorts: DEFAULT_PORTS });
   };
 
+  // Gerenciamento de Fontes de Logs em Tempo Real
+  const handleAddLogSource = () => {
+    const current = settings.realtimeLogSources || DEFAULT_LOG_SOURCES;
+    const newId = `log-source-${Date.now()}`;
+    setSettings({
+      ...settings,
+      realtimeLogSources: [
+        ...current,
+        {
+          id: newId,
+          name: 'Nova Fonte de Log',
+          filePath: '',
+          encoding: 'utf-8',
+          enabled: true
+        }
+      ]
+    });
+  };
+
+  const handleUpdateLogSource = (index: number, field: keyof RealtimeLogSource, value: any) => {
+    const current = [...(settings.realtimeLogSources || DEFAULT_LOG_SOURCES)];
+    if (current[index]) {
+      current[index] = { ...current[index], [field]: value };
+      setSettings({ ...settings, realtimeLogSources: current });
+    }
+  };
+
+  const handleRemoveLogSource = (index: number) => {
+    const current = [...(settings.realtimeLogSources || DEFAULT_LOG_SOURCES)];
+    current.splice(index, 1);
+    setSettings({ ...settings, realtimeLogSources: current });
+  };
+
+  const handleResetLogSources = () => {
+    setSettings({ ...settings, realtimeLogSources: DEFAULT_LOG_SOURCES });
+  };
+
+  const handleBrowseLogPath = async (index: number) => {
+    if (window.electronAPI && window.electronAPI.selectFile) {
+      const selected = await window.electronAPI.selectFile({
+        filters: [
+          { name: 'Arquivos de Log (*.log, *.out, *.txt)', extensions: ['log', 'out', 'txt'] },
+          { name: 'Todos os arquivos (*.*)', extensions: ['*'] }
+        ]
+      });
+      if (selected) {
+        handleUpdateLogSource(index, 'filePath', selected);
+        const autoName = selected.split(/[\\/]/).pop()?.replace(/\.(log|out|txt)$/i, '');
+        if (autoName) {
+          handleUpdateLogSource(index, 'name', autoName);
+        }
+      }
+    }
+  };
+
   const presetBranches = ['develop', 'master', 'main', 'release/37.0', 'release/38.0'];
 
   const renderPathStatusBadge = (fieldKey: string) => {
@@ -689,6 +765,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         >
           <Zap className="w-4 h-4" />
           <span>Automação Padrão</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+            activeTab === 'logs'
+              ? 'bg-primary text-primary-foreground border-primary shadow-md'
+              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+          }`}
+        >
+          <ScrollText className="w-4 h-4 text-emerald-500" />
+          <span>Logs em Tempo Real</span>
+          <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
+            {(settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length}
+          </span>
         </button>
       </div>
 
@@ -1873,6 +1964,124 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conteúdo da Aba: Logs em Tempo Real */}
+      {activeTab === 'logs' && (
+        <div className="space-y-4 flex flex-col flex-1">
+          <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
+              <div>
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <ScrollText className="w-4 h-4 text-emerald-500" /> Fontes de Logs em Tempo Real (Tail -f)
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Arquivos de saída de serviços e rotinas monitorados continuamente pela aba &quot;Logs em Tempo Real&quot;.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleResetLogSources}
+                  className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground border border-border/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Restaurar Padrões</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddLogSource}
+                  className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Adicionar Fonte de Log</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {(settings.realtimeLogSources || DEFAULT_LOG_SOURCES).map((src, idx) => (
+                <div
+                  key={src.id || idx}
+                  className="bg-card/70 border border-border/80 rounded-xl p-4 space-y-3 hover:border-border transition-colors"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-foreground block">Nome de Exibição</label>
+                      <input
+                        type="text"
+                        value={src.name || ''}
+                        onChange={(e) => handleUpdateLogSource(idx, 'name', e.target.value)}
+                        placeholder="Ex: WinThor Integração Core"
+                        className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1 md:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-foreground block">Caminho do Arquivo de Log (.log, .out, .txt)</label>
+                        <span className="text-[10px] text-muted-foreground font-mono">Windows Local</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={src.filePath || ''}
+                          onChange={(e) => handleUpdateLogSource(idx, 'filePath', e.target.value)}
+                          placeholder="Ex: C:\pcsist\produtos\winthor-integracao-core\logs\winthor-integracao-core.out.log"
+                          className="flex-1 px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleBrowseLogPath(idx)}
+                          className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg text-xs font-semibold flex items-center space-x-1 shrink-0 transition-colors"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5" />
+                          <span>Procurar...</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between pt-1 gap-2">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-[11px] font-semibold text-muted-foreground">Codificação:</label>
+                      <select
+                        value={src.encoding || 'utf-8'}
+                        onChange={(e) => handleUpdateLogSource(idx, 'encoding', e.target.value)}
+                        className="px-2.5 py-1 bg-background border border-border rounded-lg text-xs"
+                      >
+                        <option value="utf-8">UTF-8 (Padrão)</option>
+                        <option value="latin1">Latin1 / ISO-8859-1 (Delphi legada)</option>
+                        <option value="windows-1252">Windows-1252 (ANSI)</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveLogSource(idx)}
+                      className="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center space-x-1 p-1 hover:bg-rose-500/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remover</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-muted/30 border border-border/50 rounded-xl p-3.5 text-xs text-muted-foreground space-y-1">
+              <span className="font-bold text-foreground flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary" /> Dica de Produtividade
+              </span>
+              <p>
+                Os logs cadastrados aqui aparecem instantaneamente na aba <strong>Logs em Tempo Real (Alt+8)</strong>{' '}
+                com auto-scroll, busca regex e filtro por nível (ERROR, WARN, INFO). Se o arquivo ainda não existir, o
+                sistema aguardará o serviço criá-lo sem travar a interface.
+              </p>
             </div>
           </div>
         </div>

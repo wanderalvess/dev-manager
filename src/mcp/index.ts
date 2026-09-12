@@ -136,6 +136,8 @@ const DatabaseConnectionConfigSchema = z.object({
   user: z.string(),
   password: z.string().optional(),
   oracleMode: z.enum(['serviceName', 'sid']).optional(),
+  oracleClientPath: z.string().optional(),
+  oracleThickMode: z.boolean().optional(),
   ssl: z.boolean().optional(),
   isDefault: z.boolean().optional()
 });
@@ -1086,6 +1088,8 @@ server.registerTool(
       database: c.database,
       user: c.user,
       oracleMode: c.oracleMode,
+      oracleClientPath: c.oracleClientPath,
+      oracleThickMode: c.oracleThickMode,
       ssl: c.ssl,
       isDefault: c.isDefault
     }));

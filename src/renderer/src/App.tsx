@@ -9,6 +9,7 @@ import { RoutinesPage } from './pages/RoutinesPage';
 import { DocsPage } from './pages/DocsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { HelpPage } from './pages/HelpPage';
+import { LogsPage } from './pages/LogsPage';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
 
@@ -122,8 +123,9 @@ export const App: React.FC = () => {
         else if (e.key === '5') setActiveTab('git');
         else if (e.key === '6') setActiveTab('routines');
         else if (e.key === '7') setActiveTab('docs');
-        else if (e.key === '8') setActiveTab('settings');
+        else if (e.key === '8') setActiveTab('logs');
         else if (e.key === '9') setActiveTab('help');
+        else if (e.key === '0') setActiveTab('settings');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -182,6 +184,7 @@ export const App: React.FC = () => {
           <RoutinesPage onNavigateToSettings={() => setActiveTab('settings')} />
         )}
         {activeTab === 'docs' && <DocsPage onNavigateToSettings={() => setActiveTab('settings')} />}
+        {activeTab === 'logs' && <LogsPage onNavigateToSettings={() => setActiveTab('settings')} />}
         {activeTab === 'settings' && (
           <SettingsPage onSettingsSaved={refreshAll} onNavigate={(tab) => setActiveTab(tab)} />
         )}

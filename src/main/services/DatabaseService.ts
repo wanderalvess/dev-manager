@@ -1,4 +1,18 @@
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 import { DatabaseConnectionConfig, QueryResult, TableInfo, TableColumnInfo, ExplainPlanResult } from '../../shared/types';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+if (typeof (globalThis as any).__dirname === 'undefined') {
+  (globalThis as any).__dirname = __dirname;
+}
+if (typeof (globalThis as any).__filename === 'undefined') {
+  (globalThis as any).__filename = __filename;
+}
 
 interface CachedConnection {
   conn: any;
@@ -112,9 +126,9 @@ export class DatabaseService {
   ): Promise<QueryResult> {
     maxRows = Number.isFinite(maxRows) && maxRows > 0 ? Math.floor(maxRows) : 200;
     const startTime = Date.now();
-    const trimmedSql = sql.trim();
+    const cleanSql = sql.trim().replace(/;+\s*$/, '');
 
-    if (!trimmedSql) {
+    if (!cleanSql) {
       return {
         success: false,
         columns: [],
@@ -129,11 +143,11 @@ export class DatabaseService {
     try {
       switch (config.type) {
         case 'postgres':
-          return await this.executePostgres(config, trimmedSql, maxRows, startTime);
+          return await this.executePostgres(config, cleanSql, maxRows, startTime);
         case 'mysql':
-          return await this.executeMysql(config, trimmedSql, maxRows, startTime);
+          return await this.executeMysql(config, cleanSql, maxRows, startTime);
         case 'oracle':
-          return await this.executeOracle(config, trimmedSql, maxRows, startTime);
+          return await this.executeOracle(config, cleanSql, maxRows, startTime);
         default:
           throw new Error(`Tipo de banco '${config.type}' não suportado.`);
       }
@@ -544,19 +558,74 @@ export class DatabaseService {
   }
 
   // =========================================================================
-  // Implementação Oracle (Thin Mode puro JavaScript)
+  // Implementação Oracle (Thin Mode puro JavaScript ou Thick Mode com Instant Client)
   // =========================================================================
+
+  private static oracleClientInitialized = false;
+
+  private getOracleBinaryDir(): string | undefined {
+    try {
+      const candidates = [
+        path.join(process.cwd(), 'node_modules', 'oracledb', 'build', 'Release'),
+        path.join(__dirname, '..', '..', '..', 'node_modules', 'oracledb', 'build', 'Release'),
+        path.join(__dirname, '..', 'node_modules', 'oracledb', 'build', 'Release')
+      ];
+      if (typeof (process as any).resourcesPath === 'string') {
+        candidates.push(
+          path.join((process as any).resourcesPath, 'app.asar.unpacked', 'node_modules', 'oracledb', 'build', 'Release'),
+          path.join((process as any).resourcesPath, 'node_modules', 'oracledb', 'build', 'Release')
+        );
+      }
+      return candidates.find((dir) => fs.existsSync(dir));
+    } catch {
+      return undefined;
+    }
+  }
+
+  private initOracleThickClient(oracledb: any, libDir?: string): void {
+    if (DatabaseService.oracleClientInitialized) return;
+    try {
+      const options: { libDir?: string; binaryDir?: string } = {};
+      const trimmed = libDir?.trim();
+      if (trimmed) {
+        options.libDir = trimmed;
+      }
+      const binaryDir = this.getOracleBinaryDir();
+      if (binaryDir) {
+        options.binaryDir = binaryDir;
+      }
+      oracledb.initOracleClient(options);
+      DatabaseService.oracleClientInitialized = true;
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      if (msg.includes('NJS-009') || msg.includes('already been called')) {
+        DatabaseService.oracleClientInitialized = true;
+        return;
+      }
+      throw err;
+    }
+  }
 
   private async getOracleConnection(config: DatabaseConnectionConfig) {
     let oracleModule: any;
     try {
-      // oracledb é carregado dinamicamente
-      oracleModule = await import('oracledb');
+      // Prioriza createRequire para módulos nativos C++ em ambiente ESM
+      const req = createRequire(import.meta.url);
+      oracleModule = req('oracledb');
     } catch {
-      throw new Error("Driver do Oracle não instalado. Execute: npm install oracledb");
+      try {
+        oracleModule = await import('oracledb');
+      } catch {
+        throw new Error("Driver do Oracle não instalado. Execute: npm install oracledb");
+      }
     }
 
     const oracledb = oracleModule.default || oracleModule;
+
+    // Se o usuário solicitou Thick Mode ou informou o caminho do Instant Client, inicializa antes de conectar
+    if (config.oracleThickMode || config.oracleClientPath) {
+      this.initOracleThickClient(oracledb, config.oracleClientPath);
+    }
 
     // Montar string de conexão Oracle
     // Para Service Name: host:port/serviceName
@@ -564,13 +633,33 @@ export class DatabaseService {
     const separator = config.oracleMode === 'sid' ? ':' : '/';
     const connectString = `${config.host}:${config.port || 1521}${separator}${config.database}`;
 
-    const conn = await oracledb.getConnection({
-      user: config.user,
-      password: config.password,
-      connectString
-    });
-
-    return { conn, oracledb };
+    try {
+      const conn = await oracledb.getConnection({
+        user: config.user,
+        password: config.password,
+        connectString
+      });
+      return { conn, oracledb };
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      // Se for NJS-138 (Thin mode rejeitado pelo Oracle 11g/anterior) e o cliente ainda não foi inicializado em Thick mode:
+      // tenta automaticamente inicializar Thick Mode caso o Instant Client esteja disponível no PATH do sistema.
+      if (msg.includes('NJS-138') && !DatabaseService.oracleClientInitialized) {
+        try {
+          this.initOracleThickClient(oracledb, config.oracleClientPath);
+          const conn = await oracledb.getConnection({
+            user: config.user,
+            password: config.password,
+            connectString
+          });
+          return { conn, oracledb };
+        } catch {
+          // Se a tentativa de inicializar Thick falhar, relança o erro original NJS-138
+          throw err;
+        }
+      }
+      throw err;
+    }
   }
 
   private async testOracle(config: DatabaseConnectionConfig) {
@@ -583,7 +672,10 @@ export class DatabaseService {
           const result = await conn.execute('SELECT * FROM v$version WHERE banner LIKE \'Oracle%\'', [], {
             outFormat: oracledb.OUT_FORMAT_OBJECT
           });
-          const banner = (result.rows as any[])?.[0]?.BANNER || 'Oracle Database Conectado (Thin Mode)';
+          const banner = (result.rows as any[])?.[0]?.BANNER || 
+            (DatabaseService.oracleClientInitialized 
+              ? 'Oracle Database Conectado (Thick Mode)' 
+              : 'Oracle Database Conectado (Thin Mode)');
           return { success: true, message: 'Conexão bem-sucedida ao Oracle!', version: banner };
         } catch {
           // Fallback caso usuário não tenha permissão no v$version
@@ -604,9 +696,10 @@ export class DatabaseService {
       () => this.getOracleConnection(config),
       ({ conn }) => conn.close(),
       async ({ conn, oracledb }) => {
-        const isSelect = /^\s*(SELECT|WITH)\s+/i.test(sql);
+        const cleanSql = sql.trim().replace(/;+\s*$/, '');
+        const isSelect = /^\s*(SELECT|WITH)\s+/i.test(cleanSql);
 
-        const result = await conn.execute(sql, [], {
+        const result = await conn.execute(cleanSql, [], {
           outFormat: oracledb.OUT_FORMAT_OBJECT,
           autoCommit: true,
           maxRows: isSelect ? maxRows : undefined
@@ -643,6 +736,15 @@ export class DatabaseService {
 
   private formatErrorMessage(err: any, type: string): string {
     const msg = err?.message || String(err);
+    if (msg.includes('NJS-138')) {
+      return 'Erro NJS-138: Este banco de dados Oracle (ex: versão 11g) não é compatível com o Thin Mode padrão. Ative a opção "Modo Thick (Oracle Instant Client)" na conexão e certifique-se de ter o Oracle Instant Client 64-bit instalado.';
+    }
+    if (msg.includes('DPI-1047')) {
+      return 'Erro DPI-1047: Não foi possível carregar a biblioteca Oracle Client de 64 bits (oci.dll). Verifique se o caminho do Instant Client informado está correto e se o Microsoft Visual C++ Redistributable (x64) está instalado.';
+    }
+    if (msg.includes('DPI-1072')) {
+      return 'Erro DPI-1072: Falha ao inicializar o Oracle Client. Verifique se a versão do Instant Client é compatível com a arquitetura (64 bits) e se o Visual C++ Redistributable está instalado.';
+    }
     if (msg.includes('ECONNREFUSED')) {
       return `Conexão recusada no servidor ${type.toUpperCase()}. Verifique se o banco de dados está ativo e a porta correta.`;
     }

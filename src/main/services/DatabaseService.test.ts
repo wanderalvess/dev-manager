@@ -35,6 +35,10 @@ describe('DatabaseService', () => {
     const res = await service.executeQuery(config, '   ');
     expect(res.success).toBe(false);
     expect(res.error).toBe('O comando SQL não pode estar vazio.');
+
+    const resSemicolonOnly = await service.executeQuery(config, ' ;;;  ');
+    expect(resSemicolonOnly.success).toBe(false);
+    expect(resSemicolonOnly.error).toBe('O comando SQL não pode estar vazio.');
   });
 
   it('formata mensagens de erro amigáveis para timeout e recusa de conexão', () => {
@@ -46,5 +50,19 @@ describe('DatabaseService', () => {
 
     const ora12541 = (service as any).formatErrorMessage(new Error('ORA-12541: TNS:no listener'), 'oracle');
     expect(ora12541).toContain('Oracle Listener não encontrado');
+
+    const njs138 = (service as any).formatErrorMessage(
+      new Error('NJS-138: connections to this database server version are not supported by node-oracledb in Thin mode'),
+      'oracle'
+    );
+    expect(njs138).toContain('NJS-138');
+    expect(njs138).toContain('Modo Thick');
+
+    const dpi1047 = (service as any).formatErrorMessage(
+      new Error('DPI-1047: Cannot locate a 64-bit Oracle Client library'),
+      'oracle'
+    );
+    expect(dpi1047).toContain('DPI-1047');
+    expect(dpi1047).toContain('oci.dll');
   });
 });

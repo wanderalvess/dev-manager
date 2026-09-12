@@ -12,10 +12,18 @@ import { DatabaseService } from './services/DatabaseService';
 import { DockerService } from './services/DockerService';
 import { NetworkService } from './services/NetworkService';
 import { DeployService } from './services/DeployService';
+import { LogWatcherService } from './services/LogWatcherService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+if (typeof (globalThis as any).__dirname === 'undefined') {
+  (globalThis as any).__dirname = __dirname;
+}
+if (typeof (globalThis as any).__filename === 'undefined') {
+  (globalThis as any).__filename = __filename;
+}
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -58,6 +66,7 @@ function createWindow() {
   const docsIndexService = new DocsIndexService(configService, gitAzureService);
   const dockerService = new DockerService();
   const deployService = new DeployService(configService, karafService, dockerService, windowsService);
+  const logWatcherService = new LogWatcherService();
 
   registerIpcHandlers(
     mainWindow,
@@ -70,7 +79,8 @@ function createWindow() {
     databaseService,
     dockerService,
     networkService,
-    deployService
+    deployService,
+    logWatcherService
   );
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
@@ -174,6 +184,7 @@ function createWindow() {
   }
 
   mainWindow.on('closed', () => {
+    logWatcherService.stopAll();
     mainWindow = null;
   });
 }

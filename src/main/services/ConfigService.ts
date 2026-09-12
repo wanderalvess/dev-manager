@@ -9,7 +9,8 @@ import {
   TrackedProcessConfig,
   EnvironmentAutomationConfig,
   AutomationProfile,
-  DeployProfile
+  DeployProfile,
+  RealtimeLogSource
 } from '../../shared/types';
 
 export const DEFAULT_MONITORED_PORTS: MonitoredPortConfig[] = [
@@ -17,6 +18,25 @@ export const DEFAULT_MONITORED_PORTS: MonitoredPortConfig[] = [
   { port: 8101, label: 'Karaf SSH (client.bat)', enabled: true },
   { port: 5005, label: 'Java Remote Debug (JVM)', enabled: true },
   { port: 1521, label: 'Oracle DB Listener', enabled: true }
+];
+
+export const DEFAULT_REALTIME_LOG_SOURCES: RealtimeLogSource[] = [
+  {
+    id: 'winthor-integracao-core',
+    name: 'WinThor Integração Core',
+    filePath: 'C:\\pcsist\\produtos\\winthor-integracao-core\\logs\\winthor-integracao-core.out.log',
+    encoding: 'utf-8',
+    enabled: true,
+    description: 'Log de saída em tempo real do serviço WinThor Integração Core'
+  },
+  {
+    id: 'winthor-log',
+    name: 'WinThor ERP',
+    filePath: 'C:\\pcsist\\produtos\\winthor\\data\\log\\winthor.log',
+    encoding: 'utf-8',
+    enabled: true,
+    description: 'Log de execução geral e rotinas do WinThor'
+  }
 ];
 
 export const DEFAULT_AUTOMATION_PROFILES: AutomationProfile[] = [
@@ -308,7 +328,11 @@ export function getDynamicDefaultConfig(): AppSettings {
     automationProfiles: DEFAULT_AUTOMATION_PROFILES,
     activeProfileId: DEFAULT_AUTOMATION_PROFILES[0]?.id,
     deployProfiles: DEFAULT_DEPLOY_PROFILES,
-    activeDeployProfileId: DEFAULT_DEPLOY_PROFILES[0]?.id
+    activeDeployProfileId: DEFAULT_DEPLOY_PROFILES[0]?.id,
+    realtimeLogSources: DEFAULT_REALTIME_LOG_SOURCES,
+    activeLogSourceId: DEFAULT_REALTIME_LOG_SOURCES[0]?.id,
+    indexProjectsDocs: false,
+    docSyncTargets: []
   };
 }
 
@@ -393,6 +417,8 @@ export class ConfigService {
         const activeProfileId = parsed.activeProfileId || automationProfiles[0]?.id;
         const deployProfiles = pickNonEmptyArray(parsed.deployProfiles, DEFAULT_DEPLOY_PROFILES);
         const activeDeployProfileId = parsed.activeDeployProfileId || deployProfiles[0]?.id;
+        const realtimeLogSources = pickNonEmptyArray(parsed.realtimeLogSources, DEFAULT_REALTIME_LOG_SOURCES);
+        const activeLogSourceId = parsed.activeLogSourceId || realtimeLogSources[0]?.id;
 
         // Migração de compatibilidade: config.json salvo por versões antigas podia usar as
         // chaves legadas "winthorPath"/"winthorWebPort"/"winthorWebPath". Lidas aqui apenas
@@ -421,7 +447,9 @@ export class ConfigService {
           automationProfiles,
           activeProfileId,
           deployProfiles,
-          activeDeployProfileId
+          activeDeployProfileId,
+          realtimeLogSources,
+          activeLogSourceId
         };
         this.cachedSettings = { data: result, mtimeMs: stat.mtimeMs };
         return result;

@@ -7,11 +7,12 @@ import { KarafService } from '../services/KarafService';
 import { GitAzureService } from '../services/GitAzureService';
 import { RoutinesService } from '../services/RoutinesService';
 import { ConfigService } from '../services/ConfigService';
-import { DocsIndexService } from '../services/DocsIndexService';
+import { DocsIndexService, DocSyncService } from '../services/DocsIndexService';
 import { DatabaseService } from '../services/DatabaseService';
 import { DockerService } from '../services/DockerService';
 import { NetworkService } from '../services/NetworkService';
 import { DeployService } from '../services/DeployService';
+import { LogWatcherService } from '../services/LogWatcherService';
 import {
   AppSettings,
   KarafDeployRequest,
@@ -27,7 +28,9 @@ import {
   DeployProfile,
   InstallBundleRequest,
   ReinstallBundleRequest,
-  UpdateBundleVersionRequest
+  UpdateBundleVersionRequest,
+  LogWatchStatus,
+  LogChunkEvent
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
@@ -42,7 +45,8 @@ export function registerIpcHandlers(
   databaseService: DatabaseService,
   dockerService: DockerService,
   networkService: NetworkService,
-  deployService: DeployService
+  deployService: DeployService,
+  logWatcherService: LogWatcherService = new LogWatcherService()
 ) {
   // --- Diálogos Nativos do Sistema & Verificação de Caminhos ---
   ipcMain.handle('dialog:select-directory', async (_, defaultPath?: string) => {
@@ -413,6 +417,14 @@ export function registerIpcHandlers(
     return docsIndexService.getStatus();
   });
 
+  const docSyncService = new DocSyncService(configService, docsIndexService);
+
+  ipcMain.handle('docs:sync', async (_, targetId?: string) => {
+    return await docSyncService.syncToTarget(targetId, (progress) => {
+      mainWindow.webContents.send('docs:sync-progress', progress);
+    });
+  });
+
   ipcMain.handle('docs:open-file', async (_, filePath: string, mode?: 'editor' | 'folder') => {
     const settings = configService.getSettings();
     const allowedBaseDirs = [settings.projectsPath, ...(settings.docFolders || []).map((f) => f.path)].filter(Boolean);
@@ -570,5 +582,32 @@ export function registerIpcHandlers(
   // --- Métricas do Sistema (CPU, RAM, Uptime) ---
   ipcMain.handle('system:get-metrics', async () => {
     return await networkService.getSystemMetrics();
+  });
+
+  // --- Leitor e Monitor de Logs em Tempo Real (Tail -f) ---
+  ipcMain.handle('logs:start-watch', async (_, sourceId: string, filePath: string, initialLines?: number, encoding?: string) => {
+    return await logWatcherService.startWatch(
+      sourceId,
+      filePath,
+      (event: LogChunkEvent) => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('logs:chunk', event);
+        }
+      },
+      initialLines,
+      (encoding as BufferEncoding) || 'utf-8'
+    );
+  });
+
+  ipcMain.handle('logs:stop-watch', async (_, sourceId: string) => {
+    return logWatcherService.stopWatch(sourceId);
+  });
+
+  ipcMain.handle('logs:check-file', async (_, filePath: string, sourceId?: string) => {
+    return logWatcherService.checkFile(filePath, sourceId);
+  });
+
+  ipcMain.handle('logs:clear-file', async (_, filePath: string) => {
+    return await logWatcherService.clearLogFile(filePath);
   });
 }

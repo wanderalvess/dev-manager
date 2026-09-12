@@ -104,14 +104,31 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 
 ---
 
-### 7. 📚 RAG & Documentação Local Integrada
-* **Busca Semântica Vetorial Local:**
-  * Indexação e geração de embeddings locais via **FastEmbed** (`AllMiniLML6V2`), sem envio de dados para nuvem ou servidores externos.
-  * Varre automaticamente arquivos `README.md` e documentações dos projetos Git e pastas avulsas configuradas.
-* **Prévia Rápida de Documentos:**
-  * Modal integrado para leitura imediata de arquivos de documentação sem sair da aplicação.
-* **Abertura Flexível:**
-  * Abertura direta no editor de código padrão do sistema operacional ou revelação na pasta do explorador de arquivos.
+### 7. 📚 RAG & Central de Documentação Inteligente (Busca Semântica Local)
+* **O que é e para que serve:**
+  * Centraliza em um único painel todos os manuais, diagnósticos de projetos, mapeamentos de rotinas, diagramas e contratos de API REST (`.md`, `.mdx`, `.txt`, `.pdf`, `.docx`).
+  * Serve tanto para consulta rápida do desenvolvedor na tela quanto como **base de conhecimento (RAG)** para alimentar assistentes de IA (Claude Code, Cursor, Copilot, Antigravity) via MCP.
+* **Por que Vetorizar? (Busca Semântica vs. Ctrl+F tradicional):**
+  * **Busca Cega (Ctrl+F):** Exige palavras exatas. Se você pesquisar por *"estoque"* e o documento contiver *"saldo de mercadorias"*, uma busca textual comum não encontra nada.
+  * **Busca Vetorizada (Embeddings Neurais):** O modelo local **FastEmbed** (`AllMiniLML6V2`) converte cada trecho de texto em um vetor matemático de 384 dimensões que representa o seu **significado conceitual**.
+  * Quando você faz uma pergunta em linguagem natural (ex: *"como consultar saldo disponível na filial?"*), o sistema calcula a similaridade de cosseno entre a sua pergunta e os trechos indexados, trazendo os resultados mais relevantes mesmo com termos e sinônimos diferentes.
+* **Fontes Configuráveis & Toggle de Projetos Git:**
+  * **Pastas Dedicadas de Documentação:** Cadastre uma ou mais pastas centrais onde suas documentações estão salvas (ex: `prompt-hub/docs`). O indexador varre todas as subpastas recursivamente.
+  * **Toggle de Projetos Git:** Escolha se deseja incluir os repositórios Git da pasta de projetos ou focar 100% nas pastas de documentação para uma indexação ultrarrápida.
+* **Resiliência e Fallback Textual Automático:**
+  * Se o modelo neural ainda não foi baixado ou estiver bloqueado pela rede corporativa, o sistema não trava: ele opera em **Modo de Busca Textual** pontuada por relevância de termos.
+  * Suporte a instalação 100% offline do modelo neural via extração manual em `%APPDATA%\dev-manager\models`.
+* **Catálogo Completo & Prévia com 1 Clique:**
+  * Quando não há busca ativa, a tela exibe o catálogo completo de todos os arquivos indexados com seus caminhos e contagem de trechos.
+  * Filtro instantâneo por nome de arquivo para navegação imediata.
+  * Visualizador embutido (Modal de Prévia) com renderização Markdown completa, cópia rápida para o clipboard e atalhos para abrir no editor ou revelar na pasta do Windows Explorer.
+* **Sincronização Agnóstica de Documentação Vetorizada:**
+  * Envie todo o índice vetorizado local (títulos, trechos e embeddings neurais de 384 dimensões) diretamente para APIs REST ou bancos de dados externos.
+  * Suporta múltiplos destinos customizados (ex: **Espaço Ágil**, novos backends na nuvem ou na VM).
+  * Configuração flexível de URL de endpoint, método HTTP (`POST`/`PUT`), cabeçalho de autenticação (`X-Api-Key`, `Authorization`, etc.), token e tamanho de lotes (`batchSize`).
+  * Permite que aplicações web externas ofereçam chat semântico/RAG direto sobre seus documentos **sem custo de APIs externas de IA**.
+* **Integração MCP para Agentes de IA:**
+  * As tools `rag_search_docs`, `rag_reindex_docs` e `rag_get_status` permitem que IAs consultem o seu repositório local de documentação enquanto programam, eliminando alucinações de regras de negócio, tabelas ou rotinas.
 
 ---
 
