@@ -124,7 +124,7 @@ describe('DocsIndexService Lifecycle and Search', () => {
   });
 
   it('deve carregar status corretamente a partir de arquivo de índice salvo', () => {
-    const indexPath = path.join(tempDir, 'winthor-dev-manager', 'docs-index.json');
+    const indexPath = path.join(tempDir, 'dev-manager', 'docs-index.json');
     fs.mkdirSync(path.dirname(indexPath), { recursive: true });
 
     const indexContent = {
@@ -186,7 +186,7 @@ describe('DocsIndexService Lifecycle and Search', () => {
   });
 
   it('deve filtrar por sourceLabel quando especificado nas opções de busca', async () => {
-    const indexPath = path.join(tempDir, 'winthor-dev-manager', 'docs-index.json');
+    const indexPath = path.join(tempDir, 'dev-manager', 'docs-index.json');
     fs.mkdirSync(path.dirname(indexPath), { recursive: true });
 
     const indexContent = {
@@ -220,7 +220,8 @@ describe('DocsIndexService Lifecycle and Search', () => {
     fs.writeFileSync(indexPath, JSON.stringify(indexContent), 'utf-8');
 
     const service = new DocsIndexService(mockConfigService, mockGitService);
-    // Simula embedQuery para não precisar carregar o modelo ONNX em teste unitário
+    // Simula embedQuery e isModelDownloaded para não precisar baixar/carregar o modelo ONNX em teste unitário
+    vi.spyOn(service, 'isModelDownloaded').mockReturnValue(true);
     (service as any).embedQuery = vi.fn().mockResolvedValue([1, 0, 0]);
 
     const results = await service.search('Karaf deployer', { sourceLabel: 'Projeto Alpha' });
@@ -231,7 +232,7 @@ describe('DocsIndexService Lifecycle and Search', () => {
   });
 
   it('deve realizar busca textual como fallback quando chunks não possuem vetores', async () => {
-    const indexPath = path.join(tempDir, 'winthor-dev-manager', 'docs-index.json');
+    const indexPath = path.join(tempDir, 'dev-manager', 'docs-index.json');
     fs.mkdirSync(path.dirname(indexPath), { recursive: true });
 
     const indexContent = {

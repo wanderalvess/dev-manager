@@ -99,6 +99,12 @@ export class LogWatcherService {
     const content = buffer.toString(encoding);
     const rawLines = content.split(/\r?\n/);
 
+    // O buffer sempre vai até o fim do arquivo, então uma quebra de linha final gera
+    // um último elemento vazio no split que não representa uma linha real do log.
+    if (rawLines.length > 0 && rawLines[rawLines.length - 1] === '') {
+      rawLines.pop();
+    }
+
     // Se lemos apenas uma fatia no meio do arquivo, a primeira linha pode estar cortada
     if (startPosition > 0 && rawLines.length > 1) {
       rawLines.shift();
