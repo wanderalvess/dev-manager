@@ -166,7 +166,7 @@ export const Header: React.FC<HeaderProps> = ({
           label: 'Logs em Tempo Real',
           shortLabel: 'Logs',
           icon: ScrollText,
-          description: 'Acompanhamento contínuo (tail -f) de logs do WinThor e microsserviços',
+          description: 'Acompanhamento contínuo (tail -f) de logs de aplicações e microsserviços',
           shortcut: 'Alt+8'
         }
       ]

@@ -230,7 +230,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
       id: 'routines-favorites',
       question: 'Como fixar minhas rotinas favoritas e onde elas ficam salvas?',
       category: 'Catálogo de Rotinas',
-      tags: ['rotinas', 'favoritos', 'estrelas', 'delphi', 'pcinf000', '1301'],
+      tags: ['rotinas', 'favoritos', 'estrelas', 'executaveis'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
@@ -289,7 +289,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            A aba <strong className="text-foreground">Documentação</strong> é a central de busca inteligente do Dev Manager. Ela indexa manuais, diagnósticos de projetos, mapeamentos de rotinas WinThor e contratos de API REST (<code className="font-mono text-primary">.md, .txt, .pdf, .docx</code>), permitindo encontrar informações técnicas em segundos.
+            A aba <strong className="text-foreground">Documentação</strong> é a central de busca inteligente do Dev Manager. Ela indexa manuais, diagnósticos de projetos, mapeamentos de rotinas e contratos de API REST (<code className="font-mono text-primary">.md, .txt, .pdf, .docx</code>), permitindo encontrar informações técnicas em segundos.
           </p>
           <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-1.5">
             <span className="font-bold text-foreground block">Por que Vetorizar? (Busca Semântica vs. Ctrl+F tradicional):</span>
@@ -526,7 +526,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                     </div>
                     <h4 className="text-xs font-bold text-foreground">Preparar Ambiente</h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Em 1 clique, encerra travas de arquivos, inicia a IDE configurada e roda o contêiner OSGi em modo Debug.
+                      Em 1 clique, encerra travas de arquivos, inicia a IDE configurada e sobe os serviços do seu perfil de automação em modo Debug.
                     </p>
                     {onNavigate && (
                       <button
@@ -580,7 +580,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                     </div>
                     <h4 className="text-xs font-bold text-foreground">Catálogo de Rotinas</h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Busca instantânea por número (1301, 1406, 4116, PCINF000) e execução direta com favoritos salvos.
+                      Busca instantânea por código ou nome do executável e execução direta com favoritos salvos.
                     </p>
                     {onNavigate && (
                       <button
@@ -784,16 +784,16 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
 
               <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
                 <p>
-                  Acesso instantâneo a todas as rotinas compiladas na pasta <code className="font-mono text-primary">Prod</code>:
+                  Acesso instantâneo a todas as rotinas encontradas na pasta configurada:
                 </p>
                 <ul className="space-y-1.5 pl-2">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                    <span><strong>Busca Instantânea:</strong> Filtre rotinas por código numérico ou nome (ex: <code className="font-mono text-primary">1301</code>, <code className="font-mono text-primary">1406</code>, <code className="font-mono text-primary">4116</code>, <code className="font-mono text-primary">PCINF000</code>).</span>
+                    <span><strong>Busca Instantânea:</strong> Filtre rotinas por código ou nome do executável.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                    <span><strong>Filtro por Módulo:</strong> Agrupamento automático por subpastas (<code className="font-mono text-primary">MOD-001</code>, <code className="font-mono text-primary">MOD-013</code>, etc.).</span>
+                    <span><strong>Filtro por Módulo:</strong> Agrupamento automático pelas subpastas do diretório configurado.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
@@ -966,7 +966,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                       </span>
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
-                      Cockpit Integrado de Automação e Produtividade para Desenvolvedores OSGi
+                      Cockpit Integrado de Automação e Produtividade para Desenvolvedores
                     </p>
                     <p className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">
                       Desenvolvido por <strong>Wanderson Alves</strong>

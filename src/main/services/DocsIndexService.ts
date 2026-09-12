@@ -148,11 +148,11 @@ export function sanitizeDocPathInfo(rawSourceLabel: string, rawEntryTitle: strin
   }
 
   // Tags seguras: estritamente sem nenhum caractere de caminho de disco
-  const tags = Array.from(new Set(['DevManager', projectName, 'WinThor'])).filter(
+  const tags = Array.from(new Set(['DevManager', projectName])).filter(
     (t) => t && !t.includes(':') && !t.includes('/') && !t.includes('\\')
   );
 
-  const category = `WinThor / ${projectName}`;
+  const category = projectName;
   const fullPath = `Documentação / ${projectName} / ${normalizedTitle}`;
 
   return {

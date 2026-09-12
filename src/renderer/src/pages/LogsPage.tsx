@@ -33,30 +33,21 @@ interface LogsPageProps {
   onNavigateToSettings?: () => void;
 }
 
-const DEFAULT_SOURCES: RealtimeLogSource[] = [
-  {
-    id: 'winthor-integracao-core',
-    name: 'WinThor Integração Core',
-    filePath: 'C:\\pcsist\\produtos\\winthor-integracao-core\\logs\\winthor-integracao-core.out.log',
-    encoding: 'utf-8',
-    enabled: true,
-    description: 'Log de saída em tempo real do serviço WinThor Integração Core'
-  },
-  {
-    id: 'winthor-log',
-    name: 'WinThor ERP',
-    filePath: 'C:\\pcsist\\produtos\\winthor\\data\\log\\winthor.log',
-    encoding: 'utf-8',
-    enabled: true,
-    description: 'Log de execução geral e rotinas do WinThor'
-  }
-];
+const DEFAULT_SOURCES: RealtimeLogSource[] = [];
+
+const EMPTY_SOURCE: RealtimeLogSource = {
+  id: '',
+  name: '',
+  filePath: '',
+  encoding: 'utf-8',
+  enabled: false
+};
 
 type LogLevelFilter = 'ALL' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 
 export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
   const [sources, setSources] = useState<RealtimeLogSource[]>(DEFAULT_SOURCES);
-  const [activeSourceId, setActiveSourceId] = useState<string>(DEFAULT_SOURCES[0].id);
+  const [activeSourceId, setActiveSourceId] = useState<string>('');
   const [lines, setLines] = useState<string[]>([]);
   const [status, setStatus] = useState<LogWatchStatus | null>(null);
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -84,7 +75,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
 
   // Fonte ativa atual
   const activeSource = useMemo(() => {
-    return sources.find((s) => s.id === activeSourceId) || sources[0] || DEFAULT_SOURCES[0];
+    return sources.find((s) => s.id === activeSourceId) || sources[0] || EMPTY_SOURCE;
   }, [sources, activeSourceId]);
 
   // Carregar fontes salvas em AppSettings
@@ -131,7 +122,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
 
   // Iniciar observação da fonte ativa
   const startWatchingActiveSource = useCallback(async () => {
-    if (!activeSource || !window.electronAPI?.startLogWatch) return;
+    if (!activeSource.filePath || !window.electronAPI?.startLogWatch) return;
 
     setLines([]);
     setHasNewLinesBelow(false);
@@ -170,7 +161,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
     startWatchingActiveSource();
 
     return () => {
-      if (window.electronAPI?.stopLogWatch && activeSource) {
+      if (window.electronAPI?.stopLogWatch && activeSource.filePath) {
         window.electronAPI.stopLogWatch(activeSource.id);
       }
     };
@@ -178,7 +169,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
 
   // Checagem periódica do status do arquivo
   useEffect(() => {
-    if (!window.electronAPI?.checkLogFile || !activeSource) return;
+    if (!window.electronAPI?.checkLogFile || !activeSource.filePath) return;
 
     const interval = setInterval(async () => {
       try {
@@ -289,7 +280,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
 
   // Zerar arquivo no disco
   const handleConfirmClearFile = async () => {
-    if (!window.electronAPI?.clearLogFile || !activeSource) return;
+    if (!window.electronAPI?.clearLogFile || !activeSource.filePath) return;
     setIsClearFileConfirmOpen(false);
 
     try {
@@ -595,6 +586,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
         </div>
 
         {/* Centro: Telemetria do Arquivo Ativo */}
+        {sources.length > 0 && (
         <div className="hidden lg:flex items-center space-x-3 text-xs font-mono text-muted-foreground bg-muted/30 px-3 py-1 rounded-xl border border-border/50">
           <div className="flex items-center space-x-1.5 max-w-sm xl:max-w-md truncate">
             <span className="truncate text-slate-300 text-[11px]" title={activeSource.filePath}>
@@ -624,6 +616,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
             </div>
           )}
         </div>
+        )}
 
         {/* Direita: Status da Conexão e Ações Críticas */}
         <div className="flex items-center space-x-2">
@@ -645,18 +638,20 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
           ) : (
             <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">
               <AlertTriangle className="w-3 h-3" />
-              <span>ARQUIVO AUSENTE</span>
+              <span>{sources.length > 0 ? 'ARQUIVO AUSENTE' : 'NENHUMA FONTE'}</span>
             </div>
           )}
 
-          <button
-            onClick={() => setIsClearFileConfirmOpen(true)}
-            className="px-2 py-1 text-rose-400 hover:text-rose-300 text-xs font-semibold rounded-lg hover:bg-rose-500/10 border border-border/60 hover:border-rose-500/30 transition-colors flex items-center space-x-1"
-            title="Zerar o arquivo no disco (ação destrutiva para novos testes)"
-          >
-            <Trash2 className="w-3 h-3" />
-            <span className="hidden sm:inline">Zerar no Disco</span>
-          </button>
+          {sources.length > 0 && (
+            <button
+              onClick={() => setIsClearFileConfirmOpen(true)}
+              className="px-2 py-1 text-rose-400 hover:text-rose-300 text-xs font-semibold rounded-lg hover:bg-rose-500/10 border border-border/60 hover:border-rose-500/30 transition-colors flex items-center space-x-1"
+              title="Zerar o arquivo no disco (ação destrutiva para novos testes)"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span className="hidden sm:inline">Zerar no Disco</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -886,7 +881,21 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
               <ScrollText className="w-12 h-12 text-slate-800 stroke-[1.5]" />
               <div className="space-y-1.5 max-w-lg">
                 <p className="text-sm font-semibold text-slate-400">Nenhum log para exibir no momento</p>
-                {status && !status.exists ? (
+                {sources.length === 0 ? (
+                  <div className="text-xs text-slate-400 leading-relaxed bg-muted/30 border border-border/50 p-3 rounded-xl">
+                    Nenhuma fonte de log configurada.{' '}
+                    <button
+                      onClick={() => {
+                        setEditingSource(null);
+                        setIsManageModalOpen(true);
+                      }}
+                      className="text-primary underline font-semibold"
+                    >
+                      Cadastre um arquivo de log
+                    </button>{' '}
+                    para começar a acompanhar em tempo real.
+                  </div>
+                ) : status && !status.exists ? (
                   <div className="text-xs text-rose-400/90 leading-relaxed bg-rose-950/20 border border-rose-900/40 p-3 rounded-xl">
                     O arquivo <code className="text-slate-200 font-mono font-bold">{activeSource.filePath}</code> não
                     foi encontrado. O Dev Manager está em escuta contínua e iniciará a transmissão assim que o serviço
@@ -1007,7 +1016,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
                       type="text"
                       value={editingSource?.name || ''}
                       onChange={(e) => setEditingSource((prev) => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ex: WinThor Integração Core"
+                      placeholder="Ex: API Backend, Serviço de Integração..."
                       className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs focus:outline-none focus:border-primary"
                     />
                   </div>
@@ -1032,7 +1041,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
                       type="text"
                       value={editingSource?.filePath || ''}
                       onChange={(e) => setEditingSource((prev) => ({ ...prev, filePath: e.target.value }))}
-                      placeholder="Ex: C:\pcsist\produtos\winthor\data\log\winthor.log"
+                      placeholder="Ex: C:\meu-servico\logs\saida.log"
                       className="flex-1 px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-mono focus:outline-none focus:border-primary"
                     />
                     <button
@@ -1131,14 +1140,20 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-between items-center text-xs text-muted-foreground">
-                <button
-                  onClick={() => persistSources(DEFAULT_SOURCES, DEFAULT_SOURCES[0].id)}
-                  className="hover:text-foreground text-[11px] underline"
-                >
-                  Restaurar Fontes Padrão do WinThor
-                </button>
-              </div>
+              {sources.length > 0 && (
+                <div className="pt-2 flex justify-between items-center text-xs text-muted-foreground">
+                  <button
+                    onClick={() => {
+                      if (confirm('Remover todas as fontes de log configuradas?')) {
+                        persistSources([], '');
+                      }
+                    }}
+                    className="hover:text-foreground text-[11px] underline"
+                  >
+                    Remover Todas as Fontes
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="px-5 py-3 border-t border-border/70 flex justify-end bg-card">

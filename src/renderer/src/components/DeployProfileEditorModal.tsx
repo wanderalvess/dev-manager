@@ -601,7 +601,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                           type="text"
                           value={editingStep.bundleLocation || ''}
                           onChange={(e) => handleUpdateCurrentStep({ bundleLocation: e.target.value })}
-                          placeholder="mvn:br.com.totvs.winthor/meu-modulo/1.0.0 ou file:/..."
+                          placeholder="mvn:com.minhaempresa/meu-modulo/1.0.0 ou file:/..."
                           className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>

@@ -20,24 +20,7 @@ export const DEFAULT_MONITORED_PORTS: MonitoredPortConfig[] = [
   { port: 1521, label: 'Oracle DB Listener', enabled: true }
 ];
 
-export const DEFAULT_REALTIME_LOG_SOURCES: RealtimeLogSource[] = [
-  {
-    id: 'winthor-integracao-core',
-    name: 'WinThor Integração Core',
-    filePath: 'C:\\pcsist\\produtos\\winthor-integracao-core\\logs\\winthor-integracao-core.out.log',
-    encoding: 'utf-8',
-    enabled: true,
-    description: 'Log de saída em tempo real do serviço WinThor Integração Core'
-  },
-  {
-    id: 'winthor-log',
-    name: 'WinThor ERP',
-    filePath: 'C:\\pcsist\\produtos\\winthor\\data\\log\\winthor.log',
-    encoding: 'utf-8',
-    enabled: true,
-    description: 'Log de execução geral e rotinas do WinThor'
-  }
-];
+export const DEFAULT_REALTIME_LOG_SOURCES: RealtimeLogSource[] = [];
 
 export const DEFAULT_AUTOMATION_PROFILES: AutomationProfile[] = [
   {
@@ -191,9 +174,7 @@ export function detectDefaultProjectsPath(): string {
     path.join(userHome, 'projetos'),
     path.join(userHome, 'Projects'),
     path.join(userHome, 'source', 'repos'),
-    path.join(userHome, 'projetosTOTVS'),
-    'C:\\Projetos',
-    'C:\\projetosTOTVS'
+    'C:\\Projetos'
   ];
 
   for (const candidate of candidates) {
@@ -215,7 +196,6 @@ export function detectDefaultKarafPath(): string {
   }
   const userHome = os.homedir();
   const candidates = [
-    'C:\\pcsist\\produtos\\winthor',
     '/workspace/karaf',
     '/karaf',
     path.join(userHome, 'karaf'),
@@ -268,7 +248,6 @@ export function detectDefaultJdkPath(): string {
     return process.env.JAVA_HOME;
   }
   const candidates = [
-    'C:\\pcsist\\produtos\\winthor-jdk',
     'C:\\Program Files\\Java\\jdk1.8.0_202',
     'C:\\Program Files\\Java\\jdk1.8.0_232',
     'C:\\Program Files\\Java\\jdk-8',

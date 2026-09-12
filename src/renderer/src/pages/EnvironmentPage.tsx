@@ -100,8 +100,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     if (!settings) return [];
     const missing: string[] = [];
     if (!settings.projectsPath) missing.push('Diretório de Repositórios Git');
-    if (!settings.karafPath) missing.push('Diretório do Karaf');
-    if (!settings.intellijPath) missing.push('IDE (IntelliJ)');
+    if (!settings.intellijPath) missing.push('IDE / Editor de Código');
     return missing;
   }, [settings]);
 
@@ -1110,14 +1109,16 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             </div>
           </button>
 
-          <button
-            onClick={() => handleOpenLink(karafConsoleUrl)}
-            className="py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all shadow-sm"
-            title={`Abrir Console Web OSGi / Apache Felix (${karafConsoleUrl})`}
-          >
-            <Server className="w-3.5 h-3.5 text-amber-500" />
-            <span className="hidden lg:inline">Console OSGi</span>
-          </button>
+          {settings?.karafPath && (
+            <button
+              onClick={() => handleOpenLink(karafConsoleUrl)}
+              className="py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all shadow-sm"
+              title={`Abrir Console Web OSGi / Apache Felix (${karafConsoleUrl})`}
+            >
+              <Server className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden lg:inline">Console OSGi</span>
+            </button>
+          )}
         </div>
       </div>
 

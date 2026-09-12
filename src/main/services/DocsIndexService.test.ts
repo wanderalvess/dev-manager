@@ -456,13 +456,12 @@ describe('DocSyncService', () => {
       expect(sanitized.cleanProjectName).toBe('hub-carga-dados');
       expect(sanitized.cleanSourceLabel).toBe('prompt-hub');
       expect(sanitized.cleanTitle).toBe('hub-carga-dados/diagnostico-projeto-hub-carga-dados.md');
-      expect(sanitized.category).toBe('WinThor / hub-carga-dados');
+      expect(sanitized.category).toBe('hub-carga-dados');
       expect(sanitized.fullPath).toBe('Documentação / hub-carga-dados / hub-carga-dados/diagnostico-projeto-hub-carga-dados.md');
 
       // Nenhuma tag pode ter caminho de disco ou dois pontos
       expect(sanitized.tags).toContain('DevManager');
       expect(sanitized.tags).toContain('hub-carga-dados');
-      expect(sanitized.tags).toContain('WinThor');
       for (const tag of sanitized.tags) {
         expect(tag).not.toContain('C:');
         expect(tag).not.toContain('\\');
@@ -476,8 +475,8 @@ describe('DocSyncService', () => {
 
       const sanitized = sanitizeDocPathInfo(rawSourceLabel, rawEntryTitle);
       expect(sanitized.cleanProjectName).toBe('my-microservice');
-      expect(sanitized.category).toBe('WinThor / my-microservice');
-      expect(sanitized.tags).toEqual(['DevManager', 'my-microservice', 'WinThor']);
+      expect(sanitized.category).toBe('my-microservice');
+      expect(sanitized.tags).toEqual(['DevManager', 'my-microservice']);
     });
   });
 });

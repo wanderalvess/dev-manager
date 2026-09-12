@@ -122,9 +122,7 @@ export class KarafService {
     }
 
     const candidates = [
-      path.join(settings.karafPath, 'bin', 'winthor.bat'),
       path.join(settings.karafPath, 'bin', 'karaf.bat'),
-      path.join(settings.karafPath, 'bin', 'winthor'),
       path.join(settings.karafPath, 'bin', 'karaf.sh'),
       path.join(settings.karafPath, 'bin', 'karaf')
     ];
@@ -137,9 +135,7 @@ export class KarafService {
   public getResolvedJavaEnv(): NodeJS.ProcessEnv {
     const settings = this.configService.getSettings();
     const configuredJdk = settings.jdkPath && fs.existsSync(settings.jdkPath) ? settings.jdkPath : null;
-    const defaultJdk = 'C:\\pcsist\\produtos\\winthor-jdk';
-    const fallbackJdk = fs.existsSync(defaultJdk) ? defaultJdk : null;
-    const chosenJdk = configuredJdk || process.env.JAVA_HOME || fallbackJdk;
+    const chosenJdk = configuredJdk || process.env.JAVA_HOME;
 
     const childEnv: NodeJS.ProcessEnv = { ...process.env };
     if (chosenJdk) {

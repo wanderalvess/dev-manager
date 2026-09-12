@@ -281,7 +281,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       setMvnCoordinate(`mvn:${groupId}/${serviceModule}/${version}`);
       setTargetVersion(version);
     } else {
-      setMvnCoordinate(`mvn:br.com.totvs.winthor/${proj.name}/1.0.0-SNAPSHOT`);
+      setMvnCoordinate(`mvn:com.suaempresa/${proj.name}/1.0.0-SNAPSHOT`);
       setTargetVersion('1.0.0-SNAPSHOT');
     }
   };
@@ -1015,7 +1015,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                       type="text"
                       value={mvnCoordinate}
                       onChange={(e) => setMvnCoordinate(e.target.value)}
-                      placeholder="mvn:br.com.totvs.winthor/rotina-faturamento-service/1.5.0"
+                      placeholder="mvn:com.suaempresa/meu-servico/1.5.0"
                       className="w-full bg-input/50 border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
                     />
                   </div>

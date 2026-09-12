@@ -109,7 +109,7 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         id: 'act-logs',
         category: 'action',
         title: 'Logs em Tempo Real (Tail -f)',
-        subtitle: 'Monitorar em tempo real winthor-integracao-core.out.log, winthor.log e serviços',
+        subtitle: 'Monitorar em tempo real os arquivos de log configurados',
         badge: 'Alt+8',
         icon: ScrollText,
         onSelect: () => {

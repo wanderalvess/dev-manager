@@ -2801,7 +2801,7 @@ export const DatabasePage: React.FC = () => {
                   <label className="block font-bold text-foreground mb-1">Categoria / Pasta</label>
                   <input
                     type="text"
-                    placeholder="Ex: WinThor, Vendas, Auditoria"
+                    placeholder="Ex: Vendas, Auditoria, Relatórios"
                     value={snippetCategory}
                     onChange={(e) => setSnippetCategory(e.target.value)}
                     className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
