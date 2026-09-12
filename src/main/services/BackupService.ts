@@ -4,15 +4,23 @@ import { execFile } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
 
+export interface BackupOptions {
+  pgDumpPath?: string;
+  expdpPath?: string;
+  /** Nome do objeto DIRECTORY do Oracle (ex: DATA_PUMP_DIR) cujo caminho no servidor deve
+   * corresponder a destinationFolder (expdp grava no servidor, não no cliente). */
+  oracleDirectory?: string;
+}
+
 export class BackupService {
   /**
    * Executa um backup lógico da conexão informada, salvando o arquivo em destinationFolder.
-   * Por enquanto só PostgreSQL é suportado (via pg_dump); Oracle e MySQL retornam erro explícito.
+   * Suporta PostgreSQL (pg_dump) e Oracle (expdp); MySQL ainda retorna erro explícito.
    */
   public async runBackup(
     config: DatabaseConnectionConfig,
     destinationFolder: string,
-    pgDumpPath?: string
+    options?: BackupOptions
   ): Promise<BackupResult> {
     if (!isSafeLocalPath(destinationFolder)) {
       return { success: false, message: 'Pasta de destino inválida.' };
@@ -20,9 +28,9 @@ export class BackupService {
 
     switch (config.type) {
       case 'postgres':
-        return this.backupPostgres(config, destinationFolder, pgDumpPath);
+        return this.backupPostgres(config, destinationFolder, options?.pgDumpPath);
       case 'oracle':
-        return { success: false, message: 'Backup automático para Oracle ainda não implementado (em breve via expdp).' };
+        return this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory);
       case 'mysql':
         return { success: false, message: 'Backup automático para MySQL ainda não implementado (em breve via mysqldump).' };
       default:
@@ -31,13 +39,13 @@ export class BackupService {
   }
 
   /**
-   * Lista os arquivos de backup (.sql / .dump) já existentes em uma pasta, mais recentes primeiro.
+   * Lista os arquivos de backup (.sql / .dump / .dmp) já existentes em uma pasta, mais recentes primeiro.
    */
   public async listBackups(destinationFolder: string): Promise<BackupFileInfo[]> {
     if (!isSafeLocalPath(destinationFolder) || !fs.existsSync(destinationFolder)) return [];
 
     const entries = await fs.promises.readdir(destinationFolder, { withFileTypes: true });
-    const files = entries.filter((e) => e.isFile() && /\.(sql|dump)$/i.test(e.name));
+    const files = entries.filter((e) => e.isFile() && /\.(sql|dump|dmp)$/i.test(e.name));
 
     const infos: BackupFileInfo[] = [];
     for (const file of files) {
@@ -155,6 +163,113 @@ export class BackupService {
         }
       );
     });
+  }
+
+  /**
+   * Executa um export lógico via expdp. Diferente do pg_dump, o expdp roda no lado do
+   * servidor Oracle: o dump é gravado no caminho do objeto DIRECTORY do banco, não em
+   * destinationFolder diretamente. Para funcionar, destinationFolder deve apontar para o
+   * mesmo caminho físico que o DIRECTORY do Oracle usa (cenário comum em bancos de dev
+   * rodando na própria máquina). A senha é enviada via stdin, nunca como argumento de
+   * linha de comando, para não ficar visível na lista de processos.
+   */
+  private async backupOracle(
+    config: DatabaseConnectionConfig,
+    destinationFolder: string,
+    expdpPath?: string,
+    oracleDirectory?: string
+  ): Promise<BackupResult> {
+    const startTime = Date.now();
+
+    if (!config.user || !isValidIdentifier(config.user)) {
+      return { success: false, message: 'Usuário da conexão inválido ou ausente.' };
+    }
+
+    const directory = (oracleDirectory && oracleDirectory.trim()) || 'DATA_PUMP_DIR';
+    if (!isValidIdentifier(directory)) {
+      return { success: false, message: 'Nome do DIRECTORY Oracle inválido.' };
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const safeConnName = (config.name || config.user).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const dumpFileName = `${safeConnName}_${config.user}_${timestamp}.dmp`;
+    const logFileName = `${safeConnName}_${config.user}_${timestamp}.log`;
+    const expectedFilePath = path.join(destinationFolder, dumpFileName);
+
+    // Mesma sintaxe de connect string usada pelo driver oracledb (ver DatabaseService.getOracleConnection)
+    const separator = config.oracleMode === 'sid' ? ':' : '/';
+    const connectString = `${config.host}:${config.port || 1521}${separator}${config.database}`;
+
+    const binary = expdpPath && expdpPath.trim() ? expdpPath.trim() : 'expdp';
+    const args = [
+      `${config.user}@${connectString}`,
+      `directory=${directory}`,
+      `dumpfile=${dumpFileName}`,
+      `logfile=${logFileName}`,
+      `schemas=${config.user}`
+    ];
+
+    return new Promise<BackupResult>((resolve) => {
+      const child = execFile(
+        binary,
+        args,
+        {
+          maxBuffer: 20 * 1024 * 1024,
+          timeout: 10 * 60 * 1000
+        },
+        (error, stdout, stderr) => {
+          const durationMs = Date.now() - startTime;
+
+          if (error) {
+            resolve({ success: false, message: this.formatExpdpError(error, stdout, stderr), durationMs });
+            return;
+          }
+
+          fs.promises
+            .stat(expectedFilePath)
+            .then((stat) => {
+              resolve({
+                success: true,
+                message: `Backup gerado com sucesso em ${expectedFilePath}`,
+                filePath: expectedFilePath,
+                sizeBytes: stat.size,
+                durationMs
+              });
+            })
+            .catch(() => {
+              resolve({
+                success: true,
+                message: `expdp concluído, mas o dump não foi encontrado em ${destinationFolder}. Verifique se esse caminho corresponde ao do DIRECTORY '${directory}' no servidor Oracle (${dumpFileName} deve estar lá).`,
+                durationMs
+              });
+            });
+        }
+      );
+
+      // expdp pede a senha interativamente; enviamos via stdin para não expor em argv/process list.
+      child.stdin?.write(`${config.password || ''}\n`);
+      child.stdin?.end();
+    });
+  }
+
+  private formatExpdpError(error: { code?: string | number | null; message?: string }, stdout?: string, stderr?: string): string {
+    if (error.code === 'ENOENT') {
+      return "expdp não encontrado. Instale o Oracle Instant Client (pacote 'Tools') ou configure o caminho do executável nas configurações.";
+    }
+    const msg = (stdout || stderr || error.message || '').trim();
+    if (msg.includes('ORA-01017')) {
+      return 'Falha de autenticação: usuário ou senha incorretos para o Oracle.';
+    }
+    if (msg.includes('ORA-39002') || msg.includes('ORA-39070') || msg.includes('ORA-39087')) {
+      return `DIRECTORY Oracle inválido ou inexistente, ou sem permissão de acesso ao caminho. Peça ao DBA para criar/conceder acesso ao DIRECTORY usado.`;
+    }
+    if (msg.includes('ORA-12541') || msg.includes('TNS:no listener')) {
+      return 'Oracle Listener não encontrado no host e porta especificados (ORA-12541).';
+    }
+    if (msg.includes('ORA-12514')) {
+      return 'Serviço/Banco Oracle não encontrado pelo Listener (ORA-12514). Verifique o Service Name / SID.';
+    }
+    return msg || 'Falha desconhecida ao executar expdp.';
   }
 
   private formatPgDumpError(error: { code?: string | number | null; message?: string }, stderr?: string): string {

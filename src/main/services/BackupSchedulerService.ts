@@ -51,7 +51,11 @@ export class BackupSchedulerService {
 
   private async runScheduledBackup(config: BackupConfig, connection: DatabaseConnectionConfig): Promise<void> {
     const settings = this.configService.getSettings();
-    const result = await this.backupService.runBackup(connection, config.destinationFolder, settings.pgDumpPath);
+    const result = await this.backupService.runBackup(connection, config.destinationFolder, {
+      pgDumpPath: settings.pgDumpPath,
+      expdpPath: settings.expdpPath,
+      oracleDirectory: config.oracleDirectory
+    });
 
     if (result.success && config.retentionCount) {
       await this.backupService.applyRetention(config.destinationFolder, config.retentionCount);

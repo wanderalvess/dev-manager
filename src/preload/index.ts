@@ -240,8 +240,8 @@ const electronAPI = {
     ipcRenderer.invoke('db:list-tables', config),
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
     ipcRenderer.invoke('db:get-table-columns', config, tableName),
-  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string): Promise<BackupResult> =>
-    ipcRenderer.invoke('db:run-backup', config, destinationFolder),
+  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:run-backup', config, destinationFolder, oracleDirectory),
   listDbBackups: (destinationFolder: string): Promise<BackupFileInfo[]> =>
     ipcRenderer.invoke('db:list-backups', destinationFolder),
   saveDbBackupConfig: (config: BackupConfig): Promise<{ success: boolean; message: string }> =>

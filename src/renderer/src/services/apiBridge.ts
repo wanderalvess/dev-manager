@@ -718,10 +718,10 @@ export function initApiBridge() {
       });
     },
 
-    runDbBackup: async (config: DatabaseConnectionConfig, destinationFolder: string): Promise<BackupResult> => {
+    runDbBackup: async (config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string): Promise<BackupResult> => {
       return apiFetch('/api/db/backup', {
         method: 'POST',
-        body: JSON.stringify({ config, destinationFolder })
+        body: JSON.stringify({ config, destinationFolder, oracleDirectory })
       });
     },
 

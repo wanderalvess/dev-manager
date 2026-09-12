@@ -512,12 +512,17 @@ export function registerIpcHandlers(
     return await databaseService.getTableColumns(config, tableName);
   });
 
-  ipcMain.handle('db:run-backup', async (_, config: DatabaseConnectionConfig, destinationFolder: string) => {
+  ipcMain.handle('db:run-backup', async (_, config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string) => {
     const settings = configService.getSettings();
-    const result = await backupService.runBackup(config, destinationFolder, settings.pgDumpPath);
-
     const existing = settings.backupConfigs || [];
     const previous = existing.find((b) => b.connectionId === config.id);
+    const effectiveOracleDirectory = oracleDirectory ?? previous?.oracleDirectory;
+    const result = await backupService.runBackup(config, destinationFolder, {
+      pgDumpPath: settings.pgDumpPath,
+      expdpPath: settings.expdpPath,
+      oracleDirectory: effectiveOracleDirectory
+    });
+
     if (result.success && previous?.retentionCount) {
       await backupService.applyRetention(destinationFolder, previous.retentionCount);
     }
@@ -526,6 +531,7 @@ export function registerIpcHandlers(
       ...previous,
       connectionId: config.id,
       destinationFolder,
+      oracleDirectory: effectiveOracleDirectory,
       lastRunAt: new Date().toISOString(),
       lastSuccess: result.success,
       lastMessage: result.message

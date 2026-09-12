@@ -241,6 +241,8 @@ export interface AppSettings {
   mappedPrograms?: MappedProgram[];
   /** Caminho do executável pg_dump, quando não estiver no PATH do sistema */
   pgDumpPath?: string;
+  /** Caminho do executável expdp, quando não estiver no PATH do sistema */
+  expdpPath?: string;
   /** Pastas de destino de backup configuradas por conexão de banco */
   backupConfigs?: BackupConfig[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
@@ -640,6 +642,8 @@ export interface BackupConfig {
   enabled?: boolean;
   /** Quantidade de backups a manter na pasta; os mais antigos são apagados após cada execução. Ausente = mantém todos. */
   retentionCount?: number;
+  /** Nome do objeto DIRECTORY do Oracle usado pelo expdp (padrão: DATA_PUMP_DIR). Ignorado para outros tipos de banco. */
+  oracleDirectory?: string;
   lastRunAt?: string;
   lastSuccess?: boolean;
   lastMessage?: string;

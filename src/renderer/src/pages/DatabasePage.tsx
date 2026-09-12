@@ -187,6 +187,7 @@ export const DatabasePage: React.FC = () => {
   const [backupCron, setBackupCron] = useState<string>('');
   const [backupScheduleEnabled, setBackupScheduleEnabled] = useState<boolean>(true);
   const [backupRetentionCount, setBackupRetentionCount] = useState<string>('');
+  const [backupOracleDirectory, setBackupOracleDirectory] = useState<string>('');
   const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
   const [scheduleSaveResult, setScheduleSaveResult] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -399,6 +400,7 @@ export const DatabasePage: React.FC = () => {
     setBackupCron(saved?.cronExpression || '');
     setBackupScheduleEnabled(saved?.enabled !== false);
     setBackupRetentionCount(saved?.retentionCount ? String(saved.retentionCount) : '');
+    setBackupOracleDirectory(saved?.oracleDirectory || '');
     setBackupResult(null);
     setScheduleSaveResult(null);
     setIsBackupModalOpen(true);
@@ -422,7 +424,11 @@ export const DatabasePage: React.FC = () => {
     setIsRunningBackup(true);
     setBackupResult(null);
     try {
-      const res = await window.electronAPI.runDbBackup(activeConnection, backupFolder.trim());
+      const res = await window.electronAPI.runDbBackup(
+        activeConnection,
+        backupFolder.trim(),
+        activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined
+      );
       setBackupResult(res);
       // Atualiza o cache local de settings para refletir a pasta salva sem precisar recarregar
       setSettings((prev) => {
@@ -433,6 +439,7 @@ export const DatabasePage: React.FC = () => {
           ...previous,
           connectionId: activeConnection.id,
           destinationFolder: backupFolder.trim(),
+          oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : previous?.oracleDirectory,
           lastRunAt: new Date().toISOString(),
           lastSuccess: res.success,
           lastMessage: res.message
@@ -458,7 +465,8 @@ export const DatabasePage: React.FC = () => {
         destinationFolder: backupFolder.trim(),
         cronExpression: backupCron.trim() || undefined,
         enabled: backupScheduleEnabled,
-        retentionCount: backupRetentionCount.trim() ? Number(backupRetentionCount.trim()) : undefined
+        retentionCount: backupRetentionCount.trim() ? Number(backupRetentionCount.trim()) : undefined,
+        oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined
       };
       const res = await window.electronAPI.saveDbBackupConfig(config);
       setScheduleSaveResult(res);
@@ -2481,19 +2489,20 @@ export const DatabasePage: React.FC = () => {
             </div>
 
             <div className="p-4 space-y-3 text-xs overflow-y-auto">
-              {activeConnection.type !== 'postgres' ? (
+              {activeConnection.type === 'mysql' ? (
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
-                    Backup automático para {activeConnection.type === 'oracle' ? 'Oracle' : 'MySQL'} ainda não
-                    implementado. Por enquanto, apenas conexões PostgreSQL têm suporte a backup direto pelo Dev
-                    Manager.
+                    Backup automático para MySQL ainda não implementado. Por enquanto, apenas conexões PostgreSQL
+                    e Oracle têm suporte a backup direto pelo Dev Manager.
                   </span>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="block font-bold text-foreground mb-1">Pasta de Destino</label>
+                    <label className="block font-bold text-foreground mb-1">
+                      {activeConnection.type === 'oracle' ? 'Pasta do DIRECTORY (no servidor Oracle)' : 'Pasta de Destino'}
+                    </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -2511,11 +2520,37 @@ export const DatabasePage: React.FC = () => {
                         <FolderOpen className="w-4 h-4" />
                       </button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      A pasta é lembrada por conexão. O arquivo gerado usa <code>pg_dump</code> (precisa estar
-                      instalado e acessível no PATH, ou configure o caminho em Configurações → pgDumpPath).
-                    </p>
+                    {activeConnection.type === 'oracle' ? (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        O <code>expdp</code> grava o dump no servidor Oracle, não nesta máquina. Essa pasta precisa
+                        ser o mesmo caminho físico usado pelo objeto DIRECTORY abaixo (funciona direto quando o
+                        banco roda na própria máquina).
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        A pasta é lembrada por conexão. O arquivo gerado usa <code>pg_dump</code> (precisa estar
+                        instalado e acessível no PATH, ou configure o caminho em Configurações → pgDumpPath).
+                      </p>
+                    )}
                   </div>
+
+                  {activeConnection.type === 'oracle' && (
+                    <div>
+                      <label className="block font-bold text-foreground mb-1">DIRECTORY Oracle</label>
+                      <input
+                        type="text"
+                        value={backupOracleDirectory}
+                        onChange={(e) => setBackupOracleDirectory(e.target.value)}
+                        placeholder="DATA_PUMP_DIR"
+                        className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Nome do objeto DIRECTORY já criado no Oracle (<code>CREATE DIRECTORY ... AS '...'</code>).
+                        Padrão: <code>DATA_PUMP_DIR</code>. O schema exportado é o usuário da conexão (
+                        {activeConnection.user}).
+                      </p>
+                    </div>
+                  )}
 
                   <button
                     type="button"

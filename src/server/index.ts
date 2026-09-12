@@ -567,12 +567,17 @@ app.post('/api/db/columns', async (req, res) => {
 
 app.post('/api/db/backup', async (req, res) => {
   try {
-    const { config, destinationFolder } = req.body;
+    const { config, destinationFolder, oracleDirectory } = req.body;
     const settings = configService.getSettings();
-    const result = await backupService.runBackup(config, destinationFolder, settings.pgDumpPath);
-
     const existing = settings.backupConfigs || [];
     const previous = existing.find((b) => b.connectionId === config.id);
+    const effectiveOracleDirectory = oracleDirectory ?? previous?.oracleDirectory;
+    const result = await backupService.runBackup(config, destinationFolder, {
+      pgDumpPath: settings.pgDumpPath,
+      expdpPath: settings.expdpPath,
+      oracleDirectory: effectiveOracleDirectory
+    });
+
     if (result.success && previous?.retentionCount) {
       await backupService.applyRetention(destinationFolder, previous.retentionCount);
     }
@@ -581,6 +586,7 @@ app.post('/api/db/backup', async (req, res) => {
       ...previous,
       connectionId: config.id,
       destinationFolder,
+      oracleDirectory: effectiveOracleDirectory,
       lastRunAt: new Date().toISOString(),
       lastSuccess: result.success,
       lastMessage: result.message

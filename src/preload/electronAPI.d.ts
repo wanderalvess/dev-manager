@@ -185,7 +185,7 @@ export interface ElectronAPI {
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
-  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string) => Promise<BackupResult>;
+  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string) => Promise<BackupResult>;
   listDbBackups: (destinationFolder: string) => Promise<BackupFileInfo[]>;
   saveDbBackupConfig: (config: BackupConfig) => Promise<{ success: boolean; message: string }>;
 
