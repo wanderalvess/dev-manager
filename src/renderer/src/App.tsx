@@ -11,6 +11,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { HelpPage } from './pages/HelpPage';
 import { LogsPage } from './pages/LogsPage';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
+import { ToastHost, showToast } from './components/ToastHost';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
 
 // Marca se o usuário já viu a tela de Ajuda/Visão Geral pelo menos uma vez.
@@ -132,6 +133,18 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Notifica o usuário sobre o resultado de backups agendados, mesmo fora da aba Banco de Dados
+  useEffect(() => {
+    if (!window.electronAPI?.onBackupScheduleResult) return;
+    return window.electronAPI.onBackupScheduleResult(({ connectionName, result }) => {
+      if (result.success) {
+        showToast(`Backup agendado de "${connectionName}" concluído com sucesso.`, 'success');
+      } else {
+        showToast(`Falha no backup agendado de "${connectionName}": ${result.message}`, 'error');
+      }
+    });
+  }, []);
+
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden select-none transition-colors duration-300">
@@ -192,6 +205,8 @@ export const App: React.FC = () => {
           <HelpPage onNavigate={(tab) => setActiveTab(tab)} initialSearch={helpSearch} />
         )}
       </main>
+
+      <ToastHost />
     </div>
   );
 };

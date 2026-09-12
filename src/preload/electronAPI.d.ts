@@ -188,6 +188,8 @@ export interface ElectronAPI {
   runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string) => Promise<BackupResult>;
   listDbBackups: (destinationFolder: string) => Promise<BackupFileInfo[]>;
   saveDbBackupConfig: (config: BackupConfig) => Promise<{ success: boolean; message: string }>;
+  restoreDbBackup: (config: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
+  onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => () => void;
 
   // Gerenciador de Containers (Docker / Podman)
   getDockerStatus: () => Promise<DockerDaemonStatus>;

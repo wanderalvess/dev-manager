@@ -63,6 +63,9 @@ function createWindow() {
   const databaseService = new DatabaseService();
   const backupService = new BackupService();
   const backupSchedulerService = new BackupSchedulerService(configService, backupService);
+  backupSchedulerService.onResult = (connectionName, result) => {
+    mainWindow?.webContents.send('backup:schedule-result', { connectionName, result });
+  };
   const networkService = new NetworkService();
   const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
   const gitAzureService = new GitAzureService(configService, karafService);

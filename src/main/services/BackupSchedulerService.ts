@@ -1,10 +1,13 @@
 import * as cron from 'node-cron';
 import { ConfigService } from './ConfigService';
 import { BackupService } from './BackupService';
-import { BackupConfig, DatabaseConnectionConfig } from '../../shared/types';
+import { BackupConfig, BackupResult, DatabaseConnectionConfig } from '../../shared/types';
 
 export class BackupSchedulerService {
   private jobs = new Map<string, cron.ScheduledTask>();
+
+  /** Chamado após cada execução agendada (sucesso ou falha), para notificar a UI. */
+  public onResult?: (connectionName: string, result: BackupResult) => void;
 
   constructor(
     private configService: ConfigService,
@@ -76,5 +79,7 @@ export class BackupSchedulerService {
     if (!result.success) {
       console.warn(`[BackupScheduler] Falha no backup agendado de ${connection.name}: ${result.message}`);
     }
+
+    this.onResult?.(connection.name, result);
   }
 }

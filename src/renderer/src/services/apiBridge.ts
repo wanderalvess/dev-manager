@@ -739,6 +739,17 @@ export function initApiBridge() {
       });
     },
 
+    restoreDbBackup: async (config: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> => {
+      return apiFetch('/api/db/restore', {
+        method: 'POST',
+        body: JSON.stringify({ config, filePath })
+      });
+    },
+
+    onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
+      return wsManager.subscribe('backup:schedule-result', callback);
+    },
+
     // Gerenciador de Containers (Docker / Podman)
     getDockerStatus: async (): Promise<DockerDaemonStatus> => {
       return apiFetch('/api/docker/status');

@@ -547,6 +547,18 @@ export function registerIpcHandlers(
     return await backupService.listBackups(destinationFolder);
   });
 
+  ipcMain.handle('db:restore-backup', async (_, config: DatabaseConnectionConfig, filePath: string) => {
+    const settings = configService.getSettings();
+    const existing = settings.backupConfigs || [];
+    const previous = existing.find((b) => b.connectionId === config.id);
+    return await backupService.restoreBackup(config, filePath, {
+      psqlPath: settings.psqlPath,
+      impdpPath: settings.impdpPath,
+      mysqlPath: settings.mysqlPath,
+      oracleDirectory: previous?.oracleDirectory
+    });
+  });
+
   ipcMain.handle('db:save-backup-config', async (_, config: BackupConfig) => {
     if (config.cronExpression && !cron.validate(config.cronExpression)) {
       return { success: false, message: 'Expressão cron inválida.' };

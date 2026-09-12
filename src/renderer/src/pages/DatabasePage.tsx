@@ -3,6 +3,7 @@ import {
   Database,
   Play,
   RotateCw,
+  RotateCcw,
   Plus,
   Trash2,
   Edit2,
@@ -190,6 +191,8 @@ export const DatabasePage: React.FC = () => {
   const [backupOracleDirectory, setBackupOracleDirectory] = useState<string>('');
   const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
   const [scheduleSaveResult, setScheduleSaveResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [restoringFilePath, setRestoringFilePath] = useState<string | null>(null);
+  const [restoreResult, setRestoreResult] = useState<BackupResult | null>(null);
 
   const activeConnection = useMemo(() => {
     return connections.find((c) => c.id === activeConnectionId) || connections[0] || null;
@@ -403,6 +406,7 @@ export const DatabasePage: React.FC = () => {
     setBackupOracleDirectory(saved?.oracleDirectory || '');
     setBackupResult(null);
     setScheduleSaveResult(null);
+    setRestoreResult(null);
     setIsBackupModalOpen(true);
     if (folder) refreshBackupFiles(folder);
     else setBackupFiles([]);
@@ -483,6 +487,28 @@ export const DatabasePage: React.FC = () => {
       setScheduleSaveResult({ success: false, message: err?.message || 'Erro inesperado ao salvar agendamento.' });
     } finally {
       setIsSavingSchedule(false);
+    }
+  };
+
+  // Restaurar um backup existente na conexão ativa (operação destrutiva)
+  const handleRestoreBackup = async (file: BackupFileInfo) => {
+    if (!activeConnection || !window.electronAPI?.restoreDbBackup) return;
+
+    const confirmed = window.confirm(
+      `Restaurar "${file.fileName}" na conexão "${activeConnection.name}"?\n\n` +
+        'Isso executa o backup contra o banco de dados AGORA e pode sobrescrever ou duplicar dados existentes. Essa ação não pode ser desfeita pelo Dev Manager.'
+    );
+    if (!confirmed) return;
+
+    setRestoringFilePath(file.filePath);
+    setRestoreResult(null);
+    try {
+      const res = await window.electronAPI.restoreDbBackup(activeConnection, file.filePath);
+      setRestoreResult(res);
+    } catch (err: any) {
+      setRestoreResult({ success: false, message: err?.message || 'Erro inesperado ao restaurar backup.' });
+    } finally {
+      setRestoringFilePath(null);
     }
   };
 
@@ -2683,6 +2709,17 @@ export const DatabasePage: React.FC = () => {
                         <RotateCw className={`w-3 h-3 ${isLoadingBackupFiles ? 'animate-spin text-primary' : ''}`} />
                       </button>
                     </div>
+                    {restoreResult && (
+                      <div
+                        className={`mb-2 p-2 rounded-lg border text-[11px] ${
+                          restoreResult.success
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                        }`}
+                      >
+                        {restoreResult.message}
+                      </div>
+                    )}
                     {backupFiles.length === 0 ? (
                       <div className="text-center py-3 text-[11px] text-muted-foreground">
                         Nenhum backup encontrado nesta pasta.
@@ -2692,14 +2729,30 @@ export const DatabasePage: React.FC = () => {
                         {backupFiles.map((f) => (
                           <div
                             key={f.filePath}
-                            className="flex items-center justify-between p-2 bg-background/60 border border-border/50 rounded-lg"
+                            className="flex items-center justify-between p-2 bg-background/60 border border-border/50 rounded-lg gap-2"
                           >
-                            <span className="font-mono text-[10px] truncate pr-2" title={f.filePath}>
-                              {f.fileName}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground shrink-0 font-mono">
-                              {formatBytes(f.sizeBytes)}
-                            </span>
+                            <div className="min-w-0 flex-1">
+                              <span className="font-mono text-[10px] truncate block" title={f.filePath}>
+                                {f.fileName}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground font-mono">
+                                {formatBytes(f.sizeBytes)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRestoreBackup(f)}
+                              disabled={restoringFilePath !== null}
+                              title="Restaurar este backup na conexão ativa (sobrescreve dados existentes)"
+                              className="shrink-0 flex items-center gap-1 px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 rounded-md text-[10px] font-bold transition disabled:opacity-50"
+                            >
+                              {restoringFilePath === f.filePath ? (
+                                <RotateCw className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <RotateCcw className="w-3 h-3" />
+                              )}
+                              <span>Restaurar</span>
+                            </button>
                           </div>
                         ))}
                       </div>

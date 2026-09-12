@@ -97,6 +97,9 @@ const karafService = new KarafService(configService);
 const databaseService = new DatabaseService();
 const backupService = new BackupService();
 const backupSchedulerService = new BackupSchedulerService(configService, backupService);
+backupSchedulerService.onResult = (connectionName, result) => {
+  broadcastWs('backup:schedule-result', { connectionName, result });
+};
 backupSchedulerService.rescheduleAll();
 const networkService = new NetworkService();
 const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
@@ -629,6 +632,24 @@ app.post('/api/db/backup-config', async (req, res) => {
     res.json({ success: true, message: 'Agendamento salvo com sucesso.' });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message || 'Erro ao salvar agendamento' });
+  }
+});
+
+app.post('/api/db/restore', async (req, res) => {
+  try {
+    const { config, filePath } = req.body;
+    const settings = configService.getSettings();
+    const existing = settings.backupConfigs || [];
+    const previous = existing.find((b) => b.connectionId === config.id);
+    const result = await backupService.restoreBackup(config, filePath, {
+      psqlPath: settings.psqlPath,
+      impdpPath: settings.impdpPath,
+      mysqlPath: settings.mysqlPath,
+      oracleDirectory: previous?.oracleDirectory
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'Erro ao restaurar backup' });
   }
 });
 

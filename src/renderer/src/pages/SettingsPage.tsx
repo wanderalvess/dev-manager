@@ -30,7 +30,9 @@ import {
   Upload,
   ShieldCheck,
   ChevronDown,
-  ScrollText
+  ScrollText,
+  Database,
+  HardDriveDownload
 } from 'lucide-react';
 import {
   AppSettings,
@@ -71,26 +73,9 @@ const DEFAULT_AUTOMATION: EnvironmentAutomationConfig = {
   selectedStartServiceNames: []
 };
 
-const DEFAULT_LOG_SOURCES: RealtimeLogSource[] = [
-  {
-    id: 'winthor-integracao-core',
-    name: 'WinThor Integração Core',
-    filePath: 'C:\\pcsist\\produtos\\winthor-integracao-core\\logs\\winthor-integracao-core.out.log',
-    encoding: 'utf-8',
-    enabled: true,
-    description: 'Log de saída em tempo real do serviço WinThor Integração Core'
-  },
-  {
-    id: 'winthor-log',
-    name: 'WinThor ERP',
-    filePath: 'C:\\pcsist\\produtos\\winthor\\data\\log\\winthor.log',
-    encoding: 'utf-8',
-    enabled: true,
-    description: 'Log de execução geral e rotinas do WinThor'
-  }
-];
+const DEFAULT_LOG_SOURCES: RealtimeLogSource[] = [];
 
-type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs';
+type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup';
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onNavigate }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('dirs');
@@ -112,7 +97,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     monitoredPorts: DEFAULT_PORTS,
     trackedServices: DEFAULT_SERVICES,
     trackedProcesses: DEFAULT_PROCESSES,
-    automationDefaults: DEFAULT_AUTOMATION
+    automationDefaults: DEFAULT_AUTOMATION,
+    pgDumpPath: '',
+    expdpPath: '',
+    mysqldumpPath: '',
+    psqlPath: '',
+    impdpPath: '',
+    mysqlPath: ''
   });
 
   const [pathStatuses, setPathStatuses] = useState<Record<string, PathStatusInfo>>({});
@@ -218,7 +209,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           monitoredPorts: st.monitoredPorts && st.monitoredPorts.length > 0 ? st.monitoredPorts : DEFAULT_PORTS,
           trackedServices: st.trackedServices && st.trackedServices.length > 0 ? st.trackedServices : DEFAULT_SERVICES,
           trackedProcesses: st.trackedProcesses && st.trackedProcesses.length > 0 ? st.trackedProcesses : DEFAULT_PROCESSES,
-          automationDefaults: st.automationDefaults || DEFAULT_AUTOMATION
+          automationDefaults: st.automationDefaults || DEFAULT_AUTOMATION,
+          pgDumpPath: st.pgDumpPath || '',
+          expdpPath: st.expdpPath || '',
+          mysqldumpPath: st.mysqldumpPath || '',
+          psqlPath: st.psqlPath || '',
+          impdpPath: st.impdpPath || '',
+          mysqlPath: st.mysqlPath || ''
         };
         setSettings(loaded);
         setLauncherRows(Object.entries(st.routineLauncherMap || {}).map(([ext, path]) => ({ ext, path })));
@@ -780,6 +777,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
             {(settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length}
           </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('backup')}
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+            activeTab === 'backup'
+              ? 'bg-primary text-primary-foreground border-primary shadow-md'
+              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+          }`}
+        >
+          <HardDriveDownload className="w-4 h-4 text-sky-500" />
+          <span>Backup de Bancos</span>
         </button>
       </div>
 
@@ -1988,9 +1997,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   type="button"
                   onClick={handleResetLogSources}
                   className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground border border-border/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+                  title="Remove todas as fontes de log configuradas"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Restaurar Padrões</span>
+                  <span>Limpar Todas</span>
                 </button>
                 <button
                   type="button"
@@ -2016,7 +2026,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                         type="text"
                         value={src.name || ''}
                         onChange={(e) => handleUpdateLogSource(idx, 'name', e.target.value)}
-                        placeholder="Ex: WinThor Integração Core"
+                        placeholder="Ex: API Backend, Serviço de Integração..."
                         className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs"
                       />
                     </div>
@@ -2031,7 +2041,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                           type="text"
                           value={src.filePath || ''}
                           onChange={(e) => handleUpdateLogSource(idx, 'filePath', e.target.value)}
-                          placeholder="Ex: C:\pcsist\produtos\winthor-integracao-core\logs\winthor-integracao-core.out.log"
+                          placeholder="Ex: C:\meu-servico\logs\saida.log"
                           className="flex-1 px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono"
                         />
                         <button
@@ -2082,6 +2092,183 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 com auto-scroll, busca regex e filtro por nível (ERROR, WARN, INFO). Se o arquivo ainda não existir, o
                 sistema aguardará o serviço criá-lo sem travar a interface.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Conteúdo da Aba: Backup de Bancos de Dados */}
+      {activeTab === 'backup' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+          <div className="lg:col-span-12 space-y-4 flex flex-col">
+            <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+              <div className="flex items-center justify-between pb-1 border-b border-border/60">
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <HardDriveDownload className="w-4 h-4 text-sky-500" /> Executáveis de Backup
+                </h3>
+                <span className="text-[10px] text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Usados pela função de Backup da aba <strong>Banco de Dados</strong>. Deixe em branco se o executável já
+                estiver acessível no PATH do sistema.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                {/* pg_dump */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-sky-500" /> pg_dump (Postgres)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.pgDumpPath || ''}
+                      onChange={(e) => setSettings({ ...settings, pgDumpPath: e.target.value })}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: C:\Program Files\PostgreSQL\17\bin\pg_dump.exe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseFile('pgDumpPath')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                      title="Selecionar executável"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* expdp */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-rose-500" /> expdp (Oracle)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.expdpPath || ''}
+                      onChange={(e) => setSettings({ ...settings, expdpPath: e.target.value })}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: C:\oracle\instantclient\expdp.exe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseFile('expdpPath')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                      title="Selecionar executável"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-rose-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* mysqldump */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-amber-500" /> mysqldump (MySQL)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.mysqldumpPath || ''}
+                      onChange={(e) => setSettings({ ...settings, mysqldumpPath: e.target.value })}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseFile('mysqldumpPath')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                      title="Selecionar executável"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+              <div className="flex items-center justify-between pb-1 border-b border-border/60">
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-emerald-500" /> Executáveis de Restauração
+                </h3>
+                <span className="text-[10px] text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                {/* psql */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-sky-500" /> psql (Postgres)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.psqlPath || ''}
+                      onChange={(e) => setSettings({ ...settings, psqlPath: e.target.value })}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: C:\Program Files\PostgreSQL\17\bin\psql.exe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseFile('psqlPath')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                      title="Selecionar executável"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* impdp */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-rose-500" /> impdp (Oracle)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.impdpPath || ''}
+                      onChange={(e) => setSettings({ ...settings, impdpPath: e.target.value })}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: C:\oracle\instantclient\impdp.exe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseFile('impdpPath')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                      title="Selecionar executável"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-rose-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* mysql */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-amber-500" /> mysql (Cliente MySQL)
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={settings.mysqlPath || ''}
+                      onChange={(e) => setSettings({ ...settings, mysqlPath: e.target.value })}
+                      className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                      placeholder="Ex: C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBrowseFile('mysqlPath')}
+                      className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                      title="Selecionar executável"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

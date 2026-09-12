@@ -245,6 +245,12 @@ export interface AppSettings {
   expdpPath?: string;
   /** Caminho do executável mysqldump, quando não estiver no PATH do sistema */
   mysqldumpPath?: string;
+  /** Caminho do executável psql, usado para restaurar backups PostgreSQL */
+  psqlPath?: string;
+  /** Caminho do executável impdp, usado para restaurar backups Oracle */
+  impdpPath?: string;
+  /** Caminho do executável mysql (cliente), usado para restaurar backups MySQL */
+  mysqlPath?: string;
   /** Pastas de destino de backup configuradas por conexão de banco */
   backupConfigs?: BackupConfig[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */

@@ -246,6 +246,13 @@ const electronAPI = {
     ipcRenderer.invoke('db:list-backups', destinationFolder),
   saveDbBackupConfig: (config: BackupConfig): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('db:save-backup-config', config),
+  restoreDbBackup: (config: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:restore-backup', config, filePath),
+  onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
+    const subscription = (_: any, data: { connectionName: string; result: BackupResult }) => callback(data);
+    ipcRenderer.on('backup:schedule-result', subscription);
+    return () => ipcRenderer.removeListener('backup:schedule-result', subscription);
+  },
 
   // Gerenciador de Containers (Docker / Podman)
   getDockerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('docker:get-status'),
