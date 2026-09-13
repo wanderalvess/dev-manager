@@ -563,7 +563,7 @@ app.post('/api/db/test', async (req, res) => {
     const result = await databaseService.testConnection(req.body);
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message || 'Erro ao testar conexão' });
+    res.json({ success: false, message: err.message || 'Erro ao testar conexão' });
   }
 });
 
