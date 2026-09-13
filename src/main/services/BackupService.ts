@@ -1,8 +1,12 @@
 import fs from 'fs';
 import path from 'path';
+import zlib from 'zlib';
 import { execFile, spawn } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
+
+/** Margem mínima de espaço livre exigida na pasta de destino antes de iniciar um backup local. */
+const MIN_FREE_DISK_BYTES = 200 * 1024 * 1024;
 
 export interface BackupOptions {
   pgDumpPath?: string;
@@ -11,12 +15,19 @@ export interface BackupOptions {
   psqlPath?: string;
   impdpPath?: string;
   mysqlPath?: string;
+  /** Caminho do executável pg_restore, usado quando o backup foi gerado em formato compactado (-Fc). */
+  pgRestorePath?: string;
   /** Nome do objeto DIRECTORY do Oracle (ex: DATA_PUMP_DIR) cujo caminho no servidor deve
    * corresponder a destinationFolder (expdp/impdp gravam/leem no servidor, não no cliente). */
   oracleDirectory?: string;
+  /** Gera o backup em formato compactado (pg_dump -Fc / mysqldump+gzip / expdp compression=ALL). */
+  compress?: boolean;
 }
 
 export class BackupService {
+  /** Conexões com backup ou restauração em andamento, para impedir execuções concorrentes na mesma conexão. */
+  private busyConnections = new Set<string>();
+
   /**
    * Executa um backup lógico da conexão informada, salvando o arquivo em destinationFolder.
    * Suporta PostgreSQL (pg_dump), Oracle (expdp) e MySQL (mysqldump).
@@ -30,15 +41,23 @@ export class BackupService {
       return { success: false, message: 'Pasta de destino inválida.' };
     }
 
-    switch (config.type) {
-      case 'postgres':
-        return this.backupPostgres(config, destinationFolder, options?.pgDumpPath);
-      case 'oracle':
-        return this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory);
-      case 'mysql':
-        return this.backupMysql(config, destinationFolder, options?.mysqldumpPath);
-      default:
-        return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para backup.` };
+    if (!this.acquireLock(config.id)) {
+      return { success: false, message: 'Já existe um backup ou restauração em andamento para esta conexão.' };
+    }
+
+    try {
+      switch (config.type) {
+        case 'postgres':
+          return await this.backupPostgres(config, destinationFolder, options?.pgDumpPath, options?.compress);
+        case 'oracle':
+          return await this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory, options?.compress);
+        case 'mysql':
+          return await this.backupMysql(config, destinationFolder, options?.mysqldumpPath, options?.compress);
+        default:
+          return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para backup.` };
+      }
+    } finally {
+      this.releaseLock(config.id);
     }
   }
 
@@ -55,15 +74,52 @@ export class BackupService {
       return { success: false, message: 'Arquivo de backup não encontrado.' };
     }
 
-    switch (config.type) {
-      case 'postgres':
-        return this.restorePostgres(config, filePath, options?.psqlPath);
-      case 'oracle':
-        return this.restoreOracle(config, filePath, options?.impdpPath, options?.oracleDirectory);
-      case 'mysql':
-        return this.restoreMysql(config, filePath, options?.mysqlPath);
-      default:
-        return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para restauração.` };
+    if (!this.acquireLock(config.id)) {
+      return { success: false, message: 'Já existe um backup ou restauração em andamento para esta conexão.' };
+    }
+
+    try {
+      switch (config.type) {
+        case 'postgres':
+          return await this.restorePostgres(config, filePath, options?.psqlPath, options?.pgRestorePath);
+        case 'oracle':
+          return await this.restoreOracle(config, filePath, options?.impdpPath, options?.oracleDirectory);
+        case 'mysql':
+          return await this.restoreMysql(config, filePath, options?.mysqlPath);
+        default:
+          return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para restauração.` };
+      }
+    } finally {
+      this.releaseLock(config.id);
+    }
+  }
+
+  private acquireLock(connectionId: string | undefined): boolean {
+    const key = connectionId || '__unknown__';
+    if (this.busyConnections.has(key)) return false;
+    this.busyConnections.add(key);
+    return true;
+  }
+
+  private releaseLock(connectionId: string | undefined): void {
+    this.busyConnections.delete(connectionId || '__unknown__');
+  }
+
+  /**
+   * Verifica se a pasta de destino tem espaço livre suficiente antes de iniciar um dump local.
+   * fs.statfs não existe em todas as plataformas/versões de Node — nesse caso a checagem é ignorada
+   * silenciosamente (retorna null) em vez de bloquear o backup.
+   */
+  private async checkDiskSpace(destinationFolder: string): Promise<string | null> {
+    try {
+      const stat = await fs.promises.statfs(destinationFolder);
+      const freeBytes = stat.bsize * stat.bavail;
+      if (freeBytes < MIN_FREE_DISK_BYTES) {
+        return `Espaço em disco insuficiente em ${destinationFolder}: apenas ${(freeBytes / (1024 * 1024)).toFixed(0)} MB livres.`;
+      }
+      return null;
+    } catch {
+      return null;
     }
   }
 
@@ -74,7 +130,7 @@ export class BackupService {
     if (!isSafeLocalPath(destinationFolder) || !fs.existsSync(destinationFolder)) return [];
 
     const entries = await fs.promises.readdir(destinationFolder, { withFileTypes: true });
-    const files = entries.filter((e) => e.isFile() && /\.(sql|dump|dmp)$/i.test(e.name));
+    const files = entries.filter((e) => e.isFile() && /\.(sql(\.gz)?|dump|dmp)$/i.test(e.name));
 
     const infos: BackupFileInfo[] = [];
     for (const file of files) {
@@ -96,13 +152,22 @@ export class BackupService {
   }
 
   /**
-   * Apaga os backups mais antigos da pasta, mantendo apenas os `retentionCount` mais recentes.
+   * Apaga backups antigos da pasta: mantém só os `retentionCount` mais recentes (quando informado)
+   * e/ou remove qualquer backup com mais de `retentionDays` dias (quando informado). Os dois critérios
+   * são independentes — um arquivo é apagado se violar qualquer um deles.
    */
-  public async applyRetention(destinationFolder: string, retentionCount: number): Promise<number> {
-    if (!retentionCount || retentionCount <= 0) return 0;
+  public async applyRetention(destinationFolder: string, retentionCount?: number, retentionDays?: number): Promise<number> {
+    if (!retentionCount && !retentionDays) return 0;
 
     const files = await this.listBackups(destinationFolder);
-    const toDelete = files.slice(retentionCount);
+    const maxAgeMs = retentionDays && retentionDays > 0 ? retentionDays * 24 * 60 * 60 * 1000 : undefined;
+    const now = Date.now();
+
+    const toDelete = files.filter((file, index) => {
+      const overCount = !!retentionCount && retentionCount > 0 && index >= retentionCount;
+      const overAge = !!maxAgeMs && now - new Date(file.createdAt).getTime() > maxAgeMs;
+      return overCount || overAge;
+    });
 
     let deleted = 0;
     for (const file of toDelete) {
@@ -119,7 +184,8 @@ export class BackupService {
   private async backupPostgres(
     config: DatabaseConnectionConfig,
     destinationFolder: string,
-    pgDumpPath?: string
+    pgDumpPath?: string,
+    compress?: boolean
   ): Promise<BackupResult> {
     const startTime = Date.now();
 
@@ -133,9 +199,12 @@ export class BackupService {
       return { success: false, message: `Não foi possível criar/acessar a pasta de destino: ${err.message}` };
     }
 
+    const diskWarning = await this.checkDiskSpace(destinationFolder);
+    if (diskWarning) return { success: false, message: diskWarning };
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const safeConnName = (config.name || config.database).replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `${safeConnName}_${config.database}_${timestamp}.sql`;
+    const fileName = `${safeConnName}_${config.database}_${timestamp}.${compress ? 'dump' : 'sql'}`;
     const filePath = path.join(destinationFolder, fileName);
 
     const binary = pgDumpPath && pgDumpPath.trim() ? pgDumpPath.trim() : 'pg_dump';
@@ -145,6 +214,7 @@ export class BackupService {
       '-U', config.user,
       '-d', config.database,
       '-f', filePath,
+      '-F', compress ? 'c' : 'p',
       '--no-password'
     ];
 
@@ -195,14 +265,15 @@ export class BackupService {
   }
 
   /**
-   * Restaura um dump plain-SQL do PostgreSQL via psql -f. Roda diretamente contra o
-   * banco da conexão informada — pode falhar em objetos já existentes se o banco não
-   * estiver vazio (comportamento normal de um dump plain-SQL sem DROP prévio).
+   * Restaura um backup do PostgreSQL. Dumps plain-SQL (.sql) usam psql -f; dumps em formato
+   * custom (.dump, gerados com compress=true) usam pg_restore --clean --if-exists, que já
+   * remove os objetos existentes antes de recriá-los.
    */
   private async restorePostgres(
     config: DatabaseConnectionConfig,
     filePath: string,
-    psqlPath?: string
+    psqlPath?: string,
+    pgRestorePath?: string
   ): Promise<BackupResult> {
     const startTime = Date.now();
 
@@ -210,15 +281,30 @@ export class BackupService {
       return { success: false, message: 'Nome do banco de dados inválido ou ausente na conexão.' };
     }
 
-    const binary = psqlPath && psqlPath.trim() ? psqlPath.trim() : 'psql';
-    const args = [
-      '-h', config.host,
-      '-p', String(config.port || 5432),
-      '-U', config.user,
-      '-d', config.database,
-      '-f', filePath,
-      '-v', 'ON_ERROR_STOP=1'
-    ];
+    // Backups gerados com compress=true usam formato custom (-Fc) e exigem pg_restore, não psql -f.
+    const isCustomFormat = /\.dump$/i.test(filePath);
+    const binary = isCustomFormat
+      ? (pgRestorePath && pgRestorePath.trim() ? pgRestorePath.trim() : 'pg_restore')
+      : (psqlPath && psqlPath.trim() ? psqlPath.trim() : 'psql');
+    const args = isCustomFormat
+      ? [
+          '-h', config.host,
+          '-p', String(config.port || 5432),
+          '-U', config.user,
+          '-d', config.database,
+          '--no-password',
+          '--clean',
+          '--if-exists',
+          filePath
+        ]
+      : [
+          '-h', config.host,
+          '-p', String(config.port || 5432),
+          '-U', config.user,
+          '-d', config.database,
+          '-f', filePath,
+          '-v', 'ON_ERROR_STOP=1'
+        ];
 
     return new Promise<BackupResult>((resolve) => {
       execFile(
@@ -232,7 +318,7 @@ export class BackupService {
         (error, _stdout, stderr) => {
           const durationMs = Date.now() - startTime;
           if (error) {
-            resolve({ success: false, message: this.formatPostgresCliError('psql', error, stderr), durationMs });
+            resolve({ success: false, message: this.formatPostgresCliError(binary, error, stderr), durationMs });
             return;
           }
           resolve({ success: true, message: `Restauração concluída a partir de ${filePath}`, durationMs });
@@ -244,7 +330,8 @@ export class BackupService {
   private async backupMysql(
     config: DatabaseConnectionConfig,
     destinationFolder: string,
-    mysqldumpPath?: string
+    mysqldumpPath?: string,
+    compress?: boolean
   ): Promise<BackupResult> {
     const startTime = Date.now();
 
@@ -258,70 +345,137 @@ export class BackupService {
       return { success: false, message: `Não foi possível criar/acessar a pasta de destino: ${err.message}` };
     }
 
+    const diskWarning = await this.checkDiskSpace(destinationFolder);
+    if (diskWarning) return { success: false, message: diskWarning };
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const safeConnName = (config.name || config.database).replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `${safeConnName}_${config.database}_${timestamp}.sql`;
-    const filePath = path.join(destinationFolder, fileName);
-
     const binary = mysqldumpPath && mysqldumpPath.trim() ? mysqldumpPath.trim() : 'mysqldump';
-    const args = [
-      '-h', config.host,
-      '-P', String(config.port || 3306),
-      '-u', config.user,
-      `--result-file=${filePath}`,
-      config.database
-    ];
+
+    if (!compress) {
+      const fileName = `${safeConnName}_${config.database}_${timestamp}.sql`;
+      const filePath = path.join(destinationFolder, fileName);
+      const args = [
+        '-h', config.host,
+        '-P', String(config.port || 3306),
+        '-u', config.user,
+        `--result-file=${filePath}`,
+        config.database
+      ];
+
+      return new Promise<BackupResult>((resolve) => {
+        execFile(
+          binary,
+          args,
+          {
+            // MYSQL_PWD evita expor a senha nos argumentos do processo (visível em listas de processos)
+            env: { ...process.env, MYSQL_PWD: config.password || '' },
+            maxBuffer: 20 * 1024 * 1024,
+            timeout: 10 * 60 * 1000
+          },
+          (error, _stdout, stderr) => {
+            const durationMs = Date.now() - startTime;
+
+            if (error) {
+              fs.promises.unlink(filePath).catch(() => {});
+              resolve({
+                success: false,
+                message: this.formatMysqlCliError('mysqldump', error, stderr),
+                durationMs
+              });
+              return;
+            }
+
+            fs.promises
+              .stat(filePath)
+              .then((stat) => {
+                resolve({
+                  success: true,
+                  message: `Backup gerado com sucesso em ${filePath}`,
+                  filePath,
+                  sizeBytes: stat.size,
+                  durationMs
+                });
+              })
+              .catch(() => {
+                resolve({
+                  success: true,
+                  message: `Backup gerado com sucesso em ${filePath}`,
+                  filePath,
+                  durationMs
+                });
+              });
+          }
+        );
+      });
+    }
+
+    // compress=true: mysqldump não tem flag de compactação própria no CLI padrão, então o
+    // stdout é streamado através de gzip diretamente para o arquivo final (.sql.gz).
+    const fileName = `${safeConnName}_${config.database}_${timestamp}.sql.gz`;
+    const filePath = path.join(destinationFolder, fileName);
+    const args = ['-h', config.host, '-P', String(config.port || 3306), '-u', config.user, config.database];
 
     return new Promise<BackupResult>((resolve) => {
-      execFile(
-        binary,
-        args,
-        {
-          // MYSQL_PWD evita expor a senha nos argumentos do processo (visível em listas de processos)
-          env: { ...process.env, MYSQL_PWD: config.password || '' },
-          maxBuffer: 20 * 1024 * 1024,
-          timeout: 10 * 60 * 1000
-        },
-        (error, _stdout, stderr) => {
-          const durationMs = Date.now() - startTime;
+      const child = spawn(binary, args, {
+        env: { ...process.env, MYSQL_PWD: config.password || '' }
+      });
 
-          if (error) {
-            fs.promises.unlink(filePath).catch(() => {});
-            resolve({
-              success: false,
-              message: this.formatMysqlCliError('mysqldump', error, stderr),
-              durationMs
-            });
-            return;
-          }
+      let stderr = '';
+      let settled = false;
+      const finish = (result: BackupResult) => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
 
-          fs.promises
-            .stat(filePath)
-            .then((stat) => {
-              resolve({
-                success: true,
-                message: `Backup gerado com sucesso em ${filePath}`,
-                filePath,
-                sizeBytes: stat.size,
-                durationMs
-              });
-            })
-            .catch(() => {
-              resolve({
-                success: true,
-                message: `Backup gerado com sucesso em ${filePath}`,
-                filePath,
-                durationMs
-              });
-            });
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk.toString();
+      });
+
+      child.on('error', (err: any) => {
+        const durationMs = Date.now() - startTime;
+        fs.promises.unlink(filePath).catch(() => {});
+        finish({ success: false, message: this.formatMysqlCliError('mysqldump', err, stderr), durationMs });
+      });
+
+      const writeStream = fs.createWriteStream(filePath);
+      writeStream.on('error', (err) => {
+        const durationMs = Date.now() - startTime;
+        finish({ success: false, message: `Falha ao gravar arquivo de backup: ${err.message}`, durationMs });
+      });
+
+      child.stdout.pipe(zlib.createGzip()).pipe(writeStream);
+
+      child.on('close', (code) => {
+        const durationMs = Date.now() - startTime;
+        if (code !== 0) {
+          fs.promises.unlink(filePath).catch(() => {});
+          finish({
+            success: false,
+            message: this.formatMysqlCliError('mysqldump', { message: `Processo encerrou com código ${code}` }, stderr),
+            durationMs
+          });
+          return;
         }
-      );
+
+        fs.promises
+          .stat(filePath)
+          .then((stat) => {
+            finish({ success: true, message: `Backup gerado com sucesso em ${filePath}`, filePath, sizeBytes: stat.size, durationMs });
+          })
+          .catch(() => {
+            finish({ success: true, message: `Backup gerado com sucesso em ${filePath}`, filePath, durationMs });
+          });
+      });
     });
   }
 
   /**
    * Restaura um dump gerado pelo mysqldump. O cliente `mysql` lê o SQL via stdin
    * (não existe flag de "arquivo de origem" no CLI, então o arquivo é streamado).
+   * Arquivos terminados em .gz (gerados com compress=true) são descomprimidos em memória
+   * durante o streaming, antes de chegar ao stdin do processo mysql.
    */
   private async restoreMysql(
     config: DatabaseConnectionConfig,
@@ -367,7 +521,11 @@ export class BackupService {
 
       const readStream = fs.createReadStream(filePath);
       readStream.on('error', () => child.stdin.end());
-      readStream.pipe(child.stdin);
+      if (/\.gz$/i.test(filePath)) {
+        readStream.pipe(zlib.createGunzip()).pipe(child.stdin);
+      } else {
+        readStream.pipe(child.stdin);
+      }
     });
   }
 
@@ -383,7 +541,8 @@ export class BackupService {
     config: DatabaseConnectionConfig,
     destinationFolder: string,
     expdpPath?: string,
-    oracleDirectory?: string
+    oracleDirectory?: string,
+    compress?: boolean
   ): Promise<BackupResult> {
     const startTime = Date.now();
 
@@ -414,6 +573,9 @@ export class BackupService {
       `logfile=${logFileName}`,
       `schemas=${config.user}`
     ];
+    // compression=ALL exige Oracle Enterprise Edition com Advanced Compression; impdp lê o
+    // dump compactado de forma transparente, sem precisar de flag equivalente na restauração.
+    if (compress) args.push('compression=ALL');
 
     return new Promise<BackupResult>((resolve) => {
       const child = execFile(

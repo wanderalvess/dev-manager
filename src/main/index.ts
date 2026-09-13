@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session, Notification } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -65,6 +65,14 @@ function createWindow() {
   const backupSchedulerService = new BackupSchedulerService(configService, backupService);
   backupSchedulerService.onResult = (connectionName, result) => {
     mainWindow?.webContents.send('backup:schedule-result', { connectionName, result });
+    // Notificação do sistema operacional: garante visibilidade mesmo com a janela
+    // minimizada/em segundo plano, quando o webContents.send acima passa despercebido.
+    if (Notification.isSupported()) {
+      new Notification({
+        title: result.success ? 'Backup agendado concluído' : 'Falha no backup agendado',
+        body: `${connectionName}: ${result.message}`
+      }).show();
+    }
   };
   const networkService = new NetworkService();
   const windowsService = new WindowsService(configService, karafService, databaseService, networkService);

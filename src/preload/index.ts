@@ -40,7 +40,8 @@ import type {
   LogChunkEvent,
   BackupConfig,
   BackupResult,
-  BackupFileInfo
+  BackupFileInfo,
+  BackupHistoryEntry
 } from '../shared/types';
 
 const electronAPI = {
@@ -240,14 +241,20 @@ const electronAPI = {
     ipcRenderer.invoke('db:list-tables', config),
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
     ipcRenderer.invoke('db:get-table-columns', config, tableName),
-  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string): Promise<BackupResult> =>
-    ipcRenderer.invoke('db:run-backup', config, destinationFolder, oracleDirectory),
+  runDbBackup: (
+    config: DatabaseConnectionConfig,
+    destinationFolder: string,
+    oracleDirectory?: string,
+    compress?: boolean
+  ): Promise<BackupResult> => ipcRenderer.invoke('db:run-backup', config, destinationFolder, oracleDirectory, compress),
   listDbBackups: (destinationFolder: string): Promise<BackupFileInfo[]> =>
     ipcRenderer.invoke('db:list-backups', destinationFolder),
   saveDbBackupConfig: (config: BackupConfig): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('db:save-backup-config', config),
   restoreDbBackup: (config: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> =>
     ipcRenderer.invoke('db:restore-backup', config, filePath),
+  listDbBackupHistory: (connectionId?: string): Promise<BackupHistoryEntry[]> =>
+    ipcRenderer.invoke('db:list-backup-history', connectionId),
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
     const subscription = (_: any, data: { connectionName: string; result: BackupResult }) => callback(data);
     ipcRenderer.on('backup:schedule-result', subscription);

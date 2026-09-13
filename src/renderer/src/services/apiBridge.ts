@@ -46,7 +46,8 @@ import type {
   LogChunkEvent,
   BackupConfig,
   BackupResult,
-  BackupFileInfo
+  BackupFileInfo,
+  BackupHistoryEntry
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -718,10 +719,15 @@ export function initApiBridge() {
       });
     },
 
-    runDbBackup: async (config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string): Promise<BackupResult> => {
+    runDbBackup: async (
+      config: DatabaseConnectionConfig,
+      destinationFolder: string,
+      oracleDirectory?: string,
+      compress?: boolean
+    ): Promise<BackupResult> => {
       return apiFetch('/api/db/backup', {
         method: 'POST',
-        body: JSON.stringify({ config, destinationFolder, oracleDirectory })
+        body: JSON.stringify({ config, destinationFolder, oracleDirectory, compress })
       });
     },
 
@@ -748,6 +754,13 @@ export function initApiBridge() {
 
     onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
       return wsManager.subscribe('backup:schedule-result', callback);
+    },
+
+    listDbBackupHistory: async (connectionId?: string): Promise<BackupHistoryEntry[]> => {
+      return apiFetch('/api/db/backup-history', {
+        method: 'POST',
+        body: JSON.stringify({ connectionId })
+      });
     },
 
     // Gerenciador de Containers (Docker / Podman)

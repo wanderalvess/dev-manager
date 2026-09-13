@@ -512,51 +512,19 @@ export function registerIpcHandlers(
     return await databaseService.getTableColumns(config, tableName);
   });
 
-  ipcMain.handle('db:run-backup', async (_, config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string) => {
-    const settings = configService.getSettings();
-    const existing = settings.backupConfigs || [];
-    const previous = existing.find((b) => b.connectionId === config.id);
-    const effectiveOracleDirectory = oracleDirectory ?? previous?.oracleDirectory;
-    const result = await backupService.runBackup(config, destinationFolder, {
-      pgDumpPath: settings.pgDumpPath,
-      expdpPath: settings.expdpPath,
-      mysqldumpPath: settings.mysqldumpPath,
-      oracleDirectory: effectiveOracleDirectory
-    });
-
-    if (result.success && previous?.retentionCount) {
-      await backupService.applyRetention(destinationFolder, previous.retentionCount);
+  ipcMain.handle(
+    'db:run-backup',
+    async (_, config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string, compress?: boolean) => {
+      return await backupSchedulerService.runManualBackup(config, destinationFolder, { oracleDirectory, compress });
     }
-
-    const entry: BackupConfig = {
-      ...previous,
-      connectionId: config.id,
-      destinationFolder,
-      oracleDirectory: effectiveOracleDirectory,
-      lastRunAt: new Date().toISOString(),
-      lastSuccess: result.success,
-      lastMessage: result.message
-    };
-    const updated = [entry, ...existing.filter((b) => b.connectionId !== config.id)];
-    configService.saveSettings({ backupConfigs: updated });
-
-    return result;
-  });
+  );
 
   ipcMain.handle('db:list-backups', async (_, destinationFolder: string) => {
     return await backupService.listBackups(destinationFolder);
   });
 
   ipcMain.handle('db:restore-backup', async (_, config: DatabaseConnectionConfig, filePath: string) => {
-    const settings = configService.getSettings();
-    const existing = settings.backupConfigs || [];
-    const previous = existing.find((b) => b.connectionId === config.id);
-    return await backupService.restoreBackup(config, filePath, {
-      psqlPath: settings.psqlPath,
-      impdpPath: settings.impdpPath,
-      mysqlPath: settings.mysqlPath,
-      oracleDirectory: previous?.oracleDirectory
-    });
+    return await backupSchedulerService.runManualRestore(config, filePath);
   });
 
   ipcMain.handle('db:save-backup-config', async (_, config: BackupConfig) => {
@@ -573,6 +541,10 @@ export function registerIpcHandlers(
     backupSchedulerService.rescheduleAll();
 
     return { success: true, message: 'Agendamento salvo com sucesso.' };
+  });
+
+  ipcMain.handle('db:list-backup-history', async (_, connectionId?: string) => {
+    return backupSchedulerService.getHistory(connectionId);
   });
 
   // --- Gerenciador de Containers (Docker / Podman) ---

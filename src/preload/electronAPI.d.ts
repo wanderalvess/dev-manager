@@ -46,7 +46,8 @@ import type {
   LogChunkEvent,
   BackupConfig,
   BackupResult,
-  BackupFileInfo
+  BackupFileInfo,
+  BackupHistoryEntry
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -185,10 +186,16 @@ export interface ElectronAPI {
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
-  runDbBackup: (config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string) => Promise<BackupResult>;
+  runDbBackup: (
+    config: DatabaseConnectionConfig,
+    destinationFolder: string,
+    oracleDirectory?: string,
+    compress?: boolean
+  ) => Promise<BackupResult>;
   listDbBackups: (destinationFolder: string) => Promise<BackupFileInfo[]>;
   saveDbBackupConfig: (config: BackupConfig) => Promise<{ success: boolean; message: string }>;
   restoreDbBackup: (config: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
+  listDbBackupHistory: (connectionId?: string) => Promise<BackupHistoryEntry[]>;
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => () => void;
 
   // Gerenciador de Containers (Docker / Podman)

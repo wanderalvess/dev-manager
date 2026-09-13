@@ -251,8 +251,12 @@ export interface AppSettings {
   impdpPath?: string;
   /** Caminho do executável mysql (cliente), usado para restaurar backups MySQL */
   mysqlPath?: string;
+  /** Caminho do executável pg_restore, usado para restaurar backups PostgreSQL gerados em formato compactado (-Fc) */
+  pgRestorePath?: string;
   /** Pastas de destino de backup configuradas por conexão de banco */
   backupConfigs?: BackupConfig[];
+  /** Histórico das últimas execuções de backup/restore (mais recente primeiro), limitado a 200 entradas */
+  backupHistory?: BackupHistoryEntry[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
   databaseConnections?: DatabaseConnectionConfig[];
   /** Pastas locais dedicadas de documentação indexadas pelo RAG */
@@ -650,11 +654,30 @@ export interface BackupConfig {
   enabled?: boolean;
   /** Quantidade de backups a manter na pasta; os mais antigos são apagados após cada execução. Ausente = mantém todos. */
   retentionCount?: number;
+  /** Apaga backups com mais de N dias após cada execução, independente da contagem. Ausente = sem limite de idade. */
+  retentionDays?: number;
+  /** Se verdadeiro, gera o backup em formato compactado (pg_dump -Fc / mysqldump+gzip / expdp compression=ALL). */
+  compress?: boolean;
   /** Nome do objeto DIRECTORY do Oracle usado pelo expdp (padrão: DATA_PUMP_DIR). Ignorado para outros tipos de banco. */
   oracleDirectory?: string;
   lastRunAt?: string;
   lastSuccess?: boolean;
   lastMessage?: string;
+}
+
+/** Registro histórico de uma execução de backup ou restauração (persistido além do último status por conexão). */
+export interface BackupHistoryEntry {
+  id: string;
+  connectionId: string;
+  connectionName: string;
+  action: 'backup' | 'restore';
+  trigger: 'manual' | 'scheduled';
+  success: boolean;
+  message: string;
+  filePath?: string;
+  sizeBytes?: number;
+  durationMs?: number;
+  startedAt: string;
 }
 
 /** Resultado de uma execução de backup (manual). */

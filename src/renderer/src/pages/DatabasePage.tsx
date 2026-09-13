@@ -35,7 +35,8 @@ import {
   HardDriveDownload,
   FolderOpen,
   FileArchive,
-  CalendarClock
+  CalendarClock,
+  History
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -47,7 +48,8 @@ import {
   TableColumnInfo,
   BackupConfig,
   BackupResult,
-  BackupFileInfo
+  BackupFileInfo,
+  BackupHistoryEntry
 } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
@@ -188,11 +190,15 @@ export const DatabasePage: React.FC = () => {
   const [backupCron, setBackupCron] = useState<string>('');
   const [backupScheduleEnabled, setBackupScheduleEnabled] = useState<boolean>(true);
   const [backupRetentionCount, setBackupRetentionCount] = useState<string>('');
+  const [backupRetentionDays, setBackupRetentionDays] = useState<string>('');
+  const [backupCompress, setBackupCompress] = useState<boolean>(false);
   const [backupOracleDirectory, setBackupOracleDirectory] = useState<string>('');
   const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
   const [scheduleSaveResult, setScheduleSaveResult] = useState<{ success: boolean; message: string } | null>(null);
   const [restoringFilePath, setRestoringFilePath] = useState<string | null>(null);
   const [restoreResult, setRestoreResult] = useState<BackupResult | null>(null);
+  const [backupHistory, setBackupHistory] = useState<BackupHistoryEntry[]>([]);
+  const [isLoadingBackupHistory, setIsLoadingBackupHistory] = useState<boolean>(false);
 
   const activeConnection = useMemo(() => {
     return connections.find((c) => c.id === activeConnectionId) || connections[0] || null;
@@ -394,6 +400,23 @@ export const DatabasePage: React.FC = () => {
     }
   }, []);
 
+  // Carregar histórico persistido de backups/restaurações da conexão ativa
+  const refreshBackupHistory = useCallback(async (connectionId: string) => {
+    if (!window.electronAPI?.listDbBackupHistory) {
+      setBackupHistory([]);
+      return;
+    }
+    setIsLoadingBackupHistory(true);
+    try {
+      const history = await window.electronAPI.listDbBackupHistory(connectionId);
+      setBackupHistory(history || []);
+    } catch (err) {
+      console.error('Erro ao listar histórico de backups:', err);
+    } finally {
+      setIsLoadingBackupHistory(false);
+    }
+  }, []);
+
   // Abrir Modal de Backup: pré-carrega a pasta e o agendamento salvos para a conexão ativa
   const handleOpenBackupModal = () => {
     if (!activeConnection) return;
@@ -403,6 +426,8 @@ export const DatabasePage: React.FC = () => {
     setBackupCron(saved?.cronExpression || '');
     setBackupScheduleEnabled(saved?.enabled !== false);
     setBackupRetentionCount(saved?.retentionCount ? String(saved.retentionCount) : '');
+    setBackupRetentionDays(saved?.retentionDays ? String(saved.retentionDays) : '');
+    setBackupCompress(!!saved?.compress);
     setBackupOracleDirectory(saved?.oracleDirectory || '');
     setBackupResult(null);
     setScheduleSaveResult(null);
@@ -410,6 +435,7 @@ export const DatabasePage: React.FC = () => {
     setIsBackupModalOpen(true);
     if (folder) refreshBackupFiles(folder);
     else setBackupFiles([]);
+    refreshBackupHistory(activeConnection.id);
   };
 
   // Selecionar Pasta de Destino do Backup
@@ -431,7 +457,8 @@ export const DatabasePage: React.FC = () => {
       const res = await window.electronAPI.runDbBackup(
         activeConnection,
         backupFolder.trim(),
-        activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined
+        activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined,
+        backupCompress
       );
       setBackupResult(res);
       // Atualiza o cache local de settings para refletir a pasta salva sem precisar recarregar
@@ -444,6 +471,7 @@ export const DatabasePage: React.FC = () => {
           connectionId: activeConnection.id,
           destinationFolder: backupFolder.trim(),
           oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : previous?.oracleDirectory,
+          compress: backupCompress,
           lastRunAt: new Date().toISOString(),
           lastSuccess: res.success,
           lastMessage: res.message
@@ -451,6 +479,7 @@ export const DatabasePage: React.FC = () => {
         return { ...prev, backupConfigs: [entry, ...existing.filter((b) => b.connectionId !== activeConnection.id)] };
       });
       if (res.success) refreshBackupFiles(backupFolder.trim());
+      refreshBackupHistory(activeConnection.id);
     } catch (err: any) {
       setBackupResult({ success: false, message: err?.message || 'Erro inesperado ao executar backup.' });
     } finally {
@@ -470,6 +499,8 @@ export const DatabasePage: React.FC = () => {
         cronExpression: backupCron.trim() || undefined,
         enabled: backupScheduleEnabled,
         retentionCount: backupRetentionCount.trim() ? Number(backupRetentionCount.trim()) : undefined,
+        retentionDays: backupRetentionDays.trim() ? Number(backupRetentionDays.trim()) : undefined,
+        compress: backupCompress,
         oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined
       };
       const res = await window.electronAPI.saveDbBackupConfig(config);
@@ -505,6 +536,7 @@ export const DatabasePage: React.FC = () => {
     try {
       const res = await window.electronAPI.restoreDbBackup(activeConnection, file.filePath);
       setRestoreResult(res);
+      refreshBackupHistory(activeConnection.id);
     } catch (err: any) {
       setRestoreResult({ success: false, message: err?.message || 'Erro inesperado ao restaurar backup.' });
     } finally {
@@ -2574,6 +2606,21 @@ export const DatabasePage: React.FC = () => {
                     </div>
                   )}
 
+                  <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={backupCompress}
+                      onChange={(e) => setBackupCompress(e.target.checked)}
+                      className="text-primary focus:ring-0"
+                    />
+                    <span>
+                      Compactar backup
+                      {activeConnection.type === 'postgres' && ' (formato custom, -Fc)'}
+                      {activeConnection.type === 'mysql' && ' (.sql.gz)'}
+                      {activeConnection.type === 'oracle' && ' (compression=ALL, requer Enterprise Edition)'}
+                    </span>
+                  </label>
+
                   <button
                     type="button"
                     onClick={handleRunBackup}
@@ -2671,6 +2718,19 @@ export const DatabasePage: React.FC = () => {
                       </div>
                     </div>
 
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground shrink-0">Apagar com mais de</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={backupRetentionDays}
+                        onChange={(e) => setBackupRetentionDays(e.target.value)}
+                        placeholder="sem limite"
+                        className="w-20 bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono"
+                      />
+                      <span className="text-muted-foreground shrink-0">dias</span>
+                    </div>
+
                     <button
                       type="button"
                       onClick={handleSaveBackupSchedule}
@@ -2753,6 +2813,56 @@ export const DatabasePage: React.FC = () => {
                               )}
                               <span>Restaurar</span>
                             </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                        <History className="w-3 h-3" /> Histórico de Execuções
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => activeConnection && refreshBackupHistory(activeConnection.id)}
+                        disabled={isLoadingBackupHistory}
+                        className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
+                        title="Recarregar histórico"
+                      >
+                        <RotateCw className={`w-3 h-3 ${isLoadingBackupHistory ? 'animate-spin text-primary' : ''}`} />
+                      </button>
+                    </div>
+                    {backupHistory.length === 0 ? (
+                      <div className="text-center py-3 text-[11px] text-muted-foreground">
+                        Nenhuma execução registrada ainda para esta conexão.
+                      </div>
+                    ) : (
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {backupHistory.map((h) => (
+                          <div
+                            key={h.id}
+                            className={`flex items-center justify-between p-2 bg-background/60 border rounded-lg gap-2 ${
+                              h.success ? 'border-emerald-500/20' : 'border-rose-500/30'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <span className="flex items-center gap-1 text-[10px] font-bold">
+                                {h.success ? (
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                                ) : (
+                                  <AlertCircle className="w-3 h-3 text-rose-500 shrink-0" />
+                                )}
+                                <span className="text-muted-foreground">
+                                  {h.action === 'backup' ? 'Backup' : 'Restauração'} ·{' '}
+                                  {h.trigger === 'scheduled' ? 'agendado' : 'manual'}
+                                </span>
+                              </span>
+                              <span className="block text-[10px] text-muted-foreground/80 truncate" title={h.message}>
+                                {new Date(h.startedAt).toLocaleString()} — {h.message}
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>

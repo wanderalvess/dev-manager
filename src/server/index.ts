@@ -570,34 +570,8 @@ app.post('/api/db/columns', async (req, res) => {
 
 app.post('/api/db/backup', async (req, res) => {
   try {
-    const { config, destinationFolder, oracleDirectory } = req.body;
-    const settings = configService.getSettings();
-    const existing = settings.backupConfigs || [];
-    const previous = existing.find((b) => b.connectionId === config.id);
-    const effectiveOracleDirectory = oracleDirectory ?? previous?.oracleDirectory;
-    const result = await backupService.runBackup(config, destinationFolder, {
-      pgDumpPath: settings.pgDumpPath,
-      expdpPath: settings.expdpPath,
-      mysqldumpPath: settings.mysqldumpPath,
-      oracleDirectory: effectiveOracleDirectory
-    });
-
-    if (result.success && previous?.retentionCount) {
-      await backupService.applyRetention(destinationFolder, previous.retentionCount);
-    }
-
-    const entry = {
-      ...previous,
-      connectionId: config.id,
-      destinationFolder,
-      oracleDirectory: effectiveOracleDirectory,
-      lastRunAt: new Date().toISOString(),
-      lastSuccess: result.success,
-      lastMessage: result.message
-    };
-    const updated = [entry, ...existing.filter((b) => b.connectionId !== config.id)];
-    configService.saveSettings({ backupConfigs: updated });
-
+    const { config, destinationFolder, oracleDirectory, compress } = req.body;
+    const result = await backupSchedulerService.runManualBackup(config, destinationFolder, { oracleDirectory, compress });
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message || 'Erro ao executar backup' });
@@ -638,18 +612,19 @@ app.post('/api/db/backup-config', async (req, res) => {
 app.post('/api/db/restore', async (req, res) => {
   try {
     const { config, filePath } = req.body;
-    const settings = configService.getSettings();
-    const existing = settings.backupConfigs || [];
-    const previous = existing.find((b) => b.connectionId === config.id);
-    const result = await backupService.restoreBackup(config, filePath, {
-      psqlPath: settings.psqlPath,
-      impdpPath: settings.impdpPath,
-      mysqlPath: settings.mysqlPath,
-      oracleDirectory: previous?.oracleDirectory
-    });
+    const result = await backupSchedulerService.runManualRestore(config, filePath);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message || 'Erro ao restaurar backup' });
+  }
+});
+
+app.post('/api/db/backup-history', async (req, res) => {
+  try {
+    const { connectionId } = req.body || {};
+    res.json(backupSchedulerService.getHistory(connectionId));
+  } catch {
+    res.status(500).json([]);
   }
 });
 
