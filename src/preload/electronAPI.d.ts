@@ -115,8 +115,12 @@ export interface ElectronAPI {
   // Karaf Deployer & Bundles
   listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) => Promise<KarafBundleInfo[]>;
   manageKarafBundle: (
-    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
+    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
     bundleId: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<{ success: boolean; output: string }>;
+  getKarafLog: (
+    lines?: number,
     credentials?: { user?: string; pass?: string; port?: number }
   ) => Promise<{ success: boolean; output: string }>;
   getKarafBundleDetails: (

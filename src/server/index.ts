@@ -813,6 +813,12 @@ app.post('/api/karaf/bundles/manage', async (req, res) => {
   res.json(result);
 });
 
+app.post('/api/karaf/log', async (req, res) => {
+  const { lines, credentials } = req.body || {};
+  const result = await karafService.getKarafLog(lines, credentials);
+  res.json(result);
+});
+
 app.post('/api/karaf/bundles/details', async (req, res) => {
   const { bundleId, credentials } = req.body;
   const result = await karafService.getBundleDetails(bundleId, credentials);

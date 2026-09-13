@@ -595,7 +595,7 @@ const KarafCredentialsSchema = z.object({
   port: z.number().int().optional()
 });
 
-const BundleActionSchema = z.enum(['start', 'stop', 'restart', 'uninstall', 'refresh']);
+const BundleActionSchema = z.enum(['start', 'stop', 'restart', 'uninstall', 'refresh', 'resolve']);
 
 server.registerTool(
   'karaf_list_bundles',
@@ -651,10 +651,22 @@ server.registerTool(
   'karaf_manage_bundle',
   {
     title: 'Gerenciar ciclo de vida do bundle',
-    description: 'Executa start, stop, restart, uninstall ou refresh em um bundle pelo ID.',
+    description:
+      'Executa start, stop, restart, uninstall, refresh ou resolve em um bundle pelo ID. "resolve" força o framework OSGi a tentar resolver novamente um bundle travado em Installed (dependência ausente).',
     inputSchema: { action: BundleActionSchema, bundleId: z.string(), credentials: KarafCredentialsSchema.optional() }
   },
   async ({ action, bundleId, credentials }) => ok(await karafService.manageBundle(action, bundleId, credentials))
+);
+
+server.registerTool(
+  'karaf_get_log',
+  {
+    title: 'Ler log do container Karaf',
+    description:
+      'Lê o log interno do Karaf (log:display, Pax Logging) — diferente da saída do console embedded, reflete o que os bundles de fato logaram e funciona contra Karaf local ou remoto via SSH.',
+    inputSchema: { lines: z.number().int().positive().optional(), credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ lines, credentials }) => ok(await karafService.getKarafLog(lines, credentials))
 );
 
 server.registerTool(

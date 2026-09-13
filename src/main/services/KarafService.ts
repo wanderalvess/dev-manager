@@ -17,7 +17,7 @@ import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
 import { runCapturedProcess } from '../utils/process';
 
-const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall', 'refresh'] as const;
+const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall', 'refresh', 'resolve'] as const;
 type BundleAction = (typeof BUNDLE_ACTIONS)[number];
 
 /**
@@ -218,6 +218,23 @@ export class KarafService {
       featureLines,
       bundleLines
     };
+  }
+
+  /**
+   * Lê o log interno do container Karaf (Pax Logging, via `log:display`) — diferente do
+   * stdout do processo embedded persistido em KarafLogPersistenceService: este é o log real
+   * da aplicação dentro do OSGi, funciona contra qualquer Karaf acessível por SSH (local ou
+   * remoto), e reflete o que os bundles de fato logaram, não a saída do shell interativo.
+   */
+  public async getKarafLog(
+    lines: number = 200,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ success: boolean; output: string }> {
+    const safeLines = Math.min(Math.max(1, Math.floor(lines) || 200), 5000);
+    const res = await this.executeKarafCommand(`log:display -n ${safeLines}`, () => {}, credentials);
+    // eslint-disable-next-line no-control-regex
+    const cleanOutput = (res.stdout || res.stderr || '').replace(/\x1b\[[0-9;]*m/g, '');
+    return { success: res.code === 0, output: cleanOutput };
   }
 
   // --- Karaf Embutido no Painel ---

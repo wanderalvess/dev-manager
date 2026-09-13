@@ -140,10 +140,14 @@ const electronAPI = {
   listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) =>
     ipcRenderer.invoke('karaf:list-bundles', credentials),
   manageKarafBundle: (
-    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
+    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }
   ) => ipcRenderer.invoke('karaf:manage-bundle', action, bundleId, credentials),
+  getKarafLog: (
+    lines?: number,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ success: boolean; output: string }> => ipcRenderer.invoke('karaf:get-log', lines, credentials),
   getKarafBundleDetails: (
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }

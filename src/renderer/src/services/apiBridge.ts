@@ -438,13 +438,23 @@ export function initApiBridge() {
     },
 
     manageKarafBundle: async (
-      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
+      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
       bundleId: string,
       credentials?: { user?: string; pass?: string; port?: number }
     ): Promise<{ success: boolean; output: string }> => {
       return apiFetch('/api/karaf/bundles/manage', {
         method: 'POST',
         body: JSON.stringify({ action, bundleId, credentials })
+      });
+    },
+
+    getKarafLog: async (
+      lines?: number,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/log', {
+        method: 'POST',
+        body: JSON.stringify({ lines, credentials })
       });
     },
 

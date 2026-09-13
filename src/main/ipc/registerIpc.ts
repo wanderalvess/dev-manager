@@ -296,11 +296,18 @@ export function registerIpcHandlers(
     'karaf:manage-bundle',
     async (
       _,
-      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh',
+      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
       bundleId: string,
       credentials?: { user?: string; pass?: string; port?: number }
     ) => {
       return await karafService.manageBundle(action, bundleId, credentials);
+    }
+  );
+
+  ipcMain.handle(
+    'karaf:get-log',
+    async (_, lines?: number, credentials?: { user?: string; pass?: string; port?: number }) => {
+      return await karafService.getKarafLog(lines, credentials);
     }
   );
 

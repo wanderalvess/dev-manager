@@ -20,7 +20,9 @@ import {
   Camera,
   GitCompare,
   GitFork,
-  ArrowRight
+  ArrowRight,
+  Wrench,
+  Terminal
 } from 'lucide-react';
 import {
   GitProjectInfo,
@@ -99,6 +101,40 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   });
   const [newSnapshotLabel, setNewSnapshotLabel] = useState('');
   const [selectedSnapshot, setSelectedSnapshot] = useState<BundleSnapshot | null>(null);
+
+  // Sub-modal: Log do Karaf (log:display — log interno real, não o stdout do console embedded)
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [karafLog, setKarafLog] = useState('');
+  const [isLoadingLog, setIsLoadingLog] = useState(false);
+  const [logLines, setLogLines] = useState(200);
+  const [logSearch, setLogSearch] = useState('');
+
+  const handleOpenLog = async () => {
+    setIsLogModalOpen(true);
+    await handleRefreshLog();
+  };
+
+  const handleRefreshLog = async () => {
+    if (!window.electronAPI?.getKarafLog) return;
+    setIsLoadingLog(true);
+    try {
+      const res = await window.electronAPI.getKarafLog(logLines);
+      setKarafLog(res?.output || '');
+    } catch (err: any) {
+      setKarafLog(`[ERRO] Falha ao ler log do Karaf: ${err?.message || err}`);
+    } finally {
+      setIsLoadingLog(false);
+    }
+  };
+
+  const filteredKarafLog = useMemo(() => {
+    if (!logSearch.trim()) return karafLog;
+    const needle = logSearch.trim().toLowerCase();
+    return karafLog
+      .split(/\r?\n/)
+      .filter((line) => line.toLowerCase().includes(needle))
+      .join('\n');
+  }, [karafLog, logSearch]);
 
   const handleCreateSnapshot = () => {
     if (bundles.length === 0) return;
@@ -214,7 +250,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   }, [bundles, search, statusFilter]);
 
   // Ações básicas (start, stop, restart, refresh)
-  const handleBasicAction = async (action: 'start' | 'stop' | 'restart' | 'refresh', bundleId: string) => {
+  const handleBasicAction = async (action: 'start' | 'stop' | 'restart' | 'refresh' | 'resolve', bundleId: string) => {
     if (!window.electronAPI) return;
     setActionLoading((prev) => ({ ...prev, [bundleId]: action }));
     try {
@@ -516,6 +552,16 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
           <div className="flex items-center space-x-2">
             <button
               type="button"
+              onClick={handleOpenLog}
+              className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
+              title="Ver log interno do Karaf (log:display)"
+            >
+              <Terminal className="w-4 h-4 text-emerald-400" />
+              <span>Log do Karaf</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setIsSnapshotModalOpen(true)}
               className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
               title="Comparar estado atual de bundles com snapshot salvo"
@@ -697,6 +743,19 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                             >
                               <Info className="w-3.5 h-3.5" />
                             </button>
+
+                            {/* Resolver Dependências (bundle:resolve) — só faz sentido em Installed, travado por dependência ausente */}
+                            {b.state === 'Installed' && (
+                              <button
+                                type="button"
+                                onClick={() => handleBasicAction('resolve', b.id)}
+                                disabled={isRowLoading}
+                                title="Forçar resolução de dependências OSGi (bundle:resolve)"
+                                className="p-1.5 rounded-lg bg-card hover:bg-amber-500/20 border border-border text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer"
+                              >
+                                <Wrench className="w-3.5 h-3.5" />
+                              </button>
+                            )}
 
                             {/* Iniciar / Parar */}
                             {b.state === 'Active' ? (
@@ -1843,6 +1902,89 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               >
                 Fechar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-MODAL: LOG DO KARAF (log:display — log interno real do container) */}
+      {/* ========================================================================= */}
+      {isLogModalOpen && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">Log do Karaf</h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    Log interno real do container (log:display / Pax Logging) — funciona também contra Karaf remoto.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLogModalOpen(false)}
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 border-b border-border/70 bg-card/60 flex flex-wrap items-center gap-2 shrink-0">
+              <div className="relative flex-1 min-w-[220px]">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={logSearch}
+                  onChange={(e) => setLogSearch(e.target.value)}
+                  placeholder="Filtrar linhas do log..."
+                  className="w-full bg-background border border-border rounded-lg pl-8 pr-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span>Últimas</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={5000}
+                  value={logLines}
+                  onChange={(e) => setLogLines(Number(e.target.value) || 200)}
+                  className="w-20 bg-background border border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-none focus:border-primary font-mono"
+                />
+                <span>entradas</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleRefreshLog}
+                disabled={isLoadingLog}
+                className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-lg text-xs font-bold text-foreground flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
+              >
+                <RotateCw className={`w-3.5 h-3.5 ${isLoadingLog ? 'animate-spin text-primary' : ''}`} />
+                <span>Atualizar</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-3 bg-black/40">
+              {isLoadingLog ? (
+                <div className="h-full flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
+                  <RotateCw className="w-6 h-6 animate-spin text-primary" />
+                  <span>Lendo log:display via client.bat...</span>
+                </div>
+              ) : filteredKarafLog ? (
+                <pre className="text-[11px] font-mono whitespace-pre-wrap text-foreground">{filteredKarafLog}</pre>
+              ) : karafLog ? (
+                <p className="text-xs text-muted-foreground text-center py-8">
+                  Nenhuma linha corresponde ao filtro "{logSearch}".
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-8">
+                  Nenhuma entrada de log retornada. Verifique se o Karaf está acessível (client.bat / SSH).
+                </p>
+              )}
             </div>
           </div>
         </div>
