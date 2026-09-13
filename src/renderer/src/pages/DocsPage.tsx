@@ -30,7 +30,8 @@ import {
   DocsIndexStatus,
   DocSyncTargetConfig,
   DocSyncProgress,
-  DocSyncResult
+  DocSyncResult,
+  ConfluenceSourceConfig
 } from '../../../shared/types';
 import { MarkdownReader } from '../components/MarkdownReader';
 
@@ -77,6 +78,12 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
   // Formulário de Destino
   const [editingTarget, setEditingTarget] = useState<Partial<DocSyncTargetConfig> | null>(null);
 
+  // Fontes Confluence (input do RAG, ao lado das Pastas de Documentação locais)
+  const [confluenceSources, setConfluenceSources] = useState<ConfluenceSourceConfig[]>([]);
+  const [editingConfluenceSource, setEditingConfluenceSource] = useState<Partial<ConfluenceSourceConfig> | null>(null);
+  const [isTestingConfluenceId, setIsTestingConfluenceId] = useState<string | null>(null);
+  const [confluenceTestResults, setConfluenceTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
+
   const loadStatus = async () => {
     if (window.electronAPI) {
       setStatus(await window.electronAPI.getDocsIndexStatus());
@@ -89,6 +96,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
       setDocFolders(settings.docFolders || []);
       setIndexProjectsDocs(Boolean(settings.indexProjectsDocs));
       setSyncTargets(settings.docSyncTargets || []);
+      setConfluenceSources(settings.confluenceSources || []);
     }
   };
 
@@ -198,6 +206,61 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
     const updated = syncTargets.map((t) => (t.id === target.id ? { ...t, enabled } : t));
     setSyncTargets(updated);
     await window.electronAPI?.saveSettings({ docSyncTargets: updated });
+  };
+
+  const handleSaveConfluenceSource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingConfluenceSource?.name || !editingConfluenceSource?.baseUrl || !editingConfluenceSource?.authToken) return;
+
+    const sourceToSave: ConfluenceSourceConfig = {
+      id: editingConfluenceSource.id || `confluence_${Date.now()}`,
+      name: editingConfluenceSource.name.trim(),
+      baseUrl: editingConfluenceSource.baseUrl.trim(),
+      spaceKey: editingConfluenceSource.spaceKey?.trim() || undefined,
+      authToken: editingConfluenceSource.authToken.trim(),
+      authEmail: editingConfluenceSource.authEmail?.trim() || undefined,
+      enabled: editingConfluenceSource.enabled !== undefined ? editingConfluenceSource.enabled : true
+    };
+
+    let updated: ConfluenceSourceConfig[];
+    if (editingConfluenceSource.id) {
+      updated = confluenceSources.map((s) => (s.id === editingConfluenceSource.id ? sourceToSave : s));
+    } else {
+      updated = [...confluenceSources, sourceToSave];
+    }
+
+    setConfluenceSources(updated);
+    await window.electronAPI?.saveSettings({ confluenceSources: updated });
+    setEditingConfluenceSource(null);
+  };
+
+  const handleDeleteConfluenceSource = async (id: string) => {
+    const updated = confluenceSources.filter((s) => s.id !== id);
+    setConfluenceSources(updated);
+    await window.electronAPI?.saveSettings({ confluenceSources: updated });
+    if (editingConfluenceSource?.id === id) setEditingConfluenceSource(null);
+  };
+
+  const handleToggleConfluenceEnabled = async (source: ConfluenceSourceConfig, enabled: boolean) => {
+    const updated = confluenceSources.map((s) => (s.id === source.id ? { ...s, enabled } : s));
+    setConfluenceSources(updated);
+    await window.electronAPI?.saveSettings({ confluenceSources: updated });
+  };
+
+  const handleTestConfluenceConnection = async (source: ConfluenceSourceConfig) => {
+    if (!window.electronAPI?.testConfluenceConnection) return;
+    setIsTestingConfluenceId(source.id);
+    try {
+      const res = await window.electronAPI.testConfluenceConnection(source);
+      setConfluenceTestResults((prev) => ({ ...prev, [source.id]: res }));
+    } catch (err: any) {
+      setConfluenceTestResults((prev) => ({
+        ...prev,
+        [source.id]: { success: false, message: err?.message || 'Falha ao testar conexão.' }
+      }));
+    } finally {
+      setIsTestingConfluenceId(null);
+    }
   };
 
   const handleSyncNow = async (targetId?: string) => {
@@ -472,6 +535,176 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+
+        {/* Fontes Confluence */}
+        <div className="pt-3 border-t border-border/60">
+          <div className="flex items-center justify-between gap-3 mb-2.5">
+            <div>
+              <h3 className="text-xs font-bold text-foreground">Fontes Confluence</h3>
+              <p className="text-[11px] text-muted-foreground">
+                Espaços do Confluence (Cloud ou Server) indexados como documentação, via token de API.
+              </p>
+            </div>
+            <button
+              onClick={() => setEditingConfluenceSource({ enabled: true })}
+              className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Novo espaço Confluence</span>
+            </button>
+          </div>
+
+          {confluenceSources.length === 0 && !editingConfluenceSource ? (
+            <div className="text-center py-4 border border-dashed border-border rounded-xl bg-card/40">
+              <p className="text-[11px] text-muted-foreground">Nenhuma fonte Confluence configurada.</p>
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {confluenceSources.map((source) => (
+                <li key={source.id} className="bg-card border border-border/80 rounded-lg px-3 py-1.5 space-y-1">
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={source.enabled}
+                        onChange={(e) => handleToggleConfluenceEnabled(source, e.target.checked)}
+                        className="text-primary focus:ring-0 shrink-0"
+                      />
+                      <Globe className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                      <span className="font-semibold text-foreground truncate">{source.name}</span>
+                      <span className="font-mono text-[10px] text-muted-foreground truncate">{source.baseUrl}</span>
+                      {source.spaceKey && (
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0">
+                          {source.spaceKey}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleTestConfluenceConnection(source)}
+                        disabled={isTestingConfluenceId === source.id}
+                        className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+                      >
+                        {isTestingConfluenceId === source.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Testar'}
+                      </button>
+                      <button
+                        onClick={() => setEditingConfluenceSource(source)}
+                        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteConfluenceSource(source.id)}
+                        className="p-1 rounded-md hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  {confluenceTestResults[source.id] && (
+                    <div
+                      className={`text-[10px] px-1.5 py-1 rounded-md ${
+                        confluenceTestResults[source.id].success
+                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                          : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                      }`}
+                    >
+                      {confluenceTestResults[source.id].message}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {editingConfluenceSource && (
+            <form
+              onSubmit={handleSaveConfluenceSource}
+              className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-foreground">
+                  {editingConfluenceSource.id ? 'Editar Fonte Confluence' : 'Nova Fonte Confluence'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingConfluenceSource(null)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-foreground">Nome</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Wiki Interno"
+                    value={editingConfluenceSource.name || ''}
+                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, name: e.target.value })}
+                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-foreground">Space Key (opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: PRO (todo o Confluence se vazio)"
+                    value={editingConfluenceSource.spaceKey || ''}
+                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, spaceKey: e.target.value })}
+                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-foreground">URL Base do Confluence</label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://empresa.atlassian.net ou https://confluence.empresa.com"
+                  value={editingConfluenceSource.baseUrl || ''}
+                  onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, baseUrl: e.target.value })}
+                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-foreground">
+                    E-mail (Confluence Cloud — deixe vazio para Server/PAT)
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="voce@empresa.com"
+                    value={editingConfluenceSource.authEmail || ''}
+                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, authEmail: e.target.value })}
+                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-foreground">Token de API / PAT</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Token"
+                    value={editingConfluenceSource.authToken || ''}
+                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, authToken: e.target.value })}
+                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Token fica salvo em texto plano nas configurações locais, mesmo padrão dos destinos de sincronização acima.
+              </p>
+              <button
+                type="submit"
+                className="w-full px-3 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-[11px]"
+              >
+                Salvar Fonte
+              </button>
+            </form>
           )}
         </div>
       </div>

@@ -15,6 +15,8 @@ import { DockerService } from './services/DockerService';
 import { NetworkService } from './services/NetworkService';
 import { DeployService } from './services/DeployService';
 import { LogWatcherService } from './services/LogWatcherService';
+import { KarafLogPersistenceService } from './services/KarafLogPersistenceService';
+import { AutoUpdateService } from './services/AutoUpdateService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -82,6 +84,10 @@ function createWindow() {
   const dockerService = new DockerService();
   const deployService = new DeployService(configService, karafService, dockerService, windowsService);
   const logWatcherService = new LogWatcherService();
+  const karafLogPersistenceService = new KarafLogPersistenceService();
+  const autoUpdateService = new AutoUpdateService((status) => {
+    mainWindow?.webContents.send('update:status', status);
+  });
 
   registerIpcHandlers(
     mainWindow,
@@ -97,10 +103,13 @@ function createWindow() {
     dockerService,
     networkService,
     deployService,
-    logWatcherService
+    logWatcherService,
+    karafLogPersistenceService,
+    autoUpdateService
   );
 
   backupSchedulerService.rescheduleAll();
+  autoUpdateService.checkForUpdates();
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 

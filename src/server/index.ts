@@ -21,6 +21,8 @@ import { DockerService } from '../main/services/DockerService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
+import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
+import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -109,6 +111,7 @@ const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const docSyncService = new DocSyncService(configService, docsIndexService);
 const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService);
+const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
@@ -253,6 +256,7 @@ app.post('/api/env/reset', async (req, res) => {
       broadcastWs('env:log-event', log);
     },
     (chunk: string) => {
+      karafLogPersistenceService.append(chunk);
       broadcastWs('karaf:stdout', chunk);
     }
   );
@@ -311,9 +315,20 @@ app.get('/api/karaf/embedded/status', (_req, res) => {
 
 app.post('/api/karaf/embedded/start', (_req, res) => {
   const started = karafService.startEmbeddedKarafDebug((chunk) => {
+    karafLogPersistenceService.append(chunk);
     broadcastWs('karaf:stdout', chunk);
   });
   res.json({ success: started });
+});
+
+app.get('/api/karaf/embedded/persisted-logs', (req, res) => {
+  const maxChars = req.query.maxChars ? Number(req.query.maxChars) : undefined;
+  res.json({ output: karafLogPersistenceService.read(maxChars) });
+});
+
+app.post('/api/karaf/embedded/persisted-logs/clear', (_req, res) => {
+  karafLogPersistenceService.clear();
+  res.json({ success: true });
 });
 
 app.post('/api/karaf/embedded/stop', async (_req, res) => {
@@ -405,7 +420,7 @@ app.get('/api/git/pr-url', async (req, res) => {
     return res.status(400).json({ url: null });
   }
   const targetBranch = req.query.targetBranch as string | undefined;
-  res.json({ url: await gitAzureService.buildAzurePrUrl(projectPath, targetBranch) });
+  res.json({ url: await gitAzureService.buildPrUrl(projectPath, targetBranch) });
 });
 
 app.post('/api/git/command', async (req, res) => {
@@ -465,6 +480,15 @@ app.get('/api/docs/search', async (req, res) => {
 
 app.get('/api/docs/status', (_req, res) => {
   res.json(docsIndexService.getStatus());
+});
+
+app.post('/api/docs/test-confluence-connection', async (req, res) => {
+  try {
+    const entries = await new ConfluenceSource(req.body).listEntries();
+    res.json({ success: true, message: `Conectado com sucesso: ${entries.length} página(s) encontrada(s).` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err?.message || 'Falha ao conectar no Confluence.' });
+  }
 });
 
 app.post('/api/docs/sync', async (req, res) => {
@@ -628,6 +652,26 @@ app.post('/api/db/backup-history', async (req, res) => {
   }
 });
 
+app.post('/api/db/restore-drill', async (req, res) => {
+  try {
+    const { scratchConnection, filePath } = req.body;
+    const result = await backupSchedulerService.runRestoreDrill(scratchConnection, filePath);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'Erro ao testar restauração' });
+  }
+});
+
+app.post('/api/backup/test-webhook', async (req, res) => {
+  try {
+    const webhook = req.body;
+    const result = await backupSchedulerService.testWebhook(webhook);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message || 'Falha ao testar webhook' });
+  }
+});
+
 // 9. Gerenciador de Containers (Docker / Podman)
 app.get(['/api/docker/status', '/api/containers/status'], async (_req, res) => {
   const status = await dockerService.checkDockerStatus();
@@ -697,6 +741,39 @@ app.delete(['/api/docker/containers/:id', '/api/containers/:id'], async (req, re
     res.json({ success });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post(['/api/docker/compose-up', '/api/containers/compose-up'], async (req, res) => {
+  try {
+    const { composeFilePath, profile, detach } = req.body || {};
+    const result = await dockerService.composeUp(composeFilePath, { profile, detach }, (chunk) => {
+      broadcastWs('docker:compose-log-chunk', chunk);
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ code: 1, stdout: '', stderr: err.message || 'Erro ao subir compose' });
+  }
+});
+
+app.post(['/api/docker/compose-down', '/api/containers/compose-down'], async (req, res) => {
+  try {
+    const { composeFilePath, profile } = req.body || {};
+    const result = await dockerService.composeDown(composeFilePath, { profile }, (chunk) => {
+      broadcastWs('docker:compose-log-chunk', chunk);
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ code: 1, stdout: '', stderr: err.message || 'Erro ao derrubar compose' });
+  }
+});
+
+app.post(['/api/docker/compose-status', '/api/containers/compose-status'], async (req, res) => {
+  try {
+    const { composeFilePath, profile } = req.body || {};
+    res.json(await dockerService.composeStatus(composeFilePath, profile));
+  } catch {
+    res.status(500).json([]);
   }
 });
 

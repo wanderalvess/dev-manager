@@ -1,7 +1,8 @@
 import * as cron from 'node-cron';
 import { ConfigService } from './ConfigService';
 import { BackupService } from './BackupService';
-import { BackupConfig, BackupHistoryEntry, BackupResult, DatabaseConnectionConfig } from '../../shared/types';
+import { BackupConfig, BackupHistoryEntry, BackupResult, BackupWebhookConfig, DatabaseConnectionConfig } from '../../shared/types';
+import { httpRequest } from '../utils/httpRequest';
 
 /** Quantidade máxima de entradas mantidas no histórico persistido de backups/restaurações. */
 const MAX_HISTORY_ENTRIES = 200;
@@ -94,6 +95,35 @@ export class BackupSchedulerService {
     return result;
   }
 
+  /**
+   * Executa uma restauração de teste ("drill") de um backup contra uma conexão "scratch"
+   * informada pelo usuário (deve ser uma conexão descartável, o serviço não valida isso),
+   * registrando o resultado no mesmo histórico/webhooks usados por backup e restore normais.
+   */
+  public async runRestoreDrill(scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> {
+    const settings = this.configService.getSettings();
+    const previous = (settings.backupConfigs || []).find((b) => b.connectionId === scratchConnection.id);
+
+    const result = await this.backupService.runRestoreDrill(scratchConnection, filePath, {
+      psqlPath: settings.psqlPath,
+      impdpPath: settings.impdpPath,
+      mysqlPath: settings.mysqlPath,
+      pgRestorePath: settings.pgRestorePath,
+      oracleDirectory: previous?.oracleDirectory
+    });
+
+    this.recordHistory({
+      connectionId: scratchConnection.id,
+      connectionName: scratchConnection.name,
+      action: 'restore-drill',
+      trigger: 'manual',
+      result,
+      filePath
+    });
+
+    return result;
+  }
+
   /** Lista o histórico persistido de backups/restaurações, mais recente primeiro. */
   public getHistory(connectionId?: string): BackupHistoryEntry[] {
     const history = this.configService.getSettings().backupHistory || [];
@@ -173,7 +203,7 @@ export class BackupSchedulerService {
   private recordHistory(params: {
     connectionId: string;
     connectionName: string;
-    action: 'backup' | 'restore';
+    action: 'backup' | 'restore' | 'restore-drill';
     trigger: 'manual' | 'scheduled';
     result: BackupResult;
     filePath?: string;
@@ -192,10 +222,75 @@ export class BackupSchedulerService {
       filePath: params.result.filePath ?? params.filePath,
       sizeBytes: params.result.sizeBytes,
       durationMs: params.result.durationMs,
+      checksumSha256: params.result.checksumSha256,
       startedAt: new Date().toISOString()
     };
 
     const updated = [entry, ...history].slice(0, MAX_HISTORY_ENTRIES);
     this.configService.saveSettings({ backupHistory: updated });
+
+    this.notifyWebhooks(params.connectionName, params.action, params.trigger, params.result);
+  }
+
+  /**
+   * Dispara os webhooks configurados (settings.backupWebhooks) que estejam habilitados e cujo
+   * filtro de eventos inclua o resultado desta execução. Falhas de rede no webhook são só
+   * logadas — nunca fazem a execução de backup/restore em si falhar.
+   */
+  private notifyWebhooks(
+    connectionName: string,
+    action: 'backup' | 'restore' | 'restore-drill',
+    trigger: 'manual' | 'scheduled',
+    result: BackupResult
+  ): void {
+    const webhooks = this.configService.getSettings().backupWebhooks || [];
+    const eventKey = result.success ? 'success' : 'failure';
+    const targets = webhooks.filter((w) => w.enabled && (!w.events || w.events.includes(eventKey)));
+    if (targets.length === 0) return;
+
+    const payload = JSON.stringify({
+      connectionName,
+      action,
+      trigger,
+      success: result.success,
+      message: result.message,
+      filePath: result.filePath,
+      sizeBytes: result.sizeBytes,
+      durationMs: result.durationMs,
+      startedAt: new Date().toISOString()
+    });
+
+    for (const target of targets) {
+      this.sendWebhook(target, payload).catch((err) => {
+        console.warn(`[BackupScheduler] Falha ao notificar webhook "${target.name}": ${err?.message || err}`);
+      });
+    }
+  }
+
+  /** Envia um payload sintético para um webhook, usado pelo botão "Testar" da UI. */
+  public async testWebhook(target: BackupWebhookConfig): Promise<{ success: boolean; message: string }> {
+    const payload = JSON.stringify({
+      connectionName: 'Conexão de teste',
+      action: 'backup',
+      trigger: 'manual',
+      success: true,
+      message: 'Este é um envio de teste disparado manualmente pelo dev-manager.',
+      startedAt: new Date().toISOString()
+    });
+
+    try {
+      await this.sendWebhook(target, payload);
+      return { success: true, message: 'Webhook notificado com sucesso.' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Falha ao notificar webhook.' };
+    }
+  }
+
+  private async sendWebhook(target: BackupWebhookConfig, payload: string): Promise<void> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (target.authHeader && target.authValue) {
+      headers[target.authHeader.trim()] = target.authValue.trim();
+    }
+    await httpRequest(target.endpointUrl, { method: target.method || 'POST', headers, body: payload });
   }
 }

@@ -26,9 +26,11 @@ import {
   Code2,
   ArrowRight,
   Laptop,
-  Bot
+  Bot,
+  Download,
+  RefreshCw
 } from 'lucide-react';
-import { SystemAppInfo, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
+import { SystemAppInfo, UpdateStatus, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface HelpPageProps {
@@ -52,6 +54,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
   const [searchQuery, setSearchQuery] = useState(initialSearch || '');
   const [expandedFaqs, setExpandedFaqs] = useState<Record<string, boolean>>({});
   const [appInfo, setAppInfo] = useState<SystemAppInfo | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [settings, setSettings] = useState<any>(null);
   const { copy: copyDiag, copiedKey: copiedDiagKey } = useCopyToClipboard(2500);
   const copiedDiag = copiedDiagKey === 'diag';
@@ -65,8 +68,15 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
       if (window.electronAPI.getSettings) {
         window.electronAPI.getSettings().then((st) => setSettings(st));
       }
+      const unsubUpdate = window.electronAPI.onUpdateStatus?.(setUpdateStatus);
+      return () => unsubUpdate?.();
     }
   }, []);
+
+  const handleCheckForUpdates = () => {
+    setUpdateStatus({ status: 'checking' });
+    window.electronAPI?.checkForUpdate?.();
+  };
 
   const toggleFaq = (id: string) => {
     setExpandedFaqs((prev) => ({
@@ -1081,6 +1091,63 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                       <span className="truncate">{appInfo?.osHostname || 'Localhost'}</span>
                     </div>
                   </div>
+
+                  {/* Versão do App & Atualizações */}
+                  {window.electronAPI?.onUpdateStatus && (
+                    <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                        Versão do Aplicativo:
+                      </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-foreground text-[11px]">
+                          v{appInfo?.appVersion || '...'}
+                          {updateStatus?.status === 'available' && (
+                            <span className="ml-1.5 text-emerald-500 font-bold">→ v{updateStatus.version}</span>
+                          )}
+                        </span>
+                        {updateStatus?.status === 'downloaded' ? (
+                          <button
+                            onClick={() => window.electronAPI?.installUpdate?.()}
+                            className="flex items-center gap-1 px-2 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-bold transition"
+                          >
+                            <Download className="w-3 h-3" /> Instalar e Reiniciar
+                          </button>
+                        ) : updateStatus?.status === 'available' ? (
+                          <button
+                            onClick={() => window.electronAPI?.downloadUpdate?.()}
+                            className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold transition"
+                          >
+                            <Download className="w-3 h-3" /> Baixar
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleCheckForUpdates}
+                            disabled={updateStatus?.status === 'checking' || updateStatus?.status === 'downloading'}
+                            className="flex items-center gap-1 px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-[10px] font-bold transition disabled:opacity-50"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${updateStatus?.status === 'checking' ? 'animate-spin' : ''}`} />
+                            Verificar
+                          </button>
+                        )}
+                      </div>
+                      {updateStatus?.status === 'downloading' && (
+                        <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all"
+                            style={{ width: `${Math.round(updateStatus.percent)}%` }}
+                          />
+                        </div>
+                      )}
+                      {updateStatus?.status === 'not-available' && (
+                        <p className="text-[10px] text-muted-foreground">Você já está na versão mais recente.</p>
+                      )}
+                      {updateStatus?.status === 'error' && (
+                        <p className="text-[10px] text-rose-500 truncate" title={updateStatus.message}>
+                          Falha ao verificar: {updateStatus.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Caminho do Config JSON */}

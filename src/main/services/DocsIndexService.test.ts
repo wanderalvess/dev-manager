@@ -6,6 +6,9 @@ import { DocsIndexService, DocSyncService, chunkText, cosineSimilarity, textRele
 import { ConfigService } from './ConfigService';
 import { GitAzureService } from './GitAzureService';
 import { DocSyncTargetConfig } from '../../shared/types';
+import { httpRequest } from '../utils/httpRequest';
+
+vi.mock('../utils/httpRequest', () => ({ httpRequest: vi.fn() }));
 
 describe('DocsIndexService Algorithms', () => {
   describe('chunkText', () => {
@@ -393,7 +396,7 @@ describe('DocSyncService', () => {
 
     const syncService = new DocSyncService(mockConfigService, mockDocsIndexService);
     const requestCalls: any[] = [];
-    (syncService as any).httpRequest = vi.fn().mockImplementation(async (url, opts) => {
+    (httpRequest as any).mockImplementation(async (url: string, opts: any) => {
       requestCalls.push({ url, opts });
       return {
         ok: true,

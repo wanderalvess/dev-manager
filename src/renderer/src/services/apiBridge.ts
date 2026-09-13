@@ -19,6 +19,7 @@ import type {
   SystemAppInfo,
   DocSearchResult,
   DocsIndexStatus,
+  ConfluenceSourceConfig,
   DocsIndexProgress,
   DocSyncProgress,
   DocSyncResult,
@@ -42,12 +43,14 @@ import type {
   DeployProfile,
   TableColumnInfo,
   DockerContainerStats,
+  ComposeServiceStatus,
   LogWatchStatus,
   LogChunkEvent,
   BackupConfig,
   BackupResult,
   BackupFileInfo,
-  BackupHistoryEntry
+  BackupHistoryEntry,
+  BackupWebhookConfig
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -384,6 +387,13 @@ export function initApiBridge() {
     onKarafStdout: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('karaf:stdout', callback);
     },
+    getKarafPersistedLogs: async (maxChars?: number): Promise<{ output: string }> => {
+      const query = maxChars ? `?maxChars=${maxChars}` : '';
+      return apiFetch(`/api/karaf/embedded/persisted-logs${query}`);
+    },
+    clearKarafPersistedLogs: async (): Promise<{ success: boolean }> => {
+      return apiFetch('/api/karaf/embedded/persisted-logs/clear', { method: 'POST' });
+    },
 
     deployKaraf: async (request: KarafDeployRequest): Promise<{ success: boolean; error?: string }> => {
       return apiFetch('/api/karaf/deploy', {
@@ -626,6 +636,13 @@ export function initApiBridge() {
       return apiFetch('/api/docs/status');
     },
 
+    testConfluenceConnection: async (config: ConfluenceSourceConfig): Promise<{ success: boolean; message: string }> => {
+      return apiFetch('/api/docs/test-confluence-connection', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+    },
+
     openDocFile: async (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> => {
       if (mode === 'folder') {
         window.prompt('Localização do arquivo:', filePath);
@@ -763,6 +780,20 @@ export function initApiBridge() {
       });
     },
 
+    runDbRestoreDrill: async (scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> => {
+      return apiFetch('/api/db/restore-drill', {
+        method: 'POST',
+        body: JSON.stringify({ scratchConnection, filePath })
+      });
+    },
+
+    testBackupWebhook: async (webhook: BackupWebhookConfig): Promise<{ success: boolean; message: string }> => {
+      return apiFetch('/api/backup/test-webhook', {
+        method: 'POST',
+        body: JSON.stringify(webhook)
+      });
+    },
+
     // Gerenciador de Containers (Docker / Podman)
     getDockerStatus: async (): Promise<DockerDaemonStatus> => {
       return apiFetch('/api/docker/status');
@@ -859,6 +890,38 @@ export function initApiBridge() {
       } catch {
         return false;
       }
+    },
+
+    dockerComposeUp: async (
+      composeFilePath: string,
+      options?: { profile?: string; detach?: boolean }
+    ): Promise<{ code: number; stdout: string; stderr: string }> => {
+      return apiFetch('/api/docker/compose-up', {
+        method: 'POST',
+        body: JSON.stringify({ composeFilePath, ...options })
+      });
+    },
+    dockerComposeDown: async (
+      composeFilePath: string,
+      options?: { profile?: string }
+    ): Promise<{ code: number; stdout: string; stderr: string }> => {
+      return apiFetch('/api/docker/compose-down', {
+        method: 'POST',
+        body: JSON.stringify({ composeFilePath, ...options })
+      });
+    },
+    dockerComposeStatus: async (composeFilePath: string, profile?: string): Promise<ComposeServiceStatus[]> => {
+      try {
+        return await apiFetch('/api/docker/compose-status', {
+          method: 'POST',
+          body: JSON.stringify({ composeFilePath, profile })
+        });
+      } catch {
+        return [];
+      }
+    },
+    onDockerComposeLogChunk: (callback: (chunk: string) => void) => {
+      return wsManager.subscribe('docker:compose-log-chunk', callback);
     },
 
     // Rede & Detecção de IPs (Local e WSL)

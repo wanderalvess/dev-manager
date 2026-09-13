@@ -36,7 +36,9 @@ import {
   FolderOpen,
   FileArchive,
   CalendarClock,
-  History
+  History,
+  Webhook,
+  FlaskConical
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -49,7 +51,8 @@ import {
   BackupConfig,
   BackupResult,
   BackupFileInfo,
-  BackupHistoryEntry
+  BackupHistoryEntry,
+  BackupWebhookConfig
 } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
@@ -200,6 +203,17 @@ export const DatabasePage: React.FC = () => {
   const [backupHistory, setBackupHistory] = useState<BackupHistoryEntry[]>([]);
   const [isLoadingBackupHistory, setIsLoadingBackupHistory] = useState<boolean>(false);
 
+  // Webhooks de Notificação de Backup
+  const [backupWebhooks, setBackupWebhooks] = useState<BackupWebhookConfig[]>([]);
+  const [editingWebhook, setEditingWebhook] = useState<Partial<BackupWebhookConfig> | null>(null);
+  const [isTestingWebhookId, setIsTestingWebhookId] = useState<string | null>(null);
+  const [webhookTestResults, setWebhookTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
+
+  // Restore Drill (restauração de teste contra uma conexão "scratch")
+  const [scratchConnectionId, setScratchConnectionId] = useState<string>('');
+  const [drillingFilePath, setDrillingFilePath] = useState<string | null>(null);
+  const [drillResult, setDrillResult] = useState<BackupResult | null>(null);
+
   const activeConnection = useMemo(() => {
     return connections.find((c) => c.id === activeConnectionId) || connections[0] || null;
   }, [connections, activeConnectionId]);
@@ -212,6 +226,7 @@ export const DatabasePage: React.FC = () => {
         setSettings(st);
         const conns = st.databaseConnections || [];
         setConnections(conns);
+        setBackupWebhooks(st.backupWebhooks || []);
 
         if (st.savedSqlSnippets && Array.isArray(st.savedSqlSnippets) && st.savedSqlSnippets.length > 0) {
           setCustomSnippets(st.savedSqlSnippets);
@@ -432,6 +447,8 @@ export const DatabasePage: React.FC = () => {
     setBackupResult(null);
     setScheduleSaveResult(null);
     setRestoreResult(null);
+    setDrillResult(null);
+    setScratchConnectionId('');
     setIsBackupModalOpen(true);
     if (folder) refreshBackupFiles(folder);
     else setBackupFiles([]);
@@ -541,6 +558,88 @@ export const DatabasePage: React.FC = () => {
       setRestoreResult({ success: false, message: err?.message || 'Erro inesperado ao restaurar backup.' });
     } finally {
       setRestoringFilePath(null);
+    }
+  };
+
+  // Testar restauração de um backup contra uma conexão "scratch" separada, sem afetar a origem
+  const handleRunRestoreDrill = async (file: BackupFileInfo) => {
+    if (!scratchConnectionId || !window.electronAPI?.runDbRestoreDrill) return;
+    const scratchConnection = connections.find((c) => c.id === scratchConnectionId);
+    if (!scratchConnection) return;
+
+    const confirmed = window.confirm(
+      `Restaurar "${file.fileName}" na conexão "${scratchConnection.name}" como teste de integridade?\n\n` +
+        'Use apenas uma conexão descartável aqui — essa restauração sobrescreve dados na conexão escolhida.'
+    );
+    if (!confirmed) return;
+
+    setDrillingFilePath(file.filePath);
+    setDrillResult(null);
+    try {
+      const res = await window.electronAPI.runDbRestoreDrill(scratchConnection, file.filePath);
+      setDrillResult(res);
+      if (activeConnection) refreshBackupHistory(activeConnection.id);
+    } catch (err: any) {
+      setDrillResult({ success: false, message: err?.message || 'Erro inesperado ao testar restauração.' });
+    } finally {
+      setDrillingFilePath(null);
+    }
+  };
+
+  // Salvar Webhook de Notificação de Backup
+  const handleSaveWebhook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingWebhook?.name || !editingWebhook?.endpointUrl) return;
+
+    const webhookToSave: BackupWebhookConfig = {
+      id: editingWebhook.id || `webhook_${Date.now()}`,
+      name: editingWebhook.name.trim(),
+      endpointUrl: editingWebhook.endpointUrl.trim(),
+      method: editingWebhook.method || 'POST',
+      authHeader: editingWebhook.authHeader?.trim() || undefined,
+      authValue: editingWebhook.authValue?.trim() || undefined,
+      enabled: editingWebhook.enabled !== undefined ? editingWebhook.enabled : true,
+      events: editingWebhook.events && editingWebhook.events.length > 0 ? editingWebhook.events : undefined
+    };
+
+    let updated: BackupWebhookConfig[];
+    if (editingWebhook.id) {
+      updated = backupWebhooks.map((w) => (w.id === editingWebhook.id ? webhookToSave : w));
+    } else {
+      updated = [...backupWebhooks, webhookToSave];
+    }
+
+    setBackupWebhooks(updated);
+    await window.electronAPI?.saveSettings({ backupWebhooks: updated });
+    setEditingWebhook(null);
+  };
+
+  const handleDeleteWebhook = async (id: string) => {
+    const updated = backupWebhooks.filter((w) => w.id !== id);
+    setBackupWebhooks(updated);
+    await window.electronAPI?.saveSettings({ backupWebhooks: updated });
+    if (editingWebhook?.id === id) setEditingWebhook(null);
+  };
+
+  const handleToggleWebhookEnabled = async (webhook: BackupWebhookConfig, enabled: boolean) => {
+    const updated = backupWebhooks.map((w) => (w.id === webhook.id ? { ...w, enabled } : w));
+    setBackupWebhooks(updated);
+    await window.electronAPI?.saveSettings({ backupWebhooks: updated });
+  };
+
+  const handleTestWebhook = async (webhook: BackupWebhookConfig) => {
+    if (!window.electronAPI?.testBackupWebhook) return;
+    setIsTestingWebhookId(webhook.id);
+    try {
+      const res = await window.electronAPI.testBackupWebhook(webhook);
+      setWebhookTestResults((prev) => ({ ...prev, [webhook.id]: res }));
+    } catch (err: any) {
+      setWebhookTestResults((prev) => ({
+        ...prev,
+        [webhook.id]: { success: false, message: err?.message || 'Falha ao testar webhook.' }
+      }));
+    } finally {
+      setIsTestingWebhookId(null);
     }
   };
 
@@ -2780,6 +2879,37 @@ export const DatabasePage: React.FC = () => {
                         {restoreResult.message}
                       </div>
                     )}
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <FlaskConical className="w-3 h-3 text-muted-foreground shrink-0" />
+                      <select
+                        value={scratchConnectionId}
+                        onChange={(e) => setScratchConnectionId(e.target.value)}
+                        className="flex-1 bg-background border border-border/70 rounded-md p-1.5 text-[10px] text-foreground focus:outline-none focus:border-primary"
+                      >
+                        <option value="">Conexão de teste (restore drill)...</option>
+                        {connections.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.type})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {drillResult && (
+                      <div
+                        className={`mb-2 p-2 rounded-lg border text-[11px] ${
+                          drillResult.success
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                        }`}
+                      >
+                        {drillResult.message}
+                        {drillResult.success && drillResult.checksumSha256 && (
+                          <p className="text-[10px] font-mono opacity-80 mt-1 truncate">
+                            SHA-256: {drillResult.checksumSha256}
+                          </p>
+                        )}
+                      </div>
+                    )}
                     {backupFiles.length === 0 ? (
                       <div className="text-center py-3 text-[11px] text-muted-foreground">
                         Nenhum backup encontrado nesta pasta.
@@ -2799,6 +2929,20 @@ export const DatabasePage: React.FC = () => {
                                 {formatBytes(f.sizeBytes)}
                               </span>
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRunRestoreDrill(f)}
+                              disabled={!scratchConnectionId || drillingFilePath !== null}
+                              title="Testar restauração numa conexão separada (não afeta a conexão ativa)"
+                              className="shrink-0 flex items-center gap-1 px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 rounded-md text-[10px] font-bold transition disabled:opacity-50"
+                            >
+                              {drillingFilePath === f.filePath ? (
+                                <RotateCw className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <FlaskConical className="w-3 h-3" />
+                              )}
+                              <span>Drill</span>
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleRestoreBackup(f)}
@@ -2855,17 +2999,219 @@ export const DatabasePage: React.FC = () => {
                                   <AlertCircle className="w-3 h-3 text-rose-500 shrink-0" />
                                 )}
                                 <span className="text-muted-foreground">
-                                  {h.action === 'backup' ? 'Backup' : 'Restauração'} ·{' '}
+                                  {h.action === 'backup' ? 'Backup' : h.action === 'restore-drill' ? 'Restore Drill' : 'Restauração'} ·{' '}
                                   {h.trigger === 'scheduled' ? 'agendado' : 'manual'}
                                 </span>
                               </span>
                               <span className="block text-[10px] text-muted-foreground/80 truncate" title={h.message}>
                                 {new Date(h.startedAt).toLocaleString()} — {h.message}
                               </span>
+                              {h.checksumSha256 && (
+                                <span className="block text-[9px] font-mono text-muted-foreground/60 truncate" title={h.checksumSha256}>
+                                  SHA-256: {h.checksumSha256.slice(0, 16)}…
+                                </span>
+                              )}
                             </div>
                           </div>
                         ))}
                       </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                        <Webhook className="w-3 h-3" /> Webhooks de Notificação
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingWebhook({ method: 'POST', enabled: true })}
+                        className="flex items-center gap-1 px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-md text-[10px] font-bold transition"
+                      >
+                        <Plus className="w-3 h-3" /> Novo
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-1.5">
+                      Disparados a cada backup, restauração ou restore drill (manual ou agendado), independente da conexão.
+                    </p>
+
+                    {backupWebhooks.length === 0 && !editingWebhook && (
+                      <div className="text-center py-3 text-[11px] text-muted-foreground">
+                        Nenhum webhook configurado.
+                      </div>
+                    )}
+
+                    <div className="space-y-1.5">
+                      {backupWebhooks.map((w) => (
+                        <div key={w.id} className="p-2 bg-background/60 border border-border/50 rounded-lg space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <label className="flex items-center gap-1 cursor-pointer shrink-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={w.enabled}
+                                    onChange={(e) => handleToggleWebhookEnabled(w, e.target.checked)}
+                                    className="text-primary focus:ring-0"
+                                  />
+                                </label>
+                                <span className="font-bold text-[11px] truncate">{w.name}</span>
+                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0">
+                                  {w.method || 'POST'}
+                                </span>
+                              </div>
+                              <div className="font-mono text-[10px] text-muted-foreground truncate" title={w.endpointUrl}>
+                                {w.endpointUrl}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleTestWebhook(w)}
+                                disabled={isTestingWebhookId === w.id}
+                                className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50"
+                                title="Enviar payload de teste"
+                              >
+                                {isTestingWebhookId === w.id ? (
+                                  <RotateCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  'Testar'
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingWebhook(w)}
+                                className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition"
+                                title="Editar"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteWebhook(w.id)}
+                                className="p-1 rounded-md hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition"
+                                title="Remover"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                          {webhookTestResults[w.id] && (
+                            <div
+                              className={`text-[10px] px-1.5 py-1 rounded-md ${
+                                webhookTestResults[w.id].success
+                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                                  : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                              }`}
+                            >
+                              {webhookTestResults[w.id].message}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {editingWebhook && (
+                      <form onSubmit={handleSaveWebhook} className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-foreground">
+                            {editingWebhook.id ? 'Editar Webhook' : 'Novo Webhook'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setEditingWebhook(null)}
+                            className="text-[11px] text-muted-foreground hover:text-foreground transition"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <div className="sm:col-span-2 space-y-1">
+                            <label className="text-[10px] font-bold text-foreground">Nome</label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Ex: Slack #backups"
+                              value={editingWebhook.name || ''}
+                              onChange={(e) => setEditingWebhook({ ...editingWebhook, name: e.target.value })}
+                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-foreground">Método</label>
+                            <select
+                              value={editingWebhook.method || 'POST'}
+                              onChange={(e) => setEditingWebhook({ ...editingWebhook, method: e.target.value as 'POST' | 'PUT' })}
+                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                            >
+                              <option value="POST">POST</option>
+                              <option value="PUT">PUT</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-foreground">URL do Webhook</label>
+                          <input
+                            type="url"
+                            required
+                            placeholder="https://hooks.slack.com/services/..."
+                            value={editingWebhook.endpointUrl || ''}
+                            onChange={(e) => setEditingWebhook({ ...editingWebhook, endpointUrl: e.target.value })}
+                            className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-foreground">Cabeçalho de Autenticação</label>
+                            <input
+                              type="text"
+                              placeholder="Authorization (opcional)"
+                              value={editingWebhook.authHeader || ''}
+                              onChange={(e) => setEditingWebhook({ ...editingWebhook, authHeader: e.target.value })}
+                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-foreground">Valor</label>
+                            <input
+                              type="password"
+                              placeholder="Bearer ... (opcional)"
+                              value={editingWebhook.authValue || ''}
+                              onChange={(e) => setEditingWebhook({ ...editingWebhook, authValue: e.target.value })}
+                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px]">
+                          <span className="font-bold text-foreground">Disparar em:</span>
+                          {(['success', 'failure'] as const).map((ev) => {
+                            const checked = !editingWebhook.events || editingWebhook.events.includes(ev);
+                            return (
+                              <label key={ev} className="flex items-center gap-1 cursor-pointer text-muted-foreground">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={(e) => {
+                                    const current = editingWebhook.events || ['success', 'failure'];
+                                    const updated = e.target.checked
+                                      ? Array.from(new Set([...current, ev]))
+                                      : current.filter((x) => x !== ev);
+                                    setEditingWebhook({ ...editingWebhook, events: updated as ('success' | 'failure')[] });
+                                  }}
+                                  className="text-primary focus:ring-0"
+                                />
+                                <span>{ev === 'success' ? 'Sucesso' : 'Falha'}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <button
+                          type="submit"
+                          className="w-full px-3 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-[11px]"
+                        >
+                          Salvar Webhook
+                        </button>
+                      </form>
                     )}
                   </div>
               </>

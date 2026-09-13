@@ -19,7 +19,7 @@ import {
   ArrowUpRight,
   Cpu
 } from 'lucide-react';
-import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats } from '../../../shared/types';
+import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats, ComposeServiceStatus } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 export const ContainersPage: React.FC = () => {
@@ -37,6 +37,15 @@ export const ContainersPage: React.FC = () => {
   const [isLoadingLogs, setIsLoadingLogs] = useState<boolean>(false);
   const [logLines, setLogLines] = useState<number>(200);
   const { copy: copyLogsToClipboard, copiedKey: copyFeedback } = useCopyToClipboard();
+
+  // Docker Compose
+  const [composeFilePath, setComposeFilePath] = useState<string>('');
+  const [composeProfile, setComposeProfile] = useState<string>('');
+  const [isComposeRunning, setIsComposeRunning] = useState<'up' | 'down' | null>(null);
+  const [composeOutput, setComposeOutput] = useState<string>('');
+  const [composeServices, setComposeServices] = useState<ComposeServiceStatus[]>([]);
+  const [isLoadingComposeStatus, setIsLoadingComposeStatus] = useState<boolean>(false);
+  const composeOutputRef = useRef<HTMLPreElement>(null);
 
   // Carregar Métricas de Recursos (docker stats)
   const loadDockerStats = useCallback(async () => {
@@ -110,9 +119,68 @@ export const ContainersPage: React.FC = () => {
     };
   }, [loadDockerData, loadDockerStats]);
 
+  useEffect(() => {
+    const unsubscribe = window.electronAPI?.onDockerComposeLogChunk?.((chunk) => {
+      setComposeOutput((prev) => prev + chunk);
+    });
+    return () => unsubscribe?.();
+  }, []);
+
+  useEffect(() => {
+    composeOutputRef.current?.scrollTo({ top: composeOutputRef.current.scrollHeight });
+  }, [composeOutput]);
+
   // Modais de Confirmação e Erro
   const [containerToRemove, setContainerToRemove] = useState<DockerContainerInfo | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Docker Compose: sobe/derruba/consulta os serviços do arquivo compose informado
+  const handleSelectComposeFile = async () => {
+    if (!window.electronAPI?.selectFile) return;
+    const picked = await window.electronAPI.selectFile({ filters: [{ name: 'Docker Compose', extensions: ['yml', 'yaml'] }] });
+    if (picked) setComposeFilePath(picked);
+  };
+
+  const handleComposeUp = async () => {
+    if (!composeFilePath.trim() || !window.electronAPI?.dockerComposeUp) return;
+    setIsComposeRunning('up');
+    setComposeOutput('');
+    try {
+      await window.electronAPI.dockerComposeUp(composeFilePath.trim(), { profile: composeProfile.trim() || undefined });
+      await handleComposeStatus();
+      loadDockerData();
+    } catch (err: any) {
+      setComposeOutput((prev) => `${prev}\r\n[ERRO] ${err?.message || err}\r\n`);
+    } finally {
+      setIsComposeRunning(null);
+    }
+  };
+
+  const handleComposeDown = async () => {
+    if (!composeFilePath.trim() || !window.electronAPI?.dockerComposeDown) return;
+    setIsComposeRunning('down');
+    setComposeOutput('');
+    try {
+      await window.electronAPI.dockerComposeDown(composeFilePath.trim(), { profile: composeProfile.trim() || undefined });
+      await handleComposeStatus();
+      loadDockerData();
+    } catch (err: any) {
+      setComposeOutput((prev) => `${prev}\r\n[ERRO] ${err?.message || err}\r\n`);
+    } finally {
+      setIsComposeRunning(null);
+    }
+  };
+
+  const handleComposeStatus = async () => {
+    if (!composeFilePath.trim() || !window.electronAPI?.dockerComposeStatus) return;
+    setIsLoadingComposeStatus(true);
+    try {
+      const services = await window.electronAPI.dockerComposeStatus(composeFilePath.trim(), composeProfile.trim() || undefined);
+      setComposeServices(services || []);
+    } finally {
+      setIsLoadingComposeStatus(false);
+    }
+  };
 
   // Ações nos Containers
   const handleContainerAction = async (container: DockerContainerInfo, action: 'start' | 'stop' | 'restart' | 'remove') => {
@@ -318,6 +386,86 @@ export const ContainersPage: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Docker Compose */}
+      <div className="mx-3 mt-3 p-3 bg-card/70 border border-border rounded-xl shrink-0 space-y-2">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+          <Layers className="w-3.5 h-3.5 text-sky-500" />
+          <span>Docker Compose</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            value={composeFilePath}
+            onChange={(e) => setComposeFilePath(e.target.value)}
+            placeholder="Caminho do docker-compose.yml"
+            className="flex-1 min-w-[220px] bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            onClick={handleSelectComposeFile}
+            className="px-2.5 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-xs font-semibold transition cursor-pointer"
+          >
+            Selecionar
+          </button>
+          <input
+            type="text"
+            value={composeProfile}
+            onChange={(e) => setComposeProfile(e.target.value)}
+            placeholder="Profile (ex: full-stack)"
+            className="w-40 bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            onClick={handleComposeUp}
+            disabled={!composeFilePath.trim() || isComposeRunning !== null}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+          >
+            {isComposeRunning === 'up' ? <RotateCw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+            Up
+          </button>
+          <button
+            onClick={handleComposeDown}
+            disabled={!composeFilePath.trim() || isComposeRunning !== null}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+          >
+            {isComposeRunning === 'down' ? <RotateCw className="w-3 h-3 animate-spin" /> : <Square className="w-3 h-3" />}
+            Down
+          </button>
+          <button
+            onClick={handleComposeStatus}
+            disabled={!composeFilePath.trim() || isLoadingComposeStatus}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`w-3 h-3 ${isLoadingComposeStatus ? 'animate-spin' : ''}`} />
+            Status
+          </button>
+        </div>
+
+        {composeServices.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {composeServices.map((s) => (
+              <span
+                key={s.name}
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                  s.state.toLowerCase().includes('running')
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                    : 'bg-muted border-border text-muted-foreground'
+                }`}
+              >
+                {s.name}: {s.state}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {composeOutput && (
+          <pre
+            ref={composeOutputRef}
+            className="max-h-32 overflow-auto bg-black/90 text-emerald-300 text-[10px] font-mono p-2 rounded-lg whitespace-pre-wrap"
+          >
+            {composeOutput}
+          </pre>
+        )}
+      </div>
 
       {/* Lista de Containers */}
       <div className="flex-1 overflow-auto p-3">

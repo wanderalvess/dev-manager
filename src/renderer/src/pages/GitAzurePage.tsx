@@ -533,18 +533,22 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   {/* Botão de Criação de PR */}
                   <button
                     onClick={handleOpenPr}
-                    disabled={!currentProject.isAzure}
+                    disabled={!currentProject.provider}
                     className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-lg ${
-                      currentProject.isAzure
+                      currentProject.provider
                         ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.01] border border-primary/40'
                         : 'bg-muted text-muted-foreground cursor-not-allowed border border-border'
                     }`}
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>
-                      {currentProject.isAzure
+                      {currentProject.provider === 'azure'
                         ? 'Abrir Formulário de Pull Request no Azure DevOps'
-                        : 'Repositório não possui remoto Azure DevOps configurado'}
+                        : currentProject.provider === 'github'
+                        ? 'Abrir Formulário de Pull Request no GitHub'
+                        : currentProject.provider === 'gitlab'
+                        ? 'Abrir Formulário de Merge Request no GitLab'
+                        : 'Repositório não possui remoto compatível (Azure DevOps, GitHub ou GitLab)'}
                     </span>
                   </button>
                 </div>

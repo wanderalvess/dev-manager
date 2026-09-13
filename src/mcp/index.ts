@@ -13,6 +13,7 @@ import { DockerService } from '../main/services/DockerService';
 import { DatabaseService } from '../main/services/DatabaseService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
+import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
 import type { AppSettings, DatabaseConnectionConfig, DeployProfile } from '../shared/types';
 
@@ -27,6 +28,7 @@ const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService);
+const karafLogPersistenceService = new KarafLogPersistenceService();
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -59,6 +61,7 @@ const embeddedOutput: string[] = [];
 function captureEmbeddedOutput(chunk: string) {
   embeddedOutput.push(chunk);
   if (embeddedOutput.length > EMBEDDED_OUTPUT_LIMIT) embeddedOutput.shift();
+  karafLogPersistenceService.append(chunk);
 }
 
 // --- Schemas Zod reutilizados entre tools (espelham src/shared/types.ts) ---
@@ -474,6 +477,17 @@ server.registerTool(
     description: 'Drena e retorna o buffer de saída acumulado do console Karaf embutido desde a última leitura.'
   },
   async () => ok({ output: embeddedOutput.splice(0, embeddedOutput.length).join('') })
+);
+
+server.registerTool(
+  'karaf_get_persisted_logs',
+  {
+    title: 'Ler histórico persistido do console embutido',
+    description:
+      'Retorna os últimos caracteres do log do Karaf embutido persistido em disco, sem apagar nada (diferente de karaf_get_embedded_output). Sobrevive a reinícios do processo.',
+    inputSchema: { maxChars: z.number().int().positive().optional() }
+  },
+  async ({ maxChars }) => ok({ output: karafLogPersistenceService.read(maxChars) })
 );
 
 server.registerTool(
@@ -906,6 +920,66 @@ server.registerTool(
   async () => ok(await dockerService.getContainerStats())
 );
 
+const composeUpSchema = {
+  composeFilePath: z.string(),
+  profile: z.string().optional(),
+  detach: z.boolean().optional()
+};
+const runComposeUp = async ({ composeFilePath, profile, detach }: { composeFilePath: string; profile?: string; detach?: boolean }) => {
+  if (!isSafeLocalPath(composeFilePath)) return fail('Caminho de arquivo docker-compose inválido.');
+  let output = '';
+  const result = await dockerService.composeUp(composeFilePath, { profile, detach }, (chunk) => {
+    output += chunk;
+  });
+  return ok({ ...result, output });
+};
+server.registerTool(
+  'docker_compose_up',
+  { title: 'Subir docker-compose', description: 'Sobe os serviços definidos em um docker-compose.yml (equivalente a docker compose up -d).', inputSchema: composeUpSchema },
+  runComposeUp
+);
+server.registerTool(
+  'container_compose_up',
+  { title: 'Subir docker-compose', description: 'Sobe os serviços definidos em um docker-compose.yml (equivalente a docker compose up -d).', inputSchema: composeUpSchema },
+  runComposeUp
+);
+
+const composeDownSchema = { composeFilePath: z.string(), profile: z.string().optional() };
+const runComposeDown = async ({ composeFilePath, profile }: { composeFilePath: string; profile?: string }) => {
+  if (!isSafeLocalPath(composeFilePath)) return fail('Caminho de arquivo docker-compose inválido.');
+  let output = '';
+  const result = await dockerService.composeDown(composeFilePath, { profile }, (chunk) => {
+    output += chunk;
+  });
+  return ok({ ...result, output });
+};
+server.registerTool(
+  'docker_compose_down',
+  { title: 'Derrubar docker-compose', description: 'Derruba os serviços definidos em um docker-compose.yml (equivalente a docker compose down).', inputSchema: composeDownSchema },
+  runComposeDown
+);
+server.registerTool(
+  'container_compose_down',
+  { title: 'Derrubar docker-compose', description: 'Derruba os serviços definidos em um docker-compose.yml (equivalente a docker compose down).', inputSchema: composeDownSchema },
+  runComposeDown
+);
+
+const composeStatusSchema = { composeFilePath: z.string(), profile: z.string().optional() };
+const runComposeStatus = async ({ composeFilePath, profile }: { composeFilePath: string; profile?: string }) => {
+  if (!isSafeLocalPath(composeFilePath)) return fail('Caminho de arquivo docker-compose inválido.');
+  return ok(await dockerService.composeStatus(composeFilePath, profile));
+};
+server.registerTool(
+  'docker_compose_status',
+  { title: 'Status do docker-compose', description: 'Lista o status dos serviços de um docker-compose.yml (equivalente a docker compose ps).', inputSchema: composeStatusSchema },
+  runComposeStatus
+);
+server.registerTool(
+  'container_compose_status',
+  { title: 'Status do docker-compose', description: 'Lista o status dos serviços de um docker-compose.yml (equivalente a docker compose ps).', inputSchema: composeStatusSchema },
+  runComposeStatus
+);
+
 // --- 4. Git & Azure DevOps ---
 server.registerTool(
   'git_list_projects',
@@ -930,12 +1004,12 @@ server.registerTool(
   'git_build_pr_url',
   {
     title: 'Montar URL de Pull Request',
-    description: 'Monta a URL de criação de PR no Azure DevOps para o repositório e branch de destino.',
+    description: 'Monta a URL de criação de PR/MR no provedor detectado do repositório (Azure DevOps, GitHub ou GitLab) para o branch de destino.',
     inputSchema: { projectPath: z.string(), targetBranch: z.string().optional() }
   },
   async ({ projectPath, targetBranch }) => {
     if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
-    return ok({ url: await gitAzureService.buildAzurePrUrl(projectPath, targetBranch) });
+    return ok({ url: await gitAzureService.buildPrUrl(projectPath, targetBranch) });
   }
 );
 

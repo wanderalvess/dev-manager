@@ -19,6 +19,7 @@ import type {
   SystemAppInfo,
   DocSearchResult,
   DocsIndexStatus,
+  ConfluenceSourceConfig,
   DocsIndexProgress,
   DocSyncProgress,
   DocSyncResult,
@@ -36,12 +37,15 @@ import type {
   UpdateBundleVersionRequest,
   TableColumnInfo,
   DockerContainerStats,
+  ComposeServiceStatus,
   LogWatchStatus,
   LogChunkEvent,
+  UpdateStatus,
   BackupConfig,
   BackupResult,
   BackupFileInfo,
-  BackupHistoryEntry
+  BackupHistoryEntry,
+  BackupWebhookConfig
 } from '../shared/types';
 
 const electronAPI = {
@@ -115,6 +119,9 @@ const electronAPI = {
     ipcRenderer.on('karaf:stdout', subscription);
     return () => ipcRenderer.removeListener('karaf:stdout', subscription);
   },
+  getKarafPersistedLogs: (maxChars?: number): Promise<{ output: string }> =>
+    ipcRenderer.invoke('karaf:get-persisted-logs', maxChars),
+  clearKarafPersistedLogs: (): Promise<{ success: boolean }> => ipcRenderer.invoke('karaf:clear-persisted-logs'),
   deployKaraf: (request: KarafDeployRequest): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('karaf:deploy', request),
   buildAndDeployKaraf: (
@@ -204,6 +211,8 @@ const electronAPI = {
   searchDocs: (query: string, options?: { sourceLabel?: string; topK?: number }): Promise<DocSearchResult[]> =>
     ipcRenderer.invoke('docs:search', query, options),
   getDocsIndexStatus: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:get-status'),
+  testConfluenceConnection: (config: ConfluenceSourceConfig): Promise<{ success: boolean; message: string }> =>
+    ipcRenderer.invoke('docs:test-confluence-connection', config),
   openDocFile: (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> =>
     ipcRenderer.invoke('docs:open-file', filePath, mode),
   readDocContent: (filePath: string): Promise<string | null> =>
@@ -255,6 +264,10 @@ const electronAPI = {
     ipcRenderer.invoke('db:restore-backup', config, filePath),
   listDbBackupHistory: (connectionId?: string): Promise<BackupHistoryEntry[]> =>
     ipcRenderer.invoke('db:list-backup-history', connectionId),
+  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:run-restore-drill', scratchConnection, filePath),
+  testBackupWebhook: (webhook: BackupWebhookConfig): Promise<{ success: boolean; message: string }> =>
+    ipcRenderer.invoke('backup:test-webhook', webhook),
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
     const subscription = (_: any, data: { connectionName: string; result: BackupResult }) => callback(data);
     ipcRenderer.on('backup:schedule-result', subscription);
@@ -274,6 +287,23 @@ const electronAPI = {
     ipcRenderer.invoke('docker:get-stats'),
   openDockerContainerTerminal: (containerId: string, shell?: string): Promise<boolean> =>
     ipcRenderer.invoke('docker:open-terminal', containerId, shell),
+  dockerComposeUp: (
+    composeFilePath: string,
+    options?: { profile?: string; detach?: boolean }
+  ): Promise<{ code: number; stdout: string; stderr: string }> =>
+    ipcRenderer.invoke('docker:compose-up', composeFilePath, options),
+  dockerComposeDown: (
+    composeFilePath: string,
+    options?: { profile?: string }
+  ): Promise<{ code: number; stdout: string; stderr: string }> =>
+    ipcRenderer.invoke('docker:compose-down', composeFilePath, options),
+  dockerComposeStatus: (composeFilePath: string, profile?: string): Promise<ComposeServiceStatus[]> =>
+    ipcRenderer.invoke('docker:compose-status', composeFilePath, profile),
+  onDockerComposeLogChunk: (callback: (chunk: string) => void) => {
+    const subscription = (_: any, chunk: string) => callback(chunk);
+    ipcRenderer.on('docker:compose-log-chunk', subscription);
+    return () => ipcRenderer.removeListener('docker:compose-log-chunk', subscription);
+  },
 
   // Métodos genéricos de containers
   getContainerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('container:get-status'),
@@ -315,6 +345,16 @@ const electronAPI = {
     const subscription = (_: any, event: LogChunkEvent) => callback(event);
     ipcRenderer.on('logs:chunk', subscription);
     return () => ipcRenderer.removeListener('logs:chunk', subscription);
+  },
+
+  // Auto-update (electron-updater / GitHub Releases)
+  checkForUpdate: (): Promise<void> => ipcRenderer.invoke('update:check'),
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke('update:download'),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke('update:install'),
+  onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
+    const subscription = (_: any, status: UpdateStatus) => callback(status);
+    ipcRenderer.on('update:status', subscription);
+    return () => ipcRenderer.removeListener('update:status', subscription);
   }
 };
 

@@ -31,7 +31,9 @@ import {
   Download,
   Upload,
   AlertTriangle,
-  HelpCircle
+  HelpCircle,
+  History,
+  X
 } from 'lucide-react';
 import {
   ServiceStatus,
@@ -291,6 +293,29 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       if (unsubStep) unsubStep();
     };
   }, [refreshAllStatus, checkKarafRunning]);
+
+  // Histórico persistido do console Karaf embedded (sobrevive a reinícios, diferente do console ao vivo acima)
+  const [isKarafHistoryOpen, setIsKarafHistoryOpen] = useState<boolean>(false);
+  const [karafHistoryOutput, setKarafHistoryOutput] = useState<string>('');
+  const [isLoadingKarafHistory, setIsLoadingKarafHistory] = useState<boolean>(false);
+
+  const handleOpenKarafHistory = async () => {
+    setIsKarafHistoryOpen(true);
+    if (!window.electronAPI?.getKarafPersistedLogs) return;
+    setIsLoadingKarafHistory(true);
+    try {
+      const res = await window.electronAPI.getKarafPersistedLogs();
+      setKarafHistoryOutput(res?.output || '');
+    } finally {
+      setIsLoadingKarafHistory(false);
+    }
+  };
+
+  const handleClearKarafHistory = async () => {
+    if (!window.electronAPI?.clearKarafPersistedLogs) return;
+    await window.electronAPI.clearKarafPersistedLogs();
+    setKarafHistoryOutput('');
+  };
 
   // Persistência Centralizada de Perfis (Sem risco de closure defasada / sobreposição)
   const persistProfiles = useCallback(
@@ -1549,7 +1574,14 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         </div>
 
         {/* Coluna Direita: Console / Terminal Integrado */}
-        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col">
+        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col relative">
+          <button
+            onClick={handleOpenKarafHistory}
+            title="Ver histórico persistido do Karaf embedded (sobrevive a reinícios)"
+            className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 bg-card/90 hover:bg-muted border border-border rounded-lg text-[10px] font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
+          >
+            <History className="w-3 h-3" /> Histórico
+          </button>
           <TerminalViewer
             logs={logs}
             onClear={() => setLogs([])}
@@ -1560,6 +1592,47 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           />
         </div>
       </div>
+
+      {/* Modal de Histórico Persistido do Karaf Embedded */}
+      {isKarafHistoryOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-2">
+                <History className="w-4 h-4 text-sky-400" />
+                <h3 className="text-sm font-bold text-foreground">Histórico do Karaf Embedded</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleClearKarafHistory}
+                  className="px-2.5 py-1 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg text-[11px] font-bold transition"
+                >
+                  Limpar
+                </button>
+                <button
+                  onClick={() => setIsKarafHistoryOpen(false)}
+                  className="text-muted-foreground hover:text-foreground p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              {isLoadingKarafHistory ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground text-xs gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" /> Carregando histórico...
+                </div>
+              ) : karafHistoryOutput ? (
+                <pre className="text-[11px] font-mono whitespace-pre-wrap text-foreground">{karafHistoryOutput}</pre>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-8">
+                  Nenhum log persistido ainda. Inicie o console Karaf embedded para começar a acumular histórico.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Criação / Edição de Perfil de Automação */}
       <ProfileEditorModal

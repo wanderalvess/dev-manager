@@ -8,6 +8,7 @@ import { GitAzureService } from '../services/GitAzureService';
 import { RoutinesService } from '../services/RoutinesService';
 import { ConfigService } from '../services/ConfigService';
 import { DocsIndexService, DocSyncService } from '../services/DocsIndexService';
+import { ConfluenceSource } from '../services/docSources/ConfluenceSource';
 import { DatabaseService } from '../services/DatabaseService';
 import { BackupService } from '../services/BackupService';
 import { BackupSchedulerService } from '../services/BackupSchedulerService';
@@ -16,6 +17,8 @@ import { DockerService } from '../services/DockerService';
 import { NetworkService } from '../services/NetworkService';
 import { DeployService } from '../services/DeployService';
 import { LogWatcherService } from '../services/LogWatcherService';
+import { KarafLogPersistenceService } from '../services/KarafLogPersistenceService';
+import { AutoUpdateService } from '../services/AutoUpdateService';
 import {
   AppSettings,
   KarafDeployRequest,
@@ -29,6 +32,8 @@ import {
   DocsIndexProgress,
   DatabaseConnectionConfig,
   BackupConfig,
+  BackupWebhookConfig,
+  ConfluenceSourceConfig,
   DeployProfile,
   InstallBundleRequest,
   ReinstallBundleRequest,
@@ -52,7 +57,9 @@ export function registerIpcHandlers(
   dockerService: DockerService,
   networkService: NetworkService,
   deployService: DeployService,
-  logWatcherService: LogWatcherService = new LogWatcherService()
+  logWatcherService: LogWatcherService = new LogWatcherService(),
+  karafLogPersistenceService: KarafLogPersistenceService = new KarafLogPersistenceService(),
+  autoUpdateService?: AutoUpdateService
 ) {
   // --- Diálogos Nativos do Sistema & Verificação de Caminhos ---
   ipcMain.handle('dialog:select-directory', async (_, defaultPath?: string) => {
@@ -171,6 +178,7 @@ export function registerIpcHandlers(
         mainWindow.webContents.send('env:log-event', log);
       },
       (chunk) => {
+        karafLogPersistenceService.append(chunk);
         mainWindow.webContents.send('karaf:stdout', chunk);
       }
     );
@@ -227,8 +235,18 @@ export function registerIpcHandlers(
   // --- Karaf Deployer & Console Embutido ---
   ipcMain.handle('karaf:start-embedded', async () => {
     return karafService.startEmbeddedKarafDebug((chunk) => {
+      karafLogPersistenceService.append(chunk);
       mainWindow.webContents.send('karaf:stdout', chunk);
     });
+  });
+
+  ipcMain.handle('karaf:get-persisted-logs', async (_, maxChars?: number) => {
+    return { output: karafLogPersistenceService.read(maxChars) };
+  });
+
+  ipcMain.handle('karaf:clear-persisted-logs', async () => {
+    karafLogPersistenceService.clear();
+    return { success: true };
   });
 
   ipcMain.handle('karaf:send-input', async (_, input: string) => {
@@ -352,7 +370,7 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('git:build-pr-url', async (_, projectPath: string, targetBranch?: string) => {
-    return await gitAzureService.buildAzurePrUrl(projectPath, targetBranch);
+    return await gitAzureService.buildPrUrl(projectPath, targetBranch);
   });
 
   ipcMain.handle('git:exec-command', async (_, projectPath: string, command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop') => {
@@ -421,6 +439,15 @@ export function registerIpcHandlers(
 
   ipcMain.handle('docs:get-status', async () => {
     return docsIndexService.getStatus();
+  });
+
+  ipcMain.handle('docs:test-confluence-connection', async (_, config: ConfluenceSourceConfig) => {
+    try {
+      const entries = await new ConfluenceSource(config).listEntries();
+      return { success: true, message: `Conectado com sucesso: ${entries.length} página(s) encontrada(s).` };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Falha ao conectar no Confluence.' };
+    }
   });
 
   const docSyncService = new DocSyncService(configService, docsIndexService);
@@ -547,6 +574,14 @@ export function registerIpcHandlers(
     return backupSchedulerService.getHistory(connectionId);
   });
 
+  ipcMain.handle('db:run-restore-drill', async (_, scratchConnection: DatabaseConnectionConfig, filePath: string) => {
+    return await backupSchedulerService.runRestoreDrill(scratchConnection, filePath);
+  });
+
+  ipcMain.handle('backup:test-webhook', async (_, webhook: BackupWebhookConfig) => {
+    return await backupSchedulerService.testWebhook(webhook);
+  });
+
   // --- Gerenciador de Containers (Docker / Podman) ---
   ipcMain.handle('docker:get-status', async () => {
     return await dockerService.checkDockerStatus();
@@ -611,6 +646,41 @@ export function registerIpcHandlers(
     return await dockerService.openContainerTerminal(containerId, shellName);
   });
 
+  ipcMain.handle(
+    'docker:compose-up',
+    async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean }) => {
+      return await dockerService.composeUp(composeFilePath, options, (chunk) => {
+        mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+      });
+    }
+  );
+  ipcMain.handle(
+    'container:compose-up',
+    async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean }) => {
+      return await dockerService.composeUp(composeFilePath, options, (chunk) => {
+        mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+      });
+    }
+  );
+
+  ipcMain.handle('docker:compose-down', async (_, composeFilePath: string, options?: { profile?: string }) => {
+    return await dockerService.composeDown(composeFilePath, options, (chunk) => {
+      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+    });
+  });
+  ipcMain.handle('container:compose-down', async (_, composeFilePath: string, options?: { profile?: string }) => {
+    return await dockerService.composeDown(composeFilePath, options, (chunk) => {
+      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+    });
+  });
+
+  ipcMain.handle('docker:compose-status', async (_, composeFilePath: string, profile?: string) => {
+    return await dockerService.composeStatus(composeFilePath, profile);
+  });
+  ipcMain.handle('container:compose-status', async (_, composeFilePath: string, profile?: string) => {
+    return await dockerService.composeStatus(composeFilePath, profile);
+  });
+
   // --- Rede & Detecção de IPs (Local e WSL) ---
   ipcMain.handle('network:get-ips', async () => {
     return await networkService.getNetworkIps();
@@ -650,5 +720,18 @@ export function registerIpcHandlers(
 
   ipcMain.handle('logs:clear-file', async (_, filePath: string) => {
     return await logWatcherService.clearLogFile(filePath);
+  });
+
+  // --- Auto-update (electron-updater / GitHub Releases) ---
+  ipcMain.handle('update:check', async () => {
+    autoUpdateService?.checkForUpdates();
+  });
+
+  ipcMain.handle('update:download', async () => {
+    autoUpdateService?.downloadUpdate();
+  });
+
+  ipcMain.handle('update:install', async () => {
+    autoUpdateService?.quitAndInstall();
   });
 }

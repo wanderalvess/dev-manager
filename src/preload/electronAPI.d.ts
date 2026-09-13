@@ -19,6 +19,7 @@ import type {
   SystemAppInfo,
   DocSearchResult,
   DocsIndexStatus,
+  ConfluenceSourceConfig,
   DocsIndexProgress,
   DocSyncProgress,
   DocSyncResult,
@@ -42,12 +43,15 @@ import type {
   DeployProfile,
   TableColumnInfo,
   DockerContainerStats,
+  ComposeServiceStatus,
   LogWatchStatus,
   LogChunkEvent,
+  UpdateStatus,
   BackupConfig,
   BackupResult,
   BackupFileInfo,
-  BackupHistoryEntry
+  BackupHistoryEntry,
+  BackupWebhookConfig
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -91,6 +95,8 @@ export interface ElectronAPI {
   stopEmbeddedKaraf: () => Promise<boolean>;
   isEmbeddedKarafRunning: () => Promise<boolean>;
   onKarafStdout: (callback: (chunk: string) => void) => () => void;
+  getKarafPersistedLogs: (maxChars?: number) => Promise<{ output: string }>;
+  clearKarafPersistedLogs: () => Promise<{ success: boolean }>;
   deployKaraf: (request: KarafDeployRequest) => Promise<{ success: boolean; error?: string }>;
   buildAndDeployKaraf: (
     request: KarafDeployRequest,
@@ -168,6 +174,7 @@ export interface ElectronAPI {
   reindexDocs: () => Promise<DocsIndexStatus>;
   searchDocs: (query: string, options?: { sourceLabel?: string; topK?: number }) => Promise<DocSearchResult[]>;
   getDocsIndexStatus: () => Promise<DocsIndexStatus>;
+  testConfluenceConnection: (config: ConfluenceSourceConfig) => Promise<{ success: boolean; message: string }>;
   openDocFile: (filePath: string, mode?: 'editor' | 'folder') => Promise<boolean>;
   readDocContent: (filePath: string) => Promise<string | null>;
   onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => () => void;
@@ -196,6 +203,8 @@ export interface ElectronAPI {
   saveDbBackupConfig: (config: BackupConfig) => Promise<{ success: boolean; message: string }>;
   restoreDbBackup: (config: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
   listDbBackupHistory: (connectionId?: string) => Promise<BackupHistoryEntry[]>;
+  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
+  testBackupWebhook: (webhook: BackupWebhookConfig) => Promise<{ success: boolean; message: string }>;
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => () => void;
 
   // Gerenciador de Containers (Docker / Podman)
@@ -208,6 +217,16 @@ export interface ElectronAPI {
   removeDockerContainer: (containerId: string) => Promise<boolean>;
   getDockerContainerStats: () => Promise<DockerContainerStats[]>;
   openDockerContainerTerminal: (containerId: string, shell?: string) => Promise<boolean>;
+  dockerComposeUp: (
+    composeFilePath: string,
+    options?: { profile?: string; detach?: boolean }
+  ) => Promise<{ code: number; stdout: string; stderr: string }>;
+  dockerComposeDown: (
+    composeFilePath: string,
+    options?: { profile?: string }
+  ) => Promise<{ code: number; stdout: string; stderr: string }>;
+  dockerComposeStatus: (composeFilePath: string, profile?: string) => Promise<ComposeServiceStatus[]>;
+  onDockerComposeLogChunk: (callback: (chunk: string) => void) => () => void;
 
   // Métodos genéricos de containers
   getContainerStatus?: () => Promise<DockerDaemonStatus>;
@@ -238,6 +257,12 @@ export interface ElectronAPI {
   checkLogFile: (filePath: string, sourceId?: string) => Promise<LogWatchStatus>;
   clearLogFile: (filePath: string) => Promise<boolean>;
   onLogChunk: (callback: (event: LogChunkEvent) => void) => () => void;
+
+  // Auto-update (electron-updater / GitHub Releases) — só existe no app desktop, ausente no modo navegador/servidor
+  checkForUpdate?: () => Promise<void>;
+  downloadUpdate?: () => Promise<void>;
+  installUpdate?: () => Promise<void>;
+  onUpdateStatus?: (callback: (status: UpdateStatus) => void) => () => void;
 }
 
 declare global {

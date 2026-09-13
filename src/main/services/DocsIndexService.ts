@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import http from 'http';
-import https from 'https';
 import {
   DocChunk,
   DocFileInfo,
@@ -17,6 +15,8 @@ import { ConfigService, getAppDataDir } from './ConfigService';
 import { GitAzureService } from './GitAzureService';
 import { DocSource } from './docSources/DocSource';
 import { LocalFolderSource } from './docSources/LocalFolderSource';
+import { ConfluenceSource } from './docSources/ConfluenceSource';
+import { httpRequest } from '../utils/httpRequest';
 
 const CHUNK_MAX_CHARS = 800;
 const CHUNK_OVERLAP_CHARS = 100;
@@ -313,6 +313,11 @@ export class DocsIndexService {
     for (const folder of settings.docFolders || []) {
       if (!folder.path) continue;
       sources.push(new LocalFolderSource(folder.path, folder.label));
+    }
+
+    for (const confluenceConfig of settings.confluenceSources || []) {
+      if (!confluenceConfig.enabled || !confluenceConfig.baseUrl || !confluenceConfig.authToken) continue;
+      sources.push(new ConfluenceSource(confluenceConfig));
     }
 
     return sources;
@@ -781,7 +786,7 @@ export class DocSyncService {
         }
 
         const method = target.method || 'PUT';
-        const response = await this.httpRequest(target.endpointUrl, {
+        const response = await httpRequest(target.endpointUrl, {
           method,
           headers,
           body: JSON.stringify(payload)
@@ -884,55 +889,5 @@ export class DocSyncService {
     };
   }
 
-  /**
-   * Executa requisição HTTP/HTTPS com suporte a certificados corporativos autoassinados (Zscaler, proxy TOTVS, etc).
-   */
-  private async httpRequest(
-    urlStr: string,
-    options: { method: string; headers: Record<string, string>; body: string }
-  ): Promise<{ ok: boolean; status: number; statusText: string; text: () => Promise<string> }> {
-    return new Promise((resolve, reject) => {
-      try {
-        const urlObj = new URL(urlStr);
-        const isHttps = urlObj.protocol === 'https:';
-        const client = isHttps ? https : http;
-
-        const req = client.request(
-          urlStr,
-          {
-            method: options.method,
-            headers: options.headers,
-            // Em redes corporativas com proxy SSL inspect, evita erro "self signed certificate in certificate chain"
-            rejectUnauthorized: false
-          },
-          (res) => {
-            const chunks: Buffer[] = [];
-            res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
-            res.on('end', () => {
-              const bodyText = Buffer.concat(chunks).toString('utf-8');
-              const statusCode = res.statusCode || 200;
-              resolve({
-                ok: statusCode >= 200 && statusCode < 300,
-                status: statusCode,
-                statusText: res.statusMessage || `${statusCode}`,
-                text: async () => bodyText
-              });
-            });
-          }
-        );
-
-        req.on('error', (err) => {
-          reject(err);
-        });
-
-        if (options.body) {
-          req.write(options.body);
-        }
-        req.end();
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
 }
 

@@ -182,9 +182,23 @@ export interface GitProjectInfo {
   azureOrg?: string;
   azureProject?: string;
   azureRepo?: string;
+  /** Provedor Git detectado a partir da URL do remote "origin". Ausente = provedor não reconhecido. */
+  provider?: 'azure' | 'github' | 'gitlab';
+  /** Dono/organização do repositório (GitHub/GitLab). Para Azure DevOps use azureOrg/azureProject/azureRepo. */
+  owner?: string;
+  repo?: string;
   uncommittedCount?: number;
   pomInfo?: PomInfo;
 }
+
+/** Status do processo de atualização automática do app (electron-updater / GitHub Releases). */
+export type UpdateStatus =
+  | { status: 'checking' }
+  | { status: 'available'; version: string }
+  | { status: 'not-available' }
+  | { status: 'downloading'; percent: number }
+  | { status: 'downloaded'; version: string }
+  | { status: 'error'; message: string };
 
 export interface RoutineItem {
   id: string;
@@ -257,6 +271,8 @@ export interface AppSettings {
   backupConfigs?: BackupConfig[];
   /** Histórico das últimas execuções de backup/restore (mais recente primeiro), limitado a 200 entradas */
   backupHistory?: BackupHistoryEntry[];
+  /** Webhooks notificados a cada backup/restore/restore-drill (sucesso e/ou falha, conforme configurado) */
+  backupWebhooks?: BackupWebhookConfig[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
   databaseConnections?: DatabaseConnectionConfig[];
   /** Pastas locais dedicadas de documentação indexadas pelo RAG */
@@ -265,6 +281,8 @@ export interface AppSettings {
   indexProjectsDocs?: boolean;
   /** Destinos de API configurados para sincronização agnóstica de documentações vetorizadas */
   docSyncTargets?: DocSyncTargetConfig[];
+  /** Espaços do Confluence indexados como fonte adicional de documentação do RAG */
+  confluenceSources?: ConfluenceSourceConfig[];
   /** Arquivos de log configurados para acompanhamento em tempo real (Tail) */
   realtimeLogSources?: RealtimeLogSource[];
   activeLogSourceId?: string;
@@ -284,6 +302,32 @@ export interface DocSyncTargetConfig {
   /** Modo de sincronização: 'all' (Artigos + Chunks), 'articles' (Apenas Documentos KB), 'chunks' (Apenas Chunks Vetoriais) */
   syncMode?: 'all' | 'articles' | 'chunks';
   lastSyncedAt?: string;
+}
+
+/** Webhook genérico notificado a cada backup/restore/restore-drill (mesmo padrão de endpoint+auth header do DocSyncTargetConfig). */
+export interface BackupWebhookConfig {
+  id: string;
+  name: string;
+  endpointUrl: string;
+  method?: 'POST' | 'PUT';
+  authHeader?: string;
+  authValue?: string;
+  enabled: boolean;
+  /** Quais resultados disparam o webhook. Ausente = dispara em sucesso e falha. */
+  events?: ('success' | 'failure')[];
+}
+
+/** Payload enviado ao webhook de backup a cada execução (backup, restore ou restore-drill). */
+export interface BackupWebhookPayload {
+  connectionName: string;
+  action: 'backup' | 'restore' | 'restore-drill';
+  trigger: 'manual' | 'scheduled';
+  success: boolean;
+  message: string;
+  filePath?: string;
+  sizeBytes?: number;
+  durationMs?: number;
+  startedAt: string;
 }
 
 export interface DocSyncProgress {
@@ -307,6 +351,20 @@ export interface DocSyncResult {
   totalArticlesSent?: number;
   totalBatches: number;
   error?: string;
+}
+
+/** Espaço do Confluence (Cloud ou Server/Data Center) indexado como fonte de documentação do RAG. */
+export interface ConfluenceSourceConfig {
+  id: string;
+  name: string;
+  /** URL base do Confluence, sem sufixo /wiki (ex: https://empresa.atlassian.net ou https://confluence.empresa.com). */
+  baseUrl: string;
+  spaceKey?: string;
+  /** Token de API (Cloud) ou Personal Access Token (Server/Data Center). Texto plano nas settings, mesmo padrão de authValue em DocSyncTargetConfig — repo não tem criptografia de credenciais. */
+  authToken: string;
+  /** E-mail associado ao token — presente = Confluence Cloud (Basic auth email:token). Ausente = Server/Data Center (Bearer token). */
+  authEmail?: string;
+  enabled: boolean;
 }
 
 export interface DocFolderConfig {
@@ -670,7 +728,7 @@ export interface BackupHistoryEntry {
   id: string;
   connectionId: string;
   connectionName: string;
-  action: 'backup' | 'restore';
+  action: 'backup' | 'restore' | 'restore-drill';
   trigger: 'manual' | 'scheduled';
   success: boolean;
   message: string;
@@ -678,6 +736,8 @@ export interface BackupHistoryEntry {
   sizeBytes?: number;
   durationMs?: number;
   startedAt: string;
+  /** SHA-256 do arquivo de backup, calculado quando disponível (backup e restore-drill). */
+  checksumSha256?: string;
 }
 
 /** Resultado de uma execução de backup (manual). */
@@ -687,6 +747,8 @@ export interface BackupResult {
   filePath?: string;
   sizeBytes?: number;
   durationMs?: number;
+  /** SHA-256 do arquivo gerado, calculado após o dump (usado por histórico e restore-drill). */
+  checksumSha256?: string;
 }
 
 /** Metadados de um arquivo de backup já existente na pasta de destino. */
@@ -760,6 +822,13 @@ export interface DockerContainerStats {
   mem: string;
   memPerc: string;
   netIO: string;
+}
+
+export interface ComposeServiceStatus {
+  name: string;
+  state: string;
+  health?: string;
+  ports?: string[];
 }
 
 // Aliases semânticos para compatibilidade genérica de containers

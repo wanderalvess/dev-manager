@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
+import crypto from 'crypto';
 import { execFile, spawn } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
@@ -46,19 +47,57 @@ export class BackupService {
     }
 
     try {
+      let result: BackupResult;
       switch (config.type) {
         case 'postgres':
-          return await this.backupPostgres(config, destinationFolder, options?.pgDumpPath, options?.compress);
+          result = await this.backupPostgres(config, destinationFolder, options?.pgDumpPath, options?.compress);
+          break;
         case 'oracle':
-          return await this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory, options?.compress);
+          result = await this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory, options?.compress);
+          break;
         case 'mysql':
-          return await this.backupMysql(config, destinationFolder, options?.mysqldumpPath, options?.compress);
+          result = await this.backupMysql(config, destinationFolder, options?.mysqldumpPath, options?.compress);
+          break;
         default:
           return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para backup.` };
       }
+
+      if (result.success && result.filePath) {
+        result.checksumSha256 = await this.computeChecksum(result.filePath).catch(() => undefined);
+      }
+      return result;
     } finally {
       this.releaseLock(config.id);
     }
+  }
+
+  /**
+   * Executa uma restauração de teste ("drill") de um backup contra uma conexão separada
+   * ("scratch") escolhida pelo usuário, para validar que o arquivo gerado é restaurável sem
+   * mexer no banco de origem. Reusa restoreBackup como está — cabe ao usuário garantir que a
+   * conexão informada é realmente descartável, o serviço não tenta provisionar nada sozinho.
+   */
+  public async runRestoreDrill(
+    scratchConfig: DatabaseConnectionConfig,
+    filePath: string,
+    options?: BackupOptions
+  ): Promise<BackupResult> {
+    const result = await this.restoreBackup(scratchConfig, filePath, options);
+    if (result.success) {
+      result.checksumSha256 = await this.computeChecksum(filePath).catch(() => undefined);
+    }
+    return result;
+  }
+
+  /** Calcula o SHA-256 de um arquivo via streaming, sem carregá-lo inteiro em memória. */
+  private computeChecksum(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const hash = crypto.createHash('sha256');
+      const stream = fs.createReadStream(filePath);
+      stream.on('error', reject);
+      stream.on('data', (chunk) => hash.update(chunk));
+      stream.on('end', () => resolve(hash.digest('hex')));
+    });
   }
 
   /**

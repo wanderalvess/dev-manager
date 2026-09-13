@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { spawn } from 'child_process';
-import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats } from '../../shared/types';
+import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats, ComposeServiceStatus } from '../../shared/types';
 import { execFileAsync, isValidIdentifier, isSafeDockerImageTag, isSafeLocalPath } from '../utils/security';
 import { runCapturedProcess } from '../utils/process';
 
@@ -413,6 +413,109 @@ export class DockerService {
     } catch (err) {
       console.error(`[DockerService] Falha ao abrir terminal para o container ${containerId}:`, err);
       return false;
+    }
+  }
+
+  /**
+   * Sobe os serviços definidos em um docker-compose.yml, com saída em streaming.
+   * `profile` corresponde a --profile (ex: "full-stack", "services", ver docker-compose.yml do repo).
+   */
+  public async composeUp(
+    composeFilePath: string,
+    options: { profile?: string; detach?: boolean } | undefined,
+    onChunk: (chunk: string) => void
+  ): Promise<{ code: number; stdout: string; stderr: string }> {
+    if (!isSafeLocalPath(composeFilePath) || !fs.existsSync(composeFilePath)) {
+      const err = `[ERRO] Arquivo docker-compose não encontrado: ${composeFilePath}\r\n`;
+      onChunk(err);
+      return { code: 1, stdout: '', stderr: err };
+    }
+
+    const engine = await this.getEngineCommand();
+    const args = ['compose', '-f', composeFilePath];
+    if (options?.profile && isValidIdentifier(options.profile)) {
+      args.push('--profile', options.profile);
+    }
+    args.push('up');
+    if (options?.detach !== false) args.push('-d');
+
+    onChunk(`> ${engine} ${args.join(' ')}\r\n\r\n`);
+    const result = await runCapturedProcess(engine, args, { windowsHide: true }, onChunk);
+    onChunk(
+      result.code === 0
+        ? `\r\n[SUCESSO] Serviços do compose iniciados via ${engine}!\r\n`
+        : `\r\n[ERRO] Falha ao subir serviços do compose via ${engine} (Código ${result.code}).\r\n`
+    );
+    return result;
+  }
+
+  /**
+   * Derruba os serviços definidos em um docker-compose.yml, com saída em streaming.
+   */
+  public async composeDown(
+    composeFilePath: string,
+    options: { profile?: string } | undefined,
+    onChunk: (chunk: string) => void
+  ): Promise<{ code: number; stdout: string; stderr: string }> {
+    if (!isSafeLocalPath(composeFilePath) || !fs.existsSync(composeFilePath)) {
+      const err = `[ERRO] Arquivo docker-compose não encontrado: ${composeFilePath}\r\n`;
+      onChunk(err);
+      return { code: 1, stdout: '', stderr: err };
+    }
+
+    const engine = await this.getEngineCommand();
+    const args = ['compose', '-f', composeFilePath];
+    if (options?.profile && isValidIdentifier(options.profile)) {
+      args.push('--profile', options.profile);
+    }
+    args.push('down');
+
+    onChunk(`> ${engine} ${args.join(' ')}\r\n\r\n`);
+    const result = await runCapturedProcess(engine, args, { windowsHide: true }, onChunk);
+    onChunk(
+      result.code === 0
+        ? `\r\n[SUCESSO] Serviços do compose derrubados via ${engine}!\r\n`
+        : `\r\n[ERRO] Falha ao derrubar serviços do compose via ${engine} (Código ${result.code}).\r\n`
+    );
+    return result;
+  }
+
+  /**
+   * Lista o status dos serviços de um docker-compose.yml (equivalente a `docker compose ps`).
+   */
+  public async composeStatus(composeFilePath: string, profile?: string): Promise<ComposeServiceStatus[]> {
+    if (!isSafeLocalPath(composeFilePath) || !fs.existsSync(composeFilePath)) return [];
+
+    try {
+      const engine = await this.getEngineCommand();
+      const args = ['compose', '-f', composeFilePath];
+      if (profile && isValidIdentifier(profile)) args.push('--profile', profile);
+      args.push('ps', '--format', 'json');
+
+      const { stdout } = await execFileAsync(engine, args, { timeout: 8000, windowsHide: true });
+      const lines = stdout.trim().split('\n').filter((l) => l.trim().length > 0);
+      const services: ComposeServiceStatus[] = [];
+
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line);
+          const publishers = Array.isArray(parsed.Publishers) ? parsed.Publishers : [];
+          services.push({
+            name: parsed.Service || parsed.Name || '',
+            state: parsed.State || parsed.Status || 'unknown',
+            health: parsed.Health || undefined,
+            ports: publishers.length > 0
+              ? publishers.map((p: any) => `${p.PublishedPort || ''}:${p.TargetPort || ''}`)
+              : undefined
+          });
+        } catch {
+          // Ignora linha com parse inválido
+        }
+      }
+
+      return services;
+    } catch {
+      return [];
     }
   }
 }

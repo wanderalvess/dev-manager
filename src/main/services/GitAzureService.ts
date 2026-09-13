@@ -91,26 +91,38 @@ export class GitAzureService {
         branches.unshift(currentBranch);
       }
 
-      // 3. Parser Azure DevOps
+      // 3. Parser Azure DevOps / GitHub / GitLab
       let isAzure = false;
       let azureOrg = '';
       let azureProject = '';
       let azureRepo = '';
+      let provider: GitProjectInfo['provider'];
+      let owner = '';
+      let repo = '';
 
       if (remoteUrl) {
         const httpsMatch = remoteUrl.match(/dev\.azure\.com\/([^/]+)\/([^/]+)\/_git\/([^/\s]+)/);
-        if (httpsMatch) {
+        const sshMatch = !httpsMatch ? remoteUrl.match(/ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)\/([^/\s]+)/) : null;
+        const azureMatch = httpsMatch || sshMatch;
+
+        if (azureMatch) {
           isAzure = true;
-          azureOrg = httpsMatch[1];
-          azureProject = httpsMatch[2];
-          azureRepo = httpsMatch[3].replace(/\.git$/, '');
+          provider = 'azure';
+          azureOrg = azureMatch[1];
+          azureProject = azureMatch[2];
+          azureRepo = azureMatch[3].replace(/\.git$/, '');
         } else {
-          const sshMatch = remoteUrl.match(/ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)\/([^/\s]+)/);
-          if (sshMatch) {
-            isAzure = true;
-            azureOrg = sshMatch[1];
-            azureProject = sshMatch[2];
-            azureRepo = sshMatch[3].replace(/\.git$/, '');
+          const githubMatch = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/);
+          const gitlabMatch = !githubMatch ? remoteUrl.match(/gitlab\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/) : null;
+
+          if (githubMatch) {
+            provider = 'github';
+            owner = githubMatch[1];
+            repo = githubMatch[2];
+          } else if (gitlabMatch) {
+            provider = 'gitlab';
+            owner = gitlabMatch[1];
+            repo = gitlabMatch[2];
           }
         }
       }
@@ -143,6 +155,9 @@ export class GitAzureService {
         azureOrg,
         azureProject,
         azureRepo,
+        provider,
+        owner,
+        repo,
         uncommittedCount,
         pomInfo
       };
@@ -164,6 +179,41 @@ export class GitAzureService {
     const targetEncoded = encodeURIComponent(target);
 
     return `https://dev.azure.com/${info.azureOrg}/${info.azureProject}/_git/${info.azureRepo}/pullrequestcreate?sourceRef=${source}&targetRef=${targetEncoded}`;
+  }
+
+  private buildGitHubPrUrl(info: GitProjectInfo, targetBranch: string): string {
+    const source = encodeURIComponent(info.currentBranch);
+    const target = encodeURIComponent(targetBranch);
+    return `https://github.com/${info.owner}/${info.repo}/compare/${target}...${source}?expand=1`;
+  }
+
+  private buildGitLabPrUrl(info: GitProjectInfo, targetBranch: string): string {
+    const source = encodeURIComponent(info.currentBranch);
+    const target = encodeURIComponent(targetBranch);
+    return `https://gitlab.com/${info.owner}/${info.repo}/-/merge_requests/new?merge_request%5Bsource_branch%5D=${source}&merge_request%5Btarget_branch%5D=${target}`;
+  }
+
+  /**
+   * Monta a URL de criação de PR/MR no provedor detectado do remote "origin" (Azure DevOps,
+   * GitHub ou GitLab). Retorna null se o remote não corresponder a nenhum provedor suportado.
+   */
+  public async buildPrUrl(projectPath: string, targetBranch?: string): Promise<string | null> {
+    const info = await this.getProjectInfo(projectPath);
+    if (!info || !info.provider) return null;
+
+    const settings = this.configService.getSettings();
+    const target = targetBranch || settings.targetPrBranch || 'develop';
+
+    switch (info.provider) {
+      case 'azure':
+        return this.buildAzurePrUrl(projectPath, target);
+      case 'github':
+        return info.owner && info.repo ? this.buildGitHubPrUrl(info, target) : null;
+      case 'gitlab':
+        return info.owner && info.repo ? this.buildGitLabPrUrl(info, target) : null;
+      default:
+        return null;
+    }
   }
 
   public async executeGitCommand(
