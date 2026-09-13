@@ -487,7 +487,11 @@ app.post('/api/docs/test-confluence-connection', async (req, res) => {
     const entries = await new ConfluenceSource(req.body).listEntries();
     res.json({ success: true, message: `Conectado com sucesso: ${entries.length} página(s) encontrada(s).` });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err?.message || 'Falha ao conectar no Confluence.' });
+    // 200 mesmo em falha: o corpo já carrega success:false + mensagem específica do Confluence.
+    // Um status de erro HTTP faria o apiFetch do renderer descartar esse corpo (só vê "res.ok"
+    // falso) e mostrar um genérico "HTTP 500" em vez da mensagem real — mesmo problema que
+    // /api/db/test tem hoje, não repetir aqui.
+    res.json({ success: false, message: err?.message || 'Falha ao conectar no Confluence.' });
   }
 });
 
@@ -658,7 +662,9 @@ app.post('/api/db/restore-drill', async (req, res) => {
     const result = await backupSchedulerService.runRestoreDrill(scratchConnection, filePath);
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message || 'Erro ao testar restauração' });
+    // 200 com success:false: status de erro faria o apiFetch do renderer descartar o corpo
+    // e mostrar um "HTTP 500" genérico em vez da mensagem real.
+    res.json({ success: false, message: err.message || 'Erro ao testar restauração' });
   }
 });
 
@@ -668,7 +674,7 @@ app.post('/api/backup/test-webhook', async (req, res) => {
     const result = await backupSchedulerService.testWebhook(webhook);
     res.json(result);
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message || 'Falha ao testar webhook' });
+    res.json({ success: false, message: err.message || 'Falha ao testar webhook' });
   }
 });
 

@@ -246,13 +246,13 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                Controle de Versão (Git & Azure DevOps)
+                Controle de Versão (Git)
                 <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   {projects.length} {projects.length === 1 ? 'Repositório Ativo' : 'Repositórios Ativos'}
                 </span>
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Gestão de branches locais, sincronização remota e criação direta de Pull Requests no Azure DevOps.
+                Gestão de branches locais, sincronização remota e criação direta de Pull Requests (Azure DevOps, GitHub ou GitLab).
               </p>
             </div>
           </div>
@@ -485,7 +485,11 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-[13px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                       <GitMerge className="w-4 h-4" />
-                      Criar Pull Request no Azure DevOps
+                      {currentProject.provider === 'github'
+                        ? 'Criar Pull Request no GitHub'
+                        : currentProject.provider === 'gitlab'
+                        ? 'Criar Merge Request no GitLab'
+                        : 'Criar Pull Request no Azure DevOps'}
                     </span>
 
                     <div className="flex items-center space-x-2 text-xs">
