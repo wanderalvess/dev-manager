@@ -11,12 +11,19 @@ import {
   DocSyncResult,
   DocSyncTargetConfig
 } from '../../shared/types';
+import chokidar, { FSWatcher } from 'chokidar';
 import { ConfigService, getAppDataDir } from './ConfigService';
 import { GitAzureService } from './GitAzureService';
 import { DocSource } from './docSources/DocSource';
-import { LocalFolderSource } from './docSources/LocalFolderSource';
+import { LocalFolderSource, DOC_EXTENSIONS, IGNORED_DIR_NAMES } from './docSources/LocalFolderSource';
 import { ConfluenceSource } from './docSources/ConfluenceSource';
+import { JiraSource } from './docSources/JiraSource';
 import { httpRequest } from '../utils/httpRequest';
+
+// Tempo de espera após o último evento de arquivo antes de disparar reindex — evita
+// reindexar uma vez por arquivo quando várias mudanças chegam em rajada (ex: git checkout,
+// save-all da IDE). reindex() em si já é barato pra arquivos inalterados (cache por mtimeMs).
+const WATCH_DEBOUNCE_MS = 2000;
 
 const CHUNK_MAX_CHARS = 800;
 const CHUNK_OVERLAP_CHARS = 100;
@@ -190,6 +197,10 @@ export class DocsIndexService {
   private indexPath: string;
   private modelsDir: string;
   private embedderPromise: Promise<any> | null = null;
+  private watchers: FSWatcher[] = [];
+  private watchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Setado externamente (main/index.ts) pra notificar o usuário quando um reindex disparado pelo watcher terminar — mesmo padrão de BackupSchedulerService.onResult, já que este serviço não tem referência à BrowserWindow. */
+  public onWatchReindexComplete?: (status: DocsIndexStatus) => void;
 
   constructor(configService: ConfigService, gitAzureService: GitAzureService) {
     this.configService = configService;
@@ -197,6 +208,71 @@ export class DocsIndexService {
     const dataDir = getAppDataDir();
     this.indexPath = path.join(dataDir, 'docs-index.json');
     this.modelsDir = path.join(dataDir, 'models');
+  }
+
+  public isWatching(): boolean {
+    return this.watchers.length > 0;
+  }
+
+  /** Raízes locais observáveis (projetos git + pastas avulsas) — fontes remotas (Confluence/Jira) não têm filesystem pra observar. */
+  private async getWatchRoots(): Promise<string[]> {
+    const sources = await this.buildSources();
+    const roots = new Set<string>();
+    for (const source of sources) {
+      if (source instanceof LocalFolderSource) {
+        roots.add(source.getRootPath());
+      }
+    }
+    return Array.from(roots);
+  }
+
+  /**
+   * Liga o auto-reindex: observa as pastas locais configuradas (settings.autoReindexOnChange)
+   * e reindexa (debounced) quando algum arquivo de documentação muda. reindex() já é barato
+   * pra arquivos inalterados (cache por mtimeMs em performIndexUpdate), então observar e
+   * reindexar tudo de novo é seguro mesmo sem re-indexação cirúrgica por arquivo.
+   */
+  public async startWatching(): Promise<void> {
+    if (this.isWatching()) return;
+    const roots = await this.getWatchRoots();
+    if (roots.length === 0) return;
+
+    const ignoredDirGlobs = Array.from(IGNORED_DIR_NAMES).map((name) => `**/${name}/**`);
+
+    for (const root of roots) {
+      const watcher = chokidar.watch(root, {
+        ignoreInitial: true,
+        ignored: ignoredDirGlobs,
+        depth: 20
+      });
+      const handleChange = (filePath: string) => {
+        if (!DOC_EXTENSIONS.includes(path.extname(filePath).toLowerCase())) return;
+        this.scheduleDebouncedReindex();
+      };
+      watcher.on('add', handleChange).on('change', handleChange).on('unlink', handleChange);
+      this.watchers.push(watcher);
+    }
+  }
+
+  public stopWatching(): void {
+    for (const watcher of this.watchers) {
+      watcher.close().catch(() => {});
+    }
+    this.watchers = [];
+    if (this.watchDebounceTimer) {
+      clearTimeout(this.watchDebounceTimer);
+      this.watchDebounceTimer = null;
+    }
+  }
+
+  private scheduleDebouncedReindex(): void {
+    if (this.watchDebounceTimer) clearTimeout(this.watchDebounceTimer);
+    this.watchDebounceTimer = setTimeout(() => {
+      this.watchDebounceTimer = null;
+      this.reindex()
+        .then((status) => this.onWatchReindexComplete?.(status))
+        .catch((err) => console.error('[DocsIndexService] Falha no auto-reindex disparado pelo watcher:', err));
+    }, WATCH_DEBOUNCE_MS);
   }
 
   private loadIndex(): DocsIndexFile {
@@ -318,6 +394,11 @@ export class DocsIndexService {
     for (const confluenceConfig of settings.confluenceSources || []) {
       if (!confluenceConfig.enabled || !confluenceConfig.baseUrl || !confluenceConfig.authToken) continue;
       sources.push(new ConfluenceSource(confluenceConfig));
+    }
+
+    for (const jiraConfig of settings.jiraSources || []) {
+      if (!jiraConfig.enabled || !jiraConfig.baseUrl || !jiraConfig.authToken) continue;
+      sources.push(new JiraSource(jiraConfig));
     }
 
     return sources;

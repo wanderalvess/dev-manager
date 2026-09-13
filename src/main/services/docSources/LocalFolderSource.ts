@@ -6,8 +6,8 @@ import { extractPdfText, extractDocxText } from './textExtractors';
 
 const TEXT_EXTENSIONS = ['.md', '.mdx', '.txt'];
 const BINARY_EXTENSIONS = ['.pdf', '.docx'];
-const DOC_EXTENSIONS = [...TEXT_EXTENSIONS, ...BINARY_EXTENSIONS];
-const IGNORED_DIR_NAMES = new Set([
+export const DOC_EXTENSIONS = [...TEXT_EXTENSIONS, ...BINARY_EXTENSIONS];
+export const IGNORED_DIR_NAMES = new Set([
   'node_modules',
   '.git',
   'dist',
@@ -54,6 +54,10 @@ export class LocalFolderSource implements DocSource {
   constructor(private readonly rootPath: string, label?: string) {
     this.id = `local-folder:${rootPath}`;
     this.label = extractCleanFolderLabel(rootPath, label);
+  }
+
+  getRootPath(): string {
+    return this.rootPath;
   }
 
   async listEntries(): Promise<DocSourceEntry[]> {

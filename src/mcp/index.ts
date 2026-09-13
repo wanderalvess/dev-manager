@@ -505,7 +505,7 @@ server.registerTool(
   },
   async ({ request }) => {
     const { events, push } = collect();
-    const result = await karafService.deploy(request, push('chunk'));
+    const result = await karafService.deploy(request, push('chunk'), 'mcp');
     return ok({ result, events });
   }
 );
@@ -535,9 +535,18 @@ server.registerTool(
   async ({ request, projectPath, skipTests }) => {
     if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
     const { events, push } = collect();
-    const result = await karafService.buildAndDeployMaven(request, projectPath, skipTests !== false, push('chunk'));
+    const result = await karafService.buildAndDeployMaven(request, projectPath, skipTests !== false, push('chunk'), 'mcp');
     return ok({ result, events });
   }
+);
+
+server.registerTool(
+  'karaf_get_deploy_history',
+  {
+    title: 'Histórico de deploys Karaf',
+    description: 'Lista o histórico persistido de deploys/builds Karaf (mais recente primeiro, até 200 entradas).'
+  },
+  async () => ok({ history: karafService.getDeployHistory() })
 );
 
 server.registerTool(

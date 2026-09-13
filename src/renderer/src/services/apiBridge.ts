@@ -1,6 +1,7 @@
 import type {
   AppSettings,
   KarafDeployRequest,
+  KarafDeployHistoryEntry,
   EnvironmentLog,
   PortStatus,
   ServiceStatus,
@@ -20,6 +21,7 @@ import type {
   DocSearchResult,
   DocsIndexStatus,
   ConfluenceSourceConfig,
+  JiraSourceConfig,
   DocsIndexProgress,
   DocSyncProgress,
   DocSyncResult,
@@ -430,6 +432,20 @@ export function initApiBridge() {
       });
     },
 
+    getKarafDeployHistory: async (): Promise<KarafDeployHistoryEntry[]> => {
+      return apiFetch('/api/karaf/deploy-history');
+    },
+
+    onKarafDeployResult: (callback: (result: { success: boolean; error?: string }) => void) => {
+      return wsManager.subscribe('karaf:deploy-result', callback);
+    },
+    onKarafBuildResult: (callback: (result: { code: number; stdout: string; stderr: string }) => void) => {
+      return wsManager.subscribe('karaf:build-result', callback);
+    },
+    onDocsReindexComplete: (callback: (status: DocsIndexStatus) => void) => {
+      return wsManager.subscribe('docs:reindex-complete', callback);
+    },
+
     listKarafBundles: async (credentials?: { user?: string; pass?: string; port?: number }): Promise<KarafBundleInfo[]> => {
       return apiFetch('/api/karaf/bundles', {
         method: 'POST',
@@ -648,6 +664,13 @@ export function initApiBridge() {
 
     testConfluenceConnection: async (config: ConfluenceSourceConfig): Promise<{ success: boolean; message: string }> => {
       return apiFetch('/api/docs/test-confluence-connection', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+    },
+
+    testJiraConnection: async (config: JiraSourceConfig): Promise<{ success: boolean; message: string }> => {
+      return apiFetch('/api/docs/test-jira-connection', {
         method: 'POST',
         body: JSON.stringify(config)
       });

@@ -31,7 +31,8 @@ import {
   DocSyncTargetConfig,
   DocSyncProgress,
   DocSyncResult,
-  ConfluenceSourceConfig
+  ConfluenceSourceConfig,
+  JiraSourceConfig
 } from '../../../shared/types';
 import { MarkdownReader } from '../components/MarkdownReader';
 
@@ -58,6 +59,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
   const [progress, setProgress] = useState<DocsIndexProgress | null>(null);
   const [docFolders, setDocFolders] = useState<DocFolderConfig[]>([]);
   const [indexProjectsDocs, setIndexProjectsDocs] = useState<boolean>(false);
+  const [autoReindexOnChange, setAutoReindexOnChange] = useState<boolean>(false);
   const [isAddingFolder, setIsAddingFolder] = useState<boolean>(false);
   const [indexError, setIndexError] = useState<string | null>(null);
   const [showModelHelp, setShowModelHelp] = useState<boolean>(false);
@@ -84,6 +86,12 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
   const [isTestingConfluenceId, setIsTestingConfluenceId] = useState<string | null>(null);
   const [confluenceTestResults, setConfluenceTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
 
+  // Fontes Jira (input do RAG — issues viram "documentos", mesmo padrão do Confluence acima)
+  const [jiraSources, setJiraSources] = useState<JiraSourceConfig[]>([]);
+  const [editingJiraSource, setEditingJiraSource] = useState<Partial<JiraSourceConfig> | null>(null);
+  const [isTestingJiraId, setIsTestingJiraId] = useState<string | null>(null);
+  const [jiraTestResults, setJiraTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
+
   const loadStatus = async () => {
     if (window.electronAPI) {
       setStatus(await window.electronAPI.getDocsIndexStatus());
@@ -95,8 +103,10 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
       const settings = await window.electronAPI.getSettings();
       setDocFolders(settings.docFolders || []);
       setIndexProjectsDocs(Boolean(settings.indexProjectsDocs));
+      setAutoReindexOnChange(Boolean(settings.autoReindexOnChange));
       setSyncTargets(settings.docSyncTargets || []);
       setConfluenceSources(settings.confluenceSources || []);
+      setJiraSources(settings.jiraSources || []);
     }
   };
 
@@ -115,6 +125,13 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
     setIndexProjectsDocs(checked);
     if (window.electronAPI) {
       await window.electronAPI.saveSettings({ indexProjectsDocs: checked });
+    }
+  };
+
+  const handleToggleAutoReindex = async (checked: boolean) => {
+    setAutoReindexOnChange(checked);
+    if (window.electronAPI) {
+      await window.electronAPI.saveSettings({ autoReindexOnChange: checked });
     }
   };
 
@@ -260,6 +277,61 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
       }));
     } finally {
       setIsTestingConfluenceId(null);
+    }
+  };
+
+  const handleSaveJiraSource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingJiraSource?.name || !editingJiraSource?.baseUrl || !editingJiraSource?.authToken) return;
+
+    const sourceToSave: JiraSourceConfig = {
+      id: editingJiraSource.id || `jira_${Date.now()}`,
+      name: editingJiraSource.name.trim(),
+      baseUrl: editingJiraSource.baseUrl.trim(),
+      projectKey: editingJiraSource.projectKey?.trim() || undefined,
+      jql: editingJiraSource.jql?.trim() || undefined,
+      authToken: editingJiraSource.authToken.trim(),
+      enabled: editingJiraSource.enabled !== undefined ? editingJiraSource.enabled : true
+    };
+
+    let updated: JiraSourceConfig[];
+    if (editingJiraSource.id) {
+      updated = jiraSources.map((s) => (s.id === editingJiraSource.id ? sourceToSave : s));
+    } else {
+      updated = [...jiraSources, sourceToSave];
+    }
+
+    setJiraSources(updated);
+    await window.electronAPI?.saveSettings({ jiraSources: updated });
+    setEditingJiraSource(null);
+  };
+
+  const handleDeleteJiraSource = async (id: string) => {
+    const updated = jiraSources.filter((s) => s.id !== id);
+    setJiraSources(updated);
+    await window.electronAPI?.saveSettings({ jiraSources: updated });
+    if (editingJiraSource?.id === id) setEditingJiraSource(null);
+  };
+
+  const handleToggleJiraEnabled = async (source: JiraSourceConfig, enabled: boolean) => {
+    const updated = jiraSources.map((s) => (s.id === source.id ? { ...s, enabled } : s));
+    setJiraSources(updated);
+    await window.electronAPI?.saveSettings({ jiraSources: updated });
+  };
+
+  const handleTestJiraConnection = async (source: JiraSourceConfig) => {
+    if (!window.electronAPI?.testJiraConnection) return;
+    setIsTestingJiraId(source.id);
+    try {
+      const res = await window.electronAPI.testJiraConnection(source);
+      setJiraTestResults((prev) => ({ ...prev, [source.id]: res }));
+    } catch (err: any) {
+      setJiraTestResults((prev) => ({
+        ...prev,
+        [source.id]: { success: false, message: err?.message || 'Falha ao testar conexão.' }
+      }));
+    } finally {
+      setIsTestingJiraId(null);
     }
   };
 
@@ -489,6 +561,39 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
           </label>
         </div>
 
+        {/* Toggle para auto-reindex ao detectar mudanças nas pastas locais */}
+        <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/60">
+          <div className="space-y-0.5 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground">Reindexar automaticamente ao detectar mudanças</span>
+              <span
+                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                  autoReindexOnChange
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-muted text-muted-foreground border-border/60'
+                }`}
+              >
+                {autoReindexOnChange ? 'Ativado' : 'Desativado'}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {autoReindexOnChange
+                ? 'O Dev Manager observa as pastas locais indexadas e reindexa sozinho quando um arquivo muda, avisando por notificação quando terminar.'
+                : 'Desativado: a reindexação só acontece quando você clica em "Reindexar" manualmente.'}
+            </p>
+          </div>
+
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              checked={autoReindexOnChange}
+              onChange={(e) => handleToggleAutoReindex(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
         {/* Lista de Pastas de Documentação */}
         <div>
           <div className="flex items-center justify-between gap-3 mb-2.5">
@@ -697,6 +802,172 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
               </div>
               <p className="text-[10px] text-muted-foreground">
                 Token fica salvo em texto plano nas configurações locais, mesmo padrão dos destinos de sincronização acima.
+              </p>
+              <button
+                type="submit"
+                className="w-full px-3 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-[11px]"
+              >
+                Salvar Fonte
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Fontes Jira */}
+        <div className="pt-3 border-t border-border/60">
+          <div className="flex items-center justify-between gap-3 mb-2.5">
+            <div>
+              <h3 className="text-xs font-bold text-foreground">Fontes Jira</h3>
+              <p className="text-[11px] text-muted-foreground">
+                Projetos/JQLs do Jira indexados como documentação — cada issue vira um "documento".
+              </p>
+            </div>
+            <button
+              onClick={() => setEditingJiraSource({ enabled: true })}
+              className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Novo projeto Jira</span>
+            </button>
+          </div>
+
+          {jiraSources.length === 0 && !editingJiraSource ? (
+            <div className="text-center py-4 border border-dashed border-border rounded-xl bg-card/40">
+              <p className="text-[11px] text-muted-foreground">Nenhuma fonte Jira configurada.</p>
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {jiraSources.map((source) => (
+                <li key={source.id} className="bg-card border border-border/80 rounded-lg px-3 py-1.5 space-y-1">
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={source.enabled}
+                        onChange={(e) => handleToggleJiraEnabled(source, e.target.checked)}
+                        className="text-primary focus:ring-0 shrink-0"
+                      />
+                      <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                      <span className="font-semibold text-foreground truncate">{source.name}</span>
+                      <span className="font-mono text-[10px] text-muted-foreground truncate">{source.baseUrl}</span>
+                      {source.projectKey && (
+                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0">
+                          {source.projectKey}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleTestJiraConnection(source)}
+                        disabled={isTestingJiraId === source.id}
+                        className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+                      >
+                        {isTestingJiraId === source.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Testar'}
+                      </button>
+                      <button
+                        onClick={() => setEditingJiraSource(source)}
+                        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteJiraSource(source.id)}
+                        className="p-1 rounded-md hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  {jiraTestResults[source.id] && (
+                    <div
+                      className={`text-[10px] px-1.5 py-1 rounded-md ${
+                        jiraTestResults[source.id].success
+                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                          : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                      }`}
+                    >
+                      {jiraTestResults[source.id].message}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {editingJiraSource && (
+            <form
+              onSubmit={handleSaveJiraSource}
+              className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-foreground">
+                  {editingJiraSource.id ? 'Editar Fonte Jira' : 'Nova Fonte Jira'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setEditingJiraSource(null)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-foreground">Nome</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Projeto PRO"
+                    value={editingJiraSource.name || ''}
+                    onChange={(e) => setEditingJiraSource({ ...editingJiraSource, name: e.target.value })}
+                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-foreground">Project Key (opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: PRO"
+                    value={editingJiraSource.projectKey || ''}
+                    onChange={(e) => setEditingJiraSource({ ...editingJiraSource, projectKey: e.target.value })}
+                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-foreground">URL Base do Jira</label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://empresa.atlassian.net ou https://jira.empresa.com"
+                  value={editingJiraSource.baseUrl || ''}
+                  onChange={(e) => setEditingJiraSource({ ...editingJiraSource, baseUrl: e.target.value })}
+                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-foreground">JQL customizado (opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Ex: project = PRO AND status != Done ORDER BY updated DESC"
+                  value={editingJiraSource.jql || ''}
+                  onChange={(e) => setEditingJiraSource({ ...editingJiraSource, jql: e.target.value })}
+                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-foreground">Token de API / PAT (Bearer)</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Token"
+                  value={editingJiraSource.authToken || ''}
+                  onChange={(e) => setEditingJiraSource({ ...editingJiraSource, authToken: e.target.value })}
+                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Token fica salvo em texto plano nas configurações locais, mesmo padrão das fontes Confluence acima.
               </p>
               <button
                 type="submit"

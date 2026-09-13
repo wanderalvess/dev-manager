@@ -1,6 +1,7 @@
 import type {
   AppSettings,
   KarafDeployRequest,
+  KarafDeployHistoryEntry,
   EnvironmentLog,
   PortStatus,
   ServiceStatus,
@@ -20,6 +21,7 @@ import type {
   DocSearchResult,
   DocsIndexStatus,
   ConfluenceSourceConfig,
+  JiraSourceConfig,
   DocsIndexProgress,
   DocSyncProgress,
   DocSyncResult,
@@ -108,6 +110,10 @@ export interface ElectronAPI {
     skipTests?: boolean
   ) => Promise<{ code: number; stdout: string; stderr: string }>;
   execKarafDiagnostic: (command: string) => Promise<{ code: number; stdout: string; stderr: string }>;
+  getKarafDeployHistory: () => Promise<KarafDeployHistoryEntry[]>;
+  onKarafDeployResult: (callback: (result: { success: boolean; error?: string }) => void) => () => void;
+  onKarafBuildResult: (callback: (result: { code: number; stdout: string; stderr: string }) => void) => () => void;
+  onDocsReindexComplete: (callback: (status: DocsIndexStatus) => void) => () => void;
 
   parsePom: (projectPath: string) => Promise<PomInfo | null>;
   onKarafLogChunk: (callback: (chunk: string) => void) => () => void;
@@ -179,6 +185,7 @@ export interface ElectronAPI {
   searchDocs: (query: string, options?: { sourceLabel?: string; topK?: number }) => Promise<DocSearchResult[]>;
   getDocsIndexStatus: () => Promise<DocsIndexStatus>;
   testConfluenceConnection: (config: ConfluenceSourceConfig) => Promise<{ success: boolean; message: string }>;
+  testJiraConnection: (config: JiraSourceConfig) => Promise<{ success: boolean; message: string }>;
   openDocFile: (filePath: string, mode?: 'editor' | 'folder') => Promise<boolean>;
   readDocContent: (filePath: string) => Promise<string | null>;
   onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => () => void;

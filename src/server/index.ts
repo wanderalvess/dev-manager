@@ -23,6 +23,7 @@ import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
 import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
 import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
+import { JiraSource } from '../main/services/docSources/JiraSource';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -109,6 +110,12 @@ const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const docSyncService = new DocSyncService(configService, docsIndexService);
+docsIndexService.onWatchReindexComplete = (status) => {
+  broadcastWs('docs:reindex-complete', status);
+};
+if (configService.getSettings().autoReindexOnChange) {
+  docsIndexService.startWatching();
+}
 const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService);
 const karafLogPersistenceService = new KarafLogPersistenceService();
@@ -345,6 +352,7 @@ app.post('/api/karaf/deploy', async (req, res) => {
   const result = await karafService.deploy(request, (chunk) => {
     broadcastWs('karaf:log-chunk', chunk);
   });
+  broadcastWs('karaf:deploy-result', result);
   res.json(result);
 });
 
@@ -371,7 +379,12 @@ app.post('/api/karaf/build-and-deploy', async (req, res) => {
   const result = await karafService.buildAndDeployMaven(request, projectPath, skipTests !== false, (chunk) => {
     broadcastWs('karaf:log-chunk', chunk);
   });
+  broadcastWs('karaf:deploy-result', result);
   res.json(result);
+});
+
+app.get('/api/karaf/deploy-history', (_req, res) => {
+  res.json(karafService.getDeployHistory());
 });
 
 app.post('/api/karaf/run-maven-build', async (req, res) => {
@@ -382,6 +395,9 @@ app.post('/api/karaf/run-maven-build', async (req, res) => {
   const result = await karafService.runMavenBuild(projectPath, skipTests !== false, (chunk) => {
     broadcastWs('karaf:log-chunk', chunk);
   });
+  if (result.code !== 0) {
+    broadcastWs('karaf:build-result', result);
+  }
   res.json(result);
 });
 
@@ -495,6 +511,15 @@ app.post('/api/docs/test-confluence-connection', async (req, res) => {
   }
 });
 
+app.post('/api/docs/test-jira-connection', async (req, res) => {
+  try {
+    const entries = await new JiraSource(req.body).listEntries();
+    res.json({ success: true, message: `Conectado com sucesso: ${entries.length} issue(s) encontrada(s).` });
+  } catch (err: any) {
+    res.json({ success: false, message: err?.message || 'Falha ao conectar no Jira.' });
+  }
+});
+
 app.post('/api/docs/sync', async (req, res) => {
   const targetId = req.body?.targetId as string | undefined;
   const results = await docSyncService.syncToTarget(targetId, (progress: DocSyncProgress) => {
@@ -545,7 +570,15 @@ app.post('/api/settings', (req, res) => {
       }
     }
   }
-  res.json(configService.saveSettings(candidate));
+  const saved = configService.saveSettings(candidate);
+  if ('autoReindexOnChange' in candidate) {
+    if (candidate.autoReindexOnChange) {
+      docsIndexService.startWatching();
+    } else {
+      docsIndexService.stopWatching();
+    }
+  }
+  res.json(saved);
 });
 
 // 7. Utilitários Shell

@@ -172,6 +172,22 @@ export interface PomInfo {
   suggestedInstallCommand?: string;
 }
 
+/** Entrada persistida do histórico de deploys/builds Karaf (mais recente primeiro, limitado a 200). */
+export interface KarafDeployHistoryEntry {
+  id: string;
+  projectName?: string;
+  groupId?: string;
+  artifactId?: string;
+  version?: string;
+  repoUrl: string;
+  featureInstall: string;
+  success: boolean;
+  message?: string;
+  startedAt: string;
+  durationMs: number;
+  trigger: 'ui' | 'mcp';
+}
+
 export interface GitProjectInfo {
   name: string;
   path: string;
@@ -279,10 +295,14 @@ export interface AppSettings {
   docFolders?: DocFolderConfig[];
   /** Se verdadeiro, também vasculha e indexa os projetos Git da pasta de projetos. Padrão: false */
   indexProjectsDocs?: boolean;
+  /** Se verdadeiro, observa as pastas locais indexadas pelo RAG e reindexa automaticamente quando algum arquivo muda. Padrão: false (opt-in, evita custo de I/O contínuo sem o usuário pedir). */
+  autoReindexOnChange?: boolean;
   /** Destinos de API configurados para sincronização agnóstica de documentações vetorizadas */
   docSyncTargets?: DocSyncTargetConfig[];
   /** Espaços do Confluence indexados como fonte adicional de documentação do RAG */
   confluenceSources?: ConfluenceSourceConfig[];
+  /** Projetos/JQLs do Jira indexados como fonte adicional de documentação do RAG */
+  jiraSources?: JiraSourceConfig[];
   /** Último docker-compose.yml e profile usados na página de Containers, lembrados entre sessões. */
   dockerComposeConfig?: { filePath?: string; profile?: string };
   /** Arquivos de log configurados para acompanhamento em tempo real (Tail) */
@@ -290,6 +310,12 @@ export interface AppSettings {
   activeLogSourceId?: string;
   /** Consultas SQL salvas e personalizadas pelo usuário */
   savedSqlSnippets?: SqlSnippet[];
+  /** Histórico das últimas execuções de deploy/build Karaf (mais recente primeiro), limitado a 200 entradas */
+  karafDeployHistory?: KarafDeployHistoryEntry[];
+  /** Perfis de ambiente salvos (paths/portas) — ver EnvironmentProfile */
+  environmentProfiles?: EnvironmentProfile[];
+  /** Id do último perfil de ambiente ativado — só pra destaque na UI, não afeta nenhuma lógica (ativar copia os campos pra cá) */
+  activeEnvironmentProfileId?: string;
 }
 
 export interface DocSyncTargetConfig {
@@ -370,6 +396,40 @@ export interface ConfluenceSourceConfig {
   /** E-mail associado ao token — presente = Confluence Cloud (Basic auth email:token). Ausente = Server/Data Center (Bearer token). */
   authEmail?: string;
   enabled: boolean;
+}
+
+/** Projeto/JQL do Jira indexado como fonte adicional de documentação do RAG (issues viram "documentos"). */
+export interface JiraSourceConfig {
+  id: string;
+  name: string;
+  /** URL base do Jira, sem sufixo /rest (ex: https://empresa.atlassian.net ou https://jira.empresa.com). */
+  baseUrl: string;
+  /** Personal Access Token / API token. Texto plano nas settings, mesmo padrão de authToken em ConfluenceSourceConfig — repo não tem criptografia de credenciais. */
+  authToken: string;
+  projectKey?: string;
+  /** JQL customizado; se ausente, usa "project = <projectKey> ORDER BY updated DESC". */
+  jql?: string;
+  enabled: boolean;
+}
+
+/**
+ * Preset dos caminhos/portas de ambiente (projectsPath, karafPath, etc.) — "ativar" um perfil
+ * copia esses campos por cima do AppSettings atual, igual aplicar um snapshot. Diferente de
+ * AutomationProfile/DeployProfile (perfis de PASSOS de pipeline): este é perfil de AMBIENTE
+ * (onde as coisas estão), útil pra quem alterna entre múltiplos clientes/setups na mesma máquina.
+ */
+export interface EnvironmentProfile {
+  id: string;
+  label: string;
+  projectsPath?: string;
+  karafPath?: string;
+  jdkPath?: string;
+  intellijPath?: string;
+  appPath?: string;
+  webPort?: number;
+  karafSshPort?: number;
+  karafDebugPort?: number;
+  monitoredPorts?: MonitoredPortConfig[];
 }
 
 export interface DocFolderConfig {

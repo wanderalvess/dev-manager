@@ -42,7 +42,8 @@ import {
   EnvironmentAutomationConfig,
   PathStatusInfo,
   detectIdeInfo,
-  RealtimeLogSource
+  RealtimeLogSource,
+  EnvironmentProfile
 } from '../../../shared/types';
 
 interface SettingsPageProps {
@@ -109,6 +110,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   const [pathStatuses, setPathStatuses] = useState<Record<string, PathStatusInfo>>({});
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [newEnvironmentProfileLabel, setNewEnvironmentProfileLabel] = useState('');
   const [isDetecting, setIsDetecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [launcherRows, setLauncherRows] = useState<{ ext: string; path: string }[]>([]);
@@ -308,6 +310,51 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     } finally {
       setIsSaving(false);
     }
+  };
+
+  /** Campos que compõem um preset de ambiente — os mesmos que EnvironmentProfile declara em shared/types. */
+  const ENVIRONMENT_PROFILE_FIELDS = [
+    'projectsPath',
+    'karafPath',
+    'jdkPath',
+    'intellijPath',
+    'appPath',
+    'webPort',
+    'karafSshPort',
+    'karafDebugPort',
+    'monitoredPorts'
+  ] as const;
+
+  const handleSaveCurrentAsEnvironmentProfile = async () => {
+    const label = newEnvironmentProfileLabel.trim();
+    if (!label || !window.electronAPI) return;
+    const profile: EnvironmentProfile = { id: `envprofile_${Date.now()}`, label };
+    for (const field of ENVIRONMENT_PROFILE_FIELDS) {
+      (profile as any)[field] = settings[field];
+    }
+    const updated = [...(settings.environmentProfiles || []), profile];
+    setSettings({ ...settings, environmentProfiles: updated });
+    await window.electronAPI.saveSettings({ environmentProfiles: updated });
+    setNewEnvironmentProfileLabel('');
+  };
+
+  const handleActivateEnvironmentProfile = async (profile: EnvironmentProfile) => {
+    if (!window.electronAPI) return;
+    const fieldsToApply: Partial<AppSettings> = { activeEnvironmentProfileId: profile.id };
+    for (const field of ENVIRONMENT_PROFILE_FIELDS) {
+      if (profile[field] !== undefined) (fieldsToApply as any)[field] = profile[field];
+    }
+    const merged = { ...settings, ...fieldsToApply };
+    setSettings(merged);
+    await window.electronAPI.saveSettings(fieldsToApply);
+    validateAllPaths(merged);
+  };
+
+  const handleDeleteEnvironmentProfile = async (id: string) => {
+    if (!window.electronAPI) return;
+    const updated = (settings.environmentProfiles || []).filter((p) => p.id !== id);
+    setSettings({ ...settings, environmentProfiles: updated });
+    await window.electronAPI.saveSettings({ environmentProfiles: updated });
   };
 
   const handleExportSettings = async (sanitizePasswords: boolean) => {
@@ -796,6 +843,86 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       {activeTab === 'dirs' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
           <div className="lg:col-span-12 space-y-4 flex flex-col">
+            <div className="cockpit-panel rounded-2xl p-5 space-y-3 shadow-xl border border-border">
+              <div className="flex items-center justify-between pb-1 border-b border-border/60">
+                <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-primary" /> Perfis de Ambiente
+                </h3>
+                <span className="text-[10px] text-muted-foreground font-mono">Presets de paths/portas</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Salve o estado atual dos diretórios e portas abaixo como um preset nomeado, e alterne entre eles com um clique — útil pra quem trabalha com múltiplos clientes/ambientes na mesma máquina.
+              </p>
+
+              {(settings.environmentProfiles || []).length > 0 && (
+                <ul className="space-y-1.5">
+                  {(settings.environmentProfiles || []).map((profile) => {
+                    const isActive = settings.activeEnvironmentProfileId === profile.id;
+                    return (
+                      <li
+                        key={profile.id}
+                        className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg border text-xs ${
+                          isActive ? 'border-primary/50 bg-primary/10' : 'border-border/80 bg-card'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className="font-semibold text-foreground truncate">{profile.label}</span>
+                          {isActive && (
+                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-primary/20 text-primary shrink-0">
+                              Ativo
+                            </span>
+                          )}
+                          <span className="font-mono text-[10px] text-muted-foreground truncate">{profile.projectsPath}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleActivateEnvironmentProfile(profile)}
+                            disabled={isActive}
+                            className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+                          >
+                            Ativar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteEnvironmentProfile(profile.id)}
+                            className="p-1 rounded-md hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newEnvironmentProfileLabel}
+                  onChange={(e) => setNewEnvironmentProfileLabel(e.target.value)}
+                  placeholder="Rótulo do novo perfil (ex: Cliente A)..."
+                  className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveCurrentAsEnvironmentProfile();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveCurrentAsEnvironmentProfile}
+                  disabled={!newEnvironmentProfileLabel.trim()}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5 transition cursor-pointer shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Salvar estado atual como perfil</span>
+                </button>
+              </div>
+            </div>
+
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
                 <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">

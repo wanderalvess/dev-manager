@@ -9,6 +9,7 @@ import { RoutinesService } from '../services/RoutinesService';
 import { ConfigService } from '../services/ConfigService';
 import { DocsIndexService, DocSyncService } from '../services/DocsIndexService';
 import { ConfluenceSource } from '../services/docSources/ConfluenceSource';
+import { JiraSource } from '../services/docSources/JiraSource';
 import { DatabaseService } from '../services/DatabaseService';
 import { BackupService } from '../services/BackupService';
 import { BackupSchedulerService } from '../services/BackupSchedulerService';
@@ -19,6 +20,7 @@ import { DeployService } from '../services/DeployService';
 import { LogWatcherService } from '../services/LogWatcherService';
 import { KarafLogPersistenceService } from '../services/KarafLogPersistenceService';
 import { AutoUpdateService } from '../services/AutoUpdateService';
+import { notifyUser } from '../services/NotificationService';
 import {
   AppSettings,
   KarafDeployRequest,
@@ -34,6 +36,7 @@ import {
   BackupConfig,
   BackupWebhookConfig,
   ConfluenceSourceConfig,
+  JiraSourceConfig,
   DeployProfile,
   InstallBundleRequest,
   ReinstallBundleRequest,
@@ -262,9 +265,14 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('karaf:deploy', async (_, request: KarafDeployRequest) => {
-    return await karafService.deploy(request, (chunk) => {
+    const result = await karafService.deploy(request, (chunk) => {
       mainWindow.webContents.send('karaf:log-chunk', chunk);
     });
+    notifyUser(mainWindow, 'karaf:deploy-result', result, {
+      title: result.success ? 'Deploy Karaf concluído' : 'Falha no deploy Karaf',
+      body: result.success ? request.featureInstall : result.error || 'Erro desconhecido no deploy'
+    });
+    return result;
   });
 
   ipcMain.handle('karaf:exec-diagnostic', async (_, command: string) => {
@@ -276,16 +284,32 @@ export function registerIpcHandlers(
   ipcMain.handle(
     'karaf:build-and-deploy',
     async (_, request: KarafDeployRequest, projectPath: string, skipTests: boolean = true) => {
-      return await karafService.buildAndDeployMaven(request, projectPath, skipTests, (chunk) => {
+      const result = await karafService.buildAndDeployMaven(request, projectPath, skipTests, (chunk) => {
         mainWindow.webContents.send('karaf:log-chunk', chunk);
       });
+      notifyUser(mainWindow, 'karaf:deploy-result', result, {
+        title: result.success ? 'Build + Deploy Karaf concluído' : 'Falha no build/deploy Karaf',
+        body: result.success ? request.featureInstall : result.error || 'Erro desconhecido no build/deploy'
+      });
+      return result;
     }
   );
 
+  ipcMain.handle('karaf:list-deploy-history', async () => {
+    return karafService.getDeployHistory();
+  });
+
   ipcMain.handle('karaf:run-maven-build', async (_, projectPath: string, skipTests: boolean = true) => {
-    return await karafService.runMavenBuild(projectPath, skipTests, (chunk) => {
+    const result = await karafService.runMavenBuild(projectPath, skipTests, (chunk) => {
       mainWindow.webContents.send('karaf:log-chunk', chunk);
     });
+    if (result.code !== 0) {
+      notifyUser(mainWindow, 'karaf:build-result', result, {
+        title: 'Falha na compilação Maven',
+        body: `Build de "${projectPath}" terminou com código ${result.code}.`
+      });
+    }
+    return result;
   });
 
   ipcMain.handle('karaf:list-bundles', async (_, credentials?: { user?: string; pass?: string; port?: number }) => {
@@ -457,6 +481,15 @@ export function registerIpcHandlers(
     }
   });
 
+  ipcMain.handle('docs:test-jira-connection', async (_, config: JiraSourceConfig) => {
+    try {
+      const entries = await new JiraSource(config).listEntries();
+      return { success: true, message: `Conectado com sucesso: ${entries.length} issue(s) encontrada(s).` };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Falha ao conectar no Jira.' };
+    }
+  });
+
   const docSyncService = new DocSyncService(configService, docsIndexService);
 
   ipcMain.handle('docs:sync', async (_, targetId?: string) => {
@@ -514,7 +547,15 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('settings:save', async (_, settings: Partial<AppSettings>) => {
-    return configService.saveSettings(settings);
+    const saved = configService.saveSettings(settings);
+    if ('autoReindexOnChange' in settings) {
+      if (settings.autoReindexOnChange) {
+        await docsIndexService.startWatching();
+      } else {
+        docsIndexService.stopWatching();
+      }
+    }
+    return saved;
   });
 
   ipcMain.handle('settings:export', async (_, sanitizePasswords?: boolean) => {

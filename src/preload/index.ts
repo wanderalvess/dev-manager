@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import type {
   AppSettings,
   KarafDeployRequest,
+  KarafDeployHistoryEntry,
   EnvironmentLog,
   PortStatus,
   ServiceStatus,
@@ -20,6 +21,7 @@ import type {
   DocSearchResult,
   DocsIndexStatus,
   ConfluenceSourceConfig,
+  JiraSourceConfig,
   DocsIndexProgress,
   DocSyncProgress,
   DocSyncResult,
@@ -137,6 +139,22 @@ const electronAPI = {
     ipcRenderer.invoke('karaf:run-maven-build', projectPath, skipTests),
   execKarafDiagnostic: (command: string): Promise<{ code: number; stdout: string; stderr: string }> =>
     ipcRenderer.invoke('karaf:exec-diagnostic', command),
+  getKarafDeployHistory: (): Promise<KarafDeployHistoryEntry[]> => ipcRenderer.invoke('karaf:list-deploy-history'),
+  onKarafDeployResult: (callback: (result: { success: boolean; error?: string }) => void) => {
+    const subscription = (_: any, result: { success: boolean; error?: string }) => callback(result);
+    ipcRenderer.on('karaf:deploy-result', subscription);
+    return () => ipcRenderer.removeListener('karaf:deploy-result', subscription);
+  },
+  onKarafBuildResult: (callback: (result: { code: number; stdout: string; stderr: string }) => void) => {
+    const subscription = (_: any, result: { code: number; stdout: string; stderr: string }) => callback(result);
+    ipcRenderer.on('karaf:build-result', subscription);
+    return () => ipcRenderer.removeListener('karaf:build-result', subscription);
+  },
+  onDocsReindexComplete: (callback: (status: DocsIndexStatus) => void) => {
+    const subscription = (_: any, status: DocsIndexStatus) => callback(status);
+    ipcRenderer.on('docs:reindex-complete', subscription);
+    return () => ipcRenderer.removeListener('docs:reindex-complete', subscription);
+  },
   listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) =>
     ipcRenderer.invoke('karaf:list-bundles', credentials),
   manageKarafBundle: (
@@ -217,6 +235,8 @@ const electronAPI = {
   getDocsIndexStatus: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:get-status'),
   testConfluenceConnection: (config: ConfluenceSourceConfig): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('docs:test-confluence-connection', config),
+  testJiraConnection: (config: JiraSourceConfig): Promise<{ success: boolean; message: string }> =>
+    ipcRenderer.invoke('docs:test-jira-connection', config),
   openDocFile: (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> =>
     ipcRenderer.invoke('docs:open-file', filePath, mode),
   readDocContent: (filePath: string): Promise<string | null> =>

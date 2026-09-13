@@ -22,7 +22,10 @@ import {
   GitFork,
   ArrowRight,
   Wrench,
-  Terminal
+  Terminal,
+  History,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import {
   GitProjectInfo,
@@ -33,7 +36,8 @@ import {
   ReinstallBundleRequest,
   BundleSnapshot,
   BundleSnapshotItem,
-  BundleSnapshotDiff
+  BundleSnapshotDiff,
+  KarafDeployHistoryEntry
 } from '../../../shared/types';
 
 interface KarafBundleManagerModalProps {
@@ -101,6 +105,24 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   });
   const [newSnapshotLabel, setNewSnapshotLabel] = useState('');
   const [selectedSnapshot, setSelectedSnapshot] = useState<BundleSnapshot | null>(null);
+
+  // Sub-modal: Histórico de Deploys
+  const [isDeployHistoryModalOpen, setIsDeployHistoryModalOpen] = useState(false);
+  const [deployHistory, setDeployHistory] = useState<KarafDeployHistoryEntry[]>([]);
+  const [isLoadingDeployHistory, setIsLoadingDeployHistory] = useState(false);
+
+  const handleOpenDeployHistory = async () => {
+    setIsDeployHistoryModalOpen(true);
+    if (!window.electronAPI?.getKarafDeployHistory) return;
+    setIsLoadingDeployHistory(true);
+    try {
+      setDeployHistory(await window.electronAPI.getKarafDeployHistory());
+    } catch {
+      setDeployHistory([]);
+    } finally {
+      setIsLoadingDeployHistory(false);
+    }
+  };
 
   // Sub-modal: Log do Karaf (log:display — log interno real, não o stdout do console embedded)
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -573,6 +595,16 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                   {snapshots.length}
                 </span>
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenDeployHistory}
+              className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
+              title="Ver histórico de deploys/builds Karaf já executados"
+            >
+              <History className="w-4 h-4 text-sky-400" />
+              <span>Histórico de Deploys</span>
             </button>
 
             <button
@@ -1898,6 +1930,104 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               <button
                 type="button"
                 onClick={() => setIsSnapshotModalOpen(false)}
+                className="px-4 py-1.5 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 rounded-xl transition cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-MODAL: HISTÓRICO DE DEPLOYS KARAF (settings.karafDeployHistory) */}
+      {/* ========================================================================= */}
+      {isDeployHistoryModalOpen && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl h-[75vh] flex flex-col overflow-hidden animate-fade-in">
+            {/* Header */}
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">Histórico de Deploys</h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    Últimas execuções de deploy/build Karaf (sucesso, falha, duração e coordenadas Maven), mais recente primeiro.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDeployHistoryModalOpen(false)}
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Lista */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+              {isLoadingDeployHistory ? (
+                <div className="text-center py-10 text-xs text-muted-foreground">Carregando histórico...</div>
+              ) : deployHistory.length === 0 ? (
+                <div className="text-center py-10 px-3 text-xs text-muted-foreground">
+                  <History className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                  <p>Nenhum deploy registrado ainda.</p>
+                  <p className="text-[11px] mt-1 text-muted-foreground/70">
+                    Cada deploy ou build+deploy executado pela UI ou via MCP passa a aparecer aqui.
+                  </p>
+                </div>
+              ) : (
+                deployHistory.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
+                      entry.success ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
+                    }`}
+                  >
+                    {entry.success ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-foreground truncate">
+                          {entry.artifactId || entry.featureInstall}
+                        </span>
+                        {entry.version && (
+                          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {entry.version}
+                          </span>
+                        )}
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70 bg-muted/60 px-1.5 py-0.5 rounded">
+                          {entry.trigger === 'mcp' ? 'MCP' : 'UI'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1 truncate" title={entry.featureInstall}>
+                        {entry.featureInstall}
+                      </p>
+                      {!entry.success && entry.message && (
+                        <p className="text-[11px] text-red-400 mt-1">{entry.message}</p>
+                      )}
+                      <div className="flex items-center gap-2.5 mt-1.5 text-[10px] text-muted-foreground/70">
+                        <span>{new Date(entry.startedAt).toLocaleString('pt-BR')}</span>
+                        <span>•</span>
+                        <span>{(entry.durationMs / 1000).toFixed(1)}s</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-border bg-muted/20 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsDeployHistoryModalOpen(false)}
                 className="px-4 py-1.5 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 rounded-xl transition cursor-pointer"
               >
                 Fechar

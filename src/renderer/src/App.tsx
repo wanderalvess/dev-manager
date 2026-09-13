@@ -145,6 +145,33 @@ export const App: React.FC = () => {
     });
   }, []);
 
+  // Notifica o usuário sobre o resultado de deploys/builds Karaf, mesmo fora da aba de Deploy
+  useEffect(() => {
+    if (!window.electronAPI?.onKarafDeployResult) return;
+    return window.electronAPI.onKarafDeployResult((result) => {
+      if (result.success) {
+        showToast('Deploy Karaf concluído com sucesso.', 'success');
+      } else {
+        showToast(`Falha no deploy Karaf: ${result.error || 'erro desconhecido'}`, 'error');
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!window.electronAPI?.onKarafBuildResult) return;
+    return window.electronAPI.onKarafBuildResult((result) => {
+      showToast(`Falha na compilação Maven (código ${result.code}).`, 'error');
+    });
+  }, []);
+
+  // Notifica quando o watcher de auto-reindex do RAG termina uma reindexação em segundo plano
+  useEffect(() => {
+    if (!window.electronAPI?.onDocsReindexComplete) return;
+    return window.electronAPI.onDocsReindexComplete((status) => {
+      showToast(`Documentação reindexada automaticamente (${status.totalChunks} trechos).`, 'success');
+    });
+  }, []);
+
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden select-none transition-colors duration-300">

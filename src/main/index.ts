@@ -18,6 +18,7 @@ import { LogWatcherService } from './services/LogWatcherService';
 import { KarafLogPersistenceService } from './services/KarafLogPersistenceService';
 import { AutoUpdateService } from './services/AutoUpdateService';
 import { registerIpcHandlers } from './ipc/registerIpc';
+import { notifyUser } from './services/NotificationService';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,6 +82,15 @@ function createWindow() {
   const gitAzureService = new GitAzureService(configService, karafService);
   const routinesService = new RoutinesService(configService);
   const docsIndexService = new DocsIndexService(configService, gitAzureService);
+  docsIndexService.onWatchReindexComplete = (status) => {
+    notifyUser(mainWindow, 'docs:reindex-complete', status, {
+      title: 'Documentação reindexada',
+      body: `Índice do RAG atualizado automaticamente (${status.totalChunks} trechos).`
+    });
+  };
+  if (configService.getSettings().autoReindexOnChange) {
+    docsIndexService.startWatching();
+  }
   const dockerService = new DockerService();
   const deployService = new DeployService(configService, karafService, dockerService, windowsService);
   const logWatcherService = new LogWatcherService();

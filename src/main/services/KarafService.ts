@@ -11,7 +11,8 @@ import {
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
-  KarafBundleDependent
+  KarafBundleDependent,
+  KarafDeployHistoryEntry
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
@@ -19,6 +20,9 @@ import { runCapturedProcess } from '../utils/process';
 
 const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall', 'refresh', 'resolve'] as const;
 type BundleAction = (typeof BUNDLE_ACTIONS)[number];
+type DeployTrigger = 'ui' | 'mcp';
+
+const MAX_DEPLOY_HISTORY_ENTRIES = 200;
 
 /**
  * Mapeia a coluna de estado textual do Karaf (ex: "Active", "Resolved") para o
@@ -337,8 +341,13 @@ export class KarafService {
 
   public async deploy(
     request: KarafDeployRequest,
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    trigger: DeployTrigger = 'ui',
+    projectPath?: string
   ): Promise<{ success: boolean; error?: string }> {
+    const startedAt = new Date().toISOString();
+    const t0 = Date.now();
+
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`INICIANDO DEPLOY NO KARAF LOCAL\r\n`);
     onChunk(`==========================================\r\n`);
@@ -360,15 +369,19 @@ export class KarafService {
       port: request.port
     });
 
+    let result: { success: boolean; error?: string };
     if (installRes.code === 0) {
       onChunk(`\r\n==========================================\r\n`);
       onChunk(`✨ DEPLOY FINALIZADO COM SUCESSO!\r\n`);
       onChunk(`==========================================\r\n`);
-      return { success: true };
+      result = { success: true };
     } else {
       onChunk(`\r\n[ERRO] Falha na instalação da feature (Código ${installRes.code}).\r\n`);
-      return { success: false, error: installRes.stderr || 'Erro na instalação' };
+      result = { success: false, error: installRes.stderr || 'Erro na instalação' };
     }
+
+    this.recordDeployHistory(request, result, startedAt, Date.now() - t0, trigger, projectPath);
+    return result;
   }
 
   public async runMavenBuild(
@@ -421,17 +434,66 @@ export class KarafService {
     request: KarafDeployRequest,
     projectPath: string,
     skipTests: boolean,
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    trigger: DeployTrigger = 'ui'
   ): Promise<{ success: boolean; error?: string }> {
+    const startedAt = new Date().toISOString();
+    const t0 = Date.now();
+
     const buildRes = await this.runMavenBuild(projectPath, skipTests, onChunk);
     if (buildRes.code !== 0) {
       onChunk(`\r\n==========================================\r\n`);
       onChunk(`❌ DEPLOY ABORTADO: A compilação Maven falhou.\r\n`);
       onChunk(`==========================================\r\n`);
-      return { success: false, error: 'Falha na compilação Maven' };
+      const result = { success: false, error: 'Falha na compilação Maven' };
+      this.recordDeployHistory(request, result, startedAt, Date.now() - t0, trigger, projectPath);
+      return result;
     }
 
-    return this.deploy(request, onChunk);
+    return this.deploy(request, onChunk, trigger, projectPath);
+  }
+
+  /** Extrai groupId/artifactId/version de um comando "feature:repo-add mvn:g/a/v/xml/features", quando o projeto de origem não está disponível pra ler o pom.xml direto (ex: deploy manual sem projectPath). */
+  private extractCoordsFromRepoUrl(repoUrl: string): { groupId: string; artifactId: string; version: string } | null {
+    const match = repoUrl.match(/mvn:([^/\s]+)\/([^/\s]+)\/([^/\s]+)/);
+    if (!match) return null;
+    return { groupId: match[1], artifactId: match[2], version: match[3] };
+  }
+
+  /** Grava uma entrada no histórico persistido de deploys Karaf (settings.karafDeployHistory), mesmo padrão de BackupSchedulerService.recordHistory. */
+  private recordDeployHistory(
+    request: KarafDeployRequest,
+    result: { success: boolean; error?: string },
+    startedAt: string,
+    durationMs: number,
+    trigger: DeployTrigger,
+    projectPath?: string
+  ): void {
+    const coords = (projectPath ? this.parseProjectPomOrBat(projectPath) : null) || this.extractCoordsFromRepoUrl(request.repoUrl);
+
+    const entry: KarafDeployHistoryEntry = {
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      projectName: coords?.artifactId,
+      groupId: coords?.groupId,
+      artifactId: coords?.artifactId,
+      version: coords?.version,
+      repoUrl: request.repoUrl,
+      featureInstall: request.featureInstall,
+      success: result.success,
+      message: result.error,
+      startedAt,
+      durationMs,
+      trigger
+    };
+
+    const history = this.configService.getSettings().karafDeployHistory || [];
+    const updated = [entry, ...history].slice(0, MAX_DEPLOY_HISTORY_ENTRIES);
+    this.configService.saveSettings({ karafDeployHistory: updated });
+  }
+
+  /** Lista o histórico persistido de deploys/builds Karaf, mais recente primeiro. */
+  public getDeployHistory(): KarafDeployHistoryEntry[] {
+    return this.configService.getSettings().karafDeployHistory || [];
   }
 
   /**
