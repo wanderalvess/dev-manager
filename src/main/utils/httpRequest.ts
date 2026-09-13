@@ -6,6 +6,8 @@ export interface SimpleHttpResponse {
   status: number;
   statusText: string;
   text: () => Promise<string>;
+  /** Corpo bruto, sem decodificar como texto — necessário pra baixar binários (PDF, DOCX, imagens). */
+  buffer: () => Promise<Buffer>;
 }
 
 /**
@@ -35,13 +37,14 @@ export async function httpRequest(
           const chunks: Buffer[] = [];
           res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
           res.on('end', () => {
-            const bodyText = Buffer.concat(chunks).toString('utf-8');
+            const bodyBuffer = Buffer.concat(chunks);
             const statusCode = res.statusCode || 200;
             resolve({
               ok: statusCode >= 200 && statusCode < 300,
               status: statusCode,
               statusText: res.statusMessage || `${statusCode}`,
-              text: async () => bodyText
+              text: async () => bodyBuffer.toString('utf-8'),
+              buffer: async () => bodyBuffer
             });
           });
         }

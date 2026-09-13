@@ -1,12 +1,28 @@
 import { DocSource, DocSourceEntry } from './DocSource';
 import { httpRequest } from '../../utils/httpRequest';
 import { ConfluenceSourceConfig } from '../../../shared/types';
+import { extractPdfText, extractDocxText } from './textExtractors';
 
 interface ConfluenceContentPage {
   id: string;
   title: string;
   version?: { when?: string };
 }
+
+interface ConfluenceAttachment {
+  title: string;
+  extensions?: { mediaType?: string; fileSize?: number };
+  _links?: { download?: string };
+}
+
+interface ConfluenceAttachmentResponse {
+  results: ConfluenceAttachment[];
+}
+
+/** Máximo de anexos processados por página — evita que uma página com dezenas de PDFs trave o reindex. */
+const MAX_ATTACHMENTS_PER_PAGE = 10;
+/** Anexos maiores que isso são pulados (mesmo teto usado por LocalFolderSource pra binários). */
+const MAX_ATTACHMENT_SIZE_BYTES = 20_000_000;
 
 interface ConfluenceContentResponse {
   results: ConfluenceContentPage[];
@@ -109,6 +125,53 @@ export class ConfluenceSource implements DocSource {
 
     const data = JSON.parse(await response.text());
     const html = data?.body?.storage?.value || '';
-    return `# ${entry.title}\n\n${htmlToPlainText(html)}`;
+    const attachmentsText = await this.fetchAttachmentsText(entry.id);
+    return `# ${entry.title}\n\n${htmlToPlainText(html)}${attachmentsText}`;
+  }
+
+  /**
+   * Baixa e extrai texto de anexos PDF/DOCX da página (imagens e outros formatos são listados
+   * pelo nome, mas não têm texto extraído — precisaria de OCR, fora de escopo aqui). Falhas em
+   * um anexo individual não derrubam a leitura da página inteira, só pulam aquele anexo.
+   */
+  private async fetchAttachmentsText(pageId: string): Promise<string> {
+    try {
+      const url = this.apiUrl(`/rest/api/content/${encodeURIComponent(pageId)}/child/attachment?limit=${MAX_ATTACHMENTS_PER_PAGE}`);
+      const response = await httpRequest(url, { method: 'GET', headers: this.authHeaders() });
+      if (!response.ok) return '';
+
+      const data = JSON.parse(await response.text()) as ConfluenceAttachmentResponse;
+      const attachments = data.results || [];
+      if (attachments.length === 0) return '';
+
+      const sections: string[] = [];
+      for (const attachment of attachments) {
+        const mediaType = attachment.extensions?.mediaType || '';
+        const downloadPath = attachment._links?.download;
+        const fileSize = attachment.extensions?.fileSize || 0;
+        if (!downloadPath || fileSize > MAX_ATTACHMENT_SIZE_BYTES) continue;
+
+        const isPdf = mediaType === 'application/pdf';
+        const isDocx = mediaType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        if (!isPdf && !isDocx) continue;
+
+        try {
+          const base = this.config.baseUrl.replace(/\/+$/, '');
+          const downloadUrl = downloadPath.startsWith('http') ? downloadPath : `${base}${downloadPath}`;
+          const fileResponse = await httpRequest(downloadUrl, { method: 'GET', headers: this.authHeaders() });
+          if (!fileResponse.ok) continue;
+
+          const buffer = await fileResponse.buffer();
+          const text = isPdf ? await extractPdfText(buffer) : await extractDocxText(buffer);
+          if (text.trim()) sections.push(`\n\n## Anexo: ${attachment.title}\n${text.trim()}`);
+        } catch {
+          // Anexo individual falhou (corrompido, protegido por senha, etc.) — segue pros próximos.
+        }
+      }
+
+      return sections.join('');
+    } catch {
+      return '';
+    }
   }
 }

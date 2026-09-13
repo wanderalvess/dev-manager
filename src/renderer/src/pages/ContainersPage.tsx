@@ -126,6 +126,18 @@ export const ContainersPage: React.FC = () => {
     return () => unsubscribe?.();
   }, []);
 
+  // Lembra o último docker-compose.yml/profile usados, entre reinícios do app
+  useEffect(() => {
+    window.electronAPI?.getSettings?.().then((settings) => {
+      if (settings.dockerComposeConfig?.filePath) setComposeFilePath(settings.dockerComposeConfig.filePath);
+      if (settings.dockerComposeConfig?.profile) setComposeProfile(settings.dockerComposeConfig.profile);
+    });
+  }, []);
+
+  const persistComposeConfig = (filePath: string, profile: string) => {
+    window.electronAPI?.saveSettings?.({ dockerComposeConfig: { filePath, profile: profile || undefined } });
+  };
+
   useEffect(() => {
     composeOutputRef.current?.scrollTo({ top: composeOutputRef.current.scrollHeight });
   }, [composeOutput]);
@@ -145,6 +157,7 @@ export const ContainersPage: React.FC = () => {
     if (!composeFilePath.trim() || !window.electronAPI?.dockerComposeUp) return;
     setIsComposeRunning('up');
     setComposeOutput('');
+    persistComposeConfig(composeFilePath.trim(), composeProfile.trim());
     try {
       await window.electronAPI.dockerComposeUp(composeFilePath.trim(), { profile: composeProfile.trim() || undefined });
       await handleComposeStatus();
@@ -160,6 +173,7 @@ export const ContainersPage: React.FC = () => {
     if (!composeFilePath.trim() || !window.electronAPI?.dockerComposeDown) return;
     setIsComposeRunning('down');
     setComposeOutput('');
+    persistComposeConfig(composeFilePath.trim(), composeProfile.trim());
     try {
       await window.electronAPI.dockerComposeDown(composeFilePath.trim(), { profile: composeProfile.trim() || undefined });
       await handleComposeStatus();
@@ -174,6 +188,7 @@ export const ContainersPage: React.FC = () => {
   const handleComposeStatus = async () => {
     if (!composeFilePath.trim() || !window.electronAPI?.dockerComposeStatus) return;
     setIsLoadingComposeStatus(true);
+    persistComposeConfig(composeFilePath.trim(), composeProfile.trim());
     try {
       const services = await window.electronAPI.dockerComposeStatus(composeFilePath.trim(), composeProfile.trim() || undefined);
       setComposeServices(services || []);

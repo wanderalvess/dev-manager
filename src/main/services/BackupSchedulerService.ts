@@ -7,8 +7,55 @@ import { httpRequest } from '../utils/httpRequest';
 /** Quantidade máxima de entradas mantidas no histórico persistido de backups/restaurações. */
 const MAX_HISTORY_ENTRIES = 200;
 
+interface WebhookContext {
+  connectionName: string;
+  action: 'backup' | 'restore' | 'restore-drill';
+  trigger: 'manual' | 'scheduled';
+  success: boolean;
+  message: string;
+  filePath?: string;
+  sizeBytes?: number;
+  durationMs?: number;
+  startedAt: string;
+}
+
+const ACTION_LABELS: Record<WebhookContext['action'], string> = {
+  backup: 'Backup',
+  restore: 'Restauração',
+  'restore-drill': 'Restore Drill'
+};
+
+/**
+ * Monta o payload do webhook conforme a plataforma de destino. 'generic' manda todos os campos
+ * como JSON (formato original, compatível com endpoints próprios); slack/discord/teams usam o
+ * corpo esperado pelo webhook de entrada nativo de cada um, como texto simples formatado.
+ */
+function buildWebhookPayload(platform: BackupWebhookConfig['platform'], ctx: WebhookContext): string {
+  const icon = ctx.success ? '✅' : '❌';
+  const summary = `${icon} ${ACTION_LABELS[ctx.action]} (${ctx.trigger === 'scheduled' ? 'agendado' : 'manual'}) — ${ctx.connectionName}: ${ctx.message}`;
+
+  switch (platform) {
+    case 'slack':
+      return JSON.stringify({ text: summary });
+    case 'discord':
+      return JSON.stringify({ content: summary });
+    case 'teams':
+      return JSON.stringify({
+        '@type': 'MessageCard',
+        '@context': 'http://schema.org/extensions',
+        themeColor: ctx.success ? '2EB67D' : 'E01E5A',
+        title: `${ACTION_LABELS[ctx.action]} — ${ctx.connectionName}`,
+        text: summary
+      });
+    case 'generic':
+    default:
+      return JSON.stringify(ctx);
+  }
+}
+
 export class BackupSchedulerService {
   private jobs = new Map<string, cron.ScheduledTask>();
+  private drillJobs = new Map<string, cron.ScheduledTask>();
 
   /** Chamado após cada execução agendada (sucesso ou falha), para notificar a UI. */
   public onResult?: (connectionName: string, result: BackupResult) => void;
@@ -23,37 +70,67 @@ export class BackupSchedulerService {
    * Chamado na inicialização do app e sempre que uma configuração de backup é salva.
    */
   public rescheduleAll(): void {
-    for (const task of this.jobs.values()) {
-      task.stop();
-    }
+    for (const task of this.jobs.values()) task.stop();
     this.jobs.clear();
+    for (const task of this.drillJobs.values()) task.stop();
+    this.drillJobs.clear();
 
     const settings = this.configService.getSettings();
     const backupConfigs = settings.backupConfigs || [];
     const connections = settings.databaseConnections || [];
 
     for (const config of backupConfigs) {
-      if (!config.cronExpression || config.enabled === false) continue;
-      if (!cron.validate(config.cronExpression)) {
-        console.warn(`[BackupScheduler] Expressão cron inválida para ${config.connectionId}: ${config.cronExpression}`);
-        continue;
-      }
-
       const connection = connections.find((c) => c.id === config.connectionId);
       if (!connection) continue;
 
-      const task = cron.schedule(config.cronExpression, () => {
-        this.runScheduledBackup(config, connection);
-      });
-      this.jobs.set(config.connectionId, task);
+      if (config.cronExpression && config.enabled !== false) {
+        if (!cron.validate(config.cronExpression)) {
+          console.warn(`[BackupScheduler] Expressão cron inválida para ${config.connectionId}: ${config.cronExpression}`);
+        } else {
+          const task = cron.schedule(config.cronExpression, () => {
+            this.runScheduledBackup(config, connection);
+          });
+          this.jobs.set(config.connectionId, task);
+        }
+      }
+
+      if (config.restoreDrillCronExpression && config.restoreDrillEnabled !== false && config.restoreDrillScratchConnectionId) {
+        if (!cron.validate(config.restoreDrillCronExpression)) {
+          console.warn(
+            `[BackupScheduler] Expressão cron de drill inválida para ${config.connectionId}: ${config.restoreDrillCronExpression}`
+          );
+        } else {
+          const scratchConnection = connections.find((c) => c.id === config.restoreDrillScratchConnectionId);
+          if (scratchConnection) {
+            const task = cron.schedule(config.restoreDrillCronExpression, () => {
+              this.runScheduledRestoreDrill(config, scratchConnection);
+            });
+            this.drillJobs.set(config.connectionId, task);
+          }
+        }
+      }
     }
   }
 
   public stopAll(): void {
-    for (const task of this.jobs.values()) {
-      task.stop();
-    }
+    for (const task of this.jobs.values()) task.stop();
     this.jobs.clear();
+    for (const task of this.drillJobs.values()) task.stop();
+    this.drillJobs.clear();
+  }
+
+  /**
+   * Testa periodicamente (via cron) se o backup mais recente de `config.destinationFolder` é
+   * restaurável, contra a conexão scratch configurada — sem depender de alguém lembrar de
+   * clicar em "Drill" manualmente. Se ainda não existe nenhum backup na pasta, não faz nada
+   * (nem registra falha — não é um erro, só ainda não há o que testar).
+   */
+  private async runScheduledRestoreDrill(config: BackupConfig, scratchConnection: DatabaseConnectionConfig): Promise<void> {
+    const backups = await this.backupService.listBackups(config.destinationFolder);
+    if (backups.length === 0) return;
+
+    const latest = backups[0];
+    await this.runRestoreDrill(scratchConnection, latest.filePath, 'scheduled');
   }
 
   /**
@@ -100,7 +177,11 @@ export class BackupSchedulerService {
    * informada pelo usuário (deve ser uma conexão descartável, o serviço não valida isso),
    * registrando o resultado no mesmo histórico/webhooks usados por backup e restore normais.
    */
-  public async runRestoreDrill(scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> {
+  public async runRestoreDrill(
+    scratchConnection: DatabaseConnectionConfig,
+    filePath: string,
+    trigger: 'manual' | 'scheduled' = 'manual'
+  ): Promise<BackupResult> {
     const settings = this.configService.getSettings();
     const previous = (settings.backupConfigs || []).find((b) => b.connectionId === scratchConnection.id);
 
@@ -116,7 +197,7 @@ export class BackupSchedulerService {
       connectionId: scratchConnection.id,
       connectionName: scratchConnection.name,
       action: 'restore-drill',
-      trigger: 'manual',
+      trigger,
       result,
       filePath
     });
@@ -248,7 +329,7 @@ export class BackupSchedulerService {
     const targets = webhooks.filter((w) => w.enabled && (!w.events || w.events.includes(eventKey)));
     if (targets.length === 0) return;
 
-    const payload = JSON.stringify({
+    const context: WebhookContext = {
       connectionName,
       action,
       trigger,
@@ -258,10 +339,10 @@ export class BackupSchedulerService {
       sizeBytes: result.sizeBytes,
       durationMs: result.durationMs,
       startedAt: new Date().toISOString()
-    });
+    };
 
     for (const target of targets) {
-      this.sendWebhook(target, payload).catch((err) => {
+      this.sendWebhook(target, buildWebhookPayload(target.platform, context)).catch((err) => {
         console.warn(`[BackupScheduler] Falha ao notificar webhook "${target.name}": ${err?.message || err}`);
       });
     }
@@ -269,17 +350,17 @@ export class BackupSchedulerService {
 
   /** Envia um payload sintético para um webhook, usado pelo botão "Testar" da UI. */
   public async testWebhook(target: BackupWebhookConfig): Promise<{ success: boolean; message: string }> {
-    const payload = JSON.stringify({
+    const context: WebhookContext = {
       connectionName: 'Conexão de teste',
       action: 'backup',
       trigger: 'manual',
       success: true,
       message: 'Este é um envio de teste disparado manualmente pelo dev-manager.',
       startedAt: new Date().toISOString()
-    });
+    };
 
     try {
-      await this.sendWebhook(target, payload);
+      await this.sendWebhook(target, buildWebhookPayload(target.platform, context));
       return { success: true, message: 'Webhook notificado com sucesso.' };
     } catch (err: any) {
       return { success: false, message: err?.message || 'Falha ao notificar webhook.' };

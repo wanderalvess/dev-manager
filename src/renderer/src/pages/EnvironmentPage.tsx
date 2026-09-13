@@ -298,9 +298,20 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const [isKarafHistoryOpen, setIsKarafHistoryOpen] = useState<boolean>(false);
   const [karafHistoryOutput, setKarafHistoryOutput] = useState<string>('');
   const [isLoadingKarafHistory, setIsLoadingKarafHistory] = useState<boolean>(false);
+  const [karafHistorySearch, setKarafHistorySearch] = useState<string>('');
+
+  const filteredKarafHistory = useMemo(() => {
+    if (!karafHistorySearch.trim()) return karafHistoryOutput;
+    const needle = karafHistorySearch.trim().toLowerCase();
+    return karafHistoryOutput
+      .split(/\r?\n/)
+      .filter((line) => line.toLowerCase().includes(needle))
+      .join('\n');
+  }, [karafHistoryOutput, karafHistorySearch]);
 
   const handleOpenKarafHistory = async () => {
     setIsKarafHistoryOpen(true);
+    setKarafHistorySearch('');
     if (!window.electronAPI?.getKarafPersistedLogs) return;
     setIsLoadingKarafHistory(true);
     try {
@@ -1617,13 +1628,30 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                 </button>
               </div>
             </div>
+            {karafHistoryOutput && (
+              <div className="px-4 pt-3 shrink-0">
+                <input
+                  type="text"
+                  value={karafHistorySearch}
+                  onChange={(e) => setKarafHistorySearch(e.target.value)}
+                  placeholder="Filtrar linhas do histórico..."
+                  className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+            )}
             <div className="p-4 overflow-y-auto flex-1">
               {isLoadingKarafHistory ? (
                 <div className="flex items-center justify-center py-8 text-muted-foreground text-xs gap-2">
                   <RefreshCw className="w-4 h-4 animate-spin" /> Carregando histórico...
                 </div>
               ) : karafHistoryOutput ? (
-                <pre className="text-[11px] font-mono whitespace-pre-wrap text-foreground">{karafHistoryOutput}</pre>
+                filteredKarafHistory ? (
+                  <pre className="text-[11px] font-mono whitespace-pre-wrap text-foreground">{filteredKarafHistory}</pre>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-8">
+                    Nenhuma linha corresponde ao filtro "{karafHistorySearch}".
+                  </p>
+                )
               ) : (
                 <p className="text-xs text-muted-foreground text-center py-8">
                   Nenhum log persistido ainda. Inicie o console Karaf embedded para começar a acumular histórico.

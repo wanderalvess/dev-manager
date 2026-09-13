@@ -196,6 +196,9 @@ export const DatabasePage: React.FC = () => {
   const [backupRetentionDays, setBackupRetentionDays] = useState<string>('');
   const [backupCompress, setBackupCompress] = useState<boolean>(false);
   const [backupOracleDirectory, setBackupOracleDirectory] = useState<string>('');
+  const [drillCron, setDrillCron] = useState<string>('');
+  const [drillScheduleEnabled, setDrillScheduleEnabled] = useState<boolean>(true);
+  const [drillScratchConnectionId, setDrillScratchConnectionId] = useState<string>('');
   const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
   const [scheduleSaveResult, setScheduleSaveResult] = useState<{ success: boolean; message: string } | null>(null);
   const [restoringFilePath, setRestoringFilePath] = useState<string | null>(null);
@@ -444,6 +447,9 @@ export const DatabasePage: React.FC = () => {
     setBackupRetentionDays(saved?.retentionDays ? String(saved.retentionDays) : '');
     setBackupCompress(!!saved?.compress);
     setBackupOracleDirectory(saved?.oracleDirectory || '');
+    setDrillCron(saved?.restoreDrillCronExpression || '');
+    setDrillScheduleEnabled(saved?.restoreDrillEnabled !== false);
+    setDrillScratchConnectionId(saved?.restoreDrillScratchConnectionId || '');
     setBackupResult(null);
     setScheduleSaveResult(null);
     setRestoreResult(null);
@@ -518,7 +524,10 @@ export const DatabasePage: React.FC = () => {
         retentionCount: backupRetentionCount.trim() ? Number(backupRetentionCount.trim()) : undefined,
         retentionDays: backupRetentionDays.trim() ? Number(backupRetentionDays.trim()) : undefined,
         compress: backupCompress,
-        oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined
+        oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined,
+        restoreDrillCronExpression: drillCron.trim() || undefined,
+        restoreDrillEnabled: drillScheduleEnabled,
+        restoreDrillScratchConnectionId: drillScratchConnectionId || undefined
       };
       const res = await window.electronAPI.saveDbBackupConfig(config);
       setScheduleSaveResult(res);
@@ -599,7 +608,8 @@ export const DatabasePage: React.FC = () => {
       authHeader: editingWebhook.authHeader?.trim() || undefined,
       authValue: editingWebhook.authValue?.trim() || undefined,
       enabled: editingWebhook.enabled !== undefined ? editingWebhook.enabled : true,
-      events: editingWebhook.events && editingWebhook.events.length > 0 ? editingWebhook.events : undefined
+      events: editingWebhook.events && editingWebhook.events.length > 0 ? editingWebhook.events : undefined,
+      platform: editingWebhook.platform || 'generic'
     };
 
     let updated: BackupWebhookConfig[];
@@ -641,6 +651,41 @@ export const DatabasePage: React.FC = () => {
     } finally {
       setIsTestingWebhookId(null);
     }
+  };
+
+  // Exporta o histórico de backup/restore carregado (conexão ativa) como CSV, pra auditoria
+  const handleExportBackupHistoryCsv = () => {
+    if (backupHistory.length === 0) return;
+
+    const escapeCsv = (value: string): string => `"${value.replace(/"/g, '""')}"`;
+    const header = ['startedAt', 'action', 'trigger', 'success', 'message', 'filePath', 'sizeBytes', 'durationMs', 'checksumSha256'];
+    const rows = backupHistory.map((h) =>
+      [
+        h.startedAt,
+        h.action,
+        h.trigger,
+        String(h.success),
+        h.message,
+        h.filePath || '',
+        h.sizeBytes !== undefined ? String(h.sizeBytes) : '',
+        h.durationMs !== undefined ? String(h.durationMs) : '',
+        h.checksumSha256 || ''
+      ]
+        .map(escapeCsv)
+        .join(',')
+    );
+    const csv = [header.join(','), ...rows].join('\r\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const connName = (activeConnection?.name || 'conexao').replace(/[^a-zA-Z0-9_-]/g, '_');
+    link.href = url;
+    link.download = `backup-history_${connName}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const formatBytes = (bytes: number): string => {
@@ -2830,6 +2875,60 @@ export const DatabasePage: React.FC = () => {
                       <span className="text-muted-foreground shrink-0">dias</span>
                     </div>
 
+                    <div className="pt-1.5 space-y-1.5">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                        <FlaskConical className="w-3 h-3" /> Restore Drill Agendado
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={drillCron}
+                          onChange={(e) => setDrillCron(e.target.value)}
+                          className="flex-1 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                        >
+                          <option value="">Sem drill agendado (só manual)</option>
+                          <option value="0 4 * * *">Diário às 04:00</option>
+                          <option value="0 4 * * 0">Semanal (domingo às 04:00)</option>
+                          {drillCron && !['0 4 * * *', '0 4 * * 0'].includes(drillCron) && (
+                            <option value={drillCron}>Personalizado: {drillCron}</option>
+                          )}
+                        </select>
+                        <input
+                          type="text"
+                          value={drillCron}
+                          onChange={(e) => setDrillCron(e.target.value)}
+                          placeholder="cron: 0 4 * * *"
+                          className="w-32 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={drillScheduleEnabled}
+                            onChange={(e) => setDrillScheduleEnabled(e.target.checked)}
+                            disabled={!drillCron.trim()}
+                            className="text-primary focus:ring-0"
+                          />
+                          <span>Ativo</span>
+                        </label>
+                        <select
+                          value={drillScratchConnectionId}
+                          onChange={(e) => setDrillScratchConnectionId(e.target.value)}
+                          className="flex-1 bg-background border border-border/70 rounded-md p-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                        >
+                          <option value="">Conexão scratch...</option>
+                          {connections.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name} ({c.type})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Testa o backup mais recente da pasta contra a conexão scratch, no mesmo cron. Nunca use a conexão de origem.
+                      </p>
+                    </div>
+
                     <button
                       type="button"
                       onClick={handleSaveBackupSchedule}
@@ -2968,15 +3067,26 @@ export const DatabasePage: React.FC = () => {
                       <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
                         <History className="w-3 h-3" /> Histórico de Execuções
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => activeConnection && refreshBackupHistory(activeConnection.id)}
-                        disabled={isLoadingBackupHistory}
-                        className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
-                        title="Recarregar histórico"
-                      >
-                        <RotateCw className={`w-3 h-3 ${isLoadingBackupHistory ? 'animate-spin text-primary' : ''}`} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={handleExportBackupHistoryCsv}
+                          disabled={backupHistory.length === 0}
+                          className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
+                          title="Exportar histórico como CSV"
+                        >
+                          <Download className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => activeConnection && refreshBackupHistory(activeConnection.id)}
+                          disabled={isLoadingBackupHistory}
+                          className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
+                          title="Recarregar histórico"
+                        >
+                          <RotateCw className={`w-3 h-3 ${isLoadingBackupHistory ? 'animate-spin text-primary' : ''}`} />
+                        </button>
+                      </div>
                     </div>
                     {backupHistory.length === 0 ? (
                       <div className="text-center py-3 text-[11px] text-muted-foreground">
@@ -3159,6 +3269,27 @@ export const DatabasePage: React.FC = () => {
                             onChange={(e) => setEditingWebhook({ ...editingWebhook, endpointUrl: e.target.value })}
                             className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
                           />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-foreground">Plataforma</label>
+                          <select
+                            value={editingWebhook.platform || 'generic'}
+                            onChange={(e) =>
+                              setEditingWebhook({
+                                ...editingWebhook,
+                                platform: e.target.value as 'generic' | 'slack' | 'discord' | 'teams'
+                              })
+                            }
+                            className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                          >
+                            <option value="generic">Genérico (JSON completo)</option>
+                            <option value="slack">Slack</option>
+                            <option value="discord">Discord</option>
+                            <option value="teams">Microsoft Teams</option>
+                          </select>
+                          <p className="text-[10px] text-muted-foreground">
+                            Slack/Discord/Teams formatam uma mensagem de texto pronta pro webhook de entrada de cada um.
+                          </p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div className="space-y-1">

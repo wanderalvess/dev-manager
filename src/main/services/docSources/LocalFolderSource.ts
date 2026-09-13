@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { DocSource, DocSourceEntry } from './DocSource';
 import { isSafePath } from '../../utils/security';
+import { extractPdfText, extractDocxText } from './textExtractors';
 
 const TEXT_EXTENSIONS = ['.md', '.mdx', '.txt'];
 const BINARY_EXTENSIONS = ['.pdf', '.docx'];
@@ -25,25 +26,6 @@ const MAX_TEXT_FILE_SIZE_BYTES = 1_000_000;
 // PDF/DOCX carregam formatação, fontes e imagens embutidas que inflam o arquivo sem
 // relação com o tamanho do texto extraído — limite bem mais generoso que o de texto puro.
 const MAX_BINARY_FILE_SIZE_BYTES = 20_000_000;
-
-async function extractPdfText(buffer: Buffer): Promise<string> {
-  const { PDFParse } = await import('pdf-parse');
-  const parser = new PDFParse({ data: buffer });
-  try {
-    // pageJoiner vazio evita que o marcador de página ("-- N of M --") vire ruído
-    // semântico nos chunks/embeddings.
-    const result = await parser.getText({ pageJoiner: '' });
-    return result.text;
-  } finally {
-    await parser.destroy();
-  }
-}
-
-async function extractDocxText(buffer: Buffer): Promise<string> {
-  const mammoth = await import('mammoth');
-  const { value } = await mammoth.extractRawText({ buffer });
-  return value;
-}
 
 /**
  * Fonte de documentação a partir de uma pasta local (recursiva). Usada tanto para

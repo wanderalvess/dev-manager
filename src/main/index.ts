@@ -110,6 +110,9 @@ function createWindow() {
 
   backupSchedulerService.rescheduleAll();
   autoUpdateService.checkForUpdates();
+  // Rechecagem periódica: cobre o app que fica dias aberto sem reiniciar, sem depender só do check no boot.
+  const AUTO_UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
+  const autoUpdateInterval = setInterval(() => autoUpdateService.checkForUpdates(), AUTO_UPDATE_CHECK_INTERVAL_MS);
 
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 
@@ -213,6 +216,7 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     logWatcherService.stopAll();
+    clearInterval(autoUpdateInterval);
     mainWindow = null;
   });
 }

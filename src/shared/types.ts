@@ -283,6 +283,8 @@ export interface AppSettings {
   docSyncTargets?: DocSyncTargetConfig[];
   /** Espaços do Confluence indexados como fonte adicional de documentação do RAG */
   confluenceSources?: ConfluenceSourceConfig[];
+  /** Último docker-compose.yml e profile usados na página de Containers, lembrados entre sessões. */
+  dockerComposeConfig?: { filePath?: string; profile?: string };
   /** Arquivos de log configurados para acompanhamento em tempo real (Tail) */
   realtimeLogSources?: RealtimeLogSource[];
   activeLogSourceId?: string;
@@ -315,6 +317,9 @@ export interface BackupWebhookConfig {
   enabled: boolean;
   /** Quais resultados disparam o webhook. Ausente = dispara em sucesso e falha. */
   events?: ('success' | 'failure')[];
+  /** Formato do payload. 'generic' = JSON com todos os campos (padrão). Os demais formatam pra
+   * caber direto no webhook de entrada nativo de cada plataforma (texto simples). */
+  platform?: 'generic' | 'slack' | 'discord' | 'teams';
 }
 
 /** Payload enviado ao webhook de backup a cada execução (backup, restore ou restore-drill). */
@@ -721,6 +726,12 @@ export interface BackupConfig {
   lastRunAt?: string;
   lastSuccess?: boolean;
   lastMessage?: string;
+  /** Expressão cron do restore drill periódico (testa o backup mais recente contra a conexão scratch). Ausente = sem drill agendado. */
+  restoreDrillCronExpression?: string;
+  /** Se o agendamento de drill está ativo. Ignorado quando restoreDrillCronExpression não está definido. */
+  restoreDrillEnabled?: boolean;
+  /** Id da conexão "descartável" usada como destino do restore drill — nunca a própria conexão de origem. */
+  restoreDrillScratchConnectionId?: string;
 }
 
 /** Registro histórico de uma execução de backup ou restauração (persistido além do último status por conexão). */
