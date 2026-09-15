@@ -980,7 +980,7 @@ export function initApiBridge() {
     },
     saveContainerEnvironment: async (env: ContainerEnvironment): Promise<boolean> => {
       const res = await apiFetch<{ success: boolean }>('/api/wsl/environments', {
-        method: 'POST',
+        method: 'PUT',
         body: JSON.stringify(env)
       });
       return res.success;

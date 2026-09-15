@@ -636,11 +636,6 @@ export function registerIpcHandlers(
     return await dockerService.checkDockerStatus().then((s) => s.availableDistros || []);
   });
 
-  ipcMain.handle('wsl:set-target-distro', async (_, distro: string | null) => {
-    dockerService.setTargetWslDistro(distro);
-    return await dockerService.checkDockerStatus();
-  });
-
   ipcMain.handle('docker:set-target-wsl-distro', async (_, distro: string | null) => {
     dockerService.setTargetWslDistro(distro);
     return await dockerService.checkDockerStatus();
@@ -649,6 +644,9 @@ export function registerIpcHandlers(
   ipcMain.handle(
     'docker:start-sequence',
     async (_, containers: { name: string; delay?: number }[]) => {
+      if (!Array.isArray(containers)) {
+        throw new Error('containers deve ser um array.');
+      }
       return await dockerService.startContainerSequence(containers, (step) => {
         mainWindow.webContents.send('docker:sequence-progress', step);
       });
@@ -683,6 +681,9 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('wsl:save-environment', async (_, env: any) => {
+    if (!env || !env.name) {
+      throw new Error('Dados de ambiente inválidos.');
+    }
     return wslService.saveContainerManagerEnvironment(env);
   });
 

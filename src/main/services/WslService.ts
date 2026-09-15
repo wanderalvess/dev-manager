@@ -139,6 +139,7 @@ export class WslService {
     try {
       const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'));
       const environments: ContainerEnvironment[] = [];
+      let autoIdCounter = 0;
 
       if (Array.isArray(raw.environments)) {
         for (const env of raw.environments) {
@@ -159,7 +160,7 @@ export class WslService {
           }
 
           environments.push({
-            id: env.id || String(Date.now()),
+            id: env.id || `${Date.now()}-${autoIdCounter++}`,
             name: env.name || 'Sem nome',
             color: env.color || '#0066cc',
             wslDistro: env.wslDistro,

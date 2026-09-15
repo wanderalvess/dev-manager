@@ -152,6 +152,8 @@ export const ContainersPage: React.FC = () => {
         }
         if (status.isWsl && status.wslDistro) {
           setSelectedDistro(status.wslDistro);
+        } else {
+          setSelectedDistro('');
         }
 
         if (status.installed && status.running) {
@@ -616,7 +618,9 @@ export const ContainersPage: React.FC = () => {
                     { name: wta ? wta.names.replace(/^\//, '') : 'linux-winthor', delay: 15 },
                     ...(wsh ? [{ name: wsh.names.replace(/^\//, '') }] : [])
                   ];
-                  window.electronAPI?.startContainerSequence?.(seq);
+                  window.electronAPI?.startContainerSequence?.(seq)?.catch((err: any) => {
+                    setErrorMessage(`Erro ao iniciar sequência: ${err?.message || err}`);
+                  });
                 }
               }}
               disabled={sequenceProgress.running || containers.length === 0}

@@ -749,7 +749,9 @@ app.post('/api/docker/start-sequence', async (req, res) => {
   if (!Array.isArray(containers)) {
     return res.status(400).json({ success: false, error: 'containers deve ser um array' });
   }
-  const result = await dockerService.startContainerSequence(containers);
+  const result = await dockerService.startContainerSequence(containers, (step) => {
+    broadcastWs('docker:sequence-progress', step);
+  });
   res.json(result);
 });
 
@@ -807,7 +809,7 @@ app.get(['/api/docker/containers/:id/logs', '/api/containers/:id/logs'], async (
 
 app.post(['/api/docker/containers/:id/terminal', '/api/containers/:id/terminal'], async (req, res) => {
   try {
-    const shellName = req.body?.shell || 'sh';
+    const shellName = req.body?.shell || 'bash';
     const success = await dockerService.openContainerTerminal(req.params.id, shellName);
     res.json({ success });
   } catch (err: any) {

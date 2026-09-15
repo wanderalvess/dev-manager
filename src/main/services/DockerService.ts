@@ -17,13 +17,15 @@ export class DockerService {
   private detectedEngine: 'docker' | 'podman' | null = null;
   private targetWslDistro: string | null = null;
   private useWsl = false;
+  private autoDetectedWsl = false;
 
   /**
    * Define manualmente a distro WSL a ser utilizada.
    * Se for null ou vazio, volta para detecção automática ou Windows host.
    */
   public setTargetWslDistro(distro: string | null): void {
-    if (distro && distro.trim().length > 0) {
+    this.autoDetectedWsl = false;
+    if (distro && isValidIdentifier(distro) && distro.trim().length > 0) {
       this.targetWslDistro = distro.trim();
       this.useWsl = true;
     } else {
@@ -63,6 +65,20 @@ export class DockerService {
   }
 
   /**
+   * Converte um caminho estilo Windows (C:\...) para o caminho montado equivalente dentro do WSL
+   * (/mnt/c/...), necessário porque o Docker CLI executando dentro de uma distro WSL não interpreta
+   * letras de unidade do Windows.
+   */
+  private toWslPath(windowsPath: string): string {
+    if (!this.useWsl || !this.targetWslDistro) return windowsPath;
+    const match = /^([a-zA-Z]):[\\/](.*)$/.exec(windowsPath);
+    if (!match) return windowsPath;
+    const drive = match[1].toLowerCase();
+    const rest = match[2].replace(/\\/g, '/');
+    return `/mnt/${drive}/${rest}`;
+  }
+
+  /**
    * Identifica e retorna o comando do motor de container disponível no Windows ('docker' ou 'podman').
    */
   public async getEngineCommand(): Promise<'docker' | 'podman'> {
@@ -96,8 +112,9 @@ export class DockerService {
   public async checkDockerStatus(): Promise<DockerDaemonStatus> {
     const availableDistros = await wslService.listDistros();
 
-    // 1. Se uma distro WSL específica já foi selecionada pelo usuário ou detectada previamente
-    if (this.useWsl && this.targetWslDistro) {
+    // 1. Se uma distro WSL específica foi selecionada manualmente pelo usuário (não apenas detectada
+    // automaticamente como fallback), respeita a escolha sem voltar a testar o host Windows.
+    if (this.useWsl && this.targetWslDistro && !this.autoDetectedWsl) {
       try {
         const { stdout } = await execFileAsync(
           'wsl',
@@ -136,6 +153,7 @@ export class DockerService {
       const version = stdout.trim();
       this.detectedEngine = 'docker';
       this.useWsl = false;
+      this.autoDetectedWsl = false;
       return {
         installed: true,
         running: true,
@@ -154,6 +172,7 @@ export class DockerService {
         const version = stdout.trim();
         this.detectedEngine = 'podman';
         this.useWsl = false;
+        this.autoDetectedWsl = false;
         return {
           installed: true,
           running: true,
@@ -168,6 +187,7 @@ export class DockerService {
         if (wslDistroWithDocker) {
           this.targetWslDistro = wslDistroWithDocker;
           this.useWsl = true;
+          this.autoDetectedWsl = true;
 
           try {
             const { stdout } = await execFileAsync(
@@ -198,11 +218,28 @@ export class DockerService {
           }
         }
 
+        // Nenhum motor está respondendo — verifica se ao menos o binário está instalado no Windows,
+        // para diferenciar "não instalado" de "instalado, porém com o serviço parado".
+        let anyBinaryInstalled = false;
+        try {
+          await execFileAsync('docker', ['--version'], { timeout: 3000, windowsHide: true });
+          anyBinaryInstalled = true;
+        } catch {
+          try {
+            await execFileAsync('podman', ['--version'], { timeout: 3000, windowsHide: true });
+            anyBinaryInstalled = true;
+          } catch {
+            // Nenhum binário encontrado no Windows
+          }
+        }
+
         return {
-          installed: false,
+          installed: anyBinaryInstalled,
           running: false,
           availableDistros,
-          error: 'Nenhum motor de containers (Docker/Podman no Windows ou Docker no WSL) foi encontrado em execução.'
+          error: anyBinaryInstalled
+            ? 'Docker/Podman está instalado, mas o serviço não está em execução. Inicie o Docker Desktop ou o daemon correspondente.'
+            : 'Nenhum motor de containers (Docker/Podman no Windows ou Docker no WSL) foi encontrado em execução.'
         };
       }
     }
@@ -428,21 +465,20 @@ export class DockerService {
     try {
       if (this.useWsl && this.targetWslDistro) {
         // Tenta abrir com Windows Terminal (wt) direto na sessão bash do container
-        const wtArgs = ['-w', '0', 'nt', 'wsl', '-d', this.targetWslDistro, '--', 'docker', 'exec', '-it', containerId, safeShell];
-        try {
-          const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });
-          wtChild.unref();
-          return true;
-        } catch {
-          // Fallback para cmd.exe
-          const fallbackCmd = `wsl -d ${this.targetWslDistro} -- docker exec -it ${containerId} ${safeShell}`;
+        const distro = this.targetWslDistro;
+        const wtArgs = ['-w', '0', 'nt', 'wsl', '-d', distro, '--', 'docker', 'exec', '-it', containerId, safeShell];
+        const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });
+        wtChild.on('error', () => {
+          // wt.exe indisponível (ENOENT chega de forma assíncrona, não via throw): cai para cmd.exe
+          const fallbackCmd = `wsl -d ${distro} -- docker exec -it ${containerId} ${safeShell}`;
           const child = spawn('cmd.exe', ['/c', 'start', `Container: ${containerId}`, 'cmd.exe', '/k', fallbackCmd], {
             detached: true,
             stdio: 'ignore'
           });
           child.unref();
-          return true;
-        }
+        });
+        wtChild.unref();
+        return true;
       }
 
       const engine = await this.getEngineCommand();
@@ -523,8 +559,8 @@ export class DockerService {
     const { binary, finalArgs } = await this.resolveCommandAndArgs('build', [
       '-t',
       imageTag,
-      ...(dockerfile && dockerfile.trim() ? ['-f', dockerfile.trim()] : []),
-      contextPath
+      ...(dockerfile && dockerfile.trim() ? ['-f', this.toWslPath(dockerfile.trim())] : []),
+      this.toWslPath(contextPath)
     ]);
 
     onChunk(`> ${binary} ${finalArgs.join(' ')}\r\n\r\n`);
@@ -576,7 +612,7 @@ export class DockerService {
       return { code: 1, stdout: '', stderr: err };
     }
 
-    const args = ['compose', '-f', composeFilePath];
+    const args = ['compose', '-f', this.toWslPath(composeFilePath)];
     if (options?.profile && isValidIdentifier(options.profile)) {
       args.push('--profile', options.profile);
     }
@@ -608,7 +644,7 @@ export class DockerService {
       return { code: 1, stdout: '', stderr: err };
     }
 
-    const args = ['compose', '-f', composeFilePath];
+    const args = ['compose', '-f', this.toWslPath(composeFilePath)];
     if (options?.profile && isValidIdentifier(options.profile)) {
       args.push('--profile', options.profile);
     }
@@ -632,7 +668,7 @@ export class DockerService {
     if (!isSafeLocalPath(composeFilePath) || !fs.existsSync(composeFilePath)) return [];
 
     try {
-      const args = ['compose', '-f', composeFilePath];
+      const args = ['compose', '-f', this.toWslPath(composeFilePath)];
       if (profile && isValidIdentifier(profile)) args.push('--profile', profile);
       args.push('ps', '--format', 'json');
 
@@ -719,33 +755,35 @@ export class DockerService {
     password = 'password'
   ): Promise<boolean> {
     const cleanContainer = containerName.replace(/^\//, '');
+    if (!this.isValidContainerId(cleanContainer)) {
+      throw new Error('Identificador de container inválido.');
+    }
     const cleanUser = user.replace(/[^a-zA-Z0-9_]/g, '') || 'sys';
-    const cleanPass = password || 'password';
+    const cleanPass = (password || 'password').replace(/[^a-zA-Z0-9_!@#%^*+=.\-]/g, '');
 
     const cmdInside = `/home/oracle/tools/sqlplus_conn.sh ${cleanUser} ${cleanPass}`;
 
     try {
       if (this.useWsl && this.targetWslDistro) {
+        const distro = this.targetWslDistro;
         const wtArgs = [
           '-w', '0', 'nt',
           '--title', `Oracle SQL*Plus: ${cleanContainer} (${cleanUser})`,
-          'wsl.exe', '-d', this.targetWslDistro, '--',
+          'wsl.exe', '-d', distro, '--',
           'docker', 'exec', '-it', cleanContainer, 'bash', '-c', cmdInside
         ];
 
-        try {
-          const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });
-          wtChild.unref();
-          return true;
-        } catch {
-          const fallbackCmd = `wsl -d ${this.targetWslDistro} -- docker exec -it ${cleanContainer} bash -c "${cmdInside}"`;
+        const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });
+        wtChild.on('error', () => {
+          const fallbackCmd = `wsl -d ${distro} -- docker exec -it ${cleanContainer} bash -c "${cmdInside}"`;
           const child = spawn('cmd.exe', ['/c', 'start', `SQL*Plus ${cleanContainer}`, 'cmd.exe', '/k', fallbackCmd], {
             detached: true,
             stdio: 'ignore'
           });
           child.unref();
-          return true;
-        }
+        });
+        wtChild.unref();
+        return true;
       }
 
       const engine = await this.getEngineCommand();
@@ -767,6 +805,14 @@ export class DockerService {
    * Executa import_dump.sh para importar e calibrar um dump no banco Oracle.
    */
   public async execOracleDataPump(params: OracleDataPumpParams): Promise<OracleMaintenanceResult> {
+    if (!params?.containerName || !params?.dumpfile || !params?.schemaOrig) {
+      return {
+        success: false,
+        output: '',
+        error: 'Parâmetros obrigatórios ausentes: containerName, dumpfile ou schemaOrig.'
+      };
+    }
+
     const cleanContainer = params.containerName.replace(/^\//, '');
     const cleanUser = (params.user || 'system').replace(/[^a-zA-Z0-9_]/g, '');
     const cleanPass = params.password || 'password';
