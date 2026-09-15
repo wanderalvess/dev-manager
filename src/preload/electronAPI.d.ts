@@ -29,6 +29,10 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
+  WslDistroInfo,
+  ContainerEnvironment,
+  OracleMaintenanceResult,
+  OracleDataPumpParams,
   NetworkIpInfo,
   ExplainPlanResult,
   KarafBundleInfo,
@@ -218,7 +222,30 @@ export interface ElectronAPI {
   testBackupWebhook: (webhook: BackupWebhookConfig) => Promise<{ success: boolean; message: string }>;
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => () => void;
 
-  // Gerenciador de Containers (Docker / Podman)
+  // Gerenciador de Containers (Docker / Podman / WSL)
+  listWslDistros?: () => Promise<WslDistroInfo[]>;
+  setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
+  getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
+  saveContainerEnvironment?: (env: ContainerEnvironment) => Promise<boolean>;
+  deleteContainerEnvironment?: (id: string) => Promise<boolean>;
+  startContainerSequence?: (
+    containers: { name: string; delay?: number }[]
+  ) => Promise<{ success: boolean; started: string[]; failed?: string; error?: string }>;
+  onContainerSequenceProgress?: (
+    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number }) => void
+  ) => () => void;
+
+  // Ferramentas de Manutenção Oracle (INFR-Docker)
+  execOracleHealth?: (
+    containerName: string,
+    schema?: string,
+    fix?: boolean,
+    user?: string,
+    password?: string
+  ) => Promise<OracleMaintenanceResult>;
+  openOracleSqlPlus?: (containerName: string, user?: string, password?: string) => Promise<boolean>;
+  execOracleDataPump?: (params: OracleDataPumpParams) => Promise<OracleMaintenanceResult>;
+
   getDockerStatus: () => Promise<DockerDaemonStatus>;
   listDockerContainers: () => Promise<DockerContainerInfo[]>;
   startDockerContainer: (containerId: string) => Promise<boolean>;

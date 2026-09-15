@@ -1,7 +1,9 @@
 /**
  * Script de empacotamento com suporte a proxy corporativo (SSL inspection / certificados autoassinados e mirrors estáveis).
  */
-if (process.env.CORP_PROXY_INSECURE === '1') {
+// Por padrão em ambiente com proxy corporativo (SSL inspection / certificados autoassinados da TOTVS),
+// desativa a rejeição estrita de TLS para o electron-builder e dependências nativas.
+if (process.env.STRICT_SSL !== '1') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
 process.env.ELECTRON_MIRROR = process.env.ELECTRON_MIRROR || 'https://npmmirror.com/mirrors/electron/';
@@ -122,6 +124,7 @@ async function start() {
     shell: true,
     env: {
       ...process.env,
+      NODE_TLS_REJECT_UNAUTHORIZED: process.env.NODE_TLS_REJECT_UNAUTHORIZED,
       ELECTRON_MIRROR: process.env.ELECTRON_MIRROR,
       ELECTRON_BUILDER_BINARIES_MIRROR: process.env.ELECTRON_BUILDER_BINARIES_MIRROR
     }

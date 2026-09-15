@@ -878,12 +878,38 @@ export interface DockerContainerInfo {
   created: string;
 }
 
+export interface WslDistroInfo {
+  name: string;
+  state: 'Running' | 'Stopped';
+  version: number;
+  isDefault: boolean;
+  hasDocker?: boolean;
+}
+
+export interface ContainerEnvironmentSlot {
+  id: string;
+  name: string;
+  delay?: number;
+}
+
+export interface ContainerEnvironment {
+  id: string;
+  name: string;
+  color?: string;
+  wslDistro?: string;
+  containers: (string | ContainerEnvironmentSlot)[];
+  delays?: Record<string, number>;
+}
+
 export interface DockerDaemonStatus {
   installed: boolean;
   running: boolean;
   engine?: ContainerEngineType;
   version?: string;
   error?: string;
+  isWsl?: boolean;
+  wslDistro?: string;
+  availableDistros?: WslDistroInfo[];
 }
 
 export interface DockerContainerStats {
@@ -906,6 +932,24 @@ export interface ComposeServiceStatus {
 export type ContainerInfo = DockerContainerInfo;
 export type ContainerDaemonStatus = DockerDaemonStatus;
 export type ContainerStats = DockerContainerStats;
+
+export interface OracleMaintenanceResult {
+  success: boolean;
+  output: string;
+  exitCode?: number;
+  error?: string;
+}
+
+export interface OracleDataPumpParams {
+  containerName: string;
+  user?: string;
+  password?: string;
+  dumpfile: string;
+  schemaOrig: string;
+  schemaDest?: string;
+  codclipc: string;
+}
+
 
 // ==========================================
 // Módulo de Rede & IPs (Local e WSL)

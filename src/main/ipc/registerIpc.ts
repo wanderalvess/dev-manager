@@ -15,6 +15,7 @@ import { BackupService } from '../services/BackupService';
 import { BackupSchedulerService } from '../services/BackupSchedulerService';
 import * as cron from 'node-cron';
 import { DockerService } from '../services/DockerService';
+import { wslService } from '../services/WslService';
 import { NetworkService } from '../services/NetworkService';
 import { DeployService } from '../services/DeployService';
 import { LogWatcherService } from '../services/LogWatcherService';
@@ -630,7 +631,65 @@ export function registerIpcHandlers(
     return await backupSchedulerService.testWebhook(webhook);
   });
 
-  // --- Gerenciador de Containers (Docker / Podman) ---
+  // --- Gerenciador de Containers (Docker / Podman / WSL) ---
+  ipcMain.handle('wsl:list-distros', async () => {
+    return await dockerService.checkDockerStatus().then((s) => s.availableDistros || []);
+  });
+
+  ipcMain.handle('wsl:set-target-distro', async (_, distro: string | null) => {
+    dockerService.setTargetWslDistro(distro);
+    return await dockerService.checkDockerStatus();
+  });
+
+  ipcMain.handle('docker:set-target-wsl-distro', async (_, distro: string | null) => {
+    dockerService.setTargetWslDistro(distro);
+    return await dockerService.checkDockerStatus();
+  });
+
+  ipcMain.handle(
+    'docker:start-sequence',
+    async (_, containers: { name: string; delay?: number }[]) => {
+      return await dockerService.startContainerSequence(containers, (step) => {
+        mainWindow.webContents.send('docker:sequence-progress', step);
+      });
+    }
+  );
+
+  // --- Ferramentas de Manutenção Oracle (INFR-Docker) ---
+  ipcMain.handle(
+    'docker:oracle-health',
+    async (_, containerName: string, schema?: string, fix?: boolean, user?: string, password?: string) => {
+      return await dockerService.execOracleHealth(containerName, schema, fix, user, password);
+    }
+  );
+
+  ipcMain.handle(
+    'docker:oracle-sqlplus',
+    async (_, containerName: string, user?: string, password?: string) => {
+      return await dockerService.openOracleSqlPlus(containerName, user, password);
+    }
+  );
+
+  ipcMain.handle(
+    'docker:oracle-datapump',
+    async (_, params: any) => {
+      return await dockerService.execOracleDataPump(params);
+    }
+  );
+
+  // --- Ambientes do Container Manager & WSL ---
+  ipcMain.handle('wsl:get-environments', async () => {
+    return wslService.loadContainerManagerConfig();
+  });
+
+  ipcMain.handle('wsl:save-environment', async (_, env: any) => {
+    return wslService.saveContainerManagerEnvironment(env);
+  });
+
+  ipcMain.handle('wsl:delete-environment', async (_, id: string) => {
+    return wslService.deleteContainerManagerEnvironment(id);
+  });
+
   ipcMain.handle('docker:get-status', async () => {
     return await dockerService.checkDockerStatus();
   });

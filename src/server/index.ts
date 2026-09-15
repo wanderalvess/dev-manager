@@ -18,6 +18,7 @@ import { BackupService } from '../main/services/BackupService';
 import { BackupSchedulerService } from '../main/services/BackupSchedulerService';
 import * as cron from 'node-cron';
 import { DockerService } from '../main/services/DockerService';
+import { wslService } from '../main/services/WslService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
@@ -711,7 +712,47 @@ app.post('/api/backup/test-webhook', async (req, res) => {
   }
 });
 
-// 9. Gerenciador de Containers (Docker / Podman)
+// 9. Gerenciador de Containers (Docker / Podman / WSL)
+app.get(['/api/wsl/environments', '/api/config/environments'], (_req, res) => {
+  const cfg = wslService.loadContainerManagerConfig();
+  res.json(cfg);
+});
+
+app.put(['/api/wsl/environments', '/api/config/environments'], (req, res) => {
+  const env = req.body;
+  if (!env || !env.name) {
+    return res.status(400).json({ success: false, error: 'Dados de ambiente inválidos.' });
+  }
+  const success = wslService.saveContainerManagerEnvironment(env);
+  res.json({ success });
+});
+
+app.delete(['/api/wsl/environments/:id', '/api/config/environments/:id'], (req, res) => {
+  const success = wslService.deleteContainerManagerEnvironment(req.params.id);
+  res.json({ success });
+});
+
+app.get('/api/wsl/distros', async (_req, res) => {
+  const status = await dockerService.checkDockerStatus();
+  res.json(status.availableDistros || []);
+});
+
+app.post(['/api/wsl/target-distro', '/api/docker/target-distro'], async (req, res) => {
+  const { distro } = req.body || {};
+  dockerService.setTargetWslDistro(distro || null);
+  const status = await dockerService.checkDockerStatus();
+  res.json(status);
+});
+
+app.post('/api/docker/start-sequence', async (req, res) => {
+  const { containers } = req.body || {};
+  if (!Array.isArray(containers)) {
+    return res.status(400).json({ success: false, error: 'containers deve ser um array' });
+  }
+  const result = await dockerService.startContainerSequence(containers);
+  res.json(result);
+});
+
 app.get(['/api/docker/status', '/api/containers/status'], async (_req, res) => {
   const status = await dockerService.checkDockerStatus();
   res.json(status);
@@ -780,6 +821,36 @@ app.delete(['/api/docker/containers/:id', '/api/containers/:id'], async (req, re
     res.json({ success });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Ferramentas de Manutenção Oracle (INFR-Docker)
+app.post(['/api/docker/oracle-health', '/api/containers/oracle-health'], async (req, res) => {
+  try {
+    const { containerName, schema, fix, user, password } = req.body || {};
+    const result = await dockerService.execOracleHealth(containerName, schema, fix, user, password);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: '', error: err.message });
+  }
+});
+
+app.post(['/api/docker/oracle-sqlplus', '/api/containers/oracle-sqlplus'], async (req, res) => {
+  try {
+    const { containerName, user, password } = req.body || {};
+    const success = await dockerService.openOracleSqlPlus(containerName, user, password);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post(['/api/docker/oracle-datapump', '/api/containers/oracle-datapump'], async (req, res) => {
+  try {
+    const result = await dockerService.execOracleDataPump(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: '', error: err.message });
   }
 });
 

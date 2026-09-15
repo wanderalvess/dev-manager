@@ -29,6 +29,10 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
+  WslDistroInfo,
+  ContainerEnvironment,
+  OracleMaintenanceResult,
+  OracleDataPumpParams,
   NetworkIpInfo,
   ExplainPlanResult,
   SystemMetrics,
@@ -298,7 +302,42 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('backup:schedule-result', subscription);
   },
 
-  // Gerenciador de Containers (Docker / Podman)
+  // Gerenciador de Containers (Docker / Podman / WSL)
+  listWslDistros: (): Promise<WslDistroInfo[]> => ipcRenderer.invoke('wsl:list-distros'),
+  setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
+    ipcRenderer.invoke('docker:set-target-wsl-distro', distro),
+  getContainerEnvironments: (): Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }> =>
+    ipcRenderer.invoke('wsl:get-environments'),
+  saveContainerEnvironment: (env: ContainerEnvironment): Promise<boolean> =>
+    ipcRenderer.invoke('wsl:save-environment', env),
+  deleteContainerEnvironment: (id: string): Promise<boolean> =>
+    ipcRenderer.invoke('wsl:delete-environment', id),
+  startContainerSequence: (
+    containers: { name: string; delay?: number }[]
+  ): Promise<{ success: boolean; started: string[]; failed?: string; error?: string }> =>
+    ipcRenderer.invoke('docker:start-sequence', containers),
+  onContainerSequenceProgress: (
+    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number }) => void
+  ) => {
+    const subscription = (_: any, data: any) => callback(data);
+    ipcRenderer.on('docker:sequence-progress', subscription);
+    return () => ipcRenderer.removeListener('docker:sequence-progress', subscription);
+  },
+
+  // Ferramentas de Manutenção Oracle (INFR-Docker)
+  execOracleHealth: (
+    containerName: string,
+    schema?: string,
+    fix?: boolean,
+    user?: string,
+    password?: string
+  ): Promise<OracleMaintenanceResult> =>
+    ipcRenderer.invoke('docker:oracle-health', containerName, schema, fix, user, password),
+  openOracleSqlPlus: (containerName: string, user?: string, password?: string): Promise<boolean> =>
+    ipcRenderer.invoke('docker:oracle-sqlplus', containerName, user, password),
+  execOracleDataPump: (params: OracleDataPumpParams): Promise<OracleMaintenanceResult> =>
+    ipcRenderer.invoke('docker:oracle-datapump', params),
+
   getDockerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('docker:get-status'),
   listDockerContainers: (): Promise<DockerContainerInfo[]> => ipcRenderer.invoke('docker:list-containers'),
   startDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:start', containerId),

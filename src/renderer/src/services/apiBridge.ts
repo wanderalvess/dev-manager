@@ -29,6 +29,10 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
+  WslDistroInfo,
+  ContainerEnvironment,
+  OracleMaintenanceResult,
+  OracleDataPumpParams,
   NetworkIpInfo,
   ExplainPlanResult,
   KarafBundleInfo,
@@ -955,6 +959,77 @@ export function initApiBridge() {
     },
     onDockerComposeLogChunk: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('docker:compose-log-chunk', callback);
+    },
+
+    // WSL & Container Environments
+    listWslDistros: async (): Promise<WslDistroInfo[]> => {
+      try {
+        return await apiFetch<WslDistroInfo[]>('/api/wsl/distros');
+      } catch {
+        return [];
+      }
+    },
+    setDockerTargetWslDistro: async (distro: string | null): Promise<DockerDaemonStatus> => {
+      return apiFetch('/api/wsl/target-distro', {
+        method: 'POST',
+        body: JSON.stringify({ distro })
+      });
+    },
+    getContainerEnvironments: async (): Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }> => {
+      return apiFetch('/api/wsl/environments');
+    },
+    saveContainerEnvironment: async (env: ContainerEnvironment): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>('/api/wsl/environments', {
+        method: 'POST',
+        body: JSON.stringify(env)
+      });
+      return res.success;
+    },
+    deleteContainerEnvironment: async (id: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/wsl/environments/${id}`, {
+        method: 'DELETE'
+      });
+      return res.success;
+    },
+    startContainerSequence: async (containers: { name: string; delay?: number }[]) => {
+      return apiFetch('/api/docker/start-sequence', {
+        method: 'POST',
+        body: JSON.stringify({ containers })
+      });
+    },
+    onContainerSequenceProgress: (callback: (step: any) => void) => {
+      return wsManager.subscribe('docker:sequence-progress', callback);
+    },
+
+    // Ferramentas Especializadas Oracle (INFR-Docker)
+    execOracleHealth: async (
+      containerName: string,
+      schema?: string,
+      fix?: boolean,
+      user?: string,
+      password?: string
+    ): Promise<OracleMaintenanceResult> => {
+      return apiFetch('/api/docker/oracle-health', {
+        method: 'POST',
+        body: JSON.stringify({ containerName, schema, fix, user, password })
+      });
+    },
+    openOracleSqlPlus: async (containerName: string, user?: string, password?: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>('/api/docker/oracle-sqlplus', {
+          method: 'POST',
+          body: JSON.stringify({ containerName, user, password })
+        });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    execOracleDataPump: async (params: OracleDataPumpParams): Promise<OracleMaintenanceResult> => {
+      return apiFetch('/api/docker/oracle-datapump', {
+        method: 'POST',
+        body: JSON.stringify(params)
+      });
     },
 
     // Rede & Detecção de IPs (Local e WSL)
