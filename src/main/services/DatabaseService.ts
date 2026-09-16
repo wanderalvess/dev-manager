@@ -214,7 +214,9 @@ export class DatabaseService {
       if (config.type === 'oracle') {
         query = 'SELECT table_name FROM user_tables ORDER BY table_name';
       } else if (config.type === 'postgres') {
-        query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name";
+        query =
+          "SELECT table_schema || '.' || table_name AS table_name FROM information_schema.tables " +
+          "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') ORDER BY table_schema, table_name";
       } else if (config.type === 'mysql') {
         query = 'SHOW TABLES';
       }
@@ -280,12 +282,15 @@ export class DatabaseService {
           };
         });
       } else if (config.type === 'postgres') {
+        const dotIdx = cleanTable.lastIndexOf('.');
+        const schemaPart = dotIdx >= 0 ? cleanTable.slice(0, dotIdx) : 'public';
+        const tablePart = dotIdx >= 0 ? cleanTable.slice(dotIdx + 1) : cleanTable;
         const query = `
-          SELECT 
-            c.column_name, 
-            c.data_type, 
-            c.is_nullable, 
-            c.character_maximum_length, 
+          SELECT
+            c.column_name,
+            c.data_type,
+            c.is_nullable,
+            c.character_maximum_length,
             c.column_default,
             CASE WHEN pk.column_name IS NOT NULL THEN 'YES' ELSE 'NO' END AS is_pk
           FROM information_schema.columns c
@@ -296,7 +301,7 @@ export class DatabaseService {
               ON tc.constraint_name = ku.constraint_name AND tc.table_schema = ku.table_schema
             WHERE tc.constraint_type = 'PRIMARY KEY'
           ) pk ON c.table_name = pk.table_name AND c.table_schema = pk.table_schema AND c.column_name = pk.column_name
-          WHERE LOWER(c.table_name) = LOWER('${cleanTable}') AND c.table_schema = 'public'
+          WHERE LOWER(c.table_name) = LOWER('${tablePart}') AND LOWER(c.table_schema) = LOWER('${schemaPart}')
           ORDER BY c.ordinal_position
         `;
         const res = await this.executeQuery(config, query, 300);

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Sparkles, X } from 'lucide-react';
 import { TourStep } from './tourSteps';
+import { announceTourFinished } from './tourCoordinator';
 
 interface OnboardingTourProps {
   steps: TourStep[];
@@ -13,6 +14,9 @@ interface OnboardingTourProps {
 
 const RING_PADDING = 6;
 const TOOLTIP_WIDTH = 320;
+// Estimativa da altura do tooltip usada só para limitar sua posição vertical à tela — não precisa ser exata,
+// só suficiente para nunca deixar os botões (Próximo/Pular) fora da área visível.
+const TOOLTIP_ESTIMATED_HEIGHT = 200;
 const TOOLTIP_GAP = 16;
 const VIEWPORT_MARGIN = 12;
 
@@ -51,6 +55,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
 
   const finish = useCallback(() => {
     markStorage(storageKey);
+    announceTourFinished();
     onClose();
   }, [onClose, storageKey]);
 
@@ -151,14 +156,22 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
   const tooltipStyle: React.CSSProperties = rect
     ? (() => {
         const spaceBelow = window.innerHeight - rect.bottom;
-        const placeBelow = spaceBelow > 180 || rect.top < 180;
+        const spaceAbove = rect.top;
+        const placeBelow = spaceBelow >= spaceAbove;
+
         let left = rect.left + rect.width / 2 - TOOLTIP_WIDTH / 2;
         left = Math.min(Math.max(left, VIEWPORT_MARGIN), window.innerWidth - TOOLTIP_WIDTH - VIEWPORT_MARGIN);
+
+        // Alvo alto (ex: sidebar de altura total) pode deixar rect.top/rect.bottom fora da viewport —
+        // sempre limita o `top` final aos limites da tela para o tooltip nunca ficar inacessível.
+        let top = placeBelow ? rect.bottom + TOOLTIP_GAP : rect.top - TOOLTIP_GAP - TOOLTIP_ESTIMATED_HEIGHT;
+        top = Math.min(Math.max(top, VIEWPORT_MARGIN), window.innerHeight - TOOLTIP_ESTIMATED_HEIGHT - VIEWPORT_MARGIN);
+
         return {
           position: 'fixed',
           left,
-          width: TOOLTIP_WIDTH,
-          ...(placeBelow ? { top: rect.bottom + TOOLTIP_GAP } : { bottom: window.innerHeight - rect.top + TOOLTIP_GAP })
+          top,
+          width: TOOLTIP_WIDTH
         };
       })()
     : {

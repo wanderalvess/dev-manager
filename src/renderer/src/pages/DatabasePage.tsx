@@ -81,6 +81,14 @@ const DEFAULT_PORTS: Record<DatabaseType, number> = {
 
 const CRON_PRESETS = ['0 * * * *', '0 */6 * * *', '0 2 * * *', '0 2 * * 0'];
 
+const SQL_KEYWORDS = [
+  'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN', 'IS', 'NULL',
+  'ORDER BY', 'GROUP BY', 'HAVING', 'JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'ON',
+  'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'DISTINCT', 'AS', 'LIMIT',
+  'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROWNUM', 'UNION', 'UNION ALL', 'EXISTS', 'CASE',
+  'WHEN', 'THEN', 'ELSE', 'END', 'DESC', 'ASC'
+];
+
 export const DEFAULT_SQL_SNIPPETS: SqlSnippet[] = [
   {
     id: 'oracle-active-sessions',
@@ -193,6 +201,15 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
   const [expandedTable, setExpandedTable] = useState<string | null>(null);
   const [tableColumns, setTableColumns] = useState<Record<string, TableColumnInfo[]>>({});
   const [isLoadingColumns, setIsLoadingColumns] = useState<Record<string, boolean>>({});
+
+  // Autocomplete do editor SQL
+  const sqlTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const [autocomplete, setAutocomplete] = useState<{
+    suggestions: { label: string; type: 'keyword' | 'table' | 'column' }[];
+    activeIndex: number;
+    wordStart: number;
+    wordEnd: number;
+  } | null>(null);
 
   // Modal de Conexão
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -1027,11 +1044,150 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     }
   };
 
+  // Extrai tabelas/aliases referenciados após FROM/JOIN para sugerir colunas com "alias.coluna"
+  const referencedTables = useMemo(() => {
+    const regex = /\b(?:FROM|JOIN)\s+([a-zA-Z0-9_."]+)(?:\s+(?:AS\s+)?([a-zA-Z0-9_]+))?/gi;
+    const result: { table: string; alias: string }[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(sql)) !== null) {
+      const rawTable = m[1].replace(/"/g, '');
+      const alias = m[2] || rawTable.split('.').pop() || rawTable;
+      result.push({ table: rawTable, alias });
+    }
+    return result;
+  }, [sql]);
+
+  // Garante que as colunas das tabelas referenciadas no SQL estejam carregadas para o autocomplete
+  useEffect(() => {
+    if (!activeConnection || !window.electronAPI?.getDbTableColumns) return;
+    referencedTables.forEach(({ table }) => {
+      const known = tables.find((t) => t === table || t.split('.').pop() === table.split('.').pop());
+      const key = known || table;
+      if (!tableColumns[key] && !isLoadingColumns[key]) {
+        setIsLoadingColumns((prev) => ({ ...prev, [key]: true }));
+        window.electronAPI
+          .getDbTableColumns(activeConnection, key)
+          .then((cols) => setTableColumns((prev) => ({ ...prev, [key]: cols || [] })))
+          .catch(() => {})
+          .finally(() => setIsLoadingColumns((prev) => ({ ...prev, [key]: false })));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referencedTables, activeConnection]);
+
+  const getCurrentWordRange = (text: string, caret: number) => {
+    let start = caret;
+    while (start > 0 && /[a-zA-Z0-9_.]/.test(text[start - 1])) start--;
+    return { start, end: caret };
+  };
+
+  const computeAutocomplete = (text: string, caret: number) => {
+    const { start, end } = getCurrentWordRange(text, caret);
+    const word = text.slice(start, end);
+    if (!word) {
+      setAutocomplete(null);
+      return;
+    }
+
+    const dotIdx = word.lastIndexOf('.');
+    if (dotIdx >= 0) {
+      const prefix = word.slice(0, dotIdx);
+      const partial = word.slice(dotIdx + 1).toLowerCase();
+      const ref = referencedTables.find((r) => r.alias.toLowerCase() === prefix.toLowerCase());
+      const tableKey = ref
+        ? tables.find((t) => t === ref.table || t.split('.').pop() === ref.table.split('.').pop()) || ref.table
+        : undefined;
+      const cols = tableKey ? tableColumns[tableKey] || [] : [];
+      const suggestions = cols
+        .filter((c) => c.name.toLowerCase().startsWith(partial))
+        .slice(0, 15)
+        .map((c) => ({ label: c.name, type: 'column' as const }));
+      if (suggestions.length === 0) {
+        setAutocomplete(null);
+        return;
+      }
+      setAutocomplete({ suggestions, activeIndex: 0, wordStart: start + dotIdx + 1, wordEnd: end });
+      return;
+    }
+
+    const lower = word.toLowerCase();
+    const kwMatches = SQL_KEYWORDS.filter((k) => k.toLowerCase().startsWith(lower)).map((k) => ({
+      label: k,
+      type: 'keyword' as const
+    }));
+    const tblMatches = tables
+      .filter((t) => t.toLowerCase().startsWith(lower) || (t.split('.').pop() || '').toLowerCase().startsWith(lower))
+      .map((t) => ({ label: t, type: 'table' as const }));
+    const colSet = new Map<string, { label: string; type: 'column' }>();
+    referencedTables.forEach(({ table }) => {
+      const key = tables.find((t) => t === table || t.split('.').pop() === table.split('.').pop()) || table;
+      (tableColumns[key] || []).forEach((c) => {
+        if (c.name.toLowerCase().startsWith(lower)) colSet.set(c.name, { label: c.name, type: 'column' });
+      });
+    });
+    const suggestions = [...tblMatches, ...Array.from(colSet.values()), ...kwMatches].slice(0, 15);
+    if (suggestions.length === 0) {
+      setAutocomplete(null);
+      return;
+    }
+    setAutocomplete({ suggestions, activeIndex: 0, wordStart: start, wordEnd: end });
+  };
+
+  const handleSqlChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setSql(value);
+    computeAutocomplete(value, e.target.selectionStart);
+  };
+
+  const applyAutocompleteSuggestion = (label: string) => {
+    if (!autocomplete) return;
+    const newSql = sql.slice(0, autocomplete.wordStart) + label + sql.slice(autocomplete.wordEnd);
+    const caret = autocomplete.wordStart + label.length;
+    setSql(newSql);
+    setAutocomplete(null);
+    requestAnimationFrame(() => {
+      const el = sqlTextareaRef.current;
+      if (el) {
+        el.focus();
+        el.selectionStart = el.selectionEnd = caret;
+      }
+    });
+  };
+
   const handleInsertColumnName = (colName: string) => {
     setSql((prev) => (prev ? `${prev} ${colName}` : colName));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (autocomplete) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setAutocomplete((prev) =>
+          prev ? { ...prev, activeIndex: (prev.activeIndex + 1) % prev.suggestions.length } : prev
+        );
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setAutocomplete((prev) =>
+          prev
+            ? { ...prev, activeIndex: (prev.activeIndex - 1 + prev.suggestions.length) % prev.suggestions.length }
+            : prev
+        );
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        applyAutocompleteSuggestion(autocomplete.suggestions[autocomplete.activeIndex].label);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setAutocomplete(null);
+        return;
+      }
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       handleExecuteSql();
@@ -1887,13 +2043,38 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
         {/* Editor de Código SQL */}
         <div className="h-44 border-b border-border/70 relative shrink-0" data-tour="sql-editor">
           <textarea
+            ref={sqlTextareaRef}
             value={sql}
-            onChange={(e) => setSql(e.target.value)}
+            onChange={handleSqlChange}
             onKeyDown={handleKeyDown}
+            onClick={(e) => computeAutocomplete(sql, e.currentTarget.selectionStart)}
+            onBlur={() => setTimeout(() => setAutocomplete(null), 150)}
             placeholder="Digite aqui seu comando SQL (SELECT, UPDATE, INSERT, DELETE, etc.)..."
             className="w-full h-full p-3 bg-[#0B0F17] text-emerald-300 font-mono text-xs resize-none focus:outline-none [scrollbar-width:thin]"
             spellCheck={false}
           />
+          {autocomplete && (
+            <div className="absolute left-3 bottom-1 translate-y-full z-20 w-64 max-h-48 overflow-y-auto bg-[#131926] border border-border/70 rounded shadow-lg text-xs">
+              {autocomplete.suggestions.map((s, idx) => (
+                <button
+                  key={`${s.type}-${s.label}-${idx}`}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyAutocompleteSuggestion(s.label);
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 text-left font-mono ${
+                    idx === autocomplete.activeIndex ? 'bg-primary/20 text-primary' : 'text-emerald-200 hover:bg-white/5'
+                  }`}
+                >
+                  <span className="truncate">{s.label}</span>
+                  <span className="text-[9px] uppercase tracking-wide opacity-50 ml-2 shrink-0">
+                    {s.type === 'keyword' ? 'kw' : s.type === 'table' ? 'tab' : 'col'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
           {copyFeedback && (
             <div className="absolute right-3 bottom-3 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded shadow-md animate-fade-in">
               {copyFeedback}
