@@ -70,9 +70,9 @@ describe('DatabaseService', () => {
     expect(dpi1047).toContain('DPI-1047');
     expect(dpi1047).toContain('oci.dll');
 
-    const ora01008 = (service as any).formatErrorMessage(
+    const ora01008 = await (service as any).formatErrorMessage(
       new Error('ORA-01008: not all variables bound'),
-      'oracle'
+      { type: 'oracle' }
     );
     expect(ora01008).toContain('ORA-01008');
     expect(ora01008).toContain('Preencha os valores de todos os parâmetros');

@@ -107,7 +107,7 @@ export function substituteBindVariables(
       rawVal = rawEntry;
     }
 
-    const casted = typeof rawVal === 'string' && type !== 'auto' ? castBindValue(rawVal, type) : rawVal;
+    const casted = typeof rawVal === 'string' ? castBindValue(rawVal, type) : rawVal;
 
     let literal = 'NULL';
     if (casted === null || casted === undefined) {
