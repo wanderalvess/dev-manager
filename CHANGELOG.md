@@ -4,6 +4,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.10.0] - 2026-09-16
+### Adicionado
+- Autocomplete no editor SQL da página de Banco de Dados: sugere palavras-chave, tabelas e colunas (com resolução de `alias.coluna` a partir das cláusulas `FROM`/`JOIN`); navegação por setas, `Tab`/`Enter` pra aceitar, `Esc` pra fechar.
+### Corrigido
+- Listagem de tabelas do PostgreSQL considerava só o schema `public`, ocultando tabelas de outros schemas — agora lista todos (exceto `pg_catalog`/`information_schema`), qualificadas como `schema.tabela`; `getTableColumns` resolve o schema correspondente.
+
 ## [1.9.1] - 2026-09-16
 ### Corrigido
 - Testes de `BackupService` (placeholders, tokenização de comando, mascaramento de senha) usando `require()` num projeto ESM, quebrando a suíte (`Cannot find module`) — trocados por `import` normal.
