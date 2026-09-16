@@ -31,6 +31,9 @@ import {
 } from 'lucide-react';
 import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats, ComposeServiceStatus, WslDistroInfo, ContainerEnvironment } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { CONTAINERS_TOUR_STEPS, CONTAINERS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/containersTour';
 
 interface ContainersPageProps {
   isActive?: boolean;
@@ -38,6 +41,7 @@ interface ContainersPageProps {
 }
 
 export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settingsVersion }) => {
+  const tour = usePageTour(CONTAINERS_TOUR_STORAGE_KEY);
   const [containers, setContainers] = useState<DockerContainerInfo[]>([]);
   const [daemonStatus, setDaemonStatus] = useState<DockerDaemonStatus | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -516,7 +520,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
       {/* Topo / Header da Página */}
-      <header className="px-4 py-3 bg-card/85 backdrop-blur border-b border-border/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <header className="px-4 py-3 bg-card/85 backdrop-blur border-b border-border/80 flex flex-wrap items-center justify-between gap-3 shrink-0" data-tour="page-header">
         <div className="flex items-center space-x-3.5">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/20 to-brand-500/10 border border-sky-500/30 flex items-center justify-center text-sky-500 shadow-xs">
             <Box className="w-4.5 h-4.5" />
@@ -524,6 +528,14 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
           <div>
             <div className="flex items-center space-x-2.5">
               <h2 className="text-sm font-bold text-foreground tracking-tight">Containers & WSL</h2>
+              <button
+                type="button"
+                onClick={tour.open}
+                className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+                title="Rever o tour guiado desta página"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </button>
               {daemonStatus && (
                 daemonStatus.running ? (
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shadow-2xs">
@@ -723,7 +735,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
       )}
 
       {/* Docker Compose */}
-      <div className="mx-4 mt-3 p-3 bg-card/60 backdrop-blur border border-border/70 rounded-xl shrink-0 space-y-2.5 shadow-2xs">
+      <div className="mx-4 mt-3 p-3 bg-card/60 backdrop-blur border border-border/70 rounded-xl shrink-0 space-y-2.5 shadow-2xs" data-tour="compose-panel">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold text-foreground">
             <Layers className="w-3.5 h-3.5 text-sky-500" />
@@ -835,7 +847,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2.5">
+          <div className="grid grid-cols-1 gap-2.5" data-tour="container-list">
             {filteredContainers.map((container) => {
               const isLoadingAction = actionLoading[container.id];
               const isRunning = container.state === 'running';
@@ -891,7 +903,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
 
                       {/* Métricas de Recursos em Tempo Real */}
                       {isRunning && stats && (
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap" data-tour="container-stats">
                           <span
                             className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25 font-semibold"
                             title={`Uso de CPU: ${stats.cpu}`}
@@ -912,7 +924,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
                   </div>
 
                   {/* Ações Rápidas */}
-                  <div className="flex items-center space-x-1.5 shrink-0">
+                  <div className="flex items-center space-x-1.5 shrink-0" data-tour="container-actions">
                     {isRunning ? (
                       <>
                         <button
@@ -948,6 +960,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
                     {/* Terminal Interativo */}
                     {isRunning && (
                       <button
+                        data-tour="container-terminal"
                         onClick={() => handleOpenTerminal(container)}
                         disabled={Boolean(isOpeningTerminal[container.id])}
                         title="Abrir terminal interativo do container (bash)"
@@ -978,6 +991,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
 
                     {/* Ver Logs */}
                     <button
+                      data-tour="container-logs"
                       onClick={() => handleOpenLogs(container)}
                       title="Inspecionar Logs"
                       className="flex items-center space-x-1 px-2.5 py-1.5 bg-card hover:bg-muted text-foreground border border-border/80 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
@@ -1674,6 +1688,13 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
           </div>
         </div>
       )}
+
+      <OnboardingTour
+        steps={CONTAINERS_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={CONTAINERS_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

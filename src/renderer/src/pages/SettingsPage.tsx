@@ -45,6 +45,9 @@ import {
   RealtimeLogSource,
   EnvironmentProfile
 } from '../../../shared/types';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { SETTINGS_TOUR_STEPS, SETTINGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/settingsTour';
 
 interface SettingsPageProps {
   onSettingsSaved?: () => void;
@@ -79,6 +82,7 @@ const DEFAULT_LOG_SOURCES: RealtimeLogSource[] = [];
 type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup';
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onNavigate }) => {
+  const tour = usePageTour(SETTINGS_TOUR_STORAGE_KEY);
   const [activeTab, setActiveTab] = useState<SettingsTab>('dirs');
   const [settings, setSettings] = useState<AppSettings>({
     appPath: '',
@@ -587,6 +591,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
               <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                 Perfil Local
               </span>
+              <button
+                type="button"
+                onClick={tour.open}
+                className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+                title="Rever o tour guiado desta página"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </button>
             </h2>
             <p className="text-[11px] text-muted-foreground">
               Configure os diretórios base, serviços Windows, processos de encerramento, portas e preferências de automação.
@@ -661,6 +673,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
           <button
             type="button"
+            data-tour="auto-detect-button"
             onClick={handleAutoDetect}
             disabled={isDetecting}
             className="px-3 py-2.5 bg-card hover:bg-muted text-primary border border-primary/30 hover:border-primary/60 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-sm"
@@ -671,6 +684,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           </button>
 
           <button
+            data-tour="save-settings-button"
             onClick={() => handleSave()}
             disabled={isSaving}
             className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs rounded-xl shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] flex items-center space-x-2 border border-primary/40"
@@ -732,7 +746,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       )}
 
       {/* Abas de Navegação Interna das Configurações */}
-      <div className="flex items-center space-x-2 border-b border-border pb-2 text-xs flex-wrap gap-y-2">
+      <div className="flex items-center space-x-2 border-b border-border pb-2 text-xs flex-wrap gap-y-2" data-tour="tabs-nav-dirs">
         <button
           onClick={() => setActiveTab('dirs')}
           className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
@@ -800,6 +814,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         </button>
 
         <button
+          data-tour="automation-defaults"
           onClick={() => setActiveTab('automation')}
           className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
             activeTab === 'automation'
@@ -897,7 +912,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 </ul>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" data-tour="environment-profiles">
                 <input
                   type="text"
                   value={newEnvironmentProfileLabel}
@@ -947,6 +962,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   <div className="flex items-center space-x-2">
                     <input
                       type="text"
+                      data-tour="dirs-projects-path"
                       value={settings.projectsPath}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -983,6 +999,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   <div className="flex items-center space-x-2">
                     <input
                       type="text"
+                      data-tour="dirs-karaf-path"
                       value={settings.karafPath}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -2400,6 +2417,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           </div>
         </div>
       )}
+
+      <OnboardingTour
+        steps={SETTINGS_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={SETTINGS_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

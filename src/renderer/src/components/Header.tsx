@@ -283,6 +283,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div key={group.id} className="relative">
                 <button
                   type="button"
+                  data-tour={`nav-${group.id}`}
                   onClick={() => setOpenMenu(isOpen ? null : group.id)}
                   title={`Tema: ${group.title} (Clique para alternar rotinas)`}
                   className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all select-none border cursor-pointer flex items-center space-x-2 whitespace-nowrap ${
@@ -436,6 +437,7 @@ export const Header: React.FC<HeaderProps> = ({
       {onOpenQuickLauncher && (
         <button
           type="button"
+          data-tour="search"
           onClick={onOpenQuickLauncher}
           className="h-9 flex-1 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 rounded-lg bg-muted/40 hover:bg-muted/80 border border-border/70 hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all text-xs flex items-center justify-between group shadow-xs cursor-pointer select-none"
           title="Abrir busca rápida de rotinas, comandos e ações (Ctrl+K)"
@@ -456,6 +458,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative" ref={statusRef}>
           <button
             type="button"
+            data-tour="status"
             onClick={() => setIsStatusOpen(!isStatusOpen)}
             className={`h-9 px-2.5 rounded-lg border transition-all flex items-center space-x-1.5 text-xs select-none cursor-pointer ${
               isStatusOpen
@@ -624,6 +627,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Configurações (h-9 w-9) */}
         <button
           type="button"
+          data-tour="settings"
           onClick={() => setActiveTab('settings')}
           className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 ${
             activeTab === 'settings'
@@ -638,6 +642,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Botão de Atualização Geral (h-9 w-9) */}
         <button
           type="button"
+          data-tour="refresh"
           onClick={onRefreshAll}
           disabled={isRefreshing}
           className="h-9 w-9 text-muted-foreground hover:text-foreground bg-card/50 hover:bg-card border border-border/60 hover:border-border rounded-lg flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0"

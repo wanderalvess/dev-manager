@@ -17,12 +17,16 @@ import {
   Search,
   Square,
   X,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { GitProjectInfo, DeployProfile, DeployStep } from '../../../shared/types';
 import { TerminalViewer } from '../components/TerminalViewer';
 import { DeployProfileEditorModal } from '../components/DeployProfileEditorModal';
 import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { DEPLOY_TOUR_STEPS, DEPLOY_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/deployTour';
 
 interface DeployPageProps {
   projects: GitProjectInfo[];
@@ -31,6 +35,7 @@ interface DeployPageProps {
 }
 
 export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSettings, settingsVersion }) => {
+  const tour = usePageTour(DEPLOY_TOUR_STORAGE_KEY);
   const [profiles, setProfiles] = useState<DeployProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string>('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -202,6 +207,14 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                 <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   Karaf · Docker · Genérico
                 </span>
+                <button
+                  type="button"
+                  onClick={tour.open}
+                  className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+                  title="Rever o tour guiado desta página"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                </button>
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 {activeProfile?.description || 'Monte etapas sequenciais de build e publicação para qualquer alvo.'}
@@ -209,7 +222,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-tour="select-deploy-profile">
             <select
               value={activeProfileId}
               onChange={(e) => handleSelectProfile(e.target.value)}
@@ -224,6 +237,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             </select>
 
             <button
+              data-tour="edit-deploy-profile"
               onClick={() => {
                 setEditingProfile(activeProfile);
                 setIsProfileModalOpen(true);
@@ -235,7 +249,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               <Pencil className="w-3.5 h-3.5" />
             </button>
 
-            <div className="relative">
+            <div className="relative" data-tour="profile-menu-options">
               <button
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                 className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors flex items-center gap-1"
@@ -283,6 +297,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             </button>
 
             <button
+              data-tour="run-active-profile"
               onClick={handleRunActiveProfile}
               disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
               className={`px-6 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg ${
@@ -325,7 +340,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
           )}
 
           {/* Etapas do Perfil Ativo */}
-          <div className="cockpit-panel rounded-2xl p-4 space-y-2.5 border border-border">
+          <div className="cockpit-panel rounded-2xl p-4 space-y-2.5 border border-border" data-tour="steps-list-panel">
             <div className="flex items-center justify-between">
               <span className="text-[13px] font-bold uppercase tracking-wider text-foreground">
                 Etapas ({activeProfile?.steps?.length || 0})
@@ -380,6 +395,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
 
                       <button
                         type="button"
+                        data-tour="run-single-step"
                         onClick={() => handleRunSingleStep(step)}
                         disabled={isBusy}
                         className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
@@ -464,7 +480,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         </div>
 
         {/* Coluna Direita: Terminal com Streaming de Saída */}
-        <div className="lg:col-span-7 min-h-[450px] lg:min-h-full flex flex-col">
+        <div className="lg:col-span-7 min-h-[450px] lg:min-h-full flex flex-col" data-tour="deploy-console-output">
           <TerminalViewer
             logs={terminalLogs}
             onClear={() => setTerminalLogs([])}
@@ -491,6 +507,13 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         isOpen={isBundlesModalOpen}
         onClose={() => setIsBundlesModalOpen(false)}
         projects={projects}
+      />
+
+      <OnboardingTour
+        steps={DEPLOY_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={DEPLOY_TOUR_STORAGE_KEY}
       />
     </div>
   );

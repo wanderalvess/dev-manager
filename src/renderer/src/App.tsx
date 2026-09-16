@@ -12,6 +12,8 @@ import { HelpPage } from './pages/HelpPage';
 import { LogsPage } from './pages/LogsPage';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
 import { ToastHost, showToast } from './components/ToastHost';
+import { OnboardingTour } from './components/onboarding/OnboardingTour';
+import { TOUR_STEPS, TOUR_STORAGE_KEY } from './components/onboarding/tourSteps';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
 
 // Marca se o usuário já viu a tela de Ajuda/Visão Geral pelo menos uma vez.
@@ -26,6 +28,10 @@ const getInitialTab = (): string => {
   }
 };
 
+// Após uma falha de rede (ex: backend indisponível), pausa novas tentativas dessa chamada por esse período
+// em vez de tentar de novo a cada poll — evita hammering do processo quando o servidor está fora do ar.
+const FETCH_FAILURE_COOLDOWN_MS = 5000;
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([getInitialTab()]));
@@ -35,6 +41,13 @@ export const App: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isQuickLauncherOpen, setIsQuickLauncherOpen] = useState<boolean>(false);
   const [helpSearch, setHelpSearch] = useState<string>('');
+  const [isTourOpen, setIsTourOpen] = useState<boolean>(() => {
+    try {
+      return !window.localStorage.getItem(TOUR_STORAGE_KEY);
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     setVisitedTabs((prev) => {
@@ -59,8 +72,10 @@ export const App: React.FC = () => {
   }, []);
 
   const isFetchingServicesRef = React.useRef(false);
+  const servicesFailureUntilRef = React.useRef(0);
   const fetchServices = useCallback(async () => {
     if (isFetchingServicesRef.current) return;
+    if (Date.now() < servicesFailureUntilRef.current) return;
     if (window.electronAPI) {
       isFetchingServicesRef.current = true;
       try {
@@ -70,6 +85,7 @@ export const App: React.FC = () => {
           return data || [];
         });
       } catch (err) {
+        servicesFailureUntilRef.current = Date.now() + FETCH_FAILURE_COOLDOWN_MS;
         console.warn('[App] Erro ao carregar status dos serviços:', err);
       } finally {
         isFetchingServicesRef.current = false;
@@ -78,8 +94,10 @@ export const App: React.FC = () => {
   }, []);
 
   const isFetchingProjectsRef = React.useRef(false);
+  const projectsFailureUntilRef = React.useRef(0);
   const fetchProjects = useCallback(async () => {
     if (isFetchingProjectsRef.current) return;
+    if (Date.now() < projectsFailureUntilRef.current) return;
     if (window.electronAPI) {
       isFetchingProjectsRef.current = true;
       try {
@@ -89,6 +107,7 @@ export const App: React.FC = () => {
           return data || [];
         });
       } catch (err) {
+        projectsFailureUntilRef.current = Date.now() + FETCH_FAILURE_COOLDOWN_MS;
         console.warn('[App] Erro ao carregar projetos:', err);
       } finally {
         isFetchingProjectsRef.current = false;
@@ -275,12 +294,23 @@ export const App: React.FC = () => {
         )}
         {visitedTabs.has('help') && (
           <div className={`h-full w-full ${activeTab === 'help' ? '' : 'hidden'}`}>
-            <HelpPage onNavigate={(tab) => setActiveTab(tab)} initialSearch={helpSearch} />
+            <HelpPage
+              onNavigate={(tab) => setActiveTab(tab)}
+              initialSearch={helpSearch}
+              onRestartTour={() => setIsTourOpen(true)}
+            />
           </div>
         )}
       </main>
 
       <ToastHost />
+
+      <OnboardingTour
+        steps={TOUR_STEPS}
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        storageKey={TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

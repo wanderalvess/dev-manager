@@ -43,8 +43,12 @@ import {
   Eye,
   EyeOff,
   Code2,
-  Check
+  Check,
+  Sparkles
 } from 'lucide-react';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { DATABASE_TOUR_STEPS, DATABASE_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/databaseTour';
 import {
   DatabaseConnectionConfig,
   DatabaseType,
@@ -121,6 +125,7 @@ interface DatabasePageProps {
 }
 
 export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) => {
+  const tour = usePageTour(DATABASE_TOUR_STORAGE_KEY);
   const [connections, setConnections] = useState<DatabaseConnectionConfig[]>([]);
   const [activeConnectionId, setActiveConnectionId] = useState<string>('');
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -1319,20 +1324,31 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
   return (
     <div className="flex h-full w-full bg-background overflow-hidden select-none">
       {/* Sidebar de Conexões e Tabelas */}
-      <aside className="w-72 bg-card/60 border-r border-border/70 flex flex-col shrink-0">
+      <aside className="w-72 bg-card/60 border-r border-border/70 flex flex-col shrink-0" data-tour="connections-sidebar">
         {/* Topo da Sidebar: Seletor de Conexão */}
         <div className="p-3 border-b border-border/70 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Database className="w-4 h-4 text-primary" />
             <span className="text-xs font-bold text-foreground tracking-wide uppercase">Conexões</span>
           </div>
-          <button
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={tour.open}
+              className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+              title="Rever o tour guiado desta página"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+            </button>
+            <button
+            data-tour="new-connection-button"
             onClick={handleOpenCreateModal}
             className="flex items-center space-x-1 px-2 py-1 bg-primary text-primary-foreground rounded text-[11px] font-semibold hover:bg-primary/90 transition shadow-sm"
           >
             <Plus className="w-3 h-3" />
             <span>Nova</span>
-          </button>
+            </button>
+          </div>
         </div>
 
         {/* Lista de Conexões Salvas */}
@@ -1398,7 +1414,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
         </div>
 
         {/* Explorador de Tabelas do Schema */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden" data-tour="table-explorer">
           <div className="p-2.5 border-b border-border/60 flex items-center justify-between">
             <div className="flex items-center space-x-1.5">
               <Table className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1792,6 +1808,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
             {/* Botão de Backup do Banco */}
             <button
               type="button"
+              data-tour="backup-button"
               onClick={handleOpenBackupModal}
               disabled={!activeConnection}
               className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs disabled:opacity-50"
@@ -1847,6 +1864,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
 
             {/* Botão Executar */}
             <button
+              data-tour="execute-sql-button"
               onClick={() => handleExecuteSql()}
               disabled={isExecuting || !activeConnection}
               className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
@@ -1867,7 +1885,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
         </div>
 
         {/* Editor de Código SQL */}
-        <div className="h-44 border-b border-border/70 relative shrink-0">
+        <div className="h-44 border-b border-border/70 relative shrink-0" data-tour="sql-editor">
           <textarea
             value={sql}
             onChange={(e) => setSql(e.target.value)}
@@ -1957,7 +1975,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
         </div>
 
         {/* Conteúdo: Grid de Resultados ou Histórico */}
-        <div className="flex-1 overflow-auto bg-card/20">
+        <div className="flex-1 overflow-auto bg-card/20" data-tour="results-panel">
           {activeResultTab === 'grid' ? (
             <div className="h-full">
               {!queryResult ? (
@@ -4263,6 +4281,13 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
           </div>
         </div>
       )}
+
+      <OnboardingTour
+        steps={DATABASE_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={DATABASE_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

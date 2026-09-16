@@ -28,6 +28,9 @@ import {
 } from 'lucide-react';
 import { RealtimeLogSource, LogWatchStatus, LogChunkEvent, AppSettings } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { LOGS_TOUR_STEPS, LOGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/logsTour';
 
 interface LogsPageProps {
   onNavigateToSettings?: () => void;
@@ -47,6 +50,7 @@ const EMPTY_SOURCE: RealtimeLogSource = {
 type LogLevelFilter = 'ALL' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 
 export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActive }) => {
+  const tour = usePageTour(LOGS_TOUR_STORAGE_KEY);
   const [sources, setSources] = useState<RealtimeLogSource[]>(DEFAULT_SOURCES);
   const [activeSourceId, setActiveSourceId] = useState<string>('');
   const [lines, setLines] = useState<string[]>([]);
@@ -557,6 +561,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
               return (
                 <button
                   key={src.id}
+                  data-tour="selecionar-fonte-log"
                   onClick={() => setActiveSourceId(src.id)}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1.5 ${
                     isActive
@@ -577,6 +582,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
           </div>
 
           <button
+            data-tour="gerenciar-fontes"
             onClick={() => {
               setEditingSource(null);
               setIsManageModalOpen(true);
@@ -585,6 +591,15 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
             title="Gerenciar Fontes de Log"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={tour.open}
+            className="p-1.5 text-muted-foreground hover:text-primary rounded-lg hover:bg-muted border border-border/50 transition-colors"
+            title="Rever o tour guiado desta página"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -622,7 +637,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
         )}
 
         {/* Direita: Status da Conexão e Ações Críticas */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2" data-tour="status-conexao-live">
           {status?.exists ? (
             <div
               className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold border transition-colors ${
@@ -668,6 +683,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               ref={searchInputRef}
+              data-tour="campo-busca-logs"
               type="text"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
@@ -717,7 +733,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
         </div>
 
         {/* Níveis de Severidade com Contadores */}
-        <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-[11px] font-medium">
+        <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-[11px] font-medium" data-tour="filtro-severidade">
           <button
             onClick={() => setLevelFilter('ALL')}
             className={`px-2 py-0.5 rounded-md transition-colors ${
@@ -836,6 +852,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
 
           {/* Copiar Logs Filtrados */}
           <button
+            data-tour="acoes-limpar-exportar"
             onClick={() => copyToClipboard(filteredLines.join('\n'), 'all')}
             className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted border border-border/50 transition-colors"
             title="Copiar linhas filtradas"
@@ -873,6 +890,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
+          data-tour="console-live-tail"
           className="flex-1 overflow-y-auto overflow-x-auto p-1.5 font-mono scroll-smooth select-text"
         >
           {filteredLines.length > 0 ? (
@@ -1214,6 +1232,13 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
           </div>
         </div>
       )}
+
+      <OnboardingTour
+        steps={LOGS_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={LOGS_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

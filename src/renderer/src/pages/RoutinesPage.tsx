@@ -11,15 +11,20 @@ import {
   FolderOpen,
   Plus,
   Trash2,
-  AppWindow
+  AppWindow,
+  Sparkles
 } from 'lucide-react';
 import { RoutineItem, MappedProgram } from '../../../shared/types';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { ROUTINES_TOUR_STEPS, ROUTINES_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/routinesTour';
 
 interface RoutinesPageProps {
   onNavigateToSettings?: () => void;
 }
 
 export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings }) => {
+  const tour = usePageTour(ROUTINES_TOUR_STORAGE_KEY);
   const [routines, setRoutines] = useState<RoutineItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedModule, setSelectedModule] = useState<string>('TODOS');
@@ -211,11 +216,19 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
               <Grid className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2" data-tour="catalogo-rotinas">
                 Catálogo de Rotinas
                 <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   {routines.length} {routines.length === 1 ? 'Rotina Catalogada' : 'Rotinas Catalogadas'}
                 </span>
+                <button
+                  type="button"
+                  onClick={tour.open}
+                  className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+                  title="Rever o tour guiado desta página"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                </button>
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 Escaneia a pasta configurada em busca de executáveis, com busca instantânea e favoritos.
@@ -224,6 +237,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
           </div>
 
           <button
+            data-tour="atualizar-catalogo"
             onClick={loadRoutines}
             disabled={isLoading}
             className="px-3 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shadow-sm"
@@ -236,7 +250,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
 
         {/* Barra de Filtros */}
         <div className="flex flex-wrap items-center gap-3 pt-3 mt-3 border-t border-border/60">
-          <div className="relative flex-1 min-w-[280px]">
+          <div className="relative flex-1 min-w-[280px]" data-tour="busca-rotina">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
               type="text"
@@ -256,7 +270,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2" data-tour="filtro-modulo">
             <span className="text-xs text-muted-foreground font-medium">Filtrar por Módulo:</span>
             <select
               value={selectedModule}
@@ -277,7 +291,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
       <div className="flex-1 min-h-0 overflow-y-auto space-y-5 pr-1">
         {/* Favoritos */}
         {favoriteRoutines.length > 0 && (
-          <div className="space-y-2.5">
+          <div className="space-y-2.5" data-tour="rotinas-favoritas">
             <div className="flex items-center space-x-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
               <h3 className="text-[13px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
@@ -342,6 +356,13 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
           )}
         </div>
       </div>
+
+      <OnboardingTour
+        steps={ROUTINES_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={ROUTINES_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };
@@ -377,6 +398,7 @@ const RoutineCard: React.FC<RoutineCardProps> = ({
           </div>
 
           <button
+            data-tour="favoritar-rotina"
             onClick={onToggleFavorite}
             className="p-1 text-muted-foreground hover:text-amber-500 transition-colors"
             title={routine.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
@@ -396,6 +418,7 @@ const RoutineCard: React.FC<RoutineCardProps> = ({
       </div>
 
       <button
+        data-tour="executar-rotina"
         onClick={onLaunch}
         disabled={isRunning}
         className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${

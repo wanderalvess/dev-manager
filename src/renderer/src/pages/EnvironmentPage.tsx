@@ -33,8 +33,12 @@ import {
   AlertTriangle,
   HelpCircle,
   History,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { ENV_TOUR_STEPS, ENV_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/environmentTour';
 import {
   ServiceStatus,
   EnvironmentLog,
@@ -51,6 +55,10 @@ import {
 import { TerminalViewer } from '../components/TerminalViewer';
 import { ProfileEditorModal } from '../components/ProfileEditorModal';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+
+// Após uma falha de rede (ex: backend indisponível), pausa novas tentativas dessa chamada por esse período
+// em vez de tentar de novo a cada render/poll — evita hammering do processo quando o servidor está fora do ar.
+const FETCH_FAILURE_COOLDOWN_MS = 5000;
 
 interface EnvironmentPageProps {
   services: ServiceStatus[];
@@ -69,6 +77,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   isActive,
   settingsVersion
 }) => {
+  const tour = usePageTour(ENV_TOUR_STORAGE_KEY);
   const [logs, setLogs] = useState<(string | EnvironmentLog)[]>([]);
   const [ports, setPorts] = useState<PortStatus[]>([]);
   const [processes, setProcesses] = useState<ProcessStatus[]>([]);
@@ -142,8 +151,10 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
   // Verificar Portas com trava contra chamadas sobrepostas e verificação de igualdade
   const isCheckingPortsRef = useRef(false);
+  const portsFailureUntilRef = useRef(0);
   const fetchPorts = useCallback(async () => {
     if (isCheckingPortsRef.current) return;
+    if (Date.now() < portsFailureUntilRef.current) return;
     if (window.electronAPI && window.electronAPI.checkPorts) {
       isCheckingPortsRef.current = true;
       setIsCheckingPorts(true);
@@ -153,6 +164,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           if (JSON.stringify(prev) === JSON.stringify(portData)) return prev;
           return portData || [];
         });
+      } catch (err) {
+        portsFailureUntilRef.current = Date.now() + FETCH_FAILURE_COOLDOWN_MS;
+        console.warn('Erro ao verificar portas:', err);
       } finally {
         setIsCheckingPorts(false);
         isCheckingPortsRef.current = false;
@@ -162,8 +176,10 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
   // Verificar Processos com trava contra chamadas sobrepostas e verificação de igualdade
   const isCheckingProcessesRef = useRef(false);
+  const processesFailureUntilRef = useRef(0);
   const fetchProcesses = useCallback(async () => {
     if (isCheckingProcessesRef.current) return;
+    if (Date.now() < processesFailureUntilRef.current) return;
     if (window.electronAPI && window.electronAPI.getProcessesStatus) {
       isCheckingProcessesRef.current = true;
       setIsCheckingProcesses(true);
@@ -173,6 +189,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           if (JSON.stringify(prev) === JSON.stringify(procData)) return prev;
           return procData || [];
         });
+      } catch (err) {
+        processesFailureUntilRef.current = Date.now() + FETCH_FAILURE_COOLDOWN_MS;
+        console.warn('Erro ao verificar processos:', err);
       } finally {
         setIsCheckingProcesses(false);
         isCheckingProcessesRef.current = false;
@@ -182,13 +201,18 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
   // Verificar Karaf
   const isCheckingKarafRef = useRef(false);
+  const karafFailureUntilRef = useRef(0);
   const checkKarafRunning = useCallback(async () => {
     if (isCheckingKarafRef.current) return;
+    if (Date.now() < karafFailureUntilRef.current) return;
     if (window.electronAPI && window.electronAPI.isEmbeddedKarafRunning) {
       isCheckingKarafRef.current = true;
       try {
         const running = await window.electronAPI.isEmbeddedKarafRunning();
         setIsKarafEmbeddedRunning((prev) => (prev === running ? prev : running));
+      } catch (err) {
+        karafFailureUntilRef.current = Date.now() + FETCH_FAILURE_COOLDOWN_MS;
+        console.warn('Erro ao verificar status do Karaf embedded:', err);
       } finally {
         isCheckingKarafRef.current = false;
       }
@@ -201,8 +225,10 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const [webHealth, setWebHealth] = useState<HttpHealthResult | null>(null);
 
   const isCheckingNetworkRef = useRef(false);
+  const networkFailureUntilRef = useRef(0);
   const fetchNetworkIps = useCallback(async () => {
     if (isCheckingNetworkRef.current) return;
+    if (Date.now() < networkFailureUntilRef.current) return;
     if (window.electronAPI && window.electronAPI.getNetworkIps) {
       isCheckingNetworkRef.current = true;
       try {
@@ -212,6 +238,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           return data;
         });
       } catch (err) {
+        networkFailureUntilRef.current = Date.now() + FETCH_FAILURE_COOLDOWN_MS;
         console.error('Erro ao buscar IPs de rede:', err);
       } finally {
         isCheckingNetworkRef.current = false;
@@ -221,8 +248,10 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
   // Checagem Web Health estável com URL computada via refs atuais
   const isCheckingWebHealthRef = useRef(false);
+  const webHealthFailureUntilRef = useRef(0);
   const checkWebHealth = useCallback(async () => {
     if (isCheckingWebHealthRef.current) return;
+    if (Date.now() < webHealthFailureUntilRef.current) return;
     if (window.electronAPI && window.electronAPI.checkHttpHealth) {
       isCheckingWebHealthRef.current = true;
       try {
@@ -233,6 +262,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           return res;
         });
       } catch {
+        webHealthFailureUntilRef.current = Date.now() + FETCH_FAILURE_COOLDOWN_MS;
         setWebHealth(null);
       } finally {
         isCheckingWebHealthRef.current = false;
@@ -840,7 +870,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                 </h2>
 
                 {/* Dropdown de Perfis */}
-                <div className="relative inline-block">
+                <div className="relative inline-block" data-tour="profile-selector">
                   <select
                     value={activeProfileId}
                     onChange={(e) => handleSelectProfile(e.target.value)}
@@ -870,7 +900,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           {/* Ações de Gestão do Perfil e Botões Principais */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Botões do Perfil: Novo, Editar, Duplicar, Exportar, Importar, Excluir */}
-            <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border/60 text-xs gap-0.5">
+            <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border/60 text-xs gap-0.5" data-tour="profile-toolbar">
               <button
                 type="button"
                 onClick={() => {
@@ -1000,6 +1030,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             {/* BOTÃO PRINCIPAL: Subir Ambiente em Sequência */}
             <button
               type="button"
+              data-tour="run-profile-button"
               onClick={handleRunActiveProfile}
               disabled={isRunningProfile || !activeProfile?.steps || activeProfile.steps.length === 0}
               className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg ${
@@ -1011,12 +1042,21 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
               <Play className={`w-4 h-4 fill-current ${isRunningProfile ? 'animate-spin' : ''}`} />
               <span>{isRunningProfile ? 'Executando Esteira...' : 'Subir Ambiente em Sequência'}</span>
             </button>
+
+            <button
+              type="button"
+              onClick={tour.open}
+              className="h-9 w-9 rounded-xl border border-border/60 hover:border-primary/40 text-muted-foreground hover:text-primary transition flex items-center justify-center shrink-0 cursor-pointer"
+              title="Rever o tour guiado desta página"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
         {/* Stepper Visual Sequencial do Perfil Ativo */}
         {activeProfile?.steps && activeProfile.steps.length > 0 && (
-          <div className="pt-2 border-t border-border/50">
+          <div className="pt-2 border-t border-border/50" data-tour="profile-stepper">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-primary" /> Esteira Sequencial de Inicialização ({activeProfile.steps.filter((s) => s.enabled !== false).length} etapas)
@@ -1093,7 +1133,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       {/* 2. Barra de Portas e Links Rápidos */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3 shrink-0">
         {/* Monitor de Portas */}
-        <div className="md:col-span-8 bg-card border border-border/80 rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+        <div className="md:col-span-8 bg-card border border-border/80 rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-sm" data-tour="ports-monitor">
           <div className="flex items-center space-x-2">
             <Radio className={`w-3.5 h-3.5 ${isCheckingPorts ? 'animate-spin text-primary' : 'text-primary'}`} />
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -1195,7 +1235,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         {/* Coluna Esquerda: Cards de cada Serviço / Etapa do Perfil + Diagnósticos */}
         <div className="lg:col-span-6 flex flex-col space-y-3">
           {/* Cartões dos Passos do Perfil Ativo */}
-          <div className="cockpit-panel rounded-2xl p-4 flex flex-col border border-border space-y-3">
+          <div className="cockpit-panel rounded-2xl p-4 flex flex-col border border-border space-y-3" data-tour="step-cards-panel">
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
               <div className="flex items-center space-x-2">
                 <Zap className="w-4 h-4 text-primary" />
@@ -1645,7 +1685,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         </div>
 
         {/* Coluna Direita: Console / Terminal Integrado */}
-        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col relative">
+        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col relative" data-tour="console-terminal">
           <button
             onClick={handleOpenKarafHistory}
             title="Ver histórico persistido do Karaf embedded (sobrevive a reinícios)"
@@ -1733,6 +1773,13 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         onSave={handleSaveProfile}
         onDelete={(id) => handleDeleteProfile(id, true)}
         onExport={handleExportProfile}
+      />
+
+      <OnboardingTour
+        steps={ENV_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={ENV_TOUR_STORAGE_KEY}
       />
     </div>
   );

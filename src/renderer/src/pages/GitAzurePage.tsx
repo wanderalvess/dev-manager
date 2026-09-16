@@ -25,10 +25,14 @@ import {
   Split,
   Eye,
   Copy,
-  FileCode
+  FileCode,
+  Sparkles
 } from 'lucide-react';
 import { GitProjectInfo, GitCommitInfo, GitFileStatus } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { GIT_TOUR_STEPS, GIT_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/gitAzureTour';
 
 interface GitAzurePageProps {
   projects: GitProjectInfo[];
@@ -43,6 +47,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   isRefreshing,
   onNavigateToSettings
 }) => {
+  const tour = usePageTour(GIT_TOUR_STORAGE_KEY);
   const [selectedPath, setSelectedPath] = useState<string>(projects[0]?.path || '');
 
   // `projects` chega vazio no primeiro render e é populado depois de um fetch
@@ -250,6 +255,14 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                 <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   {projects.length} {projects.length === 1 ? 'Repositório Ativo' : 'Repositórios Ativos'}
                 </span>
+                <button
+                  type="button"
+                  onClick={tour.open}
+                  className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+                  title="Rever o tour guiado desta página"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                </button>
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 Gestão de branches locais, sincronização remota e criação direta de Pull Requests (Azure DevOps, GitHub ou GitLab).
@@ -288,7 +301,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
           </div>
 
           {/* Lista Rolável */}
-          <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5">
+          <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5" data-tour="repo-list">
             {filteredProjects.map((p) => {
               const isSelected = currentProject?.path === p.path;
               const hasChanges = (p.uncommittedCount || 0) > 0;
@@ -383,12 +396,13 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                       <span className="text-[10px] uppercase font-bold text-muted-foreground block tracking-wider">
                         Branch Atual
                       </span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="flex items-center gap-1.5 mt-0.5" data-tour="branch-atual">
                         <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-300">
                           {currentProject.currentBranch}
                         </span>
                         <button
                           type="button"
+                          data-tour="trocar-branch"
                           onClick={() => setIsBranchModalOpen(true)}
                           className="px-1.5 py-0.5 rounded bg-muted/60 hover:bg-muted border border-border text-[10px] font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
                           title="Alternar branch ou criar uma nova"
@@ -434,6 +448,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                     </button>
                     <button
                       type="button"
+                      data-tour="commit-push"
                       onClick={() => setIsCommitModalOpen(true)}
                       className="px-2.5 py-1.5 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-500 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
                       title="Fazer commit rápido e push para o repositório remoto"
@@ -442,6 +457,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                       <span>Commit & Push</span>
                     </button>
                     <button
+                      data-tour="acoes-sync"
                       onClick={() => handleExecGit('fetch')}
                       disabled={isExecutingGit}
                       className="px-2.5 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
@@ -492,7 +508,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                         : 'Criar Pull Request no Azure DevOps'}
                     </span>
 
-                    <div className="flex items-center space-x-2 text-xs">
+                    <div className="flex items-center space-x-2 text-xs" data-tour="selecionar-branch-destino">
                       <span className="text-muted-foreground font-medium">Branch de Destino:</span>
                       <select
                         value={targetBranch}
@@ -536,6 +552,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
                   {/* Botão de Criação de PR */}
                   <button
+                    data-tour="criar-pull-request"
                     onClick={handleOpenPr}
                     disabled={!currentProject.provider}
                     className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-lg ${
@@ -988,6 +1005,13 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
           </div>
         </div>
       )}
+
+      <OnboardingTour
+        steps={GIT_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={GIT_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

@@ -21,7 +21,8 @@ import {
   Radio,
   Layers,
   BookOpen,
-  Cpu
+  Cpu,
+  Sparkles
 } from 'lucide-react';
 import {
   DocFolderConfig,
@@ -35,6 +36,9 @@ import {
   JiraSourceConfig
 } from '../../../shared/types';
 import { MarkdownReader } from '../components/MarkdownReader';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { DOCS_TOUR_STEPS, DOCS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/docsTour';
 
 interface DocsPageProps {
   onNavigateToSettings?: () => void;
@@ -49,6 +53,7 @@ const PHASE_LABELS: Record<DocsIndexProgress['phase'], string> = {
 };
 
 export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
+  const tour = usePageTour(DOCS_TOUR_STORAGE_KEY);
   const [status, setStatus] = useState<DocsIndexStatus | null>(null);
   const [query, setQuery] = useState<string>('');
   const [sourceFilter, setSourceFilter] = useState<string>('TODOS');
@@ -427,6 +432,14 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
                     {!status.isTextOnly && ' · IA Neural Ativa'}
                   </span>
                 )}
+                <button
+                  type="button"
+                  onClick={tour.open}
+                  className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+                  title="Rever o tour guiado desta página"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                </button>
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 Busca semântica local (RAG) sobre o README/docs dos projetos e das pastas adicionais configuradas.
@@ -445,6 +458,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
             </button>
 
             <button
+              data-tour="reindex-button"
               onClick={handleReindex}
               disabled={isIndexing}
               className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-60"
@@ -595,7 +609,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
         </div>
 
         {/* Lista de Pastas de Documentação */}
-        <div>
+        <div data-tour="doc-folders-list">
           <div className="flex items-center justify-between gap-3 mb-2.5">
             <div>
               <h3 className="text-xs font-bold text-foreground">Pastas de Documentação</h3>
@@ -983,7 +997,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
       {/* Barra de Busca */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[280px]">
+          <div className="relative flex-1 min-w-[280px]" data-tour="search-input">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
               type="text"
@@ -1006,6 +1020,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
 
           {status && status.sourceLabels.length > 0 && (
             <select
+              data-tour="source-filter-select"
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
               className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
@@ -1021,6 +1036,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
 
           <button
             type="submit"
+            data-tour="search-submit-button"
             disabled={isSearching || !query.trim() || !hasIndex}
             className="px-4 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors disabled:opacity-50"
           >
@@ -1057,7 +1073,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
 
         {/* MODO BUSCA ATIVA */}
         {hasIndex && hasSearched && query.trim() && (
-          <div className="space-y-2.5">
+          <div className="space-y-2.5" data-tour="search-results-list">
             <div className="flex items-center justify-between pb-1 px-1">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Search className="w-3.5 h-3.5 text-primary" />
@@ -1134,7 +1150,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
 
         {/* MODO CATÁLOGO DE DOCUMENTOS (Quando não está buscando ativamente) */}
         {hasIndex && (!hasSearched || !query.trim()) && (
-          <div className="space-y-3">
+          <div className="space-y-3" data-tour="indexed-docs-catalog">
             <div className="flex items-center justify-between gap-3 px-1">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-primary" />
@@ -1717,6 +1733,13 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
           </div>
         </div>
       )}
+
+      <OnboardingTour
+        steps={DOCS_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={DOCS_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

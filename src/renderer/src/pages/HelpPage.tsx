@@ -40,6 +40,8 @@ interface HelpPageProps {
   onNavigate?: (tab: string) => void;
   /** Termo de busca vindo de um hint contextual de outra tela (ex: "?" ao lado das portas monitoradas) */
   initialSearch?: string;
+  /** Reabre o tour guiado de boas-vindas (spotlight nos itens do Header) */
+  onRestartTour?: () => void;
 }
 
 type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
@@ -52,7 +54,7 @@ interface FaqItem {
   tags: string[];
 }
 
-export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch }) => {
+export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, onRestartTour }) => {
   const [activeCategory, setActiveCategory] = useState<HelpCategory>(initialSearch ? 'faq' : 'overview');
   const [searchQuery, setSearchQuery] = useState(initialSearch || '');
   const [expandedFaqs, setExpandedFaqs] = useState<Record<string, boolean>>({});
@@ -614,6 +616,17 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                     O Dev Manager foi construído especificamente para eliminar o atrito diário enfrentado pelos desenvolvedores. Ele unifica em uma única interface moderna o controle de serviços do Windows, o ciclo de vida de contêineres OSGi Apache Karaf, a gestão de repositórios Git com integração direta ao Azure DevOps e o catálogo de rotinas.
                   </p>
                 </div>
+                {onRestartTour && (
+                  <button
+                    type="button"
+                    onClick={onRestartTour}
+                    className="shrink-0 h-8 px-3 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition flex items-center gap-1.5 cursor-pointer"
+                    title="Reabrir o tour guiado de boas-vindas"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Ver tour guiado</span>
+                  </button>
+                )}
               </div>
 
               {/* Fluxo de Trabalho Recomendado */}
