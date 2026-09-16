@@ -23,6 +23,173 @@ export interface BackupOptions {
   oracleDirectory?: string;
   /** Gera o backup em formato compactado (pg_dump -Fc / mysqldump+gzip / expdp compression=ALL). */
   compress?: boolean;
+  /** Se o backup desta conexão deve executar via comando customizado em vez do comando padrão. */
+  useCustomCommand?: boolean;
+  /** Template do comando customizado a ser executado para esta conexão (requer placeholder {filePath}). */
+  customCommand?: string;
+}
+
+export interface BackupPlaceholders {
+  user: string;
+  password?: string;
+  host: string;
+  port: string;
+  database: string;
+  connectString: string;
+  directory: string;
+  folder: string;
+  fileName: string;
+  filePath: string;
+  logFileName: string;
+  logPath: string;
+  timestamp: string;
+}
+
+/**
+ * Constrói o mapa de placeholders disponíveis para substituição em comandos de backup.
+ */
+export function buildBackupPlaceholders(
+  config: DatabaseConnectionConfig,
+  destinationFolder: string,
+  options?: BackupOptions
+): BackupPlaceholders {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const safeConnName = (config.name || config.database || config.user || 'db').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safeDbName = (config.database || config.user || 'backup').replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  let defaultExt = 'sql';
+  if (config.type === 'oracle') {
+    defaultExt = 'dmp';
+  } else if (config.type === 'postgres' && options?.compress) {
+    defaultExt = 'dump';
+  }
+
+  const fileName = `${safeConnName}_${safeDbName}_${timestamp}.${defaultExt}`;
+  const logFileName = `${safeConnName}_${safeDbName}_${timestamp}.log`;
+  const filePath = path.join(destinationFolder, fileName);
+  const logPath = path.join(destinationFolder, logFileName);
+
+  const defaultPort = config.type === 'oracle' ? 1521 : config.type === 'mysql' ? 3306 : 5432;
+  const port = String(config.port || defaultPort);
+
+  const separator = config.oracleMode === 'sid' ? ':' : '/';
+  const connectString =
+    config.type === 'oracle'
+      ? `${config.host}:${port}${separator}${config.database}`
+      : `${config.host}:${port}/${config.database}`;
+
+  const directory = (options?.oracleDirectory && options.oracleDirectory.trim()) || 'DATA_PUMP_DIR';
+
+  return {
+    user: config.user || '',
+    password: config.password || '',
+    host: config.host || '',
+    port,
+    database: config.database || '',
+    connectString,
+    directory,
+    folder: destinationFolder,
+    fileName,
+    filePath,
+    logFileName,
+    logPath,
+    timestamp
+  };
+}
+
+/**
+ * Substitui os marcadores {variavel} no template pelos valores calculados.
+ */
+export function interpolateBackupTemplate(
+  template: string,
+  placeholders: BackupPlaceholders
+): string {
+  let result = template;
+  const map: Record<string, string> = {
+    '{user}': placeholders.user,
+    '{password}': placeholders.password || '',
+    '{host}': placeholders.host,
+    '{port}': placeholders.port,
+    '{database}': placeholders.database,
+    '{connectString}': placeholders.connectString,
+    '{directory}': placeholders.directory,
+    '{folder}': placeholders.folder,
+    '{fileName}': placeholders.fileName,
+    '{filePath}': placeholders.filePath,
+    '{logFileName}': placeholders.logFileName,
+    '{logPath}': placeholders.logPath,
+    '{timestamp}': placeholders.timestamp
+  };
+
+  for (const [key, val] of Object.entries(map)) {
+    result = result.split(key).join(val);
+  }
+  return result;
+}
+
+/**
+ * Tokeniza uma linha de comando em array de argumentos respeitando aspas simples e duplas,
+ * sem invocar interpretador de shell (execFile seguro).
+ */
+export function parseCommandLineTokens(cmd: string): string[] {
+  const tokens: string[] = [];
+  let current = '';
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let escaped = false;
+
+  for (let i = 0; i < cmd.length; i++) {
+    const char = cmd[i];
+
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\' && !inSingleQuote) {
+      if (i + 1 < cmd.length && (cmd[i + 1] === '"' || cmd[i + 1] === '\\')) {
+        escaped = true;
+        continue;
+      }
+      current += char;
+      continue;
+    }
+
+    if (char === '"' && !inSingleQuote) {
+      inDoubleQuote = !inDoubleQuote;
+      continue;
+    }
+
+    if (char === "'" && !inDoubleQuote) {
+      inSingleQuote = !inSingleQuote;
+      continue;
+    }
+
+    if (/\s/.test(char) && !inSingleQuote && !inDoubleQuote) {
+      if (current.length > 0) {
+        tokens.push(current);
+        current = '';
+      }
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.length > 0) {
+    tokens.push(current);
+  }
+
+  return tokens;
+}
+
+/**
+ * Mascara qualquer ocorrência da senha com asteriscos.
+ */
+export function maskSensitiveText(text: string, sensitive?: string): string {
+  if (!sensitive || !sensitive.trim()) return text;
+  return text.split(sensitive).join('****');
 }
 
 export class BackupService {
@@ -31,7 +198,7 @@ export class BackupService {
 
   /**
    * Executa um backup lógico da conexão informada, salvando o arquivo em destinationFolder.
-   * Suporta PostgreSQL (pg_dump), Oracle (expdp) e MySQL (mysqldump).
+   * Suporta PostgreSQL (pg_dump), Oracle (expdp), MySQL (mysqldump) ou comando personalizado.
    */
   public async runBackup(
     config: DatabaseConnectionConfig,
@@ -48,18 +215,24 @@ export class BackupService {
 
     try {
       let result: BackupResult;
-      switch (config.type) {
-        case 'postgres':
-          result = await this.backupPostgres(config, destinationFolder, options?.pgDumpPath, options?.compress);
-          break;
-        case 'oracle':
-          result = await this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory, options?.compress);
-          break;
-        case 'mysql':
-          result = await this.backupMysql(config, destinationFolder, options?.mysqldumpPath, options?.compress);
-          break;
-        default:
-          return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para backup.` };
+      const shouldUseCustom = !!options?.useCustomCommand && !!options?.customCommand?.trim();
+
+      if (shouldUseCustom) {
+        result = await this.runCustomCommandBackupInternal(config, destinationFolder, options!.customCommand!.trim(), options);
+      } else {
+        switch (config.type) {
+          case 'postgres':
+            result = await this.backupPostgres(config, destinationFolder, options?.pgDumpPath, options?.compress);
+            break;
+          case 'oracle':
+            result = await this.backupOracle(config, destinationFolder, options?.expdpPath, options?.oracleDirectory, options?.compress);
+            break;
+          case 'mysql':
+            result = await this.backupMysql(config, destinationFolder, options?.mysqldumpPath, options?.compress);
+            break;
+          default:
+            return { success: false, message: `Tipo de banco '${(config as any).type}' não suportado para backup.` };
+        }
       }
 
       if (result.success && result.filePath) {
@@ -69,6 +242,155 @@ export class BackupService {
     } finally {
       this.releaseLock(config.id);
     }
+  }
+
+  /**
+   * Executa um backup com comando customizado diretamente, com controle de lock.
+   */
+  public async runCustomCommandBackup(
+    config: DatabaseConnectionConfig,
+    destinationFolder: string,
+    customCommandTemplate: string,
+    options?: BackupOptions
+  ): Promise<BackupResult> {
+    if (!isSafeLocalPath(destinationFolder)) {
+      return { success: false, message: 'Pasta de destino inválida.' };
+    }
+
+    if (!this.acquireLock(config.id)) {
+      return { success: false, message: 'Já existe um backup ou restauração em andamento para esta conexão.' };
+    }
+
+    try {
+      const result = await this.runCustomCommandBackupInternal(config, destinationFolder, customCommandTemplate, options);
+      if (result.success && result.filePath) {
+        result.checksumSha256 = await this.computeChecksum(result.filePath).catch(() => undefined);
+      }
+      return result;
+    } finally {
+      this.releaseLock(config.id);
+    }
+  }
+
+  /**
+   * Núcleo de execução do comando customizado (pressupõe lock já adquirido).
+   * Não utiliza interpretador de shell; faz parse seguro em tokens e executa via execFile.
+   */
+  public async runCustomCommandBackupInternal(
+    config: DatabaseConnectionConfig,
+    destinationFolder: string,
+    customCommandTemplate: string,
+    options?: BackupOptions
+  ): Promise<BackupResult> {
+    const startTime = Date.now();
+
+    if (!customCommandTemplate || !customCommandTemplate.trim()) {
+      return { success: false, message: 'O comando de backup personalizado não pode estar em branco.' };
+    }
+
+    if (!customCommandTemplate.includes('{filePath}') && !customCommandTemplate.includes('{fileName}')) {
+      return {
+        success: false,
+        message: 'O comando personalizado deve conter obrigatoriamente a tag {filePath} (ou {fileName}) para identificar o arquivo de backup gerado.'
+      };
+    }
+
+    // Bloqueia metacaracteres perigosos de encadeamento/redirecionamento de shell
+    if (/[\0\r\n;&|<>`]/.test(customCommandTemplate)) {
+      return {
+        success: false,
+        message: 'O comando contém caracteres não permitidos (; & | < > ` ou quebras de linha).'
+      };
+    }
+
+    try {
+      await fs.promises.mkdir(destinationFolder, { recursive: true });
+    } catch (err: any) {
+      return { success: false, message: `Não foi possível criar/acessar a pasta de destino: ${err.message}` };
+    }
+
+    const diskWarning = await this.checkDiskSpace(destinationFolder);
+    if (diskWarning) return { success: false, message: diskWarning };
+
+    const placeholders = buildBackupPlaceholders(config, destinationFolder, options);
+
+    // Valida que nenhum placeholder resolvido contenha \0 ou quebra de linha
+    for (const [key, val] of Object.entries(placeholders)) {
+      if (typeof val === 'string' && /[\0\r\n]/.test(val)) {
+        return { success: false, message: `Valor inválido no parâmetro ${key}: quebra de linha ou caractere nulo.` };
+      }
+    }
+
+    const resolvedCommand = interpolateBackupTemplate(customCommandTemplate, placeholders);
+    const tokens = parseCommandLineTokens(resolvedCommand);
+
+    if (tokens.length === 0) {
+      return { success: false, message: 'Comando personalizado vazio após processamento.' };
+    }
+
+    const binary = tokens[0];
+    const args = tokens.slice(1);
+    const targetFilePath = placeholders.filePath;
+
+    return new Promise<BackupResult>((resolve) => {
+      execFile(
+        binary,
+        args,
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: config.password || '',
+            MYSQL_PWD: config.password || ''
+          },
+          maxBuffer: 20 * 1024 * 1024,
+          timeout: 20 * 60 * 1000
+        },
+        (error, stdout, stderr) => {
+          const durationMs = Date.now() - startTime;
+          const maskedStderr = maskSensitiveText(stderr || '', config.password);
+          const maskedStdout = maskSensitiveText(stdout || '', config.password);
+
+          if (error) {
+            const maskedErrMessage = maskSensitiveText(error.message || '', config.password);
+            const detail = maskedStderr.trim() || maskedStdout.trim() || maskedErrMessage;
+            resolve({
+              success: false,
+              message: `Falha ao executar comando personalizado (${path.basename(binary)}): ${detail}`,
+              durationMs
+            });
+            return;
+          }
+
+          fs.promises
+            .stat(targetFilePath)
+            .then((stat) => {
+              resolve({
+                success: true,
+                message: `Backup gerado com sucesso via comando personalizado em ${targetFilePath}`,
+                filePath: targetFilePath,
+                sizeBytes: stat.size,
+                durationMs
+              });
+            })
+            .catch(() => {
+              const isExpdp = path.basename(binary).toLowerCase().includes('expdp');
+              if (isExpdp) {
+                resolve({
+                  success: true,
+                  message: `Comando expdp concluído com sucesso, mas o arquivo não foi encontrado localmente em ${targetFilePath}. Se o Oracle estiver em servidor remoto, o dump foi gravado no diretório do servidor.`,
+                  durationMs
+                });
+              } else {
+                resolve({
+                  success: false,
+                  message: `Comando executado com código 0, mas o arquivo de backup esperado não foi encontrado em: ${targetFilePath}`,
+                  durationMs
+                });
+              }
+            });
+        }
+      );
+    });
   }
 
   /**

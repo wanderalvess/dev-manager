@@ -640,8 +640,13 @@ app.post('/api/db/columns', async (req, res) => {
 
 app.post('/api/db/backup', async (req, res) => {
   try {
-    const { config, destinationFolder, oracleDirectory, compress } = req.body;
-    const result = await backupSchedulerService.runManualBackup(config, destinationFolder, { oracleDirectory, compress });
+    const { config, destinationFolder, oracleDirectory, compress, useCustomCommand, customCommand } = req.body;
+    const result = await backupSchedulerService.runManualBackup(config, destinationFolder, {
+      oracleDirectory,
+      compress,
+      useCustomCommand,
+      customCommand
+    });
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message || 'Erro ao executar backup' });

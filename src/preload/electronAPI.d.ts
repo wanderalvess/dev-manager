@@ -213,7 +213,9 @@ export interface ElectronAPI {
     config: DatabaseConnectionConfig,
     destinationFolder: string,
     oracleDirectory?: string,
-    compress?: boolean
+    compress?: boolean,
+    useCustomCommand?: boolean,
+    customCommand?: string
   ) => Promise<BackupResult>;
   listDbBackups: (destinationFolder: string) => Promise<BackupFileInfo[]>;
   saveDbBackupConfig: (config: BackupConfig) => Promise<{ success: boolean; message: string }>;

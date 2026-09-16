@@ -785,11 +785,13 @@ export function initApiBridge() {
       config: DatabaseConnectionConfig,
       destinationFolder: string,
       oracleDirectory?: string,
-      compress?: boolean
+      compress?: boolean,
+      useCustomCommand?: boolean,
+      customCommand?: string
     ): Promise<BackupResult> => {
       return apiFetch('/api/db/backup', {
         method: 'POST',
-        body: JSON.stringify({ config, destinationFolder, oracleDirectory, compress })
+        body: JSON.stringify({ config, destinationFolder, oracleDirectory, compress, useCustomCommand, customCommand })
       });
     },
 

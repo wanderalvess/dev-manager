@@ -140,7 +140,12 @@ export class BackupSchedulerService {
   public async runManualBackup(
     connection: DatabaseConnectionConfig,
     destinationFolder: string,
-    overrides?: { oracleDirectory?: string; compress?: boolean }
+    overrides?: {
+      oracleDirectory?: string;
+      compress?: boolean;
+      useCustomCommand?: boolean;
+      customCommand?: string;
+    }
   ): Promise<BackupResult> {
     return this.executeBackup(connection, destinationFolder, overrides, 'manual');
   }
@@ -215,7 +220,12 @@ export class BackupSchedulerService {
     const result = await this.executeBackup(
       connection,
       config.destinationFolder,
-      { oracleDirectory: config.oracleDirectory, compress: config.compress },
+      {
+        oracleDirectory: config.oracleDirectory,
+        compress: config.compress,
+        useCustomCommand: config.useCustomCommand,
+        customCommand: config.customCommand
+      },
       'scheduled'
     );
 
@@ -234,7 +244,12 @@ export class BackupSchedulerService {
   private async executeBackup(
     connection: DatabaseConnectionConfig,
     destinationFolder: string,
-    overrides: { oracleDirectory?: string; compress?: boolean } | undefined,
+    overrides: {
+      oracleDirectory?: string;
+      compress?: boolean;
+      useCustomCommand?: boolean;
+      customCommand?: string;
+    } | undefined,
     trigger: 'manual' | 'scheduled'
   ): Promise<BackupResult> {
     const settings = this.configService.getSettings();
@@ -242,13 +257,17 @@ export class BackupSchedulerService {
     const previous = existing.find((b) => b.connectionId === connection.id);
     const effectiveOracleDirectory = overrides?.oracleDirectory ?? previous?.oracleDirectory;
     const effectiveCompress = overrides?.compress ?? previous?.compress;
+    const effectiveUseCustomCommand = overrides?.useCustomCommand ?? previous?.useCustomCommand;
+    const effectiveCustomCommand = overrides?.customCommand ?? previous?.customCommand;
 
     const result = await this.backupService.runBackup(connection, destinationFolder, {
       pgDumpPath: settings.pgDumpPath,
       expdpPath: settings.expdpPath,
       mysqldumpPath: settings.mysqldumpPath,
       oracleDirectory: effectiveOracleDirectory,
-      compress: effectiveCompress
+      compress: effectiveCompress,
+      useCustomCommand: effectiveUseCustomCommand,
+      customCommand: effectiveCustomCommand
     });
 
     if (result.success) {
@@ -263,6 +282,8 @@ export class BackupSchedulerService {
       destinationFolder,
       oracleDirectory: effectiveOracleDirectory,
       compress: effectiveCompress,
+      useCustomCommand: effectiveUseCustomCommand,
+      customCommand: effectiveCustomCommand,
       lastRunAt: new Date().toISOString(),
       lastSuccess: result.success,
       lastMessage: result.message

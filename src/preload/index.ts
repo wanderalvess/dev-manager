@@ -285,8 +285,11 @@ const electronAPI = {
     config: DatabaseConnectionConfig,
     destinationFolder: string,
     oracleDirectory?: string,
-    compress?: boolean
-  ): Promise<BackupResult> => ipcRenderer.invoke('db:run-backup', config, destinationFolder, oracleDirectory, compress),
+    compress?: boolean,
+    useCustomCommand?: boolean,
+    customCommand?: string
+  ): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:run-backup', config, destinationFolder, oracleDirectory, compress, useCustomCommand, customCommand),
   listDbBackups: (destinationFolder: string): Promise<BackupFileInfo[]> =>
     ipcRenderer.invoke('db:list-backups', destinationFolder),
   saveDbBackupConfig: (config: BackupConfig): Promise<{ success: boolean; message: string }> =>

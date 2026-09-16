@@ -597,8 +597,21 @@ export function registerIpcHandlers(
 
   ipcMain.handle(
     'db:run-backup',
-    async (_, config: DatabaseConnectionConfig, destinationFolder: string, oracleDirectory?: string, compress?: boolean) => {
-      return await backupSchedulerService.runManualBackup(config, destinationFolder, { oracleDirectory, compress });
+    async (
+      _,
+      config: DatabaseConnectionConfig,
+      destinationFolder: string,
+      oracleDirectory?: string,
+      compress?: boolean,
+      useCustomCommand?: boolean,
+      customCommand?: string
+    ) => {
+      return await backupSchedulerService.runManualBackup(config, destinationFolder, {
+        oracleDirectory,
+        compress,
+        useCustomCommand,
+        customCommand
+      });
     }
   );
 

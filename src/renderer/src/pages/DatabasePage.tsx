@@ -39,7 +39,11 @@ import {
   History,
   Webhook,
   FlaskConical,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Eye,
+  EyeOff,
+  Code2,
+  Check
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -203,6 +207,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
 
   // Backup de Banco de Dados
   const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
+  const [backupActiveTab, setBackupActiveTab] = useState<'backup' | 'schedule' | 'files' | 'history' | 'webhooks'>('backup');
   const [backupFolder, setBackupFolder] = useState<string>('');
   const [isRunningBackup, setIsRunningBackup] = useState<boolean>(false);
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
@@ -214,6 +219,10 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
   const [backupRetentionDays, setBackupRetentionDays] = useState<string>('');
   const [backupCompress, setBackupCompress] = useState<boolean>(false);
   const [backupOracleDirectory, setBackupOracleDirectory] = useState<string>('');
+  const [useCustomBackupCommand, setUseCustomBackupCommand] = useState<boolean>(false);
+  const [customBackupCommand, setCustomBackupCommand] = useState<string>('');
+  const [showPasswordInCommandPreview, setShowPasswordInCommandPreview] = useState<boolean>(false);
+  const [commandCopied, setCommandCopied] = useState<boolean>(false);
   const [drillCron, setDrillCron] = useState<string>('');
   const [drillScheduleEnabled, setDrillScheduleEnabled] = useState<boolean>(true);
   const [drillScratchConnectionId, setDrillScratchConnectionId] = useState<string>('');
@@ -465,6 +474,17 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     setBackupRetentionDays(saved?.retentionDays ? String(saved.retentionDays) : '');
     setBackupCompress(!!saved?.compress);
     setBackupOracleDirectory(saved?.oracleDirectory || '');
+    setUseCustomBackupCommand(!!saved?.useCustomCommand);
+    const defaultTemplate =
+      activeConnection.type === 'oracle'
+        ? 'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}'
+        : activeConnection.type === 'mysql'
+        ? 'mysqldump -h {host} -P {port} -u {user} {database} --result-file="{filePath}"'
+        : 'pg_dump -h {host} -p {port} -U {user} -d {database} -f "{filePath}"';
+    setCustomBackupCommand(saved?.customCommand || defaultTemplate);
+    setBackupActiveTab('backup');
+    setShowPasswordInCommandPreview(false);
+    setCommandCopied(false);
     setDrillCron(saved?.restoreDrillCronExpression || '');
     setDrillScheduleEnabled(saved?.restoreDrillEnabled !== false);
     setDrillScratchConnectionId(saved?.restoreDrillScratchConnectionId || '');
@@ -499,7 +519,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
         activeConnection,
         backupFolder.trim(),
         activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined,
-        backupCompress
+        backupCompress,
+        useCustomBackupCommand,
+        useCustomBackupCommand ? customBackupCommand.trim() : undefined
       );
       setBackupResult(res);
       // Atualiza o cache local de settings para refletir a pasta salva sem precisar recarregar
@@ -513,6 +535,8 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
           destinationFolder: backupFolder.trim(),
           oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : previous?.oracleDirectory,
           compress: backupCompress,
+          useCustomCommand: useCustomBackupCommand,
+          customCommand: customBackupCommand.trim() || undefined,
           lastRunAt: new Date().toISOString(),
           lastSuccess: res.success,
           lastMessage: res.message
@@ -528,7 +552,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     }
   };
 
-  // Salvar Agendamento de Backup (cron + retenção)
+  // Salvar Agendamento de Backup (cron + retenção + comando customizado)
   const handleSaveBackupSchedule = async () => {
     if (!activeConnection || !backupFolder.trim() || !window.electronAPI?.saveDbBackupConfig) return;
     setIsSavingSchedule(true);
@@ -543,6 +567,8 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
         retentionDays: backupRetentionDays.trim() ? Number(backupRetentionDays.trim()) : undefined,
         compress: backupCompress,
         oracleDirectory: activeConnection.type === 'oracle' ? backupOracleDirectory.trim() || undefined : undefined,
+        useCustomCommand: useCustomBackupCommand,
+        customCommand: customBackupCommand.trim() || undefined,
         restoreDrillCronExpression: drillCron.trim() || undefined,
         restoreDrillEnabled: drillScheduleEnabled,
         restoreDrillScratchConnectionId: drillScratchConnectionId || undefined
@@ -564,6 +590,54 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
       setIsSavingSchedule(false);
     }
   };
+
+  // Preview formatado em tempo real do comando de backup
+  const previewBackupCommandResolved = useMemo(() => {
+    if (!activeConnection) return '';
+    const defaultPort = activeConnection.type === 'oracle' ? 1521 : activeConnection.type === 'mysql' ? 3306 : 5432;
+    const port = String(activeConnection.port || defaultPort);
+    const separator = activeConnection.oracleMode === 'sid' ? ':' : '/';
+    const connectString =
+      activeConnection.type === 'oracle'
+        ? `${activeConnection.host}:${port}${separator}${activeConnection.database}`
+        : `${activeConnection.host}:${port}/${activeConnection.database}`;
+    const safeConnName = (activeConnection.name || activeConnection.database || activeConnection.user || 'db').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeDbName = (activeConnection.database || activeConnection.user || 'backup').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const defaultExt = activeConnection.type === 'oracle' ? 'dmp' : activeConnection.type === 'postgres' && backupCompress ? 'dump' : 'sql';
+    const sampleFileName = `${safeConnName}_${safeDbName}_TIMESTAMP.${defaultExt}`;
+    const sampleLogName = `${safeConnName}_${safeDbName}_TIMESTAMP.log`;
+    const folder = backupFolder.trim() || 'C:\\Backups';
+    const sampleFilePath = `${folder}\\${sampleFileName}`;
+    const sampleLogPath = `${folder}\\${sampleLogName}`;
+    const directory = backupOracleDirectory.trim() || 'DATA_PUMP_DIR';
+    const pwdDisplay = showPasswordInCommandPreview ? (activeConnection.password || '') : '****';
+
+    if (!useCustomBackupCommand) {
+      if (activeConnection.type === 'oracle') {
+        return `expdp ${activeConnection.user}@${connectString} directory=${directory} dumpfile=${sampleFileName} logfile=${sampleLogName} schemas=${activeConnection.user}${backupCompress ? ' compression=ALL' : ''}`;
+      } else if (activeConnection.type === 'mysql') {
+        return `mysqldump -h ${activeConnection.host} -P ${port} -u ${activeConnection.user} --result-file="${sampleFilePath}" ${activeConnection.database}`;
+      } else {
+        return `pg_dump -h ${activeConnection.host} -p ${port} -U ${activeConnection.user} -d ${activeConnection.database} -f "${sampleFilePath}" -F ${backupCompress ? 'c' : 'p'}`;
+      }
+    }
+
+    let cmd = customBackupCommand || '';
+    cmd = cmd.split('{user}').join(activeConnection.user || '');
+    cmd = cmd.split('{password}').join(pwdDisplay);
+    cmd = cmd.split('{host}').join(activeConnection.host || '');
+    cmd = cmd.split('{port}').join(port);
+    cmd = cmd.split('{database}').join(activeConnection.database || '');
+    cmd = cmd.split('{connectString}').join(connectString);
+    cmd = cmd.split('{directory}').join(directory);
+    cmd = cmd.split('{folder}').join(folder);
+    cmd = cmd.split('{fileName}').join(sampleFileName);
+    cmd = cmd.split('{filePath}').join(sampleFilePath);
+    cmd = cmd.split('{logFileName}').join(sampleLogName);
+    cmd = cmd.split('{logPath}').join(sampleLogPath);
+    cmd = cmd.split('{timestamp}').join('TIMESTAMP');
+    return cmd;
+  }, [activeConnection, backupFolder, backupCompress, backupOracleDirectory, useCustomBackupCommand, customBackupCommand, showPasswordInCommandPreview]);
 
   // Restaurar um backup existente na conexão ativa (operação destrutiva)
   const handleRestoreBackup = async (file: BackupFileInfo) => {
@@ -2734,157 +2808,632 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
       )}
       {/* Modal de Backup do Banco de Dados */}
       {isBackupModalOpen && activeConnection && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in flex flex-col max-h-[85vh]">
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
-              <div className="flex items-center space-x-2">
-                <HardDriveDownload className="w-4 h-4 text-sky-400" />
-                <h3 className="text-sm font-bold text-foreground">
-                  Backup — {activeConnection.name} {getDbBadge(activeConnection.type)}
-                </h3>
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-3.5">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center shadow-xs shrink-0">
+                  <HardDriveDownload className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-foreground tracking-tight">
+                      Backup & Restauração
+                    </h3>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted border border-border text-foreground">
+                      {activeConnection.name}
+                    </span>
+                    {getDbBadge(activeConnection.type)}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                    <span>{activeConnection.user}@{activeConnection.host}:{activeConnection.port || (activeConnection.type === 'oracle' ? 1521 : activeConnection.type === 'mysql' ? 3306 : 5432)}</span>
+                    <span className="text-border">/</span>
+                    <span className="text-foreground/80 font-semibold">{activeConnection.database}</span>
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsBackupModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground text-sm font-bold p-1"
+                className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-muted/80 transition-colors"
+                title="Fechar"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-4 space-y-3 text-xs overflow-y-auto">
-              <>
-                <div>
-                  <label className="block font-bold text-foreground mb-1">
-                    {activeConnection.type === 'oracle' ? 'Pasta do DIRECTORY (no servidor Oracle)' : 'Pasta de Destino'}
-                  </label>
+            {/* Navigation Strip */}
+            <div className="flex items-center px-6 py-2.5 border-b border-border/70 bg-muted/20 shrink-0 gap-1.5 overflow-x-auto">
+              {[
+                { id: 'backup', label: 'Executar Backup', icon: HardDriveDownload },
+                {
+                  id: 'schedule',
+                  label: 'Agendamento & Retenção',
+                  icon: CalendarClock,
+                  indicator: backupCron && backupScheduleEnabled ? 'active' : undefined
+                },
+                {
+                  id: 'files',
+                  label: 'Arquivos na Pasta',
+                  icon: FileArchive,
+                  count: backupFiles.length
+                },
+                {
+                  id: 'history',
+                  label: 'Histórico',
+                  icon: History,
+                  count: backupHistory.length
+                },
+                {
+                  id: 'webhooks',
+                  label: 'Webhooks',
+                  icon: Webhook,
+                  count: backupWebhooks.length
+                }
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = backupActiveTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setBackupActiveTab(tab.id as any)}
+                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+                      isActive
+                        ? 'bg-background text-foreground shadow-xs border border-border/80 font-bold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-primary' : 'opacity-70'}`} />
+                    <span>{tab.label}</span>
+                    {tab.indicator === 'active' && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Agendamento ativo" />
+                    )}
+                    {tab.count !== undefined && tab.count > 0 && (
+                      <span
+                        className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono leading-none ${
+                          isActive
+                            ? 'bg-primary/15 text-primary font-bold'
+                            : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tab Body */}
+            <div className="p-6 overflow-y-auto flex-1 text-xs space-y-4">
+              {/* ABA 1: EXECUTAR BACKUP */}
+              {backupActiveTab === 'backup' && (
+                <div className="space-y-4 animate-fade-in">
+                  {/* Seção 1: Destino */}
+                  <div className="p-4 bg-background/70 border border-border/70 rounded-xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+                        <FolderOpen className="w-4 h-4 text-primary" />
+                        <span>
+                          {activeConnection.type === 'oracle' && !useCustomBackupCommand
+                            ? 'Pasta do DIRECTORY (no servidor Oracle)'
+                            : 'Pasta de Destino do Backup'}
+                        </span>
+                      </label>
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        {backupFolder ? 'Destino selecionado' : 'Pasta pendente'}
+                      </span>
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         value={backupFolder}
                         onChange={(e) => setBackupFolder(e.target.value)}
-                        placeholder="Ex: C:\Backups\Postgres"
-                        className="flex-1 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                        placeholder="Ex: C:\Backups\WinThor"
+                        className="flex-1 bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs shadow-2xs"
                       />
                       <button
                         type="button"
                         onClick={handleSelectBackupFolder}
-                        className="p-2 bg-muted hover:bg-muted/80 text-foreground rounded-md transition shrink-0"
-                        title="Selecionar pasta"
+                        className="px-3 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg border border-border/80 transition flex items-center gap-1.5 shrink-0 font-semibold text-xs shadow-2xs"
+                        title="Procurar pasta no disco"
                       >
-                        <FolderOpen className="w-4 h-4" />
+                        <FolderOpen className="w-3.5 h-3.5 text-primary" />
+                        <span>Procurar...</span>
                       </button>
                     </div>
+
                     {activeConnection.type === 'oracle' ? (
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        O <code>expdp</code> grava o dump no servidor Oracle, não nesta máquina. Essa pasta precisa
-                        ser o mesmo caminho físico usado pelo objeto DIRECTORY abaixo (funciona direto quando o
-                        banco roda na própria máquina).
-                      </p>
-                    ) : activeConnection.type === 'mysql' ? (
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        A pasta é lembrada por conexão. O arquivo gerado usa <code>mysqldump</code> (precisa estar
-                        instalado e acessível no PATH, ou configure o caminho em Configurações → mysqldumpPath).
+                      <p className="text-[11px] text-muted-foreground leading-normal">
+                        {useCustomBackupCommand
+                          ? 'Esta pasta resolverá as variáveis {filePath} e {folder}. Utilizando exp clássico, os arquivos são salvos diretamente neste caminho da sua máquina.'
+                          : 'O utilitário expdp salva os arquivos no servidor Oracle. O caminho da pasta aqui deve coincidir com o local físico do DIRECTORY abaixo.'}
                       </p>
                     ) : (
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        A pasta é lembrada por conexão. O arquivo gerado usa <code>pg_dump</code> (precisa estar
-                        instalado e acessível no PATH, ou configure o caminho em Configurações → pgDumpPath).
+                      <p className="text-[11px] text-muted-foreground leading-normal">
+                        O arquivo de backup gerado pelo utilitário ({activeConnection.type === 'mysql' ? 'mysqldump' : 'pg_dump'}) será gravado nesta pasta local.
                       </p>
                     )}
                   </div>
 
-                  {activeConnection.type === 'oracle' && (
-                    <div>
-                      <label className="block font-bold text-foreground mb-1">DIRECTORY Oracle</label>
-                      <input
-                        type="text"
-                        value={backupOracleDirectory}
-                        onChange={(e) => setBackupOracleDirectory(e.target.value)}
-                        placeholder="DATA_PUMP_DIR"
-                        className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
-                      />
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        Nome do objeto DIRECTORY já criado no Oracle (<code>CREATE DIRECTORY ... AS '...'</code>).
-                        Padrão: <code>DATA_PUMP_DIR</code>. O schema exportado é o usuário da conexão (
-                        {activeConnection.user}).
-                      </p>
-                    </div>
-                  )}
-
-                  <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={backupCompress}
-                      onChange={(e) => setBackupCompress(e.target.checked)}
-                      className="text-primary focus:ring-0"
-                    />
-                    <span>
-                      Compactar backup
-                      {activeConnection.type === 'postgres' && ' (formato custom, -Fc)'}
-                      {activeConnection.type === 'mysql' && ' (.sql.gz)'}
-                      {activeConnection.type === 'oracle' && ' (compression=ALL, requer Enterprise Edition)'}
-                    </span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleRunBackup}
-                    disabled={isRunningBackup || !backupFolder.trim()}
-                    className="w-full flex items-center justify-center space-x-1.5 px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-bold shadow-xs transition disabled:opacity-50"
-                  >
-                    {isRunningBackup ? (
-                      <>
-                        <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Gerando backup...</span>
-                      </>
-                    ) : (
-                      <>
-                        <HardDriveDownload className="w-3.5 h-3.5" />
-                        <span>Fazer Backup Agora</span>
-                      </>
-                    )}
-                  </button>
-
-                  {backupResult && (
-                    <div
-                      className={`p-3 rounded-xl border ${
-                        backupResult.success
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
-                          : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2 font-bold">
-                        {backupResult.success ? (
-                          <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        ) : (
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                        )}
-                        <span className="break-all">{backupResult.message}</span>
-                      </div>
-                      {backupResult.success && backupResult.sizeBytes !== undefined && (
-                        <p className="text-[10px] font-mono opacity-80 mt-1">
-                          {formatBytes(backupResult.sizeBytes)} · {backupResult.durationMs} ms
+                  {/* Seção 2: Modo de Comando */}
+                  <div className="p-4 bg-background/70 border border-border/70 rounded-xl space-y-3.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-border/50 pb-3">
+                      <div>
+                        <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                          <Terminal className="w-4 h-4 text-sky-500" />
+                          <span>Modo de Execução do Comando</span>
+                        </span>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Escolha o modo padrão assistido ou customize comandos e parâmetros para compatibilidade com versões específicas do banco.
                         </p>
-                      )}
-                    </div>
-                  )}
+                      </div>
 
-                  <div className="pt-2 border-t border-border/60 space-y-2">
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                      <CalendarClock className="w-3 h-3" /> Agendamento Automático
+                      <div className="flex items-center bg-muted/60 p-1 rounded-lg border border-border/50 self-start sm:self-auto shrink-0 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setUseCustomBackupCommand(false)}
+                          className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition ${
+                            !useCustomBackupCommand
+                              ? 'bg-background text-foreground shadow-2xs font-bold'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <Zap className="w-3 h-3 text-amber-500" />
+                          <span>Padrão</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setUseCustomBackupCommand(true)}
+                          className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition ${
+                            useCustomBackupCommand
+                              ? 'bg-primary text-primary-foreground shadow-2xs font-bold'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <Terminal className="w-3 h-3" />
+                          <span>Personalizado</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* MODO PADRÃO */}
+                    {!useCustomBackupCommand ? (
+                      <div className="space-y-3 pt-1">
+                        {activeConnection.type === 'oracle' && (
+                          <div className="space-y-1">
+                            <label className="block font-bold text-foreground text-xs">DIRECTORY Oracle</label>
+                            <input
+                              type="text"
+                              value={backupOracleDirectory}
+                              onChange={(e) => setBackupOracleDirectory(e.target.value)}
+                              placeholder="DATA_PUMP_DIR"
+                              className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                              Nome do objeto DIRECTORY registrado no Oracle (ex: <code>DATA_PUMP_DIR</code>). O schema exportado é o usuário da conexão (<code>{activeConnection.user}</code>).
+                            </p>
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-2 cursor-pointer text-muted-foreground select-none">
+                          <input
+                            type="checkbox"
+                            checked={backupCompress}
+                            onChange={(e) => setBackupCompress(e.target.checked)}
+                            className="text-primary focus:ring-0 rounded"
+                          />
+                          <span className="text-foreground text-xs font-medium">
+                            Compactar backup
+                            {activeConnection.type === 'postgres' && ' (formato binário customizado, -Fc)'}
+                            {activeConnection.type === 'mysql' && ' (compressão via gzip streaming)'}
+                            {activeConnection.type === 'oracle' && ' (compression=ALL, requer Oracle Enterprise Edition)'}
+                          </span>
+                        </label>
+
+                        {/* Preview do comando padrão */}
+                        <div className="mt-2.5 p-3.5 bg-muted/40 border border-border/70 rounded-xl space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                              <Terminal className="w-3 h-3 text-primary" /> Linha de Comando Gerada (Automática)
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUseCustomBackupCommand(true);
+                                  setCustomBackupCommand(previewBackupCommandResolved);
+                                }}
+                                className="px-2 py-0.5 text-[10px] text-primary hover:underline font-semibold"
+                              >
+                                Editar como personalizado
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(previewBackupCommandResolved);
+                                  setCommandCopied(true);
+                                  setTimeout(() => setCommandCopied(false), 2000);
+                                }}
+                                className="flex items-center gap-1 px-2 py-0.5 text-muted-foreground hover:text-foreground text-[10px] font-medium rounded-md hover:bg-muted transition"
+                                title="Copiar comando"
+                              >
+                                {commandCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                                <span>{commandCopied ? 'Copiado' : 'Copiar'}</span>
+                              </button>
+                            </div>
+                          </div>
+                          <pre className="font-mono text-[11px] p-2.5 bg-background/90 rounded-lg border border-border/60 text-foreground overflow-x-auto whitespace-pre-wrap break-all select-all leading-relaxed">
+                            {previewBackupCommandResolved}
+                          </pre>
+                        </div>
+                      </div>
+                    ) : (
+                      /* MODO PERSONALIZADO */
+                      <div className="space-y-4 pt-1">
+                        {/* Presets Rápidos */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                              <Zap className="w-3 h-3 text-amber-500" /> Modelos Recomendados (Presets Rápidos):
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">Clique em um modelo para carregar</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {activeConnection.type === 'oracle' ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCustomBackupCommand(
+                                      'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}'
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50"
+                                >
+                                  expdp (Padrão)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCustomBackupCommand(
+                                      'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user} version=11.2 exclude=statistics'
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50"
+                                  title="Compatível com Oracle 11g e desabilita estatísticas para acelerar"
+                                >
+                                  expdp (Compatível 11g + Sem Estatísticas)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCustomBackupCommand(
+                                      'exp {user}/{password}@{connectString} file="{filePath}" log="{logPath}" owner={user} buffer=65536 direct=y consistent=y statistics=none'
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50"
+                                  title="Export clássico direto no disco do cliente (sem depender do DATA_PUMP_DIR do servidor)"
+                                >
+                                  exp (Export Clássico / Local)
+                                </button>
+                              </>
+                            ) : activeConnection.type === 'mysql' ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCustomBackupCommand(
+                                      'mysqldump -h {host} -P {port} -u {user} {database} --result-file="{filePath}"'
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50"
+                                >
+                                  mysqldump (Padrão)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCustomBackupCommand(
+                                      'mysqldump -h {host} -P {port} -u {user} --single-transaction --quick {database} --result-file="{filePath}"'
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50"
+                                >
+                                  mysqldump (Transacional)
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCustomBackupCommand(
+                                      'pg_dump -h {host} -p {port} -U {user} -d {database} -F c -b -v -f "{filePath}"'
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50"
+                                >
+                                  pg_dump (-Fc Custom Binário)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setCustomBackupCommand(
+                                      'pg_dump -h {host} -p {port} -U {user} -d {database} -F p -f "{filePath}"'
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50"
+                                >
+                                  pg_dump (Plain SQL)
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Chips com Variáveis Categorizadas */}
+                        <div className="space-y-2 p-3 bg-muted/30 border border-border/60 rounded-xl">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                              Variáveis Disponíveis (clique para inserir):
+                            </span>
+                            <span className="text-[10px] text-amber-500 font-mono font-semibold">
+                              * tag {'{filePath}'} ou {'{fileName}'} é obrigatória
+                            </span>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                              <span className="text-muted-foreground font-semibold shrink-0 w-20">Arquivo:</span>
+                              {[
+                                { tag: '{filePath}', req: true, tip: 'Caminho completo do arquivo gerado' },
+                                { tag: '{fileName}', req: true, tip: 'Nome simples do arquivo de dump' },
+                                { tag: '{folder}', req: false, tip: 'Diretório de destino selecionado' }
+                              ].map((item) => (
+                                <button
+                                  key={item.tag}
+                                  type="button"
+                                  onClick={() => setCustomBackupCommand((prev) => (prev ? `${prev} ${item.tag}` : item.tag))}
+                                  className={`px-2 py-0.5 rounded-md font-mono text-[11px] border transition flex items-center gap-1 shadow-2xs ${
+                                    item.req
+                                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 font-semibold'
+                                      : 'bg-background border-border text-foreground hover:bg-muted'
+                                  }`}
+                                  title={item.tip}
+                                >
+                                  <span>{item.tag}</span>
+                                  {item.req && <span className="text-[9px] opacity-75 font-sans">(obrigatório)</span>}
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                              <span className="text-muted-foreground font-semibold shrink-0 w-20">Conexão:</span>
+                              {['{user}', '{password}', '{connectString}', '{host}', '{port}', '{database}'].map((tag) => (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  onClick={() => setCustomBackupCommand((prev) => (prev ? `${prev} ${tag}` : tag))}
+                                  className="px-2 py-0.5 rounded-md font-mono text-[11px] bg-background border border-border text-foreground hover:bg-muted transition shadow-2xs"
+                                  title={`Inserir ${tag}`}
+                                >
+                                  {tag}
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                              <span className="text-muted-foreground font-semibold shrink-0 w-20">Utilitários:</span>
+                              {['{directory}', '{logPath}', '{timestamp}'].map((tag) => (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  onClick={() => setCustomBackupCommand((prev) => (prev ? `${prev} ${tag}` : tag))}
+                                  className="px-2 py-0.5 rounded-md font-mono text-[11px] bg-background border border-border text-foreground hover:bg-muted transition shadow-2xs"
+                                  title={`Inserir ${tag}`}
+                                >
+                                  {tag}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Console do Utilitário CLI (Signature Element) */}
+                        <div className="bg-slate-950 text-slate-100 rounded-xl border border-slate-800 shadow-lg overflow-hidden">
+                          {/* Console Header Bar */}
+                          <div className="px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-1.5 select-none">
+                                <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+                              </div>
+                              <span className="text-slate-400 font-mono text-[11px] font-semibold flex items-center gap-1 ml-1">
+                                <Terminal className="w-3.5 h-3.5 text-sky-400" />
+                                <span>Console do Comando de Backup</span>
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {customBackupCommand.includes('{filePath}') || customBackupCommand.includes('{fileName}') ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                  <Check className="w-3 h-3" />
+                                  <span>Sintaxe Válida</span>
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  <span>Requer {'{filePath}'}</span>
+                                </span>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => setShowPasswordInCommandPreview((prev) => !prev)}
+                                className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition"
+                                title={showPasswordInCommandPreview ? 'Ocultar senha' : 'Exibir senha real'}
+                              >
+                                {showPasswordInCommandPreview ? (
+                                  <>
+                                    <EyeOff className="w-3 h-3 text-amber-400" />
+                                    <span>Ocultar Senha</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye className="w-3 h-3" />
+                                    <span>Ver Senha</span>
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(previewBackupCommandResolved);
+                                  setCommandCopied(true);
+                                  setTimeout(() => setCommandCopied(false), 2000);
+                                }}
+                                className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition"
+                                title="Copiar comando resolvido"
+                              >
+                                {commandCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                <span>{commandCopied ? 'Copiado' : 'Copiar'}</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Editor de Entrada */}
+                          <div className="relative">
+                            <textarea
+                              rows={3}
+                              value={customBackupCommand}
+                              onChange={(e) => setCustomBackupCommand(e.target.value)}
+                              placeholder='Ex: exp {user}/{password}@{connectString} file="{filePath}" log="{logPath}" owner={user}'
+                              className="w-full bg-slate-950 text-slate-100 p-3.5 font-mono text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-sky-500/50 resize-y min-h-[85px] border-b border-slate-800/80"
+                            />
+                          </div>
+
+                          {/* Live Preview Console Output */}
+                          <div className="p-3 bg-slate-900/60 font-mono text-[11px] leading-relaxed">
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-wider mb-1 select-none">
+                              <span>Visualização com Parâmetros Reais (Passados Diretamente ao Executável)</span>
+                              <span className="text-[9px] text-slate-500 font-mono">execFile sem shell</span>
+                            </div>
+                            <div className="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800 text-slate-200 overflow-x-auto whitespace-pre-wrap break-all select-all flex items-start gap-2">
+                              <span className="text-sky-400 select-none font-bold shrink-0">&gt;_</span>
+                              <span>{previewBackupCommandResolved || '(digite um comando acima para ver a prévia)'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Seção 3: Execução e Feedback */}
+                  <div className="space-y-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleRunBackup}
+                      disabled={
+                        isRunningBackup ||
+                        !backupFolder.trim() ||
+                        (useCustomBackupCommand && !customBackupCommand.includes('{filePath}') && !customBackupCommand.includes('{fileName}'))
+                      }
+                      className="w-full flex items-center justify-center space-x-2 px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition disabled:opacity-50 text-sm tracking-wide"
+                    >
+                      {isRunningBackup ? (
+                        <>
+                          <RotateCw className="w-4 h-4 animate-spin" />
+                          <span>Executando Backup...</span>
+                        </>
+                      ) : (
+                        <>
+                          <HardDriveDownload className="w-4 h-4" />
+                          <span>Fazer Backup Agora</span>
+                        </>
+                      )}
+                    </button>
+
+                    {useCustomBackupCommand && (!customBackupCommand.includes('{filePath}') && !customBackupCommand.includes('{fileName}')) && (
+                      <p className="text-[11px] text-amber-500 flex items-center justify-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Para iniciar o backup personalizado, inclua a tag <code>{'{filePath}'}</code> ou <code>{'{fileName}'}</code> no comando.</span>
+                      </p>
+                    )}
+
+                    {backupResult && (
+                      <div
+                        className={`p-4 rounded-xl border ${
+                          backupResult.success
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                            : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                        }`}
+                      >
+                        <div className="flex items-start space-x-2.5 font-bold">
+                          {backupResult.success ? (
+                            <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-500" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-rose-500" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <span className="break-all text-xs">{backupResult.message}</span>
+                            {backupResult.success && backupResult.sizeBytes !== undefined && (
+                              <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono opacity-90 mt-1.5">
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30">
+                                  Tamanho: {formatBytes(backupResult.sizeBytes)}
+                                </span>
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30">
+                                  Duração: {backupResult.durationMs} ms
+                                </span>
+                              </div>
+                            )}
+                            {backupResult.success && backupResult.checksumSha256 && (
+                              <div className="mt-1.5 flex items-center gap-2">
+                                <span className="text-[10px] font-mono opacity-80 truncate" title={backupResult.checksumSha256}>
+                                  SHA-256: {backupResult.checksumSha256}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyCellToClipboard(backupResult.checksumSha256!, 'result-hash')}
+                                  className="text-[10px] px-1.5 py-0.2 rounded hover:bg-emerald-500/20 font-mono transition"
+                                  title="Copiar hash"
+                                >
+                                  {copyFeedback === 'result-hash' ? '✓ Copiado' : 'Copiar hash'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ABA 2: AGENDAMENTO & RETENÇÃO */}
+              {backupActiveTab === 'schedule' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="p-4 bg-background/70 border border-border/70 rounded-xl space-y-3">
+                    <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                      <CalendarClock className="w-4 h-4 text-primary" /> Frequência de Execução Automática (Cron)
                     </span>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <select
                         value={backupCron}
                         onChange={(e) => setBackupCron(e.target.value)}
-                        className="flex-1 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                        className="flex-1 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
                       >
-                        <option value="">Sem agendamento (só manual)</option>
-                        <option value="0 * * * *">A cada hora</option>
-                        <option value="0 */6 * * *">A cada 6 horas</option>
-                        <option value="0 2 * * *">Diário às 02:00</option>
+                        <option value="">Sem agendamento (somente manual)</option>
+                        <option value="0 * * * *">A cada hora (0 * * * *)</option>
+                        <option value="0 */6 * * *">A cada 6 horas (0 */6 * * *)</option>
+                        <option value="0 2 * * *">Diário às 02:00 (0 2 * * *)</option>
                         <option value="0 2 * * 0">Semanal (domingo às 02:00)</option>
                         {backupCron && !CRON_PRESETS.includes(backupCron) && (
                           <option value={backupCron}>Personalizado: {backupCron}</option>
@@ -2895,88 +3444,102 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
                         value={backupCron}
                         onChange={(e) => setBackupCron(e.target.value)}
                         placeholder="cron: 0 2 * * *"
-                        className="w-32 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                        className="w-full sm:w-44 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
                       />
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground">
-                        <input
-                          type="checkbox"
-                          checked={backupScheduleEnabled}
-                          onChange={(e) => setBackupScheduleEnabled(e.target.checked)}
-                          disabled={!backupCron.trim()}
-                          className="text-primary focus:ring-0"
-                        />
-                        <span>Ativo</span>
-                      </label>
-                      <div className="flex items-center gap-1.5 flex-1">
-                        <span className="text-muted-foreground shrink-0">Manter últimos</span>
-                        <input
-                          type="number"
-                          min={1}
-                          value={backupRetentionCount}
-                          onChange={(e) => setBackupRetentionCount(e.target.value)}
-                          placeholder="todos"
-                          className="w-16 bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono"
-                        />
-                        <span className="text-muted-foreground shrink-0">backups</span>
+                    <label className="flex items-center gap-2 cursor-pointer text-muted-foreground select-none">
+                      <input
+                        type="checkbox"
+                        checked={backupScheduleEnabled}
+                        onChange={(e) => setBackupScheduleEnabled(e.target.checked)}
+                        disabled={!backupCron.trim()}
+                        className="text-primary focus:ring-0 rounded"
+                      />
+                      <span className="font-semibold text-foreground text-xs">Ativar rotina agendada</span>
+                    </label>
+                  </div>
+
+                  <div className="p-4 bg-background/70 border border-border/70 rounded-xl space-y-3">
+                    <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                      <SlidersHorizontal className="w-4 h-4 text-primary" /> Política de Retenção de Backups
+                    </span>
+                    <p className="text-[11px] text-muted-foreground">
+                      Os arquivos mais antigos são limpos automaticamente após cada execução conforme as regras abaixo:
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-foreground">Manter quantidade máxima</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            value={backupRetentionCount}
+                            onChange={(e) => setBackupRetentionCount(e.target.value)}
+                            placeholder="Ilimitado"
+                            className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+                          />
+                          <span className="text-muted-foreground shrink-0 text-xs">arquivos</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-foreground">Idade máxima dos arquivos</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            value={backupRetentionDays}
+                            onChange={(e) => setBackupRetentionDays(e.target.value)}
+                            placeholder="Sem limite"
+                            className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+                          />
+                          <span className="text-muted-foreground shrink-0 text-xs">dias</span>
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground shrink-0">Apagar com mais de</span>
-                      <input
-                        type="number"
-                        min={1}
-                        value={backupRetentionDays}
-                        onChange={(e) => setBackupRetentionDays(e.target.value)}
-                        placeholder="sem limite"
-                        className="w-20 bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono"
-                      />
-                      <span className="text-muted-foreground shrink-0">dias</span>
-                    </div>
+                  <div className="p-4 bg-background/70 border border-border/70 rounded-xl space-y-3">
+                    <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
+                      <FlaskConical className="w-4 h-4 text-cyan-500" /> Restore Drill Automático (Teste Periódico)
+                    </span>
+                    <p className="text-[11px] text-muted-foreground">
+                      Restaura automaticamente o backup mais recente gerado contra uma base de teste descartável (scratch) para certificar a integridade dos dados.
+                    </p>
 
-                    <div className="pt-1.5 space-y-1.5">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                        <FlaskConical className="w-3 h-3" /> Restore Drill Agendado
-                      </span>
-                      <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="sm:col-span-2 flex items-center gap-2">
                         <select
                           value={drillCron}
                           onChange={(e) => setDrillCron(e.target.value)}
-                          className="flex-1 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                          className="flex-1 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
                         >
-                          <option value="">Sem drill agendado (só manual)</option>
+                          <option value="">Sem drill agendado</option>
                           <option value="0 4 * * *">Diário às 04:00</option>
                           <option value="0 4 * * 0">Semanal (domingo às 04:00)</option>
                           {drillCron && !['0 4 * * *', '0 4 * * 0'].includes(drillCron) && (
                             <option value={drillCron}>Personalizado: {drillCron}</option>
                           )}
                         </select>
-                        <input
-                          type="text"
-                          value={drillCron}
-                          onChange={(e) => setDrillCron(e.target.value)}
-                          placeholder="cron: 0 4 * * *"
-                          className="w-32 bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground shrink-0">
+                        <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground shrink-0 select-none">
                           <input
                             type="checkbox"
                             checked={drillScheduleEnabled}
                             onChange={(e) => setDrillScheduleEnabled(e.target.checked)}
                             disabled={!drillCron.trim()}
-                            className="text-primary focus:ring-0"
+                            className="text-primary focus:ring-0 rounded"
                           />
-                          <span>Ativo</span>
+                          <span className="text-xs font-semibold text-foreground">Ativo</span>
                         </label>
+                      </div>
+
+                      <div>
                         <select
                           value={drillScratchConnectionId}
                           onChange={(e) => setDrillScratchConnectionId(e.target.value)}
-                          className="flex-1 bg-background border border-border/70 rounded-md p-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                          className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary text-xs"
                         >
                           <option value="">Conexão scratch...</option>
                           {connections.map((c) => (
@@ -2986,428 +3549,497 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
                           ))}
                         </select>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
-                        Testa o backup mais recente da pasta contra a conexão scratch, no mesmo cron. Nunca use a conexão de origem.
-                      </p>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={handleSaveBackupSchedule}
-                      disabled={isSavingSchedule || !backupFolder.trim()}
-                      className="w-full flex items-center justify-center space-x-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg font-bold shadow-xs transition disabled:opacity-50"
-                    >
-                      <CalendarClock className={`w-3.5 h-3.5 ${isSavingSchedule ? 'animate-spin' : ''}`} />
-                      <span>{isSavingSchedule ? 'Salvando...' : 'Salvar Agendamento'}</span>
-                    </button>
-
-                    {scheduleSaveResult && (
-                      <div
-                        className={`p-2 rounded-lg border text-[11px] ${
-                          scheduleSaveResult.success
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
-                            : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
-                        }`}
-                      >
-                        {scheduleSaveResult.message}
-                      </div>
-                    )}
                   </div>
 
-                  <div className="pt-2 border-t border-border/60">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                        <FileArchive className="w-3 h-3" /> Backups na Pasta
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => refreshBackupFiles(backupFolder)}
-                        disabled={!backupFolder.trim() || isLoadingBackupFiles}
-                        className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
-                        title="Recarregar lista"
-                      >
-                        <RotateCw className={`w-3 h-3 ${isLoadingBackupFiles ? 'animate-spin text-primary' : ''}`} />
-                      </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveBackupSchedule}
+                    disabled={isSavingSchedule || !backupFolder.trim()}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold shadow-md hover:bg-primary/90 transition disabled:opacity-50 text-xs"
+                  >
+                    <CalendarClock className={`w-4 h-4 ${isSavingSchedule ? 'animate-spin' : ''}`} />
+                    <span>{isSavingSchedule ? 'Salvando Configurações...' : 'Salvar Configurações de Agendamento'}</span>
+                  </button>
+
+                  {scheduleSaveResult && (
+                    <div
+                      className={`p-3.5 rounded-xl border text-xs ${
+                        scheduleSaveResult.success
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                      }`}
+                    >
+                      {scheduleSaveResult.message}
                     </div>
-                    {restoreResult && (
-                      <div
-                        className={`mb-2 p-2 rounded-lg border text-[11px] ${
-                          restoreResult.success
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
-                            : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
-                        }`}
-                      >
-                        {restoreResult.message}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <FlaskConical className="w-3 h-3 text-muted-foreground shrink-0" />
+                  )}
+                </div>
+              )}
+
+              {/* ABA 3: ARQUIVOS & RESTAURAÇÃO */}
+              {backupActiveTab === 'files' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/40 border border-border/70 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground text-xs">Backups na Pasta</span>
+                      <span className="text-[10px] font-mono text-muted-foreground truncate max-w-xs" title={backupFolder}>
+                        ({backupFolder || 'nenhuma pasta definida'})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
                       <select
                         value={scratchConnectionId}
                         onChange={(e) => setScratchConnectionId(e.target.value)}
-                        className="flex-1 bg-background border border-border/70 rounded-md p-1.5 text-[10px] text-foreground focus:outline-none focus:border-primary"
+                        className="bg-background border border-border/80 rounded-lg p-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
                       >
-                        <option value="">Conexão de teste (restore drill)...</option>
+                        <option value="">Conexão scratch para teste...</option>
                         {connections.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name} ({c.type})
                           </option>
                         ))}
                       </select>
-                    </div>
-                    {drillResult && (
-                      <div
-                        className={`mb-2 p-2 rounded-lg border text-[11px] ${
-                          drillResult.success
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
-                            : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
-                        }`}
+
+                      <button
+                        type="button"
+                        onClick={() => refreshBackupFiles(backupFolder)}
+                        disabled={!backupFolder.trim() || isLoadingBackupFiles}
+                        className="p-1.5 hover:text-foreground text-muted-foreground rounded-lg hover:bg-muted transition disabled:opacity-50"
+                        title="Recarregar arquivos"
                       >
-                        {drillResult.message}
-                        {drillResult.success && drillResult.checksumSha256 && (
-                          <p className="text-[10px] font-mono opacity-80 mt-1 truncate">
-                            SHA-256: {drillResult.checksumSha256}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {backupFiles.length === 0 ? (
-                      <div className="text-center py-3 text-[11px] text-muted-foreground">
-                        Nenhum backup encontrado nesta pasta.
-                      </div>
-                    ) : (
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {backupFiles.map((f) => (
-                          <div
-                            key={f.filePath}
-                            className="flex items-center justify-between p-2 bg-background/60 border border-border/50 rounded-lg gap-2"
-                          >
-                            <div className="min-w-0 flex-1">
-                              <span className="font-mono text-[10px] truncate block" title={f.filePath}>
+                        <RotateCw className={`w-4 h-4 ${isLoadingBackupFiles ? 'animate-spin text-primary' : ''}`} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {restoreResult && (
+                    <div
+                      className={`p-3.5 rounded-xl border text-xs ${
+                        restoreResult.success
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                      }`}
+                    >
+                      {restoreResult.message}
+                    </div>
+                  )}
+
+                  {drillResult && (
+                    <div
+                      className={`p-3.5 rounded-xl border text-xs ${
+                        drillResult.success
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                      }`}
+                    >
+                      {drillResult.message}
+                      {drillResult.success && drillResult.checksumSha256 && (
+                        <p className="text-[10px] font-mono opacity-80 mt-1 truncate">
+                          SHA-256: {drillResult.checksumSha256}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {backupFiles.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground bg-muted/20 border border-border/60 rounded-xl space-y-1">
+                      <FileArchive className="w-8 h-8 mx-auto opacity-40 text-muted-foreground mb-2" />
+                      <p className="font-semibold text-xs text-foreground">Nenhum arquivo de backup encontrado</p>
+                      <p className="text-[11px]">Nenhum arquivo (.dmp, .sql, .dump) foi localizado na pasta de destino selecionada.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                      {backupFiles.map((f) => (
+                        <div
+                          key={f.filePath}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-background/70 border border-border/70 rounded-xl gap-2 hover:border-border transition shadow-2xs"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-semibold text-foreground truncate" title={f.filePath}>
                                 {f.fileName}
                               </span>
-                              <span className="text-[10px] text-muted-foreground font-mono">
-                                {formatBytes(f.sizeBytes)}
+                              <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
+                                {f.fileName.split('.').pop()}
                               </span>
                             </div>
+                            <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-mono mt-1">
+                              <span>{formatBytes(f.sizeBytes)}</span>
+                              <span>·</span>
+                              <span>{new Date(f.createdAt).toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             <button
                               type="button"
                               onClick={() => handleRunRestoreDrill(f)}
                               disabled={!scratchConnectionId || drillingFilePath !== null}
-                              title="Testar restauração numa conexão separada (não afeta a conexão ativa)"
-                              className="shrink-0 flex items-center gap-1 px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 rounded-md text-[10px] font-bold transition disabled:opacity-50"
+                              title="Testar restauração numa conexão descartável (não afeta o banco ativo)"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50"
                             >
                               {drillingFilePath === f.filePath ? (
-                                <RotateCw className="w-3 h-3 animate-spin" />
+                                <RotateCw className="w-3.5 h-3.5 animate-spin" />
                               ) : (
-                                <FlaskConical className="w-3 h-3" />
+                                <FlaskConical className="w-3.5 h-3.5" />
                               )}
-                              <span>Drill</span>
+                              <span>Restore Drill</span>
                             </button>
+
                             <button
                               type="button"
                               onClick={() => handleRestoreBackup(f)}
                               disabled={restoringFilePath !== null}
                               title="Restaurar este backup na conexão ativa (sobrescreve dados existentes)"
-                              className="shrink-0 flex items-center gap-1 px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 rounded-md text-[10px] font-bold transition disabled:opacity-50"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50"
                             >
                               {restoringFilePath === f.filePath ? (
-                                <RotateCw className="w-3 h-3 animate-spin" />
+                                <RotateCw className="w-3.5 h-3.5 animate-spin" />
                               ) : (
-                                <RotateCcw className="w-3 h-3" />
+                                <RotateCcw className="w-3.5 h-3.5" />
                               )}
                               <span>Restaurar</span>
                             </button>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pt-2 border-t border-border/60">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                        <History className="w-3 h-3" /> Histórico de Execuções
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={handleExportBackupHistoryCsv}
-                          disabled={backupHistory.length === 0}
-                          className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
-                          title="Exportar histórico como CSV"
-                        >
-                          <Download className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => activeConnection && refreshBackupHistory(activeConnection.id)}
-                          disabled={isLoadingBackupHistory}
-                          className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50"
-                          title="Recarregar histórico"
-                        >
-                          <RotateCw className={`w-3 h-3 ${isLoadingBackupHistory ? 'animate-spin text-primary' : ''}`} />
-                        </button>
-                      </div>
-                    </div>
-                    {backupHistory.length === 0 ? (
-                      <div className="text-center py-3 text-[11px] text-muted-foreground">
-                        Nenhuma execução registrada ainda para esta conexão.
-                      </div>
-                    ) : (
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {backupHistory.map((h) => (
-                          <div
-                            key={h.id}
-                            className={`flex items-center justify-between p-2 bg-background/60 border rounded-lg gap-2 ${
-                              h.success ? 'border-emerald-500/20' : 'border-rose-500/30'
-                            }`}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <span className="flex items-center gap-1 text-[10px] font-bold">
-                                {h.success ? (
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                                ) : (
-                                  <AlertCircle className="w-3 h-3 text-rose-500 shrink-0" />
-                                )}
-                                <span className="text-muted-foreground">
-                                  {h.action === 'backup' ? 'Backup' : h.action === 'restore-drill' ? 'Restore Drill' : 'Restauração'} ·{' '}
-                                  {h.trigger === 'scheduled' ? 'agendado' : 'manual'}
-                                </span>
-                              </span>
-                              <span className="block text-[10px] text-muted-foreground/80 truncate" title={h.message}>
-                                {new Date(h.startedAt).toLocaleString()} — {h.message}
-                              </span>
-                              {h.checksumSha256 && (
-                                <span className="block text-[9px] font-mono text-muted-foreground/60 truncate" title={h.checksumSha256}>
-                                  SHA-256: {h.checksumSha256.slice(0, 16)}…
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="pt-2 border-t border-border/60">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-                        <Webhook className="w-3 h-3" /> Webhooks de Notificação
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingWebhook({ method: 'POST', enabled: true })}
-                        className="flex items-center gap-1 px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-md text-[10px] font-bold transition"
-                      >
-                        <Plus className="w-3 h-3" /> Novo
-                      </button>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mb-1.5">
-                      Disparados a cada backup, restauração ou restore drill (manual ou agendado), independente da conexão.
-                    </p>
-
-                    {backupWebhooks.length === 0 && !editingWebhook && (
-                      <div className="text-center py-3 text-[11px] text-muted-foreground">
-                        Nenhum webhook configurado.
-                      </div>
-                    )}
-
-                    <div className="space-y-1.5">
-                      {backupWebhooks.map((w) => (
-                        <div key={w.id} className="p-2 bg-background/60 border border-border/50 rounded-lg space-y-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <label className="flex items-center gap-1 cursor-pointer shrink-0">
-                                  <input
-                                    type="checkbox"
-                                    checked={w.enabled}
-                                    onChange={(e) => handleToggleWebhookEnabled(w, e.target.checked)}
-                                    className="text-primary focus:ring-0"
-                                  />
-                                </label>
-                                <span className="font-bold text-[11px] truncate">{w.name}</span>
-                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0">
-                                  {w.method || 'POST'}
-                                </span>
-                              </div>
-                              <div className="font-mono text-[10px] text-muted-foreground truncate" title={w.endpointUrl}>
-                                {w.endpointUrl}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => handleTestWebhook(w)}
-                                disabled={isTestingWebhookId === w.id}
-                                className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50"
-                                title="Enviar payload de teste"
-                              >
-                                {isTestingWebhookId === w.id ? (
-                                  <RotateCw className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  'Testar'
-                                )}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setEditingWebhook(w)}
-                                className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition"
-                                title="Editar"
-                              >
-                                <Edit2 className="w-3 h-3" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteWebhook(w.id)}
-                                className="p-1 rounded-md hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition"
-                                title="Remover"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-                          {webhookTestResults[w.id] && (
-                            <div
-                              className={`text-[10px] px-1.5 py-1 rounded-md ${
-                                webhookTestResults[w.id].success
-                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                                  : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
-                              }`}
-                            >
-                              {webhookTestResults[w.id].message}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
+                  )}
+                </div>
+              )}
 
-                    {editingWebhook && (
-                      <form onSubmit={handleSaveWebhook} className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-foreground">
-                            {editingWebhook.id ? 'Editar Webhook' : 'Novo Webhook'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setEditingWebhook(null)}
-                            className="text-[11px] text-muted-foreground hover:text-foreground transition"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <div className="sm:col-span-2 space-y-1">
-                            <label className="text-[10px] font-bold text-foreground">Nome</label>
-                            <input
-                              type="text"
-                              required
-                              placeholder="Ex: Slack #backups"
-                              value={editingWebhook.name || ''}
-                              onChange={(e) => setEditingWebhook({ ...editingWebhook, name: e.target.value })}
-                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
-                            />
+              {/* ABA 4: HISTÓRICO */}
+              {backupActiveTab === 'history' && (
+                <div className="space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between p-3.5 bg-muted/40 border border-border/70 rounded-xl">
+                    <span className="font-bold text-foreground text-xs">Histórico de Execuções</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleExportBackupHistoryCsv}
+                        disabled={backupHistory.length === 0}
+                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg border border-border/70 transition text-xs font-semibold disabled:opacity-50 shadow-2xs"
+                        title="Exportar histórico como arquivo CSV"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Exportar CSV</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => activeConnection && refreshBackupHistory(activeConnection.id)}
+                        disabled={isLoadingBackupHistory}
+                        className="p-1.5 hover:text-foreground text-muted-foreground rounded-lg hover:bg-muted transition disabled:opacity-50"
+                        title="Recarregar histórico"
+                      >
+                        <RotateCw className={`w-3.5 h-3.5 ${isLoadingBackupHistory ? 'animate-spin text-primary' : ''}`} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {backupHistory.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground bg-muted/20 border border-border/60 rounded-xl space-y-1">
+                      <History className="w-8 h-8 mx-auto opacity-40 text-muted-foreground mb-2" />
+                      <p className="font-semibold text-xs text-foreground">Nenhuma execução registrada</p>
+                      <p className="text-[11px]">As rotinas manuais ou agendadas serão registradas aqui.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                      {backupHistory.map((h) => (
+                        <div
+                          key={h.id}
+                          className={`p-3.5 bg-background/70 border rounded-xl gap-2 transition ${
+                            h.success ? 'border-emerald-500/25 shadow-2xs' : 'border-rose-500/30'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-2 text-xs font-bold">
+                              {h.success ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                              ) : (
+                                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                              )}
+                              <span className="text-foreground">
+                                {h.action === 'backup' ? 'Backup' : h.action === 'restore-drill' ? 'Restore Drill' : 'Restauração'}
+                              </span>
+                              <span className="text-[10px] font-mono px-2 py-0.2 rounded-md bg-muted border border-border/50 text-muted-foreground">
+                                {h.trigger === 'scheduled' ? 'agendado' : 'manual'}
+                              </span>
+                            </span>
+
+                            <span className="text-[11px] text-muted-foreground font-mono">
+                              {new Date(h.startedAt).toLocaleString()}
+                            </span>
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-foreground">Método</label>
-                            <select
-                              value={editingWebhook.method || 'POST'}
-                              onChange={(e) => setEditingWebhook({ ...editingWebhook, method: e.target.value as 'POST' | 'PUT' })}
-                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+
+                          <p className="text-[11px] text-muted-foreground mt-1.5 truncate" title={h.message}>
+                            {h.message}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono text-muted-foreground/80 mt-2 border-t border-border/40 pt-1.5">
+                            {h.durationMs !== undefined && <span>Duração: {h.durationMs} ms</span>}
+                            {h.sizeBytes !== undefined && <span>Tamanho: {formatBytes(h.sizeBytes)}</span>}
+                            {h.checksumSha256 && (
+                              <div className="flex items-center gap-1.5 truncate">
+                                <span className="truncate" title={h.checksumSha256}>
+                                  SHA-256: {h.checksumSha256.slice(0, 16)}…
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyCellToClipboard(h.checksumSha256!, `hist-hash-${h.id}`)}
+                                  className="hover:text-foreground transition underline font-mono text-[9px]"
+                                  title="Copiar hash completo"
+                                >
+                                  {copyFeedback === `hist-hash-${h.id}` ? '✓' : 'Copiar'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ABA 5: WEBHOOKS */}
+              {backupActiveTab === 'webhooks' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="flex items-center justify-between p-3.5 bg-muted/40 border border-border/70 rounded-xl">
+                    <div>
+                      <span className="font-bold text-foreground text-xs">Webhooks de Notificação</span>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Disparados ao concluir backups, restaurações ou drills (manual ou agendado).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditingWebhook({ method: 'POST', enabled: true })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:bg-primary/90 transition shadow-2xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Novo Webhook
+                    </button>
+                  </div>
+
+                  {backupWebhooks.length === 0 && !editingWebhook && (
+                    <div className="text-center py-10 text-muted-foreground bg-muted/20 border border-border/60 rounded-xl space-y-1">
+                      <Webhook className="w-8 h-8 mx-auto opacity-40 text-muted-foreground mb-2" />
+                      <p className="font-semibold text-xs text-foreground">Nenhum webhook configurado</p>
+                      <p className="text-[11px]">Configure canais no Slack, Discord, Microsoft Teams ou HTTP genérico.</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {backupWebhooks.map((w) => (
+                      <div key={w.id} className="p-3.5 bg-background/70 border border-border/70 rounded-xl space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-1 cursor-pointer shrink-0">
+                                <input
+                                  type="checkbox"
+                                  checked={w.enabled}
+                                  onChange={(e) => handleToggleWebhookEnabled(w, e.target.checked)}
+                                  className="text-primary focus:ring-0 rounded"
+                                />
+                              </label>
+                              <span className="font-bold text-xs text-foreground truncate">{w.name}</span>
+                              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
+                                {w.method || 'POST'}
+                              </span>
+                              <span
+                                className={`text-[9px] font-mono px-1.5 py-0.2 rounded border uppercase font-bold shrink-0 ${
+                                  w.platform === 'slack'
+                                    ? 'bg-[#ecb22e]/10 text-[#ecb22e] border-[#ecb22e]/30'
+                                    : w.platform === 'discord'
+                                    ? 'bg-[#5865f2]/10 text-[#5865f2] border-[#5865f2]/30'
+                                    : w.platform === 'teams'
+                                    ? 'bg-[#6264a7]/10 text-[#6264a7] border-[#6264a7]/30'
+                                    : 'bg-muted text-muted-foreground border-border/60'
+                                }`}
+                              >
+                                {w.platform || 'generic'}
+                              </span>
+                            </div>
+                            <div className="font-mono text-[10px] text-muted-foreground truncate mt-1" title={w.endpointUrl}>
+                              {w.endpointUrl}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleTestWebhook(w)}
+                              disabled={isTestingWebhookId === w.id}
+                              className="px-2.5 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-xs font-semibold transition disabled:opacity-50 border border-border/60 shadow-2xs"
+                              title="Enviar payload de teste"
                             >
-                              <option value="POST">POST</option>
-                              <option value="PUT">PUT</option>
-                            </select>
+                              {isTestingWebhookId === w.id ? (
+                                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                'Testar'
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingWebhook(w)}
+                              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition"
+                              title="Editar"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteWebhook(w.id)}
+                              className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition"
+                              title="Remover"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-foreground">URL do Webhook</label>
+                        {webhookTestResults[w.id] && (
+                          <div
+                            className={`text-[10px] px-2.5 py-1.5 rounded-lg border ${
+                              webhookTestResults[w.id].success
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+                                : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
+                            }`}
+                          >
+                            {webhookTestResults[w.id].message}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {editingWebhook && (
+                    <form onSubmit={handleSaveWebhook} className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">
+                          {editingWebhook.id ? 'Editar Webhook' : 'Novo Webhook'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingWebhook(null)}
+                          className="text-xs text-muted-foreground hover:text-foreground transition"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="sm:col-span-2 space-y-1">
+                          <label className="text-[10px] font-bold text-foreground">Nome</label>
                           <input
-                            type="url"
+                            type="text"
                             required
-                            placeholder="https://hooks.slack.com/services/..."
-                            value={editingWebhook.endpointUrl || ''}
-                            onChange={(e) => setEditingWebhook({ ...editingWebhook, endpointUrl: e.target.value })}
-                            className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
+                            placeholder="Ex: Slack #backups-winthor"
+                            value={editingWebhook.name || ''}
+                            onChange={(e) => setEditingWebhook({ ...editingWebhook, name: e.target.value })}
+                            className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-foreground">Plataforma</label>
+                          <label className="text-[10px] font-bold text-foreground">Método</label>
                           <select
-                            value={editingWebhook.platform || 'generic'}
-                            onChange={(e) =>
-                              setEditingWebhook({
-                                ...editingWebhook,
-                                platform: e.target.value as 'generic' | 'slack' | 'discord' | 'teams'
-                              })
-                            }
-                            className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
+                            value={editingWebhook.method || 'POST'}
+                            onChange={(e) => setEditingWebhook({ ...editingWebhook, method: e.target.value as 'POST' | 'PUT' })}
+                            className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
                           >
-                            <option value="generic">Genérico (JSON completo)</option>
-                            <option value="slack">Slack</option>
-                            <option value="discord">Discord</option>
-                            <option value="teams">Microsoft Teams</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
                           </select>
-                          <p className="text-[10px] text-muted-foreground">
-                            Slack/Discord/Teams formatam uma mensagem de texto pronta pro webhook de entrada de cada um.
-                          </p>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-foreground">Cabeçalho de Autenticação</label>
-                            <input
-                              type="text"
-                              placeholder="Authorization (opcional)"
-                              value={editingWebhook.authHeader || ''}
-                              onChange={(e) => setEditingWebhook({ ...editingWebhook, authHeader: e.target.value })}
-                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-foreground">Valor</label>
-                            <input
-                              type="password"
-                              placeholder="Bearer ... (opcional)"
-                              value={editingWebhook.authValue || ''}
-                              onChange={(e) => setEditingWebhook({ ...editingWebhook, authValue: e.target.value })}
-                              className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 text-[11px]">
-                          <span className="font-bold text-foreground">Disparar em:</span>
-                          {(['success', 'failure'] as const).map((ev) => {
-                            const checked = !editingWebhook.events || editingWebhook.events.includes(ev);
-                            return (
-                              <label key={ev} className="flex items-center gap-1 cursor-pointer text-muted-foreground">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={(e) => {
-                                    const current = editingWebhook.events || ['success', 'failure'];
-                                    const updated = e.target.checked
-                                      ? Array.from(new Set([...current, ev]))
-                                      : current.filter((x) => x !== ev);
-                                    setEditingWebhook({ ...editingWebhook, events: updated as ('success' | 'failure')[] });
-                                  }}
-                                  className="text-primary focus:ring-0"
-                                />
-                                <span>{ev === 'success' ? 'Sucesso' : 'Falha'}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                        <button
-                          type="submit"
-                          className="w-full px-3 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-[11px]"
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-foreground">URL do Webhook</label>
+                        <input
+                          type="url"
+                          required
+                          placeholder="https://hooks.slack.com/services/..."
+                          value={editingWebhook.endpointUrl || ''}
+                          onChange={(e) => setEditingWebhook({ ...editingWebhook, endpointUrl: e.target.value })}
+                          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-foreground">Plataforma</label>
+                        <select
+                          value={editingWebhook.platform || 'generic'}
+                          onChange={(e) =>
+                            setEditingWebhook({
+                              ...editingWebhook,
+                              platform: e.target.value as 'generic' | 'slack' | 'discord' | 'teams'
+                            })
+                          }
+                          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
                         >
-                          Salvar Webhook
-                        </button>
-                      </form>
-                    )}
-                  </div>
-              </>
+                          <option value="generic">Genérico (Payload JSON padrão)</option>
+                          <option value="slack">Slack</option>
+                          <option value="discord">Discord</option>
+                          <option value="teams">Microsoft Teams</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-foreground">Cabeçalho de Autenticação</label>
+                          <input
+                            type="text"
+                            placeholder="Authorization (opcional)"
+                            value={editingWebhook.authHeader || ''}
+                            onChange={(e) => setEditingWebhook({ ...editingWebhook, authHeader: e.target.value })}
+                            className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-foreground">Valor do Token / Chave</label>
+                          <input
+                            type="password"
+                            placeholder="Bearer ... (opcional)"
+                            value={editingWebhook.authValue || ''}
+                            onChange={(e) => setEditingWebhook({ ...editingWebhook, authValue: e.target.value })}
+                            className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="font-bold text-foreground">Disparar em:</span>
+                        {(['success', 'failure'] as const).map((ev) => {
+                          const checked = !editingWebhook.events || editingWebhook.events.includes(ev);
+                          return (
+                            <label key={ev} className="flex items-center gap-1.5 cursor-pointer text-muted-foreground select-none">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => {
+                                  const current = editingWebhook.events || ['success', 'failure'];
+                                  const updated = e.target.checked
+                                    ? Array.from(new Set([...current, ev]))
+                                    : current.filter((x) => x !== ev);
+                                  setEditingWebhook({ ...editingWebhook, events: updated as ('success' | 'failure')[] });
+                                }}
+                                className="text-primary focus:ring-0 rounded"
+                              />
+                              <span className="text-foreground">{ev === 'success' ? 'Sucesso' : 'Falha'}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-xs shadow-xs"
+                      >
+                        Salvar Webhook
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
