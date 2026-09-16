@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DatabaseService } from './DatabaseService';
 import { DatabaseConnectionConfig } from '../../shared/types';
+import * as network from '../utils/network';
 
 describe('DatabaseService', () => {
   const service = new DatabaseService();
@@ -41,26 +42,30 @@ describe('DatabaseService', () => {
     expect(resSemicolonOnly.error).toBe('O comando SQL não pode estar vazio.');
   });
 
-  it('formata mensagens de erro amigáveis para timeout e recusa de conexão', () => {
-    const refused = (service as any).formatErrorMessage(new Error('connect ECONNREFUSED 127.0.0.1:1521'), 'oracle');
+  it('formata mensagens de erro amigáveis para timeout e recusa de conexão', async () => {
+    const refused = await (service as any).formatErrorMessage(new Error('connect ECONNREFUSED 127.0.0.1:1521'), {
+      type: 'oracle'
+    });
     expect(refused).toContain('Conexão recusada no servidor ORACLE');
 
-    const timeout = (service as any).formatErrorMessage(new Error('ETIMEDOUT error'), 'postgres');
+    const timeout = await (service as any).formatErrorMessage(new Error('ETIMEDOUT error'), { type: 'postgres' });
     expect(timeout).toContain('Tempo limite esgotado');
 
-    const ora12541 = (service as any).formatErrorMessage(new Error('ORA-12541: TNS:no listener'), 'oracle');
+    const ora12541 = await (service as any).formatErrorMessage(new Error('ORA-12541: TNS:no listener'), {
+      type: 'oracle'
+    });
     expect(ora12541).toContain('Oracle Listener não encontrado');
 
-    const njs138 = (service as any).formatErrorMessage(
+    const njs138 = await (service as any).formatErrorMessage(
       new Error('NJS-138: connections to this database server version are not supported by node-oracledb in Thin mode'),
-      'oracle'
+      { type: 'oracle' }
     );
     expect(njs138).toContain('NJS-138');
     expect(njs138).toContain('Modo Thick');
 
-    const dpi1047 = (service as any).formatErrorMessage(
+    const dpi1047 = await (service as any).formatErrorMessage(
       new Error('DPI-1047: Cannot locate a 64-bit Oracle Client library'),
-      'oracle'
+      { type: 'oracle' }
     );
     expect(dpi1047).toContain('DPI-1047');
     expect(dpi1047).toContain('oci.dll');
@@ -83,5 +88,36 @@ describe('DatabaseService', () => {
 
     const res = (service as any).interpolateBinds(sql, binds);
     expect(res).toBe("SELECT 'Texto :CODPROD', -- :CODPROD comentário\n CODPROD FROM TAB WHERE CODPROD = 12345 AND CODFILIAL = '1' AND OBS = NULL");
+  });
+
+  it('avisa sobre porta local ocupada quando auth falha num host loopback', async () => {
+    const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue('1234');
+    try {
+      const msg = await (service as any).formatErrorMessage(new Error('password authentication failed for user "x"'), {
+        type: 'postgres',
+        host: 'localhost',
+        port: 5432
+      });
+      expect(msg).toContain('Falha de autenticação');
+      expect(msg).toContain('PID 1234');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('não avisa sobre porta local quando o host não é loopback', async () => {
+    const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue('1234');
+    try {
+      const msg = await (service as any).formatErrorMessage(new Error('password authentication failed for user "x"'), {
+        type: 'postgres',
+        host: 'db.remoto.com',
+        port: 5432
+      });
+      expect(msg).toContain('Falha de autenticação');
+      expect(msg).not.toContain('PID');
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
