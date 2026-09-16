@@ -410,6 +410,14 @@ app.post('/api/deploy/run-profile', async (req, res) => {
   res.json(result);
 });
 
+app.post('/api/deploy/run-step', async (req, res) => {
+  const { step, profileName } = req.body;
+  const result = await deployService.executeSingleStep(step, (chunk) => {
+    broadcastWs('deploy:log-chunk', chunk);
+  }, profileName);
+  res.json(result);
+});
+
 app.get('/api/karaf/parse-pom', (req, res) => {
   const projectPath = (req.query.path as string) || '';
   if (!isSafeLocalPath(projectPath)) {
@@ -603,8 +611,8 @@ app.post('/api/db/test', async (req, res) => {
 
 app.post('/api/db/query', async (req, res) => {
   try {
-    const { config, sql, maxRows } = req.body;
-    const result = await databaseService.executeQuery(config, sql, maxRows);
+    const { config, sql, maxRows, binds } = req.body;
+    const result = await databaseService.executeQuery(config, sql, maxRows, binds);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message || 'Erro ao executar consulta' });

@@ -32,7 +32,12 @@ import {
 import { DockerContainerInfo, DockerDaemonStatus, DockerContainerStats, ComposeServiceStatus, WslDistroInfo, ContainerEnvironment } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
-export const ContainersPage: React.FC = () => {
+interface ContainersPageProps {
+  isActive?: boolean;
+  settingsVersion?: number;
+}
+
+export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settingsVersion }) => {
   const [containers, setContainers] = useState<DockerContainerInfo[]>([]);
   const [daemonStatus, setDaemonStatus] = useState<DockerDaemonStatus | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -302,6 +307,7 @@ export const ContainersPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (isActive === false) return;
     loadDockerData();
     const interval = setInterval(loadDockerData, 12000);
     const statsInterval = setInterval(loadDockerStats, 6000);
@@ -309,7 +315,7 @@ export const ContainersPage: React.FC = () => {
       clearInterval(interval);
       clearInterval(statsInterval);
     };
-  }, [loadDockerData, loadDockerStats]);
+  }, [isActive, loadDockerData, loadDockerStats]);
 
   useEffect(() => {
     const unsubscribe = window.electronAPI?.onDockerComposeLogChunk?.((chunk) => {
@@ -324,7 +330,7 @@ export const ContainersPage: React.FC = () => {
       if (settings.dockerComposeConfig?.filePath) setComposeFilePath(settings.dockerComposeConfig.filePath);
       if (settings.dockerComposeConfig?.profile) setComposeProfile(settings.dockerComposeConfig.profile);
     });
-  }, []);
+  }, [settingsVersion]);
 
   const persistComposeConfig = (filePath: string, profile: string) => {
     window.electronAPI?.saveSettings?.({ dockerComposeConfig: { filePath, profile: profile || undefined } });

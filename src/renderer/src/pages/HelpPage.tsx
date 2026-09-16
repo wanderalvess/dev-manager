@@ -61,6 +61,13 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
   const { copy: copyToClipboard, copiedKey: copiedItem } = useCopyToClipboard(2000);
 
   useEffect(() => {
+    if (initialSearch) {
+      setSearchQuery(initialSearch);
+      setActiveCategory('faq');
+    }
+  }, [initialSearch]);
+
+  useEffect(() => {
     if (window.electronAPI) {
       if (window.electronAPI.getAppInfo) {
         window.electronAPI.getAppInfo().then((info) => setAppInfo(info));

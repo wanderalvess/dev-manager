@@ -246,4 +246,57 @@ describe('DeployService', () => {
       expect(result.error).toContain('nenhum comando informado');
     });
   });
+
+  describe('executeSingleStep', () => {
+    it('executa com sucesso uma etapa isolada', async () => {
+      vi.spyOn(windowsService, 'resolveWorkingDir').mockReturnValue('/mock/project');
+      vi.spyOn(karafService, 'runMavenBuild').mockResolvedValueOnce({
+        code: 0,
+        stdout: 'BUILD SUCCESS',
+        stderr: ''
+      });
+
+      const step = {
+        id: 'step-1',
+        name: 'Compilar Projeto Isolado',
+        type: 'maven-build' as const,
+        enabled: true,
+        projectPath: '/mock/project',
+        skipTests: true
+      };
+
+      const dummyChunk = vi.fn();
+      const result = await deployService.executeSingleStep(step, dummyChunk, 'Perfil Teste');
+
+      expect(result.success).toBe(true);
+      expect(dummyChunk).toHaveBeenCalledWith(expect.stringContaining('EXECUTANDO ETAPA INDIVIDUAL: "Compilar Projeto Isolado"'));
+      expect(dummyChunk).toHaveBeenCalledWith(expect.stringContaining('CONCLUÍDA COM SUCESSO'));
+    });
+
+    it('retorna erro se a etapa isolada falhar', async () => {
+      vi.spyOn(windowsService, 'resolveWorkingDir').mockReturnValue('/mock/project');
+      vi.spyOn(karafService, 'runMavenBuild').mockResolvedValueOnce({
+        code: 1,
+        stdout: '',
+        stderr: 'Compilation error'
+      });
+
+      const step = {
+        id: 'step-2',
+        name: 'Compilar Projeto Com Erro',
+        type: 'maven-build' as const,
+        enabled: true,
+        projectPath: '/mock/project',
+        skipTests: true
+      };
+
+      const dummyChunk = vi.fn();
+      const result = await deployService.executeSingleStep(step, dummyChunk);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Compilation error');
+      expect(dummyChunk).toHaveBeenCalledWith(expect.stringContaining('ETAPA "Compilar Projeto Com Erro" FALHOU'));
+    });
+  });
 });
+

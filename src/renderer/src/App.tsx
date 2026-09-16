@@ -28,11 +28,22 @@ const getInitialTab = (): string => {
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([getInitialTab()]));
+  const [settingsVersion, setSettingsVersion] = useState<number>(0);
   const [services, setServices] = useState<ServiceStatus[]>([]);
   const [projects, setProjects] = useState<GitProjectInfo[]>([]);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isQuickLauncherOpen, setIsQuickLauncherOpen] = useState<boolean>(false);
   const [helpSearch, setHelpSearch] = useState<string>('');
+
+  useEffect(() => {
+    setVisitedTabs((prev) => {
+      if (prev.has(activeTab)) return prev;
+      const next = new Set(prev);
+      next.add(activeTab);
+      return next;
+    });
+  }, [activeTab]);
 
   const navigateToHelp = useCallback((search?: string) => {
     setHelpSearch(search || '');
@@ -93,6 +104,11 @@ export const App: React.FC = () => {
       setIsRefreshing(false);
     }
   }, [fetchServices, fetchProjects]);
+
+  const handleSettingsSaved = useCallback(() => {
+    refreshAll();
+    setSettingsVersion((prev) => prev + 1);
+  }, [refreshAll]);
 
   useEffect(() => {
     refreshAll();
@@ -195,41 +211,72 @@ export const App: React.FC = () => {
 
       {/* Conteúdo da Aba Ativa */}
 
-      <main className="flex-1 overflow-hidden bg-background">
-        {activeTab === 'env' && (
-          <EnvironmentPage
-            services={services}
-            onRefreshServices={fetchServices}
-            onNavigateToSettings={() => setActiveTab('settings')}
-            onNavigateToHelp={navigateToHelp}
-          />
+      <main className="flex-1 overflow-hidden bg-background relative">
+        {visitedTabs.has('env') && (
+          <div className={`h-full w-full ${activeTab === 'env' ? '' : 'hidden'}`}>
+            <EnvironmentPage
+              services={services}
+              onRefreshServices={fetchServices}
+              onNavigateToSettings={() => setActiveTab('settings')}
+              onNavigateToHelp={navigateToHelp}
+              isActive={activeTab === 'env'}
+              settingsVersion={settingsVersion}
+            />
+          </div>
         )}
-        {activeTab === 'database' && <DatabasePage />}
-        {activeTab === 'containers' && <ContainersPage />}
-        {activeTab === 'deploy' && (
-          <DeployPage
-            projects={projects}
-            onNavigateToSettings={() => setActiveTab('settings')}
-          />
+        {visitedTabs.has('database') && (
+          <div className={`h-full w-full ${activeTab === 'database' ? '' : 'hidden'}`}>
+            <DatabasePage settingsVersion={settingsVersion} />
+          </div>
         )}
-        {activeTab === 'git' && (
-          <GitAzurePage
-            projects={projects}
-            onRefreshProjects={fetchProjects}
-            isRefreshing={isRefreshing}
-            onNavigateToSettings={() => setActiveTab('settings')}
-          />
+        {visitedTabs.has('containers') && (
+          <div className={`h-full w-full ${activeTab === 'containers' ? '' : 'hidden'}`}>
+            <ContainersPage isActive={activeTab === 'containers'} settingsVersion={settingsVersion} />
+          </div>
         )}
-        {activeTab === 'routines' && (
-          <RoutinesPage onNavigateToSettings={() => setActiveTab('settings')} />
+        {visitedTabs.has('deploy') && (
+          <div className={`h-full w-full ${activeTab === 'deploy' ? '' : 'hidden'}`}>
+            <DeployPage
+              projects={projects}
+              onNavigateToSettings={() => setActiveTab('settings')}
+              settingsVersion={settingsVersion}
+            />
+          </div>
         )}
-        {activeTab === 'docs' && <DocsPage onNavigateToSettings={() => setActiveTab('settings')} />}
-        {activeTab === 'logs' && <LogsPage onNavigateToSettings={() => setActiveTab('settings')} />}
-        {activeTab === 'settings' && (
-          <SettingsPage onSettingsSaved={refreshAll} onNavigate={(tab) => setActiveTab(tab)} />
+        {visitedTabs.has('git') && (
+          <div className={`h-full w-full ${activeTab === 'git' ? '' : 'hidden'}`}>
+            <GitAzurePage
+              projects={projects}
+              onRefreshProjects={fetchProjects}
+              isRefreshing={isRefreshing}
+              onNavigateToSettings={() => setActiveTab('settings')}
+            />
+          </div>
         )}
-        {activeTab === 'help' && (
-          <HelpPage onNavigate={(tab) => setActiveTab(tab)} initialSearch={helpSearch} />
+        {visitedTabs.has('routines') && (
+          <div className={`h-full w-full ${activeTab === 'routines' ? '' : 'hidden'}`}>
+            <RoutinesPage onNavigateToSettings={() => setActiveTab('settings')} />
+          </div>
+        )}
+        {visitedTabs.has('docs') && (
+          <div className={`h-full w-full ${activeTab === 'docs' ? '' : 'hidden'}`}>
+            <DocsPage onNavigateToSettings={() => setActiveTab('settings')} />
+          </div>
+        )}
+        {visitedTabs.has('logs') && (
+          <div className={`h-full w-full ${activeTab === 'logs' ? '' : 'hidden'}`}>
+            <LogsPage onNavigateToSettings={() => setActiveTab('settings')} isActive={activeTab === 'logs'} />
+          </div>
+        )}
+        {visitedTabs.has('settings') && (
+          <div className={`h-full w-full ${activeTab === 'settings' ? '' : 'hidden'}`}>
+            <SettingsPage onSettingsSaved={handleSettingsSaved} onNavigate={(tab) => setActiveTab(tab)} />
+          </div>
+        )}
+        {visitedTabs.has('help') && (
+          <div className={`h-full w-full ${activeTab === 'help' ? '' : 'hidden'}`}>
+            <HelpPage onNavigate={(tab) => setActiveTab(tab)} initialSearch={helpSearch} />
+          </div>
         )}
       </main>
 

@@ -161,6 +161,7 @@ export interface ElectronAPI {
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (profile: DeployProfile) => Promise<{ success: boolean; error?: string }>;
+  runDeployStep: (step: DeployStep, profileName?: string) => Promise<{ success: boolean; error?: string }>;
   onDeployLogChunk: (callback: (chunk: string) => void) => () => void;
 
   // Git & Azure DevOps
@@ -204,7 +205,7 @@ export interface ElectronAPI {
 
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;
-  executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number) => Promise<QueryResult>;
+  executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>) => Promise<QueryResult>;
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;

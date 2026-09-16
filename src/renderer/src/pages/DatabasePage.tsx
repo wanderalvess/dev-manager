@@ -38,7 +38,8 @@ import {
   CalendarClock,
   History,
   Webhook,
-  FlaskConical
+  FlaskConical,
+  SlidersHorizontal
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -55,6 +56,14 @@ import {
   BackupWebhookConfig
 } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import {
+  extractBindVariables,
+  castBindValue,
+  substituteBindVariables,
+  loadBindCache,
+  saveBindCache,
+  BindInputState
+} from '../utils/sqlBinds';
 
 const DEFAULT_PORTS: Record<DatabaseType, number> = {
   oracle: 1521,
@@ -103,7 +112,11 @@ interface ExecutionHistoryItem {
   error?: string;
 }
 
-export const DatabasePage: React.FC = () => {
+interface DatabasePageProps {
+  settingsVersion?: number;
+}
+
+export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) => {
   const [connections, setConnections] = useState<DatabaseConnectionConfig[]>([]);
   const [activeConnectionId, setActiveConnectionId] = useState<string>('');
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -117,6 +130,11 @@ export const DatabasePage: React.FC = () => {
   const [isExplaining, setIsExplaining] = useState<boolean>(false);
   const [explainResult, setExplainResult] = useState<ExplainPlanResult | null>(null);
   const [showSnippetsMenu, setShowSnippetsMenu] = useState<boolean>(false);
+
+  // Parâmetros de Consulta (Bind Variables)
+  const [isBindModalOpen, setIsBindModalOpen] = useState<boolean>(false);
+  const [bindInputs, setBindInputs] = useState<BindInputState[]>([]);
+  const [pendingSqlToExecute, setPendingSqlToExecute] = useState<string | null>(null);
 
   // Filtros, ordenação e seleção da tabela de resultados
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -263,7 +281,7 @@ export const DatabasePage: React.FC = () => {
 
   useEffect(() => {
     loadSettings();
-  }, [loadSettings]);
+  }, [loadSettings, settingsVersion]);
 
   // Salvar Lista de Conexões nas Configurações
   const saveConnectionsToSettings = async (newConns: DatabaseConnectionConfig[]) => {
@@ -695,14 +713,31 @@ export const DatabasePage: React.FC = () => {
   };
 
   // Executar SQL
-  const handleExecuteSql = async () => {
+  const handleExecuteSql = async (customSql?: string, overrideBinds?: Record<string, any>) => {
     if (!activeConnection) {
       alert('Selecione ou crie uma conexão antes de executar consultas.');
       return;
     }
 
-    const cleanSql = sql.trim().replace(/;+\s*$/, '');
+    const cleanSql = (customSql ?? sql).trim().replace(/;+\s*$/, '');
     if (!cleanSql) return;
+
+    // Se não foram fornecidos binds pré-resolvidos, detecta se há variáveis no SQL
+    if (!overrideBinds) {
+      const detected = extractBindVariables(cleanSql);
+      if (detected.length > 0) {
+        const cache = loadBindCache();
+        const initialInputs: BindInputState[] = detected.map((name) => ({
+          name,
+          value: cache[name] ?? '',
+          type: 'auto'
+        }));
+        setBindInputs(initialInputs);
+        setPendingSqlToExecute(cleanSql);
+        setIsBindModalOpen(true);
+        return;
+      }
+    }
 
     setIsExecuting(true);
     setActiveResultTab('grid');
@@ -715,7 +750,7 @@ export const DatabasePage: React.FC = () => {
     setCellContextMenu(null);
 
     try {
-      const res = await window.electronAPI.executeDbQuery(activeConnection, cleanSql, maxRows);
+      const res = await window.electronAPI.executeDbQuery(activeConnection, cleanSql, maxRows, overrideBinds);
       setQueryResult(res);
 
       // Adicionar ao histórico
@@ -751,6 +786,62 @@ export const DatabasePage: React.FC = () => {
     } finally {
       setIsExecuting(false);
     }
+  };
+
+  const handleOpenBindModalManually = () => {
+    const cleanSql = sql.trim().replace(/;+\s*$/, '');
+    if (!cleanSql) return;
+    const detected = extractBindVariables(cleanSql);
+    if (detected.length === 0) {
+      alert('Nenhuma variável de bind (:PARAMETRO) foi detectada no comando SQL atual.');
+      return;
+    }
+    const cache = loadBindCache();
+    const initialInputs: BindInputState[] = detected.map((name) => ({
+      name,
+      value: cache[name] ?? '',
+      type: 'auto'
+    }));
+    setBindInputs(initialInputs);
+    setPendingSqlToExecute(cleanSql);
+    setIsBindModalOpen(true);
+  };
+
+  const handleConfirmExecuteBinds = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const sqlToRun = pendingSqlToExecute || sql;
+    const bindsRecord: Record<string, any> = {};
+    const cacheToSave: Record<string, string> = {};
+
+    for (const item of bindInputs) {
+      const casted = castBindValue(item.value, item.type);
+      bindsRecord[item.name] = casted;
+      if (item.value) {
+        cacheToSave[item.name] = item.value;
+      }
+    }
+
+    saveBindCache(cacheToSave);
+    setIsBindModalOpen(false);
+    handleExecuteSql(sqlToRun, bindsRecord);
+  };
+
+  const handleSubstituteBindsInline = () => {
+    const sqlToRun = pendingSqlToExecute || sql;
+    const bindsRecord: Record<string, { value: any; type: any }> = {};
+    const cacheToSave: Record<string, string> = {};
+
+    for (const item of bindInputs) {
+      bindsRecord[item.name] = { value: item.value, type: item.type };
+      if (item.value) {
+        cacheToSave[item.name] = item.value;
+      }
+    }
+
+    saveBindCache(cacheToSave);
+    const substituted = substituteBindVariables(sqlToRun, bindsRecord);
+    setSql(substituted);
+    setIsBindModalOpen(false);
   };
 
   const handleClearHistory = () => {
@@ -913,57 +1004,7 @@ export const DatabasePage: React.FC = () => {
     const clean = snip.sql.trim().replace(/;+\s*$/, '');
     setSql(clean);
     setShowSnippetsMenu(false);
-    if (!activeConnection) {
-      alert('Selecione uma conexão antes de executar.');
-      return;
-    }
-    // Executa diretamente
-    setIsExecuting(true);
-    setActiveResultTab('grid');
-    setSearchTerm('');
-    setColumnFilters({});
-    setSortConfig(null);
-    setSelectedRowIndex(null);
-    setActiveColumnMenu(null);
-    setCellContextMenu(null);
-
-    window.electronAPI
-      ?.executeDbQuery(activeConnection, clean, maxRows)
-      .then((res) => {
-        setQueryResult(res);
-        const historyItem: ExecutionHistoryItem = {
-          id: `hist_${Date.now()}`,
-          sql: clean,
-          connectionName: activeConnection.name,
-          timestamp: new Date().toLocaleTimeString('pt-BR'),
-          success: res.success,
-          timeMs: res.executionTimeMs,
-          rowCount: res.rowCount,
-          affectedRows: res.affectedRows,
-          error: res.error
-        };
-        setHistory((prev) => {
-          const updated = [historyItem, ...prev.filter((h) => h.sql !== historyItem.sql).slice(0, 49)];
-          try {
-            localStorage.setItem('devManager:dbHistory', JSON.stringify(updated));
-          } catch {}
-          return updated;
-        });
-      })
-      .catch((err) => {
-        setQueryResult({
-          success: false,
-          columns: [],
-          rows: [],
-          rowCount: 0,
-          executionTimeMs: 0,
-          isQuery: false,
-          error: err.message || 'Erro inesperado ao executar comando.'
-        });
-      })
-      .finally(() => {
-        setIsExecuting(false);
-      });
+    handleExecuteSql(clean);
   };
 
   // Snippet rápido de consulta para tabela
@@ -978,6 +1019,11 @@ export const DatabasePage: React.FC = () => {
     }
     setSql(query);
   };
+
+  // Detecção em tempo real de variáveis de bind no editor SQL
+  const detectedBindsInEditor = useMemo(() => {
+    return extractBindVariables(sql);
+  }, [sql]);
 
   // Detecção de tipo de dado por coluna (para ícones e ordenação adequada no grid)
   const columnDataTypes = useMemo<Record<string, 'number' | 'date' | 'boolean' | 'object' | 'string'>>(() => {
@@ -1681,6 +1727,22 @@ export const DatabasePage: React.FC = () => {
               <span>Backup</span>
             </button>
 
+            {/* Botão de Parâmetros de Bind (quando houver variáveis detectadas) */}
+            {detectedBindsInEditor.length > 0 && (
+              <button
+                type="button"
+                onClick={handleOpenBindModalManually}
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/40 text-violet-400 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer animate-fade-in"
+                title="Configurar valores dos parâmetros de bind (:PARAMETRO)"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-violet-400" />
+                <span>Parâmetros</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300">
+                  {detectedBindsInEditor.length}
+                </span>
+              </button>
+            )}
+
             {/* Botão Explain Plan */}
             <button
               type="button"
@@ -1711,7 +1773,7 @@ export const DatabasePage: React.FC = () => {
 
             {/* Botão Executar */}
             <button
-              onClick={handleExecuteSql}
+              onClick={() => handleExecuteSql()}
               disabled={isExecuting || !activeConnection}
               className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
             >
@@ -3435,6 +3497,135 @@ export const DatabasePage: React.FC = () => {
                   <BookmarkPlus className="w-3.5 h-3.5" />
                   <span>{editingSnippetId ? 'Atualizar Consulta' : 'Salvar Consulta'}</span>
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Variáveis de Bind (:PARAMETRO) */}
+      {isBindModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setIsBindModalOpen(false);
+          }}
+        >
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-xl w-full p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="p-1.5 rounded-lg bg-violet-500/20 text-violet-400">
+                  <SlidersHorizontal className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-foreground text-sm">Parâmetros da Consulta (Bind Variables)</h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-400">
+                      {bindInputs.length} {bindInputs.length === 1 ? 'parâmetro' : 'parâmetros'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Informe os valores para as variáveis identificadas no comando SQL.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBindModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmExecuteBinds} className="space-y-4">
+              <div className="max-h-72 overflow-y-auto pr-1 space-y-2.5 [scrollbar-width:thin]">
+                {bindInputs.map((item, idx) => (
+                  <div
+                    key={item.name}
+                    className="p-2.5 rounded-lg bg-background/80 border border-border/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5"
+                  >
+                    <div className="flex items-center space-x-2 min-w-36">
+                      <span className="font-mono font-bold text-xs text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2 py-1 rounded">
+                        :{item.name}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-2 flex-1 w-full sm:w-auto">
+                      {/* Seletor de Tipo */}
+                      <select
+                        value={item.type}
+                        onChange={(e) => {
+                          const newType = e.target.value as BindInputState['type'];
+                          setBindInputs((prev) =>
+                            prev.map((p, i) => (i === idx ? { ...p, type: newType } : p))
+                          );
+                        }}
+                        className="bg-card border border-border text-foreground text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
+                        title="Tipo de Dado"
+                      >
+                        <option value="auto">Auto</option>
+                        <option value="string">Texto</option>
+                        <option value="number">Número</option>
+                        <option value="date">Data</option>
+                        <option value="null">Nulo (NULL)</option>
+                      </select>
+
+                      {/* Campo de Valor */}
+                      {item.type === 'null' ? (
+                        <input
+                          type="text"
+                          disabled
+                          value="NULL"
+                          className="flex-1 bg-muted/40 border border-border/60 rounded px-2.5 py-1.5 text-xs text-muted-foreground font-mono cursor-not-allowed italic"
+                        />
+                      ) : (
+                        <input
+                          type={item.type === 'date' ? 'date' : 'text'}
+                          autoFocus={idx === 0}
+                          placeholder={`Valor para :${item.name}...`}
+                          value={item.value}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setBindInputs((prev) =>
+                              prev.map((p, i) => (i === idx ? { ...p, value: val } : p))
+                            );
+                          }}
+                          className="flex-1 bg-background border border-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border/60">
+                <button
+                  type="button"
+                  onClick={handleSubstituteBindsInline}
+                  className="px-3 py-1.5 rounded-lg border border-border/80 bg-muted/50 hover:bg-muted text-xs font-medium text-foreground transition flex items-center gap-1.5 cursor-pointer"
+                  title="Substitui as variáveis :PARAMETRO diretamente no editor de código pelos literais informados"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Substituir no SQL (Inline)</span>
+                </button>
+
+                <div className="flex items-center space-x-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => setIsBindModalOpen(false)}
+                    className="px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground text-xs transition cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Executar Consulta</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>

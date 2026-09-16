@@ -2073,9 +2073,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* SUB-MODAL: LOG DO KARAF (log:display — log interno real do container) */}
       {/* ========================================================================= */}
       {isLogModalOpen && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-fade-in">
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+        <div className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card dark:bg-slate-900 border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-fade-in relative">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/70 shrink-0">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
                   <Terminal className="w-5 h-5" />
@@ -2096,7 +2096,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               </button>
             </div>
 
-            <div className="p-3 border-b border-border/70 bg-card/60 flex flex-wrap items-center gap-2 shrink-0">
+            <div className="p-3 border-b border-border/70 bg-card dark:bg-slate-900 flex flex-wrap items-center gap-2 shrink-0">
               <div className="relative flex-1 min-w-[220px]">
                 <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-muted-foreground" />
                 <input
@@ -2130,14 +2130,14 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-3 bg-black/40">
+            <div className="flex-1 overflow-auto p-3 bg-black/70">
               {isLoadingLog ? (
                 <div className="h-full flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
                   <RotateCw className="w-6 h-6 animate-spin text-primary" />
                   <span>Lendo log:display via client.bat...</span>
                 </div>
               ) : filteredKarafLog ? (
-                <pre className="text-[11px] font-mono whitespace-pre-wrap text-foreground">{filteredKarafLog}</pre>
+                <pre className="text-[11px] font-mono whitespace-pre text-foreground overflow-x-auto min-w-full">{filteredKarafLog}</pre>
               ) : karafLog ? (
                 <p className="text-xs text-muted-foreground text-center py-8">
                   Nenhuma linha corresponde ao filtro "{logSearch}".

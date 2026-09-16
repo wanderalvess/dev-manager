@@ -6,7 +6,9 @@ import {
   Check,
   Search,
   ArrowDown,
-  CornerDownLeft
+  CornerDownLeft,
+  WrapText,
+  AlignLeft
 } from 'lucide-react';
 import { EnvironmentLog } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -34,6 +36,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   const [filterType, setFilterType] = useState<'all' | 'info' | 'success' | 'warning' | 'error'>('all');
   const [searchFilter, setSearchFilter] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
+  const [wordWrap, setWordWrap] = useState(false);
 
   // Input de comando interativo
   const [inputCommand, setInputCommand] = useState('');
@@ -112,11 +115,11 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
       }
 
       return (
-        <div key={index} className="flex items-start space-x-2 font-mono text-[11px] leading-relaxed group hover:bg-slate-800/40 px-1 rounded">
+        <div key={index} className="flex items-start space-x-2 font-mono text-[11px] leading-relaxed group hover:bg-slate-800/40 px-1 rounded min-w-max">
           <span className="text-slate-600 select-none w-6 text-right text-[10px] shrink-0 font-mono opacity-60">
             {index + 1}
           </span>
-          <span className={`flex-1 whitespace-pre-wrap ${color}`}>{log}</span>
+          <span className={`flex-1 ${wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'} ${color}`}>{log}</span>
         </div>
       );
     }
@@ -145,7 +148,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
     }
 
     return (
-      <div key={index} className="flex items-start space-x-2 font-mono text-[11px] py-0.5 leading-relaxed group hover:bg-slate-800/40 px-1 rounded">
+      <div key={index} className="flex items-start space-x-2 font-mono text-[11px] py-0.5 leading-relaxed group hover:bg-slate-800/40 px-1 rounded min-w-max">
         <span className="text-slate-600 select-none w-6 text-right text-[10px] shrink-0 font-mono opacity-60">
           {index + 1}
         </span>
@@ -153,7 +156,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
         <span className={`text-[9px] uppercase px-1.5 py-0.2 rounded border font-semibold select-none shrink-0 ${badge}`}>
           {log.type}
         </span>
-        <span className={`flex-1 whitespace-pre-wrap ${color}`}>{log.message}</span>
+        <span className={`flex-1 ${wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'} ${color}`}>{log.message}</span>
       </div>
     );
   };
@@ -221,6 +224,18 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
 
           {/* Ações */}
           <button
+            onClick={() => setWordWrap(!wordWrap)}
+            className={`p-1.5 rounded-lg border text-xs transition-colors ${
+              wordWrap
+                ? 'bg-primary/20 border-primary/50 text-primary font-bold'
+                : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
+            }`}
+            title={wordWrap ? 'Quebra de Linha Ativa (clique para modo tabela / scroll horizontal)' : 'Quebra de Linha Desativada (modo colunas / tabela Karaf preservado)'}
+          >
+            {wordWrap ? <WrapText className="w-3.5 h-3.5" /> : <AlignLeft className="w-3.5 h-3.5" />}
+          </button>
+
+          <button
             onClick={() => setAutoScroll(!autoScroll)}
             className={`p-1.5 rounded-lg border text-xs transition-colors ${
               autoScroll
@@ -255,7 +270,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
       {/* Conteúdo com Estilo Phosphor Terminal */}
       <div
         ref={scrollRef}
-        className="flex-1 p-3 overflow-y-auto space-y-0.5 select-text bg-[#070b12]"
+        className={`flex-1 p-3 overflow-y-auto space-y-0.5 select-text bg-[#070b12] ${wordWrap ? 'overflow-x-hidden' : 'overflow-x-auto'}`}
         style={{
           backgroundImage:
             'radial-gradient(rgba(0, 132, 255, 0.03) 1px, transparent 0)',
