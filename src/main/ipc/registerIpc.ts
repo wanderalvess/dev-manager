@@ -39,6 +39,7 @@ import {
   ConfluenceSourceConfig,
   JiraSourceConfig,
   DeployProfile,
+  DeployStep,
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
@@ -392,6 +393,12 @@ export function registerIpcHandlers(
     });
   });
 
+  ipcMain.handle('deploy:run-step', async (_, step: DeployStep, profileName?: string) => {
+    return await deployService.executeSingleStep(step, (chunk) => {
+      mainWindow.webContents.send('deploy:log-chunk', chunk);
+    }, profileName);
+  });
+
   // --- Git & Azure DevOps ---
   ipcMain.handle('git:list-projects', async () => {
     return await gitAzureService.listProjects();
@@ -572,8 +579,8 @@ export function registerIpcHandlers(
     return await databaseService.testConnection(config);
   });
 
-  ipcMain.handle('db:execute-query', async (_, config: DatabaseConnectionConfig, sql: string, maxRows?: number) => {
-    return await databaseService.executeQuery(config, sql, maxRows);
+  ipcMain.handle('db:execute-query', async (_, config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>) => {
+    return await databaseService.executeQuery(config, sql, maxRows, binds);
   });
 
   ipcMain.handle('db:explain-plan', async (_, config: DatabaseConnectionConfig, sql: string) => {

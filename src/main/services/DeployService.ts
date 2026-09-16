@@ -212,4 +212,29 @@ export class DeployService {
     onChunk(`==========================================\r\n`);
     return { success: true };
   }
+
+  public async executeSingleStep(
+    step: DeployStep,
+    onChunk: (chunk: string) => void,
+    profileName?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    onChunk(`\r\n==========================================\r\n`);
+    onChunk(`EXECUTANDO ETAPA INDIVIDUAL: "${step.name}"${profileName ? ` (Perfil: ${profileName})` : ''}\r\n`);
+    onChunk(`Tipo: ${step.type}\r\n`);
+    onChunk(`==========================================\r\n`);
+
+    const result = await this.runStep(step, onChunk);
+    if (result.code !== 0) {
+      onChunk(`\r\n==========================================\r\n`);
+      onChunk(`❌ ETAPA "${step.name}" FALHOU (Código ${result.code}).\r\n`);
+      onChunk(`==========================================\r\n`);
+      return { success: false, error: result.stderr || `Falha na etapa "${step.name}"` };
+    }
+
+    onChunk(`\r\n==========================================\r\n`);
+    onChunk(`✨ ETAPA "${step.name}" CONCLUÍDA COM SUCESSO!\r\n`);
+    onChunk(`==========================================\r\n`);
+    return { success: true };
+  }
 }
+

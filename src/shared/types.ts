@@ -830,10 +830,17 @@ export interface BackupFileInfo {
   createdAt: string;
 }
 
+export interface SqlBindParam {
+  name: string;
+  value: any;
+  type?: 'auto' | 'string' | 'number' | 'date' | 'null';
+}
+
 export interface QueryRequest {
   connectionId: string;
   sql: string;
   maxRows?: number;
+  binds?: Record<string, any>;
 }
 
 export interface QueryResult {

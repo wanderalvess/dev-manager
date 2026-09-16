@@ -31,6 +31,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface LogsPageProps {
   onNavigateToSettings?: () => void;
+  isActive?: boolean;
 }
 
 const DEFAULT_SOURCES: RealtimeLogSource[] = [];
@@ -45,7 +46,7 @@ const EMPTY_SOURCE: RealtimeLogSource = {
 
 type LogLevelFilter = 'ALL' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 
-export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
+export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActive }) => {
   const [sources, setSources] = useState<RealtimeLogSource[]>(DEFAULT_SOURCES);
   const [activeSourceId, setActiveSourceId] = useState<string>('');
   const [lines, setLines] = useState<string[]>([]);
@@ -169,7 +170,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
 
   // Checagem periódica do status do arquivo
   useEffect(() => {
-    if (!window.electronAPI?.checkLogFile || !activeSource.filePath) return;
+    if (!window.electronAPI?.checkLogFile || !activeSource.filePath || isActive === false) return;
 
     const interval = setInterval(async () => {
       try {
@@ -191,7 +192,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [activeSource]);
+  }, [activeSource, isActive]);
 
   // Ouvir novos chunks de log emitidos pelo backend
   useEffect(() => {
@@ -227,8 +228,10 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
     };
   }, [activeSource.id, isPaused, isAutoScroll]);
 
-  // Atalhos de teclado locais (Ctrl+F, Esc, Ctrl+L)
+  // Atalhos de teclado locais (Ctrl+F, Esc, Ctrl+L) - ativos apenas na aba Logs
   useEffect(() => {
+    if (isActive === false) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         const activeTag = document.activeElement?.tagName.toLowerCase();
@@ -248,7 +251,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isActive]);
 
   // Detectar rolagem manual do usuário
   const handleScroll = () => {

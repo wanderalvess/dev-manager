@@ -38,6 +38,7 @@ import type {
   SystemMetrics,
   HttpHealthResult,
   DeployProfile,
+  DeployStep,
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
@@ -200,6 +201,8 @@ const electronAPI = {
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (profile: DeployProfile): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('deploy:run-profile', profile),
+  runDeployStep: (step: DeployStep, profileName?: string): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('deploy:run-step', step, profileName),
   onDeployLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('deploy:log-chunk', subscription);
@@ -270,8 +273,8 @@ const electronAPI = {
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig): Promise<{ success: boolean; message: string; version?: string }> =>
     ipcRenderer.invoke('db:test-connection', config),
-  executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number): Promise<QueryResult> =>
-    ipcRenderer.invoke('db:execute-query', config, sql, maxRows),
+  executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<QueryResult> =>
+    ipcRenderer.invoke('db:execute-query', config, sql, maxRows, binds),
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string): Promise<ExplainPlanResult> =>
     ipcRenderer.invoke('db:explain-plan', config, sql),
   listDbTables: (config: DatabaseConnectionConfig): Promise<string[]> =>

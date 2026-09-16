@@ -16,9 +16,10 @@ import {
   ChevronDown,
   Search,
   Square,
-  X
+  X,
+  Clock
 } from 'lucide-react';
-import { GitProjectInfo, DeployProfile } from '../../../shared/types';
+import { GitProjectInfo, DeployProfile, DeployStep } from '../../../shared/types';
 import { TerminalViewer } from '../components/TerminalViewer';
 import { DeployProfileEditorModal } from '../components/DeployProfileEditorModal';
 import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
@@ -26,9 +27,10 @@ import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
 interface DeployPageProps {
   projects: GitProjectInfo[];
   onNavigateToSettings?: () => void;
+  settingsVersion?: number;
 }
 
-export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSettings }) => {
+export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSettings, settingsVersion }) => {
   const [profiles, setProfiles] = useState<DeployProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string>('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -37,6 +39,8 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   const [karafPath, setKarafPath] = useState<string>('');
   const [karafValid, setKarafValid] = useState<boolean | null>(null);
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
+  const [runningStepId, setRunningStepId] = useState<string | null>(null);
+  const [stepExecutionTimes, setStepExecutionTimes] = useState<Record<string, number>>({});
   const [isDiagRunning, setIsDiagRunning] = useState<string | null>(null);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -49,6 +53,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     return profiles.find((p) => p.id === activeProfileId) || profiles[0];
   }, [profiles, activeProfileId]);
 
+  // Carregar e sincronizar configurações do Karaf e perfis de deploy
   useEffect(() => {
     if (window.electronAPI) {
       window.electronAPI.getSettings().then(async (st) => {
@@ -71,27 +76,31 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         }
         if (st.deployProfiles && st.deployProfiles.length > 0) {
           setProfiles(st.deployProfiles);
-          setActiveProfileId(st.activeDeployProfileId || st.deployProfiles[0].id);
+          setActiveProfileId((curr) => curr || st.activeDeployProfileId || st.deployProfiles?.[0]?.id || '');
         }
       });
-
-      const unsubDeploy = window.electronAPI.onDeployLogChunk((chunk) => {
-        setTerminalLogs((prev) => {
-          const next = [...prev, chunk];
-          return next.length > 1000 ? next.slice(next.length - 1000) : next;
-        });
-      });
-      const unsubKaraf = window.electronAPI.onKarafLogChunk((chunk) => {
-        setTerminalLogs((prev) => {
-          const next = [...prev, chunk];
-          return next.length > 1000 ? next.slice(next.length - 1000) : next;
-        });
-      });
-      return () => {
-        unsubDeploy();
-        unsubKaraf();
-      };
     }
+  }, [settingsVersion]);
+
+  // Listeners de log em tempo real (registrados uma vez na montagem)
+  useEffect(() => {
+    if (!window.electronAPI) return;
+
+    const appendChunks = (chunk: string) => {
+      const rawLines = chunk.split(/\r?\n/);
+      const linesToAdd = rawLines.length === 1 ? [rawLines[0]] : rawLines.filter((l, i) => i < rawLines.length - 1 || l.length > 0);
+      setTerminalLogs((prev) => {
+        const next = [...prev, ...linesToAdd];
+        return next.length > 2000 ? next.slice(next.length - 2000) : next;
+      });
+    };
+
+    const unsubDeploy = window.electronAPI.onDeployLogChunk(appendChunks);
+    const unsubKaraf = window.electronAPI.onKarafLogChunk(appendChunks);
+    return () => {
+      unsubDeploy();
+      unsubKaraf();
+    };
   }, []);
 
   const persistProfiles = async (updated: DeployProfile[], activeId: string) => {
@@ -143,6 +152,22 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
       setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
     } finally {
       setIsDeploying(false);
+    }
+  };
+
+  const handleRunSingleStep = async (step: DeployStep) => {
+    if (isDeploying || runningStepId || isDiagRunning || !window.electronAPI?.runDeployStep) return;
+    setRunningStepId(step.id);
+    setTerminalLogs([]);
+    const startTime = Date.now();
+
+    try {
+      await window.electronAPI.runDeployStep(step, activeProfile?.name);
+      setStepExecutionTimes((prev) => ({ ...prev, [step.id]: Date.now() - startTime }));
+    } catch (err: any) {
+      setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
+    } finally {
+      setRunningStepId(null);
     }
   };
 
@@ -323,24 +348,59 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               </p>
             ) : (
               <div className="space-y-1.5">
-                {activeProfile.steps.map((step, idx) => (
-                  <div
-                    key={step.id}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs ${
-                      step.enabled === false
-                        ? 'border-border/40 bg-muted/20 opacity-50'
-                        : 'border-border/70 bg-card'
-                    }`}
-                  >
-                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
-                      {idx + 1}
-                    </span>
-                    <div className="truncate flex-1">
-                      <p className="font-semibold text-foreground truncate">{step.name}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono truncate">{step.type}</p>
+                {activeProfile.steps.map((step, idx) => {
+                  const isStepRunning = runningStepId === step.id;
+                  const isBusy = isDeploying || runningStepId !== null || isDiagRunning !== null;
+                  return (
+                    <div
+                      key={step.id}
+                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs group transition-colors ${
+                        step.enabled === false
+                          ? 'border-border/40 bg-muted/20 opacity-50'
+                          : isStepRunning
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border/70 bg-card hover:border-border'
+                      }`}
+                    >
+                      <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
+                        {idx + 1}
+                      </span>
+                      <div className="truncate flex-1">
+                        <p className="font-semibold text-foreground truncate">{step.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground font-mono truncate">{step.type}</span>
+                          {stepExecutionTimes[step.id] !== undefined && (
+                            <span className="text-[9px] font-mono font-medium text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded-full flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5" />
+                              {(stepExecutionTimes[step.id] / 1000).toFixed(1)}s
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRunSingleStep(step)}
+                        disabled={isBusy}
+                        className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                          isStepRunning
+                            ? 'bg-primary text-primary-foreground border-primary animate-pulse'
+                            : 'bg-card hover:bg-primary/15 text-primary border-border hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed'
+                        }`}
+                        title={isStepRunning ? 'Executando esta etapa...' : `Executar somente esta etapa (${step.name})`}
+                      >
+                        {isStepRunning ? (
+                          <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                        )}
+                        <span className="text-[10px] font-semibold hidden group-hover:inline sm:inline">
+                          {isStepRunning ? 'Rodando...' : 'Executar'}
+                        </span>
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -409,7 +469,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             logs={terminalLogs}
             onClear={() => setTerminalLogs([])}
             title="Console de Deploy"
-            isRunning={isDeploying || isDiagRunning !== null}
+            isRunning={isDeploying || runningStepId !== null || isDiagRunning !== null}
           />
         </div>
       </div>

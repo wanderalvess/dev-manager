@@ -64,5 +64,24 @@ describe('DatabaseService', () => {
     );
     expect(dpi1047).toContain('DPI-1047');
     expect(dpi1047).toContain('oci.dll');
+
+    const ora01008 = (service as any).formatErrorMessage(
+      new Error('ORA-01008: not all variables bound'),
+      'oracle'
+    );
+    expect(ora01008).toContain('ORA-01008');
+    expect(ora01008).toContain('Preencha os valores de todos os parâmetros');
+  });
+
+  it('interpola bind variables corretamente preservando literais e comentários', () => {
+    const sql = "SELECT 'Texto :CODPROD', -- :CODPROD comentário\n CODPROD FROM TAB WHERE CODPROD = :CODPROD AND CODFILIAL = :CODFILIAL AND OBS = :OBS";
+    const binds = {
+      CODPROD: 12345,
+      CODFILIAL: '1',
+      OBS: null
+    };
+
+    const res = (service as any).interpolateBinds(sql, binds);
+    expect(res).toBe("SELECT 'Texto :CODPROD', -- :CODPROD comentário\n CODPROD FROM TAB WHERE CODPROD = 12345 AND CODFILIAL = '1' AND OBS = NULL");
   });
 });

@@ -122,7 +122,8 @@ export class DatabaseService {
   public async executeQuery(
     config: DatabaseConnectionConfig,
     sql: string,
-    maxRows = 200
+    maxRows = 200,
+    binds?: Record<string, any>
   ): Promise<QueryResult> {
     maxRows = Number.isFinite(maxRows) && maxRows > 0 ? Math.floor(maxRows) : 200;
     const startTime = Date.now();
@@ -143,11 +144,11 @@ export class DatabaseService {
     try {
       switch (config.type) {
         case 'postgres':
-          return await this.executePostgres(config, cleanSql, maxRows, startTime);
+          return await this.executePostgres(config, cleanSql, maxRows, startTime, binds);
         case 'mysql':
-          return await this.executeMysql(config, cleanSql, maxRows, startTime);
+          return await this.executeMysql(config, cleanSql, maxRows, startTime, binds);
         case 'oracle':
-          return await this.executeOracle(config, cleanSql, maxRows, startTime);
+          return await this.executeOracle(config, cleanSql, maxRows, startTime, binds);
         default:
           throw new Error(`Tipo de banco '${config.type}' não suportado.`);
       }
@@ -163,6 +164,44 @@ export class DatabaseService {
         error: this.formatErrorMessage(err, config.type)
       };
     }
+  }
+
+  /**
+   * Realiza interpolação segura de parâmetros de bind para bancos que não usam objeto nativo (ex: MySQL/PG).
+   */
+  private interpolateBinds(sql: string, binds?: Record<string, any>): string {
+    if (!binds || Object.keys(binds).length === 0) return sql;
+
+    const literalsMap: Record<string, string> = {};
+    for (const [key, rawVal] of Object.entries(binds)) {
+      let replacement: string;
+      if (rawVal === null || rawVal === undefined) {
+        replacement = 'NULL';
+      } else if (typeof rawVal === 'number') {
+        replacement = String(rawVal);
+      } else if (typeof rawVal === 'boolean') {
+        replacement = rawVal ? 'TRUE' : 'FALSE';
+      } else if (rawVal instanceof Date) {
+        replacement = `'${rawVal.toISOString()}'`;
+      } else {
+        replacement = `'${String(rawVal).replace(/'/g, "''")}'`;
+      }
+      literalsMap[key.toUpperCase()] = replacement;
+    }
+
+    const tokenRegex = /(\/\*[\s\S]*?\*\/|--[^\r\n]*|'(?:''|[^'])*'|(?<!:):(?!=)[a-zA-Z_][a-zA-Z0-9_]*\b)/g;
+    return sql.replace(tokenRegex, (match) => {
+      if (match.startsWith('/*') || match.startsWith('--') || match.startsWith("'")) {
+        return match;
+      }
+      if (match.startsWith(':')) {
+        const varName = match.slice(1).toUpperCase();
+        if (varName in literalsMap) {
+          return literalsMap[varName];
+        }
+      }
+      return match;
+    });
   }
 
   /**
@@ -436,14 +475,16 @@ export class DatabaseService {
     config: DatabaseConnectionConfig,
     sql: string,
     maxRows: number,
-    startTime: number
+    startTime: number,
+    binds?: Record<string, any>
   ): Promise<QueryResult> {
     return this.withConnection(
       config,
       () => this.getPgClient(config),
       (client) => client.end(),
       async (client) => {
-        const res = await client.query(sql);
+        const finalSql = this.interpolateBinds(sql, binds);
+        const res = await client.query(finalSql);
         const executionTimeMs = Date.now() - startTime;
 
         if (Array.isArray(res)) {
@@ -517,14 +558,16 @@ export class DatabaseService {
     config: DatabaseConnectionConfig,
     sql: string,
     maxRows: number,
-    startTime: number
+    startTime: number,
+    binds?: Record<string, any>
   ): Promise<QueryResult> {
     return this.withConnection(
       config,
       () => this.getMysqlConnection(config),
       (conn) => conn.end(),
       async (conn) => {
-        const [result, fields] = await conn.query(sql);
+        const finalSql = this.interpolateBinds(sql, binds);
+        const [result, fields] = await conn.query(finalSql);
         const executionTimeMs = Date.now() - startTime;
 
         if (Array.isArray(result) && fields) {
@@ -689,7 +732,8 @@ export class DatabaseService {
     config: DatabaseConnectionConfig,
     sql: string,
     maxRows: number,
-    startTime: number
+    startTime: number,
+    binds?: Record<string, any>
   ): Promise<QueryResult> {
     return this.withConnection(
       config,
@@ -699,7 +743,9 @@ export class DatabaseService {
         const cleanSql = sql.trim().replace(/;+\s*$/, '');
         const isSelect = /^\s*(SELECT|WITH)\s+/i.test(cleanSql);
 
-        const result = await conn.execute(cleanSql, [], {
+        const bindParams = binds && typeof binds === 'object' && Object.keys(binds).length > 0 ? binds : [];
+
+        const result = await conn.execute(cleanSql, bindParams, {
           outFormat: oracledb.OUT_FORMAT_OBJECT,
           autoCommit: true,
           maxRows: isSelect ? maxRows : undefined
@@ -736,6 +782,9 @@ export class DatabaseService {
 
   private formatErrorMessage(err: any, type: string): string {
     const msg = err?.message || String(err);
+    if (msg.includes('ORA-01008')) {
+      return 'Erro ORA-01008: Nem todas as variáveis foram vinculadas. Preencha os valores de todos os parâmetros (:PARAMETRO) antes de executar a consulta.';
+    }
     if (msg.includes('NJS-138')) {
       return 'Erro NJS-138: Este banco de dados Oracle (ex: versão 11g) não é compatível com o Thin Mode padrão. Ative a opção "Modo Thick (Oracle Instant Client)" na conexão e certifique-se de ter o Oracle Instant Client 64-bit instalado.';
     }

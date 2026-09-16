@@ -57,13 +57,17 @@ interface EnvironmentPageProps {
   onRefreshServices: () => void;
   onNavigateToSettings?: () => void;
   onNavigateToHelp?: (search?: string) => void;
+  isActive?: boolean;
+  settingsVersion?: number;
 }
 
 export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   services,
   onRefreshServices,
   onNavigateToSettings,
-  onNavigateToHelp
+  onNavigateToHelp,
+  isActive,
+  settingsVersion
 }) => {
   const [logs, setLogs] = useState<(string | EnvironmentLog)[]>([]);
   const [ports, setPorts] = useState<PortStatus[]>([]);
@@ -245,9 +249,14 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     checkWebHealth();
   }, [onRefreshServices, fetchPorts, fetchProcesses, checkKarafRunning, fetchNetworkIps, checkWebHealth]);
 
-  // Montagem estável: executa carga inicial UMA VEZ e define polling de 8s sem loop infinito
+  // Sincroniza configurações ao montar e sempre que settingsVersion for incrementado
   useEffect(() => {
     fetchSettings();
+  }, [fetchSettings, settingsVersion]);
+
+  // Polling de 8s condicionado à visibilidade da tela
+  useEffect(() => {
+    if (isActive === false) return;
     refreshAllStatus();
 
     const interval = setInterval(() => {
@@ -257,7 +266,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       checkWebHealth();
     }, 8000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive, refreshAllStatus, fetchPorts, fetchProcesses, checkKarafRunning, checkWebHealth]);
 
   // Ouvir logs e progresso de passos com buffer controlado para evitar estouro de memória
   useEffect(() => {

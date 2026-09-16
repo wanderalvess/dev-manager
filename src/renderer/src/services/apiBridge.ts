@@ -47,6 +47,7 @@ import type {
   SystemMetrics,
   HttpHealthResult,
   DeployProfile,
+  DeployStep,
   TableColumnInfo,
   DockerContainerStats,
   ComposeServiceStatus,
@@ -561,6 +562,13 @@ export function initApiBridge() {
       });
     },
 
+    runDeployStep: async (step: DeployStep, profileName?: string): Promise<{ success: boolean; error?: string }> => {
+      return apiFetch('/api/deploy/run-step', {
+        method: 'POST',
+        body: JSON.stringify({ step, profileName })
+      });
+    },
+
     onDeployLogChunk: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('deploy:log-chunk', callback);
     },
@@ -745,10 +753,10 @@ export function initApiBridge() {
       });
     },
 
-    executeDbQuery: async (config: DatabaseConnectionConfig, sql: string, maxRows?: number): Promise<QueryResult> => {
+    executeDbQuery: async (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<QueryResult> => {
       return apiFetch('/api/db/query', {
         method: 'POST',
-        body: JSON.stringify({ config, sql, maxRows })
+        body: JSON.stringify({ config, sql, maxRows, binds })
       });
     },
 
