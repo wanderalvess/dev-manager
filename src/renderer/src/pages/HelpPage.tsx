@@ -29,10 +29,12 @@ import {
   Bot,
   Download,
   RefreshCw,
-  Database
+  Database,
+  FileText
 } from 'lucide-react';
 import { SystemAppInfo, UpdateStatus, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { MarkdownReader } from '../components/MarkdownReader';
 
 interface HelpPageProps {
   onNavigate?: (tab: string) => void;
@@ -56,6 +58,9 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
   const [expandedFaqs, setExpandedFaqs] = useState<Record<string, boolean>>({});
   const [appInfo, setAppInfo] = useState<SystemAppInfo | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
+  const [isChangelogOpen, setIsChangelogOpen] = useState(false);
+  const [changelogContent, setChangelogContent] = useState('');
+  const [isLoadingChangelog, setIsLoadingChangelog] = useState(false);
   const [settings, setSettings] = useState<any>(null);
   const { copy: copyDiag, copiedKey: copiedDiagKey } = useCopyToClipboard(2500);
   const copiedDiag = copiedDiagKey === 'diag';
@@ -84,6 +89,20 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
   const handleCheckForUpdates = () => {
     setUpdateStatus({ status: 'checking' });
     window.electronAPI?.checkForUpdate?.();
+  };
+
+  const handleOpenChangelog = async () => {
+    setIsChangelogOpen(true);
+    setIsLoadingChangelog(true);
+    setChangelogContent('');
+    try {
+      const content = await window.electronAPI?.getChangelog?.();
+      setChangelogContent(content || 'Nenhum registro de mudanças encontrado.');
+    } catch (err: any) {
+      setChangelogContent(`Erro ao carregar o changelog: ${err?.message || err}`);
+    } finally {
+      setIsLoadingChangelog(false);
+    }
   };
 
   const toggleFaq = (id: string) => {
@@ -1085,7 +1104,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                     <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
                       Dev <span className="text-primary font-bold">Manager</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-                        v1.0.0
+                        v{appInfo?.appVersion || '...'}
                       </span>
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
@@ -1261,6 +1280,22 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                       )}
                     </div>
                   )}
+
+                  {/* Notas de Versão / Changelog */}
+                  <div className="p-3 rounded-xl bg-card/60 border border-border flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                        Notas de Versão
+                      </span>
+                      <span className="text-[11px] text-foreground truncate block">O que mudou entre as versões</span>
+                    </div>
+                    <button
+                      onClick={handleOpenChangelog}
+                      className="shrink-0 flex items-center gap-1 px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-[10px] font-bold transition"
+                    >
+                      <FileText className="w-3 h-3" /> Ver Changelog
+                    </button>
+                  </div>
                 </div>
 
                 {/* Caminho do Config JSON */}
@@ -1394,6 +1429,16 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
           </div>
         )}
       </div>
+
+      {isChangelogOpen && (
+        <MarkdownReader
+          title="Changelog"
+          filePath="CHANGELOG.md"
+          content={changelogContent}
+          isLoading={isLoadingChangelog}
+          onClose={() => setIsChangelogOpen(false)}
+        />
+      )}
     </div>
   );
 };

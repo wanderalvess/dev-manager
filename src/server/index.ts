@@ -49,6 +49,15 @@ if (typeof (globalThis as any).__filename === 'undefined') {
 
 dotenv.config();
 
+const repoRoot = path.resolve(__dirname, '../..');
+const appVersion = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf-8')).version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
+
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });
@@ -169,7 +178,7 @@ app.get('/api/system/info', async (_req, res) => {
 
   res.json({
     appName: 'Dev Manager (Web/Docker)',
-    appVersion: '1.0.0',
+    appVersion,
     electronVersion: 'N/A (Docker Web Mode)',
     nodeVersion: process.version,
     chromeVersion: 'N/A',
@@ -183,6 +192,16 @@ app.get('/api/system/info', async (_req, res) => {
     configPath: configService.getConfigFilePath(),
     isAdmin
   });
+});
+
+app.get('/api/system/changelog', (_req, res) => {
+  try {
+    const changelogPath = path.join(repoRoot, 'CHANGELOG.md');
+    if (!fs.existsSync(changelogPath)) return res.json({ content: null });
+    res.json({ content: fs.readFileSync(changelogPath, 'utf-8') });
+  } catch {
+    res.json({ content: null });
+  }
 });
 
 app.get('/api/system/check-path', (req, res) => {

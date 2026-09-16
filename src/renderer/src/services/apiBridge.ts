@@ -225,6 +225,11 @@ export function initApiBridge() {
       return apiFetch<SystemAppInfo>('/api/system/info');
     },
 
+    getChangelog: async (): Promise<string | null> => {
+      const data = await apiFetch<{ content: string | null }>('/api/system/changelog');
+      return data.content;
+    },
+
     // Gestor de Ambiente
     checkAdmin: async (): Promise<boolean> => {
       const data = await apiFetch<{ isAdmin: boolean }>('/api/env/admin');

@@ -65,6 +65,13 @@ export const Header: React.FC<HeaderProps> = ({
   const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
   const { copy: copyToClipboard, copiedKey: copiedIp } = useCopyToClipboard(1800);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (window.electronAPI?.getAppInfo) {
+      window.electronAPI.getAppInfo().then((info) => setAppVersion(info.appVersion)).catch(() => {});
+    }
+  }, []);
 
   const fetchMetrics = useCallback(async () => {
     if (window.electronAPI?.getSystemMetrics) {
@@ -253,7 +260,7 @@ export const Header: React.FC<HeaderProps> = ({
               Dev <span className="text-primary font-bold">Manager</span>
             </h1>
             <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-              v1.0
+              v{appVersion || '...'}
             </span>
           </div>
           <p className="text-[10px] text-muted-foreground font-medium hidden 2xl:block leading-tight">

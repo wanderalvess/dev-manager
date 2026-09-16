@@ -67,6 +67,7 @@ export interface ElectronAPI {
   checkPath: (targetPath: string) => Promise<PathStatusInfo>;
   autoDetectPaths: () => Promise<Partial<AppSettings>>;
   getAppInfo: () => Promise<SystemAppInfo>;
+  getChangelog: () => Promise<string | null>;
 
   // Gestor de Ambiente
   checkAdmin: () => Promise<boolean>;

@@ -67,6 +67,8 @@ const electronAPI = {
     ipcRenderer.invoke('system:auto-detect-paths'),
   getAppInfo: (): Promise<SystemAppInfo> =>
     ipcRenderer.invoke('system:get-app-info'),
+  getChangelog: (): Promise<string | null> =>
+    ipcRenderer.invoke('system:get-changelog'),
 
   // Gestor de Ambiente
   checkAdmin: (): Promise<boolean> => ipcRenderer.invoke('env:check-admin'),

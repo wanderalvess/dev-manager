@@ -1,4 +1,4 @@
-import { ipcMain, shell, BrowserWindow, dialog } from 'electron';
+import { app, ipcMain, shell, BrowserWindow, dialog } from 'electron';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -112,7 +112,7 @@ export function registerIpcHandlers(
 
     return {
       appName: 'Dev Manager',
-      appVersion: '1.0.0',
+      appVersion: app.getVersion(),
       electronVersion: process.versions.electron || 'N/A',
       nodeVersion: process.versions.node || 'N/A',
       chromeVersion: process.versions.chrome || 'N/A',
@@ -126,6 +126,16 @@ export function registerIpcHandlers(
       configPath,
       isAdmin
     };
+  });
+
+  ipcMain.handle('system:get-changelog', async (): Promise<string | null> => {
+    try {
+      const changelogPath = path.join(app.getAppPath(), 'CHANGELOG.md');
+      if (!fs.existsSync(changelogPath)) return null;
+      return fs.readFileSync(changelogPath, 'utf-8');
+    } catch {
+      return null;
+    }
   });
 
   // --- Gestor de Ambiente ---

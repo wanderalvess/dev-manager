@@ -12,7 +12,8 @@
     "dist/**/*",
     "dist-electron/**/*",
     "node_modules/**/*",
-    "package.json"
+    "package.json",
+    "CHANGELOG.md"
   ],
   "asarUnpack": [
     "node_modules/onnxruntime-node/**/*",
