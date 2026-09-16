@@ -326,7 +326,9 @@ export function registerIpcHandlers(
       bundleId: string,
       credentials?: { user?: string; pass?: string; port?: number }
     ) => {
-      return await karafService.manageBundle(action, bundleId, credentials);
+      return await karafService.manageBundle(action, bundleId, credentials, (chunk) => {
+        mainWindow.webContents.send('karaf:log-chunk', chunk);
+      });
     }
   );
 
@@ -369,7 +371,9 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('karaf:uninstall-bundle', async (_, bundleId: string, credentials?: { user?: string; pass?: string; port?: number }) => {
-    return await karafService.uninstallBundle(bundleId, credentials);
+    return await karafService.uninstallBundle(bundleId, credentials, (chunk) => {
+      mainWindow.webContents.send('karaf:log-chunk', chunk);
+    });
   });
 
   ipcMain.handle('karaf:reinstall-bundle', async (_, request: ReinstallBundleRequest) => {
@@ -379,7 +383,9 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('karaf:update-bundle-version', async (_, request: UpdateBundleVersionRequest) => {
-    return await karafService.updateBundleVersion(request);
+    return await karafService.updateBundleVersion(request, (chunk) => {
+      mainWindow.webContents.send('karaf:log-chunk', chunk);
+    });
   });
 
   ipcMain.handle('karaf:parse-pom', async (_, projectPath: string) => {

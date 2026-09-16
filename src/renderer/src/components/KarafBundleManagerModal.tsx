@@ -64,6 +64,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const [isCheckingUninstallDeps, setIsCheckingUninstallDeps] = useState(false);
   const [confirmUninstallChecked, setConfirmUninstallChecked] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
+  const [uninstallLog, setUninstallLog] = useState<string | null>(null);
 
   // Sub-modal: Instalação / Nova Versão
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
@@ -86,6 +87,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const [rebuildBeforeReinstall, setRebuildBeforeReinstall] = useState(false);
   const [reinstallProjectPath, setReinstallProjectPath] = useState('');
   const [isReinstalling, setIsReinstalling] = useState(false);
+  const [reinstallLog, setReinstallLog] = useState<string | null>(null);
 
   // Sub-modal: Detalhes do Bundle
   const [detailsTarget, setDetailsTarget] = useState<KarafBundleInfo | null>(null);
@@ -297,6 +299,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     setUninstallTarget(bundle);
     setUninstallDepCheck(null);
     setConfirmUninstallChecked(false);
+    setUninstallLog(null);
     setIsCheckingUninstallDeps(true);
 
     if (window.electronAPI?.checkKarafBundleDeps) {
@@ -316,6 +319,10 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const handleConfirmUninstall = async () => {
     if (!uninstallTarget || !window.electronAPI?.uninstallKarafBundle) return;
     setIsUninstalling(true);
+    setUninstallLog('');
+    const unsubscribe = window.electronAPI?.onKarafLogChunk?.((chunk) => {
+      setUninstallLog((prev) => (prev || '') + chunk);
+    });
     try {
       const res = await window.electronAPI.uninstallKarafBundle(uninstallTarget.id);
       if (!res.success) {
@@ -327,6 +334,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     } catch (err: any) {
       alert(`Erro: ${err?.message || err}`);
     } finally {
+      unsubscribe?.();
       setIsUninstalling(false);
     }
   };
@@ -422,7 +430,10 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     }
 
     setIsInstalling(true);
-    setInstallLog(null);
+    setInstallLog('');
+    const unsubscribe = window.electronAPI?.onKarafLogChunk?.((chunk) => {
+      setInstallLog((prev) => (prev || '') + chunk);
+    });
     try {
       if (updatingTargetBundle && window.electronAPI?.updateKarafBundleVersion) {
         const res = await window.electronAPI.updateKarafBundleVersion({
@@ -430,9 +441,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
           newVersionOrLocation: loc
         });
         if (!res?.success) {
-          setInstallLog(`[ERRO] ${res?.output || 'Falha ao atualizar versão do bundle'}`);
+          setInstallLog((prev) => `${prev || ''}\r\n[ERRO] ${res?.output || 'Falha ao atualizar versão do bundle'}`);
         } else {
-          setInstallLog(`[SUCESSO] Bundle [${updatingTargetBundle.id}] atualizado com sucesso!`);
+          setInstallLog((prev) => `${prev || ''}\r\n[SUCESSO] Bundle [${updatingTargetBundle.id}] atualizado com sucesso!`);
           await fetchBundles();
         }
       } else {
@@ -444,15 +455,16 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
         const res = await window.electronAPI?.installKarafBundle(req);
         if (!res?.success) {
-          setInstallLog(`[ERRO] ${res?.output || 'Falha ao instalar bundle'}`);
+          setInstallLog((prev) => `${prev || ''}\r\n[ERRO] ${res?.output || 'Falha ao instalar bundle'}`);
         } else {
-          setInstallLog(`[SUCESSO] Bundle instalado com ID: ${res.bundleId || 'concluído'}`);
+          setInstallLog((prev) => `${prev || ''}\r\n[SUCESSO] Bundle instalado com ID: ${res.bundleId || 'concluído'}`);
           await fetchBundles();
         }
       }
     } catch (err: any) {
-      setInstallLog(`[ERRO FATAL] ${err?.message || err}`);
+      setInstallLog((prev) => `${prev || ''}\r\n[ERRO FATAL] ${err?.message || err}`);
     } finally {
+      unsubscribe?.();
       setIsInstalling(false);
     }
   };
@@ -471,6 +483,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       return bName.includes(pName) || pName.includes(bName);
     });
     setReinstallProjectPath(matchedProject?.path || '');
+    setReinstallLog(null);
 
     if (window.electronAPI?.checkKarafBundleDeps) {
       try {
@@ -489,6 +502,10 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const handleConfirmReinstall = async () => {
     if (!reinstallTarget || !window.electronAPI?.reinstallKarafBundle) return;
     setIsReinstalling(true);
+    setReinstallLog('');
+    const unsubscribe = window.electronAPI?.onKarafLogChunk?.((chunk) => {
+      setReinstallLog((prev) => (prev || '') + chunk);
+    });
     try {
       const req: ReinstallBundleRequest = {
         bundleId: reinstallTarget.id,
@@ -506,6 +523,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     } catch (err: any) {
       alert(`Erro: ${err?.message || err}`);
     } finally {
+      unsubscribe?.();
       setIsReinstalling(false);
     }
   };
@@ -941,6 +959,13 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                   )}
                 </div>
               ) : null}
+
+              {/* Log ao vivo do bundle:uninstall + bundle:refresh */}
+              {uninstallLog && (
+                <div className="p-3 bg-black/50 border border-border rounded-xl font-mono text-[11px] text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto">
+                  {uninstallLog}
+                </div>
+              )}
             </div>
 
             <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-end space-x-2">
@@ -1210,7 +1235,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
               {/* Log do comando */}
               {installLog && (
-                <div className="p-3 bg-black/50 border border-border rounded-xl font-mono text-[11px] text-muted-foreground overflow-x-auto">
+                <div className="p-3 bg-black/50 border border-border rounded-xl font-mono text-[11px] text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto">
                   {installLog}
                 </div>
               )}
@@ -1322,6 +1347,13 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     </span>
                   </div>
                 </label>
+              )}
+
+              {/* Log ao vivo do bundle:update + bundle:refresh + bundle:start */}
+              {reinstallLog && (
+                <div className="p-3 bg-black/50 border border-border rounded-xl font-mono text-[11px] text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto">
+                  {reinstallLog}
+                </div>
               )}
             </div>
 
