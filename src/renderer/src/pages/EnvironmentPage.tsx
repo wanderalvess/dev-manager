@@ -639,6 +639,29 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     }
   };
 
+  // Botão único de serviço (service-start/service-stop): a ação segue o estado real
+  // do serviço, não o step.type configurado — esse é reservado pra quando o perfil
+  // inteiro roda em sequência (executeProfile).
+  const handleToggleServiceStep = async (step: AutomationStep, isRunning: boolean) => {
+    if (!window.electronAPI) return;
+    const target = step.targetName || step.name;
+    setStepActionLoading((prev) => ({ ...prev, [step.id]: isRunning ? 'stop' : 'run' }));
+    try {
+      if (isRunning) {
+        await window.electronAPI.stopService(target);
+      } else {
+        await window.electronAPI.startService(target);
+      }
+      setTimeout(() => refreshAllStatus(), 1500);
+    } finally {
+      setStepActionLoading((prev) => {
+        const copy = { ...prev };
+        delete copy[step.id];
+        return copy;
+      });
+    }
+  };
+
   const handleRestartStep = async (step: AutomationStep) => {
     if (!window.electronAPI || !window.electronAPI.restartProfileStep) return;
     setStepActionLoading((prev) => ({ ...prev, [step.id]: 'restart' }));
@@ -1352,47 +1375,75 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                           ) : null}
 
                           <div className="flex items-center space-x-1">
-                            {/* Botão Individual Executar / Subir / Iniciar */}
-                            <button
-                              type="button"
-                              onClick={() => handleRunStep(step)}
-                              disabled={loadingAction === 'run' || isRunningProfile}
-                              className="p-1 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
-                              title={
-                                step.type === 'service-stop'
-                                  ? 'Executar ação (parar serviço)'
-                                  : step.type === 'service-start'
-                                  ? 'Iniciar serviço'
-                                  : 'Executar esta etapa'
-                              }
-                            >
-                              <Play className="w-3 h-3 fill-current" />
-                              <span>{step.type === 'service-stop' ? 'Executar' : 'Subir'}</span>
-                            </button>
-
-                            {/* Botão Individual Parar */}
-                            <button
-                              type="button"
-                              onClick={() => handleStopStep(step)}
-                              disabled={loadingAction === 'stop' || isRunningProfile}
-                              className="p-1 px-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
-                              title="Encerrar processo ou garantir serviço parado"
-                            >
-                              <Square className="w-3 h-3" />
-                              <span>Parar</span>
-                            </button>
-
-                            {/* Botão Individual Restart */}
-                            {step.type !== 'service-stop' && step.type !== 'kill-process' && (
+                            {step.type === 'service-start' || step.type === 'service-stop' ? (
+                              /* Botão único de serviço: rótulo/ação seguem o estado real (Iniciar/Parar) */
                               <button
                                 type="button"
-                                onClick={() => handleRestartStep(step)}
-                                disabled={loadingAction === 'restart' || isRunningProfile}
-                                className="p-1 px-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
-                                title="Reiniciar esta etapa"
+                                onClick={() => handleToggleServiceStep(step, srvFound?.state === 'RUNNING')}
+                                disabled={loadingAction === 'run' || loadingAction === 'stop' || isRunningProfile}
+                                className={
+                                  srvFound?.state === 'RUNNING'
+                                    ? 'p-1 px-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all'
+                                    : 'p-1 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all'
+                                }
+                                title={srvFound?.state === 'RUNNING' ? 'Parar serviço' : 'Iniciar serviço'}
                               >
-                                <RefreshCw className={`w-3 h-3 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />
+                                {srvFound?.state === 'RUNNING' ? (
+                                  <Square className="w-3 h-3" />
+                                ) : (
+                                  <Play className="w-3 h-3 fill-current" />
+                                )}
+                                <span>{srvFound?.state === 'RUNNING' ? 'Parar' : 'Iniciar'}</span>
                               </button>
+                            ) : step.type === 'kill-process' ? (
+                              /* Botão único: kill-process não tem "início" simétrico, só finalizar */
+                              <button
+                                type="button"
+                                onClick={() => handleStopStep(step)}
+                                disabled={loadingAction === 'stop' || isRunningProfile}
+                                className="p-1 px-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                                title="Finalizar processo"
+                              >
+                                <Square className="w-3 h-3" />
+                                <span>Finalizar</span>
+                              </button>
+                            ) : (
+                              <>
+                                {/* Botão Individual Executar / Subir */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRunStep(step)}
+                                  disabled={loadingAction === 'run' || isRunningProfile}
+                                  className="p-1 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                                  title="Executar esta etapa"
+                                >
+                                  <Play className="w-3 h-3 fill-current" />
+                                  <span>Subir</span>
+                                </button>
+
+                                {/* Botão Individual Parar */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleStopStep(step)}
+                                  disabled={loadingAction === 'stop' || isRunningProfile}
+                                  className="p-1 px-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                                  title="Encerrar processo ou garantir serviço parado"
+                                >
+                                  <Square className="w-3 h-3" />
+                                  <span>Parar</span>
+                                </button>
+
+                                {/* Botão Individual Restart */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestartStep(step)}
+                                  disabled={loadingAction === 'restart' || isRunningProfile}
+                                  className="p-1 px-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
+                                  title="Reiniciar esta etapa"
+                                >
+                                  <RefreshCw className={`w-3 h-3 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />
+                                </button>
+                              </>
                             )}
                           </div>
                         </div>

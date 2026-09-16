@@ -824,6 +824,10 @@ export class WindowsService {
 
       case 'service-start': {
         const srv = step.targetName || step.name;
+        if ((await this.getServiceStatus(srv)) === 'RUNNING') {
+          pushLog('success', `Serviço "${srv}": já está em execução, nada a fazer.`);
+          return true;
+        }
         pushLog('info', `Iniciando serviço Windows "${srv}"...`);
         const ok = await this.startService(srv);
         pushLog(ok ? 'success' : 'warning', `Serviço "${srv}": ${ok ? 'Iniciado com sucesso.' : 'Falha ao iniciar.'}`);
@@ -832,6 +836,11 @@ export class WindowsService {
 
       case 'service-stop': {
         const srv = step.targetName || step.name;
+        const currentState = await this.getServiceStatus(srv);
+        if (currentState === 'STOPPED' || currentState === 'NOT_INSTALLED') {
+          pushLog('success', `Serviço "${srv}": já está parado, nada a fazer.`);
+          return true;
+        }
         pushLog('info', `Parando serviço Windows "${srv}"...`);
         const ok = await this.stopService(srv);
         pushLog(ok ? 'success' : 'warning', `Serviço "${srv}": ${ok ? 'Parado com sucesso.' : 'Falha ou já parado.'}`);
@@ -840,6 +849,10 @@ export class WindowsService {
 
       case 'kill-process': {
         const proc = step.targetName || step.name;
+        if (!(await this.isProcessRunning(proc))) {
+          pushLog('success', `Processo "${proc}": já não está em execução, nada a fazer.`);
+          return true;
+        }
         pushLog('info', `Finalizando processo "${proc}"...`);
         const ok = await this.killProcess(proc);
         pushLog(ok ? 'success' : 'info', `Processo "${proc}": ${ok ? 'Finalizado.' : 'Não encontrado ativo.'}`);
@@ -937,22 +950,36 @@ export class WindowsService {
     }
 
     if (step.type === 'service-start' && step.targetName) {
-      pushLog('info', `Parando serviço ${step.targetName}...`);
-      await this.stopService(step.targetName);
+      const currentState = await this.getServiceStatus(step.targetName);
+      if (currentState === 'STOPPED' || currentState === 'NOT_INSTALLED') {
+        pushLog('success', `Serviço ${step.targetName}: já está parado, nada a fazer.`);
+      } else {
+        pushLog('info', `Parando serviço ${step.targetName}...`);
+        await this.stopService(step.targetName);
+      }
       stopped = true;
     }
 
     if (step.type === 'service-stop' && (step.targetName || step.name)) {
       const srv = step.targetName || step.name;
-      pushLog('info', `Garantindo parada do serviço ${srv}...`);
-      await this.stopService(srv);
+      const currentState = await this.getServiceStatus(srv);
+      if (currentState === 'STOPPED' || currentState === 'NOT_INSTALLED') {
+        pushLog('success', `Serviço ${srv}: já está parado, nada a fazer.`);
+      } else {
+        pushLog('info', `Garantindo parada do serviço ${srv}...`);
+        await this.stopService(srv);
+      }
       stopped = true;
     }
 
     if (step.type === 'kill-process' && (step.targetName || step.name)) {
       const proc = step.targetName || step.name;
-      pushLog('info', `Encerrando processo ${proc}...`);
-      await this.killProcess(proc);
+      if (!(await this.isProcessRunning(proc))) {
+        pushLog('success', `Processo ${proc}: já não está em execução, nada a fazer.`);
+      } else {
+        pushLog('info', `Encerrando processo ${proc}...`);
+        await this.killProcess(proc);
+      }
       stopped = true;
     }
 
