@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Sparkles, X } from 'lucide-react';
 import { TourStep } from './tourSteps';
 import { announceTourFinished } from './tourCoordinator';
@@ -187,32 +186,26 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
       {/* Overlay escuro + spotlight (box-shadow com spread cobre tudo exceto o alvo) */}
       <div className="fixed inset-0" onClick={(e) => e.stopPropagation()}>
         {rect ? (
-          <motion.div
-            className="fixed rounded-2xl border-2 border-primary pointer-events-none"
-            style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.7)' }}
-            initial={false}
-            animate={{
+          <div
+            className="fixed rounded-2xl border-2 border-primary pointer-events-none transition-all duration-300 ease-out"
+            style={{
+              boxShadow: '0 0 0 9999px rgba(0,0,0,0.7)',
               top: rect.top - RING_PADDING,
               left: rect.left - RING_PADDING,
               width: rect.width + RING_PADDING * 2,
               height: rect.height + RING_PADDING * 2
             }}
-            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
           />
         ) : (
           <div className="fixed inset-0 bg-black/70" />
         )}
       </div>
 
-      {/* Tooltip — troca instantânea de conteúdo por chave; sem AnimatePresence/exit para evitar
-          o tooltip ficar preso no keyframe inicial quando a página hospedeira re-renderiza com frequência. */}
-      <motion.div
+      {/* Tooltip — troca de conteúdo por chave com transição suave */}
+      <div
         key={stepIndex}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18 }}
         style={tooltipStyle}
-        className="bg-card text-card-foreground rounded-xl border border-border shadow-2xl p-4 space-y-3"
+        className="animate-tour-fade bg-card text-card-foreground rounded-xl border border-border shadow-2xl p-4 space-y-3"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 text-primary">
@@ -256,7 +249,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
