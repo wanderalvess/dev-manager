@@ -81,4 +81,101 @@ describe('BackupService', () => {
 
     await fs.promises.rm(dir, { recursive: true, force: true });
   });
+
+  it('interpola placeholders corretamente no template de backup', () => {
+    const config: DatabaseConnectionConfig = {
+      id: 'conn-oracle-test',
+      name: 'Oracle Prod',
+      type: 'oracle',
+      host: '192.168.1.100',
+      port: 1521,
+      database: 'ORCL',
+      user: 'WINTHOR',
+      password: 'secret_password_123',
+      oracleMode: 'serviceName'
+    };
+
+    const destFolder = 'C:\\Backups\\Oracle';
+    const placeholders = (require('./BackupService') as typeof import('./BackupService')).buildBackupPlaceholders(
+      config,
+      destFolder,
+      { oracleDirectory: 'MEU_DIR' }
+    );
+
+    const template = 'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user} version=11.2';
+    const resolved = (require('./BackupService') as typeof import('./BackupService')).interpolateBackupTemplate(template, placeholders);
+
+    expect(resolved).toContain('WINTHOR@192.168.1.100:1521/ORCL');
+    expect(resolved).toContain('directory=MEU_DIR');
+    expect(resolved).toContain('schemas=WINTHOR');
+    expect(resolved).toContain('version=11.2');
+  });
+
+  it('tokeniza argumentos de linha de comando respeitando aspas sem invocar shell', () => {
+    const { parseCommandLineTokens } = require('./BackupService') as typeof import('./BackupService');
+    const cmd = 'exp user/pwd@host:1521/xe file="C:\\Minha Pasta\\backup.dmp" log="C:\\Minha Pasta\\backup.log" buffer=65536';
+    const tokens = parseCommandLineTokens(cmd);
+
+    expect(tokens).toEqual([
+      'exp',
+      'user/pwd@host:1521/xe',
+      'file=C:\\Minha Pasta\\backup.dmp',
+      'log=C:\\Minha Pasta\\backup.log',
+      'buffer=65536'
+    ]);
+  });
+
+  it('mascara senhas sensíveis em saídas de log e mensagens de erro', () => {
+    const { maskSensitiveText } = require('./BackupService') as typeof import('./BackupService');
+    const sensitive = 'minha_senha_secreta';
+    const output = 'Erro ao conectar com user/minha_senha_secreta@localhost:1521: ORA-01017';
+    const masked = maskSensitiveText(output, sensitive);
+
+    expect(masked).not.toContain('minha_senha_secreta');
+    expect(masked).toBe('Erro ao conectar com user/****@localhost:1521: ORA-01017');
+  });
+
+  it('rejeita comando customizado que não contém a tag obrigatória {filePath}', async () => {
+    const service = new BackupService();
+    const config: DatabaseConnectionConfig = {
+      id: 'conn-custom-test',
+      name: 'Teste',
+      type: 'oracle',
+      host: 'localhost',
+      port: 1521,
+      database: 'XE',
+      user: 'system'
+    };
+
+    const result = await service.runCustomCommandBackup(
+      config,
+      os.tmpdir(),
+      'expdp {user}@{connectString} schemas={user}'
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('{filePath}');
+  });
+
+  it('bloqueia caracteres de injeção de shell no comando customizado', async () => {
+    const service = new BackupService();
+    const config: DatabaseConnectionConfig = {
+      id: 'conn-injection-test',
+      name: 'Teste',
+      type: 'oracle',
+      host: 'localhost',
+      port: 1521,
+      database: 'XE',
+      user: 'system'
+    };
+
+    const result = await service.runCustomCommandBackup(
+      config,
+      os.tmpdir(),
+      'exp {user} file="{filePath}" && rm -rf /'
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('caracteres não permitidos');
+  });
 });

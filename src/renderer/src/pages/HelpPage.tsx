@@ -28,7 +28,8 @@ import {
   Laptop,
   Bot,
   Download,
-  RefreshCw
+  RefreshCw,
+  Database
 } from 'lucide-react';
 import { SystemAppInfo, UpdateStatus, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -416,6 +417,71 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
           </div>
         </div>
       )
+    },
+    {
+      id: 'database-backup-custom',
+      question: 'Como configurar e personalizar backups de banco de dados (especialmente Oracle 11g/12c/19c)?',
+      category: 'Banco de Dados & Backup',
+      tags: ['backup', 'oracle', 'expdp', 'exp', '11g', '19c', 'dump', 'cron', 'retenção', 'postgres', 'mysql', 'scratch'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            A <strong className="text-foreground">Central de Backup &amp; Restauração</strong> (acessível pelo botão <em>Backup &amp; Restore</em> na aba Banco de Dados) suporta os utilitários nativos de exportação do Oracle, PostgreSQL e MySQL, além de um modo flexível de <strong className="text-foreground">Comando Personalizado</strong>.
+          </p>
+
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-2">
+            <span className="font-bold text-foreground block">Por que usar o Modo Personalizado no Oracle?</span>
+            <p>
+              Ambientes do ecossistema WinThor frequentemente utilizam diferentes versões do Oracle (11g, 12c e 19c). O utilitário padrão <code className="font-mono text-primary">expdp</code> pode falhar por incompatibilidade de versão ou falta de acesso à pasta do servidor:
+            </p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Oracle 11g / 12c (Data Pump):</strong> Requer os parâmetros <code className="font-mono text-primary">VERSION=11.2</code> e frequentemente <code className="font-mono text-primary">EXCLUDE=STATISTICS</code> para exportar dados entre instâncias modernas e legadas sem erros.
+              </li>
+              <li>
+                <strong className="text-foreground">Oracle Remoto / Docker (exp clássico):</strong> O <code className="font-mono text-primary">expdp</code> roda no servidor e grava em <code className="font-mono text-primary">DATA_PUMP_DIR</code>. Quando você não possui acesso à pasta física do servidor remoto, use o utilitário clássico <code className="font-mono text-primary">exp</code>. Ele grava o arquivo <code className="font-mono text-primary">.dmp</code> diretamente na sua estação de trabalho local.
+              </li>
+            </ul>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-2">
+            <span className="font-bold text-foreground block">Presets Prontos e Tags Dinâmicas:</span>
+            <p>
+              Ao ativar o switch <strong className="text-foreground">Comando Personalizado</strong>, clique em um dos presets de 1 clique ou monte o seu comando CLI. O comando <strong>deve conter obrigatoriamente</strong> a tag <code className="font-mono text-primary">{'{filePath}'}</code> ou <code className="font-mono text-primary">{'{fileName}'}</code> para que o Dev Manager possa verificar o dump gerado e gerenciar o expurgo de retenção.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+              <div className="p-1.5 rounded bg-muted/60 border border-border/50">
+                <span className="text-primary font-bold">{'{filePath}'}</span>: Caminho absoluto do arquivo dump
+              </div>
+              <div className="p-1.5 rounded bg-muted/60 border border-border/50">
+                <span className="text-primary font-bold">{'{fileName}'}</span>: Nome do arquivo gerado
+              </div>
+              <div className="p-1.5 rounded bg-muted/60 border border-border/50">
+                <span className="text-primary font-bold">{'{folder}'}</span>: Diretório de destino
+              </div>
+              <div className="p-1.5 rounded bg-muted/60 border border-border/50">
+                <span className="text-primary font-bold">{'{user}'}</span> / <span className="text-primary font-bold">{'{password}'}</span>: Credenciais
+              </div>
+              <div className="p-1.5 rounded bg-muted/60 border border-border/50">
+                <span className="text-primary font-bold">{'{connectString}'}</span>: Host:Porta/Serviço Oracle
+              </div>
+              <div className="p-1.5 rounded bg-muted/60 border border-border/50">
+                <span className="text-primary font-bold">{'{schema}'}</span> / <span className="text-primary font-bold">{'{database}'}</span>: Schema ou Base
+              </div>
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-card/70 border border-border space-y-1.5">
+            <span className="font-bold text-foreground block">Agendamentos, Retenção e Alertas:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li><strong className="text-foreground">Cron:</strong> Agende backups recorrentes (ex: <code className="font-mono text-primary">0 2 * * *</code> para diário às 02h).</li>
+              <li><strong className="text-foreground">Retenção Automática:</strong> Defina limites de dias ou quantidade máxima de backups para exclusão automática de versões expiradas.</li>
+              <li><strong className="text-foreground">Restore Drill:</strong> Valide a saúde dos seus dumps restaurando em uma base de homologação ou banco temporário (scratch) com 1 clique na aba de arquivos.</li>
+              <li><strong className="text-foreground">Webhooks:</strong> Receba alertas imediatos com status, tamanho e duração do backup no Discord, Slack ou Teams.</li>
+            </ul>
+          </div>
+        </div>
+      )
     }
   ];
 
@@ -437,6 +503,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
     { key: 'Alt + 8', desc: 'Navegar para a aba "Configurações" (Diretórios, IDEs e Portas)', category: 'Navegação' },
     { key: 'Alt + 9', desc: 'Navegar para esta aba de "Ajuda & Sobre o Programa"', category: 'Navegação' },
     { key: 'Ctrl + K', desc: 'Abrir o Buscador Rápido (Quick Launcher)', category: 'Navegação' },
+    { key: 'Ctrl + Enter', desc: 'Executar consulta SQL selecionada no Database Studio', category: 'Banco de Dados' },
     { key: 'Shift + F9', desc: `Atalho padrão do IntelliJ IDEA para iniciar o Remote JVM Debug (:${debugPort})`, category: 'Desenvolvimento' },
     { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Karaf Shell', category: 'Console' }
   ];
@@ -850,6 +917,45 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch })
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
                     <span><strong>Local via stdio:</strong> Sem porta de rede exposta. Registro automático no Claude Code pelo <code className="font-mono text-primary">.mcp.json</code> da raiz do projeto.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Card: Banco de Dados & Central de Backup */}
+            <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3.5 shadow-md">
+              <div className="flex items-center space-x-2.5 pb-2 border-b border-border">
+                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <Database className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
+                    6. Banco de Dados & Central de Backup
+                  </h3>
+                  <span className="text-[10px] text-muted-foreground font-mono">Oracle · PostgreSQL · MySQL · CLI Personalizado</span>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
+                <p>
+                  Gerenciamento de conexões multi-vendor com suporte a backup nativo e comandos customizados:
+                </p>
+                <ul className="space-y-1.5 pl-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Modo Personalizado Oracle:</strong> Alternância entre <em>expdp padrão</em>, <em>expdp com VERSION=11.2</em> (para bancos 11g/12c legados) e <em>exp clássico</em> (exportação remota gravada direto no disco do cliente sem depender de <code className="font-mono text-primary">DATA_PUMP_DIR</code>).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Tokens Dinâmicos:</strong> Uso de marcadores como <code className="font-mono text-primary">{'{filePath}'}</code>, <code className="font-mono text-primary">{'{fileName}'}</code>, <code className="font-mono text-primary">{'{user}'}</code>, <code className="font-mono text-primary">{'{connectString}'}</code> e tags de data/hora (<code className="font-mono text-primary">{'{timestamp}'}</code>, <code className="font-mono text-primary">{'{schema}'}</code>).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Agendamento Cron &amp; Retenção:</strong> Backups automáticos recorrentes com expurgo automático por idade em dias ou contagem máxima de arquivos.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong>Restauração &amp; Webhooks:</strong> Drill de restauração isolado em banco scratch/teste e alertas em tempo real no Discord, Slack ou Teams.</span>
                   </li>
                 </ul>
               </div>

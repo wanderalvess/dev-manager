@@ -43,17 +43,86 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 
 ---
 
-### 2. 🗄️ Database Studio Multi-Vendor
+### 2. 🗄️ Database Studio Multi-Vendor & Central de Backup
 * **Suporte a Múltiplos Bancos de Dados:**
   * Conexão e execução direta para **Oracle Database** (`oracledb`), **PostgreSQL** (`pg`) e **MySQL** (`mysql2`).
+  * Conexões salvas localmente com teste instantâneo de conectividade e status visual.
 * **Inspetor de Tabelas e Colunas:**
   * Barra lateral com listagem dinâmica de tabelas e expansão sob demanda para exibir colunas, tipos de dados, chaves primárias (PK) e nulabilidade.
-  * Inserção rápida de nomes de colunas ou `SELECT` no editor com 1 clique.
+  * Inserção rápida de nomes de colunas ou cláusulas `SELECT` no editor com 1 clique.
 * **Histórico Persistente de Consultas:**
-  * Registro automático de queries executadas com tempo de resposta e quantidade de linhas retornadas, salvo localmente.
-  * Reutilização, cópia rápida ou reexecução direta do histórico.
+  * Registro automático de queries executadas com tempo de resposta em milissegundos e quantidade de linhas retornadas, salvo localmente.
+  * Reutilização, cópia rápida ou reexecução direta a partir do histórico (`Ctrl + Enter` para executar).
 * **Biblioteca de Snippets Rápidos e Customizados:**
   * Snippets de fábrica (`SELECT`, `COUNT`, `JOIN`, `DDL`) e criação de snippets próprios do desenvolvedor para acelerar consultas recorrentes.
+
+#### 🛡️ Central de Backup & Restauração Integrada (5 Abas de Controle)
+O Dev Manager conta com uma central avançada de backup acessível pelo botão **Backup & Restore**:
+1. **Executar Backup:**
+   * Seleção de banco/schema, escolha da pasta de destino com seletor nativo e alternância entre **Modo Padrão** e **Comando Personalizado**.
+   * Console de terminal integrado com streaming de log ao vivo da saída da ferramenta CLI (`expdp`, `exp`, `pg_dump`, `mysqldump`).
+   * Cálculo automático de hash de integridade **SHA-256**, tamanho do arquivo e tempo de execução.
+2. **Agendamento & Retenção:**
+   * Criação de agendamentos automatizados com expressões **Cron** (ex: `0 2 * * *` para diário às 02h00).
+   * **Política de Retenção Inteligente:** expurgo automático configurável por dias de retenção (`maxAgeDays`) ou quantidade máxima de backups (`maxCount`), liberando espaço em disco sem intervenção manual.
+3. **Gerenciador de Arquivos de Dump:**
+   * Inventário local dos backups gerados na pasta de destino com data, tamanho, hash SHA-256, botão de exclusão e atalho de restauração imediata.
+4. **Histórico de Execuções:**
+   * Auditoria completa com filtros de status (*Sucesso*, *Falha*, *Executando*), duração e modal para inspeção do log completo de saída.
+5. **Webhooks de Notificação:**
+   * Disparo automático de notificações HTTP para canais do **Discord**, **Slack** ou **Microsoft Teams** ao concluir ou falhar um backup.
+
+#### ⚙️ Modo de Comando Personalizado & Compatibilidade Oracle (11g vs 12c vs 19c)
+Ambientes de desenvolvimento do ecossistema WinThor frequentemente utilizam diferentes versões do Oracle:
+* **Incompatibilidade de Versões no Data Pump (`expdp`):** Ao exportar dados entre instâncias 19c e 11g/12c, o `expdp` padrão pode gerar dumps incompatíveis. Ativando o comando personalizado, você pode incluir facilmente parâmetros como `VERSION=11.2` e `EXCLUDE=STATISTICS`.
+* **Oracle em Servidor Remoto ou Docker (`exp` clássico):** O utilitário `expdp` roda estritamente no servidor e grava o dump no diretório interno `DATA_PUMP_DIR`. Em ambientes onde o desenvolvedor não tem acesso ao sistema de arquivos do servidor, basta usar o preset do utilitário clássico **`exp`**, que grava o arquivo `.dmp` diretamente no disco local da máquina do cliente.
+
+#### 🏷️ Tabela de Placeholders Dinâmicos
+Ao personalizar comandos de backup, utilize os seguintes marcadores dinâmicos que são substituídos em tempo de execução:
+
+| Placeholder | Descrição | Exemplo de Saída |
+| :--- | :--- | :--- |
+| `{filePath}` | Caminho absoluto do arquivo gerado *(obrigatório `{filePath}` ou `{fileName}`)* | `C:\backups\db_backup_20260916.dmp` |
+| `{fileName}` | Nome do arquivo de dump com extensão | `db_backup_20260916.dmp` |
+| `{folder}` | Pasta de destino selecionada | `C:\backups` |
+| `{host}` | Host / IP do servidor de banco | `192.168.1.100` ou `localhost` |
+| `{port}` | Porta de conexão do banco de dados | `1521` (Oracle), `5432` (PG), `3306` (MySQL) |
+| `{user}` | Usuário autenticado | `SYSTEM` ou `postgres` |
+| `{password}` | Senha do banco (mascarada na UI, injetada na execução) | `******` |
+| `{connectString}` | String de conexão Oracle no formato `host:port/service` | `localhost:1521/XEPDB1` |
+| `{schema}` | Schema ou usuário alvo selecionado | `PRODUCAO` |
+| `{database}` | Nome da base de dados ou SID/Service | `winthor` |
+| `{timestamp}` | Carimbo de data/hora atual no formato `YYYYMMDD_HHmmss` | `20260916_103000` |
+
+#### ⚡ Presets de Fábrica com 1 Clique
+* **Oracle Data Pump Padrão:**
+  ```bash
+  expdp {user}/{password}@{connectString} schemas={schema} directory=DATA_PUMP_DIR dumpfile={fileName} logfile=expdp_{timestamp}.log reuse_dumpfiles=y
+  ```
+* **Oracle Data Pump Compatível 11g / 12c:**
+  ```bash
+  expdp {user}/{password}@{connectString} schemas={schema} directory=DATA_PUMP_DIR dumpfile={fileName} logfile=expdp_{timestamp}.log version=11.2 exclude=statistics reuse_dumpfiles=y
+  ```
+* **Oracle Utilitário Clássico (Exportação Local Direta):**
+  ```bash
+  exp {user}/{password}@{connectString} file="{filePath}" log="{folder}/exp_{timestamp}.log" owner={schema} direct=y statistics=none
+  ```
+* **PostgreSQL (`pg_dump` custom format):**
+  ```bash
+  pg_dump -h {host} -p {port} -U {user} -F c -b -v -f "{filePath}" {database}
+  ```
+* **MySQL (`mysqldump` transacional):**
+  ```bash
+  mysqldump -h {host} -P {port} -u {user} -p{password} --single-transaction --quick {database} > "{filePath}"
+  ```
+
+#### 🧪 Prática Recomendada: Restore Drill em Banco Scratch / Teste
+Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a função de **Restauração** em um banco de teste temporário (*scratch database*). Isso garante a validação da integridade física e lógica do arquivo de dump sem nenhum risco de sobrescrita acidental no ambiente principal.
+
+#### 🔒 Segurança Operacional
+* **Execução Segura:** Comandos são executados internamente via `execFile` sem inicialização de interpretador de terminal arbitrário (`cmd.exe`/`sh`), prevenindo shell injection.
+* **Proteção de Credenciais:** As senhas são mascaradas (`****`) por padrão no editor de comando, com botão de alternância de visibilidade para conferência temporária antes do disparo.
+
 
 ---
 

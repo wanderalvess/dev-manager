@@ -783,6 +783,10 @@ export interface BackupConfig {
   compress?: boolean;
   /** Nome do objeto DIRECTORY do Oracle usado pelo expdp (padrão: DATA_PUMP_DIR). Ignorado para outros tipos de banco. */
   oracleDirectory?: string;
+  /** Se o backup desta conexão deve executar via comando customizado em vez do comando padrão. */
+  useCustomCommand?: boolean;
+  /** Template do comando customizado a ser executado para esta conexão (requer placeholder {filePath}). */
+  customCommand?: string;
   lastRunAt?: string;
   lastSuccess?: boolean;
   lastMessage?: string;
