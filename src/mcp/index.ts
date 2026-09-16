@@ -743,7 +743,7 @@ server.registerTool(
     }
   },
   async ({ bundleId, newVersionOrLocation, credentials }) =>
-    ok(await karafService.updateBundleVersion({ bundleId, newVersionOrLocation }, credentials))
+    ok(await karafService.updateBundleVersion({ bundleId, newVersionOrLocation, credentials }))
 );
 
 // --- 3.5. Containers (Docker / Podman) ---

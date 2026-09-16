@@ -557,7 +557,8 @@ export class KarafService {
   public async manageBundle(
     action: BundleAction,
     bundleId: string,
-    credentials?: { user?: string; pass?: string; port?: number }
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
   ): Promise<{ success: boolean; output: string }> {
     if (!BUNDLE_ACTIONS.includes(action)) {
       return { success: false, output: 'Ação de bundle não permitida.' };
@@ -573,6 +574,7 @@ export class KarafService {
       command,
       (chunk) => {
         output += chunk;
+        onChunk(chunk);
       },
       credentials
     );
@@ -820,7 +822,8 @@ export class KarafService {
    */
   public async uninstallBundle(
     bundleId: string,
-    credentials?: { user?: string; pass?: string; port?: number }
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
   ): Promise<{ success: boolean; output: string }> {
     const cleanId = bundleId.trim();
     if (!/^\d+$/.test(cleanId)) {
@@ -832,6 +835,7 @@ export class KarafService {
       `bundle:uninstall ${cleanId}`,
       (chunk) => {
         output += chunk;
+        onChunk(chunk);
       },
       credentials
     );
@@ -839,6 +843,7 @@ export class KarafService {
     if (res.code === 0) {
       await this.executeKarafCommand('bundle:refresh', (chunk) => {
         output += chunk;
+        onChunk(chunk);
       }, credentials);
     }
 
@@ -919,7 +924,7 @@ export class KarafService {
    */
   public async updateBundleVersion(
     request: UpdateBundleVersionRequest,
-    credentials?: { user?: string; pass?: string; port?: number }
+    onChunk: (chunk: string) => void = () => {}
   ): Promise<{ success: boolean; output: string }> {
     const cleanId = request.bundleId.trim();
     if (!/^\d+$/.test(cleanId)) {
@@ -941,17 +946,20 @@ export class KarafService {
       cmd,
       (chunk) => {
         output += chunk;
+        onChunk(chunk);
       },
-      credentials
+      request.credentials
     );
 
     if (res.code === 0) {
       await this.executeKarafCommand(`bundle:refresh ${cleanId}`, (chunk) => {
         output += chunk;
-      }, credentials);
+        onChunk(chunk);
+      }, request.credentials);
       await this.executeKarafCommand(`bundle:start ${cleanId}`, (chunk) => {
         output += chunk;
-      }, credentials);
+        onChunk(chunk);
+      }, request.credentials);
     }
 
     return {

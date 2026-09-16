@@ -31,12 +31,13 @@ export function checkPortOpen(port: number, host: string = '127.0.0.1', timeoutM
 }
 
 /**
- * Resolve o PID do processo em LISTENING numa porta local (Windows, via netstat -ano).
- * Usado para diferenciar "senha incorreta" de "porta local já ocupada por outro processo"
- * (ex: túnel SSH que perdeu o bind de -L para um serviço nativo já rodando na mesma porta).
- * Fora do Windows retorna undefined — não há necessidade comprovada de suportar outras plataformas aqui.
+ * Resolve o PID e o nome do processo em LISTENING numa porta local (Windows, via netstat -ano
+ * e tasklist). Usado para diferenciar "senha incorreta" de "porta local já ocupada por outro
+ * processo" (ex: túnel SSH que perdeu o bind de -L para um serviço nativo já rodando na mesma
+ * porta). Fora do Windows retorna undefined — não há necessidade comprovada de suportar outras
+ * plataformas aqui.
  */
-export async function getListeningPid(port: number): Promise<string | undefined> {
+export async function getListeningPid(port: number): Promise<{ pid: string; processName: string } | undefined> {
   if (process.platform !== 'win32') return undefined;
   try {
     const { stdout } = await execFileAsync('netstat.exe', ['-ano']);
@@ -48,7 +49,11 @@ export async function getListeningPid(port: number): Promise<string | undefined>
       );
     if (!line) return undefined;
     const tokens = line.trim().split(/\s+/);
-    return tokens[tokens.length - 1];
+    const pid = tokens[tokens.length - 1];
+
+    const { stdout: taskOut } = await execFileAsync('tasklist.exe', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH']);
+    const processName = taskOut.split(',')[0]?.replace(/"/g, '').trim() || '';
+    return { pid, processName };
   } catch {
     return undefined;
   }

@@ -744,10 +744,21 @@ export class DatabaseService {
     const loopbackHosts = ['localhost', '127.0.0.1', '::1'];
     if (!loopbackHosts.includes((config.host || '').toLowerCase())) return '';
 
-    const pid = await getListeningPid(config.port);
-    if (!pid) return '';
+    const listener = await getListeningPid(config.port);
+    if (!listener) return '';
 
-    return ` Atenção: a porta ${config.port} em ${config.host} já está em uso pelo processo PID ${pid} nesta máquina — confirme que não é outro banco de dados antes de revisar usuário/senha (sintoma comum de túnel SSH -L que não conseguiu abrir a porta local e caiu num serviço já existente ali).`;
+    const expectedProcessNames: Record<DatabaseConnectionConfig['type'], string[]> = {
+      postgres: ['postgres'],
+      mysql: ['mysqld', 'mysql'],
+      oracle: ['oracle', 'tnslsnr']
+    };
+    const name = listener.processName.toLowerCase();
+    const looksLikeExpectedEngine = (expectedProcessNames[config.type] || []).some((keyword) =>
+      name.includes(keyword)
+    );
+    if (looksLikeExpectedEngine) return '';
+
+    return ` Atenção: a porta ${config.port} em ${config.host} já está em uso pelo processo "${listener.processName}" (PID ${listener.pid}) nesta máquina, que não parece ser um ${config.type.toUpperCase()} — confirme que não é outro banco de dados antes de revisar usuário/senha (sintoma comum de túnel SSH -L que não conseguiu abrir a porta local e caiu num serviço já existente ali).`;
   }
 
   private async formatErrorMessage(err: any, config: DatabaseConnectionConfig): Promise<string> {

@@ -71,8 +71,8 @@ describe('DatabaseService', () => {
     expect(dpi1047).toContain('oci.dll');
   });
 
-  it('avisa sobre porta local ocupada quando auth falha num host loopback', async () => {
-    const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue('1234');
+  it('avisa sobre porta local ocupada quando o processo não parece ser o banco esperado', async () => {
+    const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue({ pid: '1234', processName: 'nginx.exe' });
     try {
       const msg = await (service as any).formatErrorMessage(new Error('password authentication failed for user "x"'), {
         type: 'postgres',
@@ -86,8 +86,23 @@ describe('DatabaseService', () => {
     }
   });
 
+  it('não avisa sobre porta local quando o processo já é o banco esperado', async () => {
+    const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue({ pid: '1234', processName: 'postgres.exe' });
+    try {
+      const msg = await (service as any).formatErrorMessage(new Error('password authentication failed for user "x"'), {
+        type: 'postgres',
+        host: 'localhost',
+        port: 5432
+      });
+      expect(msg).toContain('Falha de autenticação');
+      expect(msg).not.toContain('PID');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('não avisa sobre porta local quando o host não é loopback', async () => {
-    const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue('1234');
+    const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue({ pid: '1234', processName: 'nginx.exe' });
     try {
       const msg = await (service as any).formatErrorMessage(new Error('password authentication failed for user "x"'), {
         type: 'postgres',
