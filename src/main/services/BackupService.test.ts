@@ -2,7 +2,13 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { describe, expect, it, vi } from 'vitest';
-import { BackupService } from './BackupService';
+import {
+  BackupService,
+  buildBackupPlaceholders,
+  interpolateBackupTemplate,
+  parseCommandLineTokens,
+  maskSensitiveText
+} from './BackupService';
 import { DatabaseConnectionConfig } from '../../shared/types';
 
 describe('BackupService', () => {
@@ -96,14 +102,10 @@ describe('BackupService', () => {
     };
 
     const destFolder = 'C:\\Backups\\Oracle';
-    const placeholders = (require('./BackupService') as typeof import('./BackupService')).buildBackupPlaceholders(
-      config,
-      destFolder,
-      { oracleDirectory: 'MEU_DIR' }
-    );
+    const placeholders = buildBackupPlaceholders(config, destFolder, { oracleDirectory: 'MEU_DIR' });
 
     const template = 'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user} version=11.2';
-    const resolved = (require('./BackupService') as typeof import('./BackupService')).interpolateBackupTemplate(template, placeholders);
+    const resolved = interpolateBackupTemplate(template, placeholders);
 
     expect(resolved).toContain('WINTHOR@192.168.1.100:1521/ORCL');
     expect(resolved).toContain('directory=MEU_DIR');
@@ -112,7 +114,6 @@ describe('BackupService', () => {
   });
 
   it('tokeniza argumentos de linha de comando respeitando aspas sem invocar shell', () => {
-    const { parseCommandLineTokens } = require('./BackupService') as typeof import('./BackupService');
     const cmd = 'exp user/pwd@host:1521/xe file="C:\\Minha Pasta\\backup.dmp" log="C:\\Minha Pasta\\backup.log" buffer=65536';
     const tokens = parseCommandLineTokens(cmd);
 
@@ -126,7 +127,6 @@ describe('BackupService', () => {
   });
 
   it('mascara senhas sensíveis em saídas de log e mensagens de erro', () => {
-    const { maskSensitiveText } = require('./BackupService') as typeof import('./BackupService');
     const sensitive = 'minha_senha_secreta';
     const output = 'Erro ao conectar com user/minha_senha_secreta@localhost:1521: ORA-01017';
     const masked = maskSensitiveText(output, sensitive);
