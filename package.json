@@ -1,6 +1,6 @@
 {
   "name": "dev-manager",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "type": "module",
   "description": "Cockpit e Painel de Automação para Desenvolvedores e Apache Karaf OSGi",
   "main": "dist-electron/main/index.js",
