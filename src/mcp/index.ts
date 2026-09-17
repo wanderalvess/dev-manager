@@ -15,6 +15,7 @@ import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
+import { analyzeExplainPlan } from '../main/services/explainAnalyzer';
 import type { AppSettings, DatabaseConnectionConfig, DeployProfile } from '../shared/types';
 
 // --- Composição dos serviços (mesma ordem usada em src/server/index.ts e src/main/index.ts) ---
@@ -746,6 +747,122 @@ server.registerTool(
     ok(await karafService.updateBundleVersion({ bundleId, newVersionOrLocation, credentials }))
 );
 
+server.registerTool(
+  'karaf_detect_wiring_conflicts',
+  {
+    title: 'Detectar conflitos de fiação (wiring) e pacotes OSGi',
+    description:
+      'Analisa os bundles do Apache Karaf detectando estados não ativos (Resolved/Installed/Failure) e colisões de versão do mesmo symbolicName (split packages/classloader conflicts), retornando diagnósticos e ações recomendadas.',
+    inputSchema: {
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ credentials }) => {
+    const bundles = await karafService.listBundlesParsed(credentials);
+    if (!bundles || bundles.length === 0) {
+      return fail('Não foi possível listar os bundles do Karaf. Verifique se o Karaf está em execução e as credenciais SSH/porta.');
+    }
+
+    // 1. Bundles não-ativos
+    const nonActiveBundles = bundles.filter((b) => b.state !== 'Active');
+
+    // 2. Colisões de versão (mesmo symbolicName ou name com múltiplas instâncias)
+    const bySymbolicName = new Map<string, typeof bundles>();
+    for (const b of bundles) {
+      const key = (b.symbolicName || b.name || '').trim();
+      if (!key || key.startsWith('Bundle ')) continue;
+      if (!bySymbolicName.has(key)) {
+        bySymbolicName.set(key, []);
+      }
+      bySymbolicName.get(key)!.push(b);
+    }
+
+    const duplicateBundles = Array.from(bySymbolicName.entries())
+      .filter(([_, list]) => list.length > 1)
+      .map(([name, list]) => ({
+        symbolicName: name,
+        instances: list.map((b) => ({ id: b.id, version: b.version, state: b.state })),
+        hasMultipleActive: list.filter((b) => b.state === 'Active').length > 1
+      }));
+
+    // Coletar diagnóstico para os primeiros bundles não ativos (máx 5 para evitar overhead de comando SSH)
+    const unresolvedDetails: Array<{ id: string; name: string; state: string; diag?: string }> = [];
+    for (const b of nonActiveBundles.slice(0, 5)) {
+      let diagText: string | undefined;
+      try {
+        const diagRes = await karafService.executeKarafCommand(`bundle:diag ${b.id}`, () => {}, credentials);
+        if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
+          diagText = diagRes.stdout.trim();
+        }
+      } catch {
+        // fallback silencioso se diag falhar
+      }
+      unresolvedDetails.push({
+        id: b.id,
+        name: b.symbolicName || b.name,
+        state: b.state,
+        diag: diagText
+      });
+    }
+
+    const conflicts: Array<{
+      severity: 'high' | 'medium' | 'low';
+      title: string;
+      description: string;
+      recommendation: string;
+      bundleIds: string[];
+    }> = [];
+
+    // Gerar conflitos para versões duplicadas ativas
+    for (const dup of duplicateBundles) {
+      if (dup.hasMultipleActive) {
+        conflicts.push({
+          severity: 'high',
+          title: `Múltiplas versões ativas de ${dup.symbolicName}`,
+          description: `O bundle '${dup.symbolicName}' possui ${dup.instances.length} versões instaladas sendo mais de uma no estado 'Active'. Isso pode causar ClassCastException ou conflito de export/import package OSGi.`,
+          recommendation: `Desinstale a versão obsoleta com 'bundle:uninstall <ID>' ou use a ferramenta 'karaf_uninstall_bundle'.`,
+          bundleIds: dup.instances.map((i) => i.id)
+        });
+      } else {
+        conflicts.push({
+          severity: 'medium',
+          title: `Múltiplas instâncias instaladas de ${dup.symbolicName}`,
+          description: `Existem ${dup.instances.length} versões registradas (${dup.instances.map((i) => `${i.version} [${i.state}]`).join(', ')}).`,
+          recommendation: `Verifique se as versões inativas são necessárias ou remova-as para economizar memória e evitar ambiguidades.`,
+          bundleIds: dup.instances.map((i) => i.id)
+        });
+      }
+    }
+
+    // Gerar conflitos para bundles em estado Installed ou Resolved
+    for (const b of nonActiveBundles) {
+      conflicts.push({
+        severity: b.state === 'Installed' || b.state === 'Resolved' ? 'medium' : 'low',
+        title: `Bundle ${b.id} (${b.symbolicName || b.name}) em estado '${b.state}'`,
+        description: `O bundle não está ativo no runtime OSGi.`,
+        recommendation: `Execute 'bundle:diag ${b.id}' para verificar dependências ausentes (Unsatisfied Requirements) ou 'bundle:start ${b.id}' para iniciá-lo.`,
+        bundleIds: [b.id]
+      });
+    }
+
+    const healthy = conflicts.filter((c) => c.severity === 'high').length === 0 && nonActiveBundles.length === 0;
+
+    return ok({
+      healthy,
+      summary: {
+        totalBundles: bundles.length,
+        activeBundles: bundles.filter((b) => b.state === 'Active').length,
+        nonActiveBundlesCount: nonActiveBundles.length,
+        duplicateSymbolicNamesCount: duplicateBundles.length,
+        highSeverityConflicts: conflicts.filter((c) => c.severity === 'high').length
+      },
+      conflicts,
+      unresolvedDiagnostics: unresolvedDetails,
+      duplicates: duplicateBundles
+    });
+  }
+);
+
 // --- 3.5. Containers (Docker / Podman) ---
 server.registerTool(
   'docker_status',
@@ -1252,6 +1369,33 @@ server.registerTool(
     }
     const result = await databaseService.explainPlan(targetConfig, sql);
     return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_analyze_explain_plan',
+  {
+    title: 'Analisar Explain Plan no banco com Heurísticas',
+    description:
+      'Obtém o plano de execução SQL no Oracle, PostgreSQL ou MySQL e realiza análise heurística automática apontando Full Table Scans, produtos cartesianos, falta de índices, ordenações em disco e recomendações de otimização.',
+    inputSchema: {
+      sql: z.string(),
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional()
+    }
+  },
+  async ({ sql, connectionId, config }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const explainResult = await databaseService.explainPlan(targetConfig, sql);
+    const analysis = analyzeExplainPlan(explainResult.planLines, targetConfig.type, sql);
+    return ok({
+      dbType: targetConfig.type,
+      plan: explainResult,
+      analysis
+    });
   }
 );
 
