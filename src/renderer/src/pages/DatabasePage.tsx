@@ -188,7 +188,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     setCustomSnippets(newSnippets);
     try {
       localStorage.setItem('devManager:customSnippets', JSON.stringify(newSnippets));
-    } catch {}
+    } catch {
+      // Ignore storage errors
+    }
     if (window.electronAPI?.saveSettings) {
       await window.electronAPI.saveSettings({ savedSqlSnippets: newSnippets });
     }
@@ -386,7 +388,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
         const updated = [historyItem, ...prev.filter((h) => h.sql !== historyItem.sql).slice(0, 49)];
         try {
           localStorage.setItem('devManager:dbHistory', JSON.stringify(updated));
-        } catch {}
+        } catch {
+          // Ignore storage errors
+        }
         return updated;
       });
     } catch (err: any) {
@@ -465,7 +469,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
       setHistory([]);
       try {
         localStorage.removeItem('devManager:dbHistory');
-      } catch {}
+      } catch {
+        // Ignore storage errors
+      }
     }
   };
 

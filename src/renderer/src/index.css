@@ -193,3 +193,16 @@
 .radar-live {
   animation: radar-pulse 2s infinite ease-in-out;
 }
+
+@keyframes tour-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-tour-fade {
+  animation: tour-fade 0.18s ease-out;
+}

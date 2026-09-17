@@ -43,7 +43,6 @@ import {
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
-  LogWatchStatus,
   LogChunkEvent
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';

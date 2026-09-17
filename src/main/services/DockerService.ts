@@ -5,7 +5,6 @@ import {
   DockerDaemonStatus,
   DockerContainerStats,
   ComposeServiceStatus,
-  WslDistroInfo,
   OracleMaintenanceResult,
   OracleDataPumpParams
 } from '../../shared/types';
@@ -131,7 +130,7 @@ export class DockerService {
           wslDistro: this.targetWslDistro,
           availableDistros
         };
-      } catch (err: any) {
+      } catch {
         return {
           installed: true,
           running: false,
@@ -759,7 +758,7 @@ export class DockerService {
       throw new Error('Identificador de container inválido.');
     }
     const cleanUser = user.replace(/[^a-zA-Z0-9_]/g, '') || 'sys';
-    const cleanPass = (password || 'password').replace(/[^a-zA-Z0-9_!@#%^*+=.\-]/g, '');
+    const cleanPass = (password || 'password').replace(/[^a-zA-Z0-9_!@#%^*+=.-]/g, '');
 
     const cmdInside = `/home/oracle/tools/sqlplus_conn.sh ${cleanUser} ${cleanPass}`;
 

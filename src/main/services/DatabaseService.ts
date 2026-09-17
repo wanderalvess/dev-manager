@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
-import { DatabaseConnectionConfig, QueryResult, TableInfo, TableColumnInfo, ExplainPlanResult } from '../../shared/types';
+import { DatabaseConnectionConfig, QueryResult, TableColumnInfo, ExplainPlanResult } from '../../shared/types';
 import { getListeningPid } from '../utils/network';
 
 const __filename = fileURLToPath(import.meta.url);

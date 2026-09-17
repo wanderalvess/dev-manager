@@ -131,7 +131,7 @@ export function sanitizeDocPathInfo(rawSourceLabel: string, rawEntryTitle: strin
   const normalizedTitle = (rawEntryTitle || '').replace(/\\/g, '/').replace(/^\/+/, '');
 
   // 2. Extrai nome limpo da pasta/fonte a partir do sourceLabel
-  let baseFolder = (rawSourceLabel || '').replace(/\\/g, '/').replace(/\/+$/, '');
+  const baseFolder = (rawSourceLabel || '').replace(/\\/g, '/').replace(/\/+$/, '');
   let folderName = baseFolder.split('/').pop() || 'DevManager';
 
   if (['docs', 'doc', 'documentacao', 'documentation', 'wiki'].includes(folderName.toLowerCase())) {
