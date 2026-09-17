@@ -85,6 +85,7 @@ export class LocalFolderSource implements DocSource {
             continue;
           }
           const maxSize = BINARY_EXTENSIONS.includes(ext) ? MAX_BINARY_FILE_SIZE_BYTES : MAX_TEXT_FILE_SIZE_BYTES;
+          if (stat.size > maxSize) continue;
           const relTitle = path.relative(this.rootPath, full).replace(/\\/g, '/');
           entries.push({ id: full, title: relTitle, mtimeMs: stat.mtimeMs });
         }

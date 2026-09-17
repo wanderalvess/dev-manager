@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
       try {
         const metrics = await window.electronAPI.getSystemMetrics();
         setSystemMetrics(metrics);
-      } catch (err) {
+      } catch {
         // Silencioso em caso de indisponibilidade
       }
     }

@@ -2,7 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import os from 'os';
-import path from 'path';
 import { ConfigService } from '../main/services/ConfigService';
 import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';

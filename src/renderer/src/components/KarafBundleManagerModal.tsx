@@ -180,7 +180,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     setSnapshots(updated);
     try {
       localStorage.setItem('devManager:bundleSnapshots', JSON.stringify(updated));
-    } catch {}
+    } catch {
+      // Ignore storage errors
+    }
     setNewSnapshotLabel('');
     setSelectedSnapshot(snap);
   };
@@ -192,7 +194,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     if (selectedSnapshot?.id === id) setSelectedSnapshot(null);
     try {
       localStorage.setItem('devManager:bundleSnapshots', JSON.stringify(updated));
-    } catch {}
+    } catch {
+      // Ignore storage errors
+    }
   };
 
   const snapshotDiff = useMemo<BundleSnapshotDiff | null>(() => {

@@ -162,5 +162,7 @@ export function saveBindCache(values: Record<string, string>): void {
     const current = loadBindCache();
     const updated = { ...current, ...values };
     localStorage.setItem(BIND_CACHE_KEY, JSON.stringify(updated));
-  } catch {}
+  } catch {
+    // Ignore storage errors
+  }
 }

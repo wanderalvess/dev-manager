@@ -4,7 +4,6 @@ import path from 'path';
 import os from 'os';
 import { DocsIndexService, DocSyncService, chunkText, cosineSimilarity, textRelevanceScore, computeArticleId, sanitizeDocPathInfo } from './DocsIndexService';
 import { ConfigService } from './ConfigService';
-import { GitAzureService } from './GitAzureService';
 import { DocSyncTargetConfig } from '../../shared/types';
 import { httpRequest } from '../utils/httpRequest';
 
@@ -113,7 +112,9 @@ describe('DocsIndexService Lifecycle and Search', () => {
     vi.unstubAllEnvs();
     try {
       fs.rmSync(tempDir, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // ignore cleanup errors
+    }
   });
 
   it('deve inicializar e reportar status vazio se não houver arquivo docs-index.json', () => {

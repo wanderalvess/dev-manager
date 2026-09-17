@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
-  FileText,
   Code,
   BookOpen,
   Copy,
@@ -18,8 +17,6 @@ import {
   AlertCircle,
   Flame,
   ChevronRight,
-  ZoomIn,
-  ZoomOut,
   Hash,
   Clock,
   Database
@@ -481,7 +478,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
         while (i < lines.length && (/^[-*+]\s+/.test(lines[i].trim()) || /^\d+\.\s+/.test(lines[i].trim()))) {
           const curTrim = lines[i].trim();
           const isOrdered = /^\d+\.\s+/.test(curTrim);
-          let itemText = curTrim.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '');
+          const itemText = curTrim.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '');
 
           // Checkbox [- [x]] ou [- [ ]]
           const taskMatch = itemText.match(/^\[([ xX])\]\s+(.*)$/);
