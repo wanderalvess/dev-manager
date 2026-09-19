@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sun, Moon, Flame, Zap, Check, Palette } from 'lucide-react';
+import { Sun, Moon, Flame, Zap, Cpu, Sparkles, Snowflake, Check, Palette } from 'lucide-react';
 import { useTheme, ThemeVariant } from '../context/ThemeContext';
 
 export const ThemeToggle: React.FC = () => {
@@ -31,6 +31,22 @@ export const ThemeToggle: React.FC = () => {
     };
   }, [isOpen]);
 
+  const getIndicatorDot = (v: ThemeVariant) => {
+    switch (v) {
+      case 'midnight':
+        return 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]';
+      case 'cyberpunk':
+        return 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
+      case 'nebula':
+        return 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]';
+      case 'nordic':
+        return 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]';
+      case 'default':
+      default:
+        return 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]';
+    }
+  };
+
   const variantsList: {
     id: ThemeVariant;
     label: string;
@@ -42,7 +58,7 @@ export const ThemeToggle: React.FC = () => {
     {
       id: 'default',
       label: 'Cockpit Âmbar',
-      description: 'Laranja Solar & Slate Cockpit',
+      description: mode === 'light' ? 'Laranja Solar & Canvas Âmbar' : 'Laranja Solar & Slate Cockpit',
       icon: Flame,
       colorClass: 'text-orange-500',
       bgPreview: 'bg-orange-500'
@@ -50,10 +66,34 @@ export const ThemeToggle: React.FC = () => {
     {
       id: 'midnight',
       label: 'Midnight Tech',
-      description: 'Azul Elétrico & Pitch Black',
+      description: mode === 'light' ? 'Azul Safira & Clean Tech' : 'Azul Elétrico & Pitch Black',
       icon: Zap,
-      colorClass: 'text-blue-400',
+      colorClass: mode === 'light' ? 'text-blue-600' : 'text-blue-400',
       bgPreview: 'bg-blue-500'
+    },
+    {
+      id: 'cyberpunk',
+      label: 'Cyberpunk',
+      description: mode === 'light' ? 'Verde Esmeralda & Mint Fresh' : 'Verde Neon & Cyber Void',
+      icon: Cpu,
+      colorClass: mode === 'light' ? 'text-emerald-600' : 'text-emerald-400',
+      bgPreview: 'bg-emerald-500'
+    },
+    {
+      id: 'nebula',
+      label: 'Nebula',
+      description: mode === 'light' ? 'Violeta Real & Soft Lilac' : 'Roxo Cósmico & Deep Void',
+      icon: Sparkles,
+      colorClass: mode === 'light' ? 'text-purple-600' : 'text-purple-400',
+      bgPreview: 'bg-purple-500'
+    },
+    {
+      id: 'nordic',
+      label: 'Nordic Frost',
+      description: mode === 'light' ? 'Ciano Ártico & Gelo Polar' : 'Ciano Glacial & Noite Ártica',
+      icon: Snowflake,
+      colorClass: mode === 'light' ? 'text-cyan-600' : 'text-cyan-400',
+      bgPreview: 'bg-cyan-500'
     }
   ];
 
@@ -81,11 +121,7 @@ export const ThemeToggle: React.FC = () => {
 
         {/* Indicador de cor do estilo ativo */}
         <span
-          className={`w-2 h-2 rounded-full ring-2 ring-background ${
-            variant === 'midnight'
-              ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]'
-              : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]'
-          }`}
+          className={`w-2 h-2 rounded-full ring-2 ring-background ${getIndicatorDot(variant)}`}
         />
 
         <Palette className="w-3.5 h-3.5 text-muted-foreground" />
@@ -95,7 +131,7 @@ export const ThemeToggle: React.FC = () => {
       {isOpen && (
         <div
           style={{ backgroundColor: 'hsl(var(--card))' }}
-          className="absolute right-0 mt-2 w-72 origin-top-right rounded-xl bg-card border border-border/80 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-80 max-h-[85vh] overflow-y-auto origin-top-right rounded-xl bg-card border border-border/80 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
           role="menu"
         >
           {/* Cabeçalho */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Layers,
   Play,
@@ -18,12 +18,24 @@ import {
   Square,
   X,
   Clock,
-  Sparkles
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+  Download,
+  Upload,
+  History
 } from 'lucide-react';
-import { GitProjectInfo, DeployProfile, DeployStep } from '../../../shared/types';
+import {
+  GitProjectInfo,
+  DeployProfile,
+  DeployStep,
+  DeployProgressEvent,
+  DeployProfileHistoryEntry
+} from '../../../shared/types';
 import { TerminalViewer } from '../components/TerminalViewer';
 import { DeployProfileEditorModal } from '../components/DeployProfileEditorModal';
 import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
+import { DeployHistoryModal } from '../components/DeployHistoryModal';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DEPLOY_TOUR_STEPS, DEPLOY_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/deployTour';
@@ -46,12 +58,22 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
   const [runningStepId, setRunningStepId] = useState<string | null>(null);
   const [stepExecutionTimes, setStepExecutionTimes] = useState<Record<string, number>>({});
+  const [stepStatuses, setStepStatuses] = useState<
+    Record<string, { status: 'running' | 'completed' | 'failed' | 'skipped'; durationMs?: number; ignoredError?: boolean; error?: string }>
+  >({});
+  const [currentProgress, setCurrentProgress] = useState<{ current: number; total: number; stepId: string } | null>(null);
+
   const [isDiagRunning, setIsDiagRunning] = useState<string | null>(null);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const streamRemainderRef = useRef<string>('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Modal e Gestão de Bundles OSGi
+  // Modal de Histórico e Gestão de Bundles OSGi
   const [isBundlesModalOpen, setIsBundlesModalOpen] = useState<boolean>(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
+  const [historyList, setHistoryList] = useState<DeployProfileHistoryEntry[]>([]);
+  const [isConsoleMaximized, setIsConsoleMaximized] = useState<boolean>(false);
 
   const activeProfile = useMemo(() => {
     if (!profiles || profiles.length === 0) return null;
@@ -87,26 +109,85 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     }
   }, [settingsVersion]);
 
-  // Listeners de log em tempo real (registrados uma vez na montagem)
+  // Descarrega qualquer resto de linha pendente no buffer do stream
+  const flushRemainder = () => {
+    if (streamRemainderRef.current) {
+      const leftover = streamRemainderRef.current;
+      streamRemainderRef.current = '';
+      setTerminalLogs((prev) => {
+        const next = [...prev, leftover];
+        return next.length > 5000 ? next.slice(next.length - 5000) : next;
+      });
+    }
+  };
+
+  // Listeners de log e progresso em tempo real
   useEffect(() => {
     if (!window.electronAPI) return;
 
     const appendChunks = (chunk: string) => {
-      const rawLines = chunk.split(/\r?\n/);
-      const linesToAdd = rawLines.length === 1 ? [rawLines[0]] : rawLines.filter((l, i) => i < rawLines.length - 1 || l.length > 0);
-      setTerminalLogs((prev) => {
-        const next = [...prev, ...linesToAdd];
-        return next.length > 2000 ? next.slice(next.length - 2000) : next;
-      });
+      const text = streamRemainderRef.current + chunk;
+      const lines = text.split(/\r?\n/);
+      streamRemainderRef.current = lines.pop() ?? '';
+
+      if (lines.length > 0) {
+        setTerminalLogs((prev) => {
+          const next = [...prev, ...lines];
+          return next.length > 5000 ? next.slice(next.length - 5000) : next;
+        });
+      }
     };
 
     const unsubDeploy = window.electronAPI.onDeployLogChunk(appendChunks);
     const unsubKaraf = window.electronAPI.onKarafLogChunk(appendChunks);
+
+    const unsubProgress = window.electronAPI.onDeployStepProgress
+      ? window.electronAPI.onDeployStepProgress((progress: DeployProgressEvent) => {
+          setStepStatuses((prev) => ({
+            ...prev,
+            [progress.stepId]: {
+              status: progress.status,
+              durationMs: progress.durationMs,
+              ignoredError: progress.ignoredError,
+              error: progress.error
+            }
+          }));
+
+          if (progress.status === 'running') {
+            setRunningStepId(progress.stepId);
+            setCurrentProgress({
+              current: progress.stepIndex + 1,
+              total: progress.totalSteps,
+              stepId: progress.stepId
+            });
+          }
+
+          if (progress.durationMs !== undefined) {
+            setStepExecutionTimes((prev) => ({
+              ...prev,
+              [progress.stepId]: progress.durationMs!
+            }));
+          }
+        })
+      : () => {};
+
     return () => {
       unsubDeploy();
       unsubKaraf();
+      unsubProgress();
     };
   }, []);
+
+  // Atalho Escape para restaurar console se estiver maximizado
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isConsoleMaximized) {
+        setIsConsoleMaximized(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isConsoleMaximized]);
 
   const persistProfiles = async (updated: DeployProfile[], activeId: string) => {
     setProfiles(updated);
@@ -118,6 +199,8 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
 
   const handleSelectProfile = (id: string) => {
     persistProfiles(profiles, id);
+    setStepStatuses({});
+    setCurrentProgress(null);
   };
 
   const handleSaveProfile = async (saved: DeployProfile) => {
@@ -146,9 +229,79 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     await persistProfiles([...profiles, duplicated], duplicated.id);
   };
 
+  const handleExportProfile = () => {
+    if (!activeProfile) return;
+    const jsonStr = JSON.stringify(activeProfile, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `perfil-deploy-${activeProfile.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportProfileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImportProfileFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || !parsed.name || !Array.isArray(parsed.steps)) {
+        alert('Arquivo JSON inválido para Perfil de Deploy.');
+        return;
+      }
+      const imported: DeployProfile = {
+        ...parsed,
+        id: `deploy-profile-${Date.now()}`,
+        name: `${parsed.name} (Importado)`
+      };
+      await persistProfiles([...profiles, imported], imported.id);
+    } catch (err: any) {
+      alert(`Falha ao importar perfil: ${err?.message || err}`);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleOpenHistory = async () => {
+    if (window.electronAPI?.getDeployProfileHistory) {
+      const history = await window.electronAPI.getDeployProfileHistory();
+      setHistoryList(history || []);
+    }
+    setIsHistoryModalOpen(true);
+  };
+
+  const handleClearHistory = async () => {
+    if (window.electronAPI?.clearDeployProfileHistory) {
+      await window.electronAPI.clearDeployProfileHistory();
+      setHistoryList([]);
+    }
+  };
+
+  const handleAbortDeploy = async () => {
+    if (!isDeploying && !runningStepId) return;
+    try {
+      if (window.electronAPI?.abortDeploy) {
+        await window.electronAPI.abortDeploy();
+        setTerminalLogs((prev) => [...prev, '\r\n[INFO] Solicitando cancelamento da execução do deploy...\r\n']);
+      }
+    } catch (err: any) {
+      setTerminalLogs((prev) => [...prev, `[ERRO] Falha ao abortar deploy: ${err?.message || err}\r\n`]);
+    }
+  };
+
   const handleRunActiveProfile = async () => {
     if (isDeploying || isDiagRunning || !activeProfile) return;
     setIsDeploying(true);
+    setStepStatuses({});
+    const enabledSteps = activeProfile.steps.filter((s) => s.enabled !== false);
+    setCurrentProgress({ current: 0, total: enabledSteps.length, stepId: enabledSteps[0]?.id || '' });
+    streamRemainderRef.current = '';
     setTerminalLogs([]);
 
     try {
@@ -156,22 +309,45 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     } catch (err: any) {
       setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
     } finally {
+      flushRemainder();
       setIsDeploying(false);
+      setCurrentProgress(null);
+      setRunningStepId(null);
     }
   };
 
   const handleRunSingleStep = async (step: DeployStep) => {
     if (isDeploying || runningStepId || isDiagRunning || !window.electronAPI?.runDeployStep) return;
     setRunningStepId(step.id);
+    setStepStatuses((prev) => ({
+      ...prev,
+      [step.id]: { status: 'running' }
+    }));
+    streamRemainderRef.current = '';
     setTerminalLogs([]);
     const startTime = Date.now();
 
     try {
-      await window.electronAPI.runDeployStep(step, activeProfile?.name);
-      setStepExecutionTimes((prev) => ({ ...prev, [step.id]: Date.now() - startTime }));
+      const res = await window.electronAPI.runDeployStep(step, activeProfile?.name);
+      const dur = Date.now() - startTime;
+      setStepExecutionTimes((prev) => ({ ...prev, [step.id]: dur }));
+      setStepStatuses((prev) => ({
+        ...prev,
+        [step.id]: {
+          status: res.success ? 'completed' : 'failed',
+          durationMs: dur,
+          error: res.error
+        }
+      }));
     } catch (err: any) {
+      const dur = Date.now() - startTime;
       setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
+      setStepStatuses((prev) => ({
+        ...prev,
+        [step.id]: { status: 'failed', durationMs: dur, error: err?.message || err }
+      }));
     } finally {
+      flushRemainder();
       setRunningStepId(null);
     }
   };
@@ -179,32 +355,64 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   const handleRunDiagnostic = async (cmd: string, label: string) => {
     if (isDeploying || isDiagRunning) return;
     setIsDiagRunning(label);
-    setTerminalLogs((prev) => [...prev, `\r\n--- Executando Diagnóstico: ${cmd} ---\r\n`]);
+    streamRemainderRef.current = '';
+    setTerminalLogs([`--- Executando Diagnóstico: ${cmd} ---\r\n`]);
 
     try {
-      await window.electronAPI.execKarafDiagnostic(cmd);
+      const res = await window.electronAPI.execKarafDiagnostic(cmd);
+      if (res && res.code !== 0) {
+        setTerminalLogs((prev) => [
+          ...prev,
+          `\r\n[ERRO] Diagnóstico finalizou com código de saída ${res.code}.${res.stderr ? `\r\n${res.stderr}` : ''}\r\n`
+        ]);
+      } else if (res && !res.stdout?.trim() && !res.stderr?.trim()) {
+        if (cmd.includes('log:clear')) {
+          setTerminalLogs((prev) => [
+            ...prev,
+            `[ OK ] Buffer de logs em memória do Karaf (log:clear) limpo com sucesso.\r\n`
+          ]);
+        } else if (cmd.includes('log:display')) {
+          setTerminalLogs((prev) => [
+            ...prev,
+            `[INFO] O buffer de logs em memória do Karaf está vazio no momento.\r\n`
+          ]);
+        } else {
+          setTerminalLogs((prev) => [
+            ...prev,
+            `[ OK ] Comando executado com sucesso (nenhuma saída retornada pelo Karaf).\r\n`
+          ]);
+        }
+      }
     } catch (err: any) {
       setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
     } finally {
+      flushRemainder();
       setIsDiagRunning(null);
     }
   };
 
-
-
   return (
-    <div className="h-full flex flex-col p-5 pb-8 space-y-4 overflow-y-auto">
+    <div className="h-full flex flex-col p-5 pb-8 space-y-4 overflow-y-auto max-w-full overflow-x-hidden">
+      {/* Input oculto para importação de perfil JSON */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleImportProfileFile}
+        accept=".json"
+        className="hidden"
+      />
+
       {/* Cabeçalho de Deploy */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
               <Layers className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 Perfis de Deploy
-                <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   Karaf · Docker · Genérico
                 </span>
                 <button
@@ -243,7 +451,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                 setIsProfileModalOpen(true);
               }}
               disabled={!activeProfile}
-              className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors disabled:opacity-40"
+              className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors disabled:opacity-40 cursor-pointer"
               title="Editar Perfil"
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -252,35 +460,59 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             <div className="relative" data-tour="profile-menu-options">
               <button
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors flex items-center gap-1"
-                title="Mais opções"
+                className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors flex items-center gap-1 cursor-pointer"
+                title="Mais opções de perfil"
               >
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
               {isProfileMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)} />
-                  <div className="absolute right-0 mt-1 w-48 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        setEditingProfile(null);
-                        setIsProfileModalOpen(true);
-                      }}
-                      className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Novo Perfil
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        handleDuplicateProfile();
-                      }}
-                      disabled={!activeProfile}
-                      className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2 disabled:opacity-40"
-                    >
-                      <Copy className="w-3.5 h-3.5" /> Duplicar Perfil
-                    </button>
+                  <div className="absolute right-0 mt-1 w-52 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-border/50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          setEditingProfile(null);
+                          setIsProfileModalOpen(true);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-primary" /> Novo Perfil
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleDuplicateProfile();
+                        }}
+                        disabled={!activeProfile}
+                        className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-primary" /> Duplicar Perfil
+                      </button>
+                    </div>
+
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleExportProfile();
+                        }}
+                        disabled={!activeProfile}
+                        className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2 disabled:opacity-40 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5 text-emerald-500" /> Exportar Perfil (.json)
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleImportProfileClick();
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-medium text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-indigo-500" /> Importar Perfil (.json)
+                      </button>
+                    </div>
                   </div>
                 </>
               )}
@@ -288,35 +520,53 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
 
             <button
               type="button"
+              onClick={handleOpenHistory}
+              className="px-3 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
+              title="Ver histórico completo das últimas execuções de deploy"
+            >
+              <History className="w-3.5 h-3.5 text-primary" />
+              <span className="hidden sm:inline">Histórico</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setIsBundlesModalOpen(true)}
-              className="px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground shadow-xs"
+              className="px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
               title="Abrir gerenciador visual de bundles OSGi"
             >
               <ListTree className="w-3.5 h-3.5 text-primary" />
               <span>Bundles OSGi</span>
             </button>
 
-            <button
-              data-tour="run-active-profile"
-              onClick={handleRunActiveProfile}
-              disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
-              className={`px-6 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg ${
-                isDeploying
-                  ? 'bg-primary/40 text-muted-foreground cursor-not-allowed border border-primary/30'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.02] border border-primary/40'
-              }`}
-            >
-              <Play className={`w-4 h-4 fill-current ${isDeploying ? 'animate-pulse' : ''}`} />
-              <span>{isDeploying ? 'Executando Perfil...' : 'Executar Perfil'}</span>
-            </button>
+            {isDeploying ? (
+              <button
+                type="button"
+                onClick={handleAbortDeploy}
+                className="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg bg-rose-500 hover:bg-rose-600 text-white border border-rose-400/50 cursor-pointer animate-pulse"
+                title="Interromper execução do perfil imediatamente"
+              >
+                <Square className="w-4 h-4 fill-current" />
+                <span>Cancelar</span>
+              </button>
+            ) : (
+              <button
+                data-tour="run-active-profile"
+                onClick={handleRunActiveProfile}
+                disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
+                className="px-6 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.02] border border-primary/40 cursor-pointer disabled:opacity-40 disabled:scale-100"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>Executar Perfil</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Grid Principal */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[480px]">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[620px] xl:min-h-[720px] min-w-0">
         {/* Coluna Esquerda: Etapas do Perfil & Diagnósticos */}
-        <div className="lg:col-span-5 flex flex-col space-y-3">
+        <div className={`${isConsoleMaximized ? 'hidden' : 'lg:col-span-4 xl:col-span-4'} flex flex-col space-y-3 min-w-0`}>
           {karafValid === false && (
             <div className="bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
               <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
@@ -350,12 +600,33 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   setEditingProfile(activeProfile);
                   setIsProfileModalOpen(true);
                 }}
-                disabled={!activeProfile}
-                className="text-[11px] text-primary hover:underline flex items-center gap-1 disabled:opacity-40"
+                disabled={!activeProfile || isDeploying}
+                className="text-[11px] text-primary hover:underline flex items-center gap-1 disabled:opacity-40 cursor-pointer"
               >
                 <Pencil className="w-3 h-3" /> Editar Etapas
               </button>
             </div>
+
+            {/* Barra de Progresso Durante Execução Geral */}
+            {currentProgress && (
+              <div className="bg-primary/10 border border-primary/30 rounded-xl p-2.5 space-y-1.5 animate-fade-in">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-foreground flex items-center gap-1.5">
+                    <RotateCw className="w-3.5 h-3.5 animate-spin text-primary" />
+                    Etapa {currentProgress.current} de {currentProgress.total}
+                  </span>
+                  <span className="font-mono font-bold text-primary">
+                    {currentProgress.total > 0 ? Math.round((currentProgress.current / currentProgress.total) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-muted/60 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-primary h-full transition-all duration-300 rounded-full"
+                    style={{ width: `${currentProgress.total > 0 ? Math.round((currentProgress.current / currentProgress.total) * 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             {!activeProfile || activeProfile.steps.length === 0 ? (
               <p className="text-xs text-muted-foreground py-4 text-center">
@@ -366,24 +637,49 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                 {activeProfile.steps.map((step, idx) => {
                   const isStepRunning = runningStepId === step.id;
                   const isBusy = isDeploying || runningStepId !== null || isDiagRunning !== null;
+                  const stepStatus = stepStatuses[step.id];
+
                   return (
                     <div
                       key={step.id}
-                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs group transition-colors ${
+                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs group transition-all ${
                         step.enabled === false
                           ? 'border-border/40 bg-muted/20 opacity-50'
                           : isStepRunning
-                          ? 'border-primary bg-primary/10'
+                          ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-sm'
+                          : stepStatus?.status === 'completed'
+                          ? 'border-emerald-500/40 bg-emerald-500/5'
+                          : stepStatus?.status === 'failed'
+                          ? 'border-rose-500/40 bg-rose-500/5'
                           : 'border-border/70 bg-card hover:border-border'
                       }`}
                     >
+                      {/* Ícone ou Número com Status */}
                       <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
-                        {idx + 1}
+                        {isStepRunning ? (
+                          <RotateCw className="w-3 h-3 text-primary animate-spin" />
+                        ) : stepStatus?.status === 'completed' ? (
+                          stepStatus.ignoredError ? (
+                            <AlertTriangle className="w-3 h-3 text-amber-500" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          )
+                        ) : stepStatus?.status === 'failed' ? (
+                          <XCircle className="w-3 h-3 text-rose-500" />
+                        ) : (
+                          idx + 1
+                        )}
                       </span>
+
                       <div className="truncate flex-1">
                         <p className="font-semibold text-foreground truncate">{step.name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-[10px] text-muted-foreground font-mono truncate">{step.type}</span>
+                          {step.continueOnError && (
+                            <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1 rounded font-mono" title="Tolerante a falhas">
+                              tolerante
+                            </span>
+                          )}
                           {stepExecutionTimes[step.id] !== undefined && (
                             <span className="text-[9px] font-mono font-medium text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded-full flex items-center gap-1">
                               <Clock className="w-2.5 h-2.5" />
@@ -431,48 +727,72 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               <button
                 onClick={() => handleRunDiagnostic('feature:list -i', 'features')}
                 disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground"
+                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
               >
-                <ListTree className="w-4 h-4 text-amber-500 shrink-0" />
+                {isDiagRunning === 'features' ? (
+                  <RotateCw className="w-4 h-4 text-amber-500 animate-spin shrink-0" />
+                ) : (
+                  <ListTree className="w-4 h-4 text-amber-500 shrink-0" />
+                )}
                 <div className="truncate">
                   <span className="font-bold block truncate">Features Instaladas</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">feature:list -i</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    {isDiagRunning === 'features' ? 'Consultando...' : 'feature:list -i'}
+                  </span>
                 </div>
               </button>
 
               <button
                 onClick={() => handleRunDiagnostic('bundle:list -s', 'bundles')}
                 disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground"
+                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
               >
-                <Package className="w-4 h-4 text-primary shrink-0" />
+                {isDiagRunning === 'bundles' ? (
+                  <RotateCw className="w-4 h-4 text-primary animate-spin shrink-0" />
+                ) : (
+                  <Package className="w-4 h-4 text-primary shrink-0" />
+                )}
                 <div className="truncate">
                   <span className="font-bold block truncate">Bundles Ativos</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">bundle:list -s</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    {isDiagRunning === 'bundles' ? 'Consultando...' : 'bundle:list -s'}
+                  </span>
                 </div>
               </button>
 
               <button
                 onClick={() => handleRunDiagnostic('log:display -n 50', 'logs')}
                 disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground"
+                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
               >
-                <FileText className="w-4 h-4 text-emerald-500 shrink-0" />
+                {isDiagRunning === 'logs' ? (
+                  <RotateCw className="w-4 h-4 text-emerald-500 animate-spin shrink-0" />
+                ) : (
+                  <FileText className="w-4 h-4 text-emerald-500 shrink-0" />
+                )}
                 <div className="truncate">
                   <span className="font-bold block truncate">Logs Recentes</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">log:display -n 50</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    {isDiagRunning === 'logs' ? 'Lendo logs...' : 'log:display -n 50'}
+                  </span>
                 </div>
               </button>
 
               <button
                 onClick={() => handleRunDiagnostic('log:clear', 'clear')}
                 disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground"
+                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 text-rose-500 shrink-0" />
+                {isDiagRunning === 'clear' ? (
+                  <RotateCw className="w-4 h-4 text-rose-500 animate-spin shrink-0" />
+                ) : (
+                  <RotateCcw className="w-4 h-4 text-rose-500 shrink-0" />
+                )}
                 <div className="truncate">
                   <span className="font-bold block truncate">Limpar Logs</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">log:clear</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    {isDiagRunning === 'clear' ? 'Limpando...' : 'log:clear'}
+                  </span>
                 </div>
               </button>
             </div>
@@ -480,12 +800,24 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         </div>
 
         {/* Coluna Direita: Terminal com Streaming de Saída */}
-        <div className="lg:col-span-7 min-h-[450px] lg:min-h-full flex flex-col" data-tour="deploy-console-output">
+        <div
+          className={`${
+            isConsoleMaximized
+              ? 'col-span-12 min-h-[calc(100vh-210px)] h-full'
+              : 'lg:col-span-8 xl:col-span-8 min-h-[580px] lg:min-h-full'
+          } flex flex-col min-w-0 transition-all duration-200`}
+          data-tour="deploy-console-output"
+        >
           <TerminalViewer
             logs={terminalLogs}
-            onClear={() => setTerminalLogs([])}
-            title="Console de Deploy"
+            onClear={() => {
+              streamRemainderRef.current = '';
+              setTerminalLogs([]);
+            }}
+            title={isConsoleMaximized ? 'Console de Deploy (Modo Expandido)' : 'Console de Deploy'}
             isRunning={isDeploying || runningStepId !== null || isDiagRunning !== null}
+            isMaximized={isConsoleMaximized}
+            onToggleMaximize={() => setIsConsoleMaximized((prev) => !prev)}
           />
         </div>
       </div>
@@ -502,11 +834,19 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         onDelete={handleDeleteProfile}
       />
 
-      {/* Modal Gerenciador de Bundles OSGi com Verificação de Dependências e Confirmação */}
+      {/* Modal Gerenciador de Bundles OSGi */}
       <KarafBundleManagerModal
         isOpen={isBundlesModalOpen}
         onClose={() => setIsBundlesModalOpen(false)}
         projects={projects}
+      />
+
+      {/* Modal Histórico de Execuções de Deploy */}
+      <DeployHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        history={historyList}
+        onClear={handleClearHistory}
       />
 
       <OnboardingTour

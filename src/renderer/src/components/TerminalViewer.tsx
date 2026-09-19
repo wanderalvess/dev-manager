@@ -8,7 +8,9 @@ import {
   ArrowDown,
   CornerDownLeft,
   WrapText,
-  AlignLeft
+  AlignLeft,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { EnvironmentLog } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -20,6 +22,9 @@ interface TerminalViewerProps {
   isRunning?: boolean;
   onSendCommand?: (cmd: string) => void;
   inputPlaceholder?: string;
+  defaultWordWrap?: boolean;
+  onToggleMaximize?: () => void;
+  isMaximized?: boolean;
 }
 
 export const TerminalViewer: React.FC<TerminalViewerProps> = ({
@@ -28,7 +33,10 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   title = 'Console de Execução',
   isRunning = false,
   onSendCommand,
-  inputPlaceholder = 'Digite um comando OSGi Karaf (ex: bundle:list, la, feature:list, log:tail)...'
+  inputPlaceholder = 'Digite um comando OSGi Karaf (ex: bundle:list, la, feature:list, log:tail)...',
+  defaultWordWrap = false,
+  onToggleMaximize,
+  isMaximized = false
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { copy: copyLogs, copiedKey } = useCopyToClipboard(2000);
@@ -36,7 +44,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   const [filterType, setFilterType] = useState<'all' | 'info' | 'success' | 'warning' | 'error'>('all');
   const [searchFilter, setSearchFilter] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
-  const [wordWrap, setWordWrap] = useState(false);
+  const [wordWrap, setWordWrap] = useState(defaultWordWrap);
 
   // Input de comando interativo
   const [inputCommand, setInputCommand] = useState('');
@@ -115,11 +123,22 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
       }
 
       return (
-        <div key={index} className="flex items-start space-x-2 font-mono text-[11px] leading-relaxed group hover:bg-slate-800/40 px-1 rounded min-w-max">
+        <div
+          key={index}
+          className={`flex items-start space-x-2 font-mono text-[11px] leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${
+            wordWrap ? 'w-full min-w-0' : 'w-fit min-w-full'
+          }`}
+        >
           <span className="text-slate-600 select-none w-6 text-right text-[10px] shrink-0 font-mono opacity-60">
             {index + 1}
           </span>
-          <span className={`flex-1 ${wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'} ${color}`}>{log}</span>
+          <span
+            className={`flex-1 min-w-0 ${
+              wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'
+            } ${color}`}
+          >
+            {log}
+          </span>
         </div>
       );
     }
@@ -148,7 +167,12 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
     }
 
     return (
-      <div key={index} className="flex items-start space-x-2 font-mono text-[11px] py-0.5 leading-relaxed group hover:bg-slate-800/40 px-1 rounded min-w-max">
+      <div
+        key={index}
+        className={`flex items-start space-x-2 font-mono text-[11px] py-0.5 leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${
+          wordWrap ? 'w-full min-w-0' : 'w-fit min-w-full'
+        }`}
+      >
         <span className="text-slate-600 select-none w-6 text-right text-[10px] shrink-0 font-mono opacity-60">
           {index + 1}
         </span>
@@ -156,15 +180,21 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
         <span className={`text-[9px] uppercase px-1.5 py-0.2 rounded border font-semibold select-none shrink-0 ${badge}`}>
           {log.type}
         </span>
-        <span className={`flex-1 ${wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'} ${color}`}>{log.message}</span>
+        <span
+          className={`flex-1 min-w-0 ${
+            wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'
+          } ${color}`}
+        >
+          {log.message}
+        </span>
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col bg-[#070b12] border border-border rounded-2xl overflow-hidden shadow-2xl h-full">
+    <div className="flex flex-col bg-[#070b12] border border-border rounded-2xl overflow-hidden shadow-2xl h-full w-full min-w-0">
       {/* Topo do Terminal com Controles */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-[#0e1422] border-b border-[#1b283f] gap-2">
+      <div className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-[#0e1422] border-b border-[#1b283f] gap-2 shrink-0">
         <div className="flex items-center space-x-2.5">
           <div className="p-1 rounded-lg bg-primary/15 border border-primary/30 text-primary">
             <Terminal className="w-3.5 h-3.5" />
@@ -223,6 +253,20 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
           </div>
 
           {/* Ações */}
+          {onToggleMaximize && (
+            <button
+              onClick={onToggleMaximize}
+              className={`p-1.5 rounded-lg border text-xs transition-colors ${
+                isMaximized
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
+                  : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
+              }`}
+              title={isMaximized ? 'Restaurar tamanho normal do console' : 'Maximizar console (largura e altura total)'}
+            >
+              {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            </button>
+          )}
+
           <button
             onClick={() => setWordWrap(!wordWrap)}
             className={`p-1.5 rounded-lg border text-xs transition-colors ${
@@ -270,7 +314,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
       {/* Conteúdo com Estilo Phosphor Terminal */}
       <div
         ref={scrollRef}
-        className={`flex-1 p-3 overflow-y-auto space-y-0.5 select-text bg-[#070b12] ${wordWrap ? 'overflow-x-hidden' : 'overflow-x-auto'}`}
+        className={`flex-1 p-3 overflow-y-auto space-y-0.5 select-text bg-[#070b12] min-w-0 ${wordWrap ? 'overflow-x-hidden' : 'overflow-x-auto'}`}
         style={{
           backgroundImage:
             'radial-gradient(rgba(0, 132, 255, 0.03) 1px, transparent 0)',
@@ -291,7 +335,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
       {onSendCommand && (
         <form
           onSubmit={handleSend}
-          className="bg-[#0b101c] border-t border-[#1b283f] px-3 py-2 flex items-center space-x-2"
+          className="bg-[#0b101c] border-t border-[#1b283f] px-3 py-2 flex items-center space-x-2 shrink-0"
         >
           <span className="text-amber-400 font-mono font-bold text-xs shrink-0 select-none">
             karaf@root()&gt;

@@ -1,6 +1,6 @@
 {
   "name": "dev-manager",
-  "version": "1.10.0",
+  "version": "1.12.0",
   "type": "module",
   "description": "Cockpit e Painel de Automação para Desenvolvedores e Apache Karaf OSGi",
   "main": "dist-electron/main/index.js",
@@ -8,6 +8,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
+    "icons": "node scripts/generate-icons.cjs",
+    "prebuild": "node scripts/generate-icons.cjs",
     "build": "tsc && vite build",
     "build:electron": "npm run build && node scripts/build-electron.cjs",
     "pack": "npm run build && node scripts/build-electron.cjs --dir",
@@ -33,6 +35,7 @@
     "electron-updater": "^6.8.9",
     "express": "^4.21.2",
     "fastembed": "^2.1.0",
+    "iconv-lite": "^0.7.3",
     "lucide-react": "^0.344.0",
     "mammoth": "^1.12.2",
     "mysql2": "^3.12.0",

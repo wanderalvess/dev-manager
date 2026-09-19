@@ -9,6 +9,7 @@ import {
   parseCapabilitiesWiredBundles
 } from './KarafService';
 import { ConfigService } from './ConfigService';
+import * as processUtils from '../utils/process';
 
 describe('KarafService', () => {
   let tmpDir: string;
@@ -121,6 +122,19 @@ client.bat "feature:install -r custom-feature/2.0.0"
       configService.saveSettings({ karafPath });
       const foundServer = karafService.getKarafServerExecutable();
       expect(foundServer).toBe(serverFile);
+    });
+
+    it('localiza executável do server quando winthor.bat existe no bin', () => {
+      const karafPath = path.join(tmpDir, 'winthor-install');
+      const binDir = path.join(karafPath, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+
+      const winthorFile = path.join(binDir, 'winthor.bat');
+      fs.writeFileSync(winthorFile, '@echo off');
+
+      configService.saveSettings({ karafPath });
+      const foundServer = karafService.getKarafServerExecutable();
+      expect(foundServer).toBe(winthorFile);
     });
   });
 
@@ -460,6 +474,232 @@ client.bat "feature:install -r custom-feature/2.0.0"
       );
       expect(executeSpy).toHaveBeenCalledWith('bundle:refresh 255', expect.any(Function), undefined);
       expect(executeSpy).toHaveBeenCalledWith('bundle:start 255', expect.any(Function), undefined);
+    });
+  });
+
+  describe('getResolvedJavaEnv', () => {
+    it('preserva System32 e unifica Path/PATH no Windows sem perder executáveis do sistema', () => {
+      const originalPlatform = process.platform;
+      try {
+        Object.defineProperty(process, 'platform', { value: 'win32' });
+        process.env.JAVA_HOME = 'C:\\Java\\jdk1.8.0_202';
+        delete process.env.PATH;
+        process.env.Path = 'C:\\Program Files\\Something;C:\\Windows\\System32';
+
+        const env = karafService.getResolvedJavaEnv();
+
+        expect(env.JAVA_HOME).toBe('C:\\Java\\jdk1.8.0_202');
+        expect(env.PATH).toBeDefined();
+        expect(env.Path).toBeDefined();
+        expect(env.PATH).toBe(env.Path);
+        expect(env.PATH).toContain('C:\\Java\\jdk1.8.0_202\\bin');
+        expect(env.PATH).toContain('System32');
+        expect(env.SystemRoot).toBeDefined();
+        expect(env.ComSpec).toBeDefined();
+        expect(env.COLUMNS).toBe('300');
+        expect(env.LINES).toBe('1000');
+      } finally {
+        Object.defineProperty(process, 'platform', { value: originalPlatform });
+      }
+    });
+  });
+
+  describe('executeKarafCommand', () => {
+    it('bloqueia comandos com caracteres perigosos (isSafeKarafCommand)', async () => {
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('feature:list; rm -rf /', (c) => chunks.push(c));
+      expect(res.code).toBe(1);
+      expect(chunks.some((c) => c.includes('ERRO DE SEGURANÇA'))).toBe(true);
+    });
+
+    it('emite confirmação quando log:clear executa com sucesso sem retorno no stdout', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: '',
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('log:clear', (c) => chunks.push(c));
+
+      expect(res.code).toBe(0);
+      expect(chunks.some((c) => c.includes('Buffer de logs em memória do Karaf (log:clear) limpo com sucesso'))).toBe(true);
+      expect(res.stdout).toContain('[ OK ]');
+    });
+
+    it('faz fallback para winthor.log quando log:display retorna stdout vazio', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      const logDir = path.join(tmpDir, 'data', 'log');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.mkdirSync(logDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+      fs.writeFileSync(path.join(logDir, 'winthor.log'), 'Linha 1 do log\nLinha 2 do log\n', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: '',
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('log:display -n 10', (c) => chunks.push(c));
+
+      expect(res.code).toBe(0);
+      expect(chunks.some((c) => c.includes('Buffer em memória vazio. Exibindo últimas'))).toBe(true);
+      expect(chunks.some((c) => c.includes('Linha 2 do log'))).toBe(true);
+    });
+
+    it('informa que o buffer está vazio quando log:display não tem arquivo de log disponível', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: '',
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('log:display -n 50', (c) => chunks.push(c));
+
+      expect(res.code).toBe(0);
+      expect(chunks.some((c) => c.includes('O buffer de logs em memória do Karaf está vazio'))).toBe(true);
+    });
+
+    it('emite feedback de sucesso quando um comando genérico finaliza com código 0 e sem saída', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: '',
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('custom:command', (c) => chunks.push(c));
+
+      expect(res.code).toBe(0);
+      expect(chunks.some((c) => c.includes('executado com sucesso no Karaf (sem saída no console)'))).toBe(true);
+    });
+
+    it('detecta falha do Karaf com código 0 e ANSI escape codes no stdout (No matching features)', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: 'client.bat: Ignoring predefined value for KARAF_HOME\r\n \x1b[31mError executing command: No matching features for hub-carga-dados/0.0.1.SNAPSHOT \x1b[39m\r\nPicked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8\r\n',
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand(
+        'feature:install -r -u hub-carga-dados/0.0.1-SNAPSHOT',
+        (c) => chunks.push(c)
+      );
+
+      expect(res.code).toBe(1);
+      expect(res.stderr).toContain('Error executing command: No matching features for hub-carga-dados/0.0.1.SNAPSHOT');
+      expect(chunks.some((c) => c.includes('💡 [DICA] O Karaf não encontrou a feature no repositório'))).toBe(true);
+    });
+
+    it('detecta Command not found com código 0 como erro', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: 'Command not found: inexistente:cmd\r\n',
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('inexistente:cmd', (c) => chunks.push(c));
+
+      expect(res.code).toBe(1);
+      expect(res.stderr).toContain('Command not found: inexistente:cmd');
+    });
+
+    it('não confunde logs de aplicação em log:display com erro de comando do shell', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: '2026-09-18 10:00:00,123 | ERROR | pool-1-thread-1 | SomeService | Error executing command: falha em sub-tarefa antiga\r\n',
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('log:display -n 10', (c) => chunks.push(c));
+
+      expect(res.code).toBe(0);
+      expect(res.stderr).toBe('');
+    });
+  });
+
+  describe('Gerenciamento de Bundles em Lote (manageBundlesBatch)', () => {
+    it('retorna erro se nenhum ID numérico válido for fornecido', async () => {
+      const res = await karafService.manageBundlesBatch('restart', ['abc', '']);
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('Nenhum ID de bundle válido informado');
+      expect(res.processedCount).toBe(0);
+    });
+
+    it('executa comando agrupado no Karaf para múltiplos bundles', async () => {
+      const execSpy = vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: '',
+        stderr: ''
+      });
+
+      const res = await karafService.manageBundlesBatch('restart', ['10', '15', '20']);
+      expect(res.success).toBe(true);
+      expect(res.processedCount).toBe(3);
+      expect(execSpy).toHaveBeenCalledWith(
+        'bundle:restart 10 15 20',
+        expect.any(Function),
+        undefined
+      );
+    });
+
+    it('executa bundle:refresh após desinstalação em lote bem-sucedida', async () => {
+      const commandsExecuted: string[] = [];
+      vi.spyOn(karafService, 'executeKarafCommand').mockImplementation(async (cmd) => {
+        commandsExecuted.push(cmd);
+        return { code: 0, stdout: '', stderr: '' };
+      });
+
+      const res = await karafService.manageBundlesBatch('uninstall', ['101', '102']);
+      expect(res.success).toBe(true);
+      expect(commandsExecuted).toEqual([
+        'bundle:uninstall 101 102',
+        'bundle:refresh'
+      ]);
     });
   });
 });

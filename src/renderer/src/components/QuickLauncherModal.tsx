@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Search,
   Grid,
-  GitBranch,
+  GitPullRequest,
   Terminal,
   Layers,
   Settings,
@@ -12,8 +12,12 @@ import {
   X,
   Star,
   Box,
-  ScrollText
+  ScrollText,
+  Database,
+  FileSearch,
+  GitBranch
 } from 'lucide-react';
+import { AppLogo } from './AppLogo';
 import { GitProjectInfo, RoutineItem } from '../../../shared/types';
 
 interface QuickLauncherItem {
@@ -82,6 +86,18 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         }
       },
       {
+        id: 'act-database',
+        category: 'action',
+        title: 'Banco de Dados',
+        subtitle: 'Conexão e SQL runner Oracle, MySQL e Postgres',
+        badge: 'Alt+2',
+        icon: Database,
+        onSelect: () => {
+          onNavigate('database');
+          onClose();
+        }
+      },
+      {
         id: 'act-containers',
         category: 'action',
         title: 'Containers',
@@ -106,6 +122,42 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         }
       },
       {
+        id: 'act-git',
+        category: 'action',
+        title: 'Git & Azure DevOps Hub',
+        subtitle: 'Sincronizar repositórios e gerar Pull Requests',
+        badge: 'Alt+5',
+        icon: GitPullRequest,
+        onSelect: () => {
+          onNavigate('git');
+          onClose();
+        }
+      },
+      {
+        id: 'act-routines',
+        category: 'action',
+        title: 'Catálogo de Rotinas',
+        subtitle: 'Executar executáveis (.EXE e .PC)',
+        badge: 'Alt+6',
+        icon: Grid,
+        onSelect: () => {
+          onNavigate('routines');
+          onClose();
+        }
+      },
+      {
+        id: 'act-docs',
+        category: 'action',
+        title: 'Documentação Semântica',
+        subtitle: 'Busca semântica RAG na documentação dos projetos',
+        badge: 'Alt+7',
+        icon: FileSearch,
+        onSelect: () => {
+          onNavigate('docs');
+          onClose();
+        }
+      },
+      {
         id: 'act-logs',
         category: 'action',
         title: 'Logs em Tempo Real (Tail -f)',
@@ -118,26 +170,14 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         }
       },
       {
-        id: 'act-git',
+        id: 'act-help',
         category: 'action',
-        title: 'Git & Azure DevOps Hub',
-        subtitle: 'Sincronizar repositórios e gerar Pull Requests',
-        badge: 'Alt+5',
-        icon: GitBranch,
+        title: 'Ajuda & Diagnósticos',
+        subtitle: 'FAQ, diagnósticos de rede e atalhos de teclado',
+        badge: 'Alt+9',
+        icon: HelpCircle,
         onSelect: () => {
-          onNavigate('git');
-          onClose();
-        }
-      },
-      {
-        id: 'act-routines',
-        category: 'action',
-        title: 'Catálogo de Rotinas',
-        subtitle: 'Executar executáveis (.EXE e .PC)',
-        badge: 'Alt+4',
-        icon: Grid,
-        onSelect: () => {
-          onNavigate('routines');
+          onNavigate('help');
           onClose();
         }
       },
@@ -146,22 +186,9 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         category: 'action',
         title: 'Configurações do Sistema',
         subtitle: 'Gerenciar caminhos, portas e serviços monitorados',
-        badge: 'Alt+5',
         icon: Settings,
         onSelect: () => {
           onNavigate('settings');
-          onClose();
-        }
-      },
-      {
-        id: 'act-help',
-        category: 'action',
-        title: 'Ajuda & Diagnósticos',
-        subtitle: 'FAQ, diagnósticos de rede e atalhos de teclado',
-        badge: 'Alt+6',
-        icon: HelpCircle,
-        onSelect: () => {
-          onNavigate('help');
           onClose();
         }
       },
@@ -279,7 +306,8 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
       >
         {/* Campo de Busca Input */}
         <div className="p-4 border-b border-border/80 flex items-center space-x-3 bg-muted/30">
-          <Search className="w-5 h-5 text-primary shrink-0" />
+          <AppLogo size="xs" />
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           <input
             ref={inputRef}
             type="text"

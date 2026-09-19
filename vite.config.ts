@@ -4,7 +4,18 @@ import electron from 'vite-plugin-electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { createRequire } from 'module';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+
+// Garante que os ícones da aplicação existam para o dev server e empacotamento
+try {
+  const { ensureIcons } = require('./scripts/generate-icons.cjs');
+  ensureIcons();
+} catch (e) {
+  // Ignora se não for possível gerar no carregamento do config
+}
 
 export default defineConfig({
   plugins: [

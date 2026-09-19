@@ -22,6 +22,7 @@ import { LogWatcherService } from '../services/LogWatcherService';
 import { KarafLogPersistenceService } from '../services/KarafLogPersistenceService';
 import { AutoUpdateService } from '../services/AutoUpdateService';
 import { notifyUser } from '../services/NotificationService';
+import { LlmService } from '../services/LlmService';
 import {
   AppSettings,
   KarafDeployRequest,
@@ -43,7 +44,10 @@ import {
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
-  LogChunkEvent
+  LogChunkEvent,
+  LlmProviderConfig,
+  LlmChatRequest,
+  LlmRagQueryRequest
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
@@ -63,8 +67,23 @@ export function registerIpcHandlers(
   deployService: DeployService,
   logWatcherService: LogWatcherService = new LogWatcherService(),
   karafLogPersistenceService: KarafLogPersistenceService = new KarafLogPersistenceService(),
-  autoUpdateService?: AutoUpdateService
+  autoUpdateService?: AutoUpdateService,
+  llmService: LlmService = new LlmService(configService, docsIndexService)
 ) {
+  // Detecta se é a primeira execução desta versão ou primeira execução após instalação
+  let isFirstRunSession = false;
+  try {
+    const markerPath = path.join(app.getPath('userData'), '.last_seen_version');
+    const currentVersion = app.getVersion();
+    const lastVersion = fs.existsSync(markerPath) ? fs.readFileSync(markerPath, 'utf-8').trim() : null;
+    if (lastVersion !== currentVersion) {
+      isFirstRunSession = true;
+      fs.writeFileSync(markerPath, currentVersion, 'utf-8');
+    }
+  } catch {
+    // Silencioso em caso de restrição de I/O
+  }
+
   // --- Diálogos Nativos do Sistema & Verificação de Caminhos ---
   ipcMain.handle('dialog:select-directory', async (_, defaultPath?: string) => {
     const validDefault = defaultPath && fs.existsSync(defaultPath) ? defaultPath : os.homedir();
@@ -123,7 +142,8 @@ export function registerIpcHandlers(
       totalMemoryMb: Math.round(os.totalmem() / 1024 / 1024),
       freeMemoryMb: Math.round(os.freemem() / 1024 / 1024),
       configPath,
-      isAdmin
+      isAdmin,
+      isFirstRun: isFirstRunSession
     };
   });
 
@@ -342,6 +362,20 @@ export function registerIpcHandlers(
   );
 
   ipcMain.handle(
+    'karaf:manage-bundles-batch',
+    async (
+      _,
+      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
+      bundleIds: string[],
+      credentials?: { user?: string; pass?: string; port?: number }
+    ) => {
+      return await karafService.manageBundlesBatch(action, bundleIds, credentials, (chunk) => {
+        mainWindow.webContents.send('karaf:log-chunk', chunk);
+      });
+    }
+  );
+
+  ipcMain.handle(
     'karaf:get-log',
     async (_, lines?: number, credentials?: { user?: string; pass?: string; port?: number }) => {
       return await karafService.getKarafLog(lines, credentials);
@@ -403,15 +437,35 @@ export function registerIpcHandlers(
 
   // --- Orquestrador de Perfis de Deploy (Karaf / Docker / Comando Genérico) ---
   ipcMain.handle('deploy:run-profile', async (_, profile: DeployProfile) => {
-    return await deployService.executeProfile(profile, (chunk) => {
-      mainWindow.webContents.send('deploy:log-chunk', chunk);
-    });
+    return await deployService.executeProfile(
+      profile,
+      (chunk) => {
+        mainWindow.webContents.send('deploy:log-chunk', chunk);
+      },
+      (progressEvent) => {
+        mainWindow.webContents.send('deploy:step-progress', progressEvent);
+      }
+    );
   });
 
   ipcMain.handle('deploy:run-step', async (_, step: DeployStep, profileName?: string) => {
     return await deployService.executeSingleStep(step, (chunk) => {
       mainWindow.webContents.send('deploy:log-chunk', chunk);
     }, profileName);
+  });
+
+  ipcMain.handle('deploy:abort', async () => {
+    deployService.abortCurrentExecution();
+    return { success: true };
+  });
+
+  ipcMain.handle('deploy:get-history', async () => {
+    return deployService.getHistory();
+  });
+
+  ipcMain.handle('deploy:clear-history', async () => {
+    deployService.clearHistory();
+    return { success: true };
   });
 
   // --- Git & Azure DevOps ---
@@ -512,6 +566,26 @@ export function registerIpcHandlers(
       return { success: false, message: err?.message || 'Falha ao conectar no Jira.' };
     }
   });
+
+  // --- IA & Modelos LLM (BYOK - Bring Your Own Key) ---
+  const handleTestLlm = async (_: any, config: LlmProviderConfig) => {
+    return await llmService.testConnection(config);
+  };
+  const handleChatLlm = async (_: any, request: LlmChatRequest) => {
+    return await llmService.chat(request);
+  };
+  const handleAskDocs = async (_: any, request: LlmRagQueryRequest) => {
+    return await llmService.askWithDocs(request);
+  };
+
+  ipcMain.handle('llm:test-connection', handleTestLlm);
+  ipcMain.handle('llm:chat', handleChatLlm);
+  ipcMain.handle('llm:ask-with-docs', handleAskDocs);
+
+  // Aliases de compatibilidade
+  ipcMain.handle('docs:test-llm', handleTestLlm);
+  ipcMain.handle('docs:chat-llm', handleChatLlm);
+  ipcMain.handle('docs:ask-llm', handleAskDocs);
 
   const docSyncService = new DocSyncService(configService, docsIndexService);
 
@@ -671,6 +745,42 @@ export function registerIpcHandlers(
     return await dockerService.checkDockerStatus().then((s) => s.availableDistros || []);
   });
 
+  ipcMain.handle('wsl:start-docker-daemon', async (_, distro: string) => {
+    return await wslService.startDockerDaemon(distro);
+  });
+
+  ipcMain.handle('wsl:terminate-distro', async (_, distro: string) => {
+    return await wslService.terminateDistro(distro);
+  });
+
+  ipcMain.handle('wsl:open-terminal', async (_, distro: string) => {
+    return await wslService.openWslTerminal(distro);
+  });
+
+  ipcMain.handle('wsl:get-distro-ip', async (_, distro?: string) => {
+    return await wslService.getDistroIp(distro);
+  });
+
+  ipcMain.handle('wsl:open-dumps-folder', async (_, distro?: string) => {
+    return await wslService.openDumpsFolder(distro);
+  });
+
+  ipcMain.handle('wsl:list-dmp-files', async (_, distro?: string) => {
+    return await wslService.listDmpFiles(distro);
+  });
+
+  ipcMain.handle('wsl:generate-md5', (_, text: string) => {
+    return wslService.generateMd5(text);
+  });
+
+  ipcMain.handle('wsl:check-wsh-prerequisites', async (_, distro?: string) => {
+    return await wslService.checkWshPrerequisites(distro);
+  });
+
+  ipcMain.handle('wsl:open-opt-folder', async (_, distro?: string) => {
+    return await wslService.openWslOptFolder(distro);
+  });
+
   ipcMain.handle('docker:set-target-wsl-distro', async (_, distro: string | null) => {
     dockerService.setTargetWslDistro(distro);
     return await dockerService.checkDockerStatus();
@@ -710,6 +820,13 @@ export function registerIpcHandlers(
     }
   );
 
+  ipcMain.handle(
+    'docker:wta-karaf-client',
+    async (_, containerName: string) => {
+      return await dockerService.openWtaKarafClient(containerName);
+    }
+  );
+
   // --- Ambientes do Container Manager & WSL ---
   ipcMain.handle('wsl:get-environments', async () => {
     return wslService.loadContainerManagerConfig();
@@ -724,6 +841,39 @@ export function registerIpcHandlers(
 
   ipcMain.handle('wsl:delete-environment', async (_, id: string) => {
     return wslService.deleteContainerManagerEnvironment(id);
+  });
+
+  // --- Snapshots WSL & INFR-Docker Setup ---
+  ipcMain.handle('wsl:get-snapshots-dir', () => {
+    return wslService.getSnapshotsDir();
+  });
+
+  ipcMain.handle('wsl:set-snapshots-dir', (_, dir: string) => {
+    return wslService.setSnapshotsDir(dir);
+  });
+
+  ipcMain.handle('wsl:list-snapshots', async (_, dir?: string) => {
+    return await wslService.listSnapshots(dir);
+  });
+
+  ipcMain.handle('wsl:import-snapshot', async (_, params: { distroName: string; installDir: string; tarPath: string }) => {
+    return await wslService.importSnapshot(params.distroName, params.installDir, params.tarPath);
+  });
+
+  ipcMain.handle('wsl:export-snapshot', async (_, params: { distroName: string; outputPath: string }) => {
+    return await wslService.exportSnapshot(params.distroName, params.outputPath);
+  });
+
+  ipcMain.handle('wsl:unregister-distro', async (_, distroName: string) => {
+    return await wslService.unregisterDistro(distroName);
+  });
+
+  ipcMain.handle('infr:check-scripts', async (_, customPath?: string) => {
+    return await wslService.checkInfrDockerScripts(customPath);
+  });
+
+  ipcMain.handle('infr:run-setup-script', async (_, { scriptType, options }: { scriptType: 'oracle' | 'wta' | 'wsh'; options: any }) => {
+    return await wslService.runInfrSetupScript(scriptType, options);
   });
 
   ipcMain.handle('docker:get-status', async () => {
@@ -789,9 +939,37 @@ export function registerIpcHandlers(
     return await dockerService.openContainerTerminal(containerId, shellName);
   });
 
+  ipcMain.handle('docker:inspect', async (_, containerId: string) => {
+    return await dockerService.inspectContainer(containerId);
+  });
+  ipcMain.handle('container:inspect', async (_, containerId: string) => {
+    return await dockerService.inspectContainer(containerId);
+  });
+
+  ipcMain.handle('docker:pause', async (_, containerId: string) => {
+    return await dockerService.pauseContainer(containerId);
+  });
+  ipcMain.handle('container:pause', async (_, containerId: string) => {
+    return await dockerService.pauseContainer(containerId);
+  });
+
+  ipcMain.handle('docker:unpause', async (_, containerId: string) => {
+    return await dockerService.unpauseContainer(containerId);
+  });
+  ipcMain.handle('container:unpause', async (_, containerId: string) => {
+    return await dockerService.unpauseContainer(containerId);
+  });
+
+  ipcMain.handle('docker:prune', async () => {
+    return await dockerService.pruneContainers();
+  });
+  ipcMain.handle('container:prune', async () => {
+    return await dockerService.pruneContainers();
+  });
+
   ipcMain.handle(
     'docker:compose-up',
-    async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean }) => {
+    async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean; build?: boolean }) => {
       return await dockerService.composeUp(composeFilePath, options, (chunk) => {
         mainWindow.webContents.send('docker:compose-log-chunk', chunk);
       });
@@ -799,22 +977,40 @@ export function registerIpcHandlers(
   );
   ipcMain.handle(
     'container:compose-up',
-    async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean }) => {
+    async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean; build?: boolean }) => {
       return await dockerService.composeUp(composeFilePath, options, (chunk) => {
         mainWindow.webContents.send('docker:compose-log-chunk', chunk);
       });
     }
   );
 
-  ipcMain.handle('docker:compose-down', async (_, composeFilePath: string, options?: { profile?: string }) => {
+  ipcMain.handle('docker:compose-down', async (_, composeFilePath: string, options?: { profile?: string; volumes?: boolean }) => {
     return await dockerService.composeDown(composeFilePath, options, (chunk) => {
       mainWindow.webContents.send('docker:compose-log-chunk', chunk);
     });
   });
-  ipcMain.handle('container:compose-down', async (_, composeFilePath: string, options?: { profile?: string }) => {
+  ipcMain.handle('container:compose-down', async (_, composeFilePath: string, options?: { profile?: string; volumes?: boolean }) => {
     return await dockerService.composeDown(composeFilePath, options, (chunk) => {
       mainWindow.webContents.send('docker:compose-log-chunk', chunk);
     });
+  });
+
+  ipcMain.handle('docker:compose-restart', async (_, composeFilePath: string, options?: { profile?: string }) => {
+    return await dockerService.composeRestart(composeFilePath, options, (chunk) => {
+      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+    });
+  });
+  ipcMain.handle('container:compose-restart', async (_, composeFilePath: string, options?: { profile?: string }) => {
+    return await dockerService.composeRestart(composeFilePath, options, (chunk) => {
+      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+    });
+  });
+
+  ipcMain.handle('docker:compose-logs', async (_, composeFilePath: string, options?: { profile?: string; lines?: number }) => {
+    return await dockerService.getComposeLogs(composeFilePath, options);
+  });
+  ipcMain.handle('container:compose-logs', async (_, composeFilePath: string, options?: { profile?: string; lines?: number }) => {
+    return await dockerService.getComposeLogs(composeFilePath, options);
   });
 
   ipcMain.handle('docker:compose-status', async (_, composeFilePath: string, profile?: string) => {

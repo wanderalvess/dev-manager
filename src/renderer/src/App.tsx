@@ -13,18 +13,22 @@ import { LogsPage } from './pages/LogsPage';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
 import { ToastHost, showToast } from './components/ToastHost';
 import { OnboardingTour } from './components/onboarding/OnboardingTour';
+import { WelcomeIntro } from './components/onboarding/WelcomeIntro';
+import { PageToursPromptModal } from './components/onboarding/PageToursPromptModal';
+import { PAGE_TOURS_PREF_KEY } from './components/onboarding/usePageTour';
 import { TOUR_STEPS, TOUR_STORAGE_KEY } from './components/onboarding/tourSteps';
+import { WELCOME_STORAGE_KEY } from './components/onboarding/welcomeSteps';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
 
-// Marca se o usuário já viu a tela de Ajuda/Visão Geral pelo menos uma vez.
-// Usado para decidir a aba inicial no primeiro uso (onboarding).
-const ONBOARDING_SEEN_KEY = 'devManager:onboardingSeen';
-
+// Decide a aba inicial: se o onboarding inicial ainda não foi concluído, a primeira tela no primeiro uso é sempre 'help' (Central de Ajuda).
 const getInitialTab = (): string => {
   try {
-    return window.localStorage.getItem(ONBOARDING_SEEN_KEY) ? 'env' : 'help';
+    const hasSeenOnboarding =
+      window.localStorage.getItem(TOUR_STORAGE_KEY) ||
+      window.localStorage.getItem(WELCOME_STORAGE_KEY);
+    return hasSeenOnboarding ? 'env' : 'help';
   } catch {
-    return 'env';
+    return 'help';
   }
 };
 
@@ -48,6 +52,51 @@ export const App: React.FC = () => {
       return false;
     }
   });
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState<boolean>(() => {
+    try {
+      return !window.localStorage.getItem(WELCOME_STORAGE_KEY);
+    } catch {
+      return false;
+    }
+  });
+  const [isPageToursPromptOpen, setIsPageToursPromptOpen] = useState<boolean>(false);
+
+  const handleFinishWelcome = useCallback(() => {
+    setIsWelcomeOpen(false);
+  }, []);
+
+  const handleCloseTour = useCallback(() => {
+    setIsTourOpen(false);
+    try {
+      window.localStorage.setItem(TOUR_STORAGE_KEY, JSON.stringify({ done: true, ts: Date.now() }));
+      // Se ainda não foi perguntado se quer ver tutoriais das próximas telas, abre o modal de escolha
+      if (window.localStorage.getItem(PAGE_TOURS_PREF_KEY) === null) {
+        setIsPageToursPromptOpen(true);
+      }
+    } catch {
+      // localStorage indisponível
+    }
+  }, []);
+
+  // Se o Electron detectar que é primeira execução após instalação/atualização, força Central de Ajuda
+  useEffect(() => {
+    if (window.electronAPI?.getAppInfo) {
+      window.electronAPI.getAppInfo().then((info) => {
+        if (info.isFirstRun) {
+          try {
+            window.localStorage.removeItem(TOUR_STORAGE_KEY);
+            window.localStorage.removeItem(WELCOME_STORAGE_KEY);
+            window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
+          } catch {
+            // localStorage indisponível
+          }
+          setActiveTab('help');
+          setIsWelcomeOpen(true);
+          setIsTourOpen(true);
+        }
+      }).catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     setVisitedTabs((prev) => {
@@ -61,14 +110,6 @@ export const App: React.FC = () => {
   const navigateToHelp = useCallback((search?: string) => {
     setHelpSearch(search || '');
     setActiveTab('help');
-  }, []);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(ONBOARDING_SEEN_KEY, '1');
-    } catch {
-      // localStorage indisponível (ex: modo privado) - onboarding reaparece a cada abertura, sem problema
-    }
   }, []);
 
   const isFetchingServicesRef = React.useRef(false);
@@ -269,22 +310,33 @@ export const App: React.FC = () => {
               onRefreshProjects={fetchProjects}
               isRefreshing={isRefreshing}
               onNavigateToSettings={() => setActiveTab('settings')}
+              settingsVersion={settingsVersion}
             />
           </div>
         )}
         {visitedTabs.has('routines') && (
           <div className={`h-full w-full ${activeTab === 'routines' ? '' : 'hidden'}`}>
-            <RoutinesPage onNavigateToSettings={() => setActiveTab('settings')} />
+            <RoutinesPage
+              onNavigateToSettings={() => setActiveTab('settings')}
+              settingsVersion={settingsVersion}
+            />
           </div>
         )}
         {visitedTabs.has('docs') && (
           <div className={`h-full w-full ${activeTab === 'docs' ? '' : 'hidden'}`}>
-            <DocsPage onNavigateToSettings={() => setActiveTab('settings')} />
+            <DocsPage
+              onNavigateToSettings={() => setActiveTab('settings')}
+              settingsVersion={settingsVersion}
+            />
           </div>
         )}
         {visitedTabs.has('logs') && (
           <div className={`h-full w-full ${activeTab === 'logs' ? '' : 'hidden'}`}>
-            <LogsPage onNavigateToSettings={() => setActiveTab('settings')} isActive={activeTab === 'logs'} />
+            <LogsPage
+              onNavigateToSettings={() => setActiveTab('settings')}
+              isActive={activeTab === 'logs'}
+              settingsVersion={settingsVersion}
+            />
           </div>
         )}
         {visitedTabs.has('settings') && (
@@ -297,7 +349,18 @@ export const App: React.FC = () => {
             <HelpPage
               onNavigate={(tab) => setActiveTab(tab)}
               initialSearch={helpSearch}
-              onRestartTour={() => setIsTourOpen(true)}
+              settingsVersion={settingsVersion}
+              onRestartTour={() => {
+                try {
+                  window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
+                  window.localStorage.removeItem(TOUR_STORAGE_KEY);
+                  window.localStorage.removeItem(WELCOME_STORAGE_KEY);
+                } catch {
+                  // localStorage indisponível
+                }
+                setIsWelcomeOpen(true);
+                setIsTourOpen(true);
+              }}
             />
           </div>
         )}
@@ -305,11 +368,18 @@ export const App: React.FC = () => {
 
       <ToastHost />
 
+      <WelcomeIntro isOpen={isWelcomeOpen} onFinish={handleFinishWelcome} />
+
       <OnboardingTour
         steps={TOUR_STEPS}
-        isOpen={isTourOpen}
-        onClose={() => setIsTourOpen(false)}
+        isOpen={isTourOpen && !isWelcomeOpen}
+        onClose={handleCloseTour}
         storageKey={TOUR_STORAGE_KEY}
+      />
+
+      <PageToursPromptModal
+        isOpen={isPageToursPromptOpen}
+        onSelectChoice={() => setIsPageToursPromptOpen(false)}
       />
     </div>
   );

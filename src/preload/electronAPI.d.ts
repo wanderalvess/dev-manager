@@ -33,6 +33,11 @@ import type {
   ContainerEnvironment,
   OracleMaintenanceResult,
   OracleDataPumpParams,
+  WslDumpFileInfo,
+  WshPrerequisiteStatus,
+  WslSnapshotFileInfo,
+  WslSnapshotActionResult,
+  InfrDockerScriptStatus,
   NetworkIpInfo,
   ExplainPlanResult,
   KarafBundleInfo,
@@ -47,6 +52,9 @@ import type {
   SystemMetrics,
   HttpHealthResult,
   DeployProfile,
+  DeployStep,
+  DeployProfileHistoryEntry,
+  DeployProgressEvent,
   TableColumnInfo,
   DockerContainerStats,
   ComposeServiceStatus,
@@ -57,7 +65,13 @@ import type {
   BackupResult,
   BackupFileInfo,
   BackupHistoryEntry,
-  BackupWebhookConfig
+  BackupWebhookConfig,
+  LlmProviderConfig,
+  LlmChatRequest,
+  LlmChatResponse,
+  LlmTestResult,
+  LlmRagQueryRequest,
+  LlmRagQueryResponse
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -130,6 +144,11 @@ export interface ElectronAPI {
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }
   ) => Promise<{ success: boolean; output: string }>;
+  manageKarafBundlesBatch: (
+    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
+    bundleIds: string[],
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<{ success: boolean; output: string; processedCount: number }>;
   getKarafLog: (
     lines?: number,
     credentials?: { user?: string; pass?: string; port?: number }
@@ -163,7 +182,11 @@ export interface ElectronAPI {
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (profile: DeployProfile) => Promise<{ success: boolean; error?: string }>;
   runDeployStep: (step: DeployStep, profileName?: string) => Promise<{ success: boolean; error?: string }>;
+  abortDeploy: () => Promise<{ success: boolean }>;
+  getDeployProfileHistory: () => Promise<DeployProfileHistoryEntry[]>;
+  clearDeployProfileHistory: () => Promise<{ success: boolean }>;
   onDeployLogChunk: (callback: (chunk: string) => void) => () => void;
+  onDeployStepProgress: (callback: (data: DeployProgressEvent) => void) => () => void;
 
   // Git & Azure DevOps
   listProjects: () => Promise<GitProjectInfo[]>;
@@ -204,6 +227,13 @@ export interface ElectronAPI {
   exportSettings: (sanitizePasswords?: boolean) => Promise<string>;
   importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }>;
 
+  // IA & Provedores LLM (BYOK - Bring Your Own Key)
+  testLlmConnection: (config: LlmProviderConfig) => Promise<LlmTestResult>;
+  llmChat: (request: LlmChatRequest) => Promise<LlmChatResponse>;
+  askDocsWithAi: (request: LlmRagQueryRequest) => Promise<LlmRagQueryResponse>;
+  askLlm?: (request: LlmRagQueryRequest, providerConfig?: LlmProviderConfig) => Promise<LlmRagQueryResponse>;
+  chatLlm?: (request: LlmChatRequest, providerConfig?: LlmProviderConfig) => Promise<LlmChatResponse>;
+
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>) => Promise<QueryResult>;
@@ -228,6 +258,23 @@ export interface ElectronAPI {
 
   // Gerenciador de Containers (Docker / Podman / WSL)
   listWslDistros?: () => Promise<WslDistroInfo[]>;
+  startWslDockerDaemon?: (distro: string) => Promise<{ success: boolean; message: string }>;
+  terminateWslDistro?: (distro: string) => Promise<boolean>;
+  openWslTerminal?: (distro: string) => Promise<boolean>;
+  getWslDistroIp?: (distro?: string) => Promise<string | null>;
+  openWslDumpsFolder?: (distro?: string) => Promise<{ success: boolean; path: string; error?: string }>;
+  listWslDmpFiles?: (distro?: string) => Promise<WslDumpFileInfo[]>;
+  generateMd5?: (text: string) => Promise<{ lower: string; upper: string }>;
+  checkWshPrerequisites?: (distro?: string) => Promise<WshPrerequisiteStatus[]>;
+  openWslOptFolder?: (distro?: string) => Promise<{ success: boolean; path: string; error?: string }>;
+  getWslSnapshotsDir?: () => Promise<string>;
+  setWslSnapshotsDir?: (dir: string) => Promise<boolean>;
+  listWslSnapshots?: (dir?: string) => Promise<WslSnapshotFileInfo[]>;
+  importWslSnapshot?: (params: { distroName: string; installDir: string; tarPath: string }) => Promise<WslSnapshotActionResult>;
+  exportWslSnapshot?: (params: { distroName: string; outputPath: string }) => Promise<WslSnapshotActionResult>;
+  unregisterWslDistro?: (distroName: string) => Promise<WslSnapshotActionResult>;
+  checkInfrDockerScripts?: (customPath?: string) => Promise<InfrDockerScriptStatus[]>;
+  runInfrSetupScript?: (scriptType: 'oracle' | 'wta' | 'wsh', options: any) => Promise<{ success: boolean; output: string }>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
   saveContainerEnvironment?: (env: ContainerEnvironment) => Promise<boolean>;
@@ -249,6 +296,7 @@ export interface ElectronAPI {
   ) => Promise<OracleMaintenanceResult>;
   openOracleSqlPlus?: (containerName: string, user?: string, password?: string) => Promise<boolean>;
   execOracleDataPump?: (params: OracleDataPumpParams) => Promise<OracleMaintenanceResult>;
+  openWtaKarafClient?: (containerName: string) => Promise<boolean>;
 
   getDockerStatus: () => Promise<DockerDaemonStatus>;
   listDockerContainers: () => Promise<DockerContainerInfo[]>;

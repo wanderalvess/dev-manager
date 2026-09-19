@@ -10,6 +10,19 @@ import type { DatabaseService } from './DatabaseService';
 import type { NetworkService } from './NetworkService';
 import type { AutomationStep } from '../../shared/types';
 
+const spawnMock = vi.fn((..._args: unknown[]) => ({
+  unref: vi.fn(),
+  on: vi.fn((_event: string, _cb: Function) => {})
+}));
+
+vi.mock('child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('child_process')>();
+  return {
+    ...actual,
+    spawn: (...args: unknown[]) => spawnMock(...args)
+  };
+});
+
 vi.mock('../utils/security', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../utils/security')>();
   return {
@@ -342,5 +355,165 @@ describe('WindowsService.runProfileStep / stopProfileStep — serviços e proces
 
     expect(stopped).toBe(true);
     expect(killSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('WindowsService — resolveWorkingDir inteligente', () => {
+  let tmpDir: string;
+  let service: WindowsService;
+  let configService: ConfigService;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dev-manager-cwd-'));
+    process.env.CONFIG_DIR = tmpDir;
+
+    configService = new ConfigService();
+    const karafService = new KarafService(configService);
+    service = new WindowsService(configService, karafService);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('retorna cwd explícito quando fornecido', () => {
+    const customDir = path.join(tmpDir, 'custom-folder');
+    fs.mkdirSync(customDir, { recursive: true });
+    expect(service.resolveWorkingDir(customDir)).toBe(customDir);
+  });
+
+  it('quando cwd estiver vazio, resolve para karaf/bin se o comando for winthor.bat', () => {
+    const karafPath = path.join(tmpDir, 'winthor-app');
+    const binDir = path.join(karafPath, 'bin');
+    fs.mkdirSync(binDir, { recursive: true });
+    fs.writeFileSync(path.join(binDir, 'winthor.bat'), '@echo off');
+
+    configService.saveSettings({ karafPath });
+    const resolved = service.resolveWorkingDir('', 'winthor.bat debug');
+    expect(resolved).toBe(binDir);
+  });
+
+  it('quando cwd estiver vazio, resolve para karaf/bin se o comando for karaf.bat', () => {
+    const karafPath = path.join(tmpDir, 'karaf-app');
+    const binDir = path.join(karafPath, 'bin');
+    fs.mkdirSync(binDir, { recursive: true });
+    fs.writeFileSync(path.join(binDir, 'karaf.bat'), '@echo off');
+
+    configService.saveSettings({ karafPath });
+    const resolved = service.resolveWorkingDir('', 'karaf.bat debug');
+    expect(resolved).toBe(binDir);
+  });
+
+  it('quando cwd estiver vazio e comando genérico, cai para process.cwd()', () => {
+    const resolved = service.resolveWorkingDir('', 'npm test');
+    expect(resolved).toBe(process.cwd());
+  });
+});
+
+describe('WindowsService — launchServerDebug e runProfileStep (karaf / command)', () => {
+  let tmpDir: string;
+  let service: WindowsService;
+  let configService: ConfigService;
+  let karafService: KarafService;
+
+  beforeEach(() => {
+    spawnMock.mockClear();
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dev-manager-launch-'));
+    process.env.CONFIG_DIR = tmpDir;
+
+    configService = new ConfigService();
+    karafService = new KarafService(configService);
+    service = new WindowsService(configService, karafService);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('launchServerDebug retorna false se executável do Karaf não for encontrado', () => {
+    configService.saveSettings({ karafPath: path.join(tmpDir, 'inexistente') });
+    expect(service.launchServerDebug()).toBe(false);
+  });
+
+  it('launchServerDebug em modo CMD não inclui aspas manuais redundantes que abrem pastas no Explorer', () => {
+    const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+    const karafPath = path.join(tmpDir, 'karaf-win');
+    const binDir = path.join(karafPath, 'bin');
+    fs.mkdirSync(binDir, { recursive: true });
+    const batFile = path.join(binDir, 'winthor.bat');
+    fs.writeFileSync(batFile, '@echo off');
+
+    configService.saveSettings({ karafPath });
+
+    const ok = service.launchServerDebug('cmd');
+    expect(ok).toBe(true);
+    expect(spawnMock).toHaveBeenCalledTimes(1);
+
+    const callArgs = spawnMock.mock.calls[0];
+    const argsArray = callArgs[1] as string[];
+
+    // Garante que nenhum argumento contenha aspas literais dentro da string (que quebravam o cmd.exe /c start)
+    for (const arg of argsArray) {
+      expect(arg).not.toContain('"');
+    }
+
+    expect(argsArray).toEqual([
+      '/c',
+      'start',
+      'Karaf Debug Console',
+      '/d',
+      binDir,
+      'cmd.exe',
+      '/k',
+      'winthor.bat',
+      'debug'
+    ]);
+
+    platformSpy.mockRestore();
+  });
+
+  it('runProfileStep para etapa karaf com launchMode embedded aciona startEmbeddedKarafDebug', async () => {
+    const embeddedSpy = vi.spyOn(karafService, 'startEmbeddedKarafDebug').mockReturnValue(true);
+
+    const step: AutomationStep = {
+      id: 'karaf-step',
+      name: 'Iniciar Karaf',
+      type: 'karaf',
+      enabled: true,
+      launchMode: 'embedded'
+    };
+
+    const ok = await service.runProfileStep(step);
+    expect(ok).toBe(true);
+    expect(embeddedSpy).toHaveBeenCalled();
+  });
+
+  it('runProfileStep para etapa command herda variáveis do Java e remove aspas redundantes no CMD', async () => {
+    const platformSpy = vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
+    vi.spyOn(service, 'isCommandAvailable').mockResolvedValue(false); // Simula sem wt.exe para testar cmd fallback
+
+    const step: AutomationStep = {
+      id: 'cmd-step',
+      name: 'Executar WinThor',
+      type: 'command',
+      enabled: true,
+      command: 'winthor.bat debug',
+      launchMode: 'cmd'
+    };
+
+    const ok = await service.runProfileStep(step);
+    expect(ok).toBe(true);
+    expect(spawnMock).toHaveBeenCalledTimes(1);
+
+    const callArgs = spawnMock.mock.calls[0];
+    const argsArray = callArgs[1] as string[];
+    for (const arg of argsArray) {
+      expect(arg).not.toContain('"');
+    }
+
+    const options = callArgs[2] as { env?: Record<string, string> };
+    expect(options.env).toBeDefined();
+
+    platformSpy.mockRestore();
   });
 });

@@ -35,6 +35,7 @@ import { LOGS_TOUR_STEPS, LOGS_TOUR_STORAGE_KEY } from '../components/onboarding
 interface LogsPageProps {
   onNavigateToSettings?: () => void;
   isActive?: boolean;
+  settingsVersion?: number;
 }
 
 const DEFAULT_SOURCES: RealtimeLogSource[] = [];
@@ -49,7 +50,7 @@ const EMPTY_SOURCE: RealtimeLogSource = {
 
 type LogLevelFilter = 'ALL' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 
-export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActive }) => {
+export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActive, settingsVersion }) => {
   const tour = usePageTour(LOGS_TOUR_STORAGE_KEY);
   const [sources, setSources] = useState<RealtimeLogSource[]>(DEFAULT_SOURCES);
   const [activeSourceId, setActiveSourceId] = useState<string>('');
@@ -103,7 +104,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
 
   useEffect(() => {
     loadSavedSources();
-  }, [loadSavedSources]);
+  }, [loadSavedSources, settingsVersion]);
 
   // Salvar fontes atualizadas nas configurações
   const persistSources = useCallback(
@@ -555,6 +556,9 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
       <div className="bg-card/95 border-b border-border/80 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2.5 shrink-0 z-10 backdrop-blur-xs">
         {/* Esquerda: Seletor de Fontes em Pílulas */}
         <div className="flex items-center space-x-2">
+          <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/30 text-primary shrink-0" title="Logs em Tempo Real (Tail -f)">
+            <ScrollText className="w-4 h-4" />
+          </div>
           <div className="flex items-center space-x-1 bg-muted/60 p-0.5 rounded-xl border border-border/60">
             {sources.map((src) => {
               const isActive = src.id === activeSourceId;

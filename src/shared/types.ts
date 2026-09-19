@@ -62,7 +62,7 @@ export interface AutomationStep {
   cwd?: string;
   envVars?: Record<string, string>;
   port?: number;
-  launchMode?: 'wt' | 'cmd' | 'background';
+  launchMode?: 'wt' | 'cmd' | 'background' | 'embedded';
   wtWindowId?: string;
   delayAfterSeconds?: number;
   waitForPort?: boolean;
@@ -130,13 +130,20 @@ export type DeployStepType =
   | 'docker-build'
   | 'docker-push'
   | 'docker-restart'
-  | 'command';
+  | 'command'
+  | 'wait'
+  | 'http-healthcheck'
+  | 'service-action';
 
 export interface DeployStep {
   id: string;
   name: string;
   type: DeployStepType;
   enabled: boolean;
+  /** Se true, uma falha nesta etapa não abortará as etapas subsequentes do perfil */
+  continueOnError?: boolean;
+  /** Timeout máximo em segundos para execução desta etapa */
+  timeoutSeconds?: number;
   // maven-build
   projectPath?: string;
   skipTests?: boolean;
@@ -154,6 +161,16 @@ export interface DeployStep {
   dockerImageTag?: string;
   // docker-restart
   dockerContainer?: string;
+  // wait
+  waitDurationSeconds?: number;
+  // http-healthcheck
+  healthcheckUrl?: string;
+  healthcheckExpectedStatus?: number;
+  healthcheckTimeoutSeconds?: number;
+  healthcheckRetries?: number;
+  // service-action
+  serviceName?: string;
+  serviceAction?: 'start' | 'stop' | 'restart';
 }
 
 export interface DeployProfile {
@@ -161,6 +178,41 @@ export interface DeployProfile {
   name: string;
   description?: string;
   steps: DeployStep[];
+}
+
+export interface DeployStepResult {
+  stepId: string;
+  stepName: string;
+  stepType: DeployStepType;
+  success: boolean;
+  code?: number;
+  durationMs: number;
+  ignoredError?: boolean;
+  error?: string;
+}
+
+/** Entrada persistida do histórico de execuções de Perfis de Deploy (mais recente primeiro, limitado a 100). */
+export interface DeployProfileHistoryEntry {
+  id: string;
+  profileId: string;
+  profileName: string;
+  success: boolean;
+  error?: string;
+  startedAt: string;
+  durationMs: number;
+  totalSteps: number;
+  aborted?: boolean;
+  stepResults: DeployStepResult[];
+}
+
+export interface DeployProgressEvent {
+  stepId: string;
+  stepIndex: number;
+  totalSteps: number;
+  status: 'running' | 'completed' | 'failed' | 'skipped';
+  error?: string;
+  durationMs?: number;
+  ignoredError?: boolean;
 }
 
 export interface PomInfo {
@@ -312,10 +364,16 @@ export interface AppSettings {
   savedSqlSnippets?: SqlSnippet[];
   /** Histórico das últimas execuções de deploy/build Karaf (mais recente primeiro), limitado a 200 entradas */
   karafDeployHistory?: KarafDeployHistoryEntry[];
+  /** Histórico das últimas execuções de Perfis de Deploy (mais recente primeiro), limitado a 100 entradas */
+  deployProfileHistory?: DeployProfileHistoryEntry[];
   /** Perfis de ambiente salvos (paths/portas) — ver EnvironmentProfile */
   environmentProfiles?: EnvironmentProfile[];
   /** Id do último perfil de ambiente ativado — só pra destaque na UI, não afeta nenhuma lógica (ativar copia os campos pra cá) */
   activeEnvironmentProfileId?: string;
+  /** Provedores de LLM configurados pelo usuário (BYOK - Bring Your Own Key) */
+  llmProviders?: LlmProviderConfig[];
+  /** ID do provedor de LLM atualmente ativo */
+  activeLlmProviderId?: string;
 }
 
 export interface DocSyncTargetConfig {
@@ -672,6 +730,7 @@ export interface SystemAppInfo {
   freeMemoryMb: number;
   configPath: string;
   isAdmin: boolean;
+  isFirstRun?: boolean;
 }
 
 /**
@@ -920,6 +979,7 @@ export interface DockerDaemonStatus {
   error?: string;
   isWsl?: boolean;
   wslDistro?: string;
+  wslIp?: string | null;
   availableDistros?: WslDistroInfo[];
 }
 
@@ -939,10 +999,76 @@ export interface ComposeServiceStatus {
   ports?: string[];
 }
 
+export interface DockerContainerMount {
+  type: string;
+  name?: string;
+  source: string;
+  destination: string;
+  driver?: string;
+  mode: string;
+  rw: boolean;
+  propagation?: string;
+}
+
+export interface DockerContainerPortBinding {
+  hostIp: string;
+  hostPort: string;
+}
+
+export interface DockerContainerInspect {
+  id: string;
+  name: string;
+  image: string;
+  imageId?: string;
+  created: string;
+  path?: string;
+  args?: string[];
+  state: {
+    status: string;
+    running: boolean;
+    paused: boolean;
+    restarting: boolean;
+    oomKilled?: boolean;
+    dead?: boolean;
+    pid?: number;
+    exitCode: number;
+    error?: string;
+    startedAt: string;
+    finishedAt: string;
+    health?: {
+      status: string;
+      failingStreak?: number;
+    };
+  };
+  networkSettings: {
+    ipAddress: string;
+    gateway: string;
+    macAddress: string;
+    ports: Record<string, DockerContainerPortBinding[] | null>;
+    networks?: Record<string, { ipAddress: string; gateway: string }>;
+  };
+  mounts: DockerContainerMount[];
+  env: string[];
+  command?: string;
+  workingDir?: string;
+  restartPolicy?: {
+    name: string;
+    maximumRetryCount?: number;
+  };
+}
+
+export interface WslActionResult {
+  success: boolean;
+  message: string;
+  output?: string;
+  error?: string;
+}
+
 // Aliases semânticos para compatibilidade genérica de containers
 export type ContainerInfo = DockerContainerInfo;
 export type ContainerDaemonStatus = DockerDaemonStatus;
 export type ContainerStats = DockerContainerStats;
+export type ContainerInspect = DockerContainerInspect;
 
 export interface OracleMaintenanceResult {
   success: boolean;
@@ -959,6 +1085,46 @@ export interface OracleDataPumpParams {
   schemaOrig: string;
   schemaDest?: string;
   codclipc: string;
+}
+
+export interface WslDumpFileInfo {
+  name: string;
+  size: number;
+  formattedSize: string;
+  mtime?: string;
+}
+
+export interface WshPrerequisiteStatus {
+  file: string;
+  label: string;
+  required: boolean;
+  exists: boolean;
+  size?: number;
+  formattedSize?: string;
+  description: string;
+}
+
+export interface WslSnapshotFileInfo {
+  name: string;
+  path: string;
+  sizeBytes: number;
+  formattedSize: string;
+  createdAt: string;
+}
+
+export interface WslSnapshotActionResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface InfrDockerScriptStatus {
+  script: string;
+  name: string;
+  path: string;
+  exists: boolean;
+  type: 'oracle' | 'wta' | 'wsh';
+  description: string;
 }
 
 
@@ -1198,4 +1364,141 @@ export interface LogChunkEvent {
   truncatedOrRotated?: boolean;
   timestamp: string;
 }
+
+// ==========================================
+// Provedor de LLM Próprio (BYOK - Bring Your Own Key)
+// ==========================================
+
+export type LlmProviderType = 'openai' | 'gemini' | 'anthropic' | 'ollama' | 'openrouter' | 'custom';
+
+/** Configuração de um provedor de LLM (BYOK). Templates de Groq/DeepSeek usam provider: 'openai'
+ *  com baseUrl fixo (https://api.groq.com/openai/v1, https://api.deepseek.com), pois ambos
+ *  implementam o protocolo OpenAI-compatible — não são um LlmProviderType próprio. */
+export interface LlmProviderConfig {
+  id: string;
+  name: string;
+  provider: LlmProviderType;
+  /** Texto plano — mesmo padrão de karafPass/authToken no repo (sem safeStorage). Ver débito técnico. */
+  apiKey?: string;
+  baseUrl?: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  /** Timeout em ms para a chamada HTTP (evita travar o main process com Ollama/rede lenta). Padrão: 30000. */
+  timeoutMs?: number;
+  systemPrompt?: string;
+  enabled: boolean;
+  isDefault?: boolean;
+}
+
+export interface LlmChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface LlmChatRequest {
+  providerId?: string;
+  messages: LlmChatMessage[];
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface LlmChatResponse {
+  text: string;
+  provider: string;
+  model: string;
+  usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+}
+
+export interface LlmTestResult {
+  success: boolean;
+  message: string;
+  latencyMs?: number;
+}
+
+export interface LlmRagQueryRequest {
+  query: string;
+  topK?: number;
+  sourceLabel?: string;
+  systemInstruction?: string;
+}
+
+export interface LlmRagQueryResponse {
+  answer: string;
+  sources: Array<{ title: string; path: string; score: number }>;
+}
+
+export const DEFAULT_LLM_PROVIDER_TEMPLATES: Omit<LlmProviderConfig, 'id'>[] = [
+  {
+    name: 'OpenAI',
+    provider: 'openai',
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4o-mini',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeoutMs: 30000,
+    enabled: true
+  },
+  {
+    name: 'Google Gemini',
+    provider: 'gemini',
+    baseUrl: 'https://generativelanguage.googleapis.com',
+    model: 'gemini-2.0-flash',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeoutMs: 30000,
+    enabled: true
+  },
+  {
+    name: 'Anthropic Claude',
+    provider: 'anthropic',
+    baseUrl: 'https://api.anthropic.com',
+    model: 'claude-3-5-sonnet-20241022',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeoutMs: 30000,
+    enabled: true
+  },
+  {
+    name: 'Groq',
+    provider: 'openai',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeoutMs: 30000,
+    enabled: true
+  },
+  {
+    name: 'DeepSeek',
+    provider: 'openai',
+    baseUrl: 'https://api.deepseek.com',
+    model: 'deepseek-chat',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeoutMs: 30000,
+    enabled: true
+  },
+  {
+    name: 'OpenRouter',
+    provider: 'openrouter',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    model: 'anthropic/claude-3.5-sonnet',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeoutMs: 30000,
+    enabled: true
+  },
+  {
+    name: 'Ollama Local',
+    provider: 'ollama',
+    baseUrl: 'http://localhost:11434/v1',
+    model: 'llama3.2',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeoutMs: 30000,
+    enabled: true
+  }
+];
+
 

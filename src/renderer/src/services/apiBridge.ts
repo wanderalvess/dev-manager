@@ -29,10 +29,17 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
+  DockerContainerInspect,
   WslDistroInfo,
+  WslActionResult,
   ContainerEnvironment,
   OracleMaintenanceResult,
   OracleDataPumpParams,
+  WslDumpFileInfo,
+  WshPrerequisiteStatus,
+  WslSnapshotFileInfo,
+  WslSnapshotActionResult,
+  InfrDockerScriptStatus,
   NetworkIpInfo,
   ExplainPlanResult,
   KarafBundleInfo,
@@ -48,6 +55,8 @@ import type {
   HttpHealthResult,
   DeployProfile,
   DeployStep,
+  DeployProfileHistoryEntry,
+  DeployProgressEvent,
   TableColumnInfo,
   DockerContainerStats,
   ComposeServiceStatus,
@@ -57,7 +66,13 @@ import type {
   BackupResult,
   BackupFileInfo,
   BackupHistoryEntry,
-  BackupWebhookConfig
+  BackupWebhookConfig,
+  LlmProviderConfig,
+  LlmChatRequest,
+  LlmChatResponse,
+  LlmTestResult,
+  LlmRagQueryRequest,
+  LlmRagQueryResponse
 } from '../../../shared/types';
 
 class WebSocketManager {
@@ -474,6 +489,17 @@ export function initApiBridge() {
       });
     },
 
+    manageKarafBundlesBatch: async (
+      action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
+      bundleIds: string[],
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string; processedCount: number }> => {
+      return apiFetch('/api/karaf/bundles/manage-batch', {
+        method: 'POST',
+        body: JSON.stringify({ action, bundleIds, credentials })
+      });
+    },
+
     getKarafLog: async (
       lines?: number,
       credentials?: { user?: string; pass?: string; port?: number }
@@ -574,8 +600,24 @@ export function initApiBridge() {
       });
     },
 
+    abortDeploy: async (): Promise<{ success: boolean }> => {
+      return apiFetch('/api/deploy/abort', { method: 'POST' });
+    },
+
+    getDeployProfileHistory: async (): Promise<DeployProfileHistoryEntry[]> => {
+      return apiFetch('/api/deploy/history');
+    },
+
+    clearDeployProfileHistory: async (): Promise<{ success: boolean }> => {
+      return apiFetch('/api/deploy/history', { method: 'DELETE' });
+    },
+
     onDeployLogChunk: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('deploy:log-chunk', callback);
+    },
+
+    onDeployStepProgress: (callback: (data: DeployProgressEvent) => void) => {
+      return wsManager.subscribe('deploy:step-progress', callback);
     },
 
     // Git & Azure DevOps
@@ -690,6 +732,41 @@ export function initApiBridge() {
       return apiFetch('/api/docs/test-jira-connection', {
         method: 'POST',
         body: JSON.stringify(config)
+      });
+    },
+
+    testLlmConnection: async (config: LlmProviderConfig): Promise<LlmTestResult> => {
+      return apiFetch('/api/llm/test-connection', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+    },
+
+    llmChat: async (request: LlmChatRequest): Promise<LlmChatResponse> => {
+      return apiFetch('/api/llm/chat', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
+    },
+
+    askDocsWithAi: async (request: LlmRagQueryRequest): Promise<LlmRagQueryResponse> => {
+      return apiFetch('/api/llm/ask-with-docs', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
+    },
+
+    askLlm: async (request: LlmRagQueryRequest, providerConfig?: LlmProviderConfig): Promise<LlmRagQueryResponse> => {
+      return apiFetch('/api/llm/ask-with-docs', {
+        method: 'POST',
+        body: JSON.stringify({ ...request, providerId: providerConfig?.id })
+      });
+    },
+
+    chatLlm: async (request: LlmChatRequest, providerConfig?: LlmProviderConfig): Promise<LlmChatResponse> => {
+      return apiFetch('/api/llm/chat', {
+        method: 'POST',
+        body: JSON.stringify({ ...request, providerId: providerConfig?.id })
       });
     },
 
@@ -944,9 +1021,73 @@ export function initApiBridge() {
       }
     },
 
+    inspectDockerContainer: async (containerId: string): Promise<DockerContainerInspect | null> => {
+      try {
+        return await apiFetch<DockerContainerInspect>(`/api/docker/containers/${containerId}/inspect`);
+      } catch {
+        return null;
+      }
+    },
+    inspectContainer: async (containerId: string): Promise<DockerContainerInspect | null> => {
+      try {
+        return await apiFetch<DockerContainerInspect>(`/api/containers/${containerId}/inspect`);
+      } catch {
+        return null;
+      }
+    },
+
+    pauseDockerContainer: async (containerId: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/pause`, { method: 'POST' });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    pauseContainer: async (containerId: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/pause`, { method: 'POST' });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+
+    unpauseDockerContainer: async (containerId: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/unpause`, { method: 'POST' });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    unpauseContainer: async (containerId: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/unpause`, { method: 'POST' });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+
+    pruneDockerContainers: async (): Promise<{ success: boolean; output: string }> => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/docker/containers/prune', { method: 'POST' });
+      } catch (err: any) {
+        return { success: false, output: err.message };
+      }
+    },
+    pruneContainers: async (): Promise<{ success: boolean; output: string }> => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/containers/prune', { method: 'POST' });
+      } catch (err: any) {
+        return { success: false, output: err.message };
+      }
+    },
+
     dockerComposeUp: async (
       composeFilePath: string,
-      options?: { profile?: string; detach?: boolean }
+      options?: { profile?: string; detach?: boolean; build?: boolean }
     ): Promise<{ code: number; stdout: string; stderr: string }> => {
       return apiFetch('/api/docker/compose-up', {
         method: 'POST',
@@ -955,12 +1096,35 @@ export function initApiBridge() {
     },
     dockerComposeDown: async (
       composeFilePath: string,
-      options?: { profile?: string }
+      options?: { profile?: string; volumes?: boolean }
     ): Promise<{ code: number; stdout: string; stderr: string }> => {
       return apiFetch('/api/docker/compose-down', {
         method: 'POST',
         body: JSON.stringify({ composeFilePath, ...options })
       });
+    },
+    dockerComposeRestart: async (
+      composeFilePath: string,
+      options?: { profile?: string }
+    ): Promise<{ code: number; stdout: string; stderr: string }> => {
+      return apiFetch('/api/docker/compose-restart', {
+        method: 'POST',
+        body: JSON.stringify({ composeFilePath, ...options })
+      });
+    },
+    dockerComposeLogs: async (
+      composeFilePath: string,
+      options?: { profile?: string; lines?: number }
+    ): Promise<string> => {
+      try {
+        const res = await apiFetch<{ logs: string }>('/api/docker/compose-logs', {
+          method: 'POST',
+          body: JSON.stringify({ composeFilePath, ...options })
+        });
+        return res.logs;
+      } catch (err: any) {
+        return `Erro ao buscar logs: ${err.message}`;
+      }
     },
     dockerComposeStatus: async (composeFilePath: string, profile?: string): Promise<ComposeServiceStatus[]> => {
       try {
@@ -982,6 +1146,161 @@ export function initApiBridge() {
         return await apiFetch<WslDistroInfo[]>('/api/wsl/distros');
       } catch {
         return [];
+      }
+    },
+    startWslDockerDaemon: async (distro: string): Promise<WslActionResult> => {
+      try {
+        return await apiFetch<WslActionResult>('/api/wsl/start-docker-daemon', {
+          method: 'POST',
+          body: JSON.stringify({ distro })
+        });
+      } catch (err: any) {
+        return { success: false, message: err.message || 'Falha ao iniciar Docker daemon' };
+      }
+    },
+    terminateWslDistro: async (distro: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/wsl/distros/${distro}/terminate`, { method: 'POST' });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    openWslTerminal: async (distro: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>(`/api/wsl/distros/${distro}/terminal`, { method: 'POST' });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    getWslDistroIp: async (distro?: string): Promise<string | null> => {
+      try {
+        if (!distro) return null;
+        const res = await apiFetch<{ ip: string | null }>(`/api/wsl/distros/${distro}/ip`);
+        return res.ip;
+      } catch {
+        return null;
+      }
+    },
+    openWslDumpsFolder: async (distro?: string): Promise<{ success: boolean; path: string; error?: string }> => {
+      try {
+        return await apiFetch('/api/wsl/open-dumps', {
+          method: 'POST',
+          body: JSON.stringify({ distro })
+        });
+      } catch (err: any) {
+        return { success: false, path: '', error: err?.message || String(err) };
+      }
+    },
+    listWslDmpFiles: async (distro?: string): Promise<WslDumpFileInfo[]> => {
+      try {
+        const query = distro ? `?distro=${encodeURIComponent(distro)}` : '';
+        return await apiFetch<WslDumpFileInfo[]>(`/api/wsl/dumps${query}`);
+      } catch {
+        return [];
+      }
+    },
+    generateMd5: async (text: string): Promise<{ lower: string; upper: string }> => {
+      try {
+        return await apiFetch('/api/wsl/md5', {
+          method: 'POST',
+          body: JSON.stringify({ text })
+        });
+      } catch {
+        return { lower: '', upper: '' };
+      }
+    },
+    checkWshPrerequisites: async (distro?: string): Promise<WshPrerequisiteStatus[]> => {
+      try {
+        const query = distro ? `?distro=${encodeURIComponent(distro)}` : '';
+        return await apiFetch<WshPrerequisiteStatus[]>(`/api/wsl/wsh-prerequisites${query}`);
+      } catch {
+        return [];
+      }
+    },
+    openWslOptFolder: async (distro?: string): Promise<{ success: boolean; path: string; error?: string }> => {
+      try {
+        return await apiFetch('/api/wsl/open-opt', {
+          method: 'POST',
+          body: JSON.stringify({ distro })
+        });
+      } catch (err: any) {
+        return { success: false, path: '', error: err?.message || String(err) };
+      }
+    },
+    getWslSnapshotsDir: async (): Promise<string> => {
+      try {
+        const res = await apiFetch<{ dir: string }>('/api/wsl/snapshots-dir');
+        return res.dir || '';
+      } catch {
+        return '';
+      }
+    },
+    setWslSnapshotsDir: async (dir: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>('/api/wsl/snapshots-dir', {
+          method: 'PUT',
+          body: JSON.stringify({ dir })
+        });
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    listWslSnapshots: async (dir?: string): Promise<WslSnapshotFileInfo[]> => {
+      try {
+        const query = dir ? `?dir=${encodeURIComponent(dir)}` : '';
+        return await apiFetch<WslSnapshotFileInfo[]>(`/api/wsl/snapshots${query}`);
+      } catch {
+        return [];
+      }
+    },
+    importWslSnapshot: async (params: { distroName: string; installDir: string; tarPath: string }): Promise<WslSnapshotActionResult> => {
+      try {
+        return await apiFetch<WslSnapshotActionResult>('/api/wsl/import', {
+          method: 'POST',
+          body: JSON.stringify(params)
+        });
+      } catch (err: any) {
+        return { success: false, error: err.message };
+      }
+    },
+    exportWslSnapshot: async (params: { distroName: string; outputPath: string }): Promise<WslSnapshotActionResult> => {
+      try {
+        return await apiFetch<WslSnapshotActionResult>('/api/wsl/export', {
+          method: 'POST',
+          body: JSON.stringify(params)
+        });
+      } catch (err: any) {
+        return { success: false, error: err.message };
+      }
+    },
+    unregisterWslDistro: async (distroName: string): Promise<WslSnapshotActionResult> => {
+      try {
+        return await apiFetch<WslSnapshotActionResult>(`/api/wsl/distros/${encodeURIComponent(distroName)}`, {
+          method: 'DELETE'
+        });
+      } catch (err: any) {
+        return { success: false, error: err.message };
+      }
+    },
+    checkInfrDockerScripts: async (customPath?: string): Promise<InfrDockerScriptStatus[]> => {
+      try {
+        const query = customPath ? `?path=${encodeURIComponent(customPath)}` : '';
+        return await apiFetch<InfrDockerScriptStatus[]>(`/api/infr/scripts${query}`);
+      } catch {
+        return [];
+      }
+    },
+    runInfrSetupScript: async (scriptType: 'oracle' | 'wta' | 'wsh', options: any): Promise<{ success: boolean; output: string }> => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/infr/run-script', {
+          method: 'POST',
+          body: JSON.stringify({ scriptType, options })
+        });
+      } catch (err: any) {
+        return { success: false, output: err.message };
       }
     },
     setDockerTargetWslDistro: async (distro: string | null): Promise<DockerDaemonStatus> => {
@@ -1045,6 +1364,17 @@ export function initApiBridge() {
         method: 'POST',
         body: JSON.stringify(params)
       });
+    },
+    openWtaKarafClient: async (containerName: string): Promise<boolean> => {
+      try {
+        const res = await apiFetch<{ success: boolean }>('/api/docker/wta-karaf-client', {
+          method: 'POST',
+          body: JSON.stringify({ containerName })
+        });
+        return res.success;
+      } catch {
+        return false;
+      }
     },
 
     // Rede & Detecção de IPs (Local e WSL)
@@ -1173,3 +1503,10 @@ export function initApiBridge() {
     }
   };
 }
+
+/**
+ * Instância exportada para conveniência de importação direta,
+ * apontando para a interface `window.electronAPI`.
+ */
+export const api = (typeof window !== 'undefined' ? (window as any).electronAPI : undefined) as typeof window.electronAPI;
+

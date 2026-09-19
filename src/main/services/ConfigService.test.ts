@@ -185,4 +185,80 @@ describe('ConfigService', () => {
       expect(serviceA.getSettings().appPath).toBe('C:/de-b');
     });
   });
+
+  describe('sanitizeSecrets e Export/Import de segredos', () => {
+    it('sanitizeSecrets limpa todos os 5 campos sensíveis (karafPass, db, confluence, jira e llm)', () => {
+      const service = new ConfigService();
+      const rawSettings = {
+        ...service.getSettings(),
+        karafPass: 'super-secret-karaf',
+        databaseConnections: [
+          { id: 'db-1', name: 'Oracle Prod', type: 'oracle' as const, host: 'localhost', port: 1521, database: 'XE', user: 'system', password: 'secret-db-pass' }
+        ],
+        confluenceSources: [
+          { id: 'conf-1', name: 'Docs Wiki', baseUrl: 'https://confluence.corp', spaceKey: 'DEV', authToken: 'secret-conf-token', enabled: true }
+        ],
+        jiraSources: [
+          { id: 'jira-1', name: 'Jira Issues', baseUrl: 'https://jira.corp', jql: 'project=DEV', authToken: 'secret-jira-token', enabled: true }
+        ],
+        llmProviders: [
+          { id: 'llm-1', name: 'OpenAI Test', provider: 'openai' as const, model: 'gpt-4o-mini', apiKey: 'sk-test-secret-key', enabled: true }
+        ]
+      };
+
+      const sanitized = service.sanitizeSecrets(rawSettings);
+
+      expect(sanitized.karafPass).toBe('');
+      expect(sanitized.databaseConnections?.[0].password).toBe('');
+      expect(sanitized.confluenceSources?.[0].authToken).toBe('');
+      expect(sanitized.jiraSources?.[0].authToken).toBe('');
+      expect(sanitized.llmProviders?.[0].apiKey).toBe('');
+      // Dados não sensíveis devem permanecer intactos
+      expect(sanitized.llmProviders?.[0].name).toBe('OpenAI Test');
+      expect(sanitized.llmProviders?.[0].model).toBe('gpt-4o-mini');
+    });
+
+    it('exportSettings(true) sanitiza segredos e exportSettings(false) preserva segredos', () => {
+      const service = new ConfigService();
+      service.saveSettings({
+        karafPass: 'karaf-pass-123',
+        llmProviders: [
+          { id: 'llm-1', name: 'Claude', provider: 'anthropic', model: 'claude-3-5-sonnet', apiKey: 'sk-ant-secret', enabled: true }
+        ]
+      });
+
+      const exportedSanitized = JSON.parse(service.exportSettings(true));
+      expect(exportedSanitized.karafPass).toBe('');
+      expect(exportedSanitized.llmProviders[0].apiKey).toBe('');
+
+      const exportedRaw = JSON.parse(service.exportSettings(false));
+      expect(exportedRaw.karafPass).toBe('karaf-pass-123');
+      expect(exportedRaw.llmProviders[0].apiKey).toBe('sk-ant-secret');
+    });
+
+    it('importSettings preserva apiKey existente quando JSON importado não contém a chave', () => {
+      const service = new ConfigService();
+      service.saveSettings({
+        llmProviders: [
+          { id: 'llm-1', name: 'Meu Ollama', provider: 'ollama', model: 'llama3.2', apiKey: 'minha-chave-local', enabled: true }
+        ],
+        activeLlmProviderId: 'llm-1'
+      });
+
+      const importPayload = JSON.stringify({
+        llmProviders: [
+          { id: 'llm-1', name: 'Meu Ollama Renomeado', provider: 'ollama', model: 'llama3.2', apiKey: '', enabled: true }
+        ],
+        activeLlmProviderId: 'llm-1'
+      });
+
+      const result = service.importSettings(importPayload);
+      expect(result.success).toBe(true);
+
+      const reloaded = service.getSettings();
+      expect(reloaded.llmProviders?.[0].name).toBe('Meu Ollama Renomeado');
+      expect(reloaded.llmProviders?.[0].apiKey).toBe('minha-chave-local');
+    });
+  });
 });
+

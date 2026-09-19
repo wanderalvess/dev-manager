@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   GitPullRequest,
   GitBranch,
@@ -39,13 +39,15 @@ interface GitAzurePageProps {
   onRefreshProjects: () => void;
   isRefreshing: boolean;
   onNavigateToSettings?: () => void;
+  settingsVersion?: number;
 }
 
 export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   projects,
   onRefreshProjects,
   isRefreshing,
-  onNavigateToSettings
+  onNavigateToSettings,
+  settingsVersion
 }) => {
   const tour = usePageTour(GIT_TOUR_STORAGE_KEY);
   const [selectedPath, setSelectedPath] = useState<string>(projects[0]?.path || '');
@@ -58,6 +60,21 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
       setSelectedPath(projects[0].path);
     }
   }, [projects, selectedPath]);
+
+  // Sincroniza configurações globais (ex: branch alvo padrão configurado nas configurações)
+  useEffect(() => {
+    if (window.electronAPI?.getSettings) {
+      window.electronAPI.getSettings().then((st) => {
+        if (st.targetPrBranch) {
+          setTargetBranch((curr) => (curr === 'develop' || !curr ? st.targetPrBranch : curr));
+        }
+      }).catch(() => {});
+    }
+    if (settingsVersion && settingsVersion > 0) {
+      onRefreshProjects();
+    }
+  }, [settingsVersion, onRefreshProjects]);
+
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [targetBranch, setTargetBranch] = useState<string>('develop');
   const [gitOutput, setGitOutput] = useState<string | null>(null);
@@ -118,15 +135,34 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
     }
   };
 
-  const handleOpenAzureRepo = async () => {
+  const handleOpenRemoteRepo = async () => {
     if (!currentProject || !currentProject.remoteUrl) return;
     let url = currentProject.remoteUrl;
     if (url.includes('dev.azure.com')) {
       const match = url.match(/https:\/\/[^@]*@?(dev\.azure\.com\/[^/]+\/[^/]+\/_git\/[^/\s]+)/);
       if (match) url = `https://${match[1]}`;
+    } else if (url.includes('github.com')) {
+      url = url
+        .replace(/^git@github\.com:/, 'https://github.com/')
+        .replace(/https:\/\/[^@]+@github\.com\//, 'https://github.com/')
+        .replace(/\.git$/, '');
+    } else if (url.includes('gitlab.com')) {
+      url = url
+        .replace(/^git@gitlab\.com:/, 'https://gitlab.com/')
+        .replace(/https:\/\/[^@]+@gitlab\.com\//, 'https://gitlab.com/')
+        .replace(/\.git$/, '');
     }
     await window.electronAPI.openExternal(url);
   };
+
+  const remoteProviderLabel = useMemo(() => {
+    if (!currentProject?.remoteUrl) return null;
+    const prov = currentProject.provider;
+    if (prov === 'github' || currentProject.remoteUrl.includes('github.com')) return 'Ver no GitHub';
+    if (prov === 'gitlab' || currentProject.remoteUrl.includes('gitlab.com')) return 'Ver no GitLab';
+    if (currentProject.isAzure || currentProject.remoteUrl.includes('dev.azure.com')) return 'Ver no Azure';
+    return 'Ver Remoto';
+  }, [currentProject]);
 
   const handleOpenAzurePipelines = async () => {
     if (!currentProject || !currentProject.isAzure || !currentProject.azureOrg || !currentProject.azureProject) return;
@@ -363,23 +399,25 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                     <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{currentProject.path}</p>
                   </div>
 
-                  {currentProject.isAzure && (
+                  {currentProject.remoteUrl && (
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={handleOpenAzurePipelines}
-                        className="flex items-center space-x-1.5 text-xs text-foreground bg-card hover:bg-muted border border-border px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm"
-                        title="Ver pipelines de integração contínua (CI/CD) no Azure DevOps"
-                      >
-                        <span>Pipelines CI/CD</span>
-                        <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
+                      {currentProject.isAzure && (
+                        <button
+                          onClick={handleOpenAzurePipelines}
+                          className="flex items-center space-x-1.5 text-xs text-foreground bg-card hover:bg-muted border border-border px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm cursor-pointer"
+                          title="Ver pipelines de integração contínua (CI/CD) no Azure DevOps"
+                        >
+                          <span>Pipelines CI/CD</span>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                      )}
 
                       <button
-                        onClick={handleOpenAzureRepo}
-                        className="flex items-center space-x-1.5 text-xs text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm"
-                        title="Abrir repositório no portal do Azure DevOps"
+                        onClick={handleOpenRemoteRepo}
+                        className="flex items-center space-x-1.5 text-xs text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm cursor-pointer"
+                        title="Abrir repositório no navegador"
                       >
-                        <span>Ver no Azure</span>
+                        <span>{remoteProviderLabel || 'Ver Remoto'}</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -756,7 +794,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   type="button"
                   onClick={handleCommitAndPush}
                   disabled={isCommitting || !commitMessage.trim()}
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition disabled:opacity-50 shadow-sm cursor-pointer"
+                  className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs flex items-center space-x-1.5 transition disabled:opacity-50 shadow-md shadow-primary/25 cursor-pointer"
                 >
                   <UploadCloud className={`w-3.5 h-3.5 ${isCommitting ? 'animate-pulse' : ''}`} />
                   <span>{isCommitting ? 'Enviando...' : 'Confirmar & Enviar (Push)'}</span>
@@ -870,7 +908,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                     setIsDiffModalOpen(false);
                     setIsCommitModalOpen(true);
                   }}
-                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                  className="px-2.5 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
                   title="Prosseguir para commit destas alterações"
                 >
                   <UploadCloud className="w-3.5 h-3.5" />

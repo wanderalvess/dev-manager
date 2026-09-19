@@ -5,6 +5,9 @@ import {
   DockerDaemonStatus,
   DockerContainerStats,
   ComposeServiceStatus,
+  DockerContainerInspect,
+  DockerContainerMount,
+  DockerContainerPortBinding,
   OracleMaintenanceResult,
   OracleDataPumpParams
 } from '../../shared/types';
@@ -121,6 +124,7 @@ export class DockerService {
           { timeout: 5000, windowsHide: true }
         );
         const version = stdout.trim();
+        const wslIp = await wslService.getDistroIp(this.targetWslDistro);
         return {
           installed: true,
           running: true,
@@ -128,15 +132,18 @@ export class DockerService {
           version: version ? `Docker (WSL: ${this.targetWslDistro}) v${version}` : `Docker WSL (${this.targetWslDistro})`,
           isWsl: true,
           wslDistro: this.targetWslDistro,
+          wslIp,
           availableDistros
         };
       } catch {
+        const wslIp = await wslService.getDistroIp(this.targetWslDistro);
         return {
           installed: true,
           running: false,
           engine: 'docker',
           isWsl: true,
           wslDistro: this.targetWslDistro,
+          wslIp,
           availableDistros,
           error: `Docker não está respondendo dentro da distro WSL "${this.targetWslDistro}". Certifique-se de que o daemon está em execução (dockerd/service docker start).`
         };
@@ -195,6 +202,7 @@ export class DockerService {
               { timeout: 5000, windowsHide: true }
             );
             const version = stdout.trim();
+            const wslIp = await wslService.getDistroIp(wslDistroWithDocker);
             return {
               installed: true,
               running: true,
@@ -202,15 +210,18 @@ export class DockerService {
               version: version ? `Docker (WSL: ${wslDistroWithDocker}) v${version}` : `Docker WSL (${wslDistroWithDocker})`,
               isWsl: true,
               wslDistro: wslDistroWithDocker,
+              wslIp,
               availableDistros
             };
           } catch {
+            const wslIp = await wslService.getDistroIp(wslDistroWithDocker);
             return {
               installed: true,
               running: false,
               engine: 'docker',
               isWsl: true,
               wslDistro: wslDistroWithDocker,
+              wslIp,
               availableDistros,
               error: `Encontrada distro WSL "${wslDistroWithDocker}", mas o daemon do Docker não está ativo.`
             };
@@ -242,6 +253,46 @@ export class DockerService {
         };
       }
     }
+  }
+
+  /**
+   * Garante que o motor Docker esteja em execução.
+   * Se uma distro WSL estiver configurada e o daemon estiver offline,
+   * tenta auto-inicializar o serviço dockerd automaticamente.
+   */
+  public async ensureDockerRunning(distroOverride?: string): Promise<{ running: boolean; error?: string }> {
+    const targetDistro = distroOverride || (this.useWsl ? this.targetWslDistro : null);
+
+    if (targetDistro) {
+      const isAlreadyRunning = await wslService.testDockerInDistro(targetDistro);
+      if (isAlreadyRunning) {
+        return { running: true };
+      }
+
+      console.log(`[DockerService] Auto-healing: iniciando daemon Docker na distro WSL "${targetDistro}"...`);
+      const startRes = await wslService.startDockerDaemon(targetDistro);
+      if (startRes.success) {
+        return { running: true };
+      }
+      return {
+        running: false,
+        error: startRes.message || `O Docker daemon está inativo na distro WSL "${targetDistro}".`
+      };
+    }
+
+    const currentStatus = await this.checkDockerStatus();
+    if (currentStatus.running) return { running: true };
+
+    if (currentStatus.isWsl && currentStatus.wslDistro) {
+      const startRes = await wslService.startDockerDaemon(currentStatus.wslDistro);
+      if (startRes.success) return { running: true };
+      return { running: false, error: startRes.message };
+    }
+
+    return {
+      running: false,
+      error: currentStatus.error || 'Motor de containers Docker/Podman offline.'
+    };
   }
 
   /**
@@ -292,29 +343,126 @@ export class DockerService {
     }
   }
 
+  private static readonly CONTAINER_ALIASES: Record<string, string[]> = {
+    'oracle-winthor': ['oracle-local', 'oracle', 'oracle-xe', 'winthor-oracle'],
+    'oracle-local': ['oracle-winthor', 'oracle', 'oracle-xe', 'winthor-oracle'],
+    'oracle': ['oracle-local', 'oracle-winthor', 'oracle-xe'],
+    'oracle-xe': ['oracle-local', 'oracle-winthor'],
+    'linux-winthor': ['wta-local', 'wta', 'wta-winthor'],
+    'wta-local': ['linux-winthor', 'wta', 'wta-winthor'],
+    'wta': ['wta-local', 'linux-winthor', 'wta-winthor'],
+    'wta-winthor': ['wta-local', 'linux-winthor'],
+    'wsh-winthor': ['wsh-local', 'wsh'],
+    'wsh-local': ['wsh-winthor', 'wsh'],
+    'wsh': ['wsh-local', 'wsh-winthor']
+  };
+
   /**
-   * Inicia um container existente.
+   * Resolve um alias existente caso o nome de container informado não exista
+   * na distro ativa, mas seu equivalente exista (ex: oracle-winthor <-> oracle-local).
+   */
+  public async resolveContainerAlias(targetName: string): Promise<string | null> {
+    const clean = targetName.toLowerCase().trim();
+    const candidates = DockerService.CONTAINER_ALIASES[clean];
+    if (!candidates || candidates.length === 0) return null;
+
+    try {
+      const { binary, finalArgs } = await this.resolveCommandAndArgs('ps', ['-a', '--format', '{{.Names}}']);
+      const { stdout } = await execFileAsync(binary, finalArgs, { timeout: 6000, windowsHide: true });
+      const existingNames = stdout
+        .trim()
+        .split('\n')
+        .map((n) => n.replace(/^\//, '').trim().toLowerCase())
+        .filter(Boolean);
+
+      for (const candidate of candidates) {
+        if (existingNames.includes(candidate.toLowerCase())) {
+          return candidate;
+        }
+      }
+    } catch {
+      // Ignora erro de checagem prévia
+    }
+    return null;
+  }
+
+  /**
+   * Inicia um container existente com auto-healing caso o Docker daemon esteja desligado no WSL
+   * e resolução automática de aliases (ex: oracle-winthor <-> oracle-local).
    */
   public async startContainer(containerId: string): Promise<boolean> {
     if (!this.isValidContainerId(containerId)) {
       throw new Error('Identificador de container inválido.');
     }
 
-    try {
-      const { binary, finalArgs } = await this.resolveCommandAndArgs('start', [containerId]);
+    const runStart = async (targetId: string) => {
+      const { binary, finalArgs } = await this.resolveCommandAndArgs('start', [targetId]);
       await execFileAsync(binary, finalArgs, {
         timeout: 20000,
         windowsHide: true
       });
       return true;
+    };
+
+    try {
+      return await runStart(containerId);
     } catch (err: any) {
+      const errStr = (err?.stderr || '') + ' ' + (err?.message || '') + ' ' + (err?.stdout || '');
+      const isDaemonOffline =
+        errStr.includes('Cannot connect to the Docker daemon') ||
+        errStr.includes('Is the docker daemon running') ||
+        errStr.includes('docker daemon is not running') ||
+        errStr.includes('Failed to connect to');
+
+      // Se o erro foi daemon offline e estamos usando WSL, tenta auto-iniciar o dockerd e retry
+      if (isDaemonOffline && this.useWsl && this.targetWslDistro) {
+        console.warn(`[DockerService] Daemon offline detectado ao iniciar ${containerId}. Tentando auto-healing na distro "${this.targetWslDistro}"...`);
+        const heal = await wslService.startDockerDaemon(this.targetWslDistro);
+        if (heal.success) {
+          try {
+            return await runStart(containerId);
+          } catch (retryErr: any) {
+            err = retryErr;
+          }
+        } else if (heal.message) {
+          throw new Error(heal.message);
+        }
+      }
+
       console.error(`[DockerService] Erro ao iniciar container ${containerId}:`, err);
+
+      const updatedErrStr = (err?.stderr || '') + ' ' + (err?.message || '') + ' ' + (err?.stdout || '');
+      if (updatedErrStr.includes('No such container')) {
+        // Tenta auto-resolução de alias (ex: oracle-winthor -> oracle-local)
+        const alias = await this.resolveContainerAlias(containerId);
+        if (alias) {
+          try {
+            console.log(`[DockerService] Redirecionando alias automático: "${containerId}" -> "${alias}"`);
+            return await runStart(alias);
+          } catch (aliasErr: any) {
+            console.warn(`[DockerService] Falha ao tentar iniciar alias "${alias}":`, aliasErr?.message);
+          }
+        }
+
+        const distroMsg = this.useWsl && this.targetWslDistro ? ` na distro WSL "${this.targetWslDistro}"` : '';
+        throw new Error(
+          `O container "${containerId}" não foi encontrado${distroMsg}. Verifique os containers criados ou o nome informado nas configurações do ambiente.`
+        );
+      }
+
+      if (isDaemonOffline) {
+        const distroMsg = this.useWsl && this.targetWslDistro ? ` na distro WSL "${this.targetWslDistro}"` : '';
+        throw new Error(
+          `O serviço do Docker (dockerd) não está respondendo${distroMsg}. Certifique-se de que o daemon está em execução (sudo service docker start).`
+        );
+      }
+
       throw new Error(err.stderr || err.message || 'Falha ao iniciar container');
     }
   }
 
   /**
-   * Para um container em execução.
+   * Para um container em execução (com suporte a resolução de aliases).
    */
   public async stopContainer(containerId: string): Promise<boolean> {
     if (!this.isValidContainerId(containerId)) {
@@ -329,13 +477,23 @@ export class DockerService {
       });
       return true;
     } catch (err: any) {
+      if ((err?.stderr || '').includes('No such container')) {
+        const alias = await this.resolveContainerAlias(containerId);
+        if (alias) {
+          try {
+            const { binary, finalArgs } = await this.resolveCommandAndArgs('stop', [alias]);
+            await execFileAsync(binary, finalArgs, { timeout: 25000, windowsHide: true });
+            return true;
+          } catch {}
+        }
+      }
       console.error(`[DockerService] Erro ao parar container ${containerId}:`, err);
       throw new Error(err.stderr || err.message || 'Falha ao parar container');
     }
   }
 
   /**
-   * Reinicia um container.
+   * Reinicia um container (com suporte a resolução de aliases).
    */
   public async restartContainer(containerId: string): Promise<boolean> {
     if (!this.isValidContainerId(containerId)) {
@@ -350,6 +508,16 @@ export class DockerService {
       });
       return true;
     } catch (err: any) {
+      if ((err?.stderr || '').includes('No such container')) {
+        const alias = await this.resolveContainerAlias(containerId);
+        if (alias) {
+          try {
+            const { binary, finalArgs } = await this.resolveCommandAndArgs('restart', [alias]);
+            await execFileAsync(binary, finalArgs, { timeout: 25000, windowsHide: true });
+            return true;
+          } catch {}
+        }
+      }
       console.error(`[DockerService] Erro ao reiniciar container ${containerId}:`, err);
       throw new Error(err.stderr || err.message || 'Falha ao reiniciar container');
     }
@@ -408,6 +576,146 @@ export class DockerService {
 
   private isValidContainerId(id: string): boolean {
     return isValidIdentifier(id) && id.trim().length >= 2 && id.trim().length <= 128;
+  }
+
+  /**
+   * Executa docker inspect e retorna informações detalhadas de rede, portas, volumes e ambiente.
+   */
+  public async inspectContainer(containerId: string): Promise<DockerContainerInspect | null> {
+    if (!this.isValidContainerId(containerId)) {
+      throw new Error('Identificador de container inválido.');
+    }
+
+    try {
+      const { binary, finalArgs } = await this.resolveCommandAndArgs('inspect', [containerId]);
+      const { stdout } = await execFileAsync(binary, finalArgs, {
+        timeout: 10000,
+        windowsHide: true,
+        maxBuffer: 10 * 1024 * 1024
+      });
+
+      const parsed = JSON.parse(stdout);
+      if (!Array.isArray(parsed) || parsed.length === 0) return null;
+      const data = parsed[0];
+
+      const rawPorts = data.NetworkSettings?.Ports || {};
+      const ports: Record<string, DockerContainerPortBinding[] | null> = {};
+      for (const [key, val] of Object.entries(rawPorts)) {
+        if (Array.isArray(val)) {
+          ports[key] = val.map((p: any) => ({
+            hostIp: p.HostIp || '0.0.0.0',
+            hostPort: p.HostPort || ''
+          }));
+        } else {
+          ports[key] = null;
+        }
+      }
+
+      const mounts: DockerContainerMount[] = Array.isArray(data.Mounts)
+        ? data.Mounts.map((m: any) => ({
+            type: m.Type || 'volume',
+            name: m.Name,
+            source: m.Source || '',
+            destination: m.Destination || '',
+            driver: m.Driver,
+            mode: m.Mode || '',
+            rw: m.RW ?? true,
+            propagation: m.Propagation
+          }))
+        : [];
+
+      return {
+        id: data.Id || containerId,
+        name: (data.Name || '').replace(/^\//, ''),
+        image: data.Config?.Image || data.Image || '',
+        imageId: data.Image,
+        created: data.Created || '',
+        path: data.Path,
+        args: data.Args || [],
+        state: {
+          status: data.State?.Status || 'unknown',
+          running: !!data.State?.Running,
+          paused: !!data.State?.Paused,
+          restarting: !!data.State?.Restarting,
+          oomKilled: data.State?.OOMKilled,
+          dead: data.State?.Dead,
+          pid: data.State?.Pid,
+          exitCode: data.State?.ExitCode ?? 0,
+          error: data.State?.Error,
+          startedAt: data.State?.StartedAt || '',
+          finishedAt: data.State?.FinishedAt || '',
+          health: data.State?.Health ? {
+            status: data.State.Health.Status,
+            failingStreak: data.State.Health.FailingStreak
+          } : undefined
+        },
+        networkSettings: {
+          ipAddress: data.NetworkSettings?.IPAddress || '',
+          gateway: data.NetworkSettings?.Gateway || '',
+          macAddress: data.NetworkSettings?.MacAddress || '',
+          ports,
+          networks: data.NetworkSettings?.Networks
+        },
+        mounts,
+        env: Array.isArray(data.Config?.Env) ? data.Config.Env : [],
+        command: Array.isArray(data.Config?.Cmd) ? data.Config.Cmd.join(' ') : (data.Config?.Cmd || ''),
+        workingDir: data.Config?.WorkingDir || '',
+        restartPolicy: data.HostConfig?.RestartPolicy ? {
+          name: data.HostConfig.RestartPolicy.Name || 'no',
+          maximumRetryCount: data.HostConfig.RestartPolicy.MaximumRetryCount
+        } : undefined
+      };
+    } catch (err: any) {
+      console.error(`[DockerService] Erro ao inspecionar container ${containerId}:`, err);
+      return null;
+    }
+  }
+
+  /**
+   * Pausa um container em execução (docker pause).
+   */
+  public async pauseContainer(containerId: string): Promise<boolean> {
+    if (!this.isValidContainerId(containerId)) {
+      throw new Error('Identificador de container inválido.');
+    }
+    try {
+      const { binary, finalArgs } = await this.resolveCommandAndArgs('pause', [containerId]);
+      await execFileAsync(binary, finalArgs, { timeout: 15000, windowsHide: true });
+      return true;
+    } catch (err: any) {
+      console.error(`[DockerService] Erro ao pausar container ${containerId}:`, err);
+      throw new Error(err.stderr || err.message || 'Falha ao pausar container');
+    }
+  }
+
+  /**
+   * Despausa um container (docker unpause).
+   */
+  public async unpauseContainer(containerId: string): Promise<boolean> {
+    if (!this.isValidContainerId(containerId)) {
+      throw new Error('Identificador de container inválido.');
+    }
+    try {
+      const { binary, finalArgs } = await this.resolveCommandAndArgs('unpause', [containerId]);
+      await execFileAsync(binary, finalArgs, { timeout: 15000, windowsHide: true });
+      return true;
+    } catch (err: any) {
+      console.error(`[DockerService] Erro ao despausar container ${containerId}:`, err);
+      throw new Error(err.stderr || err.message || 'Falha ao despausar container');
+    }
+  }
+
+  /**
+   * Expruga containers parados (docker container prune -f).
+   */
+  public async pruneContainers(): Promise<{ success: boolean; output: string }> {
+    try {
+      const { binary, finalArgs } = await this.resolveCommandAndArgs('container', ['prune', '-f']);
+      const { stdout, stderr } = await execFileAsync(binary, finalArgs, { timeout: 30000, windowsHide: true });
+      return { success: true, output: (stdout || stderr || 'Containers parados removidos com sucesso.').trim() };
+    } catch (err: any) {
+      return { success: false, output: err.stderr || err.message || 'Falha ao expurgar containers' };
+    }
   }
 
   /**
@@ -484,7 +792,7 @@ export class DockerService {
       const title = `Container (${engine}): ${containerId.slice(0, 12)}`;
       const dockerArgs = `${engine} exec -it ${containerId} ${safeShell}`;
 
-      const child = spawn('cmd.exe', ['/c', 'start', `"${title}"`, 'cmd.exe', '/k', dockerArgs], {
+      const child = spawn('cmd.exe', ['/c', 'start', title, 'cmd.exe', '/k', dockerArgs], {
         detached: true,
         stdio: 'ignore',
         windowsHide: false
@@ -506,6 +814,17 @@ export class DockerService {
     onProgress?: (step: { currentName: string; index: number; total: number; waitingSeconds?: number }) => void
   ): Promise<{ success: boolean; started: string[]; failed?: string; error?: string }> {
     const started: string[] = [];
+
+    // Auto-recuperação prévia: garante que o daemon Docker esteja ativo antes de iniciar a sequência
+    const ensure = await this.ensureDockerRunning();
+    if (!ensure.running) {
+      return {
+        success: false,
+        started: [],
+        failed: containers[0]?.name || 'docker-daemon',
+        error: ensure.error || 'O daemon do Docker está inativo e não pôde ser iniciado automaticamente.'
+      };
+    }
 
     for (let i = 0; i < containers.length; i++) {
       const item = containers[i];
@@ -602,7 +921,7 @@ export class DockerService {
    */
   public async composeUp(
     composeFilePath: string,
-    options: { profile?: string; detach?: boolean } | undefined,
+    options: { profile?: string; detach?: boolean; build?: boolean } | undefined,
     onChunk: (chunk: string) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
     if (!isSafeLocalPath(composeFilePath) || !fs.existsSync(composeFilePath)) {
@@ -617,6 +936,7 @@ export class DockerService {
     }
     args.push('up');
     if (options?.detach !== false) args.push('-d');
+    if (options?.build === true) args.push('--build');
 
     const { binary, finalArgs } = await this.resolveCommandAndArgs(args[0], args.slice(1));
     onChunk(`> ${binary} ${finalArgs.join(' ')}\r\n\r\n`);
@@ -630,9 +950,43 @@ export class DockerService {
   }
 
   /**
-   * Derruba os serviços definidos em um docker-compose.yml.
+   * Derruba os serviços definidos em um docker-compose.yml (com suporte a remoção de volumes com -v).
    */
   public async composeDown(
+    composeFilePath: string,
+    options: { profile?: string; volumes?: boolean } | undefined,
+    onChunk: (chunk: string) => void
+  ): Promise<{ code: number; stdout: string; stderr: string }> {
+    if (!isSafeLocalPath(composeFilePath) || !fs.existsSync(composeFilePath)) {
+      const err = `[ERRO] Arquivo docker-compose não encontrado: ${composeFilePath}\r\n`;
+      onChunk(err);
+      return { code: 1, stdout: '', stderr: err };
+    }
+
+    const args = ['compose', '-f', this.toWslPath(composeFilePath)];
+    if (options?.profile && isValidIdentifier(options.profile)) {
+      args.push('--profile', options.profile);
+    }
+    args.push('down');
+    if (options?.volumes === true) {
+      args.push('-v');
+    }
+
+    const { binary, finalArgs } = await this.resolveCommandAndArgs(args[0], args.slice(1));
+    onChunk(`> ${binary} ${finalArgs.join(' ')}\r\n\r\n`);
+    const result = await runCapturedProcess(binary, finalArgs, { windowsHide: true }, onChunk);
+    onChunk(
+      result.code === 0
+        ? `\r\n[SUCESSO] Serviços do compose derrubados!\r\n`
+        : `\r\n[ERRO] Falha ao derrubar serviços do compose (Código ${result.code}).\r\n`
+    );
+    return result;
+  }
+
+  /**
+   * Reinicia os serviços definidos em um docker-compose.yml.
+   */
+  public async composeRestart(
     composeFilePath: string,
     options: { profile?: string } | undefined,
     onChunk: (chunk: string) => void
@@ -647,17 +1001,48 @@ export class DockerService {
     if (options?.profile && isValidIdentifier(options.profile)) {
       args.push('--profile', options.profile);
     }
-    args.push('down');
+    args.push('restart');
 
     const { binary, finalArgs } = await this.resolveCommandAndArgs(args[0], args.slice(1));
     onChunk(`> ${binary} ${finalArgs.join(' ')}\r\n\r\n`);
     const result = await runCapturedProcess(binary, finalArgs, { windowsHide: true }, onChunk);
     onChunk(
       result.code === 0
-        ? `\r\n[SUCESSO] Serviços do compose derrubados!\r\n`
-        : `\r\n[ERRO] Falha ao derrubar serviços do compose (Código ${result.code}).\r\n`
+        ? `\r\n[SUCESSO] Serviços do compose reiniciados com sucesso!\r\n`
+        : `\r\n[ERRO] Falha ao reiniciar serviços do compose (Código ${result.code}).\r\n`
     );
     return result;
+  }
+
+  /**
+   * Obtém os logs agregados dos serviços do docker-compose.yml.
+   */
+  public async getComposeLogs(
+    composeFilePath: string,
+    options?: { profile?: string; lines?: number }
+  ): Promise<string> {
+    if (!isSafeLocalPath(composeFilePath) || !fs.existsSync(composeFilePath)) {
+      return 'Arquivo docker-compose não encontrado.';
+    }
+
+    const lines = Math.min(Math.max(options?.lines || 200, 10), 1000);
+    const args = ['compose', '-f', this.toWslPath(composeFilePath)];
+    if (options?.profile && isValidIdentifier(options.profile)) {
+      args.push('--profile', options.profile);
+    }
+    args.push('logs', '--tail', String(lines));
+
+    try {
+      const { binary, finalArgs } = await this.resolveCommandAndArgs(args[0], args.slice(1));
+      const { stdout, stderr } = await execFileAsync(binary, finalArgs, {
+        timeout: 15000,
+        windowsHide: true,
+        maxBuffer: 10 * 1024 * 1024
+      });
+      return stdout || stderr || '(Sem logs no momento)';
+    } catch (err: any) {
+      return err.stderr || err.stdout || `Erro ao obter logs do compose: ${err.message}`;
+    }
   }
 
   /**
@@ -708,11 +1093,11 @@ export class DockerService {
     schema?: string,
     fix = false,
     user = 'sys',
-    password = 'password'
+    password = 'pcinfo'
   ): Promise<OracleMaintenanceResult> {
     const cleanContainer = containerName.replace(/^\//, '');
     const cleanUser = user.replace(/[^a-zA-Z0-9_]/g, '') || 'sys';
-    const cleanPass = password || 'password';
+    const cleanPass = password || 'pcinfo';
     const cleanSchema = schema ? schema.trim().toUpperCase().replace(/[^a-zA-Z0-9_]/g, '') : '';
 
     const args = ['exec', '-i', cleanContainer, '/home/oracle/tools/db_health.sh', cleanUser, cleanPass];
@@ -751,14 +1136,14 @@ export class DockerService {
   public async openOracleSqlPlus(
     containerName: string,
     user = 'sys',
-    password = 'password'
+    password = 'pcinfo'
   ): Promise<boolean> {
     const cleanContainer = containerName.replace(/^\//, '');
     if (!this.isValidContainerId(cleanContainer)) {
       throw new Error('Identificador de container inválido.');
     }
     const cleanUser = user.replace(/[^a-zA-Z0-9_]/g, '') || 'sys';
-    const cleanPass = (password || 'password').replace(/[^a-zA-Z0-9_!@#%^*+=.-]/g, '');
+    const cleanPass = (password || 'pcinfo').replace(/[^a-zA-Z0-9_!@#%^*+=.-]/g, '');
 
     const cmdInside = `/home/oracle/tools/sqlplus_conn.sh ${cleanUser} ${cleanPass}`;
 
@@ -787,7 +1172,7 @@ export class DockerService {
 
       const engine = await this.getEngineCommand();
       const dockerArgs = `${engine} exec -it ${cleanContainer} bash -c "${cmdInside}"`;
-      const child = spawn('cmd.exe', ['/c', 'start', `"SQL*Plus ${cleanContainer}"`, 'cmd.exe', '/k', dockerArgs], {
+      const child = spawn('cmd.exe', ['/c', 'start', `SQL*Plus ${cleanContainer}`, 'cmd.exe', '/k', dockerArgs], {
         detached: true,
         stdio: 'ignore',
         windowsHide: false
@@ -796,6 +1181,56 @@ export class DockerService {
       return true;
     } catch (err) {
       console.error(`[DockerService] Falha ao abrir SQL*Plus no container ${cleanContainer}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Abre um terminal interativo com o console de cliente Karaf (/opt/pcsist/apache-karaf/bin/client) no container WTA.
+   */
+  public async openWtaKarafClient(containerName: string): Promise<boolean> {
+    const cleanContainer = containerName.replace(/^\//, '');
+    if (!this.isValidContainerId(cleanContainer)) {
+      throw new Error('Identificador de container inválido.');
+    }
+
+    const clientCmd =
+      'if [ -x /opt/pcsist/apache-karaf/bin/client ]; then /opt/pcsist/apache-karaf/bin/client; elif [ -x /opt/karaf/bin/client ]; then /opt/karaf/bin/client; else bash; fi';
+
+    try {
+      if (this.useWsl && this.targetWslDistro) {
+        const distro = this.targetWslDistro;
+        const wtArgs = [
+          '-w', '0', 'nt',
+          '--title', `WTA Karaf Client: ${cleanContainer}`,
+          'wsl.exe', '-d', distro, '--',
+          'docker', 'exec', '-it', cleanContainer, 'bash', '-c', clientCmd
+        ];
+
+        const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });
+        wtChild.on('error', () => {
+          const fallbackCmd = `wsl -d ${distro} -- docker exec -it ${cleanContainer} bash -c "${clientCmd}"`;
+          const child = spawn('cmd.exe', ['/c', 'start', `Karaf ${cleanContainer}`, 'cmd.exe', '/k', fallbackCmd], {
+            detached: true,
+            stdio: 'ignore'
+          });
+          child.unref();
+        });
+        wtChild.unref();
+        return true;
+      }
+
+      const engine = await this.getEngineCommand();
+      const dockerArgs = `${engine} exec -it ${cleanContainer} bash -c "${clientCmd}"`;
+      const child = spawn('cmd.exe', ['/c', 'start', `Karaf ${cleanContainer}`, 'cmd.exe', '/k', dockerArgs], {
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: false
+      });
+      child.unref();
+      return true;
+    } catch (err) {
+      console.error(`[DockerService] Falha ao abrir Karaf client no container ${cleanContainer}:`, err);
       return false;
     }
   }
@@ -814,11 +1249,15 @@ export class DockerService {
 
     const cleanContainer = params.containerName.replace(/^\//, '');
     const cleanUser = (params.user || 'system').replace(/[^a-zA-Z0-9_]/g, '');
-    const cleanPass = params.password || 'password';
+    const cleanPass = params.password || 'pcinfo';
     const cleanDumpfile = params.dumpfile.replace(/[^a-zA-Z0-9_.-]/g, '');
     const cleanOrig = params.schemaOrig.toUpperCase().replace(/[^a-zA-Z0-9_]/g, '');
     const cleanDest = params.schemaDest ? params.schemaDest.toUpperCase().replace(/[^a-zA-Z0-9_]/g, '') : '';
-    const cleanCodcli = (params.codclipc || '9999').replace(/[^0-9]/g, '');
+    const rawCodcli =
+      params.codclipc !== undefined && params.codclipc !== null && String(params.codclipc).trim() !== ''
+        ? String(params.codclipc).trim()
+        : '-999';
+    const cleanCodcli = /^-?[0-9]+$/.test(rawCodcli) ? rawCodcli : '-999';
 
     if (!cleanDumpfile || !cleanOrig || !cleanCodcli) {
       return {
@@ -828,21 +1267,24 @@ export class DockerService {
       };
     }
 
+    const scriptCmd =
+      'if [ -x /home/oracle/tools/import_dump.sh ]; then exec /home/oracle/tools/import_dump.sh "$@"; else exec import_dump.sh "$@"; fi';
+    const scriptArgs = [cleanUser, cleanPass, cleanDumpfile, cleanOrig];
+    if (cleanDest && cleanDest !== cleanOrig) {
+      scriptArgs.push(cleanDest);
+    }
+    scriptArgs.push(cleanCodcli);
+
     const args = [
       'exec',
       '-i',
       cleanContainer,
-      '/home/oracle/tools/import_dump.sh',
-      cleanUser,
-      cleanPass,
-      cleanDumpfile,
-      cleanOrig
+      'bash',
+      '-c',
+      scriptCmd,
+      'bash',
+      ...scriptArgs
     ];
-
-    if (cleanDest && cleanDest !== cleanOrig) {
-      args.push(cleanDest);
-    }
-    args.push(cleanCodcli);
 
     try {
       const { binary, finalArgs } = await this.resolveCommandAndArgs(args[0], args.slice(1));

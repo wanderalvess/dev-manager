@@ -25,4 +25,56 @@ describe('DockerService', () => {
     service.setEngineCommand('docker');
     expect(await service.getEngineCommand()).toBe('docker');
   });
+
+  it('rejeita container id malicioso em inspect, pause e unpause', async () => {
+    const service = new DockerService();
+    await expect(service.inspectContainer('bad; id')).rejects.toThrow('inválido');
+    await expect(service.pauseContainer('bad && whoami')).rejects.toThrow('inválido');
+    await expect(service.unpauseContainer('bad | dir')).rejects.toThrow('inválido');
+  });
+
+  it('propaga mensagem de diagnóstico do WSL quando ensureDockerRunning falha', async () => {
+    const { wslService } = await import('./WslService');
+    const service = new DockerService();
+
+    const testSpy = (wslService.testDockerInDistro = async () => false);
+    const startSpy = (wslService.startDockerDaemon = async () => ({
+      success: false,
+      message: 'O Docker Engine não está instalado na distro WSL "ubuntu2604-winthor". Execute no terminal WSL: sudo apt update && sudo apt install -y docker.io'
+    }));
+
+    const res = await service.ensureDockerRunning('ubuntu2604-winthor');
+    expect(res.running).toBe(false);
+    expect(res.error).toContain('não está instalado na distro WSL');
+    expect(res.error).toContain('sudo apt install');
+  });
+
+  it('resolve aliases conhecidos entre nomes do manual e INFR-Docker', async () => {
+    const service = new DockerService();
+    // Testa mapeamento para oracle-winthor -> oracle-local
+    (service as any).resolveCommandAndArgs = async () => ({
+      binary: 'docker',
+      finalArgs: ['ps', '-a', '--format', '{{.Names}}']
+    });
+
+    // Mock do execFileAsync interno retornando containers com nome oracle-local
+    const origMethod = service.resolveContainerAlias;
+    const candidates = (DockerService as any).CONTAINER_ALIASES['oracle-winthor'];
+    expect(candidates).toContain('oracle-local');
+
+    const wtaCandidates = (DockerService as any).CONTAINER_ALIASES['linux-winthor'];
+    expect(wtaCandidates).toContain('wta-local');
+
+    const wshCandidates = (DockerService as any).CONTAINER_ALIASES['wsh-winthor'];
+    expect(wshCandidates).toContain('wsh-local');
+  });
+
+  it('valida que os aliases cobrem tanto o padrão do manual quanto do INFR-Docker', () => {
+    // oracle-local -> oracle-winthor
+    expect((DockerService as any).CONTAINER_ALIASES['oracle-local']).toContain('oracle-winthor');
+    // wta-local -> linux-winthor
+    expect((DockerService as any).CONTAINER_ALIASES['wta-local']).toContain('linux-winthor');
+    // wsh-local -> wsh-winthor
+    expect((DockerService as any).CONTAINER_ALIASES['wsh-local']).toContain('wsh-winthor');
+  });
 });

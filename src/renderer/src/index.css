@@ -3,35 +3,44 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* ========================================================================= */
+  /* 1. VARIANTE PADRÃO: COCKPIT ÂMBAR */
+  /* ========================================================================= */
+  :root,
+  .light,
+  .light.theme-default,
+  html.theme-default:not(.dark),
+  .theme-default:not(.dark) {
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
-    /* Base Padrão Light (Espaço Clássico - Laranja) */
-    --background: 210 35% 97%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 25 100% 50%;
+    /* Base Cockpit Âmbar Light (Warm Industrial Parchment & Aerospace Amber) */
+    --background: 32 30% 93%;
+    --foreground: 28 35% 15%;
+    --card: 35 35% 98%;
+    --card-foreground: 28 35% 15%;
+    --popover: 35 35% 98%;
+    --popover-foreground: 28 35% 15%;
+    --primary: 24 95% 44%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 35% 93%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 30% 93%;
-    --muted-foreground: 215.4 16.3% 40%;
-    --accent: 25 100% 95%;
-    --accent-foreground: 25 100% 35%;
+    --secondary: 32 25% 88%;
+    --secondary-foreground: 28 35% 15%;
+    --muted: 32 20% 88%;
+    --muted-foreground: 28 15% 42%;
+    --accent: 28 100% 92%;
+    --accent-foreground: 24 95% 35%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214.3 28% 88%;
-    --input: 214.3 28% 88%;
-    --ring: 25 100% 50%;
+    --border: 30 20% 78%;
+    --input: 30 20% 78%;
+    --ring: 24 95% 44%;
     --radius: 0.625rem;
   }
 
-  .dark {
-    /* Base Padrão Dark (Espaço Clássico - Laranja) */
+  .dark,
+  .dark.theme-default,
+  .dark .theme-default {
+    /* Base Cockpit Âmbar Dark (Espaço Clássico - Laranja) */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --card: 222.2 47% 11.2%;
@@ -53,12 +62,9 @@
     --ring: 25 100% 50%;
   }
 
-  /* Variante 2: Midnight Tech (Pitch Black & Electric Blue) */
-  .theme-midnight {
-    --primary: 217 91% 60%;
-    --ring: 217 91% 60%;
-  }
-
+  /* ========================================================================= */
+  /* 2. VARIANTE: MIDNIGHT TECH (Azul Safira & Blueprint Técnico) */
+  /* ========================================================================= */
   .dark.theme-midnight,
   .dark .theme-midnight {
     --background: 0 0% 2%;
@@ -66,6 +72,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 0 0% 5.5%;
     --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 217 35% 12%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 35% 12%;
@@ -74,23 +82,180 @@
     --input: 217 45% 20%;
     --accent: 217 91% 15%;
     --accent-foreground: 217 91% 65%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 217 91% 60%;
   }
 
+  .light.theme-midnight,
+  html.theme-midnight:not(.dark),
   .theme-midnight:not(.dark) {
-    --background: 217 50% 98%;
-    --foreground: 217 45% 12%;
+    --background: 215 28% 92%;
+    --foreground: 222 47% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 217 45% 12%;
+    --card-foreground: 222 47% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 217 45% 12%;
-    --secondary: 217 40% 93%;
-    --secondary-foreground: 217 45% 12%;
-    --muted: 217 40% 93%;
-    --muted-foreground: 217 25% 45%;
-    --border: 217 35% 88%;
-    --input: 217 35% 88%;
-    --accent: 217 91% 95%;
-    --accent-foreground: 217 91% 40%;
+    --popover-foreground: 222 47% 12%;
+    --primary: 220 92% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 25% 88%;
+    --secondary-foreground: 222 47% 12%;
+    --muted: 215 22% 88%;
+    --muted-foreground: 215 20% 40%;
+    --border: 215 25% 76%;
+    --input: 215 25% 76%;
+    --accent: 218 90% 93%;
+    --accent-foreground: 220 92% 35%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 220 92% 48%;
+  }
+
+  /* ========================================================================= */
+  /* 3. VARIANTE: CYBERPUNK (Verde Esmeralda & Mint Cleanroom) */
+  /* ========================================================================= */
+  .dark.theme-cyberpunk,
+  .dark .theme-cyberpunk {
+    --background: 160 50% 2.5%;
+    --card: 160 40% 6%;
+    --card-foreground: 150 40% 98%;
+    --popover: 160 40% 6%;
+    --popover-foreground: 150 40% 98%;
+    --primary: 158 80% 48%;
+    --primary-foreground: 160 50% 2.5%;
+    --secondary: 160 30% 13%;
+    --secondary-foreground: 150 40% 98%;
+    --muted: 160 30% 13%;
+    --muted-foreground: 155 20% 65%;
+    --border: 158 40% 18%;
+    --input: 158 40% 18%;
+    --accent: 158 80% 12%;
+    --accent-foreground: 158 80% 60%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 158 80% 48%;
+  }
+
+  .light.theme-cyberpunk,
+  html.theme-cyberpunk:not(.dark),
+  .theme-cyberpunk:not(.dark) {
+    --background: 155 25% 91%;
+    --foreground: 160 50% 10%;
+    --card: 155 30% 98%;
+    --card-foreground: 160 50% 10%;
+    --popover: 155 30% 98%;
+    --popover-foreground: 160 50% 10%;
+    --primary: 158 90% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 155 25% 86%;
+    --secondary-foreground: 160 50% 10%;
+    --muted: 155 22% 86%;
+    --muted-foreground: 158 25% 36%;
+    --border: 155 25% 74%;
+    --input: 155 25% 74%;
+    --accent: 155 80% 92%;
+    --accent-foreground: 158 90% 24%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 158 90% 32%;
+  }
+
+  /* ========================================================================= */
+  /* 4. VARIANTE: NEBULA (Violeta Real & Amethyst Folio) */
+  /* ========================================================================= */
+  .dark.theme-nebula,
+  .dark .theme-nebula {
+    --background: 270 50% 3%;
+    --card: 270 40% 7%;
+    --card-foreground: 270 40% 98%;
+    --popover: 270 40% 7%;
+    --popover-foreground: 270 40% 98%;
+    --primary: 271 85% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 30% 14%;
+    --secondary-foreground: 270 40% 98%;
+    --muted: 270 30% 14%;
+    --muted-foreground: 270 20% 65%;
+    --border: 270 40% 22%;
+    --input: 270 40% 22%;
+    --accent: 271 85% 15%;
+    --accent-foreground: 271 85% 70%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 271 85% 65%;
+  }
+
+  .light.theme-nebula,
+  html.theme-nebula:not(.dark),
+  .theme-nebula:not(.dark) {
+    --background: 268 30% 92%;
+    --foreground: 270 45% 12%;
+    --card: 270 30% 98%;
+    --card-foreground: 270 45% 12%;
+    --popover: 270 30% 98%;
+    --popover-foreground: 270 45% 12%;
+    --primary: 271 85% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 268 25% 88%;
+    --secondary-foreground: 270 45% 12%;
+    --muted: 268 22% 88%;
+    --muted-foreground: 270 20% 42%;
+    --border: 268 25% 76%;
+    --input: 268 25% 76%;
+    --accent: 270 85% 94%;
+    --accent-foreground: 271 85% 35%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 271 85% 48%;
+  }
+
+  /* ========================================================================= */
+  /* 5. VARIANTE: NORDIC FROST (Ciano Ártico & Gelo Polar) */
+  /* ========================================================================= */
+  .dark.theme-nordic,
+  .dark .theme-nordic {
+    --background: 205 50% 3%;
+    --card: 205 40% 7%;
+    --card-foreground: 200 40% 98%;
+    --popover: 205 40% 7%;
+    --popover-foreground: 200 40% 98%;
+    --primary: 199 89% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 205 30% 14%;
+    --secondary-foreground: 200 40% 98%;
+    --muted: 205 30% 14%;
+    --muted-foreground: 205 20% 65%;
+    --border: 200 40% 20%;
+    --input: 200 40% 20%;
+    --accent: 199 89% 15%;
+    --accent-foreground: 199 89% 65%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 199 89% 55%;
+  }
+
+  .light.theme-nordic,
+  html.theme-nordic:not(.dark),
+  .theme-nordic:not(.dark) {
+    --background: 198 35% 91%;
+    --foreground: 205 50% 11%;
+    --card: 198 40% 98%;
+    --card-foreground: 205 50% 11%;
+    --popover: 198 40% 98%;
+    --popover-foreground: 205 50% 11%;
+    --primary: 196 95% 34%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 198 28% 86%;
+    --secondary-foreground: 205 50% 11%;
+    --muted: 198 25% 86%;
+    --muted-foreground: 202 25% 38%;
+    --border: 198 28% 74%;
+    --input: 198 28% 74%;
+    --accent: 196 85% 92%;
+    --accent-foreground: 196 95% 24%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 196 95% 34%;
   }
 
   * {
@@ -205,4 +370,94 @@
 
 .animate-tour-fade {
   animation: tour-fade 0.18s ease-out;
+}
+
+@keyframes welcome-in-next {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes welcome-in-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-welcome-in-next {
+  animation: welcome-in-next 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-welcome-in-prev {
+  animation: welcome-in-prev 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes welcome-icon-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-welcome-icon {
+  animation: welcome-icon-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes welcome-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-welcome-overlay {
+  animation: welcome-overlay-in 0.25s ease-out;
+}
+
+@keyframes blob-float-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(30px, 20px) scale(1.08);
+  }
+}
+
+@keyframes blob-float-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-25px, -15px) scale(1.1);
+  }
+}
+
+.animate-blob-a {
+  animation: blob-float-a 9s ease-in-out infinite;
+}
+
+.animate-blob-b {
+  animation: blob-float-b 11s ease-in-out infinite;
 }

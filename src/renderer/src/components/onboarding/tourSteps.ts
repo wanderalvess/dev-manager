@@ -5,7 +5,7 @@ export interface TourStep {
   desc: string;
 }
 
-export const TOUR_STORAGE_KEY = 'devManager:onboardingTourV1';
+export const TOUR_STORAGE_KEY = 'devManager:onboardingTourV2';
 
 export const TOUR_STEPS: TourStep[] = [
   {

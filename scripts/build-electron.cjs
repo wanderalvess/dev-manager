@@ -109,6 +109,13 @@ async function ensureNsisResources() {
 
 async function start() {
   try {
+    const { ensureIcons } = require('./generate-icons.cjs');
+    ensureIcons();
+  } catch (err) {
+    console.warn('[Build] Aviso ao preparar ícones da aplicação:', err.message);
+  }
+
+  try {
     await ensureNsisResources();
   } catch (err) {
     console.warn('[Build] Aviso no pré-download do NSIS:', err.message);

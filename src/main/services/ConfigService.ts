@@ -10,7 +10,9 @@ import {
   EnvironmentAutomationConfig,
   AutomationProfile,
   DeployProfile,
-  RealtimeLogSource
+  RealtimeLogSource,
+  LlmProviderConfig,
+  DEFAULT_LLM_PROVIDER_TEMPLATES
 } from '../../shared/types';
 
 export const DEFAULT_MONITORED_PORTS: MonitoredPortConfig[] = [
@@ -64,6 +66,9 @@ export const DEFAULT_DEPLOY_PROFILES: DeployProfile[] = [
     ]
   }
 ];
+
+export { DEFAULT_LLM_PROVIDER_TEMPLATES };
+export const DEFAULT_LLM_PROVIDERS: LlmProviderConfig[] = [];
 
 export const DEFAULT_TRACKED_SERVICES: TrackedServiceConfig[] = [];
 
@@ -311,7 +316,9 @@ export function getDynamicDefaultConfig(): AppSettings {
     realtimeLogSources: DEFAULT_REALTIME_LOG_SOURCES,
     activeLogSourceId: DEFAULT_REALTIME_LOG_SOURCES[0]?.id,
     indexProjectsDocs: false,
-    docSyncTargets: []
+    docSyncTargets: [],
+    llmProviders: DEFAULT_LLM_PROVIDERS,
+    activeLlmProviderId: undefined
   };
 }
 
@@ -428,7 +435,9 @@ export class ConfigService {
           deployProfiles,
           activeDeployProfileId,
           realtimeLogSources,
-          activeLogSourceId
+          activeLogSourceId,
+          llmProviders: Array.isArray(parsed.llmProviders) ? parsed.llmProviders : [],
+          activeLlmProviderId: typeof parsed.activeLlmProviderId === 'string' ? parsed.activeLlmProviderId : (Array.isArray(parsed.llmProviders) ? parsed.llmProviders[0]?.id : undefined)
         };
         this.cachedSettings = { data: result, mtimeMs: stat.mtimeMs };
         return result;
@@ -504,20 +513,46 @@ export class ConfigService {
   }
 
   /**
+   * Sanitiza todos os campos sensíveis (senhas e tokens) de um objeto AppSettings.
+   * Usado tanto no exportSettings() quanto pelo endpoint GET /api/settings do server.
+   */
+  public sanitizeSecrets(settings: AppSettings): AppSettings {
+    const sanitized: AppSettings = structuredClone(settings);
+    sanitized.karafPass = '';
+    if (sanitized.databaseConnections) {
+      sanitized.databaseConnections = sanitized.databaseConnections.map((conn) => ({
+        ...conn,
+        password: ''
+      }));
+    }
+    if (sanitized.confluenceSources) {
+      sanitized.confluenceSources = sanitized.confluenceSources.map((cs) => ({
+        ...cs,
+        authToken: ''
+      }));
+    }
+    if (sanitized.jiraSources) {
+      sanitized.jiraSources = sanitized.jiraSources.map((js) => ({
+        ...js,
+        authToken: ''
+      }));
+    }
+    if (sanitized.llmProviders) {
+      sanitized.llmProviders = sanitized.llmProviders.map((p) => ({
+        ...p,
+        apiKey: ''
+      }));
+    }
+    return sanitized;
+  }
+
+  /**
    * Exporta as configurações atuais como JSON, opcionalmente limpando senhas sensíveis.
    */
   public exportSettings(sanitizePasswords = true): string {
-    const current: AppSettings = structuredClone(this.getSettings());
-    if (sanitizePasswords) {
-      current.karafPass = '';
-      if (current.databaseConnections) {
-        current.databaseConnections = current.databaseConnections.map((conn) => ({
-          ...conn,
-          password: ''
-        }));
-      }
-    }
-    return JSON.stringify(current, null, 2);
+    const current: AppSettings = this.getSettings();
+    const toExport = sanitizePasswords ? this.sanitizeSecrets(current) : structuredClone(current);
+    return JSON.stringify(toExport, null, 2);
   }
 
   /**
@@ -587,6 +622,20 @@ export class ConfigService {
             password: newConn.password || existing?.password || ''
           };
         });
+      }
+
+      if (Array.isArray(parsed.llmProviders)) {
+        merged.llmProviders = parsed.llmProviders.map((newProv: any) => {
+          const existing = current.llmProviders?.find((p) => p.id === newProv.id);
+          return {
+            ...newProv,
+            apiKey: newProv.apiKey || existing?.apiKey || ''
+          };
+        });
+      }
+
+      if (typeof parsed.activeLlmProviderId === 'string') {
+        merged.activeLlmProviderId = parsed.activeLlmProviderId;
       }
 
       if (parsed.automationDefaults && typeof parsed.automationDefaults === 'object') {

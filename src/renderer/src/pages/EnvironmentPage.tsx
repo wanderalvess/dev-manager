@@ -831,7 +831,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto">
+    <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto max-w-full overflow-x-hidden">
       {/* Aviso de Configuração Incompleta: orienta o primeiro uso para as Configurações */}
       {missingRequiredPaths.length > 0 && (
         <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
@@ -861,7 +861,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           {/* Título, Ícone e Seletor de Perfil */}
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
-              <Layers className="w-5 h-5" />
+              <Terminal className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
@@ -1231,9 +1231,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       </div>
 
       {/* 3. Grid Principal: Cards das Etapas do Perfil à Esquerda / Console à Direita */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-[480px]">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-[480px] min-w-0">
         {/* Coluna Esquerda: Cards de cada Serviço / Etapa do Perfil + Diagnósticos */}
-        <div className="lg:col-span-6 flex flex-col space-y-3">
+        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0">
           {/* Cartões dos Passos do Perfil Ativo */}
           <div className="cockpit-panel rounded-2xl p-4 flex flex-col border border-border space-y-3" data-tour="step-cards-panel">
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
@@ -1262,7 +1262,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             <div className="space-y-2.5">
               {activeProfile?.steps && activeProfile.steps.length > 0 ? (
                 activeProfile.steps.map((step, idx) => {
-                  const portStatus = step.port ? ports.find((p) => p.port === step.port) : undefined;
+                  const effectiveKarafPort = step.type === 'karaf' ? (step.port || settings?.karafDebugPort || 5005) : undefined;
+                  const targetPort = step.type === 'karaf' ? effectiveKarafPort : step.port;
+                  const portStatus = targetPort ? ports.find((p) => p.port === targetPort) : undefined;
                   const isPortActive = portStatus?.inUse ?? false;
                   const loadingAction = stepActionLoading[step.id];
                   const StepIcon = getStepIcon(step.type);
@@ -1303,6 +1305,16 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                                 <StepIcon className="w-3 h-3" />
                                 {step.type}
                               </span>
+                              {step.type === 'karaf' && (
+                                <span className="text-[9px] font-mono text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 font-semibold flex items-center gap-1">
+                                  Debug :{effectiveKarafPort}
+                                </span>
+                              )}
+                              {step.type === 'karaf' && step.launchMode && (
+                                <span className="text-[9px] font-mono text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded border border-primary/20">
+                                  {step.launchMode === 'wt' ? 'WT Abas' : step.launchMode === 'cmd' ? 'CMD' : 'Console'}
+                                </span>
+                              )}
                               {step.type === 'command' && step.launchMode && (
                                 <span className="text-[9px] font-mono text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded border border-primary/20">
                                   {step.launchMode === 'wt' ? 'WT Abas' : step.launchMode === 'cmd' ? 'CMD' : 'Background'}
@@ -1385,7 +1397,25 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                                 </p>
                               )}
 
-                              {/* 6. Navegador */}
+                              {/* 6. Karaf OSGi */}
+                              {step.type === 'karaf' && (
+                                <div className="space-y-0.5">
+                                  <p className="text-muted-foreground">
+                                    Inicia o Karaf OSGi em modo console depurável (<span className="text-foreground font-semibold">winthor.bat debug</span>).
+                                  </p>
+                                  <p className="text-muted-foreground/80 flex items-center gap-1 flex-wrap">
+                                    Porta depurador JDWP:{' '}
+                                    <span className="text-purple-600 dark:text-purple-400 font-bold font-mono">
+                                      :{effectiveKarafPort}
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground">
+                                      (Configure no IntelliJ: Remote JVM Debug)
+                                    </span>
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* 7. Navegador */}
                               {step.type === 'browser' && step.browserUrl && (
                                 <p className="truncate text-primary">
                                   {step.browserUrl}
@@ -1397,7 +1427,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
 
                         {/* Status da Porta / Serviço & Botões Individuais */}
                         <div className="flex flex-col items-end gap-1.5 shrink-0">
-                          {step.type === 'command' && step.port ? (
+                          {((step.type === 'command' && step.port) || step.type === 'karaf') && targetPort ? (
                             <span
                               className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
                                 isPortActive
@@ -1410,7 +1440,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
                                   isPortActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'
                                 }`}
                               />
-                              :{step.port} {isPortActive ? 'Online' : 'Offline'}
+                              :{targetPort} {step.type === 'karaf' ? (isPortActive ? 'Debug Ativo' : 'Debug Livre') : (isPortActive ? 'Online' : 'Offline')}
                             </span>
                           ) : null}
 
@@ -1685,7 +1715,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         </div>
 
         {/* Coluna Direita: Console / Terminal Integrado */}
-        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col relative" data-tour="console-terminal">
+        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col relative min-w-0" data-tour="console-terminal">
           <button
             onClick={handleOpenKarafHistory}
             title="Ver histórico persistido do Karaf embedded (sobrevive a reinícios)"

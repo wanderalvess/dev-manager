@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   ListTree,
   Package,
@@ -25,8 +25,24 @@ import {
   Terminal,
   History,
   CheckCircle,
-  XCircle
+  XCircle,
+  Copy,
+  Check,
+  Layers,
+  Activity,
+  Cpu,
+  Clock,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  CheckSquare,
+  Download,
+  Hammer,
+  FileSpreadsheet,
+  FileCode,
+  SlidersHorizontal
 } from 'lucide-react';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import {
   GitProjectInfo,
   KarafBundleInfo,
@@ -57,6 +73,25 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'Active' | 'Resolved' | 'Installed'>('ALL');
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({});
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+
+  // Filtro de Escopo / Domínio
+  type ScopeFilter = 'ALL' | 'TOTVS' | 'WORKSPACE' | 'ISSUES' | 'SYSTEM';
+  const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('ALL');
+
+  // Seleção múltipla para ações em lote
+  const [selectedBundleIds, setSelectedBundleIds] = useState<Set<string>>(new Set());
+  const [isBatchActionLoading, setIsBatchActionLoading] = useState(false);
+
+  // Ação rápida de recompilar e atualizar
+  const [rebuildingBundleId, setRebuildingBundleId] = useState<string | null>(null);
+
+  // Diagnóstico rápido inline (bundle:diag)
+  const [inlineDiagBundle, setInlineDiagBundle] = useState<{ id: string; name: string; diag: string } | null>(null);
+  const [isLoadingInlineDiag, setIsLoadingInlineDiag] = useState(false);
+
+  // Menu de exportação
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // Sub-modal: Desinstalação
   const [uninstallTarget, setUninstallTarget] = useState<KarafBundleInfo | null>(null);
@@ -108,13 +143,20 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const [newSnapshotLabel, setNewSnapshotLabel] = useState('');
   const [selectedSnapshot, setSelectedSnapshot] = useState<BundleSnapshot | null>(null);
 
-  // Sub-modal: Histórico de Deploys
+  // Sub-modal: Histórico de Deploys & Telemetria
   const [isDeployHistoryModalOpen, setIsDeployHistoryModalOpen] = useState(false);
   const [deployHistory, setDeployHistory] = useState<KarafDeployHistoryEntry[]>([]);
   const [isLoadingDeployHistory, setIsLoadingDeployHistory] = useState(false);
+  const [deployHistorySearch, setDeployHistorySearch] = useState('');
+  const [deployHistoryFilter, setDeployHistoryFilter] = useState<'ALL' | 'SUCCESS' | 'FAILURE' | 'MCP' | 'UI'>('ALL');
+  const [expandedErrorId, setExpandedErrorId] = useState<string | null>(null);
+  const { copy: copyDeployCoord, copiedKey: copiedDeployCoordKey } = useCopyToClipboard(2000);
 
   const handleOpenDeployHistory = async () => {
     setIsDeployHistoryModalOpen(true);
+    setDeployHistorySearch('');
+    setDeployHistoryFilter('ALL');
+    setExpandedErrorId(null);
     if (!window.electronAPI?.getKarafDeployHistory) return;
     setIsLoadingDeployHistory(true);
     try {
@@ -125,6 +167,57 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       setIsLoadingDeployHistory(false);
     }
   };
+
+  const deployStats = useMemo(() => {
+    const total = deployHistory.length;
+    const successes = deployHistory.filter((d) => d.success).length;
+    const failures = total - successes;
+    const successRate = total > 0 ? Math.round((successes / total) * 100) : 100;
+    const totalDuration = deployHistory.reduce((acc, d) => acc + (d.durationMs || 0), 0);
+    const avgDuration = total > 0 ? (totalDuration / total / 1000).toFixed(1) : '0.0';
+    const mcpCount = deployHistory.filter((d) => d.trigger === 'mcp').length;
+    const uiCount = total - mcpCount;
+
+    return {
+      total,
+      successes,
+      failures,
+      successRate,
+      avgDuration,
+      mcpCount,
+      uiCount
+    };
+  }, [deployHistory]);
+
+  const filteredDeployHistory = useMemo(() => {
+    return deployHistory.filter((entry) => {
+      // Filtro por status / trigger
+      if (deployHistoryFilter === 'SUCCESS' && !entry.success) return false;
+      if (deployHistoryFilter === 'FAILURE' && entry.success) return false;
+      if (deployHistoryFilter === 'MCP' && entry.trigger !== 'mcp') return false;
+      if (deployHistoryFilter === 'UI' && entry.trigger !== 'ui') return false;
+
+      // Filtro textual
+      if (deployHistorySearch.trim()) {
+        const query = deployHistorySearch.toLowerCase().trim();
+        const art = (entry.artifactId || '').toLowerCase();
+        const proj = (entry.projectName || '').toLowerCase();
+        const feat = (entry.featureInstall || '').toLowerCase();
+        const ver = (entry.version || '').toLowerCase();
+        const msg = (entry.message || '').toLowerCase();
+        const repo = (entry.repoUrl || '').toLowerCase();
+        return (
+          art.includes(query) ||
+          proj.includes(query) ||
+          feat.includes(query) ||
+          ver.includes(query) ||
+          msg.includes(query) ||
+          repo.includes(query)
+        );
+      }
+      return true;
+    });
+  }, [deployHistory, deployHistoryFilter, deployHistorySearch]);
 
   // Sub-modal: Log do Karaf (log:display — log interno real, não o stdout do console embedded)
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -252,6 +345,76 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     }
   }, [isOpen, fetchBundles]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === '/' &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  // Identificação inteligente de escopo e projetos locais
+  const getMatchedProject = useCallback(
+    (b: KarafBundleInfo): GitProjectInfo | undefined => {
+      if (!projects || projects.length === 0) return undefined;
+      const bName = (b.symbolicName || b.name || '').toLowerCase();
+      return projects.find((p) => {
+        const pName = p.name.toLowerCase();
+        const art = (p.pomInfo?.artifactId || '').toLowerCase();
+        return (
+          (bName && pName && (bName.includes(pName) || pName.includes(bName))) ||
+          (bName && art && (bName.includes(art) || art.includes(bName)))
+        );
+      });
+    },
+    [projects]
+  );
+
+  const isWorkspaceBundle = useCallback(
+    (b: KarafBundleInfo) => Boolean(getMatchedProject(b)),
+    [getMatchedProject]
+  );
+
+  const isTotvsBundle = useCallback(
+    (b: KarafBundleInfo) => {
+      const text = `${b.symbolicName || ''} ${b.name || ''}`.toLowerCase();
+      return (
+        text.includes('totvs') ||
+        text.includes('winthor') ||
+        text.includes('br.com.totvs') ||
+        isWorkspaceBundle(b)
+      );
+    },
+    [isWorkspaceBundle]
+  );
+
+  const isSystemBundle = useCallback((b: KarafBundleInfo) => {
+    const text = `${b.symbolicName || ''} ${b.name || ''}`.toLowerCase();
+    return (
+      text.startsWith('org.apache') ||
+      text.startsWith('org.ops4j') ||
+      text.startsWith('com.fasterxml') ||
+      text.startsWith('org.eclipse') ||
+      text.startsWith('org.osgi') ||
+      text.includes('aries') ||
+      text.includes('pax') ||
+      text.includes('camel') ||
+      text.includes('cxf') ||
+      text.includes('felix') ||
+      text.includes('jetty') ||
+      text.includes('slf4j') ||
+      text.includes('log4j')
+    );
+  }, []);
+
   // Contadores
   const stats = useMemo(() => {
     const total = bundles.length;
@@ -261,10 +424,39 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     return { total, active, resolved, installed };
   }, [bundles]);
 
-  // Filtros
+  const scopeCounts = useMemo(() => {
+    let totvs = 0;
+    let workspace = 0;
+    let issues = 0;
+    let system = 0;
+    for (const b of bundles) {
+      if (isTotvsBundle(b)) totvs++;
+      if (isWorkspaceBundle(b)) workspace++;
+      if (b.state !== 'Active') issues++;
+      if (isSystemBundle(b)) system++;
+    }
+    return {
+      all: bundles.length,
+      totvs,
+      workspace,
+      issues,
+      system
+    };
+  }, [bundles, isTotvsBundle, isWorkspaceBundle, isSystemBundle]);
+
+  // Filtros combinados (escopo, status e busca textual)
   const filteredBundles = useMemo(() => {
     return bundles.filter((b) => {
+      // Filtro de Status
       if (statusFilter !== 'ALL' && b.state !== statusFilter) return false;
+
+      // Filtro de Escopo
+      if (scopeFilter === 'TOTVS' && !isTotvsBundle(b)) return false;
+      if (scopeFilter === 'WORKSPACE' && !isWorkspaceBundle(b)) return false;
+      if (scopeFilter === 'ISSUES' && b.state === 'Active') return false;
+      if (scopeFilter === 'SYSTEM' && !isSystemBundle(b)) return false;
+
+      // Busca textual
       if (!search.trim()) return true;
       const term = search.toLowerCase();
       return (
@@ -275,7 +467,162 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
         b.state.toLowerCase().includes(term)
       );
     });
-  }, [bundles, search, statusFilter]);
+  }, [bundles, search, statusFilter, scopeFilter, isTotvsBundle, isWorkspaceBundle, isSystemBundle]);
+
+  // Seleção múltipla
+  const handleToggleSelectBundle = (id: string) => {
+    setSelectedBundleIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllVisible = () => {
+    if (filteredBundles.length > 0 && selectedBundleIds.size === filteredBundles.length) {
+      setSelectedBundleIds(new Set());
+    } else {
+      setSelectedBundleIds(new Set(filteredBundles.map((b) => b.id)));
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedBundleIds(new Set());
+  };
+
+  // Ações em lote
+  const handleBatchAction = async (action: 'start' | 'stop' | 'restart' | 'refresh' | 'uninstall') => {
+    if (selectedBundleIds.size === 0 || !window.electronAPI) return;
+    const ids = Array.from(selectedBundleIds);
+
+    if (action === 'uninstall') {
+      const confirmed = window.confirm(
+        `Atenção: Desinstalar ${ids.length} bundle(s) selecionado(s) pode quebrar módulos dependentes no runtime OSGi. Deseja continuar?`
+      );
+      if (!confirmed) return;
+    }
+
+    setIsBatchActionLoading(true);
+    setErrorBanner(null);
+
+    try {
+      if (window.electronAPI.manageKarafBundlesBatch) {
+        const res = await window.electronAPI.manageKarafBundlesBatch(action, ids);
+        if (!res.success) {
+          setErrorBanner(`Ação em lote "${action}" retornou: ${res.output}`);
+        }
+      } else {
+        for (const id of ids) {
+          await window.electronAPI.manageKarafBundle(action, id);
+        }
+      }
+      await fetchBundles();
+      setSelectedBundleIds(new Set());
+    } catch (err: any) {
+      setErrorBanner(`Falha ao executar ação em lote "${action}": ${err?.message || err}`);
+    } finally {
+      setIsBatchActionLoading(false);
+    }
+  };
+
+  // Recompilar Maven e atualizar bundle em 1 clique
+  const handleOneClickRebuild = async (bundle: KarafBundleInfo) => {
+    const proj = getMatchedProject(bundle);
+    if (!proj || !window.electronAPI) return;
+
+    setRebuildingBundleId(bundle.id);
+    setErrorBanner(null);
+
+    try {
+      // 1. Maven build
+      if (window.electronAPI.runMavenBuild) {
+        const buildRes = await window.electronAPI.runMavenBuild(proj.path, true);
+        if (buildRes.code !== 0) {
+          setErrorBanner(`Falha no build Maven de "${proj.name}": ${buildRes.stderr || buildRes.stdout}`);
+          return;
+        }
+      }
+      // 2. Reinstall / update
+      if (window.electronAPI.reinstallKarafBundle) {
+        const res = await window.electronAPI.reinstallKarafBundle({
+          bundleId: bundle.id,
+          projectPath: proj.path,
+          rebuild: false
+        });
+        if (!res.success) {
+          setErrorBanner(`Falha ao atualizar bundle [${bundle.id}]: ${res.output}`);
+        }
+      }
+      await fetchBundles();
+    } catch (err: any) {
+      setErrorBanner(`Erro na recompilação do bundle [${bundle.id}]: ${err?.message || err}`);
+    } finally {
+      setRebuildingBundleId(null);
+    }
+  };
+
+  // Diagnóstico rápido inline (bundle:diag)
+  const handleOpenInlineDiag = async (bundle: KarafBundleInfo) => {
+    if (!window.electronAPI?.getKarafBundleDetails) return;
+    setIsLoadingInlineDiag(true);
+    setInlineDiagBundle({ id: bundle.id, name: bundle.name, diag: 'Consultando bundle:diag...' });
+    try {
+      const details = await window.electronAPI.getKarafBundleDetails(bundle.id);
+      setInlineDiagBundle({
+        id: bundle.id,
+        name: bundle.name,
+        diag: details?.diag || 'Nenhuma restrição ou erro retornado pelo comando bundle:diag do Karaf.'
+      });
+    } catch (err: any) {
+      setInlineDiagBundle({
+        id: bundle.id,
+        name: bundle.name,
+        diag: `Falha ao obter diagnóstico: ${err?.message || err}`
+      });
+    } finally {
+      setIsLoadingInlineDiag(false);
+    }
+  };
+
+  // Exportação de inventário
+  const handleExportBundles = (format: 'json' | 'csv') => {
+    setIsExportMenuOpen(false);
+    if (filteredBundles.length === 0) return;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = `karaf-bundles-${scopeFilter.toLowerCase()}-${dateStr}.${format}`;
+
+    let content = '';
+    let mime = 'text/plain';
+
+    if (format === 'json') {
+      content = JSON.stringify(filteredBundles, null, 2);
+      mime = 'application/json';
+    } else {
+      mime = 'text/csv;charset=utf-8;';
+      const headers = ['ID', 'Estado', 'Nome', 'SymbolicName', 'Versao', 'Nivel', 'Blueprint'];
+      const rows = filteredBundles.map((b) => [
+        b.id,
+        b.state,
+        `"${(b.name || '').replace(/"/g, '""')}"`,
+        `"${(b.symbolicName || '').replace(/"/g, '""')}"`,
+        `"${(b.version || '').replace(/"/g, '""')}"`,
+        b.level || '',
+        b.blueprint || ''
+      ]);
+      content = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+    }
+
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   // Ações básicas (start, stop, restart, refresh)
   const handleBasicAction = async (action: 'start' | 'stop' | 'restart' | 'refresh' | 'resolve', bundleId: string) => {
@@ -594,6 +941,46 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Exportar Inventário */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
+                title="Exportar inventário de bundles OSGi filtrados"
+              >
+                <Download className="w-4 h-4 text-emerald-400" />
+                <span className="hidden sm:inline">Exportar</span>
+                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+              </button>
+              {isExportMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setIsExportMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-1.5 w-44 bg-card border border-border rounded-xl shadow-xl z-40 py-1 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => handleExportBundles('json')}
+                      className="w-full text-left px-3 py-2 text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer font-mono"
+                    >
+                      <FileCode className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Exportar como JSON</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleExportBundles('csv')}
+                      className="w-full text-left px-3 py-2 text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer font-mono"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Exportar como CSV</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={handleOpenLog}
@@ -673,20 +1060,73 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
           </div>
         )}
 
+        {/* Barra de Escopos Inteligentes (Smart Scope Tabs) */}
+        <div className="px-4 py-2 border-b border-border/70 bg-muted/20 flex items-center gap-2 overflow-x-auto shrink-0">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mr-2 shrink-0">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-primary" /> Escopo:
+          </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {[
+              { id: 'ALL', label: 'Todos os Módulos', count: scopeCounts.all },
+              { id: 'TOTVS', label: 'TOTVS / WinThor', count: scopeCounts.totvs },
+              { id: 'WORKSPACE', label: 'Workspace Local', count: scopeCounts.workspace },
+              { id: 'ISSUES', label: 'Com Alertas / Diag', count: scopeCounts.issues },
+              { id: 'SYSTEM', label: 'Framework & Sistema', count: scopeCounts.system }
+            ].map((tab) => {
+              const isActive = scopeFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setScopeFilter(tab.id as any)}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-xs font-bold'
+                      : 'bg-card hover:bg-muted/70 text-muted-foreground border border-border/50'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                      isActive ? 'bg-black/20 text-white' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Barra de Filtros e Busca */}
         <div className="p-3 border-b border-border/70 bg-card/60 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="relative flex-1 min-w-[260px]">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
             <input
+              ref={searchRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Pesquisar por ID, nome do bundle, versão ou symbolic name..."
-              className="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+              placeholder="Pesquisar por ID, nome do bundle, versão ou symbolic name... (Atalho: /)"
+              className="w-full bg-background border border-border rounded-xl pl-9 pr-14 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
             />
+            <div className="absolute right-3 top-2.5 text-[10px] font-mono text-muted-foreground bg-muted/60 px-1 rounded border border-border/60 pointer-events-none">
+              /
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5">
+            {selectedBundleIds.size > 0 && (
+              <button
+                type="button"
+                onClick={handleClearSelection}
+                className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition cursor-pointer mr-1"
+                title="Desmarcar todos os bundles"
+              >
+                Limpar ({selectedBundleIds.size})
+              </button>
+            )}
             {(['ALL', 'Active', 'Resolved', 'Installed'] as const).map((st) => (
               <button
                 key={st}
@@ -720,41 +1160,90 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               <p>Nenhum bundle encontrado para os filtros aplicados.</p>
             </div>
           ) : (
-            <div className="min-w-full inline-block align-middle">
+            <div className="min-w-full inline-block align-middle relative pb-16">
               <table className="min-w-full divide-y divide-border/60 text-xs font-mono">
                 <thead className="bg-muted/70 sticky top-0 z-10 text-[11px]">
                   <tr>
-                    <th className="px-3 py-2 text-left text-muted-foreground uppercase w-14">ID</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground uppercase w-24">Estado</th>
+                    <th className="px-3 py-2 text-left w-10">
+                      <input
+                        type="checkbox"
+                        checked={filteredBundles.length > 0 && selectedBundleIds.size === filteredBundles.length}
+                        onChange={handleSelectAllVisible}
+                        className="rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        title={
+                          selectedBundleIds.size === filteredBundles.length
+                            ? 'Desmarcar todos'
+                            : 'Selecionar todos os bundles visíveis'
+                        }
+                      />
+                    </th>
+                    <th className="px-3 py-2 text-left text-muted-foreground uppercase w-16">ID</th>
+                    <th className="px-3 py-2 text-left text-muted-foreground uppercase w-32">Estado</th>
                     <th className="px-3 py-2 text-left text-muted-foreground uppercase">Nome do Bundle / SymbolicName</th>
                     <th className="px-3 py-2 text-left text-muted-foreground uppercase w-28">Versão</th>
-                    <th className="px-3 py-2 text-right text-muted-foreground uppercase w-48">Ações</th>
+                    <th className="px-3 py-2 text-right text-muted-foreground uppercase w-56">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {filteredBundles.map((b) => {
                     const isRowLoading = Boolean(actionLoading[b.id]);
+                    const isSelected = selectedBundleIds.has(b.id);
+                    const isWs = isWorkspaceBundle(b);
+                    const isRebuilding = rebuildingBundleId === b.id;
+
                     return (
-                      <tr key={b.id} className="hover:bg-muted/30 transition">
-                        <td className="px-3 py-2 text-primary font-bold">{b.id}</td>
+                      <tr
+                        key={b.id}
+                        className={`transition ${
+                          isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/30'
+                        }`}
+                      >
                         <td className="px-3 py-2">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                              b.state === 'Active'
-                                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                                : b.state === 'Resolved'
-                                ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                                : b.state === 'Installed'
-                                ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
-                                : 'bg-muted text-muted-foreground border-border'
-                            }`}
-                          >
-                            {b.state}
-                          </span>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelectBundle(b.id)}
+                            className="rounded border-border text-primary focus:ring-primary cursor-pointer"
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-primary font-bold tabular-nums">{b.id}</td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                b.state === 'Active'
+                                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                                  : b.state === 'Resolved'
+                                  ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                                  : b.state === 'Installed'
+                                  ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                                  : 'bg-muted text-muted-foreground border-border'
+                              }`}
+                            >
+                              {b.state}
+                            </span>
+                            {b.state !== 'Active' && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenInlineDiag(b)}
+                                className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition cursor-pointer"
+                                title="Ver diagnóstico do Karaf para este bundle (bundle:diag)"
+                              >
+                                Diag
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="px-3 py-2 text-foreground font-medium max-w-[340px] truncate" title={b.name}>
                           <div>
-                            <span className="text-foreground">{b.name}</span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-foreground font-semibold">{b.name}</span>
+                              {isWs && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-primary/15 text-primary border border-primary/30">
+                                  <Sparkles className="w-2.5 h-2.5" /> Workspace
+                                </span>
+                              )}
+                            </div>
                             {b.symbolicName && b.symbolicName !== b.name && (
                               <span className="block text-[10px] text-muted-foreground font-normal truncate">
                                 {b.symbolicName}
@@ -762,9 +1251,33 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-muted-foreground truncate">{b.version || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate tabular-nums">{b.version || '-'}</td>
                         <td className="px-3 py-2 text-right">
                           <div className="flex items-center justify-end space-x-1">
+                            {/* Recompilar Maven & Atualizar (1 clique para projetos do workspace) */}
+                            {isWs && (
+                              <button
+                                type="button"
+                                onClick={() => handleOneClickRebuild(b)}
+                                disabled={isRebuilding || isRowLoading}
+                                title="Recompilar projeto Maven (clean install) e atualizar bundle no Karaf em 1 clique"
+                                className="p-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition disabled:opacity-50 cursor-pointer"
+                              >
+                                <Hammer className={`w-3.5 h-3.5 ${isRebuilding ? 'animate-spin' : ''}`} />
+                              </button>
+                            )}
+
+                            {/* Atualizar Fiações (bundle:refresh) */}
+                            <button
+                              type="button"
+                              onClick={() => handleBasicAction('refresh', b.id)}
+                              disabled={isRowLoading}
+                              title="Atualizar fiações OSGi do bundle (bundle:refresh)"
+                              className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-sky-400 hover:text-sky-300 transition disabled:opacity-50 cursor-pointer"
+                            >
+                              <RotateCw className="w-3.5 h-3.5" />
+                            </button>
+
                             {/* Reinstalar */}
                             <button
                               type="button"
@@ -851,6 +1364,81 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                   })}
                 </tbody>
               </table>
+
+              {/* Barra Flutuante de Ações em Lote */}
+              {selectedBundleIds.size > 0 && (
+                <div className="sticky bottom-2 left-0 right-0 z-20 bg-card/95 backdrop-blur-md border border-primary/40 shadow-2xl rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs mt-2">
+                  <div className="flex items-center gap-2 font-bold text-foreground pr-3">
+                    <CheckSquare className="w-4 h-4 text-primary" />
+                    <span>{selectedBundleIds.size} bundle(s) selecionado(s)</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleBatchAction('restart')}
+                      disabled={isBatchActionLoading}
+                      className="px-3 py-1.5 rounded-xl font-bold bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      title="Reiniciar todos os bundles selecionados"
+                    >
+                      <RotateCcw className={`w-3.5 h-3.5 ${isBatchActionLoading ? 'animate-spin' : ''}`} />
+                      <span>Reiniciar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleBatchAction('start')}
+                      disabled={isBatchActionLoading}
+                      className="px-3 py-1.5 rounded-xl font-bold bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      title="Iniciar todos os bundles selecionados"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Iniciar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleBatchAction('stop')}
+                      disabled={isBatchActionLoading}
+                      className="px-3 py-1.5 rounded-xl font-bold bg-muted hover:bg-muted/80 border border-border text-foreground transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      title="Parar todos os bundles selecionados"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      <span>Parar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleBatchAction('refresh')}
+                      disabled={isBatchActionLoading}
+                      className="px-3 py-1.5 rounded-xl font-bold bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      title="Atualizar fiações OSGi dos bundles selecionados"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                      <span>Refresh</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleBatchAction('uninstall')}
+                      disabled={isBatchActionLoading}
+                      className="px-3 py-1.5 rounded-xl font-bold bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      title="Desinstalar todos os bundles selecionados"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Desinstalar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleClearSelection}
+                      className="text-muted-foreground hover:text-foreground text-xs underline pl-2 cursor-pointer"
+                    >
+                      Desmarcar
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -860,7 +1448,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* SUB-MODAL: CONFIRMAÇÃO DE DESINSTALAÇÃO COM VERIFICAÇÃO DE DEPENDÊNCIAS */}
       {/* ========================================================================= */}
       {uninstallTarget && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
@@ -1012,7 +1600,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* SUB-MODAL: INSTALAÇÃO / ATUALIZAÇÃO PARA OUTRA VERSÃO */}
       {/* ========================================================================= */}
       {isInstallModalOpen && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
@@ -1281,7 +1869,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* SUB-MODAL: REINSTALAÇÃO DE BUNDLE */}
       {/* ========================================================================= */}
       {reinstallTarget && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
@@ -1397,7 +1985,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* SUB-MODAL: DETALHES & ÁRVORE DE DEPENDÊNCIAS DO BUNDLE */}
       {/* ========================================================================= */}
       {detailsTarget && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl h-[75vh] flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
               <div className="flex items-center space-x-2.5">
@@ -1693,7 +2281,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* SUB-MODAL: SNAPSHOTS E COMPARATIVO (DIFF) */}
       {/* ========================================================================= */}
       {isSnapshotModalOpen && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-fade-in">
             {/* Header */}
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
@@ -1976,95 +2564,402 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-MODAL: HISTÓRICO DE DEPLOYS KARAF (settings.karafDeployHistory) */}
+      {/* SUB-MODAL: HISTÓRICO E TELEMETRIA DE DEPLOYS KARAF (settings.karafDeployHistory) */}
       {/* ========================================================================= */}
       {isDeployHistoryModalOpen && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl h-[75vh] flex flex-col overflow-hidden animate-fade-in">
-            {/* Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400">
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0c1017] border border-slate-800 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in text-slate-100 font-sans">
+            {/* Header com Telemetria e Ações */}
+            <div className="p-4 border-b border-slate-800/80 bg-slate-900/60 flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 shadow-sm shadow-sky-500/10">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-foreground">Histórico de Deploys</h4>
-                  <p className="text-[11px] text-muted-foreground">
-                    Últimas execuções de deploy/build Karaf (sucesso, falha, duração e coordenadas Maven), mais recente primeiro.
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-100 tracking-tight">Histórico & Telemetria de Deploys</h3>
+                    <span className="text-[10px] uppercase font-mono tracking-wider px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 font-semibold">
+                      OSGi Audit Rail
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Auditoria de compilações Maven, hot-deploys e ativações em tempo real (UI & MCP Agent).
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsDeployHistoryModalOpen(false)}
-                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleOpenDeployHistory}
+                  disabled={isLoadingDeployHistory}
+                  className="p-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white transition disabled:opacity-50 cursor-pointer"
+                  title="Recarregar histórico de deploys"
+                >
+                  <RotateCw className={`w-4 h-4 ${isLoadingDeployHistory ? 'animate-spin text-sky-400' : ''}`} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDeployHistoryModalOpen(false)}
+                  className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition cursor-pointer"
+                  title="Fechar histórico"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Lista */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-              {isLoadingDeployHistory ? (
-                <div className="text-center py-10 text-xs text-muted-foreground">Carregando histórico...</div>
-              ) : deployHistory.length === 0 ? (
-                <div className="text-center py-10 px-3 text-xs text-muted-foreground">
-                  <History className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                  <p>Nenhum deploy registrado ainda.</p>
-                  <p className="text-[11px] mt-1 text-muted-foreground/70">
-                    Cada deploy ou build+deploy executado pela UI ou via MCP passa a aparecer aqui.
-                  </p>
+            {/* Faixa de Indicadores de Telemetria (Cockpit KPI Strip) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 px-4 border-b border-slate-800/80 bg-slate-950/40 text-xs shrink-0">
+              {/* Total */}
+              <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300">
+                  <Layers className="w-3.5 h-3.5" />
                 </div>
-              ) : (
-                deployHistory.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className={`p-2.5 rounded-xl border flex items-start gap-2.5 ${
-                      entry.success ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'
-                    }`}
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Total Deploys</div>
+                  <div className="text-sm font-bold font-mono text-slate-100">{deployStats.total}</div>
+                </div>
+              </div>
+
+              {/* Taxa de Sucesso */}
+              <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                <div className={`p-1.5 rounded-lg ${deployStats.failures === 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                  <Activity className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Taxa de Sucesso</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold font-mono text-slate-100">{deployStats.successRate}%</span>
+                    <span className={`w-2 h-2 rounded-full ${deployStats.failures === 0 ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]' : 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)]'}`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Duração Média */}
+              <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400">
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Duração Média</div>
+                  <div className="text-sm font-bold font-mono text-slate-100">{deployStats.avgDuration}s</div>
+                </div>
+              </div>
+
+              {/* Origem */}
+              <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-900/50 border border-slate-800/60">
+                <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+                  <Cpu className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Origem (MCP / UI)</div>
+                  <div className="text-xs font-bold font-mono text-slate-100">
+                    <span className="text-purple-400">{deployStats.mcpCount}</span> MCP · <span className="text-amber-400">{deployStats.uiCount}</span> UI
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Toolbar: Busca e Filtros */}
+            <div className="p-3 border-b border-slate-800/80 bg-slate-900/30 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="relative flex-1 min-w-[240px]">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={deployHistorySearch}
+                  onChange={(e) => setDeployHistorySearch(e.target.value)}
+                  placeholder="Pesquisar por artefato, versão, feature, erro..."
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-8.5 pr-8 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500/60 font-mono placeholder:text-slate-500 placeholder:font-sans transition"
+                />
+                {deployHistorySearch && (
+                  <button
+                    type="button"
+                    onClick={() => setDeployHistorySearch('')}
+                    className="absolute right-2.5 top-2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                    title="Limpar busca"
                   >
-                    {entry.success ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-foreground truncate">
-                          {entry.artifactId || entry.featureInstall}
-                        </span>
-                        {entry.version && (
-                          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            {entry.version}
-                          </span>
-                        )}
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70 bg-muted/60 px-1.5 py-0.5 rounded">
-                          {entry.trigger === 'mcp' ? 'MCP' : 'UI'}
-                        </span>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { id: 'ALL', label: 'Todos', count: deployStats.total },
+                  { id: 'SUCCESS', label: 'Sucessos', count: deployStats.successes, dotColor: 'bg-emerald-400' },
+                  { id: 'FAILURE', label: 'Falhas', count: deployStats.failures, dotColor: 'bg-rose-400' },
+                  { id: 'MCP', label: 'MCP Agent', count: deployStats.mcpCount, icon: Sparkles },
+                  { id: 'UI', label: 'Console UI', count: deployStats.uiCount, icon: Terminal }
+                ].map((chip) => {
+                  const isSelected = deployHistoryFilter === chip.id;
+                  const Icon = chip.icon;
+                  return (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      onClick={() => setDeployHistoryFilter(chip.id as any)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer border ${
+                        isSelected
+                          ? 'bg-sky-500/20 border-sky-500/50 text-sky-300 shadow-sm'
+                          : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      }`}
+                    >
+                      {chip.dotColor && <span className={`w-1.5 h-1.5 rounded-full ${chip.dotColor}`} />}
+                      {Icon && <Icon className="w-3 h-3 text-current" />}
+                      <span>{chip.label}</span>
+                      <span className="text-[10px] font-mono opacity-70 ml-0.5">({chip.count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Área Principal de Conteúdo */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+              {isLoadingDeployHistory ? (
+                <div className="h-64 flex flex-col items-center justify-center text-xs text-slate-400 space-y-2">
+                  <RotateCw className="w-6 h-6 animate-spin text-sky-400" />
+                  <span>Sincronizando auditoria de deploys do Karaf...</span>
+                </div>
+              ) : deployHistory.length === 0 ? (
+                /* EMPTY STATE ASSINATURA: "Pronto para Telemetria" Pipeline Blueprint */
+                <div className="h-full min-h-[360px] flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-full max-w-lg p-6 rounded-xl bg-card border border-border shadow-md relative">
+                    {/* Pipeline OSGi Diagram */}
+                    <div className="flex items-center justify-center gap-2 mb-5 font-mono text-[10px] text-muted-foreground">
+                      <div className="px-2.5 py-1.5 rounded-lg bg-muted/60 border border-border flex items-center gap-1.5 text-foreground">
+                        <Package className="w-3 h-3 text-primary" />
+                        <span>Maven JAR</span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-1 truncate" title={entry.featureInstall}>
-                        {entry.featureInstall}
-                      </p>
-                      {!entry.success && entry.message && (
-                        <p className="text-[11px] text-red-400 mt-1">{entry.message}</p>
-                      )}
-                      <div className="flex items-center gap-2.5 mt-1.5 text-[10px] text-muted-foreground/70">
-                        <span>{new Date(entry.startedAt).toLocaleString('pt-BR')}</span>
-                        <span>•</span>
-                        <span>{(entry.durationMs / 1000).toFixed(1)}s</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                      <div className="px-2.5 py-1.5 rounded-lg bg-muted/60 border border-border flex items-center gap-1.5 text-foreground">
+                        <UploadCloud className="w-3 h-3 text-primary" />
+                        <span>Hot-Deploy</span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                      <div className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        <span>Active OSGi</span>
                       </div>
                     </div>
+
+                    <h4 className="text-base font-bold text-foreground mb-1.5">
+                      Nenhum Deploy Registrado Nesta Sessão
+                    </h4>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed mb-6">
+                      Cada compilação e deploy disparado através da interface ou por agentes MCP (<code className="text-primary font-mono text-[11px]">karaf_deploy_feature</code>) será gravado aqui com telemetria detalhada de duração, coordenadas Maven e diagnóstico de falhas.
+                    </p>
+
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsDeployHistoryModalOpen(false);
+                          handleOpenInstall();
+                        }}
+                        className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-2 cursor-pointer active:scale-95"
+                      >
+                        <UploadCloud className="w-4 h-4" />
+                        <span>Instalar Bundle / Nova Versão</span>
+                      </button>
+                    </div>
                   </div>
-                ))
+                </div>
+              ) : filteredDeployHistory.length === 0 ? (
+                /* Quando a busca/filtro não encontra resultados */
+                <div className="py-16 text-center text-xs text-slate-400 space-y-2">
+                  <Filter className="w-8 h-8 text-slate-600 mx-auto mb-1" />
+                  <p className="text-slate-300 font-medium">Nenhum registro encontrado para os critérios selecionados.</p>
+                  <p className="text-[11px] text-slate-500">Tente ajustar o termo da busca ou alterar os filtros de status.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeployHistorySearch('');
+                      setDeployHistoryFilter('ALL');
+                    }}
+                    className="mt-2 px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-[11px] text-slate-300 transition cursor-pointer"
+                  >
+                    Limpar Filtros
+                  </button>
+                </div>
+              ) : (
+                /* Cards de Histórico */
+                filteredDeployHistory.map((entry) => {
+                  const isExpanded = expandedErrorId === entry.id;
+                  const isCopied = copiedDeployCoordKey === entry.id;
+                  const mvnCoords = entry.groupId && entry.artifactId && entry.version
+                    ? `mvn:${entry.groupId}/${entry.artifactId}/${entry.version}`
+                    : entry.featureInstall;
+
+                  return (
+                    <div
+                      key={entry.id}
+                      className={`p-3.5 rounded-xl border transition-all duration-200 ${
+                        entry.success
+                          ? 'border-slate-800/80 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/60'
+                          : 'border-rose-900/40 bg-rose-950/15 hover:border-rose-800/60 hover:bg-rose-950/25'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          {/* Status Pill */}
+                          <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${
+                            entry.success
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                          }`}>
+                            {entry.success ? (
+                              <CheckCircle className="w-4 h-4" />
+                            ) : (
+                              <XCircle className="w-4 h-4" />
+                            )}
+                          </div>
+
+                          {/* Info Principal */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold text-slate-100 truncate" title={entry.artifactId || entry.projectName || entry.featureInstall}>
+                                {entry.artifactId || entry.projectName || entry.featureInstall}
+                              </span>
+
+                              {entry.version && (
+                                <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.5 rounded font-semibold">
+                                  v{entry.version}
+                                </span>
+                              )}
+
+                              {/* Trigger Tag */}
+                              <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 border ${
+                                entry.trigger === 'mcp'
+                                  ? 'bg-purple-500/10 text-purple-300 border-purple-500/30'
+                                  : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                              }`}>
+                                {entry.trigger === 'mcp' ? (
+                                  <>
+                                    <Sparkles className="w-2.5 h-2.5" />
+                                    <span>MCP Agent</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Terminal className="w-2.5 h-2.5" />
+                                    <span>Console UI</span>
+                                  </>
+                                )}
+                              </span>
+
+                              {/* Status Tag */}
+                              <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                                entry.success
+                                  ? 'bg-emerald-500/15 text-emerald-400'
+                                  : 'bg-rose-500/15 text-rose-400'
+                              }`}>
+                                {entry.success ? 'Sucesso' : 'Falha'}
+                              </span>
+                            </div>
+
+                            {/* Comando / Feature ou Coordenadas */}
+                            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                              <code className="text-[11px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800/80 truncate max-w-md select-all">
+                                {mvnCoords}
+                              </code>
+
+                              {/* Botão Copiar Coordenadas */}
+                              <button
+                                type="button"
+                                onClick={() => copyDeployCoord(mvnCoords, entry.id)}
+                                className="p-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] flex items-center gap-1 border border-slate-700 transition cursor-pointer"
+                                title="Copiar coordenadas Maven"
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-400" />
+                                    <span className="text-emerald-400 font-semibold">Copiado</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3" />
+                                    <span>Copiar</span>
+                                  </>
+                                )}
+                              </button>
+
+                              {/* Botão para abrir no Instalador */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsDeployHistoryModalOpen(false);
+                                  handleOpenInstall();
+                                  setInstallSourceType('mvn');
+                                  setMvnCoordinate(mvnCoords);
+                                  if (entry.version) setTargetVersion(entry.version);
+                                }}
+                                className="p-1 px-1.5 rounded bg-slate-800/60 hover:bg-slate-800 text-sky-400 hover:text-sky-300 text-[10px] flex items-center gap-1 border border-slate-700/60 transition cursor-pointer"
+                                title="Reutilizar coordenadas para novo deploy"
+                              >
+                                <UploadCloud className="w-3 h-3" />
+                                <span>Usar no Instalador</span>
+                              </button>
+                            </div>
+
+                            {/* Mensagem de Erro Expandível se houver falha */}
+                            {!entry.success && entry.message && (
+                              <div className="mt-2.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedErrorId(isExpanded ? null : entry.id)}
+                                  className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                  <span>{isExpanded ? 'Ocultar diagnóstico da falha' : 'Ver diagnóstico detalhado da falha'}</span>
+                                </button>
+
+                                {isExpanded && (
+                                  <div className="mt-2 p-2.5 rounded-lg bg-black/60 border border-rose-900/60 text-[11px] font-mono text-rose-300 whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
+                                    {entry.message}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Metadados: Horário e Latência */}
+                            <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-mono">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-slate-400" />
+                                {new Date(entry.startedAt).toLocaleString('pt-BR')}
+                              </span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <Activity className="w-3 h-3 text-slate-400" />
+                                {(entry.durationMs / 1000).toFixed(2)}s duração
+                              </span>
+                              {entry.repoUrl && (
+                                <>
+                                  <span>•</span>
+                                  <span className="truncate max-w-[200px]" title={entry.repoUrl}>
+                                    {entry.repoUrl}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-border bg-muted/20 flex justify-end">
+            <div className="p-3 px-4 border-t border-slate-800/80 bg-slate-950/60 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-slate-500 font-mono">
+                Registros persistidos em <code className="text-slate-400">settings.karafDeployHistory</code> (máx: 200)
+              </span>
               <button
                 type="button"
                 onClick={() => setIsDeployHistoryModalOpen(false)}
-                className="px-4 py-1.5 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 rounded-xl transition cursor-pointer"
+                className="px-4 py-1.5 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition cursor-pointer"
               >
                 Fechar
               </button>
@@ -2151,6 +3046,61 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                   Nenhuma entrada de log retornada. Verifique se o Karaf está acessível (client.bat / SSH).
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-MODAL: DIAGNÓSTICO RÁPIDO DO BUNDLE (bundle:diag) */}
+      {/* ========================================================================= */}
+      {inlineDiagBundle && (
+        <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">
+                    Diagnóstico OSGi (bundle:diag [{inlineDiagBundle.id}])
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground truncate max-w-md">
+                    {inlineDiagBundle.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInlineDiagBundle(null)}
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div className="bg-black/80 rounded-xl p-3 border border-border font-mono text-xs text-amber-200/90 whitespace-pre-wrap max-h-96 overflow-y-auto leading-relaxed">
+                {isLoadingInlineDiag ? (
+                  <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
+                    <RotateCw className="w-5 h-5 animate-spin text-primary" />
+                    <span>Consultando bundle:diag no Karaf...</span>
+                  </div>
+                ) : (
+                  inlineDiagBundle.diag
+                )}
+              </div>
+            </div>
+
+            <div className="p-3 border-t border-border bg-muted/30 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setInlineDiagBundle(null)}
+                className="px-4 py-1.5 rounded-xl font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition cursor-pointer"
+              >
+                Fechar
+              </button>
             </div>
           </div>
         </div>

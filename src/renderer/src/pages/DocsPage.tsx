@@ -22,7 +22,8 @@ import {
   Layers,
   BookOpen,
   Cpu,
-  Sparkles
+  Sparkles,
+  Bot
 } from 'lucide-react';
 import {
   DocFolderConfig,
@@ -33,15 +34,20 @@ import {
   DocSyncProgress,
   DocSyncResult,
   ConfluenceSourceConfig,
-  JiraSourceConfig
+  JiraSourceConfig,
+  LlmProviderConfig,
+  LlmTestResult
 } from '../../../shared/types';
 import { MarkdownReader } from '../components/MarkdownReader';
+import { DocSettingsModal } from '../components/DocSettingsModal';
+import { AiMarkdownViewer } from '../components/AiMarkdownViewer';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DOCS_TOUR_STEPS, DOCS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/docsTour';
 
 interface DocsPageProps {
   onNavigateToSettings?: () => void;
+  settingsVersion?: number;
 }
 
 const PHASE_LABELS: Record<DocsIndexProgress['phase'], string> = {
@@ -52,7 +58,7 @@ const PHASE_LABELS: Record<DocsIndexProgress['phase'], string> = {
   done: 'Indexação concluída.'
 };
 
-export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
+export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settingsVersion }) => {
   const tour = usePageTour(DOCS_TOUR_STORAGE_KEY);
   const [status, setStatus] = useState<DocsIndexStatus | null>(null);
   const [query, setQuery] = useState<string>('');
@@ -97,6 +103,18 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
   const [isTestingJiraId, setIsTestingJiraId] = useState<string | null>(null);
   const [jiraTestResults, setJiraTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
 
+  // Modal de Configurações de Documentação & LLM
+  const [showDocSettingsModal, setShowDocSettingsModal] = useState<boolean>(false);
+  const [llmProviders, setLlmProviders] = useState<LlmProviderConfig[]>([]);
+  const [activeLlmProviderId, setActiveLlmProviderId] = useState<string | undefined>(undefined);
+
+  // Estados de Pergunta e Síntese de IA (RAG)
+  const [isAskingLlm, setIsAskingLlm] = useState<boolean>(false);
+  const [llmAnswer, setLlmAnswer] = useState<string | null>(null);
+  const [llmSources, setLlmSources] = useState<Array<{ title: string; path: string; score: number }>>([]);
+  const [llmError, setLlmError] = useState<string | null>(null);
+  const [copiedLlmAnswer, setCopiedLlmAnswer] = useState<boolean>(false);
+
   const loadStatus = async () => {
     if (window.electronAPI) {
       setStatus(await window.electronAPI.getDocsIndexStatus());
@@ -112,6 +130,8 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
       setSyncTargets(settings.docSyncTargets || []);
       setConfluenceSources(settings.confluenceSources || []);
       setJiraSources(settings.jiraSources || []);
+      setLlmProviders(settings.llmProviders || []);
+      setActiveLlmProviderId(settings.activeLlmProviderId);
     }
   };
 
@@ -125,6 +145,13 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
       unsubSync?.();
     };
   }, []);
+
+  useEffect(() => {
+    if (settingsVersion && settingsVersion > 0) {
+      loadDocSettings();
+      loadStatus();
+    }
+  }, [settingsVersion]);
 
   const handleToggleIndexProjects = async (checked: boolean) => {
     setIndexProjectsDocs(checked);
@@ -365,11 +392,79 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
     }
   };
 
+  const handleSaveLlmProvider = async (provider: LlmProviderConfig) => {
+    let updated: LlmProviderConfig[];
+    if (llmProviders.some((p) => p.id === provider.id)) {
+      updated = llmProviders.map((p) => (p.id === provider.id ? provider : p));
+    } else {
+      updated = [...llmProviders, provider];
+    }
+    const newActiveId = activeLlmProviderId || provider.id;
+    setLlmProviders(updated);
+    setActiveLlmProviderId(newActiveId);
+    await window.electronAPI?.saveSettings({
+      llmProviders: updated,
+      activeLlmProviderId: newActiveId
+    });
+  };
+
+  const handleDeleteLlmProvider = async (id: string) => {
+    const updated = llmProviders.filter((p) => p.id !== id);
+    const newActiveId = activeLlmProviderId === id ? updated[0]?.id : activeLlmProviderId;
+    setLlmProviders(updated);
+    setActiveLlmProviderId(newActiveId);
+    await window.electronAPI?.saveSettings({
+      llmProviders: updated,
+      activeLlmProviderId: newActiveId
+    });
+  };
+
+  const handleSetActiveLlmProvider = async (id: string) => {
+    setActiveLlmProviderId(id);
+    await window.electronAPI?.saveSettings({ activeLlmProviderId: id });
+  };
+
+  const handleTestLlmConnection = async (provider: LlmProviderConfig) => {
+    const tester = window.electronAPI?.testLlmConnection;
+    if (tester) {
+      return await tester(provider);
+    }
+    return { success: false, message: 'API não disponível.' };
+  };
+
+  const handleAskLlm = async (q = query) => {
+    if (!q.trim()) return;
+    if (!activeLlmProvider || !activeLlmProvider.enabled) {
+      setLlmError('Nenhum provedor de IA/LLM está ativo. Configure sua chave (BYOK) na aba IA & Modelos LLM das Configurações.');
+      return;
+    }
+    const askFn = window.electronAPI?.askDocsWithAi || window.electronAPI?.askLlm;
+    if (!askFn) return;
+    setIsAskingLlm(true);
+    setLlmError(null);
+    setLlmAnswer(null);
+    try {
+      const res = await askFn({
+        query: q.trim(),
+        sourceLabel: sourceFilter !== 'TODOS' ? sourceFilter : undefined,
+        topK: 5
+      });
+      setLlmAnswer(res.answer);
+      setLlmSources(res.sources || []);
+    } catch (err: any) {
+      setLlmError(err?.message || 'Falha ao consultar assistente de IA.');
+    } finally {
+      setIsAskingLlm(false);
+    }
+  };
+
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!window.electronAPI || !query.trim()) return;
     setIsSearching(true);
     setHasSearched(true);
+    setLlmAnswer(null);
+    setLlmError(null);
     try {
       const options = sourceFilter !== 'TODOS' ? { sourceLabel: sourceFilter } : undefined;
       const data = await window.electronAPI.searchDocs(query.trim(), options);
@@ -414,8 +509,10 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
     return true;
   });
 
+  const activeLlmProvider = llmProviders.find((p) => (activeLlmProviderId ? p.id === activeLlmProviderId : p.enabled));
+
   return (
-    <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
+    <div className="h-full flex flex-col p-4 md:p-5 space-y-4 overflow-y-auto">
       {/* Topo / Indexação */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -449,8 +546,21 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
 
           <div className="flex items-center gap-2 shrink-0">
             <button
+              data-tour="doc-settings-button"
+              onClick={() => setShowDocSettingsModal(true)}
+              className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+              title="Configurar pastas locais, projetos Git, Confluence, Jira e Assistente IA"
+            >
+              <Settings className="w-3.5 h-3.5 text-primary" />
+              <span>Configurações ({docFolders.length + confluenceSources.length + jiraSources.length})</span>
+              {activeLlmProvider && activeLlmProvider.enabled && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" title={`IA Ativa: ${activeLlmProvider.name}`} />
+              )}
+            </button>
+
+            <button
               onClick={() => setShowSyncModal(true)}
-              className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
               title="Gerenciar e enviar documentos vetorizados para APIs externas (ex: Espaço Ágil)"
             >
               <Send className="w-3.5 h-3.5 text-primary" />
@@ -461,7 +571,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
               data-tour="reindex-button"
               onClick={handleReindex}
               disabled={isIndexing}
-              className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-60"
+              className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-60 cursor-pointer active:scale-95"
               title="Escanear projetos e (re)gerar o índice de busca"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isIndexing ? 'animate-spin' : ''}`} />
@@ -540,460 +650,6 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
         )}
       </div>
 
-      {/* Fontes de Documentação & Pastas */}
-      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0 space-y-3.5">
-        {/* Toggle para varrer projetos Git */}
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/60">
-          <div className="space-y-0.5 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-foreground">Buscar documentação dentro dos Projetos Git</span>
-              <span
-                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                  indexProjectsDocs
-                    ? 'bg-primary/10 text-primary border-primary/30'
-                    : 'bg-muted text-muted-foreground border-border/60'
-                }`}
-              >
-                {indexProjectsDocs ? 'Ativado' : 'Desativado'}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {indexProjectsDocs
-                ? 'O indexador vasculhará todos os repositórios da Pasta de Projetos além das pastas abaixo.'
-                : 'Desativado: o Dev Manager indexa exclusivamente as pastas informadas abaixo, sem vasculhar os projetos Git.'}
-            </p>
-          </div>
-
-          <label className="relative inline-flex items-center cursor-pointer shrink-0">
-            <input
-              type="checkbox"
-              checked={indexProjectsDocs}
-              onChange={(e) => handleToggleIndexProjects(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-          </label>
-        </div>
-
-        {/* Toggle para auto-reindex ao detectar mudanças nas pastas locais */}
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/60">
-          <div className="space-y-0.5 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-foreground">Reindexar automaticamente ao detectar mudanças</span>
-              <span
-                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                  autoReindexOnChange
-                    ? 'bg-primary/10 text-primary border-primary/30'
-                    : 'bg-muted text-muted-foreground border-border/60'
-                }`}
-              >
-                {autoReindexOnChange ? 'Ativado' : 'Desativado'}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {autoReindexOnChange
-                ? 'O Dev Manager observa as pastas locais indexadas e reindexa sozinho quando um arquivo muda, avisando por notificação quando terminar.'
-                : 'Desativado: a reindexação só acontece quando você clica em "Reindexar" manualmente.'}
-            </p>
-          </div>
-
-          <label className="relative inline-flex items-center cursor-pointer shrink-0">
-            <input
-              type="checkbox"
-              checked={autoReindexOnChange}
-              onChange={(e) => handleToggleAutoReindex(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-          </label>
-        </div>
-
-        {/* Lista de Pastas de Documentação */}
-        <div data-tour="doc-folders-list">
-          <div className="flex items-center justify-between gap-3 mb-2.5">
-            <div>
-              <h3 className="text-xs font-bold text-foreground">Pastas de Documentação</h3>
-              <p className="text-[11px] text-muted-foreground">
-                Pastas contendo documentações (.md, .txt, .pdf, .docx) organizadas por projetos ou manuais centrais.
-              </p>
-            </div>
-            <button
-              onClick={handleAddFolder}
-              disabled={isAddingFolder}
-              className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shrink-0 disabled:opacity-60 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Adicionar pasta de docs</span>
-            </button>
-          </div>
-
-          {docFolders.length === 0 ? (
-            <div className="text-center py-4 border border-dashed border-border rounded-xl bg-card/40">
-              <p className="text-[11px] text-muted-foreground">
-                Nenhuma pasta de documentação configurada. Clique em "Adicionar pasta de docs" para indicar de onde buscar as documentações.
-              </p>
-            </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {docFolders.map((folder) => (
-                <li
-                  key={folder.path}
-                  className="flex items-center justify-between gap-2 text-xs bg-card border border-border/80 rounded-lg px-3 py-1.5"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <FolderOpen className="w-3.5 h-3.5 text-primary shrink-0" />
-                    <span className="font-mono text-foreground truncate">{folder.path}</span>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveFolder(folder.path)}
-                    className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 cursor-pointer"
-                    title="Remover pasta"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Fontes Confluence */}
-        <div className="pt-3 border-t border-border/60">
-          <div className="flex items-center justify-between gap-3 mb-2.5">
-            <div>
-              <h3 className="text-xs font-bold text-foreground">Fontes Confluence</h3>
-              <p className="text-[11px] text-muted-foreground">
-                Espaços do Confluence (Cloud ou Server) indexados como documentação, via token de API.
-              </p>
-            </div>
-            <button
-              onClick={() => setEditingConfluenceSource({ enabled: true })}
-              className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Novo espaço Confluence</span>
-            </button>
-          </div>
-
-          {confluenceSources.length === 0 && !editingConfluenceSource ? (
-            <div className="text-center py-4 border border-dashed border-border rounded-xl bg-card/40">
-              <p className="text-[11px] text-muted-foreground">Nenhuma fonte Confluence configurada.</p>
-            </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {confluenceSources.map((source) => (
-                <li key={source.id} className="bg-card border border-border/80 rounded-lg px-3 py-1.5 space-y-1">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <input
-                        type="checkbox"
-                        checked={source.enabled}
-                        onChange={(e) => handleToggleConfluenceEnabled(source, e.target.checked)}
-                        className="text-primary focus:ring-0 shrink-0"
-                      />
-                      <Globe className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-                      <span className="font-semibold text-foreground truncate">{source.name}</span>
-                      <span className="font-mono text-[10px] text-muted-foreground truncate">{source.baseUrl}</span>
-                      {source.spaceKey && (
-                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0">
-                          {source.spaceKey}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => handleTestConfluenceConnection(source)}
-                        disabled={isTestingConfluenceId === source.id}
-                        className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
-                      >
-                        {isTestingConfluenceId === source.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Testar'}
-                      </button>
-                      <button
-                        onClick={() => setEditingConfluenceSource(source)}
-                        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteConfluenceSource(source.id)}
-                        className="p-1 rounded-md hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  {confluenceTestResults[source.id] && (
-                    <div
-                      className={`text-[10px] px-1.5 py-1 rounded-md ${
-                        confluenceTestResults[source.id].success
-                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                          : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
-                      }`}
-                    >
-                      {confluenceTestResults[source.id].message}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {editingConfluenceSource && (
-            <form
-              onSubmit={handleSaveConfluenceSource}
-              className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-foreground">
-                  {editingConfluenceSource.id ? 'Editar Fonte Confluence' : 'Nova Fonte Confluence'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setEditingConfluenceSource(null)}
-                  className="text-[11px] text-muted-foreground hover:text-foreground transition"
-                >
-                  Cancelar
-                </button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground">Nome</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Wiki Interno"
-                    value={editingConfluenceSource.name || ''}
-                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, name: e.target.value })}
-                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground">Space Key (opcional)</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: PRO (todo o Confluence se vazio)"
-                    value={editingConfluenceSource.spaceKey || ''}
-                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, spaceKey: e.target.value })}
-                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-foreground">URL Base do Confluence</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://empresa.atlassian.net ou https://confluence.empresa.com"
-                  value={editingConfluenceSource.baseUrl || ''}
-                  onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, baseUrl: e.target.value })}
-                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground">
-                    E-mail (Confluence Cloud — deixe vazio para Server/PAT)
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="voce@empresa.com"
-                    value={editingConfluenceSource.authEmail || ''}
-                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, authEmail: e.target.value })}
-                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground">Token de API / PAT</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Token"
-                    value={editingConfluenceSource.authToken || ''}
-                    onChange={(e) => setEditingConfluenceSource({ ...editingConfluenceSource, authToken: e.target.value })}
-                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-              <p className="text-[10px] text-muted-foreground">
-                Token fica salvo em texto plano nas configurações locais, mesmo padrão dos destinos de sincronização acima.
-              </p>
-              <button
-                type="submit"
-                className="w-full px-3 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-[11px]"
-              >
-                Salvar Fonte
-              </button>
-            </form>
-          )}
-        </div>
-
-        {/* Fontes Jira */}
-        <div className="pt-3 border-t border-border/60">
-          <div className="flex items-center justify-between gap-3 mb-2.5">
-            <div>
-              <h3 className="text-xs font-bold text-foreground">Fontes Jira</h3>
-              <p className="text-[11px] text-muted-foreground">
-                Projetos/JQLs do Jira indexados como documentação — cada issue vira um "documento".
-              </p>
-            </div>
-            <button
-              onClick={() => setEditingJiraSource({ enabled: true })}
-              className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Novo projeto Jira</span>
-            </button>
-          </div>
-
-          {jiraSources.length === 0 && !editingJiraSource ? (
-            <div className="text-center py-4 border border-dashed border-border rounded-xl bg-card/40">
-              <p className="text-[11px] text-muted-foreground">Nenhuma fonte Jira configurada.</p>
-            </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {jiraSources.map((source) => (
-                <li key={source.id} className="bg-card border border-border/80 rounded-lg px-3 py-1.5 space-y-1">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <input
-                        type="checkbox"
-                        checked={source.enabled}
-                        onChange={(e) => handleToggleJiraEnabled(source, e.target.checked)}
-                        className="text-primary focus:ring-0 shrink-0"
-                      />
-                      <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                      <span className="font-semibold text-foreground truncate">{source.name}</span>
-                      <span className="font-mono text-[10px] text-muted-foreground truncate">{source.baseUrl}</span>
-                      {source.projectKey && (
-                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0">
-                          {source.projectKey}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => handleTestJiraConnection(source)}
-                        disabled={isTestingJiraId === source.id}
-                        className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
-                      >
-                        {isTestingJiraId === source.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Testar'}
-                      </button>
-                      <button
-                        onClick={() => setEditingJiraSource(source)}
-                        className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteJiraSource(source.id)}
-                        className="p-1 rounded-md hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  {jiraTestResults[source.id] && (
-                    <div
-                      className={`text-[10px] px-1.5 py-1 rounded-md ${
-                        jiraTestResults[source.id].success
-                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                          : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
-                      }`}
-                    >
-                      {jiraTestResults[source.id].message}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {editingJiraSource && (
-            <form
-              onSubmit={handleSaveJiraSource}
-              className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-foreground">
-                  {editingJiraSource.id ? 'Editar Fonte Jira' : 'Nova Fonte Jira'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setEditingJiraSource(null)}
-                  className="text-[11px] text-muted-foreground hover:text-foreground transition"
-                >
-                  Cancelar
-                </button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground">Nome</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Projeto PRO"
-                    value={editingJiraSource.name || ''}
-                    onChange={(e) => setEditingJiraSource({ ...editingJiraSource, name: e.target.value })}
-                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] text-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-foreground">Project Key (opcional)</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: PRO"
-                    value={editingJiraSource.projectKey || ''}
-                    onChange={(e) => setEditingJiraSource({ ...editingJiraSource, projectKey: e.target.value })}
-                    className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-foreground">URL Base do Jira</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://empresa.atlassian.net ou https://jira.empresa.com"
-                  value={editingJiraSource.baseUrl || ''}
-                  onChange={(e) => setEditingJiraSource({ ...editingJiraSource, baseUrl: e.target.value })}
-                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-foreground">JQL customizado (opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Ex: project = PRO AND status != Done ORDER BY updated DESC"
-                  value={editingJiraSource.jql || ''}
-                  onChange={(e) => setEditingJiraSource({ ...editingJiraSource, jql: e.target.value })}
-                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-foreground">Token de API / PAT (Bearer)</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Token"
-                  value={editingJiraSource.authToken || ''}
-                  onChange={(e) => setEditingJiraSource({ ...editingJiraSource, authToken: e.target.value })}
-                  className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-primary"
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground">
-                Token fica salvo em texto plano nas configurações locais, mesmo padrão das fontes Confluence acima.
-              </p>
-              <button
-                type="submit"
-                className="w-full px-3 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-[11px]"
-              >
-                Salvar Fonte
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-
       {/* Barra de Busca */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
@@ -1038,9 +694,32 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
             type="submit"
             data-tour="search-submit-button"
             disabled={isSearching || !query.trim() || !hasIndex}
-            className="px-4 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors disabled:opacity-50 cursor-pointer"
           >
             {isSearching ? 'Buscando...' : 'Buscar'}
+          </button>
+
+          <button
+            type="button"
+            disabled={isSearching || isAskingLlm || !query.trim() || !hasIndex}
+            onClick={async () => {
+              if (!hasSearched) await handleSearch();
+              handleAskLlm();
+            }}
+            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-md shadow-primary/25 disabled:opacity-40 cursor-pointer active:scale-95 shrink-0"
+            title={activeLlmProvider ? `Consultar Copilot Técnico (${activeLlmProvider.name} · ${activeLlmProvider.model})` : 'Consultar Copilot Técnico (BYOK)'}
+          >
+            {isAskingLlm ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Sintetizando...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Perguntar à IA</span>
+              </>
+            )}
           </button>
         </form>
       </div>
@@ -1062,7 +741,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
               <button
                 type="button"
                 onClick={onNavigateToSettings}
-                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-lg shadow-primary/20"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-lg shadow-primary/20 cursor-pointer active:scale-95"
               >
                 <Settings className="w-3.5 h-3.5" />
                 <span>Configurar Pasta de Projetos</span>
@@ -1073,7 +752,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
 
         {/* MODO BUSCA ATIVA */}
         {hasIndex && hasSearched && query.trim() && (
-          <div className="space-y-2.5" data-tour="search-results-list">
+          <div className="space-y-3" data-tour="search-results-list">
             <div className="flex items-center justify-between pb-1 px-1">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 <Search className="w-3.5 h-3.5 text-primary" />
@@ -1089,6 +768,174 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
                 ← Ver todos os documentos ({filteredFiles.length})
               </button>
             </div>
+
+            {/* Card de Síntese RAG com IA (Copilot Técnico WinThor) */}
+            {(isAskingLlm || llmAnswer || llmError) && (
+              <div className="cockpit-card rounded-2xl p-4.5 border border-primary/40 bg-card shadow-md space-y-3.5">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="relative w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                      <Bot className="w-4.5 h-4.5" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-foreground">
+                          Copilot Técnico WinThor {activeLlmProvider ? `· ${activeLlmProvider.name}` : ''}
+                        </span>
+                        {activeLlmProvider && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/25 font-bold shrink-0">
+                            {activeLlmProvider.model}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground block truncate">
+                        Síntese contextual gerada com base na documentação dos projetos e wikis indexadas
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {llmAnswer && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(llmAnswer);
+                            setCopiedLlmAnswer(true);
+                            setTimeout(() => setCopiedLlmAnswer(false), 2000);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-card hover:bg-muted text-foreground border border-border hover:border-border/80 transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                          title="Copiar síntese gerada"
+                        >
+                          {copiedLlmAnswer ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-500" />
+                              <span className="text-emerald-500">Copiado!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copiar</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isAskingLlm}
+                          onClick={() => handleAskLlm(query)}
+                          className="px-3 py-1.5 rounded-xl bg-card hover:bg-primary/10 text-primary border border-border hover:border-primary/40 transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
+                          title="Regenerar resposta"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${isAskingLlm ? 'animate-spin' : ''}`} />
+                          <span>Regenerar</span>
+                        </button>
+                      </>
+                    )}
+                    {!llmAnswer && !isAskingLlm && (
+                      <button
+                        type="button"
+                        onClick={() => handleAskLlm(query)}
+                        className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Gerar Resposta com IA</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {isAskingLlm && (
+                  <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-2.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 font-semibold text-foreground">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
+                        <span>Consultando {activeLlmProvider?.name || 'modelo de IA'} ({activeLlmProvider?.model || 'LLM'})...</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+                        RAG Vector Search
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Analisando trechos indexados para responder "{query.trim()}"...
+                    </p>
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary animate-pulse w-3/4 rounded-full" />
+                    </div>
+                  </div>
+                )}
+
+                {llmError && !isAskingLlm && (
+                  <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/25 text-xs space-y-2 font-mono">
+                    <div className="flex items-center justify-between text-destructive font-semibold">
+                      <span className="flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        Erro ao consultar motor de IA
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {onNavigateToSettings && (
+                          <button
+                            type="button"
+                            onClick={onNavigateToSettings}
+                            className="text-foreground/90 hover:text-foreground text-[11px] font-semibold flex items-center gap-1 cursor-pointer font-sans"
+                          >
+                            <Settings className="w-3 h-3" />
+                            <span>Configurar Motor</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleAskLlm(query)}
+                          className="text-primary hover:underline text-[11px] font-semibold cursor-pointer font-sans"
+                        >
+                          Tentar de novo
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-destructive/80 break-all">{llmError}</p>
+                  </div>
+                )}
+
+                {llmAnswer && !isAskingLlm && (
+                  <div className="space-y-3 pt-1">
+                    <div className="bg-card/90 p-4.5 rounded-xl border border-border/80 shadow-2xs">
+                      <AiMarkdownViewer content={llmAnswer} />
+                    </div>
+
+                    {llmSources.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-border/60">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <Layers className="w-3 h-3 text-primary" />
+                            Fontes & Referências Utilizadas na Síntese ({llmSources.length}):
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            Clique para abrir a leitura do documento
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {llmSources.map((source, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleOpenPreview(source.path, source.title)}
+                              className="px-3 py-1.5 rounded-xl bg-card hover:bg-muted text-foreground border border-border hover:border-primary/50 text-xs font-mono flex items-center gap-2 transition cursor-pointer shadow-2xs group"
+                              title={`Abrir prévia de ${source.title}`}
+                            >
+                              <FileText className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform shrink-0" />
+                              <span className="max-w-[260px] truncate font-medium">{source.title}</span>
+                              <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20 font-mono shrink-0">
+                                {(source.score * 100).toFixed(0)}%
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {!isSearching && results.length === 0 && (
               <div className="cockpit-panel rounded-2xl p-8 text-center border border-border">
@@ -1185,49 +1032,68 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                {filteredFiles.map((file) => (
-                  <div
-                    key={file.id}
-                    className="cockpit-card rounded-xl p-3 border border-border shadow-xs flex items-center justify-between gap-3 hover:border-primary/40 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <FileText className="w-3.5 h-3.5 shrink-0 text-primary" />
-                        <span className="text-xs font-semibold text-foreground truncate" title={file.title}>
-                          {file.title.split(/[\\/]/).pop()}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground font-mono truncate mt-0.5" title={file.title}>
-                        {file.title} · {file.chunkCount} {file.chunkCount === 1 ? 'trecho' : 'trechos'}
-                      </p>
-                    </div>
+                {filteredFiles.map((file) => {
+                  const fileName = file.title.split(/[\\/]/).pop() || file.title;
+                  const extMatch = fileName.match(/\.([a-zA-Z0-9]+)$/);
+                  const ext = extMatch ? extMatch[1].toUpperCase() : 'DOC';
+                  const parentFolder = file.title.includes('/') || file.title.includes('\\')
+                    ? file.title.replace(/[\\/][^\\/]+$/, '').split(/[\\/]/).pop()
+                    : null;
 
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => handleOpenPreview(file.id, file.title)}
-                        className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center gap-1 text-[11px] font-medium cursor-pointer"
-                        title="Ler documento formatado"
-                      >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span>Ler</span>
-                      </button>
-                      <button
-                        onClick={() => handleOpenInEditor(file.id)}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                        title="Abrir no editor padrão"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleOpenInFolder(file.id)}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                        title="Revelar na pasta"
-                      >
-                        <FolderOpen className="w-3.5 h-3.5" />
-                      </button>
+                  return (
+                    <div
+                      key={file.id}
+                      className="cockpit-card rounded-xl p-3.5 border border-border shadow-2xs flex items-center justify-between gap-3 hover:border-primary/50 transition-all group"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+                            {ext}
+                          </span>
+                          <span className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors" title={fileName}>
+                            {fileName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground font-mono truncate">
+                          {parentFolder && (
+                            <>
+                              <span className="truncate max-w-[140px] opacity-75">{parentFolder}</span>
+                              <span className="opacity-40">/</span>
+                            </>
+                          )}
+                          <span className="text-muted-foreground/75 truncate" title={file.title}>
+                            {file.chunkCount} {file.chunkCount === 1 ? 'trecho' : 'trechos'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleOpenPreview(file.id, file.title)}
+                          className="px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all flex items-center gap-1.5 text-[11px] font-bold cursor-pointer active:scale-95 shadow-2xs"
+                          title="Ler documento formatado"
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                          <span>Ler</span>
+                        </button>
+                        <button
+                          onClick={() => handleOpenInEditor(file.id)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          title="Abrir no editor padrão do sistema"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenInFolder(file.id)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          title="Revelar na pasta"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1733,6 +1599,68 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings }) => {
           </div>
         </div>
       )}
+
+      {/* Modal de Configurações de Documentação & LLM */}
+      <DocSettingsModal
+        isOpen={showDocSettingsModal}
+        onClose={() => setShowDocSettingsModal(false)}
+        status={status}
+        onOpenModelHelp={() => setShowModelHelp(true)}
+        docFolders={docFolders}
+        indexProjectsDocs={indexProjectsDocs}
+        autoReindexOnChange={autoReindexOnChange}
+        isAddingFolder={isAddingFolder}
+        onToggleIndexProjects={handleToggleIndexProjects}
+        onToggleAutoReindex={handleToggleAutoReindex}
+        onAddFolder={handleAddFolder}
+        onRemoveFolder={handleRemoveFolder}
+        confluenceSources={confluenceSources}
+        onSaveConfluenceSource={async (source) => {
+          let updated: ConfluenceSourceConfig[];
+          if (confluenceSources.some((s) => s.id === source.id)) {
+            updated = confluenceSources.map((s) => (s.id === source.id ? source : s));
+          } else {
+            updated = [...confluenceSources, source];
+          }
+          setConfluenceSources(updated);
+          await window.electronAPI?.saveSettings({ confluenceSources: updated });
+        }}
+        onDeleteConfluenceSource={handleDeleteConfluenceSource}
+        onToggleConfluenceEnabled={handleToggleConfluenceEnabled}
+        onTestConfluenceConnection={async (source) => {
+          const tester = window.electronAPI?.testConfluenceConnection;
+          if (!tester) {
+            return { success: false, message: 'API não disponível.' };
+          }
+          return await tester(source);
+        }}
+        jiraSources={jiraSources}
+        onSaveJiraSource={async (source) => {
+          let updated: JiraSourceConfig[];
+          if (jiraSources.some((s) => s.id === source.id)) {
+            updated = jiraSources.map((s) => (s.id === source.id ? source : s));
+          } else {
+            updated = [...jiraSources, source];
+          }
+          setJiraSources(updated);
+          await window.electronAPI?.saveSettings({ jiraSources: updated });
+        }}
+        onDeleteJiraSource={handleDeleteJiraSource}
+        onToggleJiraEnabled={handleToggleJiraEnabled}
+        onTestJiraConnection={async (source) => {
+          const tester = window.electronAPI?.testJiraConnection;
+          if (!tester) {
+            return { success: false, message: 'API não disponível.' };
+          }
+          return await tester(source);
+        }}
+        llmProviders={llmProviders}
+        activeLlmProviderId={activeLlmProviderId}
+        onSaveLlmProvider={handleSaveLlmProvider}
+        onDeleteLlmProvider={handleDeleteLlmProvider}
+        onSetActiveLlmProvider={handleSetActiveLlmProvider}
+        onTestLlmConnection={handleTestLlmConnection}
+      />
 
       <OnboardingTour
         steps={DOCS_TOUR_STEPS}

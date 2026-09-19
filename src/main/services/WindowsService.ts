@@ -382,20 +382,47 @@ export class WindowsService {
     }
   }
 
-  public launchServerDebug(): boolean {
+  public launchServerDebug(launchMode?: 'wt' | 'cmd', customDebugPort?: number): boolean {
     const exe = this.karafService.getKarafServerExecutable();
     if (exe && fs.existsSync(exe)) {
       const karafBin = path.dirname(exe);
       try {
-        const childEnv = this.karafService.getResolvedJavaEnv();
+        const childEnv = this.karafService.getResolvedJavaEnv(customDebugPort);
         if (process.platform === 'win32') {
           const scriptName = path.basename(exe);
-          spawn('cmd.exe', ['/c', 'start', '"Server Debug Console"', '/d', `"${karafBin}"`, 'cmd.exe', '/k', `"${scriptName}" debug`], {
-            cwd: karafBin,
-            detached: true,
-            stdio: 'ignore',
-            env: childEnv
-          }).unref();
+          const cmdExe = childEnv.ComSpec || process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
+          const hasWt = this.commandAvailabilityCache.get('wt.exe') ?? false;
+          const useWt = launchMode === 'wt' || (!launchMode && hasWt);
+
+          if (useWt) {
+            const wtProc = spawn(
+              'wt.exe',
+              ['-w', 'dev-manager', 'new-tab', '--title', 'Karaf Debug', '-d', karafBin, 'cmd.exe', '/k', scriptName, 'debug'],
+              {
+                cwd: karafBin,
+                detached: true,
+                stdio: 'ignore',
+                env: childEnv
+              }
+            );
+            wtProc.on('error', () => {
+              // Se wt.exe falhar (ex: não instalado), cai para cmd.exe /c start sem abrir pastas
+              spawn(cmdExe, ['/c', 'start', 'Karaf Debug Console', '/d', karafBin, 'cmd.exe', '/k', scriptName, 'debug'], {
+                cwd: karafBin,
+                detached: true,
+                stdio: 'ignore',
+                env: childEnv
+              }).unref();
+            });
+            wtProc.unref();
+          } else {
+            spawn(cmdExe, ['/c', 'start', 'Karaf Debug Console', '/d', karafBin, 'cmd.exe', '/k', scriptName, 'debug'], {
+              cwd: karafBin,
+              detached: true,
+              stdio: 'ignore',
+              env: childEnv
+            }).unref();
+          }
         } else {
           spawn(exe, ['debug'], { cwd: karafBin, detached: true, stdio: 'ignore', env: childEnv }).unref();
         }
@@ -419,10 +446,25 @@ export class WindowsService {
     this.inFlightPortsCheck = (async () => {
       try {
         const settings = this.configService.getSettings();
-        const monitoredPorts = (settings.monitoredPorts && settings.monitoredPorts.length > 0
+        const basePorts = (settings.monitoredPorts && settings.monitoredPorts.length > 0
           ? settings.monitoredPorts
           : DEFAULT_MONITORED_PORTS
         ).filter((p) => p.enabled !== false);
+
+        const monitoredPorts = [...basePorts];
+        const kDebugPort = settings.karafDebugPort || 5005;
+        if (!monitoredPorts.some((p) => p.port === kDebugPort)) {
+          monitoredPorts.push({ port: kDebugPort, label: `Java Debug JVM (JDWP :${kDebugPort})`, enabled: true });
+        }
+        if (settings.automationProfiles) {
+          for (const prof of settings.automationProfiles) {
+            for (const step of prof.steps) {
+              if (step.port && !monitoredPorts.some((p) => p.port === step.port)) {
+                monitoredPorts.push({ port: step.port, label: `Porta :${step.port} (${step.name})`, enabled: true });
+              }
+            }
+          }
+        }
 
         if (process.platform !== 'win32') {
           const res = await Promise.all(
@@ -723,28 +765,42 @@ export class WindowsService {
     }
   }
 
-  public resolveWorkingDir(cwd?: string): string {
-    if (!cwd || !cwd.trim()) {
-      return process.cwd();
+  public resolveWorkingDir(cwd?: string, command?: string): string {
+    if (cwd && cwd.trim()) {
+      const trimmed = cwd.trim();
+      if (path.isAbsolute(trimmed)) {
+        return fs.existsSync(trimmed) ? trimmed : process.cwd();
+      }
+
+      const settings = this.configService.getSettings();
+      if (settings.projectsPath) {
+        const fromProjects = path.join(settings.projectsPath, trimmed);
+        if (fs.existsSync(fromProjects)) return fromProjects;
+      }
+
+      const fromAppRoot = path.join(process.cwd(), trimmed);
+      if (fs.existsSync(fromAppRoot)) return fromAppRoot;
+
+      const fromParent = path.join(__dirname, '..', '..', '..', trimmed);
+      if (fs.existsSync(fromParent)) return fromParent;
+
+      return trimmed;
     }
-    const trimmed = cwd.trim();
-    if (path.isAbsolute(trimmed)) {
-      return fs.existsSync(trimmed) ? trimmed : process.cwd();
+
+    // Se cwd não foi especificado, mas o comando faz referência a scripts do Karaf:
+    if (command && command.trim()) {
+      const settings = this.configService.getSettings();
+      const firstToken = command.trim().split(/\s+/)[0];
+      const baseToken = path.basename(firstToken);
+      if (settings.karafPath) {
+        const karafBin = path.join(settings.karafPath, 'bin');
+        if (fs.existsSync(path.join(karafBin, baseToken)) || /^(winthor|karaf|client)(\.bat|\.sh)?$/i.test(baseToken)) {
+          return karafBin;
+        }
+      }
     }
 
-    const settings = this.configService.getSettings();
-    if (settings.projectsPath) {
-      const fromProjects = path.join(settings.projectsPath, trimmed);
-      if (fs.existsSync(fromProjects)) return fromProjects;
-    }
-
-    const fromAppRoot = path.join(process.cwd(), trimmed);
-    if (fs.existsSync(fromAppRoot)) return fromAppRoot;
-
-    const fromParent = path.join(__dirname, '..', '..', '..', trimmed);
-    if (fs.existsSync(fromParent)) return fromParent;
-
-    return trimmed;
+    return process.cwd();
   }
 
   public async runProfileStep(
@@ -762,8 +818,9 @@ export class WindowsService {
           pushLog('warning', `Etapa "${step.name}": Nenhum comando informado.`);
           return false;
         }
-        const resolvedCwd = this.resolveWorkingDir(step.cwd);
-        const childEnv = { ...process.env, ...(step.envVars || {}) };
+        const resolvedCwd = this.resolveWorkingDir(step.cwd, step.command);
+        const javaEnv = this.karafService.getResolvedJavaEnv();
+        const childEnv = { ...javaEnv, ...(step.envVars || {}) };
         const mode = step.launchMode || 'wt';
         const hasWt = await this.isCommandAvailable('wt.exe');
         const windowId = (step.wtWindowId || profileName || 'dev-manager')
@@ -781,6 +838,7 @@ export class WindowsService {
               'wt.exe',
               ['-w', windowId, 'new-tab', '--title', step.name, '-d', resolvedCwd, 'cmd.exe', '/k', step.command],
               {
+                cwd: resolvedCwd,
                 detached: true,
                 stdio: 'ignore',
                 env: childEnv
@@ -789,8 +847,9 @@ export class WindowsService {
           } else if (mode === 'cmd' || (mode === 'wt' && !hasWt)) {
             spawn(
               'cmd.exe',
-              ['/c', 'start', `"${step.name}"`, '/d', `"${resolvedCwd}"`, 'cmd.exe', '/k', step.command],
+              ['/c', 'start', step.name || 'Comando', '/d', resolvedCwd, 'cmd.exe', '/k', step.command],
               {
+                cwd: resolvedCwd,
                 detached: true,
                 stdio: 'ignore',
                 env: childEnv
@@ -868,8 +927,27 @@ export class WindowsService {
       }
 
       case 'karaf': {
-        pushLog('info', 'Iniciando Karaf OSGi Debug Server...');
-        const ok = this.launchServerDebug();
+        const mode = step.launchMode || 'wt';
+        const debugPort = step.port || settings.karafDebugPort || 5005;
+
+        // Libera a porta de debug caso esteja ocupada por processo anterior
+        try {
+          await this.killPortProcess(debugPort);
+        } catch {
+          // segue em frente
+        }
+
+        if (mode === 'embedded') {
+          pushLog('info', `Iniciando Karaf OSGi Debug Server no Console Embutido (porta debug :${debugPort})...`);
+          const ok = this.karafService.startEmbeddedKarafDebug((chunk) => {
+            pushLog('info', chunk);
+          });
+          pushLog(ok ? 'success' : 'error', `Karaf Debug: ${ok ? 'Acionado no console embutido.' : 'Falha ao acionar console embutido.'}`);
+          return ok;
+        }
+
+        pushLog('info', `Iniciando Karaf OSGi Debug Server [modo: ${mode === 'cmd' ? 'Janela CMD' : 'Terminal/Janela Externa'}, porta debug :${debugPort}]...`);
+        const ok = this.launchServerDebug(mode as 'wt' | 'cmd', debugPort);
         pushLog(ok ? 'success' : 'error', `Karaf Debug: ${ok ? 'Acionado em janela de debug.' : 'Executável Karaf não localizado.'}`);
         return ok;
       }
@@ -947,6 +1025,19 @@ export class WindowsService {
       pushLog('info', `Encerrando processos na porta ${step.port} (${step.name})...`);
       stopped = await this.killPortProcess(step.port);
       pushLog(stopped ? 'success' : 'info', `Porta ${step.port} liberada.`);
+    }
+
+    if (step.type === 'karaf') {
+      const debugPort = step.port || this.configService.getSettings().karafDebugPort || 5005;
+      pushLog('info', `Parando Karaf OSGi (porta debug :${debugPort})...`);
+      try {
+        await this.karafService.stopEmbeddedKaraf();
+      } catch {
+        // segue para liberação de porta
+      }
+      const portKilled = await this.killPortProcess(debugPort);
+      stopped = portKilled || stopped;
+      pushLog('success', `Karaf OSGi finalizado e porta :${debugPort} liberada.`);
     }
 
     if (step.type === 'service-start' && step.targetName) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Grid,
   Search,
@@ -12,18 +12,20 @@ import {
   Plus,
   Trash2,
   AppWindow,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
-import { RoutineItem, MappedProgram } from '../../../shared/types';
+import { RoutineItem, MappedProgram, AppSettings } from '../../../shared/types';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { ROUTINES_TOUR_STEPS, ROUTINES_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/routinesTour';
 
 interface RoutinesPageProps {
   onNavigateToSettings?: () => void;
+  settingsVersion?: number;
 }
 
-export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings }) => {
+export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings, settingsVersion }) => {
   const tour = usePageTour(ROUTINES_TOUR_STORAGE_KEY);
   const [routines, setRoutines] = useState<RoutineItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -34,30 +36,36 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
   const [mappedPrograms, setMappedPrograms] = useState<MappedProgram[]>([]);
   const [runningMappedId, setRunningMappedId] = useState<string | null>(null);
   const [isAddingProgram, setIsAddingProgram] = useState(false);
+  const [appPath, setAppPath] = useState<string>('');
 
-  const loadRoutines = async () => {
+  const loadRoutines = useCallback(async () => {
     setIsLoading(true);
     try {
       if (window.electronAPI) {
         const data = await window.electronAPI.listRoutines();
-        setRoutines(data);
+        setRoutines(data || []);
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const loadMappedPrograms = async () => {
-    if (window.electronAPI) {
-      const st = await window.electronAPI.getSettings();
-      setMappedPrograms(st.mappedPrograms || []);
+  const loadSettingsAndPrograms = useCallback(async () => {
+    if (window.electronAPI?.getSettings) {
+      try {
+        const st: AppSettings = await window.electronAPI.getSettings();
+        setMappedPrograms(st.mappedPrograms || []);
+        setAppPath(st.appPath || '');
+      } catch (err) {
+        console.warn('Erro ao carregar configurações de rotinas:', err);
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadRoutines();
-    loadMappedPrograms();
-  }, []);
+    loadSettingsAndPrograms();
+  }, [loadRoutines, loadSettingsAndPrograms, settingsVersion]);
 
   const handleToggleFavorite = async (id: string) => {
     if (window.electronAPI) {
@@ -140,116 +148,60 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
   const otherRoutines = filteredRoutines.filter((r) => !r.isFavorite);
 
   return (
-    <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
-      {/* Programas Mapeados */}
-      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
-              <AppWindow className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-foreground">Programas Mapeados</h2>
-              <p className="text-[11px] text-muted-foreground">
-                Atalhos pra qualquer programa que você escolher — não depende de pasta configurada.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleAddMappedProgram}
-            disabled={isAddingProgram}
-            className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0"
-            title="Selecionar um executável para mapear"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Adicionar Programa</span>
-          </button>
-        </div>
-
-        {mappedPrograms.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nenhum programa mapeado ainda. Clique em "Adicionar Programa" e escolha um executável.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
-            {mappedPrograms.map((program) => (
-              <div
-                key={program.id}
-                className="cockpit-card rounded-xl p-2.5 flex items-center gap-2 border border-border shadow-sm"
-              >
-                <input
-                  type="text"
-                  value={program.name}
-                  onChange={(e) => handleRenameMappedProgram(program.id, e.target.value)}
-                  onBlur={handleRenameMappedProgramBlur}
-                  title={program.fullPath}
-                  className="flex-1 min-w-0 bg-transparent text-xs font-bold text-foreground focus:outline-none focus:underline"
-                />
-                <button
-                  onClick={() => handleLaunchMappedProgram(program.id)}
-                  disabled={runningMappedId === program.id}
-                  className={`p-1.5 rounded-lg transition-all shrink-0 ${
-                    runningMappedId === program.id
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-card hover:bg-primary text-foreground hover:text-primary-foreground border border-border'
-                  }`}
-                  title="Executar"
-                >
-                  <Play className="w-3 h-3 fill-current" />
-                </button>
-                <button
-                  onClick={() => handleRemoveMappedProgram(program.id)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-500 transition-colors shrink-0"
-                  title="Remover"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Topo / Filtros Cockpit */}
-      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border">
+    <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto max-w-full overflow-x-hidden select-none">
+      {/* 1. Topo / Cockpit Header Unificado */}
+      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-col space-y-3.5 shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
               <Grid className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-foreground flex items-center gap-2" data-tour="catalogo-rotinas">
-                Catálogo de Rotinas
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-base font-bold text-foreground flex items-center gap-2" data-tour="catalogo-rotinas">
+                  Catálogo de Rotinas &amp; Atalhos
+                </h2>
                 <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
-                  {routines.length} {routines.length === 1 ? 'Rotina Catalogada' : 'Rotinas Catalogadas'}
+                  {routines.length} {routines.length === 1 ? 'Rotina' : 'Rotinas'}
                 </span>
-                <button
-                  type="button"
-                  onClick={tour.open}
-                  className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
-                  title="Rever o tour guiado desta página"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                </button>
-              </h2>
-              <p className="text-[11px] text-muted-foreground">
-                Escaneia a pasta configurada em busca de executáveis, com busca instantânea e favoritos.
+                {mappedPrograms.length > 0 && (
+                  <span className="text-[10px] bg-muted text-muted-foreground border border-border px-2 py-0.5 rounded-full font-mono font-bold">
+                    {mappedPrograms.length} {mappedPrograms.length === 1 ? 'Atalho' : 'Atalhos'}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Escaneia a pasta configurada em busca de executáveis WinThor, com busca instantânea, favoritos e programas mapeados.
               </p>
             </div>
           </div>
 
-          <button
-            data-tour="atualizar-catalogo"
-            onClick={loadRoutines}
-            disabled={isLoading}
-            className="px-3 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 shadow-sm"
-            title="Reescanear diretório de rotinas"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />
-            <span>Atualizar Catálogo</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              data-tour="atualizar-catalogo"
+              type="button"
+              onClick={loadRoutines}
+              disabled={isLoading}
+              className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-foreground transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+              title="Reescanear diretório de rotinas"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : 'text-muted-foreground'}`} />
+              <span>Atualizar Catálogo</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={tour.open}
+              className="h-9 w-9 rounded-xl border border-border/60 hover:border-primary/40 text-muted-foreground hover:text-primary transition flex items-center justify-center shrink-0 cursor-pointer"
+              title="Rever o tour guiado desta página"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Barra de Filtros */}
-        <div className="flex flex-wrap items-center gap-3 pt-3 mt-3 border-t border-border/60">
+        <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border/60">
           <div className="relative flex-1 min-w-[280px]" data-tour="busca-rotina">
             <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
@@ -257,12 +209,13 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
               placeholder="Buscar rotina por número ou nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl pl-10 pr-9 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary font-mono"
+              className="w-full bg-card border border-border/80 rounded-xl pl-10 pr-9 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
             />
             {searchTerm && (
               <button
+                type="button"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
                 title="Limpar busca"
               >
                 <X className="w-3.5 h-3.5" />
@@ -275,10 +228,10 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
             <select
               value={selectedModule}
               onChange={(e) => setSelectedModule(e.target.value)}
-              className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+              className="bg-card border border-border/80 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono cursor-pointer shadow-2xs"
             >
               {modules.map((m) => (
-                <option key={m} value={m}>
+                <option key={m} value={m} className="bg-card text-foreground">
                   {m}
                 </option>
               ))}
@@ -287,74 +240,172 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
         </div>
       </div>
 
-      {/* Grid Rolável com Cartões */}
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-5 pr-1">
-        {/* Favoritos */}
-        {favoriteRoutines.length > 0 && (
-          <div className="space-y-2.5" data-tour="rotinas-favoritas">
-            <div className="flex items-center space-x-2">
-              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              <h3 className="text-[13px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                Rotinas Favoritas ({favoriteRoutines.length})
+      {/* Alerta de diretório não configurado */}
+      {!appPath && (
+        <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <span className="font-bold block">Diretório de Rotinas WinThor não configurado</span>
+            <span className="text-[11px] text-muted-foreground block mt-0.5">
+              Defina a pasta onde os executáveis das rotinas estão localizados (ex: P:\ ou C:\Totvs\Winthor\Rotinas) para catalogá-los automaticamente.
+            </span>
+            {onNavigateToSettings && (
+              <button
+                type="button"
+                onClick={onNavigateToSettings}
+                className="mt-2 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-[11px] font-bold text-amber-700 dark:text-amber-200 flex items-center gap-1 transition-all cursor-pointer"
+              >
+                <Settings className="w-3 h-3" />
+                <span>Configurar Diretório</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Programas Mapeados */}
+      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary">
+              <AppWindow className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                Programas Mapeados &amp; Atalhos Rápidos ({mappedPrograms.length})
               </h3>
+              <p className="text-[10px] text-muted-foreground">
+                Atalhos diretos para executáveis (.exe, .bat, .cmd) independente da pasta padrão.
+              </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {favoriteRoutines.map((routine) => (
-                <RoutineCard
-                  key={routine.fullPath}
-                  routine={routine}
-                  onToggleFavorite={() => handleToggleFavorite(routine.id)}
-                  onLaunch={() => handleLaunchRoutine(routine)}
-                  isRunning={runningId === routine.id}
+          </div>
+          <button
+            type="button"
+            onClick={handleAddMappedProgram}
+            disabled={isAddingProgram}
+            className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer shadow-primary/20"
+            title="Selecionar um executável para mapear"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Adicionar Atalho</span>
+          </button>
+        </div>
+
+        {mappedPrograms.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-3 text-center bg-card/40 rounded-xl border border-dashed border-border/70">
+            Nenhum programa mapeado ainda. Clique em "Adicionar Atalho" e escolha um executável do seu computador.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+            {mappedPrograms.map((program) => (
+              <div
+                key={program.id}
+                className="cockpit-card rounded-xl p-2.5 flex items-center gap-2 border border-border shadow-xs hover:border-primary/40 transition-colors"
+              >
+                <input
+                  type="text"
+                  value={program.name}
+                  onChange={(e) => handleRenameMappedProgram(program.id, e.target.value)}
+                  onBlur={handleRenameMappedProgramBlur}
+                  title={program.fullPath}
+                  className="flex-1 min-w-0 bg-transparent text-xs font-bold text-foreground focus:outline-none focus:underline"
                 />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Todas as Outras */}
-        <div className="space-y-2.5">
-          <div className="flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
-              Todas as Rotinas ({otherRoutines.length})
-            </h3>
-          </div>
-
-          {otherRoutines.length === 0 && favoriteRoutines.length === 0 ? (
-            <div className="cockpit-panel rounded-2xl p-10 text-center flex flex-col items-center justify-center space-y-3 border border-border">
-              <FolderOpen className="w-10 h-10 text-primary/50" />
-              <div>
-                <h4 className="text-sm font-bold text-foreground">Nenhuma rotina encontrada</h4>
-                <p className="text-xs text-muted-foreground mt-1 max-w-md">
-                  Nenhum executável foi localizado no diretório de rotinas configurado.
-                </p>
-              </div>
-              {onNavigateToSettings && (
                 <button
                   type="button"
-                  onClick={onNavigateToSettings}
-                  className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 shadow-lg shadow-primary/20"
+                  onClick={() => handleLaunchMappedProgram(program.id)}
+                  disabled={runningMappedId === program.id}
+                  className={`p-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                    runningMappedId === program.id
+                      ? 'bg-primary text-primary-foreground animate-pulse'
+                      : 'bg-card hover:bg-primary text-foreground hover:text-primary-foreground border border-border'
+                  }`}
+                  title="Executar este programa"
                 >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span>Configurar Diretório de Rotinas</span>
+                  <Play className="w-3 h-3 fill-current" />
                 </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {otherRoutines.map((routine) => (
-                <RoutineCard
-                  key={routine.fullPath}
-                  routine={routine}
-                  onToggleFavorite={() => handleToggleFavorite(routine.id)}
-                  onLaunch={() => handleLaunchRoutine(routine)}
-                  isRunning={runningId === routine.id}
-                />
-              ))}
-            </div>
-          )}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveMappedProgram(program.id)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition-colors shrink-0 cursor-pointer"
+                  title="Remover atalho"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 3. Rotinas Favoritas */}
+      {favoriteRoutines.length > 0 && (
+        <div className="space-y-2.5 shrink-0" data-tour="rotinas-favoritas">
+          <div className="flex items-center space-x-2">
+            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              Rotinas Favoritas ({favoriteRoutines.length})
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {favoriteRoutines.map((routine) => (
+              <RoutineCard
+                key={routine.fullPath}
+                routine={routine}
+                onToggleFavorite={() => handleToggleFavorite(routine.id)}
+                onLaunch={() => handleLaunchRoutine(routine)}
+                isRunning={runningId === routine.id}
+              />
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* 4. Todas as Rotinas */}
+      <div className="space-y-2.5">
+        <div className="flex items-center space-x-2">
+          <Layers className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Todas as Rotinas ({otherRoutines.length})
+          </h3>
+        </div>
+
+        {routines.length === 0 ? (
+          <div className="cockpit-panel rounded-2xl p-8 text-center flex flex-col items-center justify-center space-y-3 border border-dashed border-border/80">
+            <FolderOpen className="w-10 h-10 text-muted-foreground/60 mb-1" />
+            <div>
+              <h4 className="text-sm font-bold text-foreground">Nenhuma rotina encontrada</h4>
+              <p className="text-xs text-muted-foreground mt-1 max-w-md">
+                Verifique se o diretório de rotinas está configurado corretamente nas Configurações ou clique em "Atualizar Catálogo".
+              </p>
+            </div>
+            {onNavigateToSettings && (
+              <button
+                type="button"
+                onClick={onNavigateToSettings}
+                className="mt-2 px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm cursor-pointer shadow-primary/25"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Configurar Diretório de Rotinas</span>
+              </button>
+            )}
+          </div>
+        ) : otherRoutines.length === 0 ? (
+          <div className="text-center py-8 text-xs text-muted-foreground bg-card/30 rounded-xl border border-border">
+            Nenhuma rotina encontrada para os filtros atuais.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {otherRoutines.map((routine) => (
+              <RoutineCard
+                key={routine.fullPath}
+                routine={routine}
+                onToggleFavorite={() => handleToggleFavorite(routine.id)}
+                onLaunch={() => handleLaunchRoutine(routine)}
+                isRunning={runningId === routine.id}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <OnboardingTour
@@ -398,9 +449,10 @@ const RoutineCard: React.FC<RoutineCardProps> = ({
           </div>
 
           <button
+            type="button"
             data-tour="favoritar-rotina"
             onClick={onToggleFavorite}
-            className="p-1 text-muted-foreground hover:text-amber-500 transition-colors"
+            className="p-1 text-muted-foreground hover:text-amber-500 transition-colors cursor-pointer"
             title={routine.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >
             <Star
@@ -418,13 +470,14 @@ const RoutineCard: React.FC<RoutineCardProps> = ({
       </div>
 
       <button
+        type="button"
         data-tour="executar-rotina"
         onClick={onLaunch}
         disabled={isRunning}
-        className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all ${
+        className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
           isRunning
-            ? 'bg-emerald-600 text-white shadow-sm'
-            : 'bg-card hover:bg-primary text-foreground hover:text-primary-foreground border border-border hover:border-primary shadow-sm'
+            ? 'bg-primary/20 text-primary border border-primary/40 animate-pulse'
+            : 'bg-card hover:bg-primary text-foreground hover:text-primary-foreground border border-border hover:border-primary shadow-xs'
         }`}
         title="Executar esta rotina no Windows"
       >

@@ -2,6 +2,19 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import os from 'os';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
+const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
+const appVersion = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.12.0';
+  } catch {
+    return '1.12.0';
+  }
+})();
 import { ConfigService } from '../main/services/ConfigService';
 import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
@@ -13,6 +26,7 @@ import { DatabaseService } from '../main/services/DatabaseService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
+import { LlmService } from '../main/services/LlmService';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
 import { analyzeExplainPlan } from '../main/services/explainAnalyzer';
 import type { AppSettings, DatabaseConnectionConfig, DeployProfile } from '../shared/types';
@@ -27,8 +41,9 @@ const gitAzureService = new GitAzureService(configService, karafService);
 const routinesService = new RoutinesService(configService);
 const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const dockerService = new DockerService();
-const deployService = new DeployService(configService, karafService, dockerService, windowsService);
+const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
 const karafLogPersistenceService = new KarafLogPersistenceService();
+const llmService = new LlmService(configService, docsIndexService);
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -148,10 +163,14 @@ const DatabaseConnectionConfigSchema = z.object({
 const DeployStepTypeSchema = z.enum([
   'maven-build',
   'karaf-command',
+  'karaf-bundle',
   'docker-build',
   'docker-push',
   'docker-restart',
-  'command'
+  'command',
+  'wait',
+  'http-healthcheck',
+  'service-action'
 ]);
 
 const DeployStepSchema = z.object({
@@ -159,14 +178,27 @@ const DeployStepSchema = z.object({
   name: z.string(),
   type: DeployStepTypeSchema,
   enabled: z.boolean(),
+  continueOnError: z.boolean().optional(),
+  timeoutSeconds: z.number().optional(),
   projectPath: z.string().optional(),
   skipTests: z.boolean().optional(),
   command: z.string().optional(),
   cwd: z.string().optional(),
+  bundleAction: z.enum(['install', 'reinstall', 'uninstall', 'update', 'restart', 'refresh', 'start', 'stop']).optional(),
+  bundleId: z.string().optional(),
+  bundleLocation: z.string().optional(),
+  bundleStart: z.boolean().optional(),
   dockerContextPath: z.string().optional(),
   dockerFile: z.string().optional(),
   dockerImageTag: z.string().optional(),
-  dockerContainer: z.string().optional()
+  dockerContainer: z.string().optional(),
+  waitDurationSeconds: z.number().optional(),
+  healthcheckUrl: z.string().optional(),
+  healthcheckExpectedStatus: z.number().optional(),
+  healthcheckTimeoutSeconds: z.number().optional(),
+  healthcheckRetries: z.number().optional(),
+  serviceName: z.string().optional(),
+  serviceAction: z.enum(['start', 'stop', 'restart']).optional()
 });
 
 const DeployProfileSchema = z.object({
@@ -195,7 +227,7 @@ function resolveDbConfig(connectionId?: string, customConfig?: any): DatabaseCon
   return conns.find((c) => c.isDefault) || conns[0] || null;
 }
 
-const server = new McpServer({ name: 'dev-manager', version: '1.0.0' });
+const server = new McpServer({ name: 'dev-manager', version: appVersion });
 
 // --- 1. Sistema ---
 server.registerTool(
@@ -206,7 +238,7 @@ server.registerTool(
     const configPath = configService.getConfigFilePath();
     return ok({
       appName: 'Dev Manager (MCP)',
-      appVersion: '1.0.0',
+      appVersion,
       nodeVersion: process.version,
       osPlatform: os.platform(),
       osRelease: os.release(),
@@ -1256,11 +1288,59 @@ server.registerTool(
   async () => ok(docsIndexService.getStatus())
 );
 
+server.registerTool(
+  'docs_ask_ai',
+  {
+    title: 'Perguntar à documentação com IA (RAG)',
+    description: 'Realiza busca semântica na documentação local indexada e sintetiza uma resposta contextualizada através do LLM ativo (BYOK).',
+    inputSchema: {
+      query: z.string().min(1),
+      topK: z.number().int().min(1).max(20).optional(),
+      sourceLabel: z.string().optional()
+    }
+  },
+  async ({ query, topK, sourceLabel }) => {
+    try {
+      const response = await llmService.askWithDocs({ query, topK, sourceLabel });
+      return ok(response);
+    } catch (err: any) {
+      return fail(err.message || 'Erro ao processar consulta RAG com IA');
+    }
+  }
+);
+
+server.registerTool(
+  'llm_chat',
+  {
+    title: 'Conversar com LLM (BYOK)',
+    description: 'Envia mensagens diretamente para o provedor de LLM configurado e ativo no Dev Manager.',
+    inputSchema: {
+      messages: z.array(
+        z.object({
+          role: z.enum(['system', 'user', 'assistant']),
+          content: z.string()
+        })
+      ),
+      providerId: z.string().optional(),
+      temperature: z.number().min(0).max(2).optional(),
+      maxTokens: z.number().int().min(1).max(32768).optional()
+    }
+  },
+  async (request) => {
+    try {
+      const response = await llmService.chat(request);
+      return ok(response);
+    } catch (err: any) {
+      return fail(err.message || 'Erro ao comunicar com o LLM');
+    }
+  }
+);
+
 // --- 7. Configurações ---
 server.registerTool(
   'settings_get',
-  { title: 'Ler configurações', description: 'Retorna as configurações atuais do Dev Manager.' },
-  async () => ok(configService.getSettings())
+  { title: 'Ler configurações', description: 'Retorna as configurações atuais do Dev Manager (com segredos ofuscados).' },
+  async () => ok(configService.sanitizeSecrets(configService.getSettings()))
 );
 
 server.registerTool(

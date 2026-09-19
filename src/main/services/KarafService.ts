@@ -123,12 +123,19 @@ export class KarafService {
       if (fs.existsSync(inBin)) {
         return inBin;
       }
+      const inRoot = path.join(settings.karafPath, custom);
+      if (fs.existsSync(inRoot)) {
+        return inRoot;
+      }
     }
 
     const candidates = [
+      path.join(settings.karafPath, 'bin', 'winthor.bat'),
       path.join(settings.karafPath, 'bin', 'karaf.bat'),
       path.join(settings.karafPath, 'bin', 'karaf.sh'),
-      path.join(settings.karafPath, 'bin', 'karaf')
+      path.join(settings.karafPath, 'bin', 'karaf'),
+      path.join(settings.karafPath, 'winthor.bat'),
+      path.join(settings.karafPath, 'karaf.bat')
     ];
     for (const c of candidates) {
       if (fs.existsSync(c)) return c;
@@ -136,7 +143,7 @@ export class KarafService {
     return null;
   }
 
-  public getResolvedJavaEnv(): NodeJS.ProcessEnv {
+  public getResolvedJavaEnv(customDebugPort?: number): NodeJS.ProcessEnv {
     const settings = this.configService.getSettings();
     const configuredJdk = settings.jdkPath && fs.existsSync(settings.jdkPath) ? settings.jdkPath : null;
     const chosenJdk = configuredJdk || process.env.JAVA_HOME;
@@ -145,12 +152,64 @@ export class KarafService {
     if (chosenJdk) {
       childEnv.JAVA_HOME = chosenJdk;
     }
-    if (childEnv.JAVA_HOME && process.platform === 'win32') {
-      const jdkBin = path.join(childEnv.JAVA_HOME, 'bin');
-      if (!childEnv.PATH?.includes(jdkBin)) {
-        childEnv.PATH = `${jdkBin};${childEnv.PATH || ''}`;
+
+    if (process.platform === 'win32') {
+      // No Windows, variáveis de ambiente são case-insensitive no sistema operacional,
+      // mas objetos JS são case-sensitive. Se process.env contiver "Path" (padrão do Windows)
+      // e o código definisse apenas "PATH", o Node/libuv enviava ambas ou priorizava a vazia,
+      // excluindo C:\Windows\System32 e gerando "spawn cmd.exe ENOENT".
+      const existingPathKey = Object.keys(childEnv).find((k) => k.toUpperCase() === 'PATH');
+      const currentPath = (existingPathKey ? childEnv[existingPathKey] : '') || '';
+
+      const sysRoot = childEnv.SystemRoot || process.env.SystemRoot || 'C:\\Windows';
+      const sys32 = path.join(sysRoot, 'System32');
+
+      const pathEntries = currentPath.split(';').filter(Boolean);
+
+      if (childEnv.JAVA_HOME) {
+        const jdkBin = path.join(childEnv.JAVA_HOME, 'bin');
+        if (!pathEntries.some((p) => p.toLowerCase() === jdkBin.toLowerCase())) {
+          pathEntries.unshift(jdkBin);
+        }
       }
+
+      if (!pathEntries.some((p) => p.toLowerCase() === sys32.toLowerCase())) {
+        pathEntries.push(sys32);
+      }
+
+      const updatedPath = pathEntries.join(';');
+
+      // Remove todas as chaves variantes de PATH para evitar duplicatas conflitantes
+      for (const k of Object.keys(childEnv)) {
+        if (k.toUpperCase() === 'PATH') {
+          delete childEnv[k];
+        }
+      }
+
+      // Define uniformemente tanto Path quanto PATH para compatibilidade absoluta
+      childEnv.Path = updatedPath;
+      childEnv.PATH = updatedPath;
+
+      if (!childEnv.SystemRoot) childEnv.SystemRoot = sysRoot;
+      if (!childEnv.ComSpec) childEnv.ComSpec = process.env.ComSpec || process.env.COMSPEC || path.join(sys32, 'cmd.exe');
     }
+
+    // Configura dimensões do terminal para que ferramentas CLI do Karaf (como feature:list e bundle:list)
+    // formatem tabelas sem quebrar cada célula em múltiplas linhas (evita limite estreito padrão de 80 colunas).
+    childEnv.COLUMNS = '300';
+    childEnv.LINES = '1000';
+    childEnv.TERM = 'xterm-256color';
+
+    // Garante que o processo Java/Karaf inicialize o console em UTF-8 para não corromper acentuação
+    childEnv.JAVA_TOOL_OPTIONS = (childEnv.JAVA_TOOL_OPTIONS ? childEnv.JAVA_TOOL_OPTIONS + ' ' : '') + '-Dfile.encoding=UTF-8';
+    if (!childEnv.LANG) childEnv.LANG = 'pt_BR.UTF-8';
+    if (!childEnv.LC_ALL) childEnv.LC_ALL = 'pt_BR.UTF-8';
+
+    // Injeta porta de debug configurada no Cockpit para o JDWP do Karaf / WinThor
+    const debugPort = customDebugPort || settings.karafDebugPort || 5005;
+    childEnv.JAVA_DEBUG_PORT = String(debugPort);
+    childEnv.JAVA_DEBUG_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${debugPort}`;
+
     return childEnv;
   }
 
@@ -188,9 +247,83 @@ export class KarafService {
     const isWin = process.platform === 'win32';
     const childEnv = this.getResolvedJavaEnv();
 
-    return isWin
-      ? runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk)
-      : runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk);
+    const res = isWin
+      ? await runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk, 30000)
+      : await runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk, 30000);
+
+    // Karaf client.bat no Windows ou SSH shell frequentemente retorna exit code 0 mesmo
+    // quando o comando falha no contêiner OSGi (ex: "Error executing command: No matching features...").
+    // Limpamos sequências de escape ANSI e inspecionamos stdout/stderr para detectar falhas reais.
+    const cleanStdout = (res.stdout || '').replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '').replace(/\[[0-9;]+m/g, '');
+    const cleanStderr = (res.stderr || '').replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '').replace(/\[[0-9;]+m/g, '');
+    const cleanCombined = `${cleanStdout}\n${cleanStderr}`;
+
+    const isLogDisplay = command.trim().startsWith('log:display');
+    const karafErrorMatch = !isLogDisplay
+      ? cleanCombined.match(/(?:Error executing command(?: on bundles)?|Command not found|Failed to get the session|Authentication failed):\s*([^\r\n]+)/i)
+      : (cleanCombined.trim().startsWith('Error executing command:') ? cleanCombined.match(/Error executing command:\s*([^\r\n]+)/i) : null);
+
+    if (karafErrorMatch) {
+      const errLine = karafErrorMatch[0].trim();
+      const finalStderr = res.stderr && res.stderr.trim().length > 0 ? `${res.stderr}\r\n${errLine}` : errLine;
+
+      if (/No matching features for/i.test(errLine)) {
+        onChunk(`\r\n💡 [DICA] O Karaf não encontrou a feature no repositório. Verifique se o atributo name="..." no features.xml do projeto coincide com o nome informado no comando.\r\n`);
+      }
+
+      return {
+        code: res.code !== 0 ? res.code : 1,
+        stdout: res.stdout,
+        stderr: finalStderr
+      };
+    }
+
+    // Fallback inteligente para comandos de log caso a saída via SSH esteja vazia
+    if (command.startsWith('log:display') && res.code === 0 && !res.stdout.trim() && settings.karafPath) {
+      const candidates = [
+        path.join(settings.karafPath, 'data', 'log', 'winthor.log'),
+        path.join(settings.karafPath, 'data', 'log', 'karaf.log')
+      ];
+      for (const logFile of candidates) {
+        if (fs.existsSync(logFile)) {
+          try {
+            const content = fs.readFileSync(logFile, 'utf-8');
+            const allLines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
+            const nMatch = command.match(/-n\s+(\d+)/);
+            const count = nMatch ? parseInt(nMatch[1], 10) : 50;
+            const tailLines = allLines.slice(-count);
+            if (tailLines.length > 0) {
+              const note = `[INFO] Buffer em memória vazio. Exibindo últimas ${tailLines.length} linhas de ${path.basename(logFile)}:\r\n\r\n`;
+              onChunk(note);
+              const outputText = tailLines.join('\r\n') + '\r\n';
+              onChunk(outputText);
+              return { code: 0, stdout: note + outputText, stderr: '' };
+            }
+          } catch {
+            // Ignora falha de leitura
+          }
+        }
+      }
+      const emptyNote = `[INFO] O buffer de logs em memória do Karaf está vazio no momento (nenhum registro recente).\r\n`;
+      onChunk(emptyNote);
+      return { code: 0, stdout: emptyNote, stderr: '' };
+    }
+
+    // Se o comando for log:clear e executou com sucesso (saída normalmente vazia), envia mensagem de confirmação
+    if (command.trim() === 'log:clear' && res.code === 0 && !res.stdout.trim()) {
+      const confirmMsg = `[ OK ] Buffer de logs em memória do Karaf (log:clear) limpo com sucesso.\r\n`;
+      onChunk(confirmMsg);
+      return { code: 0, stdout: confirmMsg, stderr: '' };
+    }
+
+    // Feedback para qualquer outro comando que executou com sucesso sem produzir saída
+    if (res.code === 0 && !res.stdout.trim() && !res.stderr.trim()) {
+      const okMsg = `[ OK ] Comando "${command}" executado com sucesso no Karaf (sem saída no console).\r\n`;
+      onChunk(okMsg);
+      return { code: 0, stdout: okMsg, stderr: '' };
+    }
+
+    return res;
   }
 
   /**
@@ -262,8 +395,9 @@ export class KarafService {
     try {
       const isWin = process.platform === 'win32';
       const childEnv = this.getResolvedJavaEnv();
+      const cmdExe = childEnv.ComSpec || process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
       this.embeddedKarafProcess = isWin
-        ? spawn('cmd.exe', ['/c', path.basename(exeFile), 'debug'], {
+        ? spawn(cmdExe, ['/c', path.basename(exeFile), 'debug'], {
             cwd: karafBin,
             shell: false,
             env: childEnv
@@ -358,7 +492,8 @@ export class KarafService {
       pass: request.pass,
       port: request.port
     });
-    if (repoRes.code !== 0 && !repoRes.stdout.includes('already registered')) {
+    const repoCombined = `${repoRes.stdout}\n${repoRes.stderr || ''}`;
+    if (repoRes.code !== 0 && !repoCombined.includes('already registered')) {
       onChunk(`\r\n[AVISO] O comando de repositório retornou código ${repoRes.code}, prosseguindo para instalação...\r\n`);
     }
 
@@ -582,6 +717,55 @@ export class KarafService {
     return {
       success: res.code === 0,
       output: output || res.stdout || res.stderr
+    };
+  }
+
+  /**
+   * Executa ação de ciclo de vida em lote em múltiplos bundles (start, stop, restart, refresh, uninstall).
+   */
+  public async manageBundlesBatch(
+    action: BundleAction,
+    bundleIds: string[],
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; output: string; processedCount: number }> {
+    if (!BUNDLE_ACTIONS.includes(action)) {
+      return { success: false, output: 'Ação de bundle não permitida.', processedCount: 0 };
+    }
+    const cleanIds = (bundleIds || [])
+      .map((id) => (typeof id === 'string' ? id.trim() : String(id).trim()))
+      .filter((id) => /^\d+$/.test(id));
+
+    if (cleanIds.length === 0) {
+      return { success: false, output: 'Nenhum ID de bundle válido informado.', processedCount: 0 };
+    }
+
+    const command = `bundle:${action} ${cleanIds.join(' ')}`;
+    let output = '';
+    const res = await this.executeKarafCommand(
+      command,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      credentials
+    );
+
+    if (action === 'uninstall' && res.code === 0) {
+      await this.executeKarafCommand(
+        'bundle:refresh',
+        (chunk) => {
+          output += chunk;
+          onChunk(chunk);
+        },
+        credentials
+      );
+    }
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr,
+      processedCount: cleanIds.length
     };
   }
 

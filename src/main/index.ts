@@ -17,6 +17,7 @@ import { DeployService } from './services/DeployService';
 import { LogWatcherService } from './services/LogWatcherService';
 import { KarafLogPersistenceService } from './services/KarafLogPersistenceService';
 import { AutoUpdateService } from './services/AutoUpdateService';
+import { LlmService } from './services/LlmService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 import { notifyUser } from './services/NotificationService';
 
@@ -33,6 +34,20 @@ if (typeof (globalThis as any).__filename === 'undefined') {
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 
+function getAppIconPath(): string | undefined {
+  const possibleIcons = [
+    path.join(app.getAppPath(), 'dist/icon.png'),
+    path.join(app.getAppPath(), 'dist/favicon.ico'),
+    path.join(__dirname, '../../dist/icon.png'),
+    path.join(__dirname, '../../public/icon.png'),
+    path.join(process.cwd(), 'dist/icon.png'),
+    path.join(process.cwd(), 'build/icon.ico'),
+    path.join(process.cwd(), 'build/icon.png'),
+    path.join(process.cwd(), 'public/icon.png')
+  ];
+  return possibleIcons.find((p) => fs.existsSync(p));
+}
+
 function createWindow() {
   const possiblePreload = [
     path.join(app.getAppPath(), 'dist-electron/preload/index.cjs'),
@@ -45,12 +60,15 @@ function createWindow() {
   const preloadPath = possiblePreload.find((p) => fs.existsSync(p)) || possiblePreload[0];
   console.log('[Electron] Carregando Preload:', preloadPath);
 
+  const iconPath = getAppIconPath();
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 840,
     minWidth: 1000,
     minHeight: 650,
     title: 'Dev Manager',
+    icon: iconPath,
     webPreferences: {
       preload: preloadPath,
       nodeIntegration: false,
@@ -59,6 +77,12 @@ function createWindow() {
     },
     autoHideMenuBar: true,
     backgroundColor: '#0B0F17'
+  });
+
+  // Iniciar sempre em tela cheia (maximizada)
+  mainWindow.maximize();
+  mainWindow.once('ready-to-show', () => {
+    mainWindow?.maximize();
   });
 
   const configService = new ConfigService();
@@ -92,12 +116,13 @@ function createWindow() {
     docsIndexService.startWatching();
   }
   const dockerService = new DockerService();
-  const deployService = new DeployService(configService, karafService, dockerService, windowsService);
+  const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
   const logWatcherService = new LogWatcherService();
   const karafLogPersistenceService = new KarafLogPersistenceService();
   const autoUpdateService = new AutoUpdateService((status) => {
     mainWindow?.webContents.send('update:status', status);
   });
+  const llmService = new LlmService(configService, docsIndexService);
 
   registerIpcHandlers(
     mainWindow,
@@ -115,7 +140,8 @@ function createWindow() {
     deployService,
     logWatcherService,
     karafLogPersistenceService,
-    autoUpdateService
+    autoUpdateService,
+    llmService
   );
 
   backupSchedulerService.rescheduleAll();
@@ -172,8 +198,14 @@ function createWindow() {
   // Tray Icon na barra de notificações
   if (!tray) {
     try {
-      const icon = nativeImage.createEmpty();
-      tray = new Tray(icon);
+      let trayIcon: Electron.NativeImage;
+      const appIconPath = getAppIconPath();
+      if (appIconPath && fs.existsSync(appIconPath)) {
+        trayIcon = nativeImage.createFromPath(appIconPath).resize({ width: 16, height: 16 });
+      } else {
+        trayIcon = nativeImage.createEmpty();
+      }
+      tray = new Tray(trayIcon);
       tray.setToolTip('Dev Manager');
 
       const contextMenu = Menu.buildFromTemplate([

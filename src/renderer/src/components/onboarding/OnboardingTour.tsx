@@ -13,21 +13,42 @@ interface OnboardingTourProps {
 
 const RING_PADDING = 6;
 const TOOLTIP_WIDTH = 320;
-// Estimativa da altura do tooltip usada só para limitar sua posição vertical à tela — não precisa ser exata,
-// só suficiente para nunca deixar os botões (Próximo/Pular) fora da área visível.
-const TOOLTIP_ESTIMATED_HEIGHT = 200;
-const TOOLTIP_GAP = 16;
-const VIEWPORT_MARGIN = 12;
+const TOOLTIP_GAP = 14;
+const VIEWPORT_MARGIN = 16;
 
 function getTargetEl(target: string | null): HTMLElement | null {
   if (!target) return null;
-  return document.querySelector<HTMLElement>(`[data-tour="${target}"]`);
+  const elements = document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`);
+  for (let i = 0; i < elements.length; i++) {
+    const el = elements[i];
+    const style = window.getComputedStyle(el);
+    if (
+      style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      style.opacity !== '0' &&
+      el.offsetWidth > 0 &&
+      el.offsetHeight > 0
+    ) {
+      return el;
+    }
+  }
+  return elements[0] || null;
 }
 
-// Passo cujo alvo não existe agora (sessão vazia, filtro escondeu, breakpoint mobile etc) é inválido e deve ser pulado.
+// Passo cujo alvo não existe ou está invisível (ex: aba oculta, dropdown fechado, breakpoint mobile etc) deve ser pulado.
 function isStepValid(step: TourStep | undefined): boolean {
   if (!step) return false;
-  return step.target === null || !!getTargetEl(step.target);
+  if (step.target === null) return true;
+  const el = getTargetEl(step.target);
+  if (!el) return false;
+  const style = window.getComputedStyle(el);
+  const rect = el.getBoundingClientRect();
+  return (
+    style.display !== 'none' &&
+    style.visibility !== 'hidden' &&
+    (rect.width > 0 || el.offsetWidth > 0) &&
+    (rect.height > 0 || el.offsetHeight > 0)
+  );
 }
 
 function findValidIndex(steps: TourStep[], start: number, dir: 1 | -1): number | null {
@@ -43,13 +64,18 @@ function markStorage(storageKey: string): void {
   try {
     window.localStorage.setItem(storageKey, JSON.stringify({ done: true, ts: Date.now() }));
   } catch {
-    // localStorage indisponível — tour volta a aparecer na próxima abertura, sem problema
+    // localStorage indisponível — tour volta a aparecer na próxima abertura
   }
 }
 
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, onClose, storageKey }) => {
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [tooltipDimensions, setTooltipDimensions] = useState<{ width: number; height: number }>({
+    width: TOOLTIP_WIDTH,
+    height: 180
+  });
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const directionRef = useRef<1 | -1>(1);
 
   const finish = useCallback(() => {
@@ -76,14 +102,23 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
     const dir = directionRef.current;
     const valid = findValidIndex(steps, stepIndex, dir);
     if (valid === null) {
-      // Não há mais passos válidos nessa direção (ex: página sem itens pra destacar) — encerra em vez de voltar sozinho.
       finish();
       return;
     }
     if (valid !== stepIndex) setStepIndex(valid);
   }, [stepIndex, isOpen, steps, finish]);
 
-  // Mede o alvo e mantém a posição atualizada durante scroll/resize
+  // Mede as dimensões reais do tooltip renderizado para posicionamento preciso
+  useEffect(() => {
+    if (tooltipRef.current) {
+      const { offsetWidth, offsetHeight } = tooltipRef.current;
+      if (offsetWidth > 0 && offsetHeight > 0) {
+        setTooltipDimensions({ width: offsetWidth, height: offsetHeight });
+      }
+    }
+  }, [stepIndex, isOpen]);
+
+  // Rastreamento contínuo em tempo real de coordenadas (evita desvios em tela cheia e mudanças assíncronas)
   useEffect(() => {
     if (!isOpen) return;
     const step = steps[stepIndex];
@@ -97,22 +132,76 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
       return;
     }
 
-    const measure = () => setRect(el.getBoundingClientRect());
-    const initial = el.getBoundingClientRect();
-    const outOfView = initial.top < 0 || initial.bottom > window.innerHeight;
+    const measure = () => {
+      const newRect = el.getBoundingClientRect();
+      setRect((prev) => {
+        if (
+          prev &&
+          Math.abs(prev.top - newRect.top) < 0.5 &&
+          Math.abs(prev.left - newRect.left) < 0.5 &&
+          Math.abs(prev.width - newRect.width) < 0.5 &&
+          Math.abs(prev.height - newRect.height) < 0.5
+        ) {
+          return prev;
+        }
+        return newRect;
+      });
+    };
 
-    let scrollTimeout: ReturnType<typeof setTimeout> | undefined;
+    // Medição imediata
+    measure();
+
+    // Rola para a área visível se estiver fora da tela
+    const initial = el.getBoundingClientRect();
+    const outOfView =
+      initial.top < 60 ||
+      initial.bottom > window.innerHeight - 60 ||
+      initial.left < 0 ||
+      initial.right > window.innerWidth;
+
     if (outOfView) {
-      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      scrollTimeout = setTimeout(measure, 350);
-    } else {
+      el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+    }
+
+    // Acompanha a rolagem a 60fps nos primeiros 750ms para manter o spotlight sincronizado
+    let animId: number;
+    const startTime = performance.now();
+    const trackScroll = () => {
       measure();
+      if (performance.now() - startTime < 750) {
+        animId = requestAnimationFrame(trackScroll);
+      }
+    };
+    animId = requestAnimationFrame(trackScroll);
+
+    // ResizeObserver no alvo e no documento para detectar carregamento de dados e reflows responsivos
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        measure();
+      });
+      resizeObserver.observe(el);
+      if (document.body) {
+        resizeObserver.observe(document.body);
+      }
+    }
+
+    // MutationObserver para capturar inclusão de elementos assíncronos no DOM
+    let mutationObserver: MutationObserver | null = null;
+    if (typeof MutationObserver !== 'undefined') {
+      mutationObserver = new MutationObserver(() => {
+        measure();
+      });
+      mutationObserver.observe(document.body, { childList: true, subtree: true, attributes: true });
     }
 
     window.addEventListener('scroll', measure, true);
     window.addEventListener('resize', measure);
+
     return () => {
-      if (scrollTimeout) clearTimeout(scrollTimeout);
+      cancelAnimationFrame(animId);
+      if (resizeObserver) resizeObserver.disconnect();
+      if (mutationObserver) mutationObserver.disconnect();
       window.removeEventListener('scroll', measure, true);
       window.removeEventListener('resize', measure);
     };
@@ -154,23 +243,34 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
 
   const tooltipStyle: React.CSSProperties = rect
     ? (() => {
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        const placeBelow = spaceBelow >= spaceAbove;
+        const tooltipW = tooltipDimensions.width || TOOLTIP_WIDTH;
+        const tooltipH = tooltipDimensions.height || 180;
 
-        let left = rect.left + rect.width / 2 - TOOLTIP_WIDTH / 2;
-        left = Math.min(Math.max(left, VIEWPORT_MARGIN), window.innerWidth - TOOLTIP_WIDTH - VIEWPORT_MARGIN);
+        // Centralizado horizontalmente no elemento alvo, respeitando as bordas da tela
+        let left = rect.left + rect.width / 2 - tooltipW / 2;
+        left = Math.min(Math.max(left, VIEWPORT_MARGIN), window.innerWidth - tooltipW - VIEWPORT_MARGIN);
 
-        // Alvo alto (ex: sidebar de altura total) pode deixar rect.top/rect.bottom fora da viewport —
-        // sempre limita o `top` final aos limites da tela para o tooltip nunca ficar inacessível.
-        let top = placeBelow ? rect.bottom + TOOLTIP_GAP : rect.top - TOOLTIP_GAP - TOOLTIP_ESTIMATED_HEIGHT;
-        top = Math.min(Math.max(top, VIEWPORT_MARGIN), window.innerHeight - TOOLTIP_ESTIMATED_HEIGHT - VIEWPORT_MARGIN);
+        // Verifica espaço vertical disponível
+        const spaceBelow = window.innerHeight - rect.bottom - TOOLTIP_GAP;
+        const spaceAbove = rect.top - TOOLTIP_GAP;
+
+        let top: number;
+        if (spaceBelow >= tooltipH + VIEWPORT_MARGIN) {
+          top = rect.bottom + TOOLTIP_GAP;
+        } else if (spaceAbove >= tooltipH + VIEWPORT_MARGIN) {
+          top = rect.top - TOOLTIP_GAP - tooltipH;
+        } else {
+          // Se não couber com folga em nenhum dos lados, posiciona no lado que tiver maior espaço
+          top = spaceBelow >= spaceAbove ? rect.bottom + TOOLTIP_GAP : rect.top - TOOLTIP_GAP - tooltipH;
+          top = Math.min(Math.max(top, VIEWPORT_MARGIN), window.innerHeight - tooltipH - VIEWPORT_MARGIN);
+        }
 
         return {
           position: 'fixed',
-          left,
-          top,
-          width: TOOLTIP_WIDTH
+          left: Math.round(left),
+          top: Math.round(top),
+          width: tooltipW,
+          zIndex: 10000
         };
       })()
     : {
@@ -178,22 +278,23 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
         top: '50%',
         left: '50%',
         width: TOOLTIP_WIDTH,
-        transform: 'translate(-50%, -50%)'
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10000
       };
 
   return (
     <div className="fixed inset-0 z-[9999]" role="dialog" aria-modal="true">
-      {/* Overlay escuro + spotlight (box-shadow com spread cobre tudo exceto o alvo) */}
+      {/* Overlay escuro + spotlight */}
       <div className="fixed inset-0" onClick={(e) => e.stopPropagation()}>
         {rect ? (
           <div
-            className="fixed rounded-2xl border-2 border-primary pointer-events-none transition-all duration-300 ease-out"
+            className="fixed rounded-2xl border-2 border-primary pointer-events-none transition-all duration-200 ease-out shadow-lg"
             style={{
-              boxShadow: '0 0 0 9999px rgba(0,0,0,0.7)',
-              top: rect.top - RING_PADDING,
-              left: rect.left - RING_PADDING,
-              width: rect.width + RING_PADDING * 2,
-              height: rect.height + RING_PADDING * 2
+              boxShadow: '0 0 0 9999px rgba(0,0,0,0.72)',
+              top: Math.round(rect.top - RING_PADDING),
+              left: Math.round(rect.left - RING_PADDING),
+              width: Math.round(rect.width + RING_PADDING * 2),
+              height: Math.round(rect.height + RING_PADDING * 2)
             }}
           />
         ) : (
@@ -201,11 +302,12 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
         )}
       </div>
 
-      {/* Tooltip — troca de conteúdo por chave com transição suave */}
+      {/* Tooltip */}
       <div
+        ref={tooltipRef}
         key={stepIndex}
         style={tooltipStyle}
-        className="animate-tour-fade bg-card text-card-foreground rounded-xl border border-border shadow-2xl p-4 space-y-3"
+        className="animate-tour-fade bg-card text-card-foreground rounded-2xl border border-border shadow-2xl p-4 space-y-3"
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-1.5 text-primary">
@@ -242,7 +344,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
             <button
               type="button"
               onClick={isLast ? finish : goNext}
-              className="h-7 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition flex items-center gap-1 cursor-pointer"
+              className="h-7 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition flex items-center gap-1 cursor-pointer shadow-xs"
             >
               {isLast ? 'Concluir' : 'Próximo'}
               {!isLast && <ChevronRight className="w-3.5 h-3.5" />}

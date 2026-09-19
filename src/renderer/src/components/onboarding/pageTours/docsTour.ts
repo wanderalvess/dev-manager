@@ -4,9 +4,9 @@ export const DOCS_TOUR_STORAGE_KEY = 'devManager:tour:docs';
 
 export const DOCS_TOUR_STEPS: TourStep[] = [
   {
-    target: 'doc-folders-list',
-    title: 'Pastas de Documentação',
-    desc: 'Aqui você adiciona as pastas locais (.md, .txt, .pdf, .docx) que servirão como fonte para a busca.'
+    target: 'doc-settings-button',
+    title: 'Configurações de Documentação & IA',
+    desc: 'Abra este painel para configurar pastas locais, fontes Confluence/Jira e o assistente de IA / LLM.'
   },
   {
     target: 'reindex-button',

@@ -20,6 +20,7 @@ import {
   ScrollText
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { AppLogo } from './AppLogo';
 import { NetworkIpInfo, SystemMetrics } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
@@ -245,14 +246,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="bg-card/95 border-b border-border/80 px-3 sm:px-4 py-2 flex items-center justify-between shadow-md relative z-30 backdrop-blur-md transition-colors duration-300 gap-2 sm:gap-3 lg:gap-4 shrink-0 h-14">
       {/* Identidade do Aplicativo (Esquerda) */}
       <div className="flex items-center space-x-2.5 shrink-0">
-        <div className="relative">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary/80 via-primary to-primary flex items-center justify-center font-black text-primary-foreground shadow-md shadow-primary/25 text-sm tracking-wider border border-primary/30">
-            D
-          </div>
-          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full flex items-center justify-center">
-            <span className="w-1 h-1 bg-white rounded-full animate-ping" />
-          </div>
-        </div>
+        <AppLogo size="sm" showStatusDot />
 
         <div className="flex flex-col">
           <div className="flex items-center space-x-1.5">

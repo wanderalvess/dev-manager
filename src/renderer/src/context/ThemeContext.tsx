@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
-export type ThemeVariant = 'default' | 'midnight';
+export type ThemeVariant = 'default' | 'midnight' | 'cyberpunk' | 'nebula' | 'nordic';
 
 interface ThemeContextType {
   mode: ThemeMode;
@@ -16,28 +16,24 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_KEY = 'theme';
 const VARIANT_KEY = 'theme-variant';
 
+const VALID_VARIANTS: ThemeVariant[] = ['default', 'midnight', 'cyberpunk', 'nebula', 'nordic'];
+
 const getInitialMode = (): ThemeMode => {
   try {
     const savedMode = localStorage.getItem(THEME_KEY) as ThemeMode | null;
     if (savedMode === 'light' || savedMode === 'dark') {
       return savedMode;
     }
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
   } catch (e) {
     console.error('Erro ao ler preferência de tema do localStorage:', e);
   }
-  return 'dark'; // Fallback padrão dark para o ambiente de desenvolvimento
+  return 'light'; // Padrão claro na primeira instalação
 };
 
 const getInitialVariant = (): ThemeVariant => {
   try {
     const savedVariant = localStorage.getItem(VARIANT_KEY) as ThemeVariant | null;
-    if (savedVariant === 'default' || savedVariant === 'midnight') {
+    if (savedVariant && VALID_VARIANTS.includes(savedVariant)) {
       return savedVariant;
     }
   } catch (e) {
@@ -57,11 +53,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const applyThemeClasses = (targetMode: ThemeMode, targetVariant: ThemeVariant) => {
     const root = document.documentElement;
 
-    // Aplica/Remove classe dark
+    // Aplica/Remove classe dark e light
     if (targetMode === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('light');
     } else {
       root.classList.remove('dark');
+      root.classList.add('light');
     }
 
     // Remove todas as variantes possíveis
@@ -103,22 +101,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     applyThemeClasses(mode, variant);
   }, [mode, variant]);
 
-  // Listener para mudanças no tema do sistema operacional se o usuário não tiver escolha salva
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      const hasSavedTheme = localStorage.getItem(THEME_KEY);
-      if (!hasSavedTheme) {
-        setMode(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- setMode is redefined every render (closes over variant); the mode/variant effect above re-applies theme classes right after, so a stale closure here is harmless and re-subscribing each render would be pure churn
-  }, []);
 
   return (
     <ThemeContext.Provider value={{ mode, variant, setMode, setVariant, toggleMode }}>

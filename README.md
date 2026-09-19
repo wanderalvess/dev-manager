@@ -20,7 +20,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 │ • Karaf OSGi Deployer: Snapshots & Comparativo de Estado (Diff), Árvore de Dependências e Fiações Wired          │
 │ • Hub Git & Azure DevOps: Sincronização rápida, detecção de branches e gerador de Pull Requests                  │
 │ • Catálogo de Rotinas (.EXE e .PC) com busca rápida e favoritos                                                  │
-│ • RAG Local com FastEmbed: Busca semântica vetorial sobre documentação, prévia rápida e abertura no editor      │
+│ • RAG & IA Local: Busca semântica (FastEmbed), Conectores Confluence/Jira, Assistente IA (BYOK) e DocSync         │
 │ • Quick Launcher Spotlight (Ctrl+K) e Navegação Global por Teclado (Alt+1 .. Alt+9)                              │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -173,31 +173,126 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 
 ---
 
-### 7. 📚 RAG & Central de Documentação Inteligente (Busca Semântica Local)
-* **O que é e para que serve:**
-  * Centraliza em um único painel todos os manuais, diagnósticos de projetos, mapeamentos de rotinas, diagramas e contratos de API REST (`.md`, `.mdx`, `.txt`, `.pdf`, `.docx`).
-  * Serve tanto para consulta rápida do desenvolvedor na tela quanto como **base de conhecimento (RAG)** para alimentar assistentes de IA (Claude Code, Cursor, Copilot, Antigravity) via MCP.
+### 7. 📚 Central de Documentação, RAG & Assistente IA Integrado
+O **Módulo de Documentações** do Dev Manager transforma a base documental técnica dispersa do projeto em uma **central de conhecimento viva, pesquisável e acionável por Inteligência Artificial**. Ele funciona simultaneamente como catálogo centralizado para consulta rápida do desenvolvedor e como **motor de RAG (Retrieval-Augmented Generation)** tanto para o Assistente IA embutido quanto para agentes externos via servidor MCP.
+
+#### 🧠 1. Motor de Busca Semântica Local com Embeddings Neurais (FastEmbed)
 * **Por que Vetorizar? (Busca Semântica vs. Ctrl+F tradicional):**
-  * **Busca Cega (Ctrl+F):** Exige palavras exatas. Se você pesquisar por *"estoque"* e o documento contiver *"saldo de mercadorias"*, uma busca textual comum não encontra nada.
-  * **Busca Vetorizada (Embeddings Neurais):** O modelo local **FastEmbed** (`AllMiniLML6V2`) converte cada trecho de texto em um vetor matemático de 384 dimensões que representa o seu **significado conceitual**.
-  * Quando você faz uma pergunta em linguagem natural (ex: *"como consultar saldo disponível na filial?"*), o sistema calcula a similaridade de cosseno entre a sua pergunta e os trechos indexados, trazendo os resultados mais relevantes mesmo com termos e sinônimos diferentes.
-* **Fontes Configuráveis & Toggle de Projetos Git:**
-  * **Pastas Dedicadas de Documentação:** Cadastre uma ou mais pastas centrais onde suas documentações estão salvas (ex: `prompt-hub/docs`). O indexador varre todas as subpastas recursivamente.
-  * **Toggle de Projetos Git:** Escolha se deseja incluir os repositórios Git da pasta de projetos ou focar 100% nas pastas de documentação para uma indexação ultrarrápida.
-* **Resiliência e Fallback Textual Automático:**
-  * Se o modelo neural ainda não foi baixado ou estiver bloqueado pela rede corporativa, o sistema não trava: ele opera em **Modo de Busca Textual** pontuada por relevância de termos.
-  * Suporte a instalação 100% offline do modelo neural via extração manual em `%APPDATA%\dev-manager\models`.
-* **Catálogo Completo & Prévia com 1 Clique:**
-  * Quando não há busca ativa, a tela exibe o catálogo completo de todos os arquivos indexados com seus caminhos e contagem de trechos.
-  * Filtro instantâneo por nome de arquivo para navegação imediata.
-  * Visualizador embutido (Modal de Prévia) com renderização Markdown completa, cópia rápida para o clipboard e atalhos para abrir no editor ou revelar na pasta do Windows Explorer.
-* **Sincronização Agnóstica de Documentação Vetorizada:**
-  * Envie todo o índice vetorizado local (títulos, trechos e embeddings neurais de 384 dimensões) diretamente para APIs REST ou bancos de dados externos.
-  * Suporta múltiplos destinos customizados (ex: **Espaço Ágil**, novos backends na nuvem ou na VM).
-  * Configuração flexível de URL de endpoint, método HTTP (`POST`/`PUT`), cabeçalho de autenticação (`X-Api-Key`, `Authorization`, etc.), token e tamanho de lotes (`batchSize`).
-  * Permite que aplicações web externas ofereçam chat semântico/RAG direto sobre seus documentos **sem custo de APIs externas de IA**.
-* **Integração MCP para Agentes de IA:**
-  * As tools `rag_search_docs`, `rag_reindex_docs` e `rag_get_status` permitem que IAs consultem o seu repositório local de documentação enquanto programam, eliminando alucinações de regras de negócio, tabelas ou rotinas.
+  * **Busca Textual Tradicional (Ctrl+F):** Exige exatidão literal de palavras. Se você buscar por *"saldo de mercadorias"* e o documento registrar *"estoque disponível"*, a busca textual comum não encontra nada.
+  * **Busca Semântica com Embeddings:** O modelo neural local **FastEmbed** (`sentence-transformers/all-MiniLM-L6-v2`) converte cada trecho de texto em um vetor matemático de 384 dimensões que codifica seu significado contextual.
+  * Perguntas em linguagem natural (ex: *"como consultar saldo disponível na filial no faturamento?"*) localizam os trechos mais relevantes por proximidade geométrica (similaridade de cosseno), superando variações de vocabulário, sinônimos e jargões técnicos.
+* **Algoritmo Híbrido com Boost Textual:**
+  * O motor combina a similaridade vetorial com pontuação de correspondência textual direta (relevância BM25/keywords) em títulos e no corpo do texto. Se houver correspondência exata de termos críticos, o resultado recebe um reforço (*boost*) automático no ranking.
+* **Privacidade Absoluta e Execução 100% On-Device:**
+  * A geração de vetores ocorre estritamente na CPU da máquina do desenvolvedor. Nenhum documento, código-fonte ou texto interno é enviado para a nuvem para fins de vetorização.
+* **Chunking Inteligente e Processamento em Lote:**
+  * Divisão automática de documentos em blocos com limite de 800 caracteres e sobreposição (*overlap*) de 100 caracteres entre parágrafos, preservando a coerência nas bordas de cada trecho.
+  * Vetorização em lotes paralelos (`passageEmbed` em lotes de até 32 trechos), maximizando o throughput da CPU.
+* **Cache Incremental por Timestamp (`mtimeMs`):**
+  * O índice armazena o carimbo de modificação de cada arquivo. Em reindexações sucessivas, arquivos inalterados são reaproveitados instantaneamente do cache, reduzindo o tempo de varredura para menos de 1 segundo.
+
+#### 🌐 2. Fontes Híbridas de Documentação (Locais e Remotas)
+O módulo agrega dados de múltiplos pontos de origem em um único índice unificado:
+* **Pastas Locais Dedicadas:**
+  * Cadastro de diretórios adicionais de documentação salvos na máquina ou em compartilhamentos de rede (ex: `prompt-hub/docs`, manuais de arquitetura, contratos de API).
+* **Varredura Opcional de Projetos Git:**
+  * Toggle configurável (`indexProjectsDocs`) para descobrir e indexar automaticamente todos os arquivos de documentação presentes nos repositórios Git clonados.
+* **Amplo Suporte a Formatos de Arquivo:**
+  * **Documentos Textuais:** Markdown (`.md`), MDX (`.mdx`) e Texto Puro (`.txt`).
+  * **Documentos Binários com Extração Dinâmica de Texto:**
+    * **PDF (`.pdf`):** Extração de texto em tempo de execução via `pdf-parse`, com supressão inteligente de marcadores de página para evitar ruídos vetoriais.
+    * **Microsoft Word (`.docx`):** Extração de texto formatado via `mammoth`.
+* **Conector Atlassian Confluence Integrado:**
+  * Conexão nativa via REST API v1 (`/wiki/rest/api/content`), compatível com **Confluence Cloud** e **Confluence Server / Data Center**.
+  * Autenticação flexível: Personal Access Token (Bearer) ou Basic Auth (e-mail + API Token).
+  * Filtragem por chave de espaço (`spaceKey`) com paginação automática.
+  * Sanitização de marcação HTML interna para texto limpo.
+  * **Processamento de Anexos:** Baixa e extrai automaticamente o texto de arquivos `.pdf` e `.docx` anexados diretamente às páginas do Confluence (até 10 anexos por página, até 20MB cada).
+  * Botão de teste de conexão com diagnóstico em tempo real.
+* **Conector Atlassian Jira Integrado:**
+  * Conexão via REST API v2 (`/rest/api/2/search` e `/rest/api/2/issue/{key}`).
+  * Filtragem por chave de projeto (`projectKey`) ou consulta avançada via **JQL** customizado.
+  * Transforma cada issue/tarefa em um documento indexável contendo chave, resumo, descrição e todos os comentários trocados pela equipe técnica.
+  * Botão de teste de conexão instantâneo.
+
+#### 🤖 3. Assistente IA Integrado com Síntese RAG (BYOK - Bring Your Own Key)
+Além de buscar trechos manualmente, o desenvolvedor pode interagir com o **Assistente IA Integrado** através do botão **"Perguntar à IA"**:
+* **Arquitetura RAG Precisa:**
+  * A dúvida do usuário recupera os trechos mais relevantes do índice local (Top-K) e os injeta como contexto factual estrito para o modelo de linguagem.
+  * A IA sintetiza a resposta com fundamentação técnica sólida, eliminando alucinações sobre tabelas, rotinas WinThor e regras de negócio.
+* **Múltiplos Provedores de IA Nativamente Suportados:**
+  * **Google Gemini:** `gemini-2.0-flash`, `gemini-1.5-flash`, `gemini-1.5-pro`.
+  * **OpenAI Oficial:** `gpt-4o-mini`, `gpt-4o`, `gpt-4.5-preview`, `o3-mini`.
+  * **Anthropic Claude:** `claude-3-5-sonnet`, `claude-3-5-haiku`, `claude-3-opus`.
+  * **Ollama (100% Offline / Local):** `llama3.2`, `deepseek-r1`, `qwen2.5-coder`, `mistral` (execução local privada na máquina sem custo de API).
+  * **OpenAI-Compatible Customizado:** Integração com qualquer servidor local ou gateway (LM Studio, vLLM, LocalAI, OpenRouter).
+* **Painel de Configuração de LLM (DocSettingsModal):**
+  * Gerenciamento de múltiplos provedores com definição do provedor ativo com 1 clique.
+  * Ajuste fino de parâmetros: Base URL, Chave de API mascarada, Modelo, Temperatura (padrão 0.3 para respostas ancoradas), Max Tokens e Timeout (ms).
+  * **System Prompt Customizável:** Pré-configurado com diretrizes especializadas para engenharia de software e ecossistema WinThor ERP/TOTVS, com opção de personalização total pelo desenvolvedor.
+  * Teste de conectividade com medição de latência em tempo real (ms).
+* **Interface de Síntese Inteligente:**
+  * Exibição formatada em Markdown com suporte a blocos de código com destaque de sintaxe.
+  * **Listagem de Fontes Utilizadas:** Cards clicáveis indicando os documentos que embasaram a resposta e seus respectivos graus de relevância percentual.
+  * Ações rápidas para **Copiar Resposta** e **Regenerar**.
+
+#### 👁️ 4. Monitoramento em Tempo Real (Auto-Reindex com Chokidar Watcher)
+* **Observação Contínua de Disco:**
+  * Monitora alterações no sistema de arquivos das pastas locais e projetos Git cadastrados.
+* **Debounce Inteligente (2000ms):**
+  * Quando múltiplos arquivos são modificados em rajada (ex: troca de branch com `git checkout`, `git pull` ou *Save All* da IDE), o watcher aguarda o término das alterações antes de disparar a reindexação automática.
+* **Feedback Visual:**
+  * Notificações discretas na conclusão informam o desenvolvedor assim que as novas alterações são integradas à base semântica.
+
+#### 📖 5. Catálogo Completo & Leitor Integrado (MarkdownReader)
+* **Catálogo de Documentos Indexados:**
+  * Visão tabular em grid de todos os arquivos catalogados com identificador de fonte (`sourceLabel`), quantidade de trechos indexados e caminho relativo.
+  * Filtro rápido por nome de documento em tempo real.
+* **Leitor Embutido (MarkdownReader Modal):**
+  * Visualização moderna e responsiva sem necessidade de abrir softwares externos.
+  * Suporte a Markdown estendido (GFM): tabelas, listas de tarefas, blocos de código com destaque de sintaxe e citações.
+* **Ações Rápidas de Produtividade:**
+  * **Ler:** Abre a prévia formatada no leitor embutido.
+  * **Editor:** Abre o arquivo instantaneamente na IDE configurada (VS Code, Cursor, IntelliJ, etc.).
+  * **Pasta:** Revela o arquivo selecionado diretamente no Windows Explorer.
+
+#### 📡 6. Sincronização Agnóstica de Documentação Vetorizada (DocSync)
+Permite exportar a base de conhecimento local já processada para backends externos e plataformas web corporativas (como o **Espaço Ágil**):
+* **Exportação Completa (Embeddings + Artigos):**
+  * Transmite em lotes (`batchSize` configurável) os artigos consolidados com conteúdo unificado e seus respectivos trechos vetorizados (384 dimensões).
+* **Modos de Sincronização:**
+  * `all`: Envia tanto os artigos completos consolidados quanto os chunks vetorizados.
+  * `articles`: Envia exclusivamente os artigos limpos (ideal para bases de conhecimento puramente textuais).
+  * `chunks`: Envia exclusivamente os blocos e vetores (ideal para bancos vetoriais como Qdrant, Pinecone, Milvus ou pgvector).
+* **Higienização Automática de Dados (`sanitizeDocPathInfo`):**
+  * Remove estritamente letras de unidades Windows (`C:\`, `D:\`), barras invertidas e diretórios locais confidenciais antes do envio, gerando títulos limpos, categorias consistentes e tags seguras.
+* **Identificadores Determinísticos SHA-256:**
+  * Cada artigo recebe um ID exclusivo baseado em hash SHA-256 (`doc_<hash>`), garantindo idempotência e atualização in-place sem duplicação de registros no backend remoto.
+* **Configuração de Destinos:**
+  * Nome do destino, URL do endpoint, método HTTP (`POST` ou `PUT`), cabeçalho de autenticação customizado (`X-Api-Key`, `Authorization: Bearer`, etc.) e controle de ativação individual.
+
+#### 🛡️ 7. Resiliência e Modo Offline Corporativo
+* **Fallback Textual Automático (Zero Bloqueio):**
+  * Caso o modelo neural ainda não tenha sido baixado ou a máquina esteja sem conexão externa, o sistema não trava: ele opera normalmente em **Modo de Busca Textual BM25 / Relevância**, permitindo pesquisar por palavras-chave em todos os documentos.
+* **Guia de Instalação Offline Integrado:**
+  * Modal explicativo com link direto e instruções detalhadas para download manual do arquivo `sentence-transformers-all-MiniLM-L6-v2.tar.gz` e extração no diretório `%APPDATA%\dev-manager\models\fast-all-MiniLM-L6-v2`, contornando bloqueios de proxy corporativo ou firewalls restritivos.
+
+#### 🎓 8. Tour Guiado Integrado (Onboarding)
+* Guia passo a passo interativo acessível pelo ícone de varinha mágica ✨ no topo da página.
+* Apresenta aos novos desenvolvedores as principais áreas da interface:
+  1. Barra de status e indicadores do modelo neural;
+  2. Botão de configurações centrais (pastas, Jira, Confluence, LLMs);
+  3. Disparo e acompanhamento da reindexação;
+  4. Campo de pesquisa em linguagem natural;
+  5. Filtros por fonte de documentação;
+  6. Síntese contextual do Assistente IA;
+  7. Catálogo e leitor integrado de documentos.
+
+#### 🤖 9. Integração com Servidor MCP (Tools de RAG para Agentes de IA)
+Para desenvolvedores que utilizam assistentes de codificação como **Claude Code**, **Cursor**, **GitHub Copilot Chat** ou **Antigravity**, o Dev Manager disponibiliza ferramentas MCP nativas:
+* `rag_search_docs`: Executa buscas semânticas vetoriais ou textuais na base indexada, retornando trechos mais relevantes e seus caminhos.
+* `rag_reindex_docs`: Dispara o processo de varredura e atualização de índices sob demanda diretamente via prompt da IA.
+* `rag_index_status`: Consulta o total de documentos, trechos, fontes ativas e status do modelo neural.
 
 ---
 
@@ -219,7 +314,7 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 
 ---
 
-### 6. 🤖 Servidor MCP — Automação via Assistentes de IA
+### 10. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
   * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code — pode chamar diretamente, sem passar pela interface gráfica.
 * **73 Tools Organizadas por Domínio:**
@@ -249,9 +344,10 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 | **Frontend** | [React](https://react.dev/) (v18), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vitejs.dev/) |
 | **Estilização** | [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/) |
 | **Empacotamento** | [Electron Builder](https://www.electron.build/) (Instalador NSIS e Portátil com elevação de Admin) |
-| **Integrações** | Windows Services (`sc`, `net stop/start`, `netstat`), Git CLI, Apache Karaf Client, Azure DevOps |
+| **Integrações de Sistema** | Windows Services (`sc`, `net stop/start`, `netstat`), Git CLI, Apache Karaf Client, Azure DevOps |
+| **Documentação & RAG** | [FastEmbed](https://github.com/qdrant/fastembed) (`AllMiniLML6V2`), [pdf-parse](https://www.npmjs.com/package/pdf-parse), [mammoth](https://www.npmjs.com/package/mammoth), [Chokidar](https://github.com/paulmillr/chokidar) |
+| **Inteligência Artificial (BYOK)** | Google Gemini, OpenAI, Anthropic Claude, Ollama (Local), [Model Context Protocol](https://modelcontextprotocol.io/) (`@modelcontextprotocol/sdk`), [Zod](https://zod.dev/) |
 | **Servidor Web/Docker** | [Express](https://expressjs.com/), [ws](https://github.com/websockets/ws) (WebSocket), [tsx](https://github.com/privatenumber/tsx) |
-| **Integração com IA** | [Model Context Protocol](https://modelcontextprotocol.io/) (`@modelcontextprotocol/sdk`), [Zod](https://zod.dev/) |
 
 ---
 
@@ -395,10 +491,13 @@ dev-manager/
     │   │   └── registerIpc.ts  # Registro de canais de comunicação IPC seguros
     │   ├── services/           # Regras de negócio e integração de sistema
     │   │   ├── ConfigService.ts    # Persistência de configurações e auto-detecção
+    │   │   ├── DocsIndexService.ts # Motor RAG, embeddings FastEmbed, busca e DocSync
+    │   │   ├── LlmService.ts       # Hub de provedores LLM (Gemini, OpenAI, Claude, Ollama)
     │   │   ├── GitAzureService.ts  # Leitura de repositórios Git e URLs do Azure
     │   │   ├── KarafService.ts     # Execução de comandos Karaf e console embutido
     │   │   ├── RoutinesService.ts  # Varredura e lançamento de rotinas
-    │   │   └── WindowsService.ts   # Controle de serviços Windows e portas de rede
+    │   │   ├── WindowsService.ts   # Controle de serviços Windows e portas de rede
+    │   │   └── docSources/         # Conectores de fontes (Local, Confluence, Jira, Extratores)
     │   └── utils/
     │       └── security.ts     # Validadores compartilhados (paths, comandos, identificadores)
     │
@@ -423,6 +522,8 @@ dev-manager/
     │       ├── components/     # Componentes reutilizáveis
     │       │   ├── Header.tsx          # Barra superior cockpit com status e tema
     │       │   ├── TerminalViewer.tsx  # Terminal com streaming de logs e prompt interativo
+    │       │   ├── DocSettingsModal.tsx# Configurações de pastas, Confluence, Jira e LLMs
+    │       │   ├── MarkdownReader.tsx  # Leitor e renderizador embutido de Markdown
     │       │   └── ThemeToggle.tsx     # Alternador de modo escuro / claro / midnight
     │       ├── context/
     │       │   └── ThemeContext.tsx    # Contexto global de temas

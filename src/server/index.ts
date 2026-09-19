@@ -25,6 +25,7 @@ import { LogWatcherService } from '../main/services/LogWatcherService';
 import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
 import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
 import { JiraSource } from '../main/services/docSources/JiraSource';
+import { LlmService } from '../main/services/LlmService';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -127,9 +128,10 @@ if (configService.getSettings().autoReindexOnChange) {
   docsIndexService.startWatching();
 }
 const dockerService = new DockerService();
-const deployService = new DeployService(configService, karafService, dockerService, windowsService);
+const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
 const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
+const llmService = new LlmService(configService, docsIndexService);
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
 const wsClients = new Set<WebSocket>();
@@ -423,9 +425,15 @@ app.post('/api/karaf/run-maven-build', async (req, res) => {
 
 app.post('/api/deploy/run-profile', async (req, res) => {
   const profile: DeployProfile = req.body;
-  const result = await deployService.executeProfile(profile, (chunk) => {
-    broadcastWs('deploy:log-chunk', chunk);
-  });
+  const result = await deployService.executeProfile(
+    profile,
+    (chunk) => {
+      broadcastWs('deploy:log-chunk', chunk);
+    },
+    (progress) => {
+      broadcastWs('deploy:step-progress', progress);
+    }
+  );
   res.json(result);
 });
 
@@ -435,6 +443,20 @@ app.post('/api/deploy/run-step', async (req, res) => {
     broadcastWs('deploy:log-chunk', chunk);
   }, profileName);
   res.json(result);
+});
+
+app.post('/api/deploy/abort', async (_req, res) => {
+  deployService.abortCurrentExecution();
+  res.json({ success: true });
+});
+
+app.get('/api/deploy/history', async (_req, res) => {
+  res.json(deployService.getHistory());
+});
+
+app.delete('/api/deploy/history', async (_req, res) => {
+  deployService.clearHistory();
+  res.json({ success: true });
 });
 
 app.get('/api/karaf/parse-pom', (req, res) => {
@@ -548,6 +570,45 @@ app.post('/api/docs/test-jira-connection', async (req, res) => {
   }
 });
 
+// --- IA & Provedores LLM (BYOK - Bring Your Own Key) ---
+const handleTestLlmRoute = async (req: express.Request, res: express.Response) => {
+  try {
+    const result = await llmService.testConnection(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.json({ success: false, message: err?.message || 'Falha ao testar conexão com LLM.' });
+  }
+};
+
+const handleChatLlmRoute = async (req: express.Request, res: express.Response) => {
+  try {
+    const request = req.body?.request || req.body;
+    const result = await llmService.chat(request);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Falha na resposta do LLM.' });
+  }
+};
+
+const handleAskDocsRoute = async (req: express.Request, res: express.Response) => {
+  try {
+    const request = req.body?.request || req.body;
+    const result = await llmService.askWithDocs(request);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Falha ao processar consulta com LLM.' });
+  }
+};
+
+app.post('/api/llm/test-connection', handleTestLlmRoute);
+app.post('/api/llm/chat', handleChatLlmRoute);
+app.post('/api/llm/ask-with-docs', handleAskDocsRoute);
+
+// Aliases de compatibilidade
+app.post('/api/docs/test-llm', handleTestLlmRoute);
+app.post('/api/docs/chat-llm', handleChatLlmRoute);
+app.post('/api/docs/ask-llm', handleAskDocsRoute);
+
 app.post('/api/docs/sync', async (req, res) => {
   const targetId = req.body?.targetId as string | undefined;
   const results = await docSyncService.syncToTarget(targetId, (progress: DocSyncProgress) => {
@@ -578,11 +639,54 @@ app.get('/api/docs/content', (req, res) => {
 
 // 7. Configurações
 app.get('/api/settings', (_req, res) => {
-  res.json(configService.getSettings());
+  res.json(configService.sanitizeSecrets(configService.getSettings()));
 });
 
 app.post('/api/settings', (req, res) => {
   const candidate = req.body || {};
+  const current = configService.getSettings();
+
+  // Preservar senhas/tokens existentes se não enviados ou vazios
+  if (!candidate.karafPass && current.karafPass) {
+    candidate.karafPass = current.karafPass;
+  }
+  if (Array.isArray(candidate.databaseConnections)) {
+    candidate.databaseConnections = candidate.databaseConnections.map((newConn: any) => {
+      const existing = current.databaseConnections?.find((c) => c.id === newConn.id);
+      return {
+        ...newConn,
+        password: newConn.password || existing?.password || ''
+      };
+    });
+  }
+  if (Array.isArray(candidate.confluenceSources)) {
+    candidate.confluenceSources = candidate.confluenceSources.map((s: any) => {
+      const existing = current.confluenceSources?.find((e) => e.id === s.id);
+      return {
+        ...s,
+        authToken: s.authToken || existing?.authToken || ''
+      };
+    });
+  }
+  if (Array.isArray(candidate.jiraSources)) {
+    candidate.jiraSources = candidate.jiraSources.map((s: any) => {
+      const existing = current.jiraSources?.find((e) => e.id === s.id);
+      return {
+        ...s,
+        authToken: s.authToken || existing?.authToken || ''
+      };
+    });
+  }
+  if (Array.isArray(candidate.llmProviders)) {
+    candidate.llmProviders = candidate.llmProviders.map((p: any) => {
+      const existing = current.llmProviders?.find((e) => e.id === p.id);
+      return {
+        ...p,
+        apiKey: p.apiKey || existing?.apiKey || ''
+      };
+    });
+  }
+
   const pathKeys: (keyof AppSettings)[] = ['appPath', 'karafPath', 'intellijPath', 'projectsPath'];
   for (const key of pathKeys) {
     if (candidate[key] && typeof candidate[key] === 'string') {
@@ -606,7 +710,7 @@ app.post('/api/settings', (req, res) => {
       docsIndexService.stopWatching();
     }
   }
-  res.json(saved);
+  res.json(configService.sanitizeSecrets(saved));
 });
 
 // 7. Utilitários Shell
@@ -769,6 +873,157 @@ app.get('/api/wsl/distros', async (_req, res) => {
   res.json(status.availableDistros || []);
 });
 
+app.post('/api/wsl/start-docker-daemon', async (req, res) => {
+  const { distro } = req.body || {};
+  const result = await wslService.startDockerDaemon(distro);
+  res.json(result);
+});
+
+app.post('/api/wsl/distros/:name/terminate', async (req, res) => {
+  const success = await wslService.terminateDistro(req.params.name);
+  res.json({ success });
+});
+
+app.post('/api/wsl/distros/:name/terminal', async (req, res) => {
+  const success = await wslService.openWslTerminal(req.params.name);
+  res.json({ success });
+});
+
+app.get('/api/wsl/distros/:name/ip', async (req, res) => {
+  const ip = await wslService.getDistroIp(req.params.name);
+  res.json({ ip });
+});
+
+app.get('/api/wsl/dumps', async (req, res) => {
+  try {
+    const distro = req.query.distro as string | undefined;
+    const dumps = await wslService.listDmpFiles(distro);
+    res.json(dumps);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/wsl/open-dumps', async (req, res) => {
+  try {
+    const { distro } = req.body || {};
+    const result = await wslService.openDumpsFolder(distro);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, path: '', error: err.message });
+  }
+});
+
+app.post('/api/wsl/md5', (req, res) => {
+  try {
+    const { text } = req.body || {};
+    const result = wslService.generateMd5(text || '');
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/wsl/wsh-prerequisites', async (req, res) => {
+  try {
+    const distro = req.query.distro as string | undefined;
+    const result = await wslService.checkWshPrerequisites(distro);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/wsl/open-opt', async (req, res) => {
+  try {
+    const { distro } = req.body || {};
+    const result = await wslService.openWslOptFolder(distro);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, path: '', error: err.message });
+  }
+});
+
+// --- Snapshots WSL & INFR-Docker Setup ---
+app.get('/api/wsl/snapshots', async (req, res) => {
+  try {
+    const dir = req.query.dir as string | undefined;
+    const snapshots = await wslService.listSnapshots(dir);
+    res.json(snapshots);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/wsl/snapshots-dir', (_req, res) => {
+  res.json({ dir: wslService.getSnapshotsDir() });
+});
+
+app.put('/api/wsl/snapshots-dir', (req, res) => {
+  const { dir } = req.body || {};
+  if (!dir) return res.status(400).json({ error: 'dir obrigatório' });
+  const success = wslService.setSnapshotsDir(dir);
+  res.json({ success, dir });
+});
+
+app.post('/api/wsl/import', async (req, res) => {
+  try {
+    const { distroName, installDir, tarPath } = req.body || {};
+    if (!distroName || !installDir || !tarPath) {
+      return res.status(400).json({ success: false, error: 'distroName, installDir e tarPath são obrigatórios' });
+    }
+    const result = await wslService.importSnapshot(distroName, installDir, tarPath);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/wsl/export', async (req, res) => {
+  try {
+    const { distroName, outputPath } = req.body || {};
+    if (!distroName || !outputPath) {
+      return res.status(400).json({ success: false, error: 'distroName e outputPath são obrigatórios' });
+    }
+    const result = await wslService.exportSnapshot(distroName, outputPath);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/wsl/distros/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    if (!name) return res.status(400).json({ success: false, error: 'name é obrigatório' });
+    const result = await wslService.unregisterDistro(name);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/infr/scripts', async (req, res) => {
+  try {
+    const customPath = req.query.path as string | undefined;
+    const scripts = await wslService.checkInfrDockerScripts(customPath);
+    res.json(scripts);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/infr/run-script', async (req, res) => {
+  try {
+    const { scriptType, options } = req.body || {};
+    if (!scriptType) return res.status(400).json({ success: false, output: 'scriptType é obrigatório' });
+    const result = await wslService.runInfrSetupScript(scriptType, options || {});
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message });
+  }
+});
+
 app.post(['/api/wsl/target-distro', '/api/docker/target-distro'], async (req, res) => {
   const { distro } = req.body || {};
   dockerService.setTargetWslDistro(distro || null);
@@ -849,6 +1104,45 @@ app.post(['/api/docker/containers/:id/terminal', '/api/containers/:id/terminal']
   }
 });
 
+app.get(['/api/docker/containers/:id/inspect', '/api/containers/:id/inspect'], async (req, res) => {
+  try {
+    const details = await dockerService.inspectContainer(req.params.id);
+    if (!details) {
+      return res.status(404).json({ error: 'Container não encontrado' });
+    }
+    res.json(details);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post(['/api/docker/containers/:id/pause', '/api/containers/:id/pause'], async (req, res) => {
+  try {
+    const success = await dockerService.pauseContainer(req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post(['/api/docker/containers/:id/unpause', '/api/containers/:id/unpause'], async (req, res) => {
+  try {
+    const success = await dockerService.unpauseContainer(req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post(['/api/docker/containers/prune', '/api/containers/prune'], async (_req, res) => {
+  try {
+    const result = await dockerService.pruneContainers();
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message });
+  }
+});
+
 app.delete(['/api/docker/containers/:id', '/api/containers/:id'], async (req, res) => {
   try {
     const success = await dockerService.removeContainer(req.params.id);
@@ -888,10 +1182,23 @@ app.post(['/api/docker/oracle-datapump', '/api/containers/oracle-datapump'], asy
   }
 });
 
+app.post(['/api/docker/wta-karaf-client', '/api/containers/wta-karaf-client'], async (req, res) => {
+  try {
+    const { containerName } = req.body || {};
+    if (!containerName) {
+      return res.status(400).json({ success: false, error: 'containerName é obrigatório' });
+    }
+    const success = await dockerService.openWtaKarafClient(containerName);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post(['/api/docker/compose-up', '/api/containers/compose-up'], async (req, res) => {
   try {
-    const { composeFilePath, profile, detach } = req.body || {};
-    const result = await dockerService.composeUp(composeFilePath, { profile, detach }, (chunk) => {
+    const { composeFilePath, profile, detach, build } = req.body || {};
+    const result = await dockerService.composeUp(composeFilePath, { profile, detach, build }, (chunk) => {
       broadcastWs('docker:compose-log-chunk', chunk);
     });
     res.json(result);
@@ -902,13 +1209,35 @@ app.post(['/api/docker/compose-up', '/api/containers/compose-up'], async (req, r
 
 app.post(['/api/docker/compose-down', '/api/containers/compose-down'], async (req, res) => {
   try {
-    const { composeFilePath, profile } = req.body || {};
-    const result = await dockerService.composeDown(composeFilePath, { profile }, (chunk) => {
+    const { composeFilePath, profile, volumes } = req.body || {};
+    const result = await dockerService.composeDown(composeFilePath, { profile, volumes }, (chunk) => {
       broadcastWs('docker:compose-log-chunk', chunk);
     });
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ code: 1, stdout: '', stderr: err.message || 'Erro ao derrubar compose' });
+  }
+});
+
+app.post(['/api/docker/compose-restart', '/api/containers/compose-restart'], async (req, res) => {
+  try {
+    const { composeFilePath, profile } = req.body || {};
+    const result = await dockerService.composeRestart(composeFilePath, { profile }, (chunk) => {
+      broadcastWs('docker:compose-log-chunk', chunk);
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ code: 1, stdout: '', stderr: err.message || 'Erro ao reiniciar compose' });
+  }
+});
+
+app.post(['/api/docker/compose-logs', '/api/containers/compose-logs'], async (req, res) => {
+  try {
+    const { composeFilePath, profile, lines } = req.body || {};
+    const logs = await dockerService.getComposeLogs(composeFilePath, { profile, lines });
+    res.json({ logs });
+  } catch (err: any) {
+    res.status(500).json({ logs: `Erro: ${err.message}` });
   }
 });
 
@@ -948,6 +1277,12 @@ app.post('/api/karaf/bundles', async (req, res) => {
 app.post('/api/karaf/bundles/manage', async (req, res) => {
   const { action, bundleId, credentials } = req.body;
   const result = await karafService.manageBundle(action, bundleId, credentials);
+  res.json(result);
+});
+
+app.post('/api/karaf/bundles/manage-batch', async (req, res) => {
+  const { action, bundleIds, credentials } = req.body;
+  const result = await karafService.manageBundlesBatch(action, bundleIds, credentials);
   res.json(result);
 });
 

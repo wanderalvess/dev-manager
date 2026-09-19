@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.12.0] - 2026-09-17
+### Adicionado
+- Sistema completo de Onboarding Guiado e Tours Interativos (`src/renderer/src/components/onboarding/`):
+  - Tour global no cabeçalho apresentando as principais ferramentas e recursos do cockpit (Infraestrutura, Banco de Dados, Desenvolvimento, Busca Rápida `Ctrl+K`, Diagnósticos/Rede, Configurações e Atualização).
+  - Tours interativos contextuais dedicados em todas as telas do cockpit (Ambiente, Containers, Banco de Dados, Deploy Karaf, Git/Azure DevOps, Logs, Documentação RAG, Rotinas WinThor e Configurações).
+  - Coordenação inteligente (`tourCoordinator` e `usePageTour`) para evitar sobreposição, abrindo os tours por página apenas após o usuário concluir ou dispensar o tour inicial.
+  - Persistência de progresso e conclusão salva individualmente no `localStorage`.
+- Gerador automático e validador de ícones para distribuição Desktop (`scripts/generate-icons.cjs`):
+  - Garante a presença e conformidade dos ícones `.ico` e `.png` (mínimo 256x256) no pipeline do Electron através do hook de npm `prebuild`.
+  - Configuração explícita de ícone Windows em `electron-builder.json5`.
+
 ## [1.10.0] - 2026-09-16
 ### Adicionado
 - Autocomplete no editor SQL da página de Banco de Dados: sugere palavras-chave, tabelas e colunas (com resolução de `alias.coluna` a partir das cláusulas `FROM`/`JOIN`); navegação por setas, `Tab`/`Enter` pra aceitar, `Esc` pra fechar.

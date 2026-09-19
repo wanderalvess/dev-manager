@@ -29,16 +29,25 @@ import type {
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
+  DockerContainerInspect,
   WslDistroInfo,
+  WslActionResult,
   ContainerEnvironment,
   OracleMaintenanceResult,
   OracleDataPumpParams,
+  WslDumpFileInfo,
+  WshPrerequisiteStatus,
+  WslSnapshotFileInfo,
+  WslSnapshotActionResult,
+  InfrDockerScriptStatus,
   NetworkIpInfo,
   ExplainPlanResult,
   SystemMetrics,
   HttpHealthResult,
   DeployProfile,
   DeployStep,
+  DeployProfileHistoryEntry,
+  DeployProgressEvent,
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
@@ -52,7 +61,13 @@ import type {
   BackupResult,
   BackupFileInfo,
   BackupHistoryEntry,
-  BackupWebhookConfig
+  BackupWebhookConfig,
+  LlmProviderConfig,
+  LlmChatRequest,
+  LlmChatResponse,
+  LlmTestResult,
+  LlmRagQueryRequest,
+  LlmRagQueryResponse
 } from '../shared/types';
 
 const electronAPI = {
@@ -169,6 +184,12 @@ const electronAPI = {
     bundleId: string,
     credentials?: { user?: string; pass?: string; port?: number }
   ) => ipcRenderer.invoke('karaf:manage-bundle', action, bundleId, credentials),
+  manageKarafBundlesBatch: (
+    action: 'start' | 'stop' | 'restart' | 'uninstall' | 'refresh' | 'resolve',
+    bundleIds: string[],
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ success: boolean; output: string; processedCount: number }> =>
+    ipcRenderer.invoke('karaf:manage-bundles-batch', action, bundleIds, credentials),
   getKarafLog: (
     lines?: number,
     credentials?: { user?: string; pass?: string; port?: number }
@@ -205,10 +226,20 @@ const electronAPI = {
     ipcRenderer.invoke('deploy:run-profile', profile),
   runDeployStep: (step: DeployStep, profileName?: string): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('deploy:run-step', step, profileName),
+  abortDeploy: (): Promise<{ success: boolean }> => ipcRenderer.invoke('deploy:abort'),
+  getDeployProfileHistory: (): Promise<DeployProfileHistoryEntry[]> =>
+    ipcRenderer.invoke('deploy:get-history'),
+  clearDeployProfileHistory: (): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('deploy:clear-history'),
   onDeployLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('deploy:log-chunk', subscription);
     return () => ipcRenderer.removeListener('deploy:log-chunk', subscription);
+  },
+  onDeployStepProgress: (callback: (data: DeployProgressEvent) => void) => {
+    const subscription = (_: any, data: DeployProgressEvent) => callback(data);
+    ipcRenderer.on('deploy:step-progress', subscription);
+    return () => ipcRenderer.removeListener('deploy:step-progress', subscription);
   },
 
   // Git & Azure DevOps
@@ -246,6 +277,17 @@ const electronAPI = {
     ipcRenderer.invoke('docs:test-confluence-connection', config),
   testJiraConnection: (config: JiraSourceConfig): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('docs:test-jira-connection', config),
+  testLlmConnection: (config: LlmProviderConfig): Promise<LlmTestResult> =>
+    ipcRenderer.invoke('llm:test-connection', config),
+  llmChat: (request: LlmChatRequest): Promise<LlmChatResponse> =>
+    ipcRenderer.invoke('llm:chat', request),
+  askDocsWithAi: (request: LlmRagQueryRequest): Promise<LlmRagQueryResponse> =>
+    ipcRenderer.invoke('llm:ask-with-docs', request),
+  // Aliases de compatibilidade
+  askLlm: (request: LlmRagQueryRequest, providerConfig?: LlmProviderConfig): Promise<LlmRagQueryResponse> =>
+    ipcRenderer.invoke('llm:ask-with-docs', request, providerConfig),
+  chatLlm: (request: LlmChatRequest, providerConfig?: LlmProviderConfig): Promise<LlmChatResponse> =>
+    ipcRenderer.invoke('llm:chat', request, providerConfig),
   openDocFile: (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> =>
     ipcRenderer.invoke('docs:open-file', filePath, mode),
   readDocContent: (filePath: string): Promise<string | null> =>
@@ -312,6 +354,40 @@ const electronAPI = {
 
   // Gerenciador de Containers (Docker / Podman / WSL)
   listWslDistros: (): Promise<WslDistroInfo[]> => ipcRenderer.invoke('wsl:list-distros'),
+  startWslDockerDaemon: (distro: string): Promise<WslActionResult> =>
+    ipcRenderer.invoke('wsl:start-docker-daemon', distro),
+  terminateWslDistro: (distro: string): Promise<boolean> =>
+    ipcRenderer.invoke('wsl:terminate-distro', distro),
+  openWslTerminal: (distro: string): Promise<boolean> =>
+    ipcRenderer.invoke('wsl:open-terminal', distro),
+  getWslDistroIp: (distro?: string): Promise<string | null> =>
+    ipcRenderer.invoke('wsl:get-distro-ip', distro),
+  openWslDumpsFolder: (distro?: string): Promise<{ success: boolean; path: string; error?: string }> =>
+    ipcRenderer.invoke('wsl:open-dumps-folder', distro),
+  listWslDmpFiles: (distro?: string): Promise<WslDumpFileInfo[]> =>
+    ipcRenderer.invoke('wsl:list-dmp-files', distro),
+  generateMd5: (text: string): Promise<{ lower: string; upper: string }> =>
+    ipcRenderer.invoke('wsl:generate-md5', text),
+  checkWshPrerequisites: (distro?: string): Promise<WshPrerequisiteStatus[]> =>
+    ipcRenderer.invoke('wsl:check-wsh-prerequisites', distro),
+  openWslOptFolder: (distro?: string): Promise<{ success: boolean; path: string; error?: string }> =>
+    ipcRenderer.invoke('wsl:open-opt-folder', distro),
+  getWslSnapshotsDir: (): Promise<string> =>
+    ipcRenderer.invoke('wsl:get-snapshots-dir'),
+  setWslSnapshotsDir: (dir: string): Promise<boolean> =>
+    ipcRenderer.invoke('wsl:set-snapshots-dir', dir),
+  listWslSnapshots: (dir?: string): Promise<WslSnapshotFileInfo[]> =>
+    ipcRenderer.invoke('wsl:list-snapshots', dir),
+  importWslSnapshot: (params: { distroName: string; installDir: string; tarPath: string }): Promise<WslSnapshotActionResult> =>
+    ipcRenderer.invoke('wsl:import-snapshot', params),
+  exportWslSnapshot: (params: { distroName: string; outputPath: string }): Promise<WslSnapshotActionResult> =>
+    ipcRenderer.invoke('wsl:export-snapshot', params),
+  unregisterWslDistro: (distroName: string): Promise<WslSnapshotActionResult> =>
+    ipcRenderer.invoke('wsl:unregister-distro', distroName),
+  checkInfrDockerScripts: (customPath?: string): Promise<InfrDockerScriptStatus[]> =>
+    ipcRenderer.invoke('infr:check-scripts', customPath),
+  runInfrSetupScript: (scriptType: 'oracle' | 'wta' | 'wsh', options: any): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('infr:run-setup-script', { scriptType, options }),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
     ipcRenderer.invoke('docker:set-target-wsl-distro', distro),
   getContainerEnvironments: (): Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }> =>
@@ -345,12 +421,20 @@ const electronAPI = {
     ipcRenderer.invoke('docker:oracle-sqlplus', containerName, user, password),
   execOracleDataPump: (params: OracleDataPumpParams): Promise<OracleMaintenanceResult> =>
     ipcRenderer.invoke('docker:oracle-datapump', params),
+  openWtaKarafClient: (containerName: string): Promise<boolean> =>
+    ipcRenderer.invoke('docker:wta-karaf-client', containerName),
 
   getDockerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('docker:get-status'),
   listDockerContainers: (): Promise<DockerContainerInfo[]> => ipcRenderer.invoke('docker:list-containers'),
   startDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:start', containerId),
   stopDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:stop', containerId),
   restartDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:restart', containerId),
+  pauseDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:pause', containerId),
+  unpauseDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:unpause', containerId),
+  inspectDockerContainer: (containerId: string): Promise<DockerContainerInspect | null> =>
+    ipcRenderer.invoke('docker:inspect', containerId),
+  pruneDockerContainers: (): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('docker:prune'),
   getDockerLogs: (containerId: string, lines?: number): Promise<string> =>
     ipcRenderer.invoke('docker:logs', containerId, lines),
   removeDockerContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('docker:remove', containerId),
@@ -360,14 +444,24 @@ const electronAPI = {
     ipcRenderer.invoke('docker:open-terminal', containerId, shell),
   dockerComposeUp: (
     composeFilePath: string,
-    options?: { profile?: string; detach?: boolean }
+    options?: { profile?: string; detach?: boolean; build?: boolean }
   ): Promise<{ code: number; stdout: string; stderr: string }> =>
     ipcRenderer.invoke('docker:compose-up', composeFilePath, options),
   dockerComposeDown: (
     composeFilePath: string,
-    options?: { profile?: string }
+    options?: { profile?: string; volumes?: boolean }
   ): Promise<{ code: number; stdout: string; stderr: string }> =>
     ipcRenderer.invoke('docker:compose-down', composeFilePath, options),
+  dockerComposeRestart: (
+    composeFilePath: string,
+    options?: { profile?: string }
+  ): Promise<{ code: number; stdout: string; stderr: string }> =>
+    ipcRenderer.invoke('docker:compose-restart', composeFilePath, options),
+  dockerComposeLogs: (
+    composeFilePath: string,
+    options?: { profile?: string; lines?: number }
+  ): Promise<string> =>
+    ipcRenderer.invoke('docker:compose-logs', composeFilePath, options),
   dockerComposeStatus: (composeFilePath: string, profile?: string): Promise<ComposeServiceStatus[]> =>
     ipcRenderer.invoke('docker:compose-status', composeFilePath, profile),
   onDockerComposeLogChunk: (callback: (chunk: string) => void) => {
@@ -382,6 +476,12 @@ const electronAPI = {
   startContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:start', containerId),
   stopContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:stop', containerId),
   restartContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:restart', containerId),
+  pauseContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:pause', containerId),
+  unpauseContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:unpause', containerId),
+  inspectContainer: (containerId: string): Promise<DockerContainerInspect | null> =>
+    ipcRenderer.invoke('container:inspect', containerId),
+  pruneContainers: (): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('container:prune'),
   getContainerLogs: (containerId: string, lines?: number): Promise<string> =>
     ipcRenderer.invoke('container:logs', containerId, lines),
   removeContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:remove', containerId),

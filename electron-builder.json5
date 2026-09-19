@@ -2,7 +2,8 @@
   "appId": "com.devmanager.cockpit",
   "productName": "Dev Manager",
   "directories": {
-    "output": "release"
+    "output": "release",
+    "buildResources": "build"
   },
   "electronDist": "node_modules/electron/dist",
   "electronDownload": {
@@ -21,7 +22,8 @@
   ],
   "win": {
     "target": ["nsis", "portable"],
-    "requestedExecutionLevel": "asInvoker"
+    "requestedExecutionLevel": "asInvoker",
+    "icon": "build/icon.ico"
   },
   "nsis": {
     "oneClick": false,

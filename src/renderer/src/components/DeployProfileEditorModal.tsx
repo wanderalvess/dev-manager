@@ -14,7 +14,12 @@ import {
   Save,
   Layers,
   Sparkles,
-  ListTree
+  ListTree,
+  Copy,
+  Clock,
+  Globe,
+  Server,
+  AlertTriangle
 } from 'lucide-react';
 import {
   DeployProfile,
@@ -74,6 +79,24 @@ const STEP_TYPE_OPTIONS: { type: DeployStepType; label: string; desc: string; ic
     label: 'Comando / Script Genérico',
     desc: 'Executa qualquer comando num diretório, com saída em tempo real',
     icon: Terminal
+  },
+  {
+    type: 'wait',
+    label: 'Aguardar / Delay (Sleep)',
+    desc: 'Pausa a esteira por N segundos com contagem regressiva no log',
+    icon: Clock
+  },
+  {
+    type: 'http-healthcheck',
+    label: 'Healthcheck HTTP (Sondagem)',
+    desc: 'Verifica se uma URL responde com HTTP 200/esperado antes de prosseguir',
+    icon: Globe
+  },
+  {
+    type: 'service-action',
+    label: 'Serviço Windows (Iniciar/Parar)',
+    desc: 'Controla inicialização ou parada de serviços do Windows (ex: Oracle, Postgres)',
+    icon: Server
   }
 ];
 
@@ -93,6 +116,12 @@ const stepTypeDefaultName = (type: DeployStepType): string => {
       return 'Reiniciar Container';
     case 'command':
       return 'Comando Genérico';
+    case 'wait':
+      return 'Aguardar Inicialização';
+    case 'http-healthcheck':
+      return 'Healthcheck HTTP';
+    case 'service-action':
+      return 'Ação de Serviço Windows';
     default:
       return 'Nova Etapa';
   }
@@ -161,6 +190,20 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
     } else if (editingStepIndex !== null && editingStepIndex > index) {
       setEditingStepIndex(editingStepIndex - 1);
     }
+  };
+
+  const handleDuplicateStep = (index: number) => {
+    const stepToClone = steps[index];
+    if (!stepToClone) return;
+    const cloned: DeployStep = {
+      ...structuredClone(stepToClone),
+      id: `deploy-step-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      name: `${stepToClone.name} (Cópia)`
+    };
+    const newSteps = [...steps];
+    newSteps.splice(index + 1, 0, cloned);
+    setSteps(newSteps);
+    setEditingStepIndex(index + 1);
   };
 
   const handleMoveStep = (index: number, direction: 'up' | 'down') => {
@@ -336,7 +379,14 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                         </span>
                         <div className="truncate">
                           <p className="font-semibold text-foreground truncate">{step.name || 'Sem nome'}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{step.type}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-muted-foreground truncate font-mono">{step.type}</span>
+                            {step.continueOnError && (
+                              <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/30 px-1 py-0.2 rounded font-mono" title="Não aborta o deploy se falhar">
+                                tolerante
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -358,6 +408,14 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                           title="Mover para baixo"
                         >
                           <ArrowDown className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDuplicateStep(idx)}
+                          className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded"
+                          title="Duplicar etapa"
+                        >
+                          <Copy className="w-3 h-3" />
                         </button>
                         <button
                           type="button"
@@ -746,6 +804,186 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                     </div>
                   </>
                 )}
+
+                {/* Campos: Aguardar / Delay */}
+                {editingStep.type === 'wait' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                      Tempo de Espera (em segundos)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min={1}
+                        max={600}
+                        value={editingStep.waitDurationSeconds ?? 5}
+                        onChange={(e) => handleUpdateCurrentStep({ waitDurationSeconds: Math.max(1, parseInt(e.target.value) || 1) })}
+                        className="w-32 bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        A esteira pausará com contagem regressiva em tempo real no console.
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Campos: Healthcheck HTTP */}
+                {editingStep.type === 'http-healthcheck' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                        URL do Endpoint HTTP
+                      </label>
+                      <input
+                        type="text"
+                        value={editingStep.healthcheckUrl || ''}
+                        onChange={(e) => handleUpdateCurrentStep({ healthcheckUrl: e.target.value })}
+                        placeholder="Ex: http://localhost:8080/cxf/healthcheck ou http://localhost:8889"
+                        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                          Status Esperado
+                        </label>
+                        <input
+                          type="number"
+                          value={editingStep.healthcheckExpectedStatus ?? 200}
+                          onChange={(e) => handleUpdateCurrentStep({ healthcheckExpectedStatus: parseInt(e.target.value) || 200 })}
+                          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                          Timeout (s)
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={60}
+                          value={editingStep.healthcheckTimeoutSeconds ?? 5}
+                          onChange={(e) => handleUpdateCurrentStep({ healthcheckTimeoutSeconds: Math.max(1, parseInt(e.target.value) || 5) })}
+                          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                          Tentativas
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={60}
+                          value={editingStep.healthcheckRetries ?? 10}
+                          onChange={(e) => handleUpdateCurrentStep({ healthcheckRetries: Math.max(1, parseInt(e.target.value) || 10) })}
+                          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Realiza requisições periódicas a cada 2 segundos até o endpoint responder com o código esperado ou esgotar as tentativas.
+                    </p>
+                  </div>
+                )}
+
+                {/* Campos: Serviço Windows */}
+                {editingStep.type === 'service-action' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                        Ação no Serviço
+                      </label>
+                      <select
+                        value={editingStep.serviceAction || 'start'}
+                        onChange={(e) => handleUpdateCurrentStep({ serviceAction: e.target.value as any })}
+                        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="start">Iniciar Serviço (start)</option>
+                        <option value="stop">Parar Serviço (stop)</option>
+                        <option value="restart">Reiniciar Serviço (restart)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                        Nome do Serviço Windows
+                      </label>
+                      <input
+                        type="text"
+                        value={editingStep.serviceName || ''}
+                        onChange={(e) => handleUpdateCurrentStep({ serviceName: e.target.value })}
+                        placeholder="Ex: OracleServiceXE, postgresql-x64-15, Winthor-Karaf"
+                        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Nome de identificação do serviço no Windows (conforme exibido em services.msc).
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Configurações Avançadas e Tolerância */}
+                <div className="pt-4 border-t border-border/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-start gap-2.5 cursor-pointer text-xs">
+                      <input
+                        type="checkbox"
+                        checked={editingStep.continueOnError ?? false}
+                        onChange={(e) => handleUpdateCurrentStep({ continueOnError: e.target.checked })}
+                        className="rounded border-border text-amber-500 focus:ring-amber-500 mt-0.5"
+                      />
+                      <div>
+                        <span className="text-foreground font-semibold flex items-center gap-1.5">
+                          Tolerar falha nesta etapa (continueOnError)
+                        </span>
+                        <span className="text-[11px] text-muted-foreground block">
+                          Se ativado, um código de erro ou falha nesta etapa emitirá um aviso no log mas não interromperá as próximas etapas.
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                        Timeout Máximo (segundos, opcional)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editingStep.timeoutSeconds ?? ''}
+                        onChange={(e) => handleUpdateCurrentStep({ timeoutSeconds: e.target.value ? parseInt(e.target.value) : undefined })}
+                        placeholder="Sem limite de tempo (padrão)"
+                        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dica de Variáveis Dinâmicas */}
+                  <div className="bg-muted/20 border border-border/60 rounded-lg p-2.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground mb-1.5">
+                      <Sparkles className="w-3 h-3 text-primary" /> Variáveis dinâmicas para comandos e caminhos:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { token: '{PROJECTS_PATH}', desc: 'Pasta de projetos' },
+                        { token: '{KARAF_PATH}', desc: 'Pasta do Karaf' },
+                        { token: '{JDK_PATH}', desc: 'Pasta do JDK' },
+                        { token: '{DATE}', desc: 'AAAA-MM-DD' },
+                        { token: '{TIMESTAMP}', desc: 'Data e hora' }
+                      ].map((v) => (
+                        <span
+                          key={v.token}
+                          className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-card border border-border text-foreground"
+                          title={v.desc}
+                        >
+                          <code className="text-primary font-bold">{v.token}</code>
+                          <span className="text-muted-foreground text-[9px]">({v.desc})</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-20">
