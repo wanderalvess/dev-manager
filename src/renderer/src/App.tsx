@@ -1,15 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { Header } from './components/Header';
-import { EnvironmentPage } from './pages/EnvironmentPage';
-import { DatabasePage } from './pages/DatabasePage';
-import { ContainersPage } from './pages/ContainersPage';
-import { DeployPage } from './pages/DeployPage';
-import { GitAzurePage } from './pages/GitAzurePage';
-import { RoutinesPage } from './pages/RoutinesPage';
-import { DocsPage } from './pages/DocsPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { HelpPage } from './pages/HelpPage';
-import { LogsPage } from './pages/LogsPage';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
 import { ToastHost, showToast } from './components/ToastHost';
 import { OnboardingTour } from './components/onboarding/OnboardingTour';
@@ -19,6 +10,26 @@ import { PAGE_TOURS_PREF_KEY } from './components/onboarding/usePageTour';
 import { TOUR_STEPS, TOUR_STORAGE_KEY } from './components/onboarding/tourSteps';
 import { WELCOME_STORAGE_KEY } from './components/onboarding/welcomeSteps';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
+
+// Code-split cada página: cada aba só baixa/parseia seu próprio bundle na primeira
+// vez que é visitada (visitedTabs em conjunto com isso evita tanto o parse quanto o
+// download antecipado de todas as ~10 páginas no startup do app).
+const EnvironmentPage = lazy(() => import('./pages/EnvironmentPage').then((m) => ({ default: m.EnvironmentPage })));
+const DatabasePage = lazy(() => import('./pages/DatabasePage').then((m) => ({ default: m.DatabasePage })));
+const ContainersPage = lazy(() => import('./pages/ContainersPage').then((m) => ({ default: m.ContainersPage })));
+const DeployPage = lazy(() => import('./pages/DeployPage').then((m) => ({ default: m.DeployPage })));
+const GitAzurePage = lazy(() => import('./pages/GitAzurePage').then((m) => ({ default: m.GitAzurePage })));
+const RoutinesPage = lazy(() => import('./pages/RoutinesPage').then((m) => ({ default: m.RoutinesPage })));
+const DocsPage = lazy(() => import('./pages/DocsPage').then((m) => ({ default: m.DocsPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
+const LogsPage = lazy(() => import('./pages/LogsPage').then((m) => ({ default: m.LogsPage })));
+
+const PageLoadingFallback: React.FC = () => (
+  <div className="h-full w-full flex items-center justify-center">
+    <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+  </div>
+);
 
 // Decide a aba inicial: se o onboarding inicial ainda não foi concluído, a primeira tela no primeiro uso é sempre 'help' (Central de Ajuda).
 const getInitialTab = (): string => {
@@ -272,6 +283,7 @@ export const App: React.FC = () => {
       {/* Conteúdo da Aba Ativa */}
 
       <main className="flex-1 overflow-hidden bg-background relative">
+        <Suspense fallback={<PageLoadingFallback />}>
         {visitedTabs.has('env') && (
           <div className={`h-full w-full ${activeTab === 'env' ? '' : 'hidden'}`}>
             <EnvironmentPage
@@ -364,6 +376,7 @@ export const App: React.FC = () => {
             />
           </div>
         )}
+        </Suspense>
       </main>
 
       <ToastHost />
