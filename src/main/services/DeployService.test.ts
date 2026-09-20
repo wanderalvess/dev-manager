@@ -628,6 +628,7 @@ describe('DeployService', () => {
         if (patch.deployProfileHistory !== undefined) {
           mockHistory = patch.deployProfileHistory;
         }
+        return { deployProfileHistory: mockHistory } as any;
       });
 
       const profile: DeployProfile = {

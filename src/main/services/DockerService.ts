@@ -667,6 +667,9 @@ export class DockerService {
             })
           : [],
         command: Array.isArray(data.Config?.Cmd) ? data.Config.Cmd.join(' ') : (data.Config?.Cmd || ''),
+        entrypoint: Array.isArray(data.Config?.Entrypoint) ? data.Config.Entrypoint : undefined,
+        cmd: Array.isArray(data.Config?.Cmd) ? data.Config.Cmd : undefined,
+        platform: data.Platform || undefined,
         workingDir: data.Config?.WorkingDir || '',
         restartPolicy: data.HostConfig?.RestartPolicy ? {
           name: data.HostConfig.RestartPolicy.Name || 'no',

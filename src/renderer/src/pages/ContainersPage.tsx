@@ -41,7 +41,8 @@ import {
   Filter,
   Key,
   Archive,
-  Sliders
+  Sliders,
+  Sparkles
 } from 'lucide-react';
 import {
   DockerContainerInfo,
@@ -679,7 +680,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   const handleSaveCurrentAsEnvironment = async () => {
     if (!newEnvName.trim() || !window.electronAPI?.saveContainerEnvironment) return;
 
-    let slots: { id?: string; name: string; delay?: number }[] = [];
+    let slots: { id: string; name: string; delay?: number }[] = [];
     if (envPresetType === 'doc') {
       slots = [
         { id: '1', name: 'oracle-local', delay: 30 },
@@ -798,10 +799,10 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   // Iniciar Docker Daemon na Distro WSL (com auto-recuperação do erro)
   const handleStartDockerDaemon = async (distro?: string) => {
     const targetDistro = distro || smartError?.distroName || selectedDistro || daemonStatus?.wslDistro;
-    if (!targetDistro || !window.electronAPI?.startDockerDaemon) return;
+    if (!targetDistro || !window.electronAPI?.startWslDockerDaemon) return;
     setIsStartingDaemon(true);
     try {
-      const res = await window.electronAPI.startDockerDaemon(targetDistro);
+      const res = await window.electronAPI.startWslDockerDaemon(targetDistro);
       if (res.success) {
         const retry = smartError?.retryAction;
         setSmartError(null);
@@ -1031,11 +1032,11 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   };
 
   const handleComposeLogs = async () => {
-    if (!composeFilePath.trim() || !window.electronAPI?.getDockerComposeLogs) return;
+    if (!composeFilePath.trim() || !window.electronAPI?.dockerComposeLogs) return;
     try {
-      const output = await window.electronAPI.getDockerComposeLogs(composeFilePath.trim(), {
+      const output = await window.electronAPI.dockerComposeLogs(composeFilePath.trim(), {
         profile: composeProfile.trim() || undefined,
-        tail: 100
+        lines: 100
       });
       setComposeOutput(output || '(Nenhum log retornado pelo Compose)');
     } catch (err: any) {
@@ -4898,7 +4899,7 @@ DB_PASSWORD=pcinfo
                     </div>
                     <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground">Política de Reinício</span>
-                      <div className="text-xs text-foreground font-mono">{inspectingContainer.restartPolicy || 'no'}</div>
+                      <div className="text-xs text-foreground font-mono">{inspectingContainer.restartPolicy?.name || 'no'}</div>
                     </div>
                     <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground">Diretório de Trabalho</span>
@@ -4929,37 +4930,50 @@ DB_PASSWORD=pcinfo
                     <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground">Endereço IP</span>
                       <div className="text-xs font-mono font-bold text-sky-600 dark:text-sky-400 select-all">
-                        {inspectingContainer.network.ipAddress || 'Host Mode / Nenhum'}
+                        {inspectingContainer.networkSettings.ipAddress || 'Host Mode / Nenhum'}
                       </div>
                     </div>
                     <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground">Gateway</span>
                       <div className="text-xs font-mono text-foreground select-all">
-                        {inspectingContainer.network.gateway || 'N/D'}
+                        {inspectingContainer.networkSettings.gateway || 'N/D'}
                       </div>
                     </div>
                     <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
                       <span className="text-[10px] uppercase font-bold text-muted-foreground">Endereço MAC</span>
                       <div className="text-xs font-mono text-foreground select-all">
-                        {inspectingContainer.network.macAddress || 'N/D'}
+                        {inspectingContainer.networkSettings.macAddress || 'N/D'}
                       </div>
                     </div>
                   </div>
 
                   <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground block">Mapeamento de Portas</span>
-                    {inspectingContainer.ports.length === 0 ? (
-                      <div className="text-xs text-muted-foreground">Nenhuma porta mapeada para o host.</div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {inspectingContainer.ports.map((p, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-2 bg-card rounded-lg border border-border/60 text-xs font-mono">
-                            <span className="text-muted-foreground">Container: {p.containerPort}/{p.protocol}</span>
-                            <span className="text-sky-600 dark:text-sky-400 font-semibold">Host: {p.hostIp || '0.0.0.0'}:{p.hostPort}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {(() => {
+                      const portEntries: { containerPort: string; protocol: string; hostIp?: string; hostPort: string }[] = Object.entries(
+                        inspectingContainer.networkSettings.ports || {}
+                      ).flatMap(([key, bindings]) => {
+                        const [containerPort, protocol] = key.split('/');
+                        return (bindings || []).map((b) => ({
+                          containerPort,
+                          protocol: protocol || 'tcp',
+                          hostIp: b.hostIp,
+                          hostPort: b.hostPort
+                        }));
+                      });
+                      return portEntries.length === 0 ? (
+                        <div className="text-xs text-muted-foreground">Nenhuma porta mapeada para o host.</div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {portEntries.map((p, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-card rounded-lg border border-border/60 text-xs font-mono">
+                              <span className="text-muted-foreground">Container: {p.containerPort}/{p.protocol}</span>
+                              <span className="text-sky-600 dark:text-sky-400 font-semibold">Host: {p.hostIp || '0.0.0.0'}:{p.hostPort}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}

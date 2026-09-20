@@ -28,6 +28,7 @@ import type {
   DatabaseConnectionConfig,
   QueryResult,
   DockerContainerInfo,
+  DockerContainerInspect,
   DockerDaemonStatus,
   WslDistroInfo,
   ContainerEnvironment,
@@ -37,6 +38,7 @@ import type {
   WshPrerequisiteStatus,
   WslSnapshotFileInfo,
   WslSnapshotActionResult,
+  WslActionResult,
   InfrDockerScriptStatus,
   NetworkIpInfo,
   ExplainPlanResult,
@@ -258,7 +260,7 @@ export interface ElectronAPI {
 
   // Gerenciador de Containers (Docker / Podman / WSL)
   listWslDistros?: () => Promise<WslDistroInfo[]>;
-  startWslDockerDaemon?: (distro: string) => Promise<{ success: boolean; message: string }>;
+  startWslDockerDaemon?: (distro: string) => Promise<WslActionResult>;
   terminateWslDistro?: (distro: string) => Promise<boolean>;
   openWslTerminal?: (distro: string) => Promise<boolean>;
   getWslDistroIp?: (distro?: string) => Promise<string | null>;
@@ -303,18 +305,30 @@ export interface ElectronAPI {
   startDockerContainer: (containerId: string) => Promise<boolean>;
   stopDockerContainer: (containerId: string) => Promise<boolean>;
   restartDockerContainer: (containerId: string) => Promise<boolean>;
+  pauseDockerContainer: (containerId: string) => Promise<boolean>;
+  unpauseDockerContainer: (containerId: string) => Promise<boolean>;
+  inspectDockerContainer: (containerId: string) => Promise<DockerContainerInspect | null>;
+  pruneDockerContainers: () => Promise<{ success: boolean; output: string }>;
   getDockerLogs: (containerId: string, lines?: number) => Promise<string>;
   removeDockerContainer: (containerId: string) => Promise<boolean>;
   getDockerContainerStats: () => Promise<DockerContainerStats[]>;
   openDockerContainerTerminal: (containerId: string, shell?: string) => Promise<boolean>;
   dockerComposeUp: (
     composeFilePath: string,
-    options?: { profile?: string; detach?: boolean }
+    options?: { profile?: string; detach?: boolean; build?: boolean }
   ) => Promise<{ code: number; stdout: string; stderr: string }>;
   dockerComposeDown: (
     composeFilePath: string,
+    options?: { profile?: string; volumes?: boolean }
+  ) => Promise<{ code: number; stdout: string; stderr: string }>;
+  dockerComposeRestart: (
+    composeFilePath: string,
     options?: { profile?: string }
   ) => Promise<{ code: number; stdout: string; stderr: string }>;
+  dockerComposeLogs: (
+    composeFilePath: string,
+    options?: { profile?: string; lines?: number }
+  ) => Promise<string>;
   dockerComposeStatus: (composeFilePath: string, profile?: string) => Promise<ComposeServiceStatus[]>;
   onDockerComposeLogChunk: (callback: (chunk: string) => void) => () => void;
 
@@ -324,6 +338,10 @@ export interface ElectronAPI {
   startContainer?: (containerId: string) => Promise<boolean>;
   stopContainer?: (containerId: string) => Promise<boolean>;
   restartContainer?: (containerId: string) => Promise<boolean>;
+  pauseContainer?: (containerId: string) => Promise<boolean>;
+  unpauseContainer?: (containerId: string) => Promise<boolean>;
+  inspectContainer?: (containerId: string) => Promise<DockerContainerInspect | null>;
+  pruneContainers?: () => Promise<{ success: boolean; output: string }>;
   getContainerLogs?: (containerId: string, lines?: number) => Promise<string>;
   removeContainer?: (containerId: string) => Promise<boolean>;
   getContainerStats?: () => Promise<DockerContainerStats[]>;

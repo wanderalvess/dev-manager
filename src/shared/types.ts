@@ -1050,6 +1050,9 @@ export interface DockerContainerInspect {
   mounts: DockerContainerMount[];
   env: string[];
   command?: string;
+  entrypoint?: string[];
+  cmd?: string[];
+  platform?: string;
   workingDir?: string;
   restartPolicy?: {
     name: string;
