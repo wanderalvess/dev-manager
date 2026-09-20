@@ -61,6 +61,16 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { CONTAINERS_TOUR_STEPS, CONTAINERS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/containersTour';
+import {
+  buildEnvironmentSlots,
+  computeStackTopology,
+  extractOraclePort,
+  extractWtaPort,
+  filterContainers,
+  flattenPortBindings,
+  getOracleTnsConfig,
+  parsePortLinks
+} from '../utils/dockerContainerUtils';
 
 interface ContainersPageProps {
   isActive?: boolean;
@@ -386,16 +396,6 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
     }
   };
 
-  // Helper para extrair porta do WTA
-  const extractWtaPort = (ports?: string): number => {
-    if (!ports) return 8080;
-    const match = ports.match(/0\.0\.0\.0:(\d+)->8080/);
-    if (match) return parseInt(match[1], 10);
-    const altMatch = ports.match(/:(\d+)->/);
-    if (altMatch) return parseInt(altMatch[1], 10);
-    return 8080;
-  };
-
   // Abrir Console Karaf interativo no WTA
   const handleOpenKarafClient = async (containerName: string) => {
     if (!window.electronAPI?.openWtaKarafClient) return;
@@ -680,31 +680,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   const handleSaveCurrentAsEnvironment = async () => {
     if (!newEnvName.trim() || !window.electronAPI?.saveContainerEnvironment) return;
 
-    let slots: { id: string; name: string; delay?: number }[] = [];
-    if (envPresetType === 'doc') {
-      slots = [
-        { id: '1', name: 'oracle-local', delay: 30 },
-        { id: '2', name: 'wta-local', delay: 10 },
-        { id: '3', name: 'wsh-local' }
-      ];
-    } else if (envPresetType === 'infr') {
-      slots = [
-        { id: '1', name: 'oracle-winthor', delay: 45 },
-        { id: '2', name: 'linux-winthor', delay: 15 },
-        { id: '3', name: 'wsh-winthor' }
-      ];
-    } else {
-      // Monta ambiente baseado nos containers atuais
-      const oracleContainer = containers.find((c) => c.names.toLowerCase().includes('oracle'));
-      const wtaContainer = containers.find((c) => c.names.toLowerCase().includes('wta') || c.names.toLowerCase().includes('linux-winthor'));
-      const wshContainer = containers.find((c) => c.names.toLowerCase().includes('wsh'));
-
-      slots = [
-        { id: '1', name: oracleContainer ? oracleContainer.names.replace(/^\//, '') : 'oracle-local', delay: 30 },
-        { id: '2', name: wtaContainer ? wtaContainer.names.replace(/^\//, '') : 'wta-local', delay: 10 },
-        ...(wshContainer ? [{ id: '3', name: wshContainer.names.replace(/^\//, '') }] : [])
-      ];
-    }
+    const slots = buildEnvironmentSlots(envPresetType, containers);
 
     const newEnv: ContainerEnvironment = {
       id: String(Date.now()),
@@ -925,43 +901,6 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   };
 
   // Parser para portas publicadas em container
-  const parsePortLinks = (portsStr: string) => {
-    if (!portsStr) return [];
-    const regex = /(?:[\d.]+::?|\[::\]:)?(\d+)->(\d+)\/([a-z]+)/gi;
-    const matches: { hostPort: number; containerPort: number; protocol: string }[] = [];
-    let match;
-    while ((match = regex.exec(portsStr)) !== null) {
-      matches.push({
-        hostPort: parseInt(match[1], 10),
-        containerPort: parseInt(match[2], 10),
-        protocol: match[3]
-      });
-    }
-    return matches;
-  };
-
-  // Extrai porta do host mapeada para o listener Oracle (padrão XE: 1522 ou 1521)
-  const extractOraclePort = (portsStr?: string): string => {
-    if (!portsStr) return '1522';
-    const match = portsStr.match(/(?:[\d.]+::?|\[::\]:)?(\d+)->1521/);
-    if (match && match[1]) return match[1];
-    const directMatch = portsStr.match(/(\d+):1521/);
-    if (directMatch && directMatch[1]) return directMatch[1];
-    return '1522';
-  };
-
-  // Bloco oficial tnsnames.ora para conexão local
-  const getOracleTnsConfig = (port = '1522', alias = 'LOCAL_DOCKER', sid = 'XE'): string => {
-    return `${alias} =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))
-    (CONNECT_DATA =
-      (SERVER = DEDICATED)
-      (SERVICE_NAME = ${sid})
-    )
-  )`;
-  };
-
   // Docker Compose: Selecionar arquivo
   const handleSelectComposeFile = async () => {
     if (!window.electronAPI?.selectFile) return;
@@ -1140,63 +1079,14 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   const handleCopyLogs = () => copyLogsToClipboard(logs, 'Logs copiados!');
 
   // Filtro
-  const filteredContainers = useMemo(() => {
-    if (!filter) return containers;
-    const lower = filter.toLowerCase();
-    return containers.filter(
-      (c) =>
-        c.names.toLowerCase().includes(lower) ||
-        c.image.toLowerCase().includes(lower) ||
-        c.id.toLowerCase().includes(lower) ||
-        c.ports.toLowerCase().includes(lower)
-    );
-  }, [containers, filter]);
+  const filteredContainers = useMemo(() => filterContainers(containers, filter), [containers, filter]);
 
   // Estatísticas
   const runningCount = useMemo(() => containers.filter((c) => c.state === 'running').length, [containers]);
   const stoppedCount = useMemo(() => containers.filter((c) => c.state !== 'running').length, [containers]);
 
   // Topologia do Ambiente WinThor (WSL2 -> Oracle -> WTA -> WSH)
-  const stackTopology = useMemo(() => {
-    const oracle = containers.find((c) => c.names.toLowerCase().includes('oracle'));
-    const wta = containers.find(
-      (c) => c.names.toLowerCase().includes('wta') || c.names.toLowerCase().includes('linux')
-    );
-    const wsh = containers.find((c) => c.names.toLowerCase().includes('wsh'));
-
-    const oracleRunning = oracle?.state === 'running';
-    const wtaRunning = wta?.state === 'running';
-    const wshRunning = wsh?.state === 'running';
-
-    const isStackComplete = Boolean(oracle && wta && oracleRunning && wtaRunning && (!wsh || wshRunning));
-    const hasMissingDependency = Boolean((wtaRunning || wshRunning) && !oracleRunning);
-
-    return {
-      oracle: {
-        container: oracle || null,
-        name: oracle ? oracle.names.replace(/^\//, '') : 'oracle-winthor',
-        running: oracleRunning,
-        port: extractOraclePort(oracle?.ports),
-        exists: Boolean(oracle)
-      },
-      wta: {
-        container: wta || null,
-        name: wta ? wta.names.replace(/^\//, '') : 'linux-winthor',
-        running: wtaRunning,
-        port: String(extractWtaPort(wta?.ports)),
-        exists: Boolean(wta)
-      },
-      wsh: {
-        container: wsh || null,
-        name: wsh ? wsh.names.replace(/^\//, '') : 'wsh-winthor',
-        running: wshRunning,
-        port: '8080',
-        exists: Boolean(wsh)
-      },
-      isStackComplete,
-      hasMissingDependency
-    };
-  }, [containers]);
+  const stackTopology = useMemo(() => computeStackTopology(containers), [containers]);
 
   const getStateBadge = (state: string) => {
     switch (state) {
@@ -4950,17 +4840,7 @@ DB_PASSWORD=pcinfo
                   <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground block">Mapeamento de Portas</span>
                     {(() => {
-                      const portEntries: { containerPort: string; protocol: string; hostIp?: string; hostPort: string }[] = Object.entries(
-                        inspectingContainer.networkSettings.ports || {}
-                      ).flatMap(([key, bindings]) => {
-                        const [containerPort, protocol] = key.split('/');
-                        return (bindings || []).map((b) => ({
-                          containerPort,
-                          protocol: protocol || 'tcp',
-                          hostIp: b.hostIp,
-                          hostPort: b.hostPort
-                        }));
-                      });
+                      const portEntries = flattenPortBindings(inspectingContainer.networkSettings.ports);
                       return portEntries.length === 0 ? (
                         <div className="text-xs text-muted-foreground">Nenhuma porta mapeada para o host.</div>
                       ) : (
