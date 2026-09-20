@@ -7,7 +7,7 @@ import { httpRequest } from '../utils/httpRequest';
 /** Quantidade máxima de entradas mantidas no histórico persistido de backups/restaurações. */
 const MAX_HISTORY_ENTRIES = 200;
 
-interface WebhookContext {
+export interface WebhookContext {
   connectionName: string;
   action: 'backup' | 'restore' | 'restore-drill';
   trigger: 'manual' | 'scheduled';
@@ -30,7 +30,7 @@ const ACTION_LABELS: Record<WebhookContext['action'], string> = {
  * como JSON (formato original, compatível com endpoints próprios); slack/discord/teams usam o
  * corpo esperado pelo webhook de entrada nativo de cada um, como texto simples formatado.
  */
-function buildWebhookPayload(platform: BackupWebhookConfig['platform'], ctx: WebhookContext): string {
+export function buildWebhookPayload(platform: BackupWebhookConfig['platform'], ctx: WebhookContext): string {
   const icon = ctx.success ? '✅' : '❌';
   const summary = `${icon} ${ACTION_LABELS[ctx.action]} (${ctx.trigger === 'scheduled' ? 'agendado' : 'manual'}) — ${ctx.connectionName}: ${ctx.message}`;
 
