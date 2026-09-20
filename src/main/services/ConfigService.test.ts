@@ -300,5 +300,69 @@ describe('ConfigService', () => {
       expect(reloaded.llmProviders?.[0].apiKey).toBe('');
     });
   });
+
+  describe('Criptografia de segredos em repouso', () => {
+    it('grava os segredos criptografados em disco, mas getSettings() continua retornando texto plano', () => {
+      const service = new ConfigService();
+      service.saveSettings({
+        karafPass: 'senha-karaf-123',
+        databaseConnections: [
+          { id: 'db-1', name: 'Oracle', type: 'oracle', host: 'localhost', port: 1521, database: 'XE', user: 'sys', password: 'senha-db-456' }
+        ],
+        llmProviders: [
+          { id: 'llm-1', name: 'OpenAI', provider: 'openai', model: 'gpt-4o-mini', apiKey: 'sk-segredo-789', enabled: true }
+        ]
+      });
+
+      const rawDisk = fs.readFileSync(service.getConfigFilePath(), 'utf-8');
+      expect(rawDisk).not.toContain('senha-karaf-123');
+      expect(rawDisk).not.toContain('senha-db-456');
+      expect(rawDisk).not.toContain('sk-segredo-789');
+      expect(rawDisk).toContain('enc:v1:');
+
+      const settings = service.getSettings();
+      expect(settings.karafPass).toBe('senha-karaf-123');
+      expect(settings.databaseConnections?.[0].password).toBe('senha-db-456');
+      expect(settings.llmProviders?.[0].apiKey).toBe('sk-segredo-789');
+    });
+
+    it('lê corretamente config.json escrito com segredos em texto plano (compatibilidade com versões anteriores)', () => {
+      const service = new ConfigService();
+      // Simula um config.json de uma versão anterior a esta feature, gravado com senha em texto puro.
+      fs.writeFileSync(
+        service.getConfigFilePath(),
+        JSON.stringify({ karafPass: 'senha-legada-em-texto-puro' }, null, 2),
+        'utf-8'
+      );
+
+      expect(service.getSettings().karafPass).toBe('senha-legada-em-texto-puro');
+    });
+
+    it('migra um segredo legado em texto puro para criptografado no próximo save', () => {
+      const service = new ConfigService();
+      fs.writeFileSync(
+        service.getConfigFilePath(),
+        JSON.stringify({ karafPass: 'senha-legada' }, null, 2),
+        'utf-8'
+      );
+
+      service.saveSettings({ karafUser: 'admin' });
+
+      const rawDisk = fs.readFileSync(service.getConfigFilePath(), 'utf-8');
+      expect(rawDisk).not.toContain('senha-legada');
+      expect(service.getSettings().karafPass).toBe('senha-legada');
+    });
+
+    it('exportSettings() continua exportando texto plano (sanitizado ou não), nunca o valor criptografado', () => {
+      const service = new ConfigService();
+      service.saveSettings({ karafPass: 'senha-export-teste' });
+
+      const exportedRaw = JSON.parse(service.exportSettings(false));
+      expect(exportedRaw.karafPass).toBe('senha-export-teste');
+
+      const exportedSanitized = JSON.parse(service.exportSettings(true));
+      expect(exportedSanitized.karafPass).toBe('');
+    });
+  });
 });
 

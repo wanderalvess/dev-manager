@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { decryptSecret, encryptSecret } from '../utils/secretsCrypto';
 import {
   AppSettings,
   PathStatusInfo,
@@ -380,6 +381,51 @@ export class ConfigService {
     return this.configPath;
   }
 
+  /**
+   * Descriptografa em memória os segredos persistidos (mutando `settings` diretamente).
+   * Chamado uma vez por leitura do disco, para que o restante do app sempre lide com
+   * texto plano — só a representação em disco fica criptografada.
+   */
+  private decryptSecretsInPlace(settings: AppSettings): void {
+    const dir = path.dirname(this.configPath);
+    if (settings.karafPass) settings.karafPass = decryptSecret(settings.karafPass, dir)!;
+    settings.databaseConnections?.forEach((c) => {
+      if (c.password) c.password = decryptSecret(c.password, dir);
+    });
+    settings.confluenceSources?.forEach((s) => {
+      if (s.authToken) s.authToken = decryptSecret(s.authToken, dir)!;
+    });
+    settings.jiraSources?.forEach((s) => {
+      if (s.authToken) s.authToken = decryptSecret(s.authToken, dir)!;
+    });
+    settings.llmProviders?.forEach((p) => {
+      if (p.apiKey) p.apiKey = decryptSecret(p.apiKey, dir)!;
+    });
+  }
+
+  /**
+   * Retorna uma cópia de `settings` com os segredos criptografados, pronta para gravação
+   * em disco. Não modifica o objeto original (que permanece em texto plano no cache/retorno).
+   */
+  private encryptSecretsForDisk(settings: AppSettings): AppSettings {
+    const dir = path.dirname(this.configPath);
+    const clone: AppSettings = structuredClone(settings);
+    if (clone.karafPass) clone.karafPass = encryptSecret(clone.karafPass, dir)!;
+    clone.databaseConnections = clone.databaseConnections?.map((c) =>
+      c.password ? { ...c, password: encryptSecret(c.password, dir) } : c
+    );
+    clone.confluenceSources = clone.confluenceSources?.map((s) =>
+      s.authToken ? { ...s, authToken: encryptSecret(s.authToken, dir)! } : s
+    );
+    clone.jiraSources = clone.jiraSources?.map((s) =>
+      s.authToken ? { ...s, authToken: encryptSecret(s.authToken, dir)! } : s
+    );
+    clone.llmProviders = clone.llmProviders?.map((p) =>
+      p.apiKey ? { ...p, apiKey: encryptSecret(p.apiKey, dir)! } : p
+    );
+    return clone;
+  }
+
   private getDefaultConfigCached(): AppSettings {
     if (!this.cachedDefaultConfig) {
       this.cachedDefaultConfig = getDynamicDefaultConfig();
@@ -439,6 +485,7 @@ export class ConfigService {
           llmProviders: Array.isArray(parsed.llmProviders) ? parsed.llmProviders : [],
           activeLlmProviderId: typeof parsed.activeLlmProviderId === 'string' ? parsed.activeLlmProviderId : (Array.isArray(parsed.llmProviders) ? parsed.llmProviders[0]?.id : undefined)
         };
+        this.decryptSecretsInPlace(result);
         this.cachedSettings = { data: result, mtimeMs: stat.mtimeMs };
         return result;
       }
@@ -453,7 +500,8 @@ export class ConfigService {
     const current = this.getSettings();
     const updated = { ...current, ...settings };
     try {
-      fs.writeFileSync(this.configPath, JSON.stringify(updated, null, 2), 'utf-8');
+      const forDisk = this.encryptSecretsForDisk(updated);
+      fs.writeFileSync(this.configPath, JSON.stringify(forDisk, null, 2), 'utf-8');
       const stat = fs.statSync(this.configPath);
       this.cachedSettings = { data: updated, mtimeMs: stat.mtimeMs };
     } catch (err) {
