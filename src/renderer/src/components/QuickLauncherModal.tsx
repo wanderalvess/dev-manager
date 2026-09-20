@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { GitProjectInfo, RoutineItem } from '../../../shared/types';
+import { fuzzyMatchBest } from '../utils/fuzzyMatch';
 
 interface QuickLauncherItem {
   id: string;
@@ -29,7 +30,33 @@ interface QuickLauncherItem {
   icon: React.ElementType;
   onSelect: () => void;
   isFavorite?: boolean;
+  /** Score de relevância fuzzy (maior = melhor). Ausente/0 quando a busca está vazia. */
+  score?: number;
+  /** Índices do título que casaram com a busca, para highlight. */
+  titleMatchIndices?: number[];
 }
+
+/** Renderiza o título destacando os caracteres que casaram com a busca fuzzy. */
+const HighlightedText: React.FC<{ text: string; matchedIndices?: number[] }> = ({
+  text,
+  matchedIndices
+}) => {
+  if (!matchedIndices || matchedIndices.length === 0) return <>{text}</>;
+  const matchSet = new Set(matchedIndices);
+  return (
+    <>
+      {text.split('').map((char, idx) =>
+        matchSet.has(idx) ? (
+          <mark key={idx} className="bg-transparent text-amber-400 font-extrabold">
+            {char}
+          </mark>
+        ) : (
+          <React.Fragment key={idx}>{char}</React.Fragment>
+        )
+      )}
+    </>
+  );
+};
 
 interface QuickLauncherModalProps {
   isOpen: boolean;
@@ -205,55 +232,64 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
       }
     ];
 
+    /** Aplica fuzzy match (título + subtítulo) e retorna o item enriquecido, ou null se não casar. */
+    const withFuzzyMatch = (item: QuickLauncherItem): QuickLauncherItem | null => {
+      if (!q) return item;
+      const best = fuzzyMatchBest(q, [item.title, item.subtitle ?? '']);
+      if (best.fieldIndex === -1) return null;
+      return {
+        ...item,
+        score: best.score,
+        titleMatchIndices: best.fieldIndex === 0 ? best.matchedIndices : undefined
+      };
+    };
+
     defaultActions.forEach((act) => {
-      if (!q || act.title.toLowerCase().includes(q) || act.subtitle?.toLowerCase().includes(q)) {
-        items.push(act);
-      }
+      const matched = withFuzzyMatch(act);
+      if (matched) items.push(matched);
     });
 
     // 2. Rotinas (Executáveis)
     routines.forEach((r) => {
-      const matchName = r.name.toLowerCase().includes(q);
-      const matchId = r.id.toLowerCase().includes(q);
-      const matchMod = r.module.toLowerCase().includes(q);
-      if (!q || matchName || matchId || matchMod) {
-        items.push({
-          id: `rt-${r.id}`,
-          category: 'routine',
-          title: `Rotina ${r.name}`,
-          subtitle: `Módulo ${r.module} • ${r.sizeMb}`,
-          badge: r.id,
-          icon: Grid,
-          isFavorite: r.isFavorite,
-          onSelect: async () => {
-            if (window.electronAPI) {
-              await window.electronAPI.launchRoutine(r.fullPath);
-            }
-            onClose();
+      const matched = withFuzzyMatch({
+        id: `rt-${r.id}`,
+        category: 'routine',
+        title: `Rotina ${r.name}`,
+        subtitle: `Módulo ${r.module} • ${r.sizeMb} • ${r.id}`,
+        badge: r.id,
+        icon: Grid,
+        isFavorite: r.isFavorite,
+        onSelect: async () => {
+          if (window.electronAPI) {
+            await window.electronAPI.launchRoutine(r.fullPath);
           }
-        });
-      }
+          onClose();
+        }
+      });
+      if (matched) items.push(matched);
     });
 
     // 3. Repositórios Git
     projects.forEach((p) => {
-      const matchName = p.name.toLowerCase().includes(q);
-      const matchBranch = p.currentBranch.toLowerCase().includes(q);
-      if (!q || matchName || matchBranch) {
-        items.push({
-          id: `repo-${p.name}`,
-          category: 'repo',
-          title: `Projeto ${p.name}`,
-          subtitle: `Branch: ${p.currentBranch} ${p.uncommittedCount ? `(${p.uncommittedCount} mods)` : ''}`,
-          badge: 'Git',
-          icon: GitBranch,
-          onSelect: () => {
-            onNavigate('git');
-            onClose();
-          }
-        });
-      }
+      const matched = withFuzzyMatch({
+        id: `repo-${p.name}`,
+        category: 'repo',
+        title: `Projeto ${p.name}`,
+        subtitle: `Branch: ${p.currentBranch} ${p.uncommittedCount ? `(${p.uncommittedCount} mods)` : ''}`,
+        badge: 'Git',
+        icon: GitBranch,
+        onSelect: () => {
+          onNavigate('git');
+          onClose();
+        }
+      });
+      if (matched) items.push(matched);
     });
+
+    // Favoritos primeiro, depois por relevância fuzzy (só importa quando há busca ativa).
+    if (q) {
+      items.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    }
 
     return items;
   }, [search, routines, projects, onNavigate, onRefreshAll, onClose]);
@@ -362,7 +398,9 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
                     </div>
                     <div className="truncate">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold truncate">{item.title}</span>
+                        <span className="text-xs font-bold truncate">
+                          <HighlightedText text={item.title} matchedIndices={item.titleMatchIndices} />
+                        </span>
                         {item.isFavorite && (
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
                         )}
