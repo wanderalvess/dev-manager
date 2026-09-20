@@ -56,6 +56,13 @@ import {
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { SETTINGS_TOUR_STEPS, SETTINGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/settingsTour';
+import {
+  addToList,
+  coercePortFieldValue,
+  computeSetupChecklistStatus,
+  removeAtIndex,
+  updateAtIndex
+} from '../utils/settingsListEditors';
 
 interface SettingsPageProps {
   onSettingsSaved?: () => void;
@@ -243,35 +250,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   }, [launcherRows]);
 
   // Checklist de Primeira Configuração: orienta o usuário novo pelas etapas essenciais
-  const setupChecklist = useMemo(
-    () => [
-      {
-        id: 'dirs',
-        label: 'Diretórios de Repositórios & Karaf',
-        done: Boolean(pathStatuses.projectsPath?.exists && pathStatuses.karafPath?.exists),
-        action: () => setActiveTab('dirs')
-      },
-      {
-        id: 'ide',
-        label: 'IDE detectada (IntelliJ)',
-        done: Boolean(pathStatuses.intellijPath?.exists),
-        action: () => setActiveTab('dirs')
-      },
-      {
-        id: 'karaf-creds',
-        label: 'Credenciais do Karaf',
-        done: Boolean(settings.karafUser?.trim() && settings.karafPass?.trim()),
-        action: () => setActiveTab('karaf')
-      },
-      {
-        id: 'database',
-        label: 'Conexão de Banco de Dados',
-        done: Boolean(settings.databaseConnections && settings.databaseConnections.length > 0),
-        action: () => onNavigate?.('database')
-      }
-    ],
-    [pathStatuses, settings.karafUser, settings.karafPass, settings.databaseConnections, onNavigate]
-  );
+  const setupChecklist = useMemo(() => {
+    const actionsById: Record<string, () => void> = {
+      dirs: () => setActiveTab('dirs'),
+      ide: () => setActiveTab('dirs'),
+      'karaf-creds': () => setActiveTab('karaf'),
+      database: () => onNavigate?.('database')
+    };
+    return computeSetupChecklistStatus(
+      { karafUser: settings.karafUser, karafPass: settings.karafPass, databaseConnections: settings.databaseConnections },
+      pathStatuses
+    ).map((item) => ({
+      ...item,
+      action: actionsById[item.id]
+    }));
+  }, [pathStatuses, settings.karafUser, settings.karafPass, settings.databaseConnections, onNavigate]);
   const pendingChecklistCount = setupChecklist.filter((item) => !item.done).length;
 
   // Validação de Caminhos
@@ -526,25 +519,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
   // Gerenciamento de Serviços Windows
   const handleAddService = (name = 'NovoServico', displayName = 'Novo Serviço Windows') => {
-    const current = settings.trackedServices || DEFAULT_SERVICES;
     setSettings({
       ...settings,
-      trackedServices: [...current, { name, displayName, enabled: true, autoStop: true, autoStart: false }]
+      trackedServices: addToList(settings.trackedServices, DEFAULT_SERVICES, {
+        name,
+        displayName,
+        enabled: true,
+        autoStop: true,
+        autoStart: false
+      })
     });
   };
 
   const handleUpdateService = (index: number, field: keyof TrackedServiceConfig, value: any) => {
-    const current = [...(settings.trackedServices || DEFAULT_SERVICES)];
-    if (current[index]) {
-      current[index] = { ...current[index], [field]: value };
-      setSettings({ ...settings, trackedServices: current });
-    }
+    setSettings({
+      ...settings,
+      trackedServices: updateAtIndex(settings.trackedServices, DEFAULT_SERVICES, index, { [field]: value })
+    });
   };
 
   const handleRemoveService = (index: number) => {
-    const current = [...(settings.trackedServices || DEFAULT_SERVICES)];
-    current.splice(index, 1);
-    setSettings({ ...settings, trackedServices: current });
+    setSettings({ ...settings, trackedServices: removeAtIndex(settings.trackedServices, DEFAULT_SERVICES, index) });
   };
 
   const handleResetServices = () => {
@@ -553,25 +548,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
   // Gerenciamento de Processos Conflitantes
   const handleAddProcess = (name = 'processo.exe', displayName = 'Processo em Segundo Plano') => {
-    const current = settings.trackedProcesses || DEFAULT_PROCESSES;
     setSettings({
       ...settings,
-      trackedProcesses: [...current, { name, displayName, enabled: true, autoKill: true }]
+      trackedProcesses: addToList(settings.trackedProcesses, DEFAULT_PROCESSES, {
+        name,
+        displayName,
+        enabled: true,
+        autoKill: true
+      })
     });
   };
 
   const handleUpdateProcess = (index: number, field: keyof TrackedProcessConfig, value: any) => {
-    const current = [...(settings.trackedProcesses || DEFAULT_PROCESSES)];
-    if (current[index]) {
-      current[index] = { ...current[index], [field]: value };
-      setSettings({ ...settings, trackedProcesses: current });
-    }
+    setSettings({
+      ...settings,
+      trackedProcesses: updateAtIndex(settings.trackedProcesses, DEFAULT_PROCESSES, index, { [field]: value })
+    });
   };
 
   const handleRemoveProcess = (index: number) => {
-    const current = [...(settings.trackedProcesses || DEFAULT_PROCESSES)];
-    current.splice(index, 1);
-    setSettings({ ...settings, trackedProcesses: current });
+    setSettings({ ...settings, trackedProcesses: removeAtIndex(settings.trackedProcesses, DEFAULT_PROCESSES, index) });
   };
 
   const handleResetProcesses = () => {
@@ -580,28 +576,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
   // Gerenciamento de Portas
   const handleAddPort = (port = 8080, label = 'Nova Porta') => {
-    const current = settings.monitoredPorts || DEFAULT_PORTS;
     setSettings({
       ...settings,
-      monitoredPorts: [...current, { port, label, enabled: true }]
+      monitoredPorts: addToList(settings.monitoredPorts, DEFAULT_PORTS, { port, label, enabled: true })
     });
   };
 
   const handleUpdatePort = (index: number, field: keyof MonitoredPortConfig, value: any) => {
-    const current = [...(settings.monitoredPorts || DEFAULT_PORTS)];
-    if (current[index]) {
-      current[index] = {
-        ...current[index],
-        [field]: field === 'port' ? parseInt(value) || 0 : value
-      };
-      setSettings({ ...settings, monitoredPorts: current });
-    }
+    setSettings({
+      ...settings,
+      monitoredPorts: updateAtIndex(settings.monitoredPorts, DEFAULT_PORTS, index, {
+        [field]: coercePortFieldValue(field, value)
+      })
+    });
   };
 
   const handleRemovePort = (index: number) => {
-    const current = [...(settings.monitoredPorts || DEFAULT_PORTS)];
-    current.splice(index, 1);
-    setSettings({ ...settings, monitoredPorts: current });
+    setSettings({ ...settings, monitoredPorts: removeAtIndex(settings.monitoredPorts, DEFAULT_PORTS, index) });
   };
 
   const handleResetPorts = () => {
@@ -610,35 +601,31 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
   // Gerenciamento de Fontes de Logs em Tempo Real
   const handleAddLogSource = () => {
-    const current = settings.realtimeLogSources || DEFAULT_LOG_SOURCES;
     const newId = `log-source-${Date.now()}`;
     setSettings({
       ...settings,
-      realtimeLogSources: [
-        ...current,
-        {
-          id: newId,
-          name: 'Nova Fonte de Log',
-          filePath: '',
-          encoding: 'utf-8',
-          enabled: true
-        }
-      ]
+      realtimeLogSources: addToList(settings.realtimeLogSources, DEFAULT_LOG_SOURCES, {
+        id: newId,
+        name: 'Nova Fonte de Log',
+        filePath: '',
+        encoding: 'utf-8',
+        enabled: true
+      })
     });
   };
 
   const handleUpdateLogSource = (index: number, field: keyof RealtimeLogSource, value: any) => {
-    const current = [...(settings.realtimeLogSources || DEFAULT_LOG_SOURCES)];
-    if (current[index]) {
-      current[index] = { ...current[index], [field]: value };
-      setSettings({ ...settings, realtimeLogSources: current });
-    }
+    setSettings({
+      ...settings,
+      realtimeLogSources: updateAtIndex(settings.realtimeLogSources, DEFAULT_LOG_SOURCES, index, { [field]: value })
+    });
   };
 
   const handleRemoveLogSource = (index: number) => {
-    const current = [...(settings.realtimeLogSources || DEFAULT_LOG_SOURCES)];
-    current.splice(index, 1);
-    setSettings({ ...settings, realtimeLogSources: current });
+    setSettings({
+      ...settings,
+      realtimeLogSources: removeAtIndex(settings.realtimeLogSources, DEFAULT_LOG_SOURCES, index)
+    });
   };
 
   const handleResetLogSources = () => {
