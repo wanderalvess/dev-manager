@@ -51,10 +51,17 @@ import {
   InstallBundleRequest,
   ReinstallBundleRequest,
   BundleSnapshot,
-  BundleSnapshotItem,
   BundleSnapshotDiff,
   KarafDeployHistoryEntry
 } from '../../../shared/types';
+import {
+  computeBundleStats,
+  computeScopeCounts,
+  computeSnapshotDiff,
+  filterBundles,
+  getMatchedProject as getMatchedProjectUtil,
+  isWorkspaceBundle as isWorkspaceBundleUtil
+} from '../utils/karafBundleUtils';
 
 interface KarafBundleManagerModalProps {
   isOpen: boolean;
@@ -292,38 +299,10 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     }
   };
 
-  const snapshotDiff = useMemo<BundleSnapshotDiff | null>(() => {
-    if (!selectedSnapshot) return null;
-    const currentMap = new Map(bundles.map((b) => [b.id, b]));
-    const snapMap = new Map(selectedSnapshot.bundles.map((b) => [b.id, b]));
-
-    const unchanged: BundleSnapshotItem[] = [];
-    const versionChanged: { snapshot: BundleSnapshotItem; current: KarafBundleInfo }[] = [];
-    const stateChanged: { snapshot: BundleSnapshotItem; current: KarafBundleInfo }[] = [];
-    const added: KarafBundleInfo[] = [];
-    const removed: BundleSnapshotItem[] = [];
-
-    for (const snapItem of selectedSnapshot.bundles) {
-      const curr = currentMap.get(snapItem.id);
-      if (!curr) {
-        removed.push(snapItem);
-      } else if (curr.version !== snapItem.version) {
-        versionChanged.push({ snapshot: snapItem, current: curr });
-      } else if (curr.state !== snapItem.state) {
-        stateChanged.push({ snapshot: snapItem, current: curr });
-      } else {
-        unchanged.push(snapItem);
-      }
-    }
-
-    for (const curr of bundles) {
-      if (!snapMap.has(curr.id)) {
-        added.push(curr);
-      }
-    }
-
-    return { unchanged, versionChanged, stateChanged, added, removed };
-  }, [selectedSnapshot, bundles]);
+  const snapshotDiff = useMemo<BundleSnapshotDiff | null>(
+    () => computeSnapshotDiff(bundles, selectedSnapshot),
+    [selectedSnapshot, bundles]
+  );
 
   const fetchBundles = useCallback(async () => {
     if (!window.electronAPI) return;
@@ -363,111 +342,22 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
   // Identificação inteligente de escopo e projetos locais
   const getMatchedProject = useCallback(
-    (b: KarafBundleInfo): GitProjectInfo | undefined => {
-      if (!projects || projects.length === 0) return undefined;
-      const bName = (b.symbolicName || b.name || '').toLowerCase();
-      return projects.find((p) => {
-        const pName = p.name.toLowerCase();
-        const art = (p.pomInfo?.artifactId || '').toLowerCase();
-        return (
-          (bName && pName && (bName.includes(pName) || pName.includes(bName))) ||
-          (bName && art && (bName.includes(art) || art.includes(bName)))
-        );
-      });
-    },
+    (b: KarafBundleInfo): GitProjectInfo | undefined => getMatchedProjectUtil(b, projects),
     [projects]
   );
 
-  const isWorkspaceBundle = useCallback(
-    (b: KarafBundleInfo) => Boolean(getMatchedProject(b)),
-    [getMatchedProject]
-  );
-
-  const isTotvsBundle = useCallback(
-    (b: KarafBundleInfo) => {
-      const text = `${b.symbolicName || ''} ${b.name || ''}`.toLowerCase();
-      return (
-        text.includes('totvs') ||
-        text.includes('winthor') ||
-        text.includes('br.com.totvs') ||
-        isWorkspaceBundle(b)
-      );
-    },
-    [isWorkspaceBundle]
-  );
-
-  const isSystemBundle = useCallback((b: KarafBundleInfo) => {
-    const text = `${b.symbolicName || ''} ${b.name || ''}`.toLowerCase();
-    return (
-      text.startsWith('org.apache') ||
-      text.startsWith('org.ops4j') ||
-      text.startsWith('com.fasterxml') ||
-      text.startsWith('org.eclipse') ||
-      text.startsWith('org.osgi') ||
-      text.includes('aries') ||
-      text.includes('pax') ||
-      text.includes('camel') ||
-      text.includes('cxf') ||
-      text.includes('felix') ||
-      text.includes('jetty') ||
-      text.includes('slf4j') ||
-      text.includes('log4j')
-    );
-  }, []);
+  const isWorkspaceBundle = useCallback((b: KarafBundleInfo) => isWorkspaceBundleUtil(b, projects), [projects]);
 
   // Contadores
-  const stats = useMemo(() => {
-    const total = bundles.length;
-    const active = bundles.filter((b) => b.state === 'Active').length;
-    const resolved = bundles.filter((b) => b.state === 'Resolved').length;
-    const installed = bundles.filter((b) => b.state === 'Installed').length;
-    return { total, active, resolved, installed };
-  }, [bundles]);
+  const stats = useMemo(() => computeBundleStats(bundles), [bundles]);
 
-  const scopeCounts = useMemo(() => {
-    let totvs = 0;
-    let workspace = 0;
-    let issues = 0;
-    let system = 0;
-    for (const b of bundles) {
-      if (isTotvsBundle(b)) totvs++;
-      if (isWorkspaceBundle(b)) workspace++;
-      if (b.state !== 'Active') issues++;
-      if (isSystemBundle(b)) system++;
-    }
-    return {
-      all: bundles.length,
-      totvs,
-      workspace,
-      issues,
-      system
-    };
-  }, [bundles, isTotvsBundle, isWorkspaceBundle, isSystemBundle]);
+  const scopeCounts = useMemo(() => computeScopeCounts(bundles, projects), [bundles, projects]);
 
   // Filtros combinados (escopo, status e busca textual)
-  const filteredBundles = useMemo(() => {
-    return bundles.filter((b) => {
-      // Filtro de Status
-      if (statusFilter !== 'ALL' && b.state !== statusFilter) return false;
-
-      // Filtro de Escopo
-      if (scopeFilter === 'TOTVS' && !isTotvsBundle(b)) return false;
-      if (scopeFilter === 'WORKSPACE' && !isWorkspaceBundle(b)) return false;
-      if (scopeFilter === 'ISSUES' && b.state === 'Active') return false;
-      if (scopeFilter === 'SYSTEM' && !isSystemBundle(b)) return false;
-
-      // Busca textual
-      if (!search.trim()) return true;
-      const term = search.toLowerCase();
-      return (
-        b.id.toLowerCase().includes(term) ||
-        b.name.toLowerCase().includes(term) ||
-        (b.symbolicName && b.symbolicName.toLowerCase().includes(term)) ||
-        b.version.toLowerCase().includes(term) ||
-        b.state.toLowerCase().includes(term)
-      );
-    });
-  }, [bundles, search, statusFilter, scopeFilter, isTotvsBundle, isWorkspaceBundle, isSystemBundle]);
+  const filteredBundles = useMemo(
+    () => filterBundles(bundles, { search, statusFilter, scopeFilter }, projects),
+    [bundles, search, statusFilter, scopeFilter, projects]
+  );
 
   // Seleção múltipla
   const handleToggleSelectBundle = (id: string) => {
