@@ -407,7 +407,8 @@ export class DockerService {
     try {
       return await runStart(containerId);
     } catch (err: any) {
-      const errStr = (err?.stderr || '') + ' ' + (err?.message || '') + ' ' + (err?.stdout || '');
+      let currentErr = err;
+      const errStr = (currentErr?.stderr || '') + ' ' + (currentErr?.message || '') + ' ' + (currentErr?.stdout || '');
       const isDaemonOffline =
         errStr.includes('Cannot connect to the Docker daemon') ||
         errStr.includes('Is the docker daemon running') ||
@@ -422,16 +423,16 @@ export class DockerService {
           try {
             return await runStart(containerId);
           } catch (retryErr: any) {
-            err = retryErr;
+            currentErr = retryErr;
           }
         } else if (heal.message) {
           throw new Error(heal.message);
         }
       }
 
-      console.error(`[DockerService] Erro ao iniciar container ${containerId}:`, err);
+      console.error(`[DockerService] Erro ao iniciar container ${containerId}:`, currentErr);
 
-      const updatedErrStr = (err?.stderr || '') + ' ' + (err?.message || '') + ' ' + (err?.stdout || '');
+      const updatedErrStr = (currentErr?.stderr || '') + ' ' + (currentErr?.message || '') + ' ' + (currentErr?.stdout || '');
       if (updatedErrStr.includes('No such container')) {
         // Tenta auto-resolução de alias (ex: oracle-winthor -> oracle-local)
         const alias = await this.resolveContainerAlias(containerId);
@@ -457,7 +458,7 @@ export class DockerService {
         );
       }
 
-      throw new Error(err.stderr || err.message || 'Falha ao iniciar container');
+      throw new Error(currentErr.stderr || currentErr.message || 'Falha ao iniciar container');
     }
   }
 
@@ -484,7 +485,9 @@ export class DockerService {
             const { binary, finalArgs } = await this.resolveCommandAndArgs('stop', [alias]);
             await execFileAsync(binary, finalArgs, { timeout: 25000, windowsHide: true });
             return true;
-          } catch {}
+          } catch {
+            // Falha no alias: ignora e segue para o erro original do containerId informado
+          }
         }
       }
       console.error(`[DockerService] Erro ao parar container ${containerId}:`, err);
@@ -515,7 +518,9 @@ export class DockerService {
             const { binary, finalArgs } = await this.resolveCommandAndArgs('restart', [alias]);
             await execFileAsync(binary, finalArgs, { timeout: 25000, windowsHide: true });
             return true;
-          } catch {}
+          } catch {
+            // Falha no alias: ignora e segue para o erro original do containerId informado
+          }
         }
       }
       console.error(`[DockerService] Erro ao reiniciar container ${containerId}:`, err);

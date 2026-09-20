@@ -7,7 +7,6 @@ import {
   XCircle,
   AlertTriangle,
   Calendar,
-  Layers,
   ChevronDown,
   ChevronUp,
   History

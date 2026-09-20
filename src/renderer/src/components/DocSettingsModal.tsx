@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   FolderOpen,
-  Folder,
   Plus,
   Trash2,
   Globe,
@@ -18,8 +17,6 @@ import {
   Sliders,
   Cpu,
   RotateCcw,
-  Zap,
-  Server,
   GitBranch,
   Copy,
   ExternalLink,

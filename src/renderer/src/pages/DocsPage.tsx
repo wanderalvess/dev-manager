@@ -10,7 +10,6 @@ import {
   Download,
   Plus,
   Trash2,
-  Eye,
   ExternalLink,
   Copy,
   Check,
@@ -35,8 +34,7 @@ import {
   DocSyncResult,
   ConfluenceSourceConfig,
   JiraSourceConfig,
-  LlmProviderConfig,
-  LlmTestResult
+  LlmProviderConfig
 } from '../../../shared/types';
 import { MarkdownReader } from '../components/MarkdownReader';
 import { DocSettingsModal } from '../components/DocSettingsModal';
@@ -94,14 +92,10 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
   // Fontes Confluence (input do RAG, ao lado das Pastas de Documentação locais)
   const [confluenceSources, setConfluenceSources] = useState<ConfluenceSourceConfig[]>([]);
   const [editingConfluenceSource, setEditingConfluenceSource] = useState<Partial<ConfluenceSourceConfig> | null>(null);
-  const [isTestingConfluenceId, setIsTestingConfluenceId] = useState<string | null>(null);
-  const [confluenceTestResults, setConfluenceTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
 
   // Fontes Jira (input do RAG — issues viram "documentos", mesmo padrão do Confluence acima)
   const [jiraSources, setJiraSources] = useState<JiraSourceConfig[]>([]);
   const [editingJiraSource, setEditingJiraSource] = useState<Partial<JiraSourceConfig> | null>(null);
-  const [isTestingJiraId, setIsTestingJiraId] = useState<string | null>(null);
-  const [jiraTestResults, setJiraTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
 
   // Modal de Configurações de Documentação & LLM
   const [showDocSettingsModal, setShowDocSettingsModal] = useState<boolean>(false);
@@ -257,32 +251,6 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
     await window.electronAPI?.saveSettings({ docSyncTargets: updated });
   };
 
-  const handleSaveConfluenceSource = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingConfluenceSource?.name || !editingConfluenceSource?.baseUrl || !editingConfluenceSource?.authToken) return;
-
-    const sourceToSave: ConfluenceSourceConfig = {
-      id: editingConfluenceSource.id || `confluence_${Date.now()}`,
-      name: editingConfluenceSource.name.trim(),
-      baseUrl: editingConfluenceSource.baseUrl.trim(),
-      spaceKey: editingConfluenceSource.spaceKey?.trim() || undefined,
-      authToken: editingConfluenceSource.authToken.trim(),
-      authEmail: editingConfluenceSource.authEmail?.trim() || undefined,
-      enabled: editingConfluenceSource.enabled !== undefined ? editingConfluenceSource.enabled : true
-    };
-
-    let updated: ConfluenceSourceConfig[];
-    if (editingConfluenceSource.id) {
-      updated = confluenceSources.map((s) => (s.id === editingConfluenceSource.id ? sourceToSave : s));
-    } else {
-      updated = [...confluenceSources, sourceToSave];
-    }
-
-    setConfluenceSources(updated);
-    await window.electronAPI?.saveSettings({ confluenceSources: updated });
-    setEditingConfluenceSource(null);
-  };
-
   const handleDeleteConfluenceSource = async (id: string) => {
     const updated = confluenceSources.filter((s) => s.id !== id);
     setConfluenceSources(updated);
@@ -296,48 +264,6 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
     await window.electronAPI?.saveSettings({ confluenceSources: updated });
   };
 
-  const handleTestConfluenceConnection = async (source: ConfluenceSourceConfig) => {
-    if (!window.electronAPI?.testConfluenceConnection) return;
-    setIsTestingConfluenceId(source.id);
-    try {
-      const res = await window.electronAPI.testConfluenceConnection(source);
-      setConfluenceTestResults((prev) => ({ ...prev, [source.id]: res }));
-    } catch (err: any) {
-      setConfluenceTestResults((prev) => ({
-        ...prev,
-        [source.id]: { success: false, message: err?.message || 'Falha ao testar conexão.' }
-      }));
-    } finally {
-      setIsTestingConfluenceId(null);
-    }
-  };
-
-  const handleSaveJiraSource = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingJiraSource?.name || !editingJiraSource?.baseUrl || !editingJiraSource?.authToken) return;
-
-    const sourceToSave: JiraSourceConfig = {
-      id: editingJiraSource.id || `jira_${Date.now()}`,
-      name: editingJiraSource.name.trim(),
-      baseUrl: editingJiraSource.baseUrl.trim(),
-      projectKey: editingJiraSource.projectKey?.trim() || undefined,
-      jql: editingJiraSource.jql?.trim() || undefined,
-      authToken: editingJiraSource.authToken.trim(),
-      enabled: editingJiraSource.enabled !== undefined ? editingJiraSource.enabled : true
-    };
-
-    let updated: JiraSourceConfig[];
-    if (editingJiraSource.id) {
-      updated = jiraSources.map((s) => (s.id === editingJiraSource.id ? sourceToSave : s));
-    } else {
-      updated = [...jiraSources, sourceToSave];
-    }
-
-    setJiraSources(updated);
-    await window.electronAPI?.saveSettings({ jiraSources: updated });
-    setEditingJiraSource(null);
-  };
-
   const handleDeleteJiraSource = async (id: string) => {
     const updated = jiraSources.filter((s) => s.id !== id);
     setJiraSources(updated);
@@ -349,22 +275,6 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
     const updated = jiraSources.map((s) => (s.id === source.id ? { ...s, enabled } : s));
     setJiraSources(updated);
     await window.electronAPI?.saveSettings({ jiraSources: updated });
-  };
-
-  const handleTestJiraConnection = async (source: JiraSourceConfig) => {
-    if (!window.electronAPI?.testJiraConnection) return;
-    setIsTestingJiraId(source.id);
-    try {
-      const res = await window.electronAPI.testJiraConnection(source);
-      setJiraTestResults((prev) => ({ ...prev, [source.id]: res }));
-    } catch (err: any) {
-      setJiraTestResults((prev) => ({
-        ...prev,
-        [source.id]: { success: false, message: err?.message || 'Falha ao testar conexão.' }
-      }));
-    } finally {
-      setIsTestingJiraId(null);
-    }
   };
 
   const handleSyncNow = async (targetId?: string) => {

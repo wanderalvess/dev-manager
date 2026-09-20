@@ -18,8 +18,7 @@ import {
   Copy,
   Clock,
   Globe,
-  Server,
-  AlertTriangle
+  Server
 } from 'lucide-react';
 import {
   DeployProfile,

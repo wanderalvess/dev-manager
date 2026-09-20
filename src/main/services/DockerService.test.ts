@@ -43,11 +43,11 @@ describe('DockerService', () => {
     const { wslService } = await import('./WslService');
     const service = new DockerService();
 
-    const testSpy = (wslService.testDockerInDistro = async () => false);
-    const startSpy = (wslService.startDockerDaemon = async () => ({
+    wslService.testDockerInDistro = async () => false;
+    wslService.startDockerDaemon = async () => ({
       success: false,
       message: 'O Docker Engine não está instalado na distro WSL "ubuntu2604-winthor". Execute no terminal WSL: sudo apt update && sudo apt install -y docker.io'
-    }));
+    });
 
     const res = await service.ensureDockerRunning('ubuntu2604-winthor');
     expect(res.running).toBe(false);
@@ -64,7 +64,6 @@ describe('DockerService', () => {
     });
 
     // Mock do execFileAsync interno retornando containers com nome oracle-local
-    const origMethod = service.resolveContainerAlias;
     const candidates = (DockerService as any).CONTAINER_ALIASES['oracle-winthor'];
     expect(candidates).toContain('oracle-local');
 

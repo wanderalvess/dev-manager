@@ -773,7 +773,7 @@ app.post('/api/db/tables', async (req, res) => {
   try {
     const result = await databaseService.listTables(req.body);
     res.json(result);
-  } catch (err: any) {
+  } catch {
     res.status(500).json([]);
   }
 });

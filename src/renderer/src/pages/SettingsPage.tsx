@@ -36,8 +36,7 @@ import {
   Bot,
   Sliders,
   Cpu,
-  Activity,
-  Check
+  Activity
 } from 'lucide-react';
 import {
   AppSettings,

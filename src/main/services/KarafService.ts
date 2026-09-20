@@ -254,7 +254,9 @@ export class KarafService {
     // Karaf client.bat no Windows ou SSH shell frequentemente retorna exit code 0 mesmo
     // quando o comando falha no contêiner OSGi (ex: "Error executing command: No matching features...").
     // Limpamos sequências de escape ANSI e inspecionamos stdout/stderr para detectar falhas reais.
+    // eslint-disable-next-line no-control-regex -- ESC (0x1B) e o marcador real da sequencia de escape ANSI a remover
     const cleanStdout = (res.stdout || '').replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '').replace(/\[[0-9;]+m/g, '');
+    // eslint-disable-next-line no-control-regex -- ESC (0x1B) e o marcador real da sequencia de escape ANSI a remover
     const cleanStderr = (res.stderr || '').replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '').replace(/\[[0-9;]+m/g, '');
     const cleanCombined = `${cleanStdout}\n${cleanStderr}`;
 

@@ -25,7 +25,6 @@ export function analyzeExplainPlan(
   const findings: ExplainAnalysisFinding[] = [];
   const suggestions: string[] = [];
 
-  const rawText = planLines.join('\n');
   const normalizedType = (dbType || '').toLowerCase();
 
   // 1. Análise Heurística: ORACLE

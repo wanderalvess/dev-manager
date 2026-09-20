@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, RefObject } from 'react';
+import { useState, useEffect, useMemo, RefObject } from 'react';
 
 export interface VirtualItem {
   index: number;
@@ -36,11 +36,6 @@ export function useVirtualScroll(
 
   // Threshold mínimo de itens para ativar a virtualização (abaixo disso, renderiza normal)
   const isVirtual = itemCount > 60;
-
-  const handleScroll = useCallback(() => {
-    if (!containerRef.current) return;
-    setScrollTop(containerRef.current.scrollTop);
-  }, [containerRef]);
 
   // Observa mudanças de tamanho do container
   useEffect(() => {

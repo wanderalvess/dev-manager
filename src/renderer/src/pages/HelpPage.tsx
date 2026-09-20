@@ -166,7 +166,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
     return Math.min(100, Math.max(0, Math.round((used / appInfo.totalMemoryMb) * 100)));
   }, [appInfo]);
 
-  const faqList: FaqItem[] = [
+  const faqList: FaqItem[] = useMemo(() => [
     {
       id: 'admin-privileges',
       question: 'Por que o status indica "Sem Elevação" ou não consigo parar/iniciar serviços do Windows?',
@@ -412,7 +412,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
         </div>
       )
     }
-  ];
+  ], [appInfo, copiedItem, copyToClipboard, debugPort, onNavigate, sshPort, webPort]);
 
   const faqCategories = useMemo(() => {
     const cats = new Set(faqList.map((f) => f.category));

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Table,
-  Terminal,
   Clock,
   Download,
   Zap,
@@ -221,9 +220,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     }
   }, [activeConnection]);
 
-  // Sempre que a conexão ativa mudar, limpa resultado e tabela
+  // Sempre que a seleção de conexão ativa mudar (não a cada refresh da lista), limpa resultado e tabela
   useEffect(() => {
-    if (activeConnection) {
+    if (activeConnectionId) {
       setTables([]);
       setQueryResult(null);
     }

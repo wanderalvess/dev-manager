@@ -18,7 +18,6 @@ import {
   ChevronUp,
   Activity,
   ExternalLink,
-  Layers,
   Plus,
   Edit3,
   Copy,

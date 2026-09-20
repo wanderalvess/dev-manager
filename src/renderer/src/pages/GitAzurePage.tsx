@@ -88,7 +88,6 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
   const [isBranchModalOpen, setIsBranchModalOpen] = useState<boolean>(false);
   const [newBranchName, setNewBranchName] = useState<string>('');
-  const [isCreatingBranch, setIsCreatingBranch] = useState<boolean>(false);
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [commitHistory, setCommitHistory] = useState<GitCommitInfo[]>([]);

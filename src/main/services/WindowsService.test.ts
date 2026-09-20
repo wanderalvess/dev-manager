@@ -12,7 +12,7 @@ import type { AutomationStep } from '../../shared/types';
 
 const spawnMock = vi.fn((..._args: unknown[]) => ({
   unref: vi.fn(),
-  on: vi.fn((_event: string, _cb: Function) => {})
+  on: vi.fn((_event: string, _cb: (...args: unknown[]) => void) => {})
 }));
 
 vi.mock('child_process', async (importOriginal) => {

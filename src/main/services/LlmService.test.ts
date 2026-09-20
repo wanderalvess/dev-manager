@@ -1,7 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { LlmService } from './LlmService';
-import { ConfigService } from './ConfigService';
-import { DocsIndexService } from './DocsIndexService';
 import { LlmProviderConfig } from '../../shared/types';
 
 describe('LlmService', () => {

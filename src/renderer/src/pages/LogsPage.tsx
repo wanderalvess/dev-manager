@@ -23,8 +23,7 @@ import {
   Sparkles,
   SlidersHorizontal,
   Lock,
-  Unlock,
-  Layers
+  Unlock
 } from 'lucide-react';
 import { RealtimeLogSource, LogWatchStatus, LogChunkEvent, AppSettings } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -50,7 +49,7 @@ const EMPTY_SOURCE: RealtimeLogSource = {
 
 type LogLevelFilter = 'ALL' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 
-export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActive, settingsVersion }) => {
+export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNavigateToSettings, isActive, settingsVersion }) => {
   const tour = usePageTour(LOGS_TOUR_STORAGE_KEY);
   const [sources, setSources] = useState<RealtimeLogSource[]>(DEFAULT_SOURCES);
   const [activeSourceId, setActiveSourceId] = useState<string>('');
@@ -171,7 +170,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings, isActi
         window.electronAPI.stopLogWatch(activeSource.id);
       }
     };
-  }, [startWatchingActiveSource]);
+  }, [startWatchingActiveSource, activeSource.filePath, activeSource.id]);
 
   // Checagem periódica do status do arquivo
   useEffect(() => {
