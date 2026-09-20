@@ -16,7 +16,6 @@ import {
   HardDrive,
   RefreshCw,
   Clock,
-  ArrowUpRight,
   Cpu,
   FolderPlus,
   FolderOpen,
@@ -27,8 +26,6 @@ import {
   FileText,
   X,
   Shield,
-  CheckCircle,
-  Flame,
   Pause,
   Info,
   Download,
@@ -38,7 +35,6 @@ import {
   Network,
   Globe,
   Power,
-  Filter,
   Key,
   Archive,
   Sliders,
@@ -99,6 +95,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   const [newEnvName, setNewEnvName] = useState<string>('');
   const [newEnvColor, setNewEnvColor] = useState<string>('#0066cc');
   const [envPresetType, setEnvPresetType] = useState<'current' | 'doc' | 'infr'>('current');
+  const [envToDelete, setEnvToDelete] = useState<ContainerEnvironment | null>(null);
 
   // Sequência de Startup WinThor / Ambiente
   const [sequenceProgress, setSequenceProgress] = useState<{
@@ -757,7 +754,9 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
     try {
       const saved = localStorage.getItem('winthor_recent_compose_files');
       if (saved) setRecentComposeFiles(JSON.parse(saved));
-    } catch {}
+    } catch {
+      // localStorage indisponível ou JSON inválido: ignora e mantém a lista vazia
+    }
   }, []);
 
   const addRecentComposeFile = (file: string) => {
@@ -767,7 +766,9 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
       const updated = [file, ...filtered].slice(0, 5);
       try {
         localStorage.setItem('winthor_recent_compose_files', JSON.stringify(updated));
-      } catch {}
+      } catch {
+        // localStorage indisponível (ex: modo privado): segue apenas com o estado em memória
+      }
       return updated;
     });
   };
@@ -1053,18 +1054,21 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   };
 
   // Recarregar Logs com nova quantidade de linhas (com suporte a background auto-refresh)
-  const handleRefreshLogs = async (showLoading = true) => {
-    if (!selectedContainer || !window.electronAPI?.getDockerLogs) return;
-    if (showLoading) setIsLoadingLogs(true);
-    try {
-      const text = await window.electronAPI.getDockerLogs(selectedContainer.id, logLines);
-      setLogs(text || '(Nenhum log retornado)');
-    } catch (err: any) {
-      if (showLoading) setLogs(`Erro ao atualizar logs: ${err.message || err}`);
-    } finally {
-      if (showLoading) setIsLoadingLogs(false);
-    }
-  };
+  const handleRefreshLogs = useCallback(
+    async (showLoading = true) => {
+      if (!selectedContainer || !window.electronAPI?.getDockerLogs) return;
+      if (showLoading) setIsLoadingLogs(true);
+      try {
+        const text = await window.electronAPI.getDockerLogs(selectedContainer.id, logLines);
+        setLogs(text || '(Nenhum log retornado)');
+      } catch (err: any) {
+        if (showLoading) setLogs(`Erro ao atualizar logs: ${err.message || err}`);
+      } finally {
+        if (showLoading) setIsLoadingLogs(false);
+      }
+    },
+    [selectedContainer, logLines]
+  );
 
   // Auto-refresh interval para os logs quando modal estiver aberto
   useEffect(() => {
@@ -1073,7 +1077,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
       handleRefreshLogs(false);
     }, 3000);
     return () => clearInterval(timer);
-  }, [selectedContainer, isLogAutoRefresh, logLines]);
+  }, [selectedContainer, isLogAutoRefresh, logLines, handleRefreshLogs]);
 
   // Copiar Logs
   const handleCopyLogs = () => copyLogsToClipboard(logs, 'Logs copiados!');
@@ -1255,6 +1259,20 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
                     </option>
                   ))}
                 </select>
+                {selectedEnvId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const found = environments.find((env) => env.id === selectedEnvId);
+                      if (found) setEnvToDelete(found);
+                    }}
+                    disabled={sequenceProgress.running}
+                    title="Excluir ambiente salvo"
+                    className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1338,7 +1356,9 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
                 setShowTopologyBus(next);
                 try {
                   localStorage.setItem('winthor_show_topology_bus', String(next));
-                } catch {}
+                } catch {
+                  // localStorage indisponível: preferência não persiste, mas segue funcionando na sessão
+                }
               }}
               title={showTopologyBus ? 'Ocultar barramento de topologia WinThor' : 'Exibir barramento de topologia WinThor'}
               className={`flex items-center space-x-1.5 px-2.5 py-1.5 border rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer active:scale-95 ${
@@ -1489,7 +1509,9 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
                   setShowTopologyBus(false);
                   try {
                     localStorage.setItem('winthor_show_topology_bus', 'false');
-                  } catch {}
+                  } catch {
+                    // localStorage indisponível: preferência não persiste, mas segue funcionando na sessão
+                  }
                 }}
                 className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                 title="Ocultar Barramento de Topologia"
@@ -2594,6 +2616,47 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Remover Container</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão de Ambiente */}
+      {envToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md p-5 animate-fade-in space-y-4">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-bold text-foreground">Excluir Ambiente</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tem certeza que deseja excluir o ambiente{' '}
+                  <span className="font-semibold text-foreground">{envToDelete.name}</span>? Esta ação não pode ser
+                  desfeita.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-border">
+              <button
+                onClick={() => setEnvToDelete(null)}
+                className="px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-semibold text-foreground transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  const target = envToDelete;
+                  setEnvToDelete(null);
+                  if (target) await handleDeleteEnvironment(target.id);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer flex items-center space-x-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Excluir Ambiente</span>
               </button>
             </div>
           </div>
