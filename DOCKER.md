@@ -111,5 +111,10 @@ docker run -d \
 ### Como acessar o painel de outro computador na rede local?
 O servidor escuta em `0.0.0.0`, permitindo que outros membros do time acessem pelo IP da sua máquina (ex: `http://192.168.1.50:3000`).
 
+### Várias pessoas podem usar essa mesma instância ao mesmo tempo?
+Tecnicamente sim, mas **não é esse o modelo pensado para o Dev Manager**. Cada instância é *single-tenant*: existe um único arquivo de configurações (`CONFIG_DIR/config.json`) compartilhado por qualquer um que acesse aquela URL — conexões de banco, credenciais do Karaf, perfis de backup e chaves de LLM incluídos. Não há login nem separação por usuário; a `API_KEY` autentica o acesso à instância como um todo, não identifica quem está usando. Se duas pessoas editarem configurações ao mesmo tempo, uma sobrescreve a outra.
+
+O modelo pretendido é **uma instância por pessoa** (rodando localmente ou no seu próprio container). Para padronizar a configuração entre a equipe sem compartilhar credenciais, use **Configurações → Exportar** (com a opção de sanitizar senhas) e cada pessoa importa o arquivo na sua própria instância.
+
 ### Os meus arquivos Git são alterados no host?
 Sim! A montagem de volumes é bidirecional. Comandos como `git pull` ou `git stash` executados no painel Web refletem imediatamente na sua pasta local.
