@@ -620,6 +620,14 @@ describe('DeployService', () => {
 
   describe('Histórico de Execuções', () => {
     it('registra e recupera o histórico de deploy', async () => {
+      // Perfil precisa de ao menos uma etapa habilitada: com steps: [] o executeProfile
+      // retorna sucesso antecipadamente ("Nenhuma etapa habilitada") sem gravar histórico.
+      vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: 'ok',
+        stderr: ''
+      });
+
       let mockHistory: any[] = [];
       vi.spyOn(configService, 'getSettings').mockImplementation(() => ({
         deployProfileHistory: mockHistory
@@ -634,7 +642,15 @@ describe('DeployService', () => {
       const profile: DeployProfile = {
         id: 'prof-hist-test',
         name: 'Perfil com Histórico',
-        steps: []
+        steps: [
+          {
+            id: 'k1',
+            name: 'Comando Karaf',
+            type: 'karaf-command',
+            enabled: true,
+            command: 'feature:list'
+          }
+        ]
       };
 
       await deployService.executeProfile(profile, vi.fn());

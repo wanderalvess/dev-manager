@@ -162,12 +162,14 @@ export class KarafService {
       const currentPath = (existingPathKey ? childEnv[existingPathKey] : '') || '';
 
       const sysRoot = childEnv.SystemRoot || process.env.SystemRoot || 'C:\\Windows';
-      const sys32 = path.join(sysRoot, 'System32');
+      // path.win32.join (não path.join) garante separador "\" mesmo quando este processo Node
+      // roda em host não-Windows (ex: suíte de testes em CI Linux simulando process.platform).
+      const sys32 = path.win32.join(sysRoot, 'System32');
 
       const pathEntries = currentPath.split(';').filter(Boolean);
 
       if (childEnv.JAVA_HOME) {
-        const jdkBin = path.join(childEnv.JAVA_HOME, 'bin');
+        const jdkBin = path.win32.join(childEnv.JAVA_HOME, 'bin');
         if (!pathEntries.some((p) => p.toLowerCase() === jdkBin.toLowerCase())) {
           pathEntries.unshift(jdkBin);
         }
@@ -191,7 +193,7 @@ export class KarafService {
       childEnv.PATH = updatedPath;
 
       if (!childEnv.SystemRoot) childEnv.SystemRoot = sysRoot;
-      if (!childEnv.ComSpec) childEnv.ComSpec = process.env.ComSpec || process.env.COMSPEC || path.join(sys32, 'cmd.exe');
+      if (!childEnv.ComSpec) childEnv.ComSpec = process.env.ComSpec || process.env.COMSPEC || path.win32.join(sys32, 'cmd.exe');
     }
 
     // Configura dimensões do terminal para que ferramentas CLI do Karaf (como feature:list e bundle:list)

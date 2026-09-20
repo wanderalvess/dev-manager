@@ -485,12 +485,14 @@ export class DeployService {
           error: result.stderr
         });
 
+        const stepErrorMessage = `Falha na etapa "${step.name}"${result.stderr ? `: ${result.stderr}` : ''}`;
+
         onStepProgress?.({
           stepId: step.id,
           stepIndex: i,
           totalSteps: total,
           status: 'failed',
-          error: result.stderr || `Falha na etapa "${step.name}"`,
+          error: stepErrorMessage,
           durationMs: stepDuration
         });
 
@@ -500,7 +502,7 @@ export class DeployService {
           profileId: profile.id,
           profileName: profile.name,
           success: false,
-          error: result.stderr || `Falha na etapa "${step.name}"`,
+          error: stepErrorMessage,
           startedAt: new Date(profileStartTime).toISOString(),
           durationMs,
           totalSteps: total,
@@ -508,7 +510,7 @@ export class DeployService {
           stepResults
         });
 
-        return { success: false, error: result.stderr || `Falha na etapa "${step.name}"` };
+        return { success: false, error: stepErrorMessage };
       }
 
       stepResults.push({
@@ -568,7 +570,7 @@ export class DeployService {
       onChunk(`\r\n==========================================\r\n`);
       onChunk(`❌ ETAPA "${step.name}" FALHOU (Código ${result.code}).\r\n`);
       onChunk(`==========================================\r\n`);
-      return { success: false, error: result.stderr || `Falha na etapa "${step.name}"` };
+      return { success: false, error: `Falha na etapa "${step.name}"${result.stderr ? `: ${result.stderr}` : ''}` };
     }
 
     onChunk(`\r\n==========================================\r\n`);

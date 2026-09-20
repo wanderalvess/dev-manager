@@ -482,6 +482,10 @@ client.bat "feature:install -r custom-feature/2.0.0"
       const originalPlatform = process.platform;
       try {
         Object.defineProperty(process, 'platform', { value: 'win32' });
+        // Força jdkPath vazio: getSettings() detecta automaticamente um JDK real instalado na
+        // máquina (detectDefaultJdkPath), o que tornaria este teste dependente do ambiente onde
+        // roda (diferente no dev local vs. CI) se não fosse isolado explicitamente aqui.
+        vi.spyOn(configService, 'getSettings').mockReturnValue({ ...configService.getSettings(), jdkPath: '' });
         process.env.JAVA_HOME = 'C:\\Java\\jdk1.8.0_202';
         delete process.env.PATH;
         process.env.Path = 'C:\\Program Files\\Something;C:\\Windows\\System32';
