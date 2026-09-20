@@ -657,7 +657,15 @@ export class DockerService {
           networks: data.NetworkSettings?.Networks
         },
         mounts,
-        env: Array.isArray(data.Config?.Env) ? data.Config.Env : [],
+        env: Array.isArray(data.Config?.Env)
+          ? data.Config.Env.map((entry: string) => {
+              const idx = entry.indexOf('=');
+              const key = idx === -1 ? entry : entry.slice(0, idx);
+              return /PASSWORD|SECRET|TOKEN|API[_-]?KEY|PWD|CREDENTIAL/i.test(key)
+                ? `${key}=***REDACTED***`
+                : entry;
+            })
+          : [],
         command: Array.isArray(data.Config?.Cmd) ? data.Config.Cmd.join(' ') : (data.Config?.Cmd || ''),
         workingDir: data.Config?.WorkingDir || '',
         restartPolicy: data.HostConfig?.RestartPolicy ? {
@@ -1093,11 +1101,14 @@ export class DockerService {
     schema?: string,
     fix = false,
     user = 'sys',
-    password = 'pcinfo'
+    password?: string
   ): Promise<OracleMaintenanceResult> {
+    if (!password) {
+      return { success: false, output: '', error: 'Senha do usuário Oracle (sys/system) é obrigatória.' };
+    }
     const cleanContainer = containerName.replace(/^\//, '');
     const cleanUser = user.replace(/[^a-zA-Z0-9_]/g, '') || 'sys';
-    const cleanPass = password || 'pcinfo';
+    const cleanPass = password;
     const cleanSchema = schema ? schema.trim().toUpperCase().replace(/[^a-zA-Z0-9_]/g, '') : '';
 
     const args = ['exec', '-i', cleanContainer, '/home/oracle/tools/db_health.sh', cleanUser, cleanPass];
@@ -1136,14 +1147,17 @@ export class DockerService {
   public async openOracleSqlPlus(
     containerName: string,
     user = 'sys',
-    password = 'pcinfo'
+    password?: string
   ): Promise<boolean> {
     const cleanContainer = containerName.replace(/^\//, '');
     if (!this.isValidContainerId(cleanContainer)) {
       throw new Error('Identificador de container inválido.');
     }
+    if (!password) {
+      throw new Error('Senha do usuário Oracle (sys/system) é obrigatória.');
+    }
     const cleanUser = user.replace(/[^a-zA-Z0-9_]/g, '') || 'sys';
-    const cleanPass = (password || 'pcinfo').replace(/[^a-zA-Z0-9_!@#%^*+=.-]/g, '');
+    const cleanPass = password.replace(/[^a-zA-Z0-9_!@#%^*+=.-]/g, '');
 
     const cmdInside = `/home/oracle/tools/sqlplus_conn.sh ${cleanUser} ${cleanPass}`;
 
@@ -1246,10 +1260,13 @@ export class DockerService {
         error: 'Parâmetros obrigatórios ausentes: containerName, dumpfile ou schemaOrig.'
       };
     }
+    if (!params.password) {
+      return { success: false, output: '', error: 'Senha do usuário Oracle (sys/system) é obrigatória.' };
+    }
 
     const cleanContainer = params.containerName.replace(/^\//, '');
     const cleanUser = (params.user || 'system').replace(/[^a-zA-Z0-9_]/g, '');
-    const cleanPass = params.password || 'pcinfo';
+    const cleanPass = params.password;
     const cleanDumpfile = params.dumpfile.replace(/[^a-zA-Z0-9_.-]/g, '');
     const cleanOrig = params.schemaOrig.toUpperCase().replace(/[^a-zA-Z0-9_]/g, '');
     const cleanDest = params.schemaDest ? params.schemaDest.toUpperCase().replace(/[^a-zA-Z0-9_]/g, '') : '';

@@ -1,5 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DockerService } from './DockerService';
+import * as security from '../utils/security';
+
+vi.mock('../utils/security', async () => {
+  const actual = await vi.importActual<typeof import('../utils/security')>('../utils/security');
+  return { ...actual, execFileAsync: vi.fn() };
+});
 
 describe('DockerService', () => {
   it('valida identificadores de container seguros', () => {
@@ -76,5 +82,60 @@ describe('DockerService', () => {
     expect((DockerService as any).CONTAINER_ALIASES['wta-local']).toContain('linux-winthor');
     // wsh-local -> wsh-winthor
     expect((DockerService as any).CONTAINER_ALIASES['wsh-local']).toContain('wsh-winthor');
+  });
+
+  it('exige senha explícita nas operações Oracle sys/system, sem usar fallback hardcoded', async () => {
+    const service = new DockerService();
+
+    const healthRes = await service.execOracleHealth('oracle-winthor');
+    expect(healthRes.success).toBe(false);
+    expect(healthRes.error).toContain('Senha');
+
+    await expect(service.openOracleSqlPlus('oracle-winthor')).rejects.toThrow('Senha');
+
+    const dumpRes = await service.execOracleDataPump({
+      containerName: 'oracle-winthor',
+      dumpfile: 'test.dmp',
+      schemaOrig: 'WINTHOR'
+    } as any);
+    expect(dumpRes.success).toBe(false);
+    expect(dumpRes.error).toContain('Senha');
+  });
+
+  it('redige variáveis de ambiente sensíveis no inspect, preservando as demais', async () => {
+    const service = new DockerService();
+    (service as any).resolveCommandAndArgs = async () => ({
+      binary: 'docker',
+      finalArgs: ['inspect', 'oracle-local']
+    });
+
+    vi.mocked(security.execFileAsync).mockResolvedValueOnce({
+      stdout: JSON.stringify([
+        {
+          Id: 'abc123',
+          Name: '/oracle-local',
+          Config: {
+            Image: 'oracle/xe',
+            Env: [
+              'ORACLE_PASSWORD=devmanager',
+              'APP_USER_PASSWORD=secret',
+              'DB_TOKEN=xyz',
+              'PATH=/usr/bin'
+            ]
+          },
+          State: {},
+          NetworkSettings: {}
+        }
+      ]),
+      stderr: ''
+    } as any);
+
+    const result = await service.inspectContainer('oracle-local');
+    expect(result?.env).toEqual([
+      'ORACLE_PASSWORD=***REDACTED***',
+      'APP_USER_PASSWORD=***REDACTED***',
+      'DB_TOKEN=***REDACTED***',
+      'PATH=/usr/bin'
+    ]);
   });
 });

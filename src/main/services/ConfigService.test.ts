@@ -259,6 +259,46 @@ describe('ConfigService', () => {
       expect(reloaded.llmProviders?.[0].name).toBe('Meu Ollama Renomeado');
       expect(reloaded.llmProviders?.[0].apiKey).toBe('minha-chave-local');
     });
+
+    it('NÃO reaproveita apiKey existente quando o baseUrl importado é alterado (proteção contra exfiltração)', () => {
+      const service = new ConfigService();
+      service.saveSettings({
+        llmProviders: [
+          {
+            id: 'llm-1',
+            name: 'Meu Provedor',
+            provider: 'openai',
+            model: 'gpt-4o-mini',
+            apiKey: 'chave-real-secreta',
+            baseUrl: 'https://api.openai.com/v1',
+            enabled: true
+          }
+        ],
+        activeLlmProviderId: 'llm-1'
+      });
+
+      const importPayload = JSON.stringify({
+        llmProviders: [
+          {
+            id: 'llm-1',
+            name: 'Meu Provedor',
+            provider: 'openai',
+            model: 'gpt-4o-mini',
+            apiKey: '',
+            baseUrl: 'https://evil.example/v1',
+            enabled: true
+          }
+        ],
+        activeLlmProviderId: 'llm-1'
+      });
+
+      const result = service.importSettings(importPayload);
+      expect(result.success).toBe(true);
+
+      const reloaded = service.getSettings();
+      expect(reloaded.llmProviders?.[0].baseUrl).toBe('https://evil.example/v1');
+      expect(reloaded.llmProviders?.[0].apiKey).toBe('');
+    });
   });
 });
 

@@ -627,9 +627,13 @@ export class ConfigService {
       if (Array.isArray(parsed.llmProviders)) {
         merged.llmProviders = parsed.llmProviders.map((newProv: any) => {
           const existing = current.llmProviders?.find((p) => p.id === newProv.id);
+          // Só reaproveita a apiKey armazenada se o baseUrl não estiver mudando: caso
+          // contrário, um arquivo de import adulterado poderia redirecionar a chave real
+          // para um endpoint arbitrário. Se o baseUrl muda sem uma nova apiKey, exige reentrada.
+          const baseUrlChanged = !!existing && !!newProv.baseUrl && newProv.baseUrl !== existing.baseUrl;
           return {
             ...newProv,
-            apiKey: newProv.apiKey || existing?.apiKey || ''
+            apiKey: newProv.apiKey || (baseUrlChanged ? '' : existing?.apiKey || '')
           };
         });
       }

@@ -163,6 +163,48 @@ describe('LlmService', () => {
       expect(result.message).toContain('ollama serve');
       fetchSpy.mockRestore();
     });
+
+    it('rejeita baseUrl insegura (protocolo não http/https) sem chamar fetch (proteção contra SSRF) - provedor custom/openai-compatible', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+      const service = new LlmService(mockConfigService);
+      const config: LlmProviderConfig = {
+        id: 'test',
+        name: 'Custom Test',
+        provider: 'custom' as any,
+        apiKey: 'sk-123',
+        baseUrl: 'file:///etc/passwd',
+        model: 'gpt-4o-mini',
+        enabled: true
+      };
+
+      const result = await service.testConnection(config);
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('insegura');
+      expect(fetchSpy).not.toHaveBeenCalled();
+      fetchSpy.mockRestore();
+    });
+
+    it('rejeita baseUrl insegura sem chamar fetch (proteção contra SSRF) - provedor Anthropic', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+      const service = new LlmService(mockConfigService);
+      const config: LlmProviderConfig = {
+        id: 'test',
+        name: 'Claude Test',
+        provider: 'anthropic',
+        apiKey: 'ant-123',
+        baseUrl: 'ftp://internal.local',
+        model: 'claude-3-5-sonnet-20241022',
+        enabled: true
+      };
+
+      const result = await service.testConnection(config);
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('insegura');
+      expect(fetchSpy).not.toHaveBeenCalled();
+      fetchSpy.mockRestore();
+    });
   });
 
   describe('chat', () => {
@@ -231,6 +273,56 @@ describe('LlmService', () => {
 
       expect(response.text).toBe('Resposta do Claude');
       expect(response.usage?.totalTokens).toBe(20);
+      fetchSpy.mockRestore();
+    });
+
+    it('lança erro e não chama fetch quando o provedor Anthropic tem baseUrl insegura configurada (proteção contra SSRF)', async () => {
+      mockConfigService.getSettings.mockReturnValue({
+        llmProviders: [
+          {
+            id: 'prov-anthropic',
+            name: 'Claude Test',
+            provider: 'anthropic',
+            model: 'claude-3-5-sonnet-20241022',
+            apiKey: 'ant-test-key',
+            baseUrl: 'file:///etc/passwd',
+            enabled: true
+          }
+        ],
+        activeLlmProviderId: 'prov-anthropic'
+      });
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+      const service = new LlmService(mockConfigService);
+      await expect(
+        service.chat({ messages: [{ role: 'user', content: 'oi' }] })
+      ).rejects.toThrow(/insegura/);
+      expect(fetchSpy).not.toHaveBeenCalled();
+      fetchSpy.mockRestore();
+    });
+
+    it('lança erro e não chama fetch quando o provedor OpenAI-compatible tem baseUrl insegura configurada (proteção contra SSRF)', async () => {
+      mockConfigService.getSettings.mockReturnValue({
+        llmProviders: [
+          {
+            id: 'prov-openai',
+            name: 'OpenAI Test',
+            provider: 'openai',
+            model: 'gpt-4o-mini',
+            apiKey: 'sk-test-key',
+            baseUrl: 'file:///etc/passwd',
+            enabled: true
+          }
+        ],
+        activeLlmProviderId: 'prov-openai'
+      });
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+      const service = new LlmService(mockConfigService);
+      await expect(
+        service.chat({ messages: [{ role: 'user', content: 'oi' }] })
+      ).rejects.toThrow(/insegura/);
+      expect(fetchSpy).not.toHaveBeenCalled();
       fetchSpy.mockRestore();
     });
   });

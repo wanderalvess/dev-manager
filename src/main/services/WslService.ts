@@ -14,7 +14,7 @@ import {
   WslSnapshotActionResult,
   InfrDockerScriptStatus
 } from '../../shared/types';
-import { execFileAsync, isValidIdentifier } from '../utils/security';
+import { execFileAsync, isValidIdentifier, isSafeLocalPath } from '../utils/security';
 
 export class WslService {
   private cachedDistros: WslDistroInfo[] = [];
@@ -730,6 +730,7 @@ export class WslService {
    * Salva o diretório de snapshots preferencial.
    */
   public setSnapshotsDir(dir: string): boolean {
+    if (!isSafeLocalPath(dir)) return false;
     try {
       const cfgPath = this.getContainerManagerConfigPath();
       const current = this.loadContainerManagerConfig();
@@ -817,11 +818,11 @@ export class WslService {
     if (!distroName || !isValidIdentifier(distroName)) {
       return { success: false, error: 'Nome de distribuição WSL inválido.' };
     }
-    if (!tarPath || !fs.existsSync(tarPath)) {
+    if (!tarPath || !isSafeLocalPath(tarPath) || !fs.existsSync(tarPath)) {
       return { success: false, error: `Arquivo .tar não encontrado: ${tarPath}` };
     }
-    if (!installDir) {
-      return { success: false, error: 'Diretório de instalação não especificado.' };
+    if (!installDir || !isSafeLocalPath(installDir)) {
+      return { success: false, error: 'Diretório de instalação não especificado ou inválido.' };
     }
 
     try {
@@ -866,8 +867,8 @@ export class WslService {
     if (!distroName || !isValidIdentifier(distroName)) {
       return { success: false, error: 'Nome de distribuição WSL inválido.' };
     }
-    if (!outputPath) {
-      return { success: false, error: 'Caminho do arquivo de saída não especificado.' };
+    if (!outputPath || !isSafeLocalPath(outputPath)) {
+      return { success: false, error: 'Caminho do arquivo de saída não especificado ou inválido.' };
     }
 
     try {
@@ -1039,6 +1040,9 @@ export class WslService {
     }
 
     const basePath = options.infrPath || 'C:\\Users\\wanderson.alves\\projetosTOTV\\INFR-Docker';
+    if (!isSafeLocalPath(basePath) || !/^[a-zA-Z0-9_\-.:\\/ ]+$/.test(basePath)) {
+      return { success: false, output: 'Caminho de instalação (infrPath) inválido.' };
+    }
 
     // Converte caminho do Windows para caminho /mnt/... do WSL
     const wslPath = basePath

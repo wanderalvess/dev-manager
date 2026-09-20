@@ -8,6 +8,7 @@ import {
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { DocsIndexService } from './DocsIndexService';
+import { isSafeUrl } from '../utils/security';
 
 export class LlmService {
   constructor(
@@ -80,6 +81,9 @@ export class LlmService {
         }
         const baseUrl = (config.baseUrl?.trim() || 'https://api.anthropic.com').replace(/\/+$/, '');
         const url = `${baseUrl}/v1/messages`;
+        if (!isSafeUrl(url)) {
+          return { success: false, message: 'URL do provedor (baseUrl) inválida ou insegura.' };
+        }
 
         const response = await fetch(url, {
           method: 'POST',
@@ -109,6 +113,9 @@ export class LlmService {
       const defaultBaseUrl = config.provider === 'ollama' ? 'http://localhost:11434/v1' : 'https://api.openai.com/v1';
       const baseUrl = (config.baseUrl?.trim() || defaultBaseUrl).replace(/\/+$/, '');
       const url = baseUrl.endsWith('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
+      if (!isSafeUrl(url)) {
+        return { success: false, message: 'URL do provedor (baseUrl) inválida ou insegura.' };
+      }
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
@@ -271,6 +278,9 @@ export class LlmService {
     const defaultBaseUrl = provider.provider === 'ollama' ? 'http://localhost:11434/v1' : 'https://api.openai.com/v1';
     const baseUrl = (provider.baseUrl?.trim() || defaultBaseUrl).replace(/\/+$/, '');
     const url = baseUrl.endsWith('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
+    if (!isSafeUrl(url)) {
+      throw new Error(`URL do provedor ${provider.name} (baseUrl) inválida ou insegura.`);
+    }
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (provider.apiKey?.trim()) {
@@ -386,6 +396,9 @@ export class LlmService {
     const apiKey = provider.apiKey?.trim() || '';
     const baseUrl = (provider.baseUrl?.trim() || 'https://api.anthropic.com').replace(/\/+$/, '');
     const url = `${baseUrl}/v1/messages`;
+    if (!isSafeUrl(url)) {
+      throw new Error(`URL do provedor ${provider.name} (baseUrl) inválida ou insegura.`);
+    }
 
     const systemMessages = request.messages.filter((m) => m.role === 'system');
     const conversationMessages = request.messages.filter((m) => m.role !== 'system');

@@ -37,6 +37,7 @@ import {
   DeployProfile
 } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
+import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -580,10 +581,33 @@ const handleTestLlmRoute = async (req: express.Request, res: express.Response) =
   }
 };
 
+// Mesmas restrições de shape aplicadas pela tool MCP equivalente (llm_chat / docs_ask_ai),
+// para que a rota HTTP não aceite payloads/roles que a superfície MCP rejeitaria.
+const llmChatRequestSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.enum(['system', 'user', 'assistant']),
+      content: z.string()
+    })
+  ),
+  providerId: z.string().optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().int().min(1).max(32768).optional()
+});
+
+const llmAskDocsRequestSchema = z.object({
+  query: z.string().min(1),
+  topK: z.number().int().min(1).max(20).optional(),
+  sourceLabel: z.string().optional()
+});
+
 const handleChatLlmRoute = async (req: express.Request, res: express.Response) => {
   try {
-    const request = req.body?.request || req.body;
-    const result = await llmService.chat(request);
+    const parsed = llmChatRequestSchema.safeParse(req.body?.request || req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Payload inválido para chat com LLM.', details: parsed.error.issues });
+    }
+    const result = await llmService.chat(parsed.data);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Falha na resposta do LLM.' });
@@ -592,8 +616,11 @@ const handleChatLlmRoute = async (req: express.Request, res: express.Response) =
 
 const handleAskDocsRoute = async (req: express.Request, res: express.Response) => {
   try {
-    const request = req.body?.request || req.body;
-    const result = await llmService.askWithDocs(request);
+    const parsed = llmAskDocsRequestSchema.safeParse(req.body?.request || req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Payload inválido para consulta com LLM.', details: parsed.error.issues });
+    }
+    const result = await llmService.askWithDocs(parsed.data);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Falha ao processar consulta com LLM.' });
