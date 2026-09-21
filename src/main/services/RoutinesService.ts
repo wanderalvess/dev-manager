@@ -17,7 +17,12 @@ const DEFAULT_ROUTINE_EXTENSIONS = ['.EXE'];
  *  - "PCSIS1203.exe" -> "1203"
  */
 export function extractRoutineCode(fileNameOrPath: string): string | null {
-  const baseName = path.basename(fileNameOrPath, path.extname(fileNameOrPath)).toUpperCase();
+  if (!fileNameOrPath || typeof fileNameOrPath !== 'string') return null;
+  // Extrai o último segmento de caminho suportando separadores Windows (\) e POSIX (/)
+  const cleanName = fileNameOrPath.split(/[\\/]/).pop() || fileNameOrPath;
+  const ext = path.extname(cleanName);
+  const baseName = (ext ? cleanName.slice(0, -ext.length) : cleanName).trim().toUpperCase();
+
   // Padrão clássico: PCSIS followed by numbers (ex: PCSIS132, PCSIS1000)
   const pcsisMatch = baseName.match(/^PCSIS(\d+)$/i);
   if (pcsisMatch) return pcsisMatch[1];
