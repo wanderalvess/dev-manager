@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.13.0] - 2026-09-21
+### Adicionado
+- **Integração WinThor Start (DataSnap REST) & WTA**:
+  - Abertura de rotinas desktop do WinThor (extensões `.EXE`, `.PC`, etc.) através do serviço local **WinThor Start** (`http://localhost:9195`), permitindo iniciar telas com contexto autenticado sem necessitar do menu aberto.
+  - Autenticação automática no portal WinThor Anywhere (WTA) via endpoint `POST /winthor/autenticacao/v1/login` para obtenção dinâmica de tokens e parâmetros de inicialização de rotinas (`matriculaWinthor`, `usuarioBd`, `senhaBd`, `serverBd`, `token`).
+  - Suporte a payload de sessão fixo (`winthorStartDefaultPayload`) como contingência e fallback permanente.
+  - Monitoramento nativo da porta `9195` (`WinThor Start (Launcher Delphi)`) e `8889` (`Portal Web Local (WTA)`) no cockpit de portas monitoradas.
+  - Painel de configuração visual dedicado em **Configurações > Diretórios** e badge de status em tempo real no **Catálogo de Rotinas**.
+  - Fallback automático para execução direta (`spawn`) ou launcher customizado caso o serviço local esteja inativo.
+- **Distribuição & Assinatura de Código (Code Signing)**:
+  - Pipeline de empacotamento com suporte ativo e validado à assinatura digital de binários (`.exe`, instalador NSIS e desinstalador) via certificado corporativo (`.env.codesign`), prevenindo bloqueios do Windows SmartScreen na distribuição interna.
+
 ## [1.12.0] - 2026-09-17
 ### Adicionado
 - Sistema completo de Onboarding Guiado e Tours Interativos (`src/renderer/src/components/onboarding/`):

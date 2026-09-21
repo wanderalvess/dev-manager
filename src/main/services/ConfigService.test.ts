@@ -119,7 +119,14 @@ describe('ConfigService', () => {
       webPath: '/custom-portal',
       karafSshPort: 8102,
       routineFileExtensions: ['.EXE', '.PC'],
-      routineLauncherMap: { '.PC': 'C:/launcher.exe' }
+      routineLauncherMap: { '.PC': 'C:/launcher.exe' },
+      winthorStartEnabled: true,
+      winthorStartPort: 9195,
+      wtaUrl: 'http://localhost:8889',
+      wtaLogin: 'PCADMIN',
+      wtaPassword: 'MD5PASSWORD',
+      wtaAuthToken: 'token123',
+      winthorStartDefaultPayload: '{"m":"1"}'
     });
 
     const res = service.importSettings(jsonToImport);
@@ -131,6 +138,13 @@ describe('ConfigService', () => {
     expect(res.settings?.karafSshPort).toBe(8102);
     expect(res.settings?.routineFileExtensions).toEqual(['.EXE', '.PC']);
     expect(res.settings?.routineLauncherMap).toEqual({ '.PC': 'C:/launcher.exe' });
+    expect(res.settings?.winthorStartEnabled).toBe(true);
+    expect(res.settings?.winthorStartPort).toBe(9195);
+    expect(res.settings?.wtaUrl).toBe('http://localhost:8889');
+    expect(res.settings?.wtaLogin).toBe('PCADMIN');
+    expect(res.settings?.wtaPassword).toBe('MD5PASSWORD');
+    expect(res.settings?.wtaAuthToken).toBe('token123');
+    expect(res.settings?.winthorStartDefaultPayload).toBe('{"m":"1"}');
   });
 
   describe('cache em memória de getSettings', () => {

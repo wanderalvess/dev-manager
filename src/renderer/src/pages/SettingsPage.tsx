@@ -70,7 +70,8 @@ interface SettingsPageProps {
 }
 
 const DEFAULT_PORTS: MonitoredPortConfig[] = [
-  { port: 8889, label: 'Portal Web Local', enabled: true },
+  { port: 8889, label: 'Portal Web Local (WTA)', enabled: true },
+  { port: 9195, label: 'WinThor Start (Launcher Delphi)', enabled: true },
   { port: 8101, label: 'Karaf SSH (client.bat)', enabled: true },
   { port: 5005, label: 'Java Remote Debug', enabled: true },
   { port: 1521, label: 'Oracle DB Listener', enabled: true }
@@ -112,6 +113,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     favoriteRoutines: [],
     webPort: 8889,
     webPath: '',
+    winthorStartEnabled: true,
+    winthorStartPort: 9195,
+    wtaUrl: 'http://localhost:8889',
+    wtaLogin: 'PCADMIN',
+    wtaPassword: '',
+    wtaAuthToken: '',
+    winthorStartDefaultPayload: '',
     karafSshPort: 8101,
     karafDebugPort: 5005,
     monitoredPorts: DEFAULT_PORTS,
@@ -312,6 +320,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           jdkPath: st.jdkPath || '',
           karafScript: st.karafScript || '',
           webPort: st.webPort || 8889,
+          webPath: st.webPath || '',
+          winthorStartEnabled: st.winthorStartEnabled !== undefined ? st.winthorStartEnabled : true,
+          winthorStartPort: st.winthorStartPort || 9195,
+          wtaUrl: st.wtaUrl || 'http://localhost:8889',
+          wtaLogin: st.wtaLogin !== undefined ? st.wtaLogin : 'PCADMIN',
+          wtaPassword: st.wtaPassword || '',
+          wtaAuthToken: st.wtaAuthToken || '',
+          winthorStartDefaultPayload: st.winthorStartDefaultPayload || '',
           karafSshPort: st.karafSshPort || 8101,
           karafDebugPort: st.karafDebugPort || 5005,
           monitoredPorts: st.monitoredPorts && st.monitoredPorts.length > 0 ? st.monitoredPorts : DEFAULT_PORTS,
@@ -1316,6 +1332,117 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                       </button>
                     </div>
                   ))}
+                </div>
+
+                {/* Integração WinThor Start & WTA */}
+                <div className="bg-card border border-border/80 rounded-xl p-3.5 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                        <Activity className="w-4 h-4 text-emerald-500" /> Integração WinThor Start (DataSnap) & WTA
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Abre rotinas desktop autenticadas via serviço local do WinThor Start sem necessitar do menu aberto.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.winthorStartEnabled ?? true}
+                        onChange={(e) => setSettings({ ...settings, winthorStartEnabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        Porta do WinThor Start:
+                      </label>
+                      <input
+                        type="number"
+                        value={settings.winthorStartPort ?? 9195}
+                        onChange={(e) => setSettings({ ...settings, winthorStartPort: parseInt(e.target.value) || 9195 })}
+                        className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                        placeholder="9195"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        URL do Portal WTA:
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.wtaUrl || 'http://localhost:8889'}
+                        onChange={(e) => setSettings({ ...settings, wtaUrl: e.target.value })}
+                        className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                        placeholder="http://localhost:8889"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        Usuário WTA (Login Automático):
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.wtaLogin || ''}
+                        onChange={(e) => setSettings({ ...settings, wtaLogin: e.target.value })}
+                        className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                        placeholder="Ex: PCADMIN"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        Senha / Hash WTA:
+                      </label>
+                      <input
+                        type="password"
+                        value={settings.wtaPassword || ''}
+                        onChange={(e) => setSettings({ ...settings, wtaPassword: e.target.value })}
+                        className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                        placeholder="Senha ou Hash MD5 do WTA"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-border/40">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        Cookie de Autenticação WTA (Cookie <code>suukie</code>):
+                      </label>
+                      <input
+                        type="password"
+                        value={settings.wtaAuthToken || ''}
+                        onChange={(e) => setSettings({ ...settings, wtaAuthToken: e.target.value })}
+                        className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                        placeholder="Cole o valor do cookie 'suukie' do WTA (opcional)"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Permite que o Dev Manager consulte os parâmetros atualizados direto da sua sessão web.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        Payload de Fallback (JSON com <code>m, u, p, t, s</code>):
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={settings.winthorStartDefaultPayload || ''}
+                        onChange={(e) => setSettings({ ...settings, winthorStartDefaultPayload: e.target.value })}
+                        className="w-full bg-muted/40 border border-border rounded-lg p-2 text-foreground font-mono text-[11px] focus:outline-none focus:border-primary resize-none"
+                        placeholder='{"m":"...","u":"...","p":"...","t":"...","s":"..."}'
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Usado como parâmetros fixos quando o WTA estiver fechado ou sem cookie ativo.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Executável da IDE */}

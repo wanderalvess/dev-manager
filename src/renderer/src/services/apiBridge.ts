@@ -245,6 +245,11 @@ export function initApiBridge() {
       return data.content;
     },
 
+    getMcpDocs: async (): Promise<string> => {
+      const data = await apiFetch<{ content: string }>('/api/system/mcp-docs');
+      return data.content;
+    },
+
     // Gestor de Ambiente
     checkAdmin: async (): Promise<boolean> => {
       const data = await apiFetch<{ isAdmin: boolean }>('/api/env/admin');

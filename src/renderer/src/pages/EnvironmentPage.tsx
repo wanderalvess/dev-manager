@@ -830,7 +830,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto max-w-full overflow-x-hidden">
+    <div className="h-full flex flex-col p-4 md:p-5 pb-4 space-y-3.5 overflow-y-auto lg:overflow-hidden max-w-full overflow-x-hidden">
       {/* Aviso de Configuração Incompleta: orienta o primeiro uso para as Configurações */}
       {missingRequiredPaths.length > 0 && (
         <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
@@ -1230,9 +1230,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       </div>
 
       {/* 3. Grid Principal: Cards das Etapas do Perfil à Esquerda / Console à Direita */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-[480px] min-w-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-0 min-w-0">
         {/* Coluna Esquerda: Cards de cada Serviço / Etapa do Perfil + Diagnósticos */}
-        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0">
+        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0 lg:overflow-y-auto lg:pr-2 lg:pb-2">
           {/* Cartões dos Passos do Perfil Ativo */}
           <div className="cockpit-panel rounded-2xl p-4 flex flex-col border border-border space-y-3" data-tour="step-cards-panel">
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
@@ -1714,7 +1714,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         </div>
 
         {/* Coluna Direita: Console / Terminal Integrado */}
-        <div className="lg:col-span-6 min-h-[450px] lg:min-h-full flex flex-col relative min-w-0" data-tour="console-terminal">
+        <div className="lg:col-span-6 flex flex-col relative min-w-0 min-h-[400px] lg:min-h-0" data-tour="console-terminal">
           <button
             onClick={handleOpenKarafHistory}
             title="Ver histórico persistido do Karaf embedded (sobrevive a reinícios)"

@@ -74,6 +74,11 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
   const [isChangelogOpen, setIsChangelogOpen] = useState(false);
   const [changelogContent, setChangelogContent] = useState('');
   const [isLoadingChangelog, setIsLoadingChangelog] = useState(false);
+
+  const [isMcpDocsOpen, setIsMcpDocsOpen] = useState(false);
+  const [mcpDocsContent, setMcpDocsContent] = useState('');
+  const [isLoadingMcpDocs, setIsLoadingMcpDocs] = useState(false);
+
   const [settings, setSettings] = useState<any>(null);
 
   const { copy: copyDiag, copiedKey: copiedDiagKey } = useCopyToClipboard(2500);
@@ -116,6 +121,20 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       setChangelogContent(`Erro ao carregar o changelog: ${err?.message || err}`);
     } finally {
       setIsLoadingChangelog(false);
+    }
+  };
+
+  const handleOpenMcpDocs = async () => {
+    setIsMcpDocsOpen(true);
+    setIsLoadingMcpDocs(true);
+    setMcpDocsContent('');
+    try {
+      const content = await window.electronAPI?.getMcpDocs?.();
+      setMcpDocsContent(content || 'Nenhuma documentação encontrada.');
+    } catch (err: any) {
+      setMcpDocsContent(`Erro ao carregar a documentação: ${err?.message || err}`);
+    } finally {
+      setIsLoadingMcpDocs(false);
     }
   };
 
@@ -367,22 +386,38 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">52 tools</strong> que um assistente de IA (Claude Code, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica.
+            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">73 tools</strong> que um assistente de IA (Claude Code, Antigravity, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
-            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Ativar no Claude Code:</span>
-            <p>
-              O arquivo <code className="font-mono text-primary font-semibold">.mcp.json</code> na raiz do projeto já registra o servidor. Basta abrir esta pasta no Claude Code e rodar <code className="font-mono text-primary">/mcp</code> para conectar.
-            </p>
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60">
-              <code>npm run mcp</code>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Catálogo de Ferramentas:</span>
+              <p className="mb-2">
+                As ferramentas permitem executar desde o start do ambiente até comandos Karaf complexos e análise de queries no banco.
+              </p>
               <button
-                onClick={() => copyToClipboard('npm run mcp', 'cmd-mcp-faq')}
-                className="p-1 hover:text-foreground transition-colors cursor-pointer"
-                title="Copiar comando"
+                onClick={handleOpenMcpDocs}
+                className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-2 w-fit cursor-pointer"
               >
-                {copiedItem === 'cmd-mcp-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Ver Catálogo e Exemplos de Prompts</span>
               </button>
+            </div>
+            
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Ativar no Claude Code:</span>
+              <p className="mb-2">
+                O arquivo <code className="font-mono text-primary font-semibold">.mcp.json</code> na raiz do projeto já registra o servidor. Basta abrir esta pasta no Claude Code e rodar <code className="font-mono text-primary">/mcp</code> para conectar.
+              </p>
+              <div className="flex items-center justify-between p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60">
+                <code>npm run mcp</code>
+                <button
+                  onClick={() => copyToClipboard('npm run mcp', 'cmd-mcp-faq')}
+                  className="p-1 hover:text-foreground transition-colors cursor-pointer"
+                  title="Copiar comando"
+                >
+                  {copiedItem === 'cmd-mcp-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1527,7 +1562,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
                         8. Servidor MCP (Automação por IA)
                       </h3>
-                      <span className="text-[10px] text-muted-foreground font-mono">52 Tools expostas via stdio para Claude Code</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">73 Tools expostas via stdio para IAs</span>
                     </div>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 font-mono font-bold">
@@ -1542,13 +1577,20 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <ul className="space-y-1.5 pl-1">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
-                      <span><strong>52 Tools Especializadas:</strong> Controle de serviços Windows, Karaf, Docker, Git, Rotinas e RAG.</span>
+                      <span><strong>73 Tools Especializadas:</strong> Controle de serviços Windows, Karaf, Docker, Git, Banco, Deploy, e RAG.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
-                      <span><strong>Conexão Instantânea:</strong> Arquivo <code className="font-mono text-primary">.mcp.json</code> já configurado na raiz.</span>
+                      <span><strong>Catálogo de Ferramentas:</strong> Documentação completa e dicas de prompts para a IA.</span>
                     </li>
                   </ul>
+                  <button
+                    onClick={handleOpenMcpDocs}
+                    className="w-full mt-2 py-2 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Ver Catálogo de Ferramentas MCP</span>
+                  </button>
                 </div>
               </div>
 
@@ -2085,6 +2127,16 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
           content={changelogContent}
           isLoading={isLoadingChangelog}
           onClose={() => setIsChangelogOpen(false)}
+        />
+      )}
+
+      {isMcpDocsOpen && (
+        <MarkdownReader
+          title="Catálogo de Ferramentas MCP"
+          filePath="docs/MCP_TOOLS.md"
+          content={mcpDocsContent}
+          isLoading={isLoadingMcpDocs}
+          onClose={() => setIsMcpDocsOpen(false)}
         />
       )}
     </div>

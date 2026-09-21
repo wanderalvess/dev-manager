@@ -207,6 +207,16 @@ app.get('/api/system/changelog', (_req, res) => {
   }
 });
 
+app.get('/api/system/mcp-docs', (_req, res) => {
+  try {
+    const docsPath = path.join(repoRoot, 'docs', 'MCP_TOOLS.md');
+    if (!fs.existsSync(docsPath)) return res.json({ content: '# Documentação não encontrada\nNão foi possível localizar o arquivo MCP_TOOLS.md.' });
+    res.json({ content: fs.readFileSync(docsPath, 'utf-8') });
+  } catch (err: any) {
+    res.json({ content: `# Erro ao ler documentação\n${err.message}` });
+  }
+});
+
 app.get('/api/system/check-path', (req, res) => {
   const targetPath = (req.query.path as string) || '';
   if (!isSafeLocalPath(targetPath)) {
@@ -503,12 +513,13 @@ app.get('/api/routines', (_req, res) => {
   res.json(routinesService.listRoutines());
 });
 
-app.post('/api/routines/launch', (req, res) => {
+app.post('/api/routines/launch', async (req, res) => {
   const { fullPath } = req.body;
   if (!fullPath || typeof fullPath !== 'string' || !isSafeLocalPath(fullPath)) {
     return res.status(400).json({ success: false, error: 'Caminho inválido.' });
   }
-  res.json({ success: routinesService.launchRoutine(fullPath) });
+  const success = await routinesService.launchRoutine(fullPath);
+  res.json({ success });
 });
 
 app.post('/api/routines/launch-mapped', (req, res) => {

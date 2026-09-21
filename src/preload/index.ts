@@ -84,6 +84,8 @@ const electronAPI = {
     ipcRenderer.invoke('system:get-app-info'),
   getChangelog: (): Promise<string | null> =>
     ipcRenderer.invoke('system:get-changelog'),
+  getMcpDocs: (): Promise<string> =>
+    ipcRenderer.invoke('system:get-mcp-docs'),
 
   // Gestor de Ambiente
   checkAdmin: (): Promise<boolean> => ipcRenderer.invoke('env:check-admin'),

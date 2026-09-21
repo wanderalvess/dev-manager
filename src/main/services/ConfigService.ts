@@ -17,7 +17,8 @@ import {
 } from '../../shared/types';
 
 export const DEFAULT_MONITORED_PORTS: MonitoredPortConfig[] = [
-  { port: 8889, label: 'Portal Web Local', enabled: true },
+  { port: 8889, label: 'Portal Web Local (WTA)', enabled: true },
+  { port: 9195, label: 'WinThor Start (Launcher Delphi)', enabled: true },
   { port: 8101, label: 'Karaf SSH (client.bat)', enabled: true },
   { port: 5005, label: 'Java Remote Debug (JVM)', enabled: true },
   { port: 1521, label: 'Oracle DB Listener', enabled: true }
@@ -304,6 +305,9 @@ export function getDynamicDefaultConfig(): AppSettings {
     favoriteRoutines: [],
     webPort: 8889,
     webPath: '',
+    winthorStartEnabled: true,
+    winthorStartPort: 9195,
+    wtaUrl: 'http://localhost:8889',
     karafSshPort: 8101,
     karafDebugPort: 5005,
     monitoredPorts: DEFAULT_MONITORED_PORTS,
@@ -653,6 +657,13 @@ export class ConfigService {
       }
       if (typeof parsed.webPort === 'number') merged.webPort = parsed.webPort;
       if (typeof parsed.webPath === 'string') merged.webPath = parsed.webPath;
+      if (typeof parsed.winthorStartEnabled === 'boolean') merged.winthorStartEnabled = parsed.winthorStartEnabled;
+      if (typeof parsed.winthorStartPort === 'number') merged.winthorStartPort = parsed.winthorStartPort;
+      if (typeof parsed.wtaUrl === 'string') merged.wtaUrl = parsed.wtaUrl;
+      if (typeof parsed.wtaLogin === 'string') merged.wtaLogin = parsed.wtaLogin;
+      if (typeof parsed.wtaPassword === 'string') merged.wtaPassword = parsed.wtaPassword;
+      if (typeof parsed.wtaAuthToken === 'string') merged.wtaAuthToken = parsed.wtaAuthToken;
+      if (typeof parsed.winthorStartDefaultPayload === 'string') merged.winthorStartDefaultPayload = parsed.winthorStartDefaultPayload;
       if (typeof parsed.karafSshPort === 'number') merged.karafSshPort = parsed.karafSshPort;
       if (typeof parsed.karafDebugPort === 'number') merged.karafDebugPort = parsed.karafDebugPort;
       if (typeof parsed.ideName === 'string') merged.ideName = parsed.ideName;

@@ -19,6 +19,43 @@ interface CachedConnection {
   conn: any;
   close: (conn: any) => Promise<void>;
   timer: ReturnType<typeof setTimeout>;
+  queue: Promise<any>;
+}
+
+/**
+ * Sanitiza valores retornados do banco de dados para garantir que possam ser
+ * serializados via IPC do Electron (structuredClone) sem travar ou rejeitar.
+ */
+function sanitizeDbValue(val: any): any {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'bigint') return val.toString();
+  if (typeof val === 'number' || typeof val === 'boolean' || typeof val === 'string') return val;
+  if (val instanceof Date) return val.toISOString();
+  if (Buffer.isBuffer(val)) {
+    return `[BLOB ${val.length} bytes]`;
+  }
+  if (typeof val === 'object') {
+    // Se for um Stream / EventEmitter / oracledb.Lob que não foi convertido
+    if (typeof (val as any).pipe === 'function' || typeof (val as any).read === 'function') {
+      return '[LOB Stream]';
+    }
+    try {
+      return JSON.parse(JSON.stringify(val));
+    } catch {
+      return String(val);
+    }
+  }
+  return String(val);
+}
+
+function sanitizeRows(rows: Record<string, any>[], columns: string[]): Record<string, any>[] {
+  return rows.map((row) => {
+    const clean: Record<string, any> = {};
+    for (const col of columns) {
+      clean[col] = sanitizeDbValue(row[col]);
+    }
+    return clean;
+  });
 }
 
 export class DatabaseService {
@@ -38,6 +75,10 @@ export class DatabaseService {
    * aberta e a compartilha entre chamadas subsequentes com a mesma config
    * (evita reabrir handshake em test -> listTables -> executeQuery), fechando-a
    * após IDLE_MS sem uso ou imediatamente em caso de erro.
+   *
+   * As operações na mesma conexão física são enfileiradas sequencialmente para
+   * impedir colisões de pacotes de rede e desincronização de socket nos drivers
+   * (especialmente Oracle thin e PostgreSQL client).
    */
   private async withConnection<T, R>(
     config: DatabaseConnectionConfig,
@@ -61,7 +102,8 @@ export class DatabaseService {
       cachedPromise = getConn().then((conn) => ({
         conn,
         close: closeConn as (c: any) => Promise<void>,
-        timer: undefined as any
+        timer: undefined as any,
+        queue: Promise.resolve()
       }));
       // Se a conexão falhar, remove a entrada para permitir uma nova tentativa
       // (sem consumir a rejeição de quem está aguardando `cachedPromise` abaixo).
@@ -76,8 +118,14 @@ export class DatabaseService {
       cached.close(cached.conn).catch(() => {});
     }, DatabaseService.IDLE_MS);
 
+    const runInQueue = () => {
+      const next = cached.queue.then(() => fn(cached.conn as T));
+      cached.queue = next.catch(() => {});
+      return next;
+    };
+
     try {
-      return await fn(cached.conn as T);
+      return await runInQueue();
     } catch (err) {
       clearTimeout(cached.timer);
       this.connCache.delete(key);
@@ -245,6 +293,7 @@ export class DatabaseService {
 
     try {
       if (config.type === 'oracle') {
+        const upperTable = cleanTable.toUpperCase();
         const query = `
           SELECT 
             c.COLUMN_NAME, 
@@ -253,14 +302,17 @@ export class DatabaseService {
             c.DATA_PRECISION, 
             c.DATA_SCALE, 
             c.NULLABLE,
-            (SELECT 'Y' FROM USER_CONS_COLUMNS cc 
-               JOIN USER_CONSTRAINTS uc ON cc.CONSTRAINT_NAME = uc.CONSTRAINT_NAME 
-             WHERE uc.CONSTRAINT_TYPE = 'P' 
-               AND UPPER(cc.TABLE_NAME) = UPPER(c.TABLE_NAME) 
-               AND UPPER(cc.COLUMN_NAME) = UPPER(c.COLUMN_NAME) 
-               AND ROWNUM = 1) AS IS_PK
+            CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 'Y' ELSE 'N' END AS IS_PK
           FROM USER_TAB_COLS c
-          WHERE UPPER(c.TABLE_NAME) = UPPER('${cleanTable}')
+          LEFT JOIN (
+            SELECT cc.COLUMN_NAME
+            FROM USER_CONSTRAINTS uc
+            JOIN USER_CONS_COLUMNS cc ON uc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+            WHERE uc.CONSTRAINT_TYPE = 'P' 
+              AND uc.TABLE_NAME = '${upperTable}'
+          ) pk ON c.COLUMN_NAME = pk.COLUMN_NAME
+          WHERE c.TABLE_NAME = '${upperTable}'
+            AND c.HIDDEN_COLUMN = 'NO'
           ORDER BY c.COLUMN_ID
         `;
         const res = await this.executeQuery(config, query, 300);
@@ -497,10 +549,12 @@ export class DatabaseService {
           // Múltiplos comandos
           const last = res[res.length - 1];
           const isQuery = Boolean(last.fields && last.fields.length > 0);
+          const columns = isQuery ? last.fields.map((f: any) => f.name) : [];
+          const rawRows = isQuery ? (last.rows || []).slice(0, maxRows) : [];
           return {
             success: true,
-            columns: isQuery ? last.fields.map((f: any) => f.name) : [],
-            rows: isQuery ? (last.rows || []).slice(0, maxRows) : [],
+            columns,
+            rows: sanitizeRows(rawRows, columns),
             rowCount: isQuery ? (last.rows ? last.rows.length : 0) : 0,
             affectedRows: !isQuery ? last.rowCount ?? undefined : undefined,
             executionTimeMs,
@@ -509,10 +563,12 @@ export class DatabaseService {
         }
 
         const isQuery = Boolean(res.fields && res.fields.length > 0);
+        const columns = isQuery ? res.fields.map((f: any) => f.name) : [];
+        const rawRows = isQuery ? (res.rows || []).slice(0, maxRows) : [];
         return {
           success: true,
-          columns: isQuery ? res.fields.map((f: any) => f.name) : [],
-          rows: isQuery ? (res.rows || []).slice(0, maxRows) : [],
+          columns,
+          rows: sanitizeRows(rawRows, columns),
           rowCount: isQuery ? (res.rows ? res.rows.length : 0) : 0,
           affectedRows: !isQuery ? res.rowCount ?? undefined : undefined,
           executionTimeMs,
@@ -579,11 +635,11 @@ export class DatabaseService {
         if (Array.isArray(result) && fields) {
           // É um SELECT / resultado com colunas
           const columns = (fields as any[]).map((f) => f.name);
-          const rows = (result as Record<string, any>[]).slice(0, maxRows);
+          const rawRows = (result as Record<string, any>[]).slice(0, maxRows);
           return {
             success: true,
             columns,
-            rows,
+            rows: sanitizeRows(rawRows, columns),
             rowCount: result.length,
             executionTimeMs,
             isQuery: true
@@ -671,6 +727,18 @@ export class DatabaseService {
 
     const oracledb = oracleModule.default || oracleModule;
 
+    // Configura tratamento nativo de LOBs no Oracle para carregar como strings/buffers em vez de streams
+    try {
+      if (oracledb.CLOB && (!oracledb.fetchAsString || !oracledb.fetchAsString.includes(oracledb.CLOB))) {
+        oracledb.fetchAsString = [oracledb.CLOB];
+      }
+      if (oracledb.BLOB && (!oracledb.fetchAsBuffer || !oracledb.fetchAsBuffer.includes(oracledb.BLOB))) {
+        oracledb.fetchAsBuffer = [oracledb.BLOB];
+      }
+    } catch {
+      // Ignora caso a versão não suporte
+    }
+
     // Se o usuário solicitou Thick Mode ou informou o caminho do Instant Client, inicializa antes de conectar
     if (config.oracleThickMode || config.oracleClientPath) {
       this.initOracleThickClient(oracledb, config.oracleClientPath);
@@ -747,25 +815,30 @@ export class DatabaseService {
       ({ conn }) => conn.close(),
       async ({ conn, oracledb }) => {
         const cleanSql = sql.trim().replace(/;+\s*$/, '');
-        const isSelect = /^\s*(SELECT|WITH)\s+/i.test(cleanSql);
+        const sqlWithoutComments = cleanSql.replace(/^(\s*(--[^\r\n]*|\/\*[\s\S]*?\*\/)\s*)+/i, '');
+        const isSelect = /^(SELECT|WITH)\b/i.test(sqlWithoutComments);
 
         const bindParams = binds && typeof binds === 'object' && Object.keys(binds).length > 0 ? binds : [];
 
-        const result = await conn.execute(cleanSql, bindParams, {
+        const execOptions: any = {
           outFormat: oracledb.OUT_FORMAT_OBJECT,
-          autoCommit: true,
+          autoCommit: !isSelect,
           maxRows: isSelect ? maxRows : undefined
-        });
+        };
+        // callTimeout (ms) evita travamento de socket em consultas demoradas
+        execOptions.callTimeout = 60000;
+
+        const result = await conn.execute(cleanSql, bindParams, execOptions);
 
         const executionTimeMs = Date.now() - startTime;
 
         if (result.rows && result.metaData) {
           const columns = result.metaData.map((m: any) => m.name);
-          const rows = (result.rows as Record<string, any>[]).slice(0, maxRows);
+          const rawRows = (result.rows as Record<string, any>[]).slice(0, maxRows);
           return {
             success: true,
             columns,
-            rows,
+            rows: sanitizeRows(rawRows, columns),
             rowCount: result.rows.length,
             executionTimeMs,
             isQuery: true

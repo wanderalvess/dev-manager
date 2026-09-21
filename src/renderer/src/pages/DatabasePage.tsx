@@ -358,6 +358,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     }
 
     setIsExecuting(true);
+    setQueryResult(null);
     setActiveResultTab('grid');
     setSearchTerm('');
     setColumnFilters({});
@@ -911,7 +912,12 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
           </div>
 
           {/* Estatísticas do Resultado */}
-          {queryResult && (
+          {isExecuting ? (
+            <div className="flex items-center space-x-2 text-xs text-primary font-medium animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-primary" />
+              <span>Executando consulta...</span>
+            </div>
+          ) : queryResult && (
             <div className="flex items-center space-x-3 text-xs">
               {queryResult.success ? (
                 <>
@@ -949,6 +955,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
           {activeResultTab === 'grid' ? (
             <ResultsDataGrid
               queryResult={queryResult}
+              isExecuting={isExecuting}
               processedRows={processedRows}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}

@@ -134,21 +134,29 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
     return result;
   }, [sql]);
 
-  // Garante que as colunas das tabelas referenciadas no SQL estejam carregadas para o autocomplete
+  // Garante que as colunas das tabelas referenciadas no SQL estejam carregadas para o autocomplete (com debounce de 400ms)
   useEffect(() => {
-    if (!activeConnection || !window.electronAPI?.getDbTableColumns) return;
-    referencedTables.forEach(({ table }) => {
-      const known = tables.find((t) => t === table || t.split('.').pop() === table.split('.').pop());
-      const key = known || table;
-      if (!tableColumns[key] && !isLoadingColumns[key]) {
-        setIsLoadingColumns((prev) => ({ ...prev, [key]: true }));
-        window.electronAPI
-          .getDbTableColumns(activeConnection, key)
-          .then((cols) => setTableColumns((prev) => ({ ...prev, [key]: cols || [] })))
-          .catch(() => {})
-          .finally(() => setIsLoadingColumns((prev) => ({ ...prev, [key]: false })));
-      }
-    });
+    if (!activeConnection || !window.electronAPI?.getDbTableColumns || referencedTables.length === 0) return;
+
+    const timer = setTimeout(() => {
+      referencedTables.forEach(({ table }) => {
+        const tableUpper = table.toUpperCase();
+        const known = tables.find(
+          (t) => t.toUpperCase() === tableUpper || (t.split('.').pop() || '').toUpperCase() === tableUpper
+        );
+        const key = known || table;
+        if (!tableColumns[key] && !isLoadingColumns[key]) {
+          setIsLoadingColumns((prev) => ({ ...prev, [key]: true }));
+          window.electronAPI
+            .getDbTableColumns(activeConnection, key)
+            .then((cols) => setTableColumns((prev) => ({ ...prev, [key]: cols || [] })))
+            .catch(() => {})
+            .finally(() => setIsLoadingColumns((prev) => ({ ...prev, [key]: false })));
+        }
+      });
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [referencedTables, activeConnection, tables, tableColumns, isLoadingColumns, setIsLoadingColumns, setTableColumns]);
 
   const getCurrentWordRange = (text: string, caret: number) => {

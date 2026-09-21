@@ -13,7 +13,8 @@ import {
   Trash2,
   AppWindow,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  Activity
 } from 'lucide-react';
 import { RoutineItem, MappedProgram, AppSettings } from '../../../shared/types';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
@@ -37,6 +38,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
   const [runningMappedId, setRunningMappedId] = useState<string | null>(null);
   const [isAddingProgram, setIsAddingProgram] = useState(false);
   const [appPath, setAppPath] = useState<string>('');
+  const [winthorStartActive, setWinthorStartActive] = useState<boolean>(true);
 
   const loadRoutines = useCallback(async () => {
     setIsLoading(true);
@@ -56,6 +58,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
         const st: AppSettings = await window.electronAPI.getSettings();
         setMappedPrograms(st.mappedPrograms || []);
         setAppPath(st.appPath || '');
+        setWinthorStartActive(st.winthorStartEnabled ?? true);
       } catch (err) {
         console.warn('Erro ao carregar configurações de rotinas:', err);
       }
@@ -76,12 +79,31 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
     }
   };
 
+  const [launchFeedback, setLaunchFeedback] = useState<{ id: string; success: boolean; message: string } | null>(null);
+
   const handleLaunchRoutine = async (routine: RoutineItem) => {
     setRunningId(routine.id);
+    setLaunchFeedback(null);
     try {
       if (window.electronAPI) {
-        await window.electronAPI.launchRoutine(routine.fullPath);
+        console.log(`[RoutinesPage] Chamando launchRoutine para: ${routine.fullPath}`);
+        const success = await window.electronAPI.launchRoutine(routine.fullPath);
+        console.log(`[RoutinesPage] Resultado da abertura:`, success);
+        if (!success) {
+          setLaunchFeedback({
+            id: routine.id,
+            success: false,
+            message: 'Não foi possível iniciar a rotina. Verifique se o caminho existe e se o WinThor Start está ativo.'
+          });
+        }
       }
+    } catch (err: any) {
+      console.error(`[RoutinesPage] Erro ao disparar rotina:`, err);
+      setLaunchFeedback({
+        id: routine.id,
+        success: false,
+        message: err?.message || 'Erro inesperado ao iniciar a rotina.'
+      });
     } finally {
       setTimeout(() => setRunningId(null), 1500);
     }
@@ -169,6 +191,21 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
                     {mappedPrograms.length} {mappedPrograms.length === 1 ? 'Atalho' : 'Atalhos'}
                   </span>
                 )}
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold flex items-center gap-1 border ${
+                    winthorStartActive
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                      : 'bg-muted text-muted-foreground border-border'
+                  }`}
+                  title={
+                    winthorStartActive
+                      ? 'WinThor Start ativado: Rotinas serão iniciadas via serviço local autenticado (DataSnap)'
+                      : 'WinThor Start desativado: Rotinas serão disparadas via executável direto'
+                  }
+                >
+                  <Activity className="w-2.5 h-2.5" />
+                  <span>WinThor Start: {winthorStartActive ? 'Ativo' : 'Desativado'}</span>
+                </span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Escaneia a pasta configurada em busca de executáveis WinThor, com busca instantânea, favoritos e programas mapeados.
@@ -239,6 +276,27 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
           </div>
         </div>
       </div>
+
+      {/* Banner de Feedback de Execução de Rotina */}
+      {launchFeedback && (
+        <div className="shrink-0 bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 flex items-start justify-between space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
+          <div className="flex items-start space-x-2.5">
+            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold block">Falha ao abrir rotina ({launchFeedback.id})</span>
+              <span className="text-[11px] text-muted-foreground block mt-0.5">{launchFeedback.message}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLaunchFeedback(null)}
+            className="text-muted-foreground hover:text-foreground cursor-pointer p-1"
+            title="Fechar aviso"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Alerta de diretório não configurado */}
       {!appPath && (

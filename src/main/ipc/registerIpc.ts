@@ -124,6 +124,23 @@ export function registerIpcHandlers(
     return configService.autoDetectPaths();
   });
 
+  ipcMain.handle('system:get-mcp-docs', async () => {
+    try {
+      const docsPath = path.join(process.cwd(), 'docs', 'MCP_TOOLS.md');
+      if (fs.existsSync(docsPath)) {
+        return fs.readFileSync(docsPath, 'utf-8');
+      }
+      // fallback in case cwd is different in packaged app
+      const fallbackPath = path.join(app.getAppPath(), 'docs', 'MCP_TOOLS.md');
+      if (fs.existsSync(fallbackPath)) {
+        return fs.readFileSync(fallbackPath, 'utf-8');
+      }
+      return '# Documentação não encontrada\nNão foi possível localizar o arquivo MCP_TOOLS.md.';
+    } catch (err: any) {
+      return `# Erro ao ler documentação\n${err.message}`;
+    }
+  });
+
   ipcMain.handle('system:get-app-info', async (): Promise<SystemAppInfo> => {
     const isAdmin = await windowsService.checkAdminPrivileges();
     const configPath = configService.getConfigFilePath();

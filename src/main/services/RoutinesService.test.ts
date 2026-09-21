@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { ConfigService } from './ConfigService';
-import { RoutinesService } from './RoutinesService';
+import { RoutinesService, extractRoutineCode } from './RoutinesService';
 
 const spawnMock = vi.fn((..._args: unknown[]) => ({ unref: vi.fn() }));
 vi.mock('child_process', async (importOriginal) => {
@@ -89,25 +89,44 @@ describe('RoutinesService', () => {
     });
   });
 
+  describe('extractRoutineCode', () => {
+    it('extrai corretamente códigos numéricos de executáveis PCSIS', () => {
+      expect(extractRoutineCode('PCSIS132.EXE')).toBe('132');
+      expect(extractRoutineCode('pcsis1000.exe')).toBe('1000');
+      expect(extractRoutineCode('C:\\winthor\\Prod\\PCSIS1203.EXE')).toBe('1203');
+    });
+
+    it('extrai códigos puramente numéricos ou com prefixo genérico', () => {
+      expect(extractRoutineCode('132.EXE')).toBe('132');
+      expect(extractRoutineCode('ROTINA529.exe')).toBe('529');
+      expect(extractRoutineCode('ROT_1400.exe')).toBe('1400');
+    });
+
+    it('retorna null para programas e utilitários sem código numérico padrão', () => {
+      expect(extractRoutineCode('notepad.exe')).toBeNull();
+      expect(extractRoutineCode('launcher.exe')).toBeNull();
+    });
+  });
+
   describe('launchRoutine', () => {
-    it('bloqueia caminho fora da pasta configurada', () => {
+    it('bloqueia caminho fora da pasta configurada', async () => {
       configService.saveSettings({ appPath: appDir });
       const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dev-manager-outside-'));
       const outsideExe = path.join(outsideDir, 'evil.exe');
       fs.writeFileSync(outsideExe, 'x');
 
-      const result = service.launchRoutine(outsideExe);
+      const result = await service.launchRoutine(outsideExe);
       expect(result).toBe(false);
       expect(spawnMock).not.toHaveBeenCalled();
       fs.rmSync(outsideDir, { recursive: true, force: true });
     });
 
-    it('lança .EXE diretamente quando não há launcher configurado', () => {
+    it('lança .EXE diretamente quando não há launcher configurado e winthorStart falha ou está desabilitado', async () => {
       const exePath = path.join(appDir, 'ROTINA1.EXE');
       fs.writeFileSync(exePath, 'x');
-      configService.saveSettings({ appPath: appDir });
+      configService.saveSettings({ appPath: appDir, winthorStartEnabled: false });
 
-      const result = service.launchRoutine(exePath);
+      const result = await service.launchRoutine(exePath);
       expect(result).toBe(true);
       expect(spawnMock).toHaveBeenCalledWith(
         path.normalize(exePath),
@@ -116,7 +135,7 @@ describe('RoutinesService', () => {
       );
     });
 
-    it('usa o launcher configurado para extensões mapeadas', () => {
+    it('usa o launcher configurado para extensões mapeadas', async () => {
       const launcherPath = path.join(appDir, 'LAUNCHER.EXE');
       fs.writeFileSync(launcherPath, 'x');
       const pcFile = path.join(appDir, 'ROTINA1.PC');
@@ -126,7 +145,7 @@ describe('RoutinesService', () => {
         routineLauncherMap: { '.PC': launcherPath }
       });
 
-      const result = service.launchRoutine(pcFile);
+      const result = await service.launchRoutine(pcFile);
       expect(result).toBe(true);
       expect(spawnMock).toHaveBeenCalledWith(
         launcherPath,
@@ -135,9 +154,38 @@ describe('RoutinesService', () => {
       );
     });
 
-    it('retorna false quando o arquivo não existe', () => {
+    it('tenta abrir via Winthor Start se winthorStartEnabled for true e for rotina identificada', async () => {
+      const exePath = path.join(appDir, 'PCSIS132.EXE');
+      fs.writeFileSync(exePath, 'x');
+      configService.saveSettings({ appPath: appDir, winthorStartEnabled: true });
+
+      const winthorStartSpy = vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue(true);
+
+      const result = await service.launchRoutine(exePath);
+      expect(result).toBe(true);
+      expect(winthorStartSpy).toHaveBeenCalledWith('132');
+      expect(spawnMock).not.toHaveBeenCalled();
+    });
+
+    it('faz fallback para spawn se Winthor Start falhar', async () => {
+      const exePath = path.join(appDir, 'PCSIS132.EXE');
+      fs.writeFileSync(exePath, 'x');
+      configService.saveSettings({ appPath: appDir, winthorStartEnabled: true });
+
+      vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue(false);
+
+      const result = await service.launchRoutine(exePath);
+      expect(result).toBe(true);
+      expect(spawnMock).toHaveBeenCalledWith(
+        path.normalize(exePath),
+        [],
+        expect.objectContaining({ detached: true })
+      );
+    });
+
+    it('retorna false quando o arquivo não existe', async () => {
       configService.saveSettings({ appPath: appDir });
-      const result = service.launchRoutine(path.join(appDir, 'nao-existe.exe'));
+      const result = await service.launchRoutine(path.join(appDir, 'nao-existe.exe'));
       expect(result).toBe(false);
     });
   });

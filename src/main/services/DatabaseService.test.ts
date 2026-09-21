@@ -135,4 +135,45 @@ describe('DatabaseService', () => {
       spy.mockRestore();
     }
   });
+
+  it('enfileira chamadas concorrentes sequencialmente na mesma conexão', async () => {
+    const order: number[] = [];
+    const dummyConn = { id: 'conn_test' };
+    const config: DatabaseConnectionConfig = {
+      id: 'queue-test',
+      name: 'Queue Test',
+      type: 'oracle',
+      host: 'localhost',
+      port: 1521,
+      database: 'XEPDB1',
+      user: 'system'
+    };
+
+    const task1 = (service as any).withConnection(
+      config,
+      async () => dummyConn,
+      async () => {},
+      async () => {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        order.push(1);
+        return 1;
+      },
+      true
+    );
+
+    const task2 = (service as any).withConnection(
+      config,
+      async () => dummyConn,
+      async () => {},
+      async () => {
+        order.push(2);
+        return 2;
+      },
+      true
+    );
+
+    const results = await Promise.all([task1, task2]);
+    expect(results).toEqual([1, 2]);
+    expect(order).toEqual([1, 2]);
+  });
 });

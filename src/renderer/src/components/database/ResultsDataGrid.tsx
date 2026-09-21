@@ -10,13 +10,15 @@ import {
   Terminal,
   AlertCircle,
   CheckCircle2,
-  Info
+  Info,
+  RotateCw
 } from 'lucide-react';
 import { QueryResult } from '../../../../shared/types';
 import { useVirtualScroll } from '../../hooks/useVirtualScroll';
 
 export interface ResultsDataGridProps {
   queryResult: QueryResult | null;
+  isExecuting?: boolean;
   processedRows: any[];
   searchTerm: string;
   setSearchTerm: (s: string) => void;
@@ -51,6 +53,7 @@ export interface ResultsDataGridProps {
 
 export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
   queryResult,
+  isExecuting = false,
   processedRows,
   searchTerm,
   setSearchTerm,
@@ -82,6 +85,16 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
       overscan: 10
     }
   );
+
+  if (isExecuting) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-xs space-y-3">
+        <RotateCw className="w-8 h-8 animate-spin text-primary opacity-80" />
+        <p className="font-semibold text-foreground text-sm">Executando consulta no banco de dados...</p>
+        <span className="text-[11px] opacity-70">Aguardando resposta do servidor...</span>
+      </div>
+    );
+  }
 
   if (!queryResult) {
     return (

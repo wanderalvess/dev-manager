@@ -1227,7 +1227,8 @@ server.registerTool(
   },
   async ({ fullPath }) => {
     if (!isSafeLocalPath(fullPath)) return fail('Caminho inválido.');
-    return ok({ success: routinesService.launchRoutine(fullPath) });
+    const success = await routinesService.launchRoutine(fullPath);
+    return ok({ success });
   }
 );
 

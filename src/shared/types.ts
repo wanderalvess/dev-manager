@@ -317,6 +317,20 @@ export interface AppSettings {
   activeDeployProfileId?: string;
   /** Extensões de arquivo reconhecidas como rotina executável no Catálogo de Rotinas (padrão: ['.EXE']) */
   routineFileExtensions?: string[];
+  /** Habilita disparo de rotinas desktop via Winthor Start (serviço local DataSnap) */
+  winthorStartEnabled?: boolean;
+  /** Porta local do Winthor Start (padrão: 9195) */
+  winthorStartPort?: number;
+  /** URL do portal Winthor Anywhere (WTA) para obtenção de parâmetros de lançamento (padrão: http://localhost:8889) */
+  wtaUrl?: string;
+  /** Usuário para login automático no WTA (ex: PCADMIN) */
+  wtaLogin?: string;
+  /** Senha ou hash MD5 da senha do usuário no WTA */
+  wtaPassword?: string;
+  /** Cookie de sessão ou token do WTA para autenticação automática no lançamento de rotinas (opcional) */
+  wtaAuthToken?: string;
+  /** Payload de sessão pré-configurado para o Winthor Start (contendo m, u, p, t, s) como fallback permanente */
+  winthorStartDefaultPayload?: string;
   /** Mapa de extensão -> caminho de executável launcher, para formatos de rotina que não rodam sozinhos (ex: ".PC" -> caminho de um launcher configurado pelo usuário) */
   routineLauncherMap?: Record<string, string>;
   /** Programas mapeados manualmente pelo usuário para abrir com um clique */

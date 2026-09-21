@@ -796,36 +796,36 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl h-[88vh] flex flex-col overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[97vw] 2xl:max-w-[1720px] h-[94vh] flex flex-col overflow-hidden animate-fade-in">
         {/* Cabeçalho */}
-        <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
-              <ListTree className="w-5 h-5" />
+        <div className="p-4 sm:px-6 border-b border-border flex items-center justify-between bg-muted/40 shrink-0 gap-3">
+          <div className="flex items-center space-x-3.5 min-w-0">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
+              <ListTree className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-foreground">Gerenciador de Bundles OSGi</h3>
-                <span className="text-[10px] bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-lg font-bold text-foreground tracking-tight">Gerenciador de Bundles OSGi</h3>
+                <span className="text-[11px] bg-primary/15 text-primary border border-primary/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
                   {stats.total} bundles
                 </span>
-                <span className="text-[10px] bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                <span className="text-[11px] bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
                   {stats.active} ativos
                 </span>
                 {stats.resolved > 0 && (
-                  <span className="text-[10px] bg-amber-500/15 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                  <span className="text-[11px] bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
                     {stats.resolved} resolvidos
                   </span>
                 )}
                 {stats.installed > 0 && (
-                  <span className="text-[10px] bg-blue-500/15 text-blue-500 border border-blue-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                  <span className="text-[11px] bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
                     {stats.installed} instalados
                   </span>
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Inspecione dependências, reinstale, desinstale ou publique novas versões com confirmação de impacto.
+                Inspecione dependências, reinstale, desinstale ou publique novas versões com confirmação de impacto em tempo real.
               </p>
             </div>
           </div>
@@ -836,12 +836,12 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               <button
                 type="button"
                 onClick={() => setIsExportMenuOpen((prev) => !prev)}
-                className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
+                className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
                 title="Exportar inventário de bundles OSGi filtrados"
               >
                 <Download className="w-4 h-4 text-emerald-400" />
                 <span className="hidden sm:inline">Exportar</span>
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
               {isExportMenuOpen && (
                 <>
@@ -874,21 +874,21 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={handleOpenLog}
-              className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
+              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
               title="Ver log interno do Karaf (log:display)"
             >
               <Terminal className="w-4 h-4 text-emerald-400" />
-              <span>Log do Karaf</span>
+              <span className="hidden sm:inline">Log do Karaf</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsSnapshotModalOpen(true)}
-              className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
+              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
               title="Comparar estado atual de bundles com snapshot salvo"
             >
               <Camera className="w-4 h-4 text-purple-400" />
-              <span>Snapshots / Diff</span>
+              <span className="hidden sm:inline">Snapshots / Diff</span>
               {snapshots.length > 0 && (
                 <span className="bg-purple-500/20 text-purple-400 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
                   {snapshots.length}
@@ -899,17 +899,17 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={handleOpenDeployHistory}
-              className="px-3 py-1.5 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer"
+              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
               title="Ver histórico de deploys/builds Karaf já executados"
             >
               <History className="w-4 h-4 text-sky-400" />
-              <span>Histórico de Deploys</span>
+              <span className="hidden sm:inline">Histórico de Deploys</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleOpenInstall()}
-              className="px-3 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm cursor-pointer"
+              className="px-4 py-2 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm cursor-pointer"
               title="Instalar novo bundle ou outra versão"
             >
               <UploadCloud className="w-4 h-4" />
@@ -920,7 +920,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               type="button"
               onClick={fetchBundles}
               disabled={isLoading}
-              className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
+              className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-xs"
               title="Atualizar lista de bundles"
             >
               <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-primary' : ''}`} />
@@ -929,33 +929,33 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={onClose}
-              className="p-2 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="p-2.5 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition cursor-pointer"
               title="Fechar"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Erro de conexão / aviso */}
         {errorBanner && (
-          <div className="bg-rose-500/10 border-b border-rose-500/30 p-2.5 px-4 text-xs text-rose-500 flex items-center justify-between">
+          <div className="bg-rose-500/10 border-b border-rose-500/30 p-3 px-6 text-xs text-rose-500 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{errorBanner}</span>
             </div>
-            <button onClick={() => setErrorBanner(null)} className="hover:underline">
+            <button onClick={() => setErrorBanner(null)} className="hover:underline font-bold">
               Fechar
             </button>
           </div>
         )}
 
         {/* Barra de Escopos Inteligentes (Smart Scope Tabs) */}
-        <div className="px-4 py-2 border-b border-border/70 bg-muted/20 flex items-center gap-2 overflow-x-auto shrink-0">
+        <div className="px-4 sm:px-6 py-2.5 border-b border-border/70 bg-muted/20 flex items-center gap-2 overflow-x-auto shrink-0">
           <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mr-2 shrink-0">
             <SlidersHorizontal className="w-3.5 h-3.5 text-primary" /> Escopo:
           </span>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {[
               { id: 'ALL', label: 'Todos os Módulos', count: scopeCounts.all },
               { id: 'TOTVS', label: 'TOTVS / WinThor', count: scopeCounts.totvs },
@@ -969,16 +969,16 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                   key={tab.id}
                   type="button"
                   onClick={() => setScopeFilter(tab.id as any)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-primary text-primary-foreground shadow-xs font-bold'
-                      : 'bg-card hover:bg-muted/70 text-muted-foreground border border-border/50'
+                      ? 'bg-primary text-primary-foreground shadow-sm font-bold'
+                      : 'bg-card hover:bg-muted text-muted-foreground border border-border/60 hover:text-foreground'
                   }`}
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                      isActive ? 'bg-black/20 text-white' : 'bg-muted text-muted-foreground'
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                      isActive ? 'bg-black/25 text-white' : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {tab.count}
@@ -990,31 +990,31 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
         </div>
 
         {/* Barra de Filtros e Busca */}
-        <div className="p-3 border-b border-border/70 bg-card/60 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="relative flex-1 min-w-[260px]">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
+        <div className="p-3 sm:px-6 border-b border-border/70 bg-card/60 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="relative flex-1 min-w-[280px]">
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
             <input
               ref={searchRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Pesquisar por ID, nome do bundle, versão ou symbolic name... (Atalho: /)"
-              className="w-full bg-background border border-border rounded-xl pl-9 pr-14 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+              className="w-full bg-background border border-border rounded-xl pl-10 pr-14 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono transition"
             />
-            <div className="absolute right-3 top-2.5 text-[10px] font-mono text-muted-foreground bg-muted/60 px-1 rounded border border-border/60 pointer-events-none">
+            <div className="absolute right-3 top-2.5 text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/60 pointer-events-none">
               /
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             {selectedBundleIds.size > 0 && (
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition cursor-pointer mr-1"
+                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition cursor-pointer mr-1"
                 title="Desmarcar todos os bundles"
               >
-                Limpar ({selectedBundleIds.size})
+                Limpar seleção ({selectedBundleIds.size})
               </button>
             )}
             {(['ALL', 'Active', 'Resolved', 'Installed'] as const).map((st) => (
@@ -1022,23 +1022,23 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                 key={st}
                 type="button"
                 onClick={() => setStatusFilter(st)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                   statusFilter === st
-                    ? 'bg-primary text-primary-foreground font-bold'
-                    : 'bg-muted/50 hover:bg-muted text-muted-foreground'
+                    ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {st === 'ALL' ? 'Todos' : st}
               </button>
             ))}
-            <span className="text-xs text-muted-foreground font-mono ml-2">
+            <span className="text-xs text-muted-foreground font-mono ml-2 font-semibold">
               {filteredBundles.length} de {bundles.length}
             </span>
           </div>
         </div>
 
         {/* Tabela de Bundles */}
-        <div className="flex-1 overflow-auto p-3">
+        <div className="flex-1 overflow-auto p-4 sm:px-6">
           {isLoading ? (
             <div className="h-64 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
               <RotateCw className="w-6 h-6 animate-spin text-primary" />
@@ -1050,16 +1050,16 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               <p>Nenhum bundle encontrado para os filtros aplicados.</p>
             </div>
           ) : (
-            <div className="min-w-full inline-block align-middle relative pb-16">
+            <div className="min-w-full inline-block align-middle relative pb-20">
               <table className="min-w-full divide-y divide-border/60 text-xs font-mono">
-                <thead className="bg-muted/70 sticky top-0 z-10 text-[11px]">
+                <thead className="bg-muted/80 sticky top-0 z-10 text-[11px] backdrop-blur-xs">
                   <tr>
-                    <th className="px-3 py-2 text-left w-10">
+                    <th className="px-4 py-3 text-left w-12">
                       <input
                         type="checkbox"
                         checked={filteredBundles.length > 0 && selectedBundleIds.size === filteredBundles.length}
                         onChange={handleSelectAllVisible}
-                        className="rounded border-border text-primary focus:ring-primary cursor-pointer"
+                        className="rounded border-border text-primary focus:ring-primary cursor-pointer w-4 h-4"
                         title={
                           selectedBundleIds.size === filteredBundles.length
                             ? 'Desmarcar todos'
@@ -1067,11 +1067,11 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                         }
                       />
                     </th>
-                    <th className="px-3 py-2 text-left text-muted-foreground uppercase w-16">ID</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground uppercase w-32">Estado</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground uppercase">Nome do Bundle / SymbolicName</th>
-                    <th className="px-3 py-2 text-left text-muted-foreground uppercase w-28">Versão</th>
-                    <th className="px-3 py-2 text-right text-muted-foreground uppercase w-56">Ações</th>
+                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-20">ID</th>
+                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36">Estado</th>
+                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider min-w-[340px]">Nome do Bundle / SymbolicName</th>
+                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36">Versão</th>
+                    <th className="px-4 py-3 text-right text-muted-foreground uppercase font-bold tracking-wider w-72">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
@@ -1085,38 +1085,41 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                       <tr
                         key={b.id}
                         className={`transition ${
-                          isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/30'
+                          isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/40'
                         }`}
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-3">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handleToggleSelectBundle(b.id)}
-                            className="rounded border-border text-primary focus:ring-primary cursor-pointer"
+                            className="rounded border-border text-primary focus:ring-primary cursor-pointer w-4 h-4"
                           />
                         </td>
-                        <td className="px-3 py-2 text-primary font-bold tabular-nums">{b.id}</td>
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-3 text-primary font-bold text-sm tabular-nums">{b.id}</td>
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 ${
                                 b.state === 'Active'
-                                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                                  ? 'bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border-emerald-500/30'
                                   : b.state === 'Resolved'
-                                  ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                                  ? 'bg-amber-500/15 text-amber-500 dark:text-amber-400 border-amber-500/30'
                                   : b.state === 'Installed'
-                                  ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                                  ? 'bg-blue-500/15 text-blue-500 dark:text-blue-400 border-blue-500/30'
                                   : 'bg-muted text-muted-foreground border-border'
                               }`}
                             >
+                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                b.state === 'Active' ? 'bg-emerald-500' : b.state === 'Resolved' ? 'bg-amber-500' : 'bg-blue-500'
+                              }`} />
                               {b.state}
                             </span>
                             {b.state !== 'Active' && (
                               <button
                                 type="button"
                                 onClick={() => handleOpenInlineDiag(b)}
-                                className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition cursor-pointer"
+                                className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 dark:text-amber-300 border border-amber-500/40 transition cursor-pointer"
                                 title="Ver diagnóstico do Karaf para este bundle (bundle:diag)"
                               >
                                 Diag
@@ -1124,26 +1127,26 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-foreground font-medium max-w-[340px] truncate" title={b.name}>
-                          <div>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-foreground font-semibold">{b.name}</span>
+                        <td className="px-4 py-3 text-foreground font-medium" title={b.name}>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-foreground font-bold text-xs">{b.name}</span>
                               {isWs && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-primary/15 text-primary border border-primary/30">
-                                  <Sparkles className="w-2.5 h-2.5" /> Workspace
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/15 text-primary border border-primary/30">
+                                  <Sparkles className="w-3 h-3" /> Workspace
                                 </span>
                               )}
                             </div>
                             {b.symbolicName && b.symbolicName !== b.name && (
-                              <span className="block text-[10px] text-muted-foreground font-normal truncate">
+                              <span className="block text-[11px] text-muted-foreground font-mono mt-0.5 truncate max-w-xl">
                                 {b.symbolicName}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-muted-foreground truncate tabular-nums">{b.version || '-'}</td>
-                        <td className="px-3 py-2 text-right">
-                          <div className="flex items-center justify-end space-x-1">
+                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs tabular-nums font-semibold">{b.version || '-'}</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end space-x-1.5">
                             {/* Recompilar Maven & Atualizar (1 clique para projetos do workspace) */}
                             {isWs && (
                               <button
@@ -1151,9 +1154,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleOneClickRebuild(b)}
                                 disabled={isRebuilding || isRowLoading}
                                 title="Recompilar projeto Maven (clean install) e atualizar bundle no Karaf em 1 clique"
-                                className="p-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition disabled:opacity-50 cursor-pointer"
+                                className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition disabled:opacity-50 cursor-pointer shadow-2xs"
                               >
-                                <Hammer className={`w-3.5 h-3.5 ${isRebuilding ? 'animate-spin' : ''}`} />
+                                <Hammer className={`w-4 h-4 ${isRebuilding ? 'animate-spin' : ''}`} />
                               </button>
                             )}
 
@@ -1163,9 +1166,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleBasicAction('refresh', b.id)}
                               disabled={isRowLoading}
                               title="Atualizar fiações OSGi do bundle (bundle:refresh)"
-                              className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-sky-400 hover:text-sky-300 transition disabled:opacity-50 cursor-pointer"
+                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-400 hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
-                              <RotateCw className="w-3.5 h-3.5" />
+                              <RotateCw className="w-4 h-4" />
                             </button>
 
                             {/* Reinstalar */}
@@ -1174,9 +1177,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenReinstall(b)}
                               disabled={isRowLoading}
                               title="Reinstalar bundle (update + refresh)"
-                              className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-primary hover:text-primary transition disabled:opacity-50 cursor-pointer"
+                              className="p-2 rounded-xl bg-card hover:bg-primary/15 border border-border hover:border-primary/40 text-primary hover:text-primary transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
-                              <RotateCcw className="w-3.5 h-3.5" />
+                              <RotateCcw className="w-4 h-4" />
                             </button>
 
                             {/* Instalar Outra Versão / Atualizar */}
@@ -1185,9 +1188,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenInstall(b)}
                               disabled={isRowLoading}
                               title="Instalar outra versão ou atualizar"
-                              className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-sky-400 hover:text-sky-300 transition disabled:opacity-50 cursor-pointer"
+                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-400 hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
-                              <ArrowUpCircle className="w-3.5 h-3.5" />
+                              <ArrowUpCircle className="w-4 h-4" />
                             </button>
 
                             {/* Detalhes & Dependências */}
@@ -1196,21 +1199,21 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenDetails(b)}
                               disabled={isRowLoading}
                               title="Inspecionar dependências e manifesto"
-                              className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
+                              className="p-2 rounded-xl bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
-                              <Info className="w-3.5 h-3.5" />
+                              <Info className="w-4 h-4" />
                             </button>
 
-                            {/* Resolver Dependências (bundle:resolve) — só faz sentido em Installed, travado por dependência ausente */}
+                            {/* Resolver Dependências (bundle:resolve) */}
                             {b.state === 'Installed' && (
                               <button
                                 type="button"
                                 onClick={() => handleBasicAction('resolve', b.id)}
                                 disabled={isRowLoading}
                                 title="Forçar resolução de dependências OSGi (bundle:resolve)"
-                                className="p-1.5 rounded-lg bg-card hover:bg-amber-500/20 border border-border text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer"
+                                className="p-2 rounded-xl bg-card hover:bg-amber-500/20 border border-border text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                               >
-                                <Wrench className="w-3.5 h-3.5" />
+                                <Wrench className="w-4 h-4" />
                               </button>
                             )}
 
@@ -1221,9 +1224,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('stop', b.id)}
                                 disabled={isRowLoading}
                                 title="Parar bundle"
-                                className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer"
+                                className="p-2 rounded-xl bg-card hover:bg-amber-500/15 border border-border hover:border-amber-500/40 text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                               >
-                                <Square className="w-3.5 h-3.5 fill-current" />
+                                <Square className="w-4 h-4 fill-current" />
                               </button>
                             ) : (
                               <button
@@ -1231,9 +1234,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('start', b.id)}
                                 disabled={isRowLoading}
                                 title="Iniciar bundle"
-                                className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-emerald-400 hover:text-emerald-300 transition disabled:opacity-50 cursor-pointer"
+                                className="p-2 rounded-xl bg-card hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-emerald-400 hover:text-emerald-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                               >
-                                <Play className="w-3.5 h-3.5 fill-current" />
+                                <Play className="w-4 h-4 fill-current" />
                               </button>
                             )}
 
@@ -1243,9 +1246,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenUninstall(b)}
                               disabled={isRowLoading}
                               title="Desinstalar bundle com verificação de dependências"
-                              className="p-1.5 rounded-lg bg-card hover:bg-rose-500/20 border border-border text-rose-400 hover:text-rose-300 transition disabled:opacity-50 cursor-pointer"
+                              className="p-2 rounded-xl bg-card hover:bg-rose-500/20 border border-border hover:border-rose-500/40 text-rose-400 hover:text-rose-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -1339,7 +1342,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {uninstallTarget && (
         <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500">
@@ -1491,7 +1494,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {isInstallModalOpen && (
         <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
@@ -1760,7 +1763,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {reinstallTarget && (
         <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
@@ -1876,7 +1879,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {detailsTarget && (
         <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl h-[75vh] flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[86vh] flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
@@ -2172,7 +2175,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {isSnapshotModalOpen && (
         <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in">
             {/* Header */}
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
               <div className="flex items-center space-x-2.5">
@@ -2458,7 +2461,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {isDeployHistoryModalOpen && (
         <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0c1017] border border-slate-800 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in text-slate-100 font-sans">
+          <div className="bg-[#0c1017] border border-slate-800 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in text-slate-100 font-sans">
             {/* Header com Telemetria e Ações */}
             <div className="p-4 border-b border-slate-800/80 bg-slate-900/60 flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-3">
@@ -2863,7 +2866,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {isLogModalOpen && (
         <div className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card dark:bg-slate-900 border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-fade-in relative">
+          <div className="bg-card dark:bg-slate-900 border border-border rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden animate-fade-in relative">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/70 shrink-0">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
@@ -2946,7 +2949,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       {/* ========================================================================= */}
       {inlineDiagBundle && (
         <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500">

@@ -84,6 +84,7 @@ export interface ElectronAPI {
   autoDetectPaths: () => Promise<Partial<AppSettings>>;
   getAppInfo: () => Promise<SystemAppInfo>;
   getChangelog: () => Promise<string | null>;
+  getMcpDocs: () => Promise<string>;
 
   // Gestor de Ambiente
   checkAdmin: () => Promise<boolean>;

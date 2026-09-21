@@ -5,6 +5,8 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
+  ChevronUp,
+  ChevronDown,
   FolderOpen,
   Terminal,
   Hammer,
@@ -284,12 +286,12 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
   const editingStep = editingStepIndex !== null ? steps[editingStepIndex] : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
+      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[96vw] xl:max-w-[1540px] h-[93vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -303,14 +305,14 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Informações Básicas do Perfil */}
-        <div className="px-6 py-3 border-b border-border bg-background grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="px-6 py-3.5 border-b border-border bg-background grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">
               Nome do Perfil de Deploy
@@ -320,7 +322,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Deploy Karaf OSGi, Deploy Container Produção..."
-              className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full bg-input/50 border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <div>
@@ -332,7 +334,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex: Build + install no Karaf local, Build + push + restart do container..."
-              className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full bg-input/50 border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
@@ -340,7 +342,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
         {/* Corpo: Lista de Etapas à esquerda + Editor da Etapa selecionada à direita */}
         <div className="flex-1 flex overflow-hidden">
           {/* Coluna Esquerda: Lista de Etapas Sequenciais */}
-          <div className="w-80 border-r border-border flex flex-col bg-muted/10">
+          <div className="w-80 md:w-96 border-r border-border flex flex-col bg-muted/10 shrink-0">
             <div className="p-3 border-b border-border flex items-center justify-between bg-muted/30">
               <span className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
                 Etapas na Sequência ({steps.length})
@@ -348,13 +350,13 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
               <button
                 type="button"
                 onClick={() => handleAddStep('command')}
-                className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 bg-primary/10 px-2 py-1 rounded transition-colors"
+                className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/90 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Adicionar
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
               {steps.length === 0 ? (
                 <div className="text-center py-10 px-4 text-xs text-muted-foreground">
                   Nenhuma etapa cadastrada. Clique em "+ Adicionar" acima para começar.
@@ -366,47 +368,39 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                     <div
                       key={step.id}
                       onClick={() => setEditingStepIndex(idx)}
-                      className={`flex items-center justify-between p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                      className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                         isSelected
-                          ? 'border-primary bg-primary/10 shadow-sm'
+                          ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary/40'
                           : 'border-border/60 bg-card hover:bg-muted/40'
                       }`}
                     >
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
+                      <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+                        <span className="w-6 h-6 flex items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
                           {idx + 1}
                         </span>
                         <div className="truncate">
-                          <p className="font-semibold text-foreground truncate">{step.name || 'Sem nome'}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] text-muted-foreground truncate font-mono">{step.type}</span>
-                            {step.continueOnError && (
-                              <span className="text-[9px] bg-amber-500/10 text-amber-500 border border-amber-500/30 px-1 py-0.2 rounded font-mono" title="Não aborta o deploy se falhar">
-                                tolerante
-                              </span>
-                            )}
-                          </div>
+                          <p className="font-bold text-foreground truncate">{step.name || 'Sem nome'}</p>
+                          <span className="text-[10px] text-muted-foreground font-mono">{step.type}</span>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
-                          disabled={idx === 0}
                           onClick={() => handleMoveStep(idx, 'up')}
-                          className="p-1 hover:bg-muted text-muted-foreground disabled:opacity-30 rounded"
+                          disabled={idx === 0}
+                          className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded disabled:opacity-30"
                           title="Mover para cima"
                         >
-                          <ArrowUp className="w-3 h-3" />
+                          <ChevronUp className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
-                          disabled={idx === steps.length - 1}
                           onClick={() => handleMoveStep(idx, 'down')}
-                          className="p-1 hover:bg-muted text-muted-foreground disabled:opacity-30 rounded"
+                          disabled={idx === steps.length - 1}
+                          className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded disabled:opacity-30"
                           title="Mover para baixo"
                         >
-                          <ArrowDown className="w-3 h-3" />
+                          <ChevronDown className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
@@ -414,7 +408,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                           className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded"
                           title="Duplicar etapa"
                         >
-                          <Copy className="w-3 h-3" />
+                          <Copy className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
@@ -422,7 +416,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
                           className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded"
                           title="Remover etapa"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
@@ -433,9 +427,9 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
           </div>
 
           {/* Coluna Direita: Detalhes da Etapa Selecionada */}
-          <div className="flex-1 overflow-y-auto p-6 bg-background">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-background">
             {editingStep ? (
-              <div className="space-y-5 max-w-2xl">
+              <div className="space-y-6 max-w-4xl xl:max-w-5xl">
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div>
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
