@@ -325,10 +325,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.12.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.13.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.12.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.13.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
             </ul>
           </div>
@@ -454,7 +454,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '8 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqList.length}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.12.0'}` }
+    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.13.0'}` }
   ];
 
   const handleSearchChange = (val: string) => {
@@ -558,7 +558,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       COCKPIT DO DESENVOLVEDOR
                     </span>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Dev Manager • v{appInfo?.appVersion || '1.12.0'}
+                      Dev Manager • v{appInfo?.appVersion || '1.13.0'}
                     </span>
                     {appInfo?.isAdmin ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
@@ -1740,7 +1740,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <h3 className="text-sm sm:text-base font-extrabold text-foreground flex items-center gap-2">
                       Dev <span className="text-primary font-bold">Manager</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-                        v{appInfo?.appVersion || '1.12.0'}
+                        v{appInfo?.appVersion || '1.13.0'}
                       </span>
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
@@ -2016,7 +2016,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      Dev Manager {appInfo?.appVersion || '1.12.0'}.exe (Portátil)
+                      Dev Manager {appInfo?.appVersion || '1.13.0'}.exe (Portátil)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Versão autônoma que não necessita instalação. Pode ser executada diretamente de pastas de rede ou pendrives.
@@ -2026,7 +2026,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-primary" />
-                      Dev Manager Setup {appInfo?.appVersion || '1.12.0'}.exe (Instalador)
+                      Dev Manager Setup {appInfo?.appVersion || '1.13.0'}.exe (Instalador)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Instalador padrão NSIS que cria atalhos no Menu Iniciar e Área de Trabalho com desinstalador integrado.
