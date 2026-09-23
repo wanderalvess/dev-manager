@@ -62,6 +62,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   const [currentProgress, setCurrentProgress] = useState<{ current: number; total: number; stepId: string } | null>(null);
 
   const [isDiagRunning, setIsDiagRunning] = useState<string | null>(null);
+  const [diagTab, setDiagTab] = useState<'quick' | 'feature' | 'bundle'>('quick');
+  const [diagFeatureName, setDiagFeatureName] = useState('');
+  const [diagBundleId, setDiagBundleId] = useState('');
+  const [customCommand, setCustomCommand] = useState('');
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [commandHistoryIndex, setCommandHistoryIndex] = useState<number>(-1);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
   const streamRemainderRef = useRef<string>('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -386,6 +392,37 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     } finally {
       flushRemainder();
       setIsDiagRunning(null);
+    }
+  };
+
+  const handleCustomCommandSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cmd = customCommand.trim();
+    if (!cmd || isDeploying || isDiagRunning !== null) return;
+    setCommandHistory((prev) => [...prev, cmd]);
+    setCommandHistoryIndex(-1);
+    setCustomCommand('');
+    handleRunDiagnostic(cmd, 'custom');
+  };
+
+  const handleCustomCommandKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (commandHistory.length === 0) return;
+      const nextIdx = commandHistoryIndex === -1 ? commandHistory.length - 1 : Math.max(0, commandHistoryIndex - 1);
+      setCommandHistoryIndex(nextIdx);
+      setCustomCommand(commandHistory[nextIdx] || '');
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (commandHistoryIndex === -1) return;
+      const nextIdx = commandHistoryIndex + 1;
+      if (nextIdx >= commandHistory.length) {
+        setCommandHistoryIndex(-1);
+        setCustomCommand('');
+      } else {
+        setCommandHistoryIndex(nextIdx);
+        setCustomCommand(commandHistory[nextIdx] || '');
+      }
     }
   };
 
@@ -716,83 +753,326 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
           </div>
 
           {/* Ferramentas de Diagnóstico Rápido do Karaf */}
-          <div className="cockpit-panel rounded-2xl p-4 space-y-2.5 shadow-xl border border-border">
-            <div className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos Karaf OSGi (client.bat)
+          <div className="cockpit-panel rounded-2xl p-4 space-y-3 shadow-xl border border-border">
+            <div className="flex items-center justify-between">
+              <div className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos OSGi (client.bat)
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            {/* Abas de Escopo: Rápidos | Features | Bundles */}
+            <div className="flex items-center gap-1 p-1 bg-muted/60 border border-border rounded-xl text-xs">
               <button
-                onClick={() => handleRunDiagnostic('feature:list -i', 'features')}
-                disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                type="button"
+                onClick={() => setDiagTab('quick')}
+                className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  diagTab === 'quick'
+                    ? 'bg-card text-foreground shadow-xs border border-border/50'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
-                {isDiagRunning === 'features' ? (
-                  <RotateCw className="w-4 h-4 text-amber-500 animate-spin shrink-0" />
-                ) : (
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span>Rápidos</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDiagTab('feature')}
+                className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  diagTab === 'feature'
+                    ? 'bg-card text-foreground shadow-xs border border-border/50'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <ListTree className="w-3.5 h-3.5 text-primary" />
+                <span>Features</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDiagTab('bundle')}
+                className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  diagTab === 'bundle'
+                    ? 'bg-card text-foreground shadow-xs border border-border/50'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Package className="w-3.5 h-3.5 text-sky-500" />
+                <span>Bundles</span>
+              </button>
+            </div>
+
+            {/* Conteúdo da Aba 1: Comandos Rápidos */}
+            {diagTab === 'quick' && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleRunDiagnostic('feature:list -i', 'features-i')}
+                  disabled={isDeploying || isDiagRunning !== null}
+                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  title="feature:list -i"
+                >
                   <ListTree className="w-4 h-4 text-amber-500 shrink-0" />
-                )}
-                <div className="truncate">
-                  <span className="font-bold block truncate">Features Instaladas</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {isDiagRunning === 'features' ? 'Consultando...' : 'feature:list -i'}
-                  </span>
-                </div>
-              </button>
+                  <div className="truncate">
+                    <span className="font-bold block truncate">Features Ativas</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">feature:list -i</span>
+                  </div>
+                </button>
 
-              <button
-                onClick={() => handleRunDiagnostic('bundle:list -s', 'bundles')}
-                disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
-              >
-                {isDiagRunning === 'bundles' ? (
-                  <RotateCw className="w-4 h-4 text-primary animate-spin shrink-0" />
-                ) : (
+                <button
+                  type="button"
+                  onClick={() => handleRunDiagnostic('bundle:list -s', 'bundles-s')}
+                  disabled={isDeploying || isDiagRunning !== null}
+                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  title="bundle:list -s"
+                >
                   <Package className="w-4 h-4 text-primary shrink-0" />
-                )}
-                <div className="truncate">
-                  <span className="font-bold block truncate">Bundles Ativos</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {isDiagRunning === 'bundles' ? 'Consultando...' : 'bundle:list -s'}
-                  </span>
-                </div>
-              </button>
+                  <div className="truncate">
+                    <span className="font-bold block truncate">Bundles Ativos</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">bundle:list -s</span>
+                  </div>
+                </button>
 
-              <button
-                onClick={() => handleRunDiagnostic('log:display -n 50', 'logs')}
-                disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
-              >
-                {isDiagRunning === 'logs' ? (
-                  <RotateCw className="w-4 h-4 text-emerald-500 animate-spin shrink-0" />
-                ) : (
+                <button
+                  type="button"
+                  onClick={() => handleRunDiagnostic('bundle:diag', 'bundles-diag')}
+                  disabled={isDeploying || isDiagRunning !== null}
+                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  title="bundle:diag (diagnostica todos os bundles com falha de resolução)"
+                >
+                  <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                  <div className="truncate">
+                    <span className="font-bold block truncate">Diag Falhas</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">bundle:diag</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleRunDiagnostic('feature:repo-list', 'repos')}
+                  disabled={isDeploying || isDiagRunning !== null}
+                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  title="feature:repo-list"
+                >
+                  <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <div className="truncate">
+                    <span className="font-bold block truncate">Repositórios</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">feature:repo-list</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleRunDiagnostic('log:display -n 50', 'logs-50')}
+                  disabled={isDeploying || isDiagRunning !== null}
+                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  title="log:display -n 50"
+                >
                   <FileText className="w-4 h-4 text-emerald-500 shrink-0" />
-                )}
-                <div className="truncate">
-                  <span className="font-bold block truncate">Logs Recentes</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {isDiagRunning === 'logs' ? 'Lendo logs...' : 'log:display -n 50'}
-                  </span>
-                </div>
-              </button>
+                  <div className="truncate">
+                    <span className="font-bold block truncate">Últimos Logs</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">log:display -n 50</span>
+                  </div>
+                </button>
 
-              <button
-                onClick={() => handleRunDiagnostic('log:clear', 'clear')}
-                disabled={isDeploying || isDiagRunning !== null}
-                className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
-              >
-                {isDiagRunning === 'clear' ? (
-                  <RotateCw className="w-4 h-4 text-rose-500 animate-spin shrink-0" />
-                ) : (
-                  <RotateCcw className="w-4 h-4 text-rose-500 shrink-0" />
-                )}
-                <div className="truncate">
-                  <span className="font-bold block truncate">Limpar Logs</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {isDiagRunning === 'clear' ? 'Limpando...' : 'log:clear'}
-                  </span>
+                <button
+                  type="button"
+                  onClick={() => handleRunDiagnostic('log:clear', 'clear')}
+                  disabled={isDeploying || isDiagRunning !== null}
+                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  title="log:clear"
+                >
+                  <RotateCcw className="w-4 h-4 text-amber-500 shrink-0" />
+                  <div className="truncate">
+                    <span className="font-bold block truncate">Limpar Logs</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">log:clear</span>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* Conteúdo da Aba 2: Features Karaf */}
+            {diagTab === 'feature' && (
+              <div className="space-y-2.5">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleRunDiagnostic('feature:list -i', 'features-i')}
+                    disabled={isDeploying || isDiagRunning !== null}
+                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  >
+                    <ListTree className="w-4 h-4 text-amber-500 shrink-0" />
+                    <div className="truncate">
+                      <span className="font-bold block truncate">Listar Instaladas</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">feature:list -i</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRunDiagnostic('feature:repo-list', 'repos')}
+                    disabled={isDeploying || isDiagRunning !== null}
+                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  >
+                    <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <div className="truncate">
+                      <span className="font-bold block truncate">Repositórios</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">feature:repo-list</span>
+                    </div>
+                  </button>
                 </div>
-              </button>
+
+                {/* Ação pontual por Nome da Feature */}
+                <div className="p-2.5 bg-muted/30 border border-border rounded-xl space-y-2 text-xs">
+                  <div className="text-[11px] font-bold text-foreground">Ação por Nome da Feature:</div>
+                  <input
+                    type="text"
+                    value={diagFeatureName}
+                    onChange={(e) => setDiagFeatureName(e.target.value)}
+                    placeholder="Ex: winthor-integracao-varejo"
+                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                  />
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`feature:info ${diagFeatureName.trim()}`, 'feat-info')}
+                      disabled={!diagFeatureName.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-50 cursor-pointer transition"
+                      title="Ver detalhes, bundles e dependências da feature"
+                    >
+                      🔍 Info
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`feature:uninstall -r ${diagFeatureName.trim()}`, 'feat-uninstall')}
+                      disabled={!diagFeatureName.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-lg text-[11px] font-bold text-rose-600 dark:text-rose-400 disabled:opacity-50 cursor-pointer transition"
+                      title="Desinstalar feature com -r (definitivo)"
+                    >
+                      🗑️ Desinstalar (-r)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`feature:install -r -u ${diagFeatureName.trim()}`, 'feat-install')}
+                      disabled={!diagFeatureName.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-[11px] font-bold text-emerald-600 dark:text-emerald-400 disabled:opacity-50 cursor-pointer transition"
+                      title="Instalar / atualizar feature"
+                    >
+                      ⚡ Instalar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Conteúdo da Aba 3: Bundles OSGi */}
+            {diagTab === 'bundle' && (
+              <div className="space-y-2.5">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleRunDiagnostic('bundle:list -s', 'bundles-s')}
+                    disabled={isDeploying || isDiagRunning !== null}
+                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  >
+                    <Package className="w-4 h-4 text-primary shrink-0" />
+                    <div className="truncate">
+                      <span className="font-bold block truncate">Listar Bundles</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">bundle:list -s</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRunDiagnostic('bundle:diag', 'bundles-diag')}
+                    disabled={isDeploying || isDiagRunning !== null}
+                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  >
+                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                    <div className="truncate">
+                      <span className="font-bold block truncate">Diag Falhas</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">bundle:diag</span>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Ação pontual por ID do Bundle */}
+                <div className="p-2.5 bg-muted/30 border border-border rounded-xl space-y-2 text-xs">
+                  <div className="text-[11px] font-bold text-foreground">Ação por ID do Bundle:</div>
+                  <input
+                    type="text"
+                    value={diagBundleId}
+                    onChange={(e) => setDiagBundleId(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Ex: 185"
+                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                  />
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`bundle:diag ${diagBundleId.trim()}`, 'b-diag')}
+                      disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-50 cursor-pointer transition"
+                      title="Diagnosticar falha de resolução do bundle"
+                    >
+                      🩺 Diag
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`bundle:headers ${diagBundleId.trim()}`, 'b-headers')}
+                      disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-50 cursor-pointer transition"
+                      title="Ver headers e Manifest do bundle"
+                    >
+                      📋 Headers
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`bundle:restart ${diagBundleId.trim()}`, 'b-restart')}
+                      disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-[11px] font-bold text-amber-600 dark:text-amber-400 disabled:opacity-50 cursor-pointer transition"
+                      title="Reiniciar bundle"
+                    >
+                      🔄 Restart
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`bundle:uninstall ${diagBundleId.trim()}`, 'b-uninstall')}
+                      disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-lg text-[11px] font-bold text-rose-600 dark:text-rose-400 disabled:opacity-50 cursor-pointer transition"
+                      title="Desinstalar bundle da memória"
+                    >
+                      🗑️ Desinstalar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Inserir Comando e Mandar */}
+            <div className="pt-2 border-t border-border space-y-1.5">
+              <div className="text-[11px] font-bold text-foreground flex items-center justify-between">
+                <span>Comando Personalizado:</span>
+                <span className="text-[10px] text-muted-foreground font-normal">Pressione Enter para enviar</span>
+              </div>
+              <form onSubmit={handleCustomCommandSubmit} className="flex gap-1.5">
+                <input
+                  type="text"
+                  value={customCommand}
+                  onChange={(e) => setCustomCommand(e.target.value)}
+                  onKeyDown={handleCustomCommandKeyDown}
+                  placeholder="Ex: feature:uninstall -r winthor-integracao-varejo/1.0"
+                  className="flex-1 px-2.5 py-1.5 bg-background border border-border rounded-xl text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  type="submit"
+                  disabled={!customCommand.trim() || isDeploying || isDiagRunning !== null}
+                  className="px-3 py-1.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:bg-primary/90 disabled:opacity-50 cursor-pointer transition flex items-center gap-1 shrink-0"
+                  title="Executar comando no shell Karaf"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Enviar</span>
+                </button>
+              </form>
             </div>
           </div>
         </div>
@@ -814,6 +1094,8 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             }}
             title={isConsoleMaximized ? 'Console de Deploy (Modo Expandido)' : 'Console de Deploy'}
             isRunning={isDeploying || runningStepId !== null || isDiagRunning !== null}
+            onSendCommand={(cmd) => handleRunDiagnostic(cmd, 'terminal')}
+            inputPlaceholder="Digite um comando Karaf (ex: feature:uninstall -r winthor-integracao-varejo/versao, bundle:diag, la)..."
             isMaximized={isConsoleMaximized}
             onToggleMaximize={() => setIsConsoleMaximized((prev) => !prev)}
           />

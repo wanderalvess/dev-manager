@@ -216,6 +216,12 @@ const electronAPI = {
     ipcRenderer.invoke('karaf:reinstall-bundle', request),
   updateKarafBundleVersion: (request: UpdateBundleVersionRequest) =>
     ipcRenderer.invoke('karaf:update-bundle-version', request),
+  listKarafFeatures: (credentials?: { user?: string; pass?: string; port?: number }) =>
+    ipcRenderer.invoke('karaf:list-features', credentials),
+  uninstallKarafFeature: (featureName: string, version?: string, credentials?: { user?: string; pass?: string; port?: number }) =>
+    ipcRenderer.invoke('karaf:uninstall-feature', featureName, version, credentials),
+  installKarafFeature: (featureName: string, version?: string, credentials?: { user?: string; pass?: string; port?: number }) =>
+    ipcRenderer.invoke('karaf:install-feature', featureName, version, credentials),
   parsePom: (projectPath: string) => ipcRenderer.invoke('karaf:parse-pom', projectPath),
   onKarafLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);

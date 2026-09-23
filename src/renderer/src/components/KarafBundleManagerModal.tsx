@@ -52,7 +52,8 @@ import {
   ReinstallBundleRequest,
   BundleSnapshot,
   BundleSnapshotDiff,
-  KarafDeployHistoryEntry
+  KarafDeployHistoryEntry,
+  KarafFeatureInfo
 } from '../../../shared/types';
 import {
   computeBundleStats,
@@ -107,6 +108,22 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const [confirmUninstallChecked, setConfirmUninstallChecked] = useState(false);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [uninstallLog, setUninstallLog] = useState<string | null>(null);
+  const [uninstallMode, setUninstallMode] = useState<'feature' | 'bundle'>('feature');
+  const [uninstallFeatureName, setUninstallFeatureName] = useState('');
+  const [uninstallFeatureVersion, setUninstallFeatureVersion] = useState('');
+  const [installedFeaturesList, setInstalledFeaturesList] = useState<KarafFeatureInfo[]>([]);
+
+  // Sub-modal: Gerenciador de Features Karaf
+  const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState(false);
+  const [featuresList, setFeaturesList] = useState<KarafFeatureInfo[]>([]);
+  const [isLoadingFeatures, setIsLoadingFeatures] = useState(false);
+  const [featuresSearch, setFeaturesSearch] = useState('');
+  const [featuresFilter, setFeaturesFilter] = useState<'ALL' | 'WINTHOR' | 'SYSTEM'>('ALL');
+  const [featureActionLoading, setFeatureActionLoading] = useState<string | null>(null);
+  const [featureLog, setFeatureLog] = useState<string | null>(null);
+  const [isFeatureInstallOpen, setIsFeatureInstallOpen] = useState(false);
+  const [newFeatureInstallName, setNewFeatureInstallName] = useState('');
+  const [newFeatureInstallVersion, setNewFeatureInstallVersion] = useState('');
 
   // Sub-modal: Instalação / Nova Versão
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
@@ -535,13 +552,44 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     }
   };
 
-  // --- Fluxo de Desinstalação com Verificação de Dependências ---
+  // --- Fluxo de Desinstalação com Verificação de Dependências e Features ---
   const handleOpenUninstall = async (bundle: KarafBundleInfo) => {
     setUninstallTarget(bundle);
     setUninstallDepCheck(null);
     setConfirmUninstallChecked(false);
     setUninstallLog(null);
+    setUninstallMode('feature');
+
+    // Tentar inferir nome provável da feature a partir do bundle
+    const rawName = bundle.symbolicName || bundle.name || '';
+    const cleanCandidate = rawName
+      .replace(/^(com\.br\.com\.pcsist\.winthor\.|br\.com\.totvs\.|com\.pcsist\.)/, '')
+      .replace(/-service$|-impl$|-core$|-api$/, '');
+    setUninstallFeatureName(cleanCandidate);
+    setUninstallFeatureVersion(bundle.version || '');
+
     setIsCheckingUninstallDeps(true);
+
+    // Carregar features instaladas para dar match inteligente e preencher o datalist
+    if (window.electronAPI?.listKarafFeatures) {
+      window.electronAPI.listKarafFeatures().then((res) => {
+        const list: KarafFeatureInfo[] = Array.isArray(res) ? res : ((res as any)?.features || []);
+        if (list.length > 0) {
+          setInstalledFeaturesList(list);
+          const needle = cleanCandidate.toLowerCase();
+          const matched = list.find(
+            (f: KarafFeatureInfo) =>
+              f.name.toLowerCase() === needle ||
+              needle.includes(f.name.toLowerCase()) ||
+              f.name.toLowerCase().includes(needle)
+          );
+          if (matched) {
+            setUninstallFeatureName(matched.name);
+            if (matched.version) setUninstallFeatureVersion(matched.version);
+          }
+        }
+      }).catch((err) => console.error('Erro ao listar features no modal de uninstall:', err));
+    }
 
     if (window.electronAPI?.checkKarafBundleDeps) {
       try {
@@ -558,19 +606,43 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   };
 
   const handleConfirmUninstall = async () => {
-    if (!uninstallTarget || !window.electronAPI?.uninstallKarafBundle) return;
+    if (!uninstallTarget) return;
     setIsUninstalling(true);
     setUninstallLog('');
     const unsubscribe = window.electronAPI?.onKarafLogChunk?.((chunk) => {
       setUninstallLog((prev) => (prev || '') + chunk);
     });
     try {
-      const res = await window.electronAPI.uninstallKarafBundle(uninstallTarget.id);
-      if (!res.success) {
-        alert(`Falha na desinstalação: ${res.output}`);
+      if (uninstallMode === 'feature') {
+        if (!uninstallFeatureName.trim()) {
+          alert('Informe o nome da feature para desinstalar.');
+          setIsUninstalling(false);
+          return;
+        }
+        if (!window.electronAPI?.uninstallKarafFeature) {
+          alert('API de desinstalação de feature não disponível.');
+          setIsUninstalling(false);
+          return;
+        }
+        const res = await window.electronAPI.uninstallKarafFeature(
+          uninstallFeatureName.trim(),
+          uninstallFeatureVersion.trim() || undefined
+        );
+        if (!res.success) {
+          alert(`Falha na desinstalação da Feature: ${res.output}`);
+        } else {
+          setUninstallTarget(null);
+          await fetchBundles();
+        }
       } else {
-        setUninstallTarget(null);
-        await fetchBundles();
+        if (!window.electronAPI?.uninstallKarafBundle) return;
+        const res = await window.electronAPI.uninstallKarafBundle(uninstallTarget.id);
+        if (!res.success) {
+          alert(`Falha na desinstalação do Bundle: ${res.output}`);
+        } else {
+          setUninstallTarget(null);
+          await fetchBundles();
+        }
       }
     } catch (err: any) {
       alert(`Erro: ${err?.message || err}`);
@@ -579,6 +651,104 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       setIsUninstalling(false);
     }
   };
+
+  // --- Gerenciador de Features Karaf ---
+  const handleOpenFeaturesModal = async () => {
+    setIsFeaturesModalOpen(true);
+    setFeatureLog(null);
+    await handleRefreshFeatures();
+  };
+
+  const handleRefreshFeatures = async () => {
+    if (!window.electronAPI?.listKarafFeatures) return;
+    setIsLoadingFeatures(true);
+    try {
+      const res = await window.electronAPI.listKarafFeatures();
+      const list = Array.isArray(res) ? res : ((res as any)?.features || []);
+      setFeaturesList(list);
+    } catch (err: any) {
+      console.error('Erro ao listar features:', err);
+      setFeaturesList([]);
+    } finally {
+      setIsLoadingFeatures(false);
+    }
+  };
+
+  const handleUninstallFeatureDirect = async (feat: KarafFeatureInfo) => {
+    const featIdent = `${feat.name}${feat.version ? `/${feat.version}` : ''}`;
+    if (!confirm(`Deseja realmente desinstalar permanentemente a feature "${featIdent}"?\n\nIsso executará "feature:uninstall -r" e removerá a feature do Karaf e seus bundles.`)) {
+      return;
+    }
+    setFeatureActionLoading(feat.name);
+    setFeatureLog('');
+    const unsubscribe = window.electronAPI?.onKarafLogChunk?.((chunk) => {
+      setFeatureLog((prev) => (prev || '') + chunk);
+    });
+    try {
+      const res = await window.electronAPI.uninstallKarafFeature(feat.name, feat.version);
+      if (!res.success) {
+        alert(`Erro ao desinstalar feature: ${res.output}`);
+      } else {
+        await handleRefreshFeatures();
+        await fetchBundles();
+      }
+    } catch (err: any) {
+      alert(`Falha: ${err?.message || err}`);
+    } finally {
+      unsubscribe?.();
+      setFeatureActionLoading(null);
+    }
+  };
+
+  const handleInstallFeatureDirect = async () => {
+    if (!newFeatureInstallName.trim()) {
+      alert('Informe o nome da feature.');
+      return;
+    }
+    setFeatureActionLoading('installing_new');
+    setFeatureLog('');
+    const unsubscribe = window.electronAPI?.onKarafLogChunk?.((chunk) => {
+      setFeatureLog((prev) => (prev || '') + chunk);
+    });
+    try {
+      const res = await window.electronAPI.installKarafFeature(
+        newFeatureInstallName.trim(),
+        newFeatureInstallVersion.trim() || undefined
+      );
+      if (!res.success) {
+        alert(`Erro ao instalar feature: ${res.output}`);
+      } else {
+        setIsFeatureInstallOpen(false);
+        setNewFeatureInstallName('');
+        setNewFeatureInstallVersion('');
+        await handleRefreshFeatures();
+        await fetchBundles();
+      }
+    } catch (err: any) {
+      alert(`Falha: ${err?.message || err}`);
+    } finally {
+      unsubscribe?.();
+      setFeatureActionLoading(null);
+    }
+  };
+
+  const filteredFeatures = useMemo(() => {
+    return featuresList.filter((f) => {
+      if (featuresFilter === 'WINTHOR' && !f.isWinthor) return false;
+      if (featuresFilter === 'SYSTEM' && f.isWinthor) return false;
+      if (featuresSearch.trim()) {
+        const q = featuresSearch.toLowerCase();
+        return (
+          f.name.toLowerCase().includes(q) ||
+          f.version.toLowerCase().includes(q) ||
+          (f.description && f.description.toLowerCase().includes(q)) ||
+          (f.repository && f.repository.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [featuresList, featuresFilter, featuresSearch]);
+
 
   // --- Fluxo de Instalação / Nova Versão ---
   const updateFromSelectedProject = (proj: GitProjectInfo) => {
@@ -898,6 +1068,16 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
             <button
               type="button"
+              onClick={handleOpenFeaturesModal}
+              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
+              title="Gerenciar Features instaladas do Karaf (feature:list -i, feature:uninstall -r, feature:install)"
+            >
+              <Layers className="w-4 h-4 text-indigo-400" />
+              <span className="hidden sm:inline">Features Karaf</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleOpenDeployHistory}
               className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
               title="Ver histórico de deploys/builds Karaf já executados"
@@ -1038,23 +1218,23 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
         </div>
 
         {/* Tabela de Bundles */}
-        <div className="flex-1 overflow-auto p-4 sm:px-6">
+        <div className="flex-1 overflow-auto relative">
           {isLoading ? (
-            <div className="h-64 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
+            <div className="h-64 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2 p-6">
               <RotateCw className="w-6 h-6 animate-spin text-primary" />
               <span>Consultando bundles no runtime Karaf via client.bat...</span>
             </div>
           ) : filteredBundles.length === 0 ? (
-            <div className="h-48 flex flex-col items-center justify-center text-xs text-muted-foreground">
+            <div className="h-48 flex flex-col items-center justify-center text-xs text-muted-foreground p-6">
               <Package className="w-8 h-8 opacity-30 mb-2" />
               <p>Nenhum bundle encontrado para os filtros aplicados.</p>
             </div>
           ) : (
-            <div className="min-w-full inline-block align-middle relative pb-20">
-              <table className="min-w-full divide-y divide-border/60 text-xs font-mono">
-                <thead className="bg-muted/80 sticky top-0 z-10 text-[11px] backdrop-blur-xs">
-                  <tr>
-                    <th className="px-4 py-3 text-left w-12">
+            <div className="min-w-full relative pb-28">
+              <table className="min-w-full text-xs font-mono border-separate border-spacing-0">
+                <thead className="sticky top-0 z-20 shadow-xs">
+                  <tr className="bg-muted">
+                    <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left w-12 border-b border-border select-none">
                       <input
                         type="checkbox"
                         checked={filteredBundles.length > 0 && selectedBundleIds.size === filteredBundles.length}
@@ -1067,14 +1247,14 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                         }
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-20">ID</th>
-                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36">Estado</th>
-                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider min-w-[340px]">Nome do Bundle / SymbolicName</th>
-                    <th className="px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36">Versão</th>
-                    <th className="px-4 py-3 text-right text-muted-foreground uppercase font-bold tracking-wider w-72">Ações</th>
+                    <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-20 border-b border-border select-none text-[11px]">ID</th>
+                    <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36 border-b border-border select-none text-[11px]">Estado</th>
+                    <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider min-w-[340px] border-b border-border select-none text-[11px]">Nome do Bundle / SymbolicName</th>
+                    <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36 border-b border-border select-none text-[11px]">Versão</th>
+                    <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-right text-muted-foreground uppercase font-bold tracking-wider w-72 border-b border-border select-none text-[11px]">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/40">
+                <tbody>
                   {filteredBundles.map((b) => {
                     const isRowLoading = Boolean(actionLoading[b.id]);
                     const isSelected = selectedBundleIds.has(b.id);
@@ -1088,7 +1268,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                           isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/40'
                         }`}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 border-b border-border/40">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -1096,17 +1276,17 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                             className="rounded border-border text-primary focus:ring-primary cursor-pointer w-4 h-4"
                           />
                         </td>
-                        <td className="px-4 py-3 text-primary font-bold text-sm tabular-nums">{b.id}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 border-b border-border/40 text-primary font-bold text-sm tabular-nums">{b.id}</td>
+                        <td className="px-4 py-3 border-b border-border/40">
                           <div className="flex items-center gap-1.5">
                             <span
                               className={`px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 ${
                                 b.state === 'Active'
-                                  ? 'bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border-emerald-500/30'
+                                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
                                   : b.state === 'Resolved'
-                                  ? 'bg-amber-500/15 text-amber-500 dark:text-amber-400 border-amber-500/30'
+                                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
                                   : b.state === 'Installed'
-                                  ? 'bg-blue-500/15 text-blue-500 dark:text-blue-400 border-blue-500/30'
+                                  ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30'
                                   : 'bg-muted text-muted-foreground border-border'
                               }`}
                             >
@@ -1119,7 +1299,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               <button
                                 type="button"
                                 onClick={() => handleOpenInlineDiag(b)}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 dark:text-amber-300 border border-amber-500/40 transition cursor-pointer"
+                                className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 border border-amber-500/40 transition cursor-pointer"
                                 title="Ver diagnóstico do Karaf para este bundle (bundle:diag)"
                               >
                                 Diag
@@ -1127,7 +1307,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-foreground font-medium" title={b.name}>
+                        <td className="px-4 py-3 border-b border-border/40 text-foreground font-medium" title={b.name}>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-foreground font-bold text-xs">{b.name}</span>
@@ -1144,8 +1324,8 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs tabular-nums font-semibold">{b.version || '-'}</td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 border-b border-border/40 text-muted-foreground font-mono text-xs tabular-nums font-semibold">{b.version || '-'}</td>
+                        <td className="px-4 py-3 border-b border-border/40 text-right">
                           <div className="flex items-center justify-end space-x-1.5">
                             {/* Recompilar Maven & Atualizar (1 clique para projetos do workspace) */}
                             {isWs && (
@@ -1166,7 +1346,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleBasicAction('refresh', b.id)}
                               disabled={isRowLoading}
                               title="Atualizar fiações OSGi do bundle (bundle:refresh)"
-                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-400 hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
                               <RotateCw className="w-4 h-4" />
                             </button>
@@ -1188,7 +1368,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenInstall(b)}
                               disabled={isRowLoading}
                               title="Instalar outra versão ou atualizar"
-                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-400 hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
                               <ArrowUpCircle className="w-4 h-4" />
                             </button>
@@ -1211,7 +1391,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('resolve', b.id)}
                                 disabled={isRowLoading}
                                 title="Forçar resolução de dependências OSGi (bundle:resolve)"
-                                className="p-2 rounded-xl bg-card hover:bg-amber-500/20 border border-border text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="p-2 rounded-xl bg-card hover:bg-amber-500/20 border border-border text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                               >
                                 <Wrench className="w-4 h-4" />
                               </button>
@@ -1224,7 +1404,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('stop', b.id)}
                                 disabled={isRowLoading}
                                 title="Parar bundle"
-                                className="p-2 rounded-xl bg-card hover:bg-amber-500/15 border border-border hover:border-amber-500/40 text-amber-400 hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="p-2 rounded-xl bg-card hover:bg-amber-500/15 border border-border hover:border-amber-500/40 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                               >
                                 <Square className="w-4 h-4 fill-current" />
                               </button>
@@ -1234,7 +1414,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('start', b.id)}
                                 disabled={isRowLoading}
                                 title="Iniciar bundle"
-                                className="p-2 rounded-xl bg-card hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-emerald-400 hover:text-emerald-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="p-2 rounded-xl bg-card hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                               >
                                 <Play className="w-4 h-4 fill-current" />
                               </button>
@@ -1246,7 +1426,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenUninstall(b)}
                               disabled={isRowLoading}
                               title="Desinstalar bundle com verificação de dependências"
-                              className="p-2 rounded-xl bg-card hover:bg-rose-500/20 border border-border hover:border-rose-500/40 text-rose-400 hover:text-rose-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-2 rounded-xl bg-card hover:bg-rose-500/20 border border-border hover:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1260,7 +1440,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
               {/* Barra Flutuante de Ações em Lote */}
               {selectedBundleIds.size > 0 && (
-                <div className="sticky bottom-2 left-0 right-0 z-20 bg-card/95 backdrop-blur-md border border-primary/40 shadow-2xl rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs mt-2">
+                <div className="sticky bottom-3 mx-4 z-20 bg-card/95 backdrop-blur-md border border-primary/40 shadow-2xl rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs mt-2">
                   <div className="flex items-center gap-2 font-bold text-foreground pr-3">
                     <CheckSquare className="w-4 h-4 text-primary" />
                     <span>{selectedBundleIds.size} bundle(s) selecionado(s)</span>
@@ -1271,7 +1451,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                       type="button"
                       onClick={() => handleBatchAction('restart')}
                       disabled={isBatchActionLoading}
-                      className="px-3 py-1.5 rounded-xl font-bold bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-xl font-bold bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                       title="Reiniciar todos os bundles selecionados"
                     >
                       <RotateCcw className={`w-3.5 h-3.5 ${isBatchActionLoading ? 'animate-spin' : ''}`} />
@@ -1282,7 +1462,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                       type="button"
                       onClick={() => handleBatchAction('start')}
                       disabled={isBatchActionLoading}
-                      className="px-3 py-1.5 rounded-xl font-bold bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-xl font-bold bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                       title="Iniciar todos os bundles selecionados"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
@@ -1304,7 +1484,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                       type="button"
                       onClick={() => handleBatchAction('refresh')}
                       disabled={isBatchActionLoading}
-                      className="px-3 py-1.5 rounded-xl font-bold bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-xl font-bold bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-700 dark:text-sky-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                       title="Atualizar fiações OSGi dos bundles selecionados"
                     >
                       <RotateCw className="w-3.5 h-3.5" />
@@ -1315,7 +1495,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                       type="button"
                       onClick={() => handleBatchAction('uninstall')}
                       disabled={isBatchActionLoading}
-                      className="px-3 py-1.5 rounded-xl font-bold bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-xl font-bold bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-700 dark:text-rose-400 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                       title="Desinstalar todos os bundles selecionados"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1345,7 +1525,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
           <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500">
+                <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
@@ -1373,10 +1553,137 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     ID: {uninstallTarget.id} · Versão: {uninstallTarget.version}
                   </div>
                 </div>
-                <span className="text-xs font-mono font-bold bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                <span
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 font-mono ${
+                    uninstallTarget.state === 'Active'
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                      : uninstallTarget.state === 'Resolved'
+                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
+                      : uninstallTarget.state === 'Installed'
+                      ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                      : 'bg-muted text-muted-foreground border-border'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    uninstallTarget.state === 'Active' ? 'bg-emerald-500' : uninstallTarget.state === 'Resolved' ? 'bg-amber-500' : 'bg-blue-500'
+                  }`} />
                   {uninstallTarget.state}
                 </span>
               </div>
+
+              {/* Modo de Desinstalação */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Tipo de Desinstalação
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUninstallMode('feature')}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      uninstallMode === 'feature'
+                        ? 'border-rose-500/60 bg-rose-500/10 text-foreground ring-1 ring-rose-500/30'
+                        : 'border-border bg-card hover:bg-muted/40 text-muted-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-rose-500" />
+                        Desinstalação Permanente
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400">
+                        Recomendado
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Executa <code className="text-rose-400 font-mono">feature:uninstall -r</code>. Não volta ao reiniciar o Karaf.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setUninstallMode('bundle')}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      uninstallMode === 'bundle'
+                        ? 'border-rose-500/60 bg-rose-500/10 text-foreground ring-1 ring-rose-500/30'
+                        : 'border-border bg-card hover:bg-muted/40 text-muted-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                        <Package className="w-3.5 h-3.5 text-amber-500" />
+                        Apenas Bundle (Memória)
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        OSGi
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Executa <code className="text-amber-400 font-mono">bundle:uninstall</code>. Pode retornar se Karaf reiniciar.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Se for modo feature: inputs de nome e versão da feature */}
+              {uninstallMode === 'feature' && (
+                <div className="p-3.5 bg-muted/20 border border-border rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      Parâmetros da Feature Karaf
+                    </span>
+                    {installedFeaturesList.length > 0 && (
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        {installedFeaturesList.length} features instaladas detectadas
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                        Nome da Feature
+                      </label>
+                      <input
+                        type="text"
+                        list="karaf-installed-features-datalist"
+                        value={uninstallFeatureName}
+                        onChange={(e) => setUninstallFeatureName(e.target.value)}
+                        placeholder="Ex: winthor-integracao-varejo"
+                        className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                      />
+                      <datalist id="karaf-installed-features-datalist">
+                        {installedFeaturesList.map((f) => (
+                          <option key={`${f.name}-${f.version}`} value={f.name}>
+                            {f.name} {f.version ? `(${f.version})` : ''}
+                          </option>
+                        ))}
+                      </datalist>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                        Versão (Opcional)
+                      </label>
+                      <input
+                        type="text"
+                        value={uninstallFeatureVersion}
+                        onChange={(e) => setUninstallFeatureVersion(e.target.value)}
+                        placeholder="Ex: 0.0.1-SNAPSHOT"
+                        className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] font-mono text-muted-foreground bg-muted/40 p-2 rounded-lg border border-border/50">
+                    Comando Karaf que será executado:
+                    <div className="text-rose-400 font-bold mt-0.5">
+                      feature:uninstall -r {uninstallFeatureName || '<nome-feature>'}{uninstallFeatureVersion ? `/${uninstallFeatureVersion}` : ''}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Status da checagem de dependências */}
               {isCheckingUninstallDeps ? (
@@ -1388,42 +1695,42 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                 <div className="space-y-3">
                   {/* Nível de Risco */}
                   {uninstallDepCheck.riskLevel === 'HIGH' ? (
-                    <div className="p-3.5 bg-rose-500/15 border border-rose-500/30 rounded-xl text-rose-400 text-xs space-y-2">
-                      <div className="flex items-center gap-2 font-bold text-rose-400">
-                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <div className="p-3.5 bg-rose-500/10 dark:bg-rose-950/40 border border-rose-500/30 dark:border-rose-800/50 rounded-xl text-xs space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-rose-700 dark:text-rose-300">
+                        <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                         <span>RISCO ALTO: Bundles dependentes ativos detectados!</span>
                       </div>
-                      <p className="text-[11px] text-rose-300">
+                      <p className="text-[11px] text-rose-700/90 dark:text-rose-300/90 leading-relaxed">
                         Existem {uninstallDepCheck.dependentBundles.length} bundle(s) que dependem diretamente deste módulo.
                         Ao desinstalar, esses módulos deixarão de funcionar no Karaf.
                       </p>
 
                       {/* Lista de dependentes */}
-                      <div className="mt-2 bg-background/50 border border-rose-500/20 rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
+                      <div className="mt-2 bg-card/80 border border-rose-500/30 rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
                         {uninstallDepCheck.dependentBundles.map((dep) => (
                           <div key={dep.id} className="text-[10px] font-mono text-foreground flex items-center justify-between">
                             <span>
                               [{dep.id}] {dep.name} {dep.version ? `(${dep.version})` : ''}
                             </span>
-                            <span className="text-rose-400 text-[9px]">{dep.reason}</span>
+                            <span className="text-rose-600 dark:text-rose-400 font-semibold text-[9px]">{dep.reason}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   ) : uninstallDepCheck.riskLevel === 'MEDIUM' ? (
-                    <div className="p-3.5 bg-amber-500/15 border border-amber-500/30 rounded-xl text-amber-400 text-xs space-y-1.5">
-                      <div className="flex items-center gap-2 font-bold text-amber-400">
-                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div className="p-3.5 bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/30 dark:border-amber-800/50 rounded-xl text-xs space-y-1.5">
+                      <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                         <span>ATENÇÃO: Pacotes exportados podem estar em uso</span>
                       </div>
-                      <p className="text-[11px] text-amber-300">
+                      <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
                         Este bundle exporta {uninstallDepCheck.exportedPackages.length} pacotes OSGi. Nenhum bundle cliente foi
                         detectado com fiação direta no momento, mas dependências dinâmicas podem ser afetadas.
                       </p>
                     </div>
                   ) : (
-                    <div className="p-3.5 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <div className="p-3.5 bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/30 dark:border-emerald-800/50 rounded-xl text-xs flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>Risco Baixo: Nenhuma dependência ativa encontrada. Seguro para desinstalar.</span>
                     </div>
                   )}
@@ -1447,7 +1754,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
               {/* Log ao vivo do bundle:uninstall + bundle:refresh */}
               {uninstallLog && (
-                <div className="p-3 bg-black/50 border border-border rounded-xl font-mono text-[11px] text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto">
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
                   {uninstallLog}
                 </div>
               )}
@@ -1470,11 +1777,11 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                   isCheckingUninstallDeps ||
                   (uninstallDepCheck?.riskLevel === 'HIGH' && !confirmUninstallChecked)
                 }
-                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-40 rounded-xl transition flex items-center gap-1.5 shadow-sm"
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-75 disabled:cursor-wait rounded-xl transition flex items-center gap-1.5 shadow-sm"
               >
                 {isUninstalling ? (
                   <>
-                    <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                    <RotateCw className="w-3.5 h-3.5 animate-spin text-white" />
                     <span>Desinstalando...</span>
                   </>
                 ) : (
@@ -1720,7 +2027,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
               {/* Log do comando */}
               {installLog && (
-                <div className="p-3 bg-black/50 border border-border rounded-xl font-mono text-[11px] text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto">
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
                   {installLog}
                 </div>
               )}
@@ -1836,7 +2143,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
               {/* Log ao vivo do bundle:update + bundle:refresh + bundle:start */}
               {reinstallLog && (
-                <div className="p-3 bg-black/50 border border-border rounded-xl font-mono text-[11px] text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto">
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
                   {reinstallLog}
                 </div>
               )}
@@ -2063,7 +2370,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                           <div>
                             <div className="text-xs font-bold text-foreground flex items-center gap-2">
                               <span>[{detailsTarget.id}] {detailsTarget.name}</span>
-                              <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold">
+                              <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-mono font-bold">
                                 {detailsTarget.state}
                               </span>
                             </div>
@@ -2150,7 +2457,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                   )}
 
                   {detailsTab === 'diag' && (
-                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl font-mono text-xs text-rose-300 whitespace-pre-wrap">
+                    <div className="p-3 bg-rose-500/10 dark:bg-rose-950/40 border border-rose-500/30 dark:border-rose-800/50 rounded-xl font-mono text-xs text-rose-800 dark:text-rose-200 whitespace-pre-wrap leading-relaxed">
                       {bundleDetails.diag}
                     </div>
                   )}
@@ -2293,26 +2600,26 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
                     {/* Resumo com badges */}
                     <div className="flex flex-wrap gap-2 text-xs font-mono">
-                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                         {snapshotDiff?.unchanged.length || 0} inalterados
                       </span>
                       {(snapshotDiff?.versionChanged.length || 0) > 0 && (
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-400 border border-amber-500/30 font-bold">
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold">
                           {snapshotDiff?.versionChanged.length} versões alteradas
                         </span>
                       )}
                       {(snapshotDiff?.stateChanged.length || 0) > 0 && (
-                        <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/30 font-bold">
+                        <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-bold">
                           {snapshotDiff?.stateChanged.length} estados alterados
                         </span>
                       )}
                       {(snapshotDiff?.added.length || 0) > 0 && (
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold">
                           +{snapshotDiff?.added.length} novos
                         </span>
                       )}
                       {(snapshotDiff?.removed.length || 0) > 0 && (
-                        <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-400 border border-rose-500/30 font-bold">
+                        <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 font-bold">
                           -{snapshotDiff?.removed.length} ausentes
                         </span>
                       )}
@@ -2324,8 +2631,8 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                       snapshotDiff.stateChanged.length === 0 &&
                       snapshotDiff.added.length === 0 &&
                       snapshotDiff.removed.length === 0 && (
-                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center text-xs text-emerald-400">
-                          <CheckCircle2 className="w-6 h-6 mx-auto mb-1.5" />
+                        <div className="p-4 bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-center text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                          <CheckCircle2 className="w-6 h-6 mx-auto mb-1.5 text-emerald-600 dark:text-emerald-400" />
                           Todos os bundles estão idênticos ao snapshot em versão e estado!
                         </div>
                       )}
@@ -2333,7 +2640,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     {/* Versões alteradas */}
                     {snapshotDiff && snapshotDiff.versionChanged.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                        <div className="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                           <RotateCw className="w-3.5 h-3.5" />
                           Versões Atualizadas ({snapshotDiff.versionChanged.length})
                         </div>
@@ -2349,8 +2656,8 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               </div>
                               <div className="flex items-center gap-2 font-mono text-[11px]">
                                 <span className="text-muted-foreground line-through">{snapshot.version}</span>
-                                <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
-                                <span className="text-amber-400 font-bold">{current.version}</span>
+                                <ArrowRight className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                <span className="text-amber-700 dark:text-amber-400 font-bold">{current.version}</span>
                               </div>
                             </div>
                           ))}
@@ -2361,7 +2668,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     {/* Estados alterados */}
                     {snapshotDiff && snapshotDiff.stateChanged.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                        <div className="text-xs font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                           <Play className="w-3.5 h-3.5" />
                           Estados Alterados ({snapshotDiff.stateChanged.length})
                         </div>
@@ -2377,8 +2684,8 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               </div>
                               <div className="flex items-center gap-2 font-mono text-[11px]">
                                 <span className="text-muted-foreground">{snapshot.state}</span>
-                                <ArrowRight className="w-3.5 h-3.5 text-blue-400" />
-                                <span className="text-blue-400 font-bold">{current.state}</span>
+                                <ArrowRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                <span className="text-blue-700 dark:text-blue-400 font-bold">{current.state}</span>
                               </div>
                             </div>
                           ))}
@@ -2389,7 +2696,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     {/* Novos bundles adicionados */}
                     {snapshotDiff && snapshotDiff.added.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                        <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                           <UploadCloud className="w-3.5 h-3.5" />
                           Novos Bundles Instalados (+{snapshotDiff.added.length})
                         </div>
@@ -2403,7 +2710,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 <span className="font-mono font-bold text-foreground">[{b.id}] </span>
                                 <span className="text-foreground">{b.name}</span>
                               </div>
-                              <div className="font-mono text-[10px] text-emerald-400 shrink-0">
+                              <div className="font-mono text-[10px] text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
                                 v{b.version} · {b.state}
                               </div>
                             </div>
@@ -2415,7 +2722,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     {/* Bundles removidos */}
                     {snapshotDiff && snapshotDiff.removed.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+                        <div className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
                           <Trash2 className="w-3.5 h-3.5" />
                           Bundles Removidos / Ausentes (-{snapshotDiff.removed.length})
                         </div>
@@ -2429,7 +2736,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 <span className="font-mono font-bold text-foreground">[{b.id}] </span>
                                 <span className="text-muted-foreground line-through">{b.name}</span>
                               </div>
-                              <div className="font-mono text-[10px] text-rose-400 shrink-0">
+                              <div className="font-mono text-[10px] text-rose-700 dark:text-rose-400 font-bold shrink-0">
                                 v{b.version} (era {b.state})
                               </div>
                             </div>
@@ -2618,30 +2925,30 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               ) : deployHistory.length === 0 ? (
                 /* EMPTY STATE ASSINATURA: "Pronto para Telemetria" Pipeline Blueprint */
                 <div className="h-full min-h-[360px] flex flex-col items-center justify-center p-6 text-center">
-                  <div className="w-full max-w-lg p-6 rounded-xl bg-card border border-border shadow-md relative">
+                  <div className="w-full max-w-lg p-6 rounded-xl bg-slate-900/90 border border-slate-800 shadow-md relative">
                     {/* Pipeline OSGi Diagram */}
-                    <div className="flex items-center justify-center gap-2 mb-5 font-mono text-[10px] text-muted-foreground">
-                      <div className="px-2.5 py-1.5 rounded-lg bg-muted/60 border border-border flex items-center gap-1.5 text-foreground">
-                        <Package className="w-3 h-3 text-primary" />
+                    <div className="flex items-center justify-center gap-2 mb-5 font-mono text-[10px] text-slate-400">
+                      <div className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center gap-1.5 text-slate-200">
+                        <Package className="w-3 h-3 text-sky-400" />
                         <span>Maven JAR</span>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                      <div className="px-2.5 py-1.5 rounded-lg bg-muted/60 border border-border flex items-center gap-1.5 text-foreground">
-                        <UploadCloud className="w-3 h-3 text-primary" />
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+                      <div className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center gap-1.5 text-slate-200">
+                        <UploadCloud className="w-3 h-3 text-sky-400" />
                         <span>Hot-Deploy</span>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                      <div className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+                      <div className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-1.5 text-emerald-400">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                         <span>Active OSGi</span>
                       </div>
                     </div>
 
-                    <h4 className="text-base font-bold text-foreground mb-1.5">
+                    <h4 className="text-base font-bold text-slate-100 mb-1.5">
                       Nenhum Deploy Registrado Nesta Sessão
                     </h4>
-                    <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed mb-6">
-                      Cada compilação e deploy disparado através da interface ou por agentes MCP (<code className="text-primary font-mono text-[11px]">karaf_deploy_feature</code>) será gravado aqui com telemetria detalhada de duração, coordenadas Maven e diagnóstico de falhas.
+                    <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed mb-6">
+                      Cada compilação e deploy disparado através da interface ou por agentes MCP (<code className="text-sky-400 font-mono text-[11px]">karaf_deploy_feature</code>) será gravado aqui com telemetria detalhada de duração, coordenadas Maven e diagnóstico de falhas.
                     </p>
 
                     <div className="flex items-center justify-center gap-3">
@@ -2922,20 +3229,20 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-3 bg-black/70">
+            <div className="flex-1 overflow-auto p-3 bg-slate-950">
               {isLoadingLog ? (
-                <div className="h-full flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
+                <div className="h-full flex flex-col items-center justify-center text-xs text-slate-400 space-y-2">
                   <RotateCw className="w-6 h-6 animate-spin text-primary" />
                   <span>Lendo log:display via client.bat...</span>
                 </div>
               ) : filteredKarafLog ? (
-                <pre className="text-[11px] font-mono whitespace-pre text-foreground overflow-x-auto min-w-full">{filteredKarafLog}</pre>
+                <pre className="text-[11px] font-mono whitespace-pre text-slate-200 overflow-x-auto min-w-full selection:bg-slate-800">{filteredKarafLog}</pre>
               ) : karafLog ? (
-                <p className="text-xs text-muted-foreground text-center py-8">
+                <p className="text-xs text-slate-400 text-center py-8">
                   Nenhuma linha corresponde ao filtro "{logSearch}".
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-8">
+                <p className="text-xs text-slate-400 text-center py-8">
                   Nenhuma entrada de log retornada. Verifique se o Karaf está acessível (client.bat / SSH).
                 </p>
               )}
@@ -2974,7 +3281,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             </div>
 
             <div className="p-4 space-y-3">
-              <div className="bg-black/80 rounded-xl p-3 border border-border font-mono text-xs text-amber-200/90 whitespace-pre-wrap max-h-96 overflow-y-auto leading-relaxed">
+              <div className="bg-slate-950 rounded-xl p-3.5 border border-amber-500/30 font-mono text-xs text-amber-200 whitespace-pre-wrap max-h-96 overflow-y-auto leading-relaxed selection:bg-amber-900/40">
                 {isLoadingInlineDiag ? (
                   <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
                     <RotateCw className="w-5 h-5 animate-spin text-primary" />
@@ -2990,6 +3297,355 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               <button
                 type="button"
                 onClick={() => setInlineDiagBundle(null)}
+                className="px-4 py-1.5 rounded-xl font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========================================================================= */}
+      {/* SUB-MODAL: GERENCIADOR DE FEATURES KARAF */}
+      {/* ========================================================================= */}
+      {isFeaturesModalOpen && (
+        <div className="fixed inset-0 z-[85] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+            {/* Header */}
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-500">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-base font-bold text-foreground">
+                      Features Karaf Instaladas
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                      {featuresList.length} total
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      {featuresList.filter((f) => f.isWinthor).length} WinThor
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Gerencie o ciclo de vida permanente das features (<code className="text-indigo-400">feature:list -i</code>). A desinstalação via <code className="text-rose-400">feature:uninstall -r</code> impede que bundles retornem ao reiniciar o Karaf.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFeaturesModalOpen(false)}
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Toolbar */}
+            <div className="p-3 border-b border-border bg-card/60 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+              <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={featuresSearch}
+                    onChange={(e) => setFeaturesSearch(e.target.value)}
+                    placeholder="Filtrar por nome, versão, repositório..."
+                    className="w-full pl-8.5 pr-3 py-1.5 bg-background border border-border rounded-xl text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-indigo-500 font-mono"
+                  />
+                  {featuresSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setFeaturesSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filtro WinThor / Sistema / Todas */}
+                <div className="flex items-center bg-muted/60 p-0.5 rounded-xl border border-border text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setFeaturesFilter('ALL')}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                      featuresFilter === 'ALL'
+                        ? 'bg-background text-foreground shadow-xs font-bold'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Todas ({featuresList.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeaturesFilter('WINTHOR')}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                      featuresFilter === 'WINTHOR'
+                        ? 'bg-indigo-500/20 text-indigo-300 font-bold'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    WinThor ({featuresList.filter((f) => f.isWinthor).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeaturesFilter('SYSTEM')}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                      featuresFilter === 'SYSTEM'
+                        ? 'bg-background text-foreground shadow-xs font-bold'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Sistema ({featuresList.filter((f) => !f.isWinthor).length})
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsFeatureInstallOpen((prev) => !prev)}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                    isFeatureInstallOpen
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-400'
+                  }`}
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Instalar Feature</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRefreshFeatures}
+                  disabled={isLoadingFeatures}
+                  className="px-3 py-1.5 rounded-xl font-medium text-xs bg-muted hover:bg-muted/80 border border-border text-foreground transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                  title="Recarregar lista de features do Karaf"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 ${isLoadingFeatures ? 'animate-spin text-primary' : ''}`} />
+                  <span className="hidden sm:inline">Recarregar</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Painel expansível de Instalação Manual de Feature */}
+            {isFeatureInstallOpen && (
+              <div className="p-4 bg-muted/25 border-b border-border animate-fade-in shrink-0 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                    <span className="text-xs font-bold text-foreground">Instalar Feature Karaf</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    Executa <code className="text-indigo-400">feature:install -r -u &lt;feature&gt;</code>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="sm:col-span-2">
+                    <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                      Nome da Feature <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newFeatureInstallName}
+                      onChange={(e) => setNewFeatureInstallName(e.target.value)}
+                      placeholder="Ex: winthor-integracao-varejo ou hub-carga-dados"
+                      className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                      Versão (Opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newFeatureInstallVersion}
+                      onChange={(e) => setNewFeatureInstallVersion(e.target.value)}
+                      placeholder="Ex: 0.0.1-SNAPSHOT"
+                      className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    Comando:{' '}
+                    <span className="text-indigo-400 font-bold">
+                      feature:install -r -u {newFeatureInstallName || '<feature>'}{newFeatureInstallVersion ? `/${newFeatureInstallVersion}` : ''}
+                    </span>
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsFeatureInstallOpen(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 transition cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleInstallFeatureDirect}
+                      disabled={!newFeatureInstallName.trim() || featureActionLoading === 'installing_new'}
+                      className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                      {featureActionLoading === 'installing_new' ? (
+                        <>
+                          <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Instalando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Instalar Feature</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Live Log das Ações de Feature */}
+            {featureLog && (
+              <div className="p-3 bg-slate-950 border-b border-slate-800 text-slate-200 font-mono text-xs max-h-40 overflow-y-auto whitespace-pre-wrap shrink-0">
+                <div className="flex items-center justify-between mb-1 pb-1 border-b border-slate-800 text-[10px] text-slate-400">
+                  <span className="font-bold text-indigo-400">Log da Execução do Comando Karaf:</span>
+                  <button
+                    type="button"
+                    onClick={() => setFeatureLog(null)}
+                    className="text-slate-400 hover:text-slate-200 underline cursor-pointer"
+                  >
+                    Limpar
+                  </button>
+                </div>
+                {featureLog}
+              </div>
+            )}
+
+            {/* Tabela de Features */}
+            <div className="flex-1 overflow-y-auto min-h-[250px]">
+              {isLoadingFeatures ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-2 text-muted-foreground">
+                  <RotateCw className="w-6 h-6 animate-spin text-primary" />
+                  <span className="text-xs">Consultando features instaladas no Karaf (feature:list -i)...</span>
+                </div>
+              ) : filteredFeatures.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+                  <Layers className="w-10 h-10 text-muted-foreground/40 mb-2" />
+                  <p className="text-sm font-semibold text-foreground">Nenhuma feature encontrada</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {featuresSearch
+                      ? `Nenhum resultado corresponde a "${featuresSearch}".`
+                      : 'Nenhuma feature com o filtro selecionado.'}
+                  </p>
+                </div>
+              ) : (
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="sticky top-0 bg-muted/80 backdrop-blur-xs border-b border-border z-10 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <tr>
+                      <th className="py-2.5 px-4">Feature</th>
+                      <th className="py-2.5 px-3">Versão</th>
+                      <th className="py-2.5 px-3">Repositório</th>
+                      <th className="py-2.5 px-3">Estado</th>
+                      <th className="py-2.5 px-4 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60 font-mono text-[11px]">
+                    {filteredFeatures.map((feat) => {
+                      const isLoadingThis = featureActionLoading === feat.name;
+                      return (
+                        <tr
+                          key={`${feat.name}-${feat.version}`}
+                          className={`hover:bg-muted/40 transition-colors ${
+                            feat.isWinthor ? 'bg-indigo-500/5' : ''
+                          }`}
+                        >
+                          <td className="py-2.5 px-4 font-medium text-foreground">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs">{feat.name}</span>
+                              {feat.isWinthor && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 uppercase tracking-wider">
+                                  WinThor
+                                </span>
+                              )}
+                              {feat.required && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                  Required
+                                </span>
+                              )}
+                            </div>
+                            {feat.description && (
+                              <p className="text-[10px] text-muted-foreground font-sans truncate max-w-md mt-0.5">
+                                {feat.description}
+                              </p>
+                            )}
+                          </td>
+
+                          <td className="py-2.5 px-3 text-muted-foreground">
+                            {feat.version || '—'}
+                          </td>
+
+                          <td className="py-2.5 px-3 text-muted-foreground max-w-[200px] truncate" title={feat.repository}>
+                            {feat.repository || '—'}
+                          </td>
+
+                          <td className="py-2.5 px-3">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
+                                feat.state?.toLowerCase() === 'started'
+                                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                                  : 'bg-muted text-muted-foreground border-border'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  feat.state?.toLowerCase() === 'started' ? 'bg-emerald-400' : 'bg-muted-foreground'
+                                }`}
+                              />
+                              {feat.state}
+                            </span>
+                          </td>
+
+                          <td className="py-2.5 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleUninstallFeatureDirect(feat)}
+                              disabled={isLoadingThis}
+                              className="px-2.5 py-1 rounded-lg font-bold text-[11px] bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 transition cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                              title={`Desinstalar permanentemente feature:uninstall -r ${feat.name}/${feat.version}`}
+                            >
+                              {isLoadingThis ? (
+                                <RotateCw className="w-3 h-3 animate-spin text-rose-400" />
+                              ) : (
+                                <Trash2 className="w-3 h-3" />
+                              )}
+                              <span>Desinstalar (-r)</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 px-4 border-t border-border bg-muted/30 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-muted-foreground font-mono flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                Desinstalar com <code className="text-rose-400 font-bold">-r</code> purga a feature e seus bundles exclusivos do Karaf permanentemente.
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setIsFeaturesModalOpen(false)}
                 className="px-4 py-1.5 rounded-xl font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition cursor-pointer"
               >
                 Fechar

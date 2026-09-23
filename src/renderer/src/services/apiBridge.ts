@@ -48,6 +48,7 @@ import type {
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
+  KarafFeatureInfo,
   GitCommitInfo,
   GitFileStatus,
   GitDiffResult,
@@ -579,6 +580,37 @@ export function initApiBridge() {
       return apiFetch('/api/karaf/bundles/update-version', {
         method: 'POST',
         body: JSON.stringify(request)
+      });
+    },
+
+    listKarafFeatures: async (
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<KarafFeatureInfo[]> => {
+      return apiFetch('/api/karaf/features', {
+        method: 'POST',
+        body: JSON.stringify(credentials || {})
+      });
+    },
+
+    uninstallKarafFeature: async (
+      featureName: string,
+      version?: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/features/uninstall', {
+        method: 'POST',
+        body: JSON.stringify({ featureName, version, credentials })
+      });
+    },
+
+    installKarafFeature: async (
+      featureName: string,
+      version?: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/features/install', {
+        method: 'POST',
+        body: JSON.stringify({ featureName, version, credentials })
       });
     },
 

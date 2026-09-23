@@ -1199,6 +1199,16 @@ export interface KarafBundleInfo {
   updateUrl?: string;
 }
 
+export interface KarafFeatureInfo {
+  name: string;
+  version: string;
+  required?: boolean;
+  state: string;
+  repository: string;
+  description?: string;
+  isWinthor?: boolean;
+}
+
 export interface KarafBundleDependent {
   id: string;
   name: string;

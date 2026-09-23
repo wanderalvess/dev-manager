@@ -12,7 +12,8 @@ import {
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
   KarafBundleDependent,
-  KarafDeployHistoryEntry
+  KarafDeployHistoryEntry,
+  KarafFeatureInfo
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
@@ -200,7 +201,18 @@ export class KarafService {
     // formatem tabelas sem quebrar cada célula em múltiplas linhas (evita limite estreito padrão de 80 colunas).
     childEnv.COLUMNS = '300';
     childEnv.LINES = '1000';
-    childEnv.TERM = 'xterm-256color';
+
+    if (process.platform === 'win32') {
+      // No Windows, NÃO definir TERM como 'xterm' ou 'xterm-256color'.
+      // Quando TERM=xterm está presente no ambiente no Windows, a biblioteca JLine do Karaf
+      // instancia UnixTerminal() em vez de WindowsTerminal.
+      // Isso faz o JLine emitir sequências VT100 não suportadas no cmd.exe ao editar a linha
+      // (ex: \x1b[P para delete, \x1b[1@ para insert), que aparecem no console como setas
+      // literais (←[P, +[P, +[1@) em cima do texto digitado ao apagar ou navegar com as setas.
+      delete childEnv.TERM;
+    } else {
+      childEnv.TERM = 'xterm-256color';
+    }
 
     // Garante que o processo Java/Karaf inicialize o console em UTF-8 para não corromper acentuação
     childEnv.JAVA_TOOL_OPTIONS = (childEnv.JAVA_TOOL_OPTIONS ? childEnv.JAVA_TOOL_OPTIONS + ' ' : '') + '-Dfile.encoding=UTF-8';
@@ -691,6 +703,64 @@ export class KarafService {
   }
 
   /**
+   * Executa "feature:list -i" e retorna a lista estruturada de Features Karaf instaladas.
+   */
+  public async listInstalledFeatures(
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<KarafFeatureInfo[]> {
+    const dummyChunk = () => {};
+    const res = await this.executeKarafCommand('feature:list -i', dummyChunk, credentials);
+    if (res.code !== 0 || !res.stdout) return [];
+
+    const lines = res.stdout.split(/\r?\n/);
+    const features: KarafFeatureInfo[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (
+        !trimmed ||
+        trimmed.startsWith('===') ||
+        trimmed.startsWith('---') ||
+        trimmed.startsWith('───') ||
+        trimmed.includes('Name |') ||
+        trimmed.includes('Name │') ||
+        trimmed.toLowerCase().startsWith('name ')
+      ) {
+        continue;
+      }
+
+      // Formato colunas por pipe (| ou │)
+      if (trimmed.includes('|') || trimmed.includes('│')) {
+        const parts = trimmed.split(/[|│]/).map((p) => p.trim());
+        if (parts.length >= 4) {
+          const name = parts[0];
+          if (name.toLowerCase() === 'name') continue;
+
+          const version = parts[1] || '';
+          const required = parts[2]?.toLowerCase() === 'x' || parts[2]?.toLowerCase() === 'true';
+          const state = parts[3] || 'Started';
+          const repository = parts[4] || '';
+          const description = parts.slice(5).join(' ') || '';
+
+          const isWinthor = /winthor|totvs/i.test(name) || /winthor|totvs/i.test(repository);
+
+          features.push({
+            name,
+            version,
+            required,
+            state,
+            repository,
+            description,
+            isWinthor
+          });
+        }
+      }
+    }
+
+    return features;
+  }
+
+  /**
    * Executa ação de ciclo de vida em um bundle específico (start, stop, restart, uninstall).
    */
   public async manageBundle(
@@ -1034,6 +1104,76 @@ export class KarafService {
         onChunk(chunk);
       }, credentials);
     }
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
+  }
+
+  /**
+   * Desinstala uma Feature Karaf de forma definitiva utilizando `feature:uninstall -r`.
+   * A flag -r remove a feature e limpa/desmonta os bundles associados, impedindo
+   * que retornem na reinicialização do container Karaf.
+   */
+  public async uninstallFeature(
+    featureName: string,
+    version?: string,
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanName = featureName.trim();
+    if (!cleanName || !isSafeKarafCommand(cleanName)) {
+      return { success: false, output: 'Nome da feature inválido ou não seguro.' };
+    }
+
+    const cleanVer = version?.trim();
+    const target = cleanVer && isSafeKarafCommand(cleanVer) ? `${cleanName}/${cleanVer}` : cleanName;
+    const command = `feature:uninstall -r ${target}`;
+
+    let output = '';
+    const res = await this.executeKarafCommand(
+      command,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      credentials
+    );
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
+  }
+
+  /**
+   * Instala / atualiza uma Feature Karaf utilizando `feature:install -r -u`.
+   */
+  public async installFeature(
+    featureName: string,
+    version?: string,
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanName = featureName.trim();
+    if (!cleanName || !isSafeKarafCommand(cleanName)) {
+      return { success: false, output: 'Nome da feature inválido ou não seguro.' };
+    }
+
+    const cleanVer = version?.trim();
+    const target = cleanVer && isSafeKarafCommand(cleanVer) ? `${cleanName}/${cleanVer}` : cleanName;
+    const command = `feature:install -r -u ${target}`;
+
+    let output = '';
+    const res = await this.executeKarafCommand(
+      command,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      credentials
+    );
 
     return {
       success: res.code === 0,

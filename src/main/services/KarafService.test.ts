@@ -706,5 +706,129 @@ client.bat "feature:install -r custom-feature/2.0.0"
       ]);
     });
   });
+
+  describe('getResolvedJavaEnv e correção de caracteres VT100/setas no console', () => {
+    it('remove a variável TERM no Windows para impedir que JLine instancie UnixTerminal', () => {
+      const originalPlatform = process.platform;
+      try {
+        // Simular ambiente com TERM preexistente
+        process.env.TERM = 'xterm-256color';
+        const env = karafService.getResolvedJavaEnv();
+
+        if (process.platform === 'win32') {
+          expect(env.TERM).toBeUndefined();
+        } else {
+          expect(env.TERM).toBe('xterm-256color');
+        }
+      } finally {
+        delete process.env.TERM;
+      }
+    });
+
+    it('injeta encoding UTF-8 nas variáveis de ambiente do Karaf', () => {
+      const env = karafService.getResolvedJavaEnv();
+      expect(env.JAVA_TOOL_OPTIONS).toContain('-Dfile.encoding=UTF-8');
+      expect(env.COLUMNS).toBe('300');
+      expect(env.LINES).toBe('1000');
+    });
+  });
+
+  describe('Gerenciamento de Features Karaf (listInstalledFeatures, uninstallFeature, installFeature)', () => {
+    it('listInstalledFeatures analisa a tabela de feature:list -i corretamente', async () => {
+      const sampleOutput = `
+Name                     │ Version        │ Required │ State   │ Repository             │ Description
+─────────────────────────┼────────────────┼──────────┼─────────┼────────────────────────┼────────────────────────────────────────────────────────────
+standard                 │ 4.4.6          │ x        │ Started │ standard-4.4.6         │ Karaf standard feature
+winthor-integracao-varejo│ 1.0.0-SNAPSHOT │ x        │ Started │ hub-carga-dados        │ Rotina de integração de varejo WinThor
+totvs-pdv-sync           │ 2.3.1          │          │ Started │ totvs-repo             │ Sincronização PDV
+`;
+      vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: sampleOutput,
+        stderr: ''
+      });
+
+      const features = await karafService.listInstalledFeatures();
+      expect(features).toHaveLength(3);
+
+      expect(features[0]).toEqual({
+        name: 'standard',
+        version: '4.4.6',
+        required: true,
+        state: 'Started',
+        repository: 'standard-4.4.6',
+        description: 'Karaf standard feature',
+        isWinthor: false
+      });
+
+      expect(features[1]).toEqual({
+        name: 'winthor-integracao-varejo',
+        version: '1.0.0-SNAPSHOT',
+        required: true,
+        state: 'Started',
+        repository: 'hub-carga-dados',
+        description: 'Rotina de integração de varejo WinThor',
+        isWinthor: true
+      });
+
+      expect(features[2].isWinthor).toBe(true);
+      expect(features[2].required).toBe(false);
+    });
+
+    it('uninstallFeature executa comando feature:uninstall -r com nome e versão', async () => {
+      const execSpy = vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: 'Uninstalled feature winthor-integracao-varejo/1.0.0-SNAPSHOT',
+        stderr: ''
+      });
+
+      const res = await karafService.uninstallFeature('winthor-integracao-varejo', '1.0.0-SNAPSHOT');
+      expect(res.success).toBe(true);
+      expect(execSpy).toHaveBeenCalledWith(
+        'feature:uninstall -r winthor-integracao-varejo/1.0.0-SNAPSHOT',
+        expect.any(Function),
+        undefined
+      );
+    });
+
+    it('uninstallFeature executa comando feature:uninstall -r apenas com nome quando versão omitida', async () => {
+      const execSpy = vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: 'Uninstalled feature winthor-integracao-varejo',
+        stderr: ''
+      });
+
+      const res = await karafService.uninstallFeature('winthor-integracao-varejo');
+      expect(res.success).toBe(true);
+      expect(execSpy).toHaveBeenCalledWith(
+        'feature:uninstall -r winthor-integracao-varejo',
+        expect.any(Function),
+        undefined
+      );
+    });
+
+    it('uninstallFeature rejeita comandos com caracteres inseguros', async () => {
+      const res = await karafService.uninstallFeature('winthor; rm -rf /');
+      expect(res.success).toBe(false);
+      expect(res.output).toContain('inválido ou não seguro');
+    });
+
+    it('installFeature executa comando feature:install -r -u', async () => {
+      const execSpy = vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: 'Installed feature hub-carga-dados/0.0.1-SNAPSHOT',
+        stderr: ''
+      });
+
+      const res = await karafService.installFeature('hub-carga-dados', '0.0.1-SNAPSHOT');
+      expect(res.success).toBe(true);
+      expect(execSpy).toHaveBeenCalledWith(
+        'feature:install -r -u hub-carga-dados/0.0.1-SNAPSHOT',
+        expect.any(Function),
+        undefined
+      );
+    });
+  });
 });
+
 

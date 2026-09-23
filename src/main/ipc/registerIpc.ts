@@ -436,6 +436,38 @@ export function registerIpcHandlers(
     });
   });
 
+  ipcMain.handle('karaf:list-features', async (_, credentials?: { user?: string; pass?: string; port?: number }) => {
+    return await karafService.listInstalledFeatures(credentials);
+  });
+
+  ipcMain.handle(
+    'karaf:uninstall-feature',
+    async (
+      _,
+      featureName: string,
+      version?: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ) => {
+      return await karafService.uninstallFeature(featureName, version, credentials, (chunk) => {
+        mainWindow.webContents.send('karaf:log-chunk', chunk);
+      });
+    }
+  );
+
+  ipcMain.handle(
+    'karaf:install-feature',
+    async (
+      _,
+      featureName: string,
+      version?: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ) => {
+      return await karafService.installFeature(featureName, version, credentials, (chunk) => {
+        mainWindow.webContents.send('karaf:log-chunk', chunk);
+      });
+    }
+  );
+
   ipcMain.handle('karaf:reinstall-bundle', async (_, request: ReinstallBundleRequest) => {
     return await karafService.reinstallBundle(request, (chunk) => {
       mainWindow.webContents.send('karaf:log-chunk', chunk);

@@ -43,6 +43,7 @@ import type {
   NetworkIpInfo,
   ExplainPlanResult,
   KarafBundleInfo,
+  KarafFeatureInfo,
   KarafBundleDetails,
   BundleDependencyCheckResult,
   InstallBundleRequest,
@@ -180,6 +181,19 @@ export interface ElectronAPI {
   ) => Promise<{ success: boolean; state?: string; diag?: string; output: string }>;
   updateKarafBundleVersion: (
     request: UpdateBundleVersionRequest
+  ) => Promise<{ success: boolean; output: string }>;
+  listKarafFeatures: (
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<KarafFeatureInfo[]>;
+  uninstallKarafFeature: (
+    featureName: string,
+    version?: string,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ) => Promise<{ success: boolean; output: string }>;
+  installKarafFeature: (
+    featureName: string,
+    version?: string,
+    credentials?: { user?: string; pass?: string; port?: number }
   ) => Promise<{ success: boolean; output: string }>;
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
