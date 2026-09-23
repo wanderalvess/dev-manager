@@ -35,6 +35,7 @@ import {
   BackupWebhookConfig
 } from '../../../../shared/types';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
+import { getDefaultBackupCommandTemplate, resolveBackupCommandPreview } from '../../utils/backupCommandPreview';
 
 const CRON_PRESETS = ['0 * * * *', '0 */6 * * *', '0 2 * * *', '0 2 * * 0'];
 
@@ -161,14 +162,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
     setBackupOracleDirectory(saved?.oracleDirectory || 'DATA_PUMP_DIR');
     setUseCustomBackupCommand(Boolean(saved?.useCustomCommand));
 
-    const defaultTemplate =
-      activeConnection.type === 'oracle'
-        ? 'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}'
-        : activeConnection.type === 'mysql'
-        ? 'mysqldump -h {host} -P {port} -u {user} {database} --result-file="{filePath}"'
-        : 'pg_dump -h {host} -p {port} -U {user} -d {database} -f "{filePath}"';
-
-    setCustomBackupCommand(saved?.customCommand || defaultTemplate);
+    setCustomBackupCommand(saved?.customCommand || getDefaultBackupCommandTemplate(activeConnection.type));
     setBackupActiveTab('backup');
     setShowPasswordInCommandPreview(false);
     setCommandCopied(false);
@@ -187,52 +181,18 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   }, [isOpen, activeConnection, settings, refreshBackupFiles, refreshBackupHistory]);
 
   // Preview formatado em tempo real do comando de backup
-  const previewBackupCommandResolved = useMemo(() => {
-    if (!activeConnection) return '';
-    const defaultPort = activeConnection.type === 'oracle' ? 1521 : activeConnection.type === 'mysql' ? 3306 : 5432;
-    const port = String(activeConnection.port || defaultPort);
-    const separator = activeConnection.oracleMode === 'sid' ? ':' : '/';
-    const connectString =
-      activeConnection.type === 'oracle'
-        ? `${activeConnection.host}:${port}${separator}${activeConnection.database}`
-        : `${activeConnection.host}:${port}/${activeConnection.database}`;
-    const safeConnName = (activeConnection.name || activeConnection.database || activeConnection.user || 'db').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const safeDbName = (activeConnection.database || activeConnection.user || 'backup').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const defaultExt = activeConnection.type === 'oracle' ? 'dmp' : activeConnection.type === 'postgres' && backupCompress ? 'dump' : 'sql';
-    const sampleFileName = `${safeConnName}_${safeDbName}_TIMESTAMP.${defaultExt}`;
-    const sampleLogName = `${safeConnName}_${safeDbName}_TIMESTAMP.log`;
-    const folder = backupFolder.trim() || 'C:\\Backups';
-    const sampleFilePath = `${folder}\\${sampleFileName}`;
-    const sampleLogPath = `${folder}\\${sampleLogName}`;
-    const directory = backupOracleDirectory.trim() || 'DATA_PUMP_DIR';
-    const pwdDisplay = showPasswordInCommandPreview ? (activeConnection.password || '') : '****';
-
-    if (!useCustomBackupCommand) {
-      if (activeConnection.type === 'oracle') {
-        return `expdp ${activeConnection.user}@${connectString} directory=${directory} dumpfile=${sampleFileName} logfile=${sampleLogName} schemas=${activeConnection.user}${backupCompress ? ' compression=ALL' : ''}`;
-      } else if (activeConnection.type === 'mysql') {
-        return `mysqldump -h ${activeConnection.host} -P ${port} -u ${activeConnection.user} --result-file="${sampleFilePath}" ${activeConnection.database}`;
-      } else {
-        return `pg_dump -h ${activeConnection.host} -p ${port} -U ${activeConnection.user} -d ${activeConnection.database} -f "${sampleFilePath}" -F ${backupCompress ? 'c' : 'p'}`;
-      }
-    }
-
-    let cmd = customBackupCommand || '';
-    cmd = cmd.split('{user}').join(activeConnection.user || '');
-    cmd = cmd.split('{password}').join(pwdDisplay);
-    cmd = cmd.split('{host}').join(activeConnection.host || '');
-    cmd = cmd.split('{port}').join(port);
-    cmd = cmd.split('{database}').join(activeConnection.database || '');
-    cmd = cmd.split('{connectString}').join(connectString);
-    cmd = cmd.split('{directory}').join(directory);
-    cmd = cmd.split('{folder}').join(folder);
-    cmd = cmd.split('{fileName}').join(sampleFileName);
-    cmd = cmd.split('{filePath}').join(sampleFilePath);
-    cmd = cmd.split('{logFileName}').join(sampleLogName);
-    cmd = cmd.split('{logPath}').join(sampleLogPath);
-    cmd = cmd.split('{timestamp}').join('TIMESTAMP');
-    return cmd;
-  }, [activeConnection, backupFolder, backupCompress, backupOracleDirectory, useCustomBackupCommand, customBackupCommand, showPasswordInCommandPreview]);
+  const previewBackupCommandResolved = useMemo(
+    () =>
+      resolveBackupCommandPreview(activeConnection, {
+        backupFolder,
+        backupCompress,
+        backupOracleDirectory,
+        useCustomBackupCommand,
+        customBackupCommand,
+        showPassword: showPasswordInCommandPreview
+      }),
+    [activeConnection, backupFolder, backupCompress, backupOracleDirectory, useCustomBackupCommand, customBackupCommand, showPasswordInCommandPreview]
+  );
 
   const handleSelectBackupFolder = async () => {
     if (!window.electronAPI?.selectDirectory) return;
