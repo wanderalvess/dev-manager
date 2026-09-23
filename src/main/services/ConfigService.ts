@@ -401,6 +401,12 @@ export class ConfigService {
     settings.llmProviders?.forEach((p) => {
       if (p.apiKey) p.apiKey = decryptSecret(p.apiKey, dir)!;
     });
+    settings.docSyncTargets?.forEach((t) => {
+      if (t.authValue) t.authValue = decryptSecret(t.authValue, dir)!;
+    });
+    settings.backupWebhooks?.forEach((w) => {
+      if (w.authValue) w.authValue = decryptSecret(w.authValue, dir)!;
+    });
   }
 
   /**
@@ -422,6 +428,12 @@ export class ConfigService {
     );
     clone.llmProviders = clone.llmProviders?.map((p) =>
       p.apiKey ? { ...p, apiKey: encryptSecret(p.apiKey, dir)! } : p
+    );
+    clone.docSyncTargets = clone.docSyncTargets?.map((t) =>
+      t.authValue ? { ...t, authValue: encryptSecret(t.authValue, dir)! } : t
+    );
+    clone.backupWebhooks = clone.backupWebhooks?.map((w) =>
+      w.authValue ? { ...w, authValue: encryptSecret(w.authValue, dir)! } : w
     );
     return clone;
   }
@@ -498,7 +510,8 @@ export class ConfigService {
 
   public saveSettings(settings: Partial<AppSettings>): AppSettings {
     const current = this.getSettings();
-    const updated = { ...current, ...settings };
+    const candidate = this.preserveExistingSecrets(settings, current);
+    const updated = { ...current, ...candidate };
     try {
       const forDisk = this.encryptSecretsForDisk(updated);
       fs.writeFileSync(this.configPath, JSON.stringify(forDisk, null, 2), 'utf-8');
@@ -508,6 +521,74 @@ export class ConfigService {
       console.error('Erro ao salvar configurações:', err);
     }
     return updated;
+  }
+
+  /**
+   * Preenche de volta, num Partial<AppSettings> recebido de fora (IPC/REST/MCP/import), os
+   * segredos que vieram vazios/ausentes com o valor já salvo para o mesmo id — sem isso, um
+   * cliente que apenas ecoa de volta o resultado sanitizado de getSettings()/sanitizeSecrets()
+   * (sem reenviar a senha/token, que chega vazia de propósito) apagaria a credencial salva a
+   * cada save. Centralizado aqui (em vez de duplicado em registerIpc.ts/server/index.ts) para
+   * que os três transportes tenham exatamente o mesmo comportamento — e para que um novo campo
+   * de segredo só precise ser listado numa lista de shape (não em 3 arquivos).
+   *
+   * Cada item com segredo só reaproveita o valor salvo quando, além do próprio segredo vir
+   * vazio, o destino (host/baseUrl/endpointUrl) para onde ele seria enviado **não mudou** —
+   * caso contrário, um payload de save/import adulterado que só trocasse o destino conseguiria
+   * redirecionar uma credencial real (senha de banco, token de API) pra um endpoint arbitrário
+   * sem precisar conhecê-la. Guarda originalmente só aplicada a llmProviders em importSettings;
+   * agora uniforme para todo campo de segredo, em todo caminho de save.
+   */
+  private preserveExistingSecrets(candidate: Partial<AppSettings>, current: AppSettings): Partial<AppSettings> {
+    const merged: Partial<AppSettings> = { ...candidate };
+
+    if (!merged.karafPass && current.karafPass) {
+      merged.karafPass = current.karafPass;
+    }
+    if (Array.isArray(merged.databaseConnections)) {
+      merged.databaseConnections = merged.databaseConnections.map((newConn) => {
+        const existing = current.databaseConnections?.find((c) => c.id === newConn.id);
+        const destinationChanged = !!existing && (newConn.host !== existing.host || newConn.port !== existing.port);
+        return { ...newConn, password: newConn.password || (destinationChanged ? '' : existing?.password || '') };
+      });
+    }
+    if (Array.isArray(merged.confluenceSources)) {
+      merged.confluenceSources = merged.confluenceSources.map((s) => {
+        const existing = current.confluenceSources?.find((e) => e.id === s.id);
+        const destinationChanged = !!existing && !!s.baseUrl && s.baseUrl !== existing.baseUrl;
+        return { ...s, authToken: s.authToken || (destinationChanged ? '' : existing?.authToken || '') };
+      });
+    }
+    if (Array.isArray(merged.jiraSources)) {
+      merged.jiraSources = merged.jiraSources.map((s) => {
+        const existing = current.jiraSources?.find((e) => e.id === s.id);
+        const destinationChanged = !!existing && !!s.baseUrl && s.baseUrl !== existing.baseUrl;
+        return { ...s, authToken: s.authToken || (destinationChanged ? '' : existing?.authToken || '') };
+      });
+    }
+    if (Array.isArray(merged.llmProviders)) {
+      merged.llmProviders = merged.llmProviders.map((p) => {
+        const existing = current.llmProviders?.find((e) => e.id === p.id);
+        const destinationChanged = !!existing && !!p.baseUrl && p.baseUrl !== existing.baseUrl;
+        return { ...p, apiKey: p.apiKey || (destinationChanged ? '' : existing?.apiKey || '') };
+      });
+    }
+    if (Array.isArray(merged.docSyncTargets)) {
+      merged.docSyncTargets = merged.docSyncTargets.map((t) => {
+        const existing = current.docSyncTargets?.find((e) => e.id === t.id);
+        const destinationChanged = !!existing && !!t.endpointUrl && t.endpointUrl !== existing.endpointUrl;
+        return { ...t, authValue: t.authValue || (destinationChanged ? '' : existing?.authValue || '') };
+      });
+    }
+    if (Array.isArray(merged.backupWebhooks)) {
+      merged.backupWebhooks = merged.backupWebhooks.map((w) => {
+        const existing = current.backupWebhooks?.find((e) => e.id === w.id);
+        const destinationChanged = !!existing && !!w.endpointUrl && w.endpointUrl !== existing.endpointUrl;
+        return { ...w, authValue: w.authValue || (destinationChanged ? '' : existing?.authValue || '') };
+      });
+    }
+
+    return merged;
   }
 
   public autoDetectPaths(): Partial<AppSettings> {
@@ -589,6 +670,18 @@ export class ConfigService {
       sanitized.llmProviders = sanitized.llmProviders.map((p) => ({
         ...p,
         apiKey: ''
+      }));
+    }
+    if (sanitized.docSyncTargets) {
+      sanitized.docSyncTargets = sanitized.docSyncTargets.map((t) => ({
+        ...t,
+        authValue: ''
+      }));
+    }
+    if (sanitized.backupWebhooks) {
+      sanitized.backupWebhooks = sanitized.backupWebhooks.map((w) => ({
+        ...w,
+        authValue: ''
       }));
     }
     return sanitized;

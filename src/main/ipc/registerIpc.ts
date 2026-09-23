@@ -644,38 +644,11 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('settings:save', async (_, settings: Partial<AppSettings>) => {
-    // Preserva senhas/tokens existentes quando o renderer envia de volta o valor
-    // sanitizado (vazio) recebido de settings:get, evitando apagar credenciais salvas.
-    const current = configService.getSettings();
-    const candidate: any = { ...settings };
-    if (!candidate.karafPass && current.karafPass) {
-      candidate.karafPass = current.karafPass;
-    }
-    if (Array.isArray(candidate.databaseConnections)) {
-      candidate.databaseConnections = candidate.databaseConnections.map((newConn: any) => {
-        const existing = current.databaseConnections?.find((c) => c.id === newConn.id);
-        return { ...newConn, password: newConn.password || existing?.password || '' };
-      });
-    }
-    if (Array.isArray(candidate.confluenceSources)) {
-      candidate.confluenceSources = candidate.confluenceSources.map((s: any) => {
-        const existing = current.confluenceSources?.find((e) => e.id === s.id);
-        return { ...s, authToken: s.authToken || existing?.authToken || '' };
-      });
-    }
-    if (Array.isArray(candidate.jiraSources)) {
-      candidate.jiraSources = candidate.jiraSources.map((s: any) => {
-        const existing = current.jiraSources?.find((e) => e.id === s.id);
-        return { ...s, authToken: s.authToken || existing?.authToken || '' };
-      });
-    }
-    if (Array.isArray(candidate.llmProviders)) {
-      candidate.llmProviders = candidate.llmProviders.map((p: any) => {
-        const existing = current.llmProviders?.find((e) => e.id === p.id);
-        return { ...p, apiKey: p.apiKey || existing?.apiKey || '' };
-      });
-    }
-    const saved = configService.saveSettings(candidate);
+    // A preservação de senhas/tokens existentes (quando o renderer ecoa de volta o valor
+    // sanitizado/vazio recebido de settings:get) é responsabilidade do próprio
+    // ConfigService.saveSettings — assim os três transportes (IPC/REST/MCP) se comportam
+    // igual e um novo campo de segredo não precisa ser listado em 3 arquivos.
+    const saved = configService.saveSettings(settings);
     if ('autoReindexOnChange' in settings) {
       if (settings.autoReindexOnChange) {
         await docsIndexService.startWatching();

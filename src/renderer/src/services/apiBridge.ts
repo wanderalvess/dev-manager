@@ -75,6 +75,8 @@ import type {
   LlmRagQueryResponse
 } from '../../../shared/types';
 
+const API_KEY_STORAGE = 'devManagerApiKey';
+
 class WebSocketManager {
   private ws: WebSocket | null = null;
   private listeners: Map<string, Set<(data: any) => void>> = new Map();
@@ -89,7 +91,11 @@ class WebSocketManager {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host || 'localhost:3000';
-    const wsUrl = `${protocol}//${host}/ws`;
+    // A API key é lida a cada tentativa de conexão (não só na primeira), pois pode
+    // ainda não existir no localStorage quando o WebSocketManager é instanciado e
+    // só ser preenchida depois, quando uma chamada REST dispara o prompt de 401.
+    const apiKey = window.localStorage.getItem(API_KEY_STORAGE);
+    const wsUrl = `${protocol}//${host}/ws${apiKey ? `?apiKey=${encodeURIComponent(apiKey)}` : ''}`;
 
     try {
       this.ws = new WebSocket(wsUrl);
@@ -161,8 +167,6 @@ export function initApiBridge() {
   console.log('[API Bridge] Inicializando Web Adapter (Modo Docker / Navegador)...');
 
   const wsManager = new WebSocketManager();
-
-  const API_KEY_STORAGE = 'devManagerApiKey';
 
   const doFetch = (url: string, options?: RequestInit): Promise<Response> => {
     const apiKey = window.localStorage.getItem(API_KEY_STORAGE);
