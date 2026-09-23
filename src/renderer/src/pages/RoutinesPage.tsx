@@ -148,7 +148,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
   const otherRoutines = filteredRoutines.filter((r) => !r.isFavorite);
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto max-w-full overflow-x-hidden select-none">
+    <div className="h-full flex flex-col p-4 md:p-5 space-y-3.5 overflow-hidden max-w-full select-none">
       {/* 1. Topo / Cockpit Header Unificado */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-col space-y-3.5 shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -337,6 +337,8 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
         )}
       </div>
 
+      {/* Área rolável: catálogo de rotinas (favoritas + todas) rola independente do cabeçalho */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 -mr-1 space-y-3.5">
       {/* 3. Rotinas Favoritas */}
       {favoriteRoutines.length > 0 && (
         <div className="space-y-2.5 shrink-0" data-tour="rotinas-favoritas">
@@ -406,6 +408,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
             ))}
           </div>
         )}
+      </div>
       </div>
 
       <OnboardingTour

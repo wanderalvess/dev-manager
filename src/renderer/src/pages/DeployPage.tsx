@@ -390,7 +390,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   };
 
   return (
-    <div className="h-full flex flex-col p-5 pb-8 space-y-4 overflow-y-auto max-w-full overflow-x-hidden">
+    <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden max-w-full">
       {/* Input oculto para importação de perfil JSON */}
       <input
         type="file"
@@ -562,9 +562,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
       </div>
 
       {/* Grid Principal */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[620px] xl:min-h-[720px] min-w-0">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 min-w-0">
         {/* Coluna Esquerda: Etapas do Perfil & Diagnósticos */}
-        <div className={`${isConsoleMaximized ? 'hidden' : 'lg:col-span-4 xl:col-span-4'} flex flex-col space-y-3 min-w-0`}>
+        <div className={`${isConsoleMaximized ? 'hidden' : 'lg:col-span-4 xl:col-span-4'} flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1`}>
           {karafValid === false && (
             <div className="bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
               <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
