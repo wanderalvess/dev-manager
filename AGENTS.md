@@ -31,7 +31,17 @@ expor esse service nos três entry points — nunca duplicar lógica de negócio
 Detalhe de transporte: MCP é request/response stateless, mas vários services fazem streaming
 via callbacks (`onLog`/`onChunk`/`onProgress`) pensados para WebSocket. `mcp/index.ts` resolve
 isso com um helper `collect()` que buffereia os eventos e devolve tudo de uma vez quando a
-tool call termina.
+tool call termina. O conjunto de tools do MCP cresce junto com os services — hoje inclui
+também backup/restore de banco (`db_run_backup`, `db_restore_backup`, `db_run_restore_drill`,
+`db_list_backups`/`db_list_backup_history`, `backup_test_webhook`, `db_save_backup_config`) e
+leitura/gestão de log watcher (`logs_read_last_lines`, `logs_check_file`, `logs_clear_file`).
+
+**Modo Web/Docker é single-tenant**: quando `server/index.ts` roda exposto na rede, todo
+cliente que acessa a mesma URL compartilha o mesmo `config.json` — mesmas conexões de banco,
+credenciais do Karaf, chaves de LLM — sem login nem isolamento por usuário (ver FAQ em
+[DOCKER.md](DOCKER.md)). Não assuma multi-tenancy ao projetar features para esse modo; o
+caminho recomendado para padronizar configs entre um time é export/import de configuração, não
+compartilhar a mesma instância com credenciais distintas.
 
 ### Camadas dentro do Electron
 
@@ -76,6 +86,23 @@ em qualquer novo handler de IPC, rota do server ou tool do MCP que aceite caminh
 URL vindos do usuário. Já houve correções dedicadas de command injection/SSRF/vazamento de
 segredo; trate esse tipo de bug como prioridade alta.
 
+**Segredos em repouso**: senhas de banco, senha do Karaf, tokens de Confluence/Jira, chaves de
+API de LLM e `authValue` de webhooks/doc-sync ficam criptografados em `config.json` com
+AES-256-GCM ([src/main/utils/secretsCrypto.ts](src/main/utils/secretsCrypto.ts)). A chave é
+gerada na primeira execução e persistida em `.secrets.key` (modo `0600`) ao lado do
+`config.json` — **não** usa `safeStorage` do Electron, porque `ConfigService` é compartilhado
+pelos três runtimes (Electron, server web, MCP) e os dois últimos rodam como Node puro, sem
+Electron. Qualquer campo novo de credencial/segredo adicionado a `shared/types.ts` deve ser
+incluído em `encryptSecretsForDisk`/`decryptSecretsInPlace`/`sanitizeSecrets` — do contrário
+vaza em texto plano no disco e/ou em `GET /api/settings` e `settings:get`. Isso já aconteceu
+uma vez (campos `authValue` ficaram de fora na primeira leva) e foi tratado como bug de
+segurança, não como melhoria.
+
+**Autenticação do WebSocket**: no modo Web/Docker, o upgrade do `/ws` exige a mesma API key
+usada pelas rotas REST, passada via query string (não basta validar o header `Origin`, que um
+cliente não-browser simplesmente não envia). `apiBridge.ts` já lê a key do `localStorage` e
+anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
+
 ## Build e tooling
 
 - `npm run build` = `tsc && vite build` — o typecheck é um gate antes do bundle; não pule.
@@ -90,6 +117,10 @@ segredo; trate esse tipo de bug como prioridade alta.
   headless, não o app Electron.
 - `.claude/launch.json` já define os dev servers (`renderer` porta 5173, `server` porta 3000)
   para o preview do Claude Code.
+- CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) roda lint → typecheck → test →
+  **build** (`npm run build`, adicionado para pegar import quebrado/`import()` dinâmico que o
+  typecheck sozinho não cobre). Não inclui `build:electron` (empacotamento do instalador),
+  que é pesado e específico de plataforma — isso continua só local/release.
 
 ## Convenções de código e idioma
 
