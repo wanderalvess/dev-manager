@@ -54,6 +54,7 @@ import {
 import { TerminalViewer } from '../components/TerminalViewer';
 import { ProfileEditorModal } from '../components/ProfileEditorModal';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { resolveActiveProfile, getMissingRequiredPaths, filterLogLines, resolveStepRuntimeTarget } from '../utils/environmentPageUtils';
 
 // Após uma falha de rede (ex: backend indisponível), pausa novas tentativas dessa chamada por esse período
 // em vez de tentar de novo a cada render/poll — evita hammering do processo quando o servidor está fora do ar.
@@ -103,20 +104,11 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const [selectedServiceRows, setSelectedServiceRows] = useState<Set<string>>(new Set());
 
   // Perfil Ativo Selecionado
-  const activeProfile = useMemo(() => {
-    if (!profiles || profiles.length === 0) return null;
-    return profiles.find((p) => p.id === activeProfileId) || profiles[0];
-  }, [profiles, activeProfileId]);
+  const activeProfile = useMemo(() => resolveActiveProfile(profiles, activeProfileId), [profiles, activeProfileId]);
 
   // Diretórios essenciais ainda não configurados (detecção automática não achou nada no disco).
   // Usado para orientar quem está usando o programa pela primeira vez direto para as Configurações.
-  const missingRequiredPaths = useMemo(() => {
-    if (!settings) return [];
-    const missing: string[] = [];
-    if (!settings.projectsPath) missing.push('Diretório de Repositórios Git');
-    if (!settings.intellijPath) missing.push('IDE / Editor de Código');
-    return missing;
-  }, [settings]);
+  const missingRequiredPaths = useMemo(() => getMissingRequiredPaths(settings), [settings]);
 
   // Referências para valores voláteis usados em checagens periódicas (evita recriar callbacks)
   const settingsRef = useRef<AppSettings | null>(settings);
@@ -338,14 +330,10 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   const [isLoadingKarafHistory, setIsLoadingKarafHistory] = useState<boolean>(false);
   const [karafHistorySearch, setKarafHistorySearch] = useState<string>('');
 
-  const filteredKarafHistory = useMemo(() => {
-    if (!karafHistorySearch.trim()) return karafHistoryOutput;
-    const needle = karafHistorySearch.trim().toLowerCase();
-    return karafHistoryOutput
-      .split(/\r?\n/)
-      .filter((line) => line.toLowerCase().includes(needle))
-      .join('\n');
-  }, [karafHistoryOutput, karafHistorySearch]);
+  const filteredKarafHistory = useMemo(
+    () => filterLogLines(karafHistoryOutput, karafHistorySearch),
+    [karafHistoryOutput, karafHistorySearch]
+  );
 
   const handleOpenKarafHistory = async () => {
     setIsKarafHistoryOpen(true);
@@ -830,7 +818,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 pb-8 space-y-3.5 overflow-y-auto max-w-full overflow-x-hidden">
+    <div className="h-full flex flex-col p-4 md:p-5 space-y-3.5 overflow-hidden max-w-full">
       {/* Aviso de Configuração Incompleta: orienta o primeiro uso para as Configurações */}
       {missingRequiredPaths.length > 0 && (
         <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
@@ -1230,9 +1218,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
       </div>
 
       {/* 3. Grid Principal: Cards das Etapas do Perfil à Esquerda / Console à Direita */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-[480px] min-w-0">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-w-0">
         {/* Coluna Esquerda: Cards de cada Serviço / Etapa do Perfil + Diagnósticos */}
-        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0">
+        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1">
           {/* Cartões dos Passos do Perfil Ativo */}
           <div className="cockpit-panel rounded-2xl p-4 flex flex-col border border-border space-y-3" data-tour="step-cards-panel">
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
@@ -1261,17 +1249,17 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             <div className="space-y-2.5">
               {activeProfile?.steps && activeProfile.steps.length > 0 ? (
                 activeProfile.steps.map((step, idx) => {
-                  const effectiveKarafPort = step.type === 'karaf' ? (step.port || settings?.karafDebugPort || 5005) : undefined;
-                  const targetPort = step.type === 'karaf' ? effectiveKarafPort : step.port;
-                  const portStatus = targetPort ? ports.find((p) => p.port === targetPort) : undefined;
-                  const isPortActive = portStatus?.inUse ?? false;
+                  const {
+                    effectiveKarafPort,
+                    targetPort,
+                    isPortActive,
+                    serviceTargetName: srvTarget,
+                    service: srvFound,
+                    processTargetName: procTarget,
+                    process: procFound
+                  } = resolveStepRuntimeTarget(step, { services, processes, ports, karafDebugPort: settings?.karafDebugPort });
                   const loadingAction = stepActionLoading[step.id];
                   const StepIcon = getStepIcon(step.type);
-
-                  const srvTarget = (step.type === 'service-start' || step.type === 'service-stop') ? (step.targetName || step.name) : null;
-                  const procTarget = step.type === 'kill-process' ? (step.targetName || step.name) : null;
-                  const srvFound = srvTarget ? services.find((s) => s.name.toLowerCase() === srvTarget.toLowerCase()) : undefined;
-                  const procFound = procTarget ? processes.find((p) => p.name.toLowerCase() === procTarget.toLowerCase()) : undefined;
 
                   return (
                     <div
