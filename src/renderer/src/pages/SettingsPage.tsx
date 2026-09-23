@@ -690,7 +690,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   };
 
   return (
-    <div className="h-full w-full flex flex-col p-4 md:p-5 space-y-4 overflow-y-auto">
+    <div className="h-full w-full flex flex-col p-4 md:p-5 space-y-4 overflow-hidden">
       {/* Cabeçalho da Página de Configurações */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
@@ -981,6 +981,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         </button>
       </div>
 
+      {/* Área rolável: apenas o conteúdo da aba ativa rola, cabeçalho e abas ficam fixos */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 -mr-1 flex flex-col">
       {/* Conteúdo da Aba 1: Diretórios & IDE */}
       {activeTab === 'dirs' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
@@ -3130,6 +3132,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           </div>
         </div>
       )}
+      </div>
 
       <OnboardingTour
         steps={SETTINGS_TOUR_STEPS}

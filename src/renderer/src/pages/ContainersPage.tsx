@@ -1935,7 +1935,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
       </div>
 
       {/* Lista de Containers */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 min-h-0 overflow-auto p-4">
         {filteredContainers.length === 0 ? (
           <div className="h-full min-h-[260px] flex flex-col items-center justify-center text-center p-6 bg-card/30 border border-dashed border-border/80 rounded-2xl">
             <div className="w-12 h-12 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground mb-3">

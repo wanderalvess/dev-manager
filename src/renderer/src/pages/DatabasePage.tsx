@@ -30,6 +30,7 @@ import {
   saveBindCache,
   BindInputState
 } from '../utils/sqlBinds';
+import { detectColumnDataTypes, processQueryRows, hasActiveQueryFilters } from '../utils/databaseResultsUtils';
 
 // Subcomponentes Modularizados
 import { DatabaseSidebar } from '../components/database/DatabaseSidebar';
@@ -609,133 +610,22 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     setSql(query);
   };
 
-  // Detecção de tipo de dado por coluna
+  // Detecção de tipo de dado por coluna (lógica pura extraída/testada em utils/databaseResultsUtils.ts)
   const columnDataTypes = useMemo<Record<string, 'number' | 'date' | 'boolean' | 'object' | 'string'>>(() => {
     if (!queryResult || !queryResult.columns || !queryResult.rows) return {};
-    const types: Record<string, 'number' | 'date' | 'boolean' | 'object' | 'string'> = {};
-
-    for (const col of queryResult.columns) {
-      let detected: 'number' | 'date' | 'boolean' | 'object' | 'string' = 'string';
-      for (const row of queryResult.rows) {
-        const val = row[col];
-        if (val !== null && val !== undefined && val !== '') {
-          if (typeof val === 'number') {
-            detected = 'number';
-            break;
-          }
-          if (typeof val === 'boolean') {
-            detected = 'boolean';
-            break;
-          }
-          if (typeof val === 'object') {
-            if (val instanceof Date) {
-              detected = 'date';
-            } else {
-              detected = 'object';
-            }
-            break;
-          }
-          if (typeof val === 'string') {
-            const trimmed = val.trim();
-            if (/^-?\d+(\.\d+)?$/.test(trimmed) && !isNaN(Number(trimmed))) {
-              detected = 'number';
-              break;
-            }
-            if (/^\d{4}-\d{2}-\d{2}/.test(trimmed) || /^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
-              detected = 'date';
-              break;
-            }
-            detected = 'string';
-            break;
-          }
-        }
-      }
-      types[col] = detected;
-    }
-    return types;
+    return detectColumnDataTypes(queryResult.columns, queryResult.rows);
   }, [queryResult]);
 
   // Linhas processadas com busca global, filtros por coluna e ordenação
-  const processedRows = useMemo(() => {
-    if (!queryResult?.rows) return [];
-    let list = [...queryResult.rows];
+  const processedRows = useMemo(
+    () => processQueryRows(queryResult, { searchTerm, columnFilters, sortConfig, columnDataTypes }),
+    [queryResult, searchTerm, columnFilters, sortConfig, columnDataTypes]
+  );
 
-    if (searchTerm.trim()) {
-      const termLower = searchTerm.trim().toLowerCase();
-      list = list.filter((row) => {
-        return queryResult.columns.some((col) => {
-          const val = row[col];
-          if (val === null || val === undefined) return false;
-          return String(val).toLowerCase().includes(termLower);
-        });
-      });
-    }
-
-    const activeFilters = Object.entries(columnFilters).filter(([, v]) => v && v.trim());
-    if (activeFilters.length > 0) {
-      list = list.filter((row) => {
-        return activeFilters.every(([col, filterVal]) => {
-          const val = row[col];
-          const lowerFilter = filterVal.trim().toLowerCase();
-          if (lowerFilter === '[null]' || lowerFilter === 'null') {
-            return val === null || val === undefined;
-          }
-          if (lowerFilter === 'not null' || lowerFilter === '!null') {
-            return val !== null && val !== undefined;
-          }
-          if (val === null || val === undefined) return false;
-          return String(val).toLowerCase().includes(lowerFilter);
-        });
-      });
-    }
-
-    if (sortConfig) {
-      const { column, direction } = sortConfig;
-      const type = columnDataTypes[column] || 'string';
-
-      list.sort((a, b) => {
-        const valA = a[column];
-        const valB = b[column];
-
-        if ((valA === null || valA === undefined) && (valB === null || valB === undefined)) return 0;
-        if (valA === null || valA === undefined) return 1;
-        if (valB === null || valB === undefined) return -1;
-
-        let comp = 0;
-        if (type === 'number') {
-          const numA = Number(valA);
-          const numB = Number(valB);
-          if (!isNaN(numA) && !isNaN(numB)) {
-            comp = numA - numB;
-          } else {
-            comp = String(valA).localeCompare(String(valB));
-          }
-        } else if (type === 'date') {
-          const dateA = new Date(valA).getTime();
-          const dateB = new Date(valB).getTime();
-          if (!isNaN(dateA) && !isNaN(dateB)) {
-            comp = dateA - dateB;
-          } else {
-            comp = String(valA).localeCompare(String(valB));
-          }
-        } else {
-          comp = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
-        }
-
-        return direction === 'asc' ? comp : -comp;
-      });
-    }
-
-    return list;
-  }, [queryResult, searchTerm, columnFilters, sortConfig, columnDataTypes]);
-
-  const hasActiveFilters = useMemo(() => {
-    return Boolean(
-      searchTerm.trim() ||
-      sortConfig !== null ||
-      Object.values(columnFilters).some((v) => v && v.trim())
-    );
-  }, [searchTerm, sortConfig, columnFilters]);
+  const hasActiveFilters = useMemo(
+    () => hasActiveQueryFilters(searchTerm, sortConfig, columnFilters),
+    [searchTerm, sortConfig, columnFilters]
+  );
 
   const handleClearAllFilters = () => {
     setSearchTerm('');

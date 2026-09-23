@@ -146,6 +146,20 @@ wss.on('connection', (ws, req) => {
     return;
   }
 
+  // Exigir a mesma API key das rotas REST no handshake do WS. Sem isso, um cliente
+  // que não seja navegador (e portanto não envia header Origin) conseguiria se
+  // conectar direto e enviar karaf:input — execução de comando — contornando por
+  // completo a autenticação por API key.
+  if (API_KEY) {
+    const requestUrl = new URL(req.url || '', 'http://localhost');
+    const providedKey = requestUrl.searchParams.get('apiKey');
+    if (providedKey !== API_KEY) {
+      console.warn('[Segurança] Conexão WebSocket rejeitada: API key ausente ou inválida.');
+      ws.close(1008, 'API key ausente ou inválida');
+      return;
+    }
+  }
+
   wsClients.add(ws);
 
   ws.on('message', (message) => {
@@ -682,48 +696,11 @@ app.get('/api/settings', (_req, res) => {
 
 app.post('/api/settings', (req, res) => {
   const candidate = req.body || {};
-  const current = configService.getSettings();
 
-  // Preservar senhas/tokens existentes se não enviados ou vazios
-  if (!candidate.karafPass && current.karafPass) {
-    candidate.karafPass = current.karafPass;
-  }
-  if (Array.isArray(candidate.databaseConnections)) {
-    candidate.databaseConnections = candidate.databaseConnections.map((newConn: any) => {
-      const existing = current.databaseConnections?.find((c) => c.id === newConn.id);
-      return {
-        ...newConn,
-        password: newConn.password || existing?.password || ''
-      };
-    });
-  }
-  if (Array.isArray(candidate.confluenceSources)) {
-    candidate.confluenceSources = candidate.confluenceSources.map((s: any) => {
-      const existing = current.confluenceSources?.find((e) => e.id === s.id);
-      return {
-        ...s,
-        authToken: s.authToken || existing?.authToken || ''
-      };
-    });
-  }
-  if (Array.isArray(candidate.jiraSources)) {
-    candidate.jiraSources = candidate.jiraSources.map((s: any) => {
-      const existing = current.jiraSources?.find((e) => e.id === s.id);
-      return {
-        ...s,
-        authToken: s.authToken || existing?.authToken || ''
-      };
-    });
-  }
-  if (Array.isArray(candidate.llmProviders)) {
-    candidate.llmProviders = candidate.llmProviders.map((p: any) => {
-      const existing = current.llmProviders?.find((e) => e.id === p.id);
-      return {
-        ...p,
-        apiKey: p.apiKey || existing?.apiKey || ''
-      };
-    });
-  }
+  // A preservação de senhas/tokens existentes (quando o cliente ecoa de volta o valor
+  // sanitizado/vazio recebido de GET /api/settings) é responsabilidade do próprio
+  // ConfigService.saveSettings — assim os três transportes (IPC/REST/MCP) se comportam
+  // igual e um novo campo de segredo não precisa ser listado em 3 arquivos.
 
   const pathKeys: (keyof AppSettings)[] = ['appPath', 'karafPath', 'intellijPath', 'projectsPath'];
   for (const key of pathKeys) {

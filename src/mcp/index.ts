@@ -10,9 +10,9 @@ const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.12.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.14.0';
   } catch {
-    return '1.12.0';
+    return '1.14.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -23,18 +23,24 @@ import { RoutinesService } from '../main/services/RoutinesService';
 import { DocsIndexService } from '../main/services/DocsIndexService';
 import { DockerService } from '../main/services/DockerService';
 import { DatabaseService } from '../main/services/DatabaseService';
+import { BackupService } from '../main/services/BackupService';
+import { BackupSchedulerService } from '../main/services/BackupSchedulerService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
+import { LogWatcherService } from '../main/services/LogWatcherService';
 import { LlmService } from '../main/services/LlmService';
+import * as cron from 'node-cron';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
 import { analyzeExplainPlan } from '../main/services/explainAnalyzer';
-import type { AppSettings, DatabaseConnectionConfig, DeployProfile } from '../shared/types';
+import type { AppSettings, BackupConfig, BackupWebhookConfig, DatabaseConnectionConfig, DeployProfile } from '../shared/types';
 
 // --- Composição dos serviços (mesma ordem usada em src/server/index.ts e src/main/index.ts) ---
 const configService = new ConfigService();
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService();
+const backupService = new BackupService();
+const backupSchedulerService = new BackupSchedulerService(configService, backupService);
 const networkService = new NetworkService();
 const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
 const gitAzureService = new GitAzureService(configService, karafService);
@@ -43,6 +49,7 @@ const docsIndexService = new DocsIndexService(configService, gitAzureService);
 const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
 const karafLogPersistenceService = new KarafLogPersistenceService();
+const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
 
 // --- Helpers de resposta MCP ---
@@ -1520,6 +1527,165 @@ server.registerTool(
   }
 );
 
+// --- 8b. Backup & Restore de Banco ---
+server.registerTool(
+  'db_run_backup',
+  {
+    title: 'Executar backup de banco',
+    description: 'Executa um backup manual (pg_dump/expdp/mysqldump ou comando customizado) de uma conexão para uma pasta de destino.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      destinationFolder: z.string(),
+      oracleDirectory: z.string().optional(),
+      compress: z.boolean().optional(),
+      useCustomCommand: z.boolean().optional(),
+      customCommand: z.string().optional()
+    }
+  },
+  async ({ connectionId, config, destinationFolder, oracleDirectory, compress, useCustomCommand, customCommand }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    if (!isSafeLocalPath(destinationFolder)) return fail('Pasta de destino inválida ou remota não permitida.');
+    const result = await backupSchedulerService.runManualBackup(targetConfig, destinationFolder, {
+      oracleDirectory,
+      compress,
+      useCustomCommand,
+      customCommand
+    });
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_list_backups',
+  {
+    title: 'Listar arquivos de backup',
+    description: 'Lista os arquivos de backup existentes em uma pasta de destino, mais recentes primeiro.',
+    inputSchema: { destinationFolder: z.string() }
+  },
+  async ({ destinationFolder }) => {
+    if (!isSafeLocalPath(destinationFolder)) return fail('Pasta de destino inválida ou remota não permitida.');
+    const backups = await backupService.listBackups(destinationFolder);
+    return ok({ backups, count: backups.length });
+  }
+);
+
+server.registerTool(
+  'db_restore_backup',
+  {
+    title: 'Restaurar backup de banco',
+    description: 'Restaura um arquivo de backup existente na conexão informada. Ação destrutiva: sobrescreve os dados atuais da conexão de destino.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      filePath: z.string()
+    }
+  },
+  async ({ connectionId, config, filePath }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
+    const result = await backupSchedulerService.runManualRestore(targetConfig, filePath);
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_run_restore_drill',
+  {
+    title: 'Testar restauração de backup (drill)',
+    description: 'Restaura um backup contra uma conexão "scratch" descartável, sem afetar a conexão de origem — usado para validar que o backup é restaurável.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      filePath: z.string()
+    }
+  },
+  async ({ connectionId, config, filePath }) => {
+    const scratchConfig = resolveDbConfig(connectionId, config);
+    if (!scratchConfig) return fail('Nenhuma conexão scratch configurada ou encontrada. Informe connectionId ou config.');
+    if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
+    const result = await backupSchedulerService.runRestoreDrill(scratchConfig, filePath, 'manual');
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_list_backup_history',
+  {
+    title: 'Histórico de backups/restaurações',
+    description: 'Lista o histórico persistido de execuções de backup, restore e restore drill, mais recente primeiro.',
+    inputSchema: { connectionId: z.string().optional() }
+  },
+  async ({ connectionId }) => ok(backupSchedulerService.getHistory(connectionId))
+);
+
+server.registerTool(
+  'db_save_backup_config',
+  {
+    title: 'Salvar agendamento de backup',
+    description:
+      'Salva a configuração de agendamento (cron) de backup e/ou restore drill de uma conexão. Não ativa o agendamento neste processo MCP — quem executa os jobs de cron é o processo Electron/servidor Web já em execução; esta tool só grava a configuração para ele.',
+    inputSchema: {
+      connectionId: z.string(),
+      destinationFolder: z.string(),
+      cronExpression: z.string().optional(),
+      enabled: z.boolean().optional(),
+      retentionCount: z.number().int().positive().optional(),
+      retentionDays: z.number().int().positive().optional(),
+      compress: z.boolean().optional(),
+      oracleDirectory: z.string().optional(),
+      useCustomCommand: z.boolean().optional(),
+      customCommand: z.string().optional(),
+      restoreDrillCronExpression: z.string().optional(),
+      restoreDrillEnabled: z.boolean().optional(),
+      restoreDrillScratchConnectionId: z.string().optional()
+    }
+  },
+  async (input) => {
+    const config = input as BackupConfig;
+    if (!isSafeLocalPath(config.destinationFolder)) return fail('Pasta de destino inválida ou remota não permitida.');
+    if (config.cronExpression && !cron.validate(config.cronExpression)) return fail('Expressão cron inválida.');
+    if (config.restoreDrillCronExpression && !cron.validate(config.restoreDrillCronExpression)) {
+      return fail('Expressão cron de restore drill inválida.');
+    }
+
+    const settings = configService.getSettings();
+    const existing = settings.backupConfigs || [];
+    const previous = existing.find((b) => b.connectionId === config.connectionId);
+    const merged: BackupConfig = { ...previous, ...config };
+    const updated = [merged, ...existing.filter((b) => b.connectionId !== config.connectionId)];
+    configService.saveSettings({ backupConfigs: updated });
+
+    return ok({ success: true, message: 'Agendamento salvo com sucesso.' });
+  }
+);
+
+server.registerTool(
+  'backup_test_webhook',
+  {
+    title: 'Testar webhook de backup',
+    description: 'Envia um payload de teste para um webhook de notificação de backup (Slack, Discord, Teams ou genérico).',
+    inputSchema: {
+      id: z.string(),
+      name: z.string(),
+      endpointUrl: z.string(),
+      method: z.enum(['POST', 'PUT']).optional(),
+      authHeader: z.string().optional(),
+      authValue: z.string().optional(),
+      enabled: z.boolean(),
+      events: z.array(z.enum(['success', 'failure'])).optional(),
+      platform: z.enum(['generic', 'slack', 'discord', 'teams']).optional()
+    }
+  },
+  async (input) => {
+    const webhook = input as BackupWebhookConfig;
+    if (!isSafeUrl(webhook.endpointUrl)) return fail('URL do webhook inválida ou protocolo inseguro (apenas http/https permitidos).');
+    return ok(await backupSchedulerService.testWebhook(webhook));
+  }
+);
+
 // --- 9. Perfis de Deploy ---
 server.registerTool(
   'deploy_list_profiles',
@@ -1597,6 +1763,57 @@ server.registerTool(
     description: 'Retorna uso de CPU (%), consumo de memória RAM (MB e %) e tempo de atividade do sistema.'
   },
   async () => ok(await networkService.getSystemMetrics())
+);
+
+// --- 11. Logs (observador de arquivos) ---
+// `startWatch`/`stopWatch` não são expostos aqui: são operações de streaming contínuo
+// (tail -f) pensadas para um cliente WebSocket recebendo eventos ao vivo via onChunk, e uma
+// chamada de tool MCP via stdio é requisição/resposta única — não há "fim" natural para
+// aguardar, ao contrário do padrão collect() usado alhures neste arquivo para operações que
+// de fato terminam. Em vez disso, `logs_read_last_lines` cobre o caso de uso equivalente
+// para um assistente de IA: um retrato pontual das últimas linhas do arquivo, sob demanda.
+server.registerTool(
+  'logs_check_file',
+  {
+    title: 'Checar arquivo de log',
+    description: 'Verifica se um arquivo de log existe, seu tamanho e data de modificação.',
+    inputSchema: { filePath: z.string(), sourceId: z.string().optional() }
+  },
+  async ({ filePath, sourceId }) => {
+    if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
+    return ok(logWatcherService.checkFile(filePath, sourceId));
+  }
+);
+
+server.registerTool(
+  'logs_read_last_lines',
+  {
+    title: 'Ler últimas linhas de um log',
+    description: 'Lê eficientemente as últimas N linhas de um arquivo de log, sem carregar o arquivo inteiro em memória.',
+    inputSchema: {
+      filePath: z.string(),
+      maxLines: z.number().int().positive().max(5000).optional()
+    }
+  },
+  async ({ filePath, maxLines }) => {
+    if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
+    const result = await logWatcherService.readLastLines(filePath, maxLines ?? 300);
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'logs_clear_file',
+  {
+    title: 'Limpar arquivo de log',
+    description: 'Zera (trunca) o conteúdo de um arquivo de log no disco. Ação destrutiva e irreversível.',
+    inputSchema: { filePath: z.string() }
+  },
+  async ({ filePath }) => {
+    if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
+    const success = await logWatcherService.clearLogFile(filePath);
+    return success ? ok({ success: true }) : fail('Não foi possível limpar o arquivo (não existe ou sem permissão).');
+  }
 );
 
 // --- Inicialização ---

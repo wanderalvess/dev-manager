@@ -42,6 +42,8 @@ import { AiMarkdownViewer } from '../components/AiMarkdownViewer';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DOCS_TOUR_STEPS, DOCS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/docsTour';
+import { filterDocFiles } from '../utils/docsPageUtils';
+import { resolveActiveLlmProvider } from '../utils/llmProviderUtils';
 
 interface DocsPageProps {
   onNavigateToSettings?: () => void;
@@ -413,16 +415,12 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
   const hasIndex = !!status && status.totalChunks > 0;
 
   const filesList = status?.files || [];
-  const filteredFiles = filesList.filter((f) => {
-    if (sourceFilter !== 'TODOS' && f.sourceLabel !== sourceFilter) return false;
-    if (fileFilter.trim() && !f.title.toLowerCase().includes(fileFilter.toLowerCase())) return false;
-    return true;
-  });
+  const filteredFiles = filterDocFiles(filesList, sourceFilter, fileFilter);
 
-  const activeLlmProvider = llmProviders.find((p) => (activeLlmProviderId ? p.id === activeLlmProviderId : p.enabled));
+  const activeLlmProvider = resolveActiveLlmProvider(llmProviders, activeLlmProviderId);
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 space-y-4 overflow-y-auto">
+    <div className="h-full flex flex-col p-4 md:p-5 space-y-4 overflow-hidden">
       {/* Topo / Indexação */}
       <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
         <div className="flex flex-wrap items-center justify-between gap-3">

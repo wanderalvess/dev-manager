@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.14.0] - 2026-09-23
+### Adicionado
+- Criptografia em repouso (AES-256-GCM) dos segredos gravados no `config.json` — senha do Karaf, senhas de conexão de banco, tokens do Confluence/Jira e API keys de provedores LLM, antes salvos em texto plano no disco.
+- Fuzzy match com destaque de trecho correspondente e ordenação por relevância no Quick Launcher (`Ctrl+K`).
+- Autenticação por API key também no handshake do WebSocket do modo Web/Docker (`/ws`): antes, um cliente que não fosse navegador podia se conectar sem enviar o header `Origin` e, com isso, contornar por completo a autenticação já exigida nas rotas REST — inclusive para enviar comandos ao Karaf embutido (`karaf:input`).
+- Paridade do servidor MCP com IPC/REST para backup/restore de banco (`db_run_backup`, `db_list_backups`, `db_restore_backup`, `db_run_restore_drill`, `db_save_backup_config`, `db_list_backup_history`, `backup_test_webhook`) e para o observador de logs (`logs_check_file`, `logs_read_last_lines`, `logs_clear_file`) — nenhum dos dois tinha qualquer tool exposta a assistentes de IA até aqui.
+- Verificação de build (`npm run build`) adicionada ao pipeline de CI, além de lint/typecheck/test.
+### Alterado
+- Code-split das páginas via `React.lazy`: bundle inicial do renderer reduzido de 1.19MB para 247KB.
+- Documentação esclarece que o modo Web/Docker é single-tenant (sem isolamento por usuário).
+- Lógica de preservação de credenciais existentes ao salvar configurações (antes duplicada em `registerIpc.ts` e `server/index.ts`, ausente no MCP) centralizada em `ConfigService.saveSettings`.
+### Corrigido
+- 35 erros de typecheck e a maior parte dos avisos pré-existentes do ESLint (52 no total) acumulados após a modernização do cockpit de containers, incluindo 3 falhas de teste que quebravam o CI desde então.
+- Credenciais de webhook (`docSyncTargets`/`backupWebhooks`, usadas por sincronização de documentação e notificações de backup) ficaram de fora da criptografia em repouso acima e também não eram mascaradas em `GET /api/settings`/`settings:get` — trafegavam e ficavam gravadas em texto plano, diferente das demais credenciais. Corrigido; e a proteção contra reaproveitar uma credencial salva quando só o destino (host/URL) muda — que já existia para API keys de LLM só na importação de configurações — passou a valer para todo campo de segredo, em todo caminho de salvamento.
+- Teste de isolamento de cache do `ConfigService` (`cada instância... não vaza entre instâncias`) dependia da resolução de mtime do sistema de arquivos e falhava esporadicamente; passou a forçar o avanço do mtime como o teste vizinho já fazia.
+
 ## [1.13.0] - 2026-09-21
 ### Adicionado
 - **Integração WinThor Start (DataSnap REST) & WTA**:

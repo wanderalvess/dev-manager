@@ -396,6 +396,7 @@ export interface DocSyncTargetConfig {
   endpointUrl: string;
   method?: 'POST' | 'PUT';
   authHeader?: string;
+  /** Criptografado em repouso (AES-256-GCM, ver ConfigService.encryptSecretsForDisk); trafega em texto plano no IPC/REST/MCP local. */
   authValue?: string;
   batchSize?: number;
   enabled: boolean;
@@ -411,6 +412,7 @@ export interface BackupWebhookConfig {
   endpointUrl: string;
   method?: 'POST' | 'PUT';
   authHeader?: string;
+  /** Criptografado em repouso (AES-256-GCM, ver ConfigService.encryptSecretsForDisk); trafega em texto plano no IPC/REST/MCP local. */
   authValue?: string;
   enabled: boolean;
   /** Quais resultados disparam o webhook. Ausente = dispara em sucesso e falha. */
@@ -463,7 +465,7 @@ export interface ConfluenceSourceConfig {
   /** URL base do Confluence, sem sufixo /wiki (ex: https://empresa.atlassian.net ou https://confluence.empresa.com). */
   baseUrl: string;
   spaceKey?: string;
-  /** Token de API (Cloud) ou Personal Access Token (Server/Data Center). Texto plano nas settings, mesmo padrão de authValue em DocSyncTargetConfig — repo não tem criptografia de credenciais. */
+  /** Token de API (Cloud) ou Personal Access Token (Server/Data Center). Criptografado em repouso (AES-256-GCM, ver ConfigService.encryptSecretsForDisk); trafega em texto plano no IPC/REST/MCP local. */
   authToken: string;
   /** E-mail associado ao token — presente = Confluence Cloud (Basic auth email:token). Ausente = Server/Data Center (Bearer token). */
   authEmail?: string;
@@ -476,7 +478,7 @@ export interface JiraSourceConfig {
   name: string;
   /** URL base do Jira, sem sufixo /rest (ex: https://empresa.atlassian.net ou https://jira.empresa.com). */
   baseUrl: string;
-  /** Personal Access Token / API token. Texto plano nas settings, mesmo padrão de authToken em ConfluenceSourceConfig — repo não tem criptografia de credenciais. */
+  /** Personal Access Token / API token. Criptografado em repouso (AES-256-GCM, ver ConfigService.encryptSecretsForDisk); trafega em texto plano no IPC/REST/MCP local. */
   authToken: string;
   projectKey?: string;
   /** JQL customizado; se ausente, usa "project = <projectKey> ORDER BY updated DESC". */
@@ -1405,7 +1407,7 @@ export interface LlmProviderConfig {
   id: string;
   name: string;
   provider: LlmProviderType;
-  /** Texto plano — mesmo padrão de karafPass/authToken no repo (sem safeStorage). Ver débito técnico. */
+  /** Criptografado em repouso (AES-256-GCM, ver ConfigService.encryptSecretsForDisk); trafega em texto plano no IPC/REST/MCP local. */
   apiKey?: string;
   baseUrl?: string;
   model: string;

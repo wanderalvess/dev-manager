@@ -195,13 +195,20 @@ describe('ConfigService', () => {
       expect(serviceB.getSettings().appPath).toBe('C:/de-a');
 
       serviceB.saveSettings({ appPath: 'C:/de-b' });
+      // Garante mtime estritamente maior, independente da resolução do relógio do FS (mesmo
+      // motivo do teste acima) — sem isso, a escrita de serviceB pode cair no mesmo tick de
+      // mtime da escrita de serviceA em filesystems de resolução mais grossa, deixando este
+      // teste instável (passa na maioria das execuções, falha esporadicamente).
+      const configPath = serviceA.getConfigFilePath();
+      const future = new Date(Date.now() + 5000);
+      fs.utimesSync(configPath, future, future);
       // serviceA só deve enxergar a mudança externa após seu próprio cache expirar por mtime.
       expect(serviceA.getSettings().appPath).toBe('C:/de-b');
     });
   });
 
   describe('sanitizeSecrets e Export/Import de segredos', () => {
-    it('sanitizeSecrets limpa todos os 5 campos sensíveis (karafPass, db, confluence, jira e llm)', () => {
+    it('sanitizeSecrets limpa todos os 7 campos sensíveis (karafPass, db, confluence, jira, llm, docSync e backupWebhook)', () => {
       const service = new ConfigService();
       const rawSettings = {
         ...service.getSettings(),
@@ -217,6 +224,12 @@ describe('ConfigService', () => {
         ],
         llmProviders: [
           { id: 'llm-1', name: 'OpenAI Test', provider: 'openai' as const, model: 'gpt-4o-mini', apiKey: 'sk-test-secret-key', enabled: true }
+        ],
+        docSyncTargets: [
+          { id: 'sync-1', name: 'Guru KB', endpointUrl: 'https://api.getguru.com/sync', authHeader: 'Authorization', authValue: 'secret-sync-token', enabled: true }
+        ],
+        backupWebhooks: [
+          { id: 'hook-1', name: 'Slack Backups', endpointUrl: 'https://hooks.slack.com/x', authHeader: 'Authorization', authValue: 'secret-webhook-token', enabled: true }
         ]
       };
 
@@ -227,9 +240,41 @@ describe('ConfigService', () => {
       expect(sanitized.confluenceSources?.[0].authToken).toBe('');
       expect(sanitized.jiraSources?.[0].authToken).toBe('');
       expect(sanitized.llmProviders?.[0].apiKey).toBe('');
+      expect(sanitized.docSyncTargets?.[0].authValue).toBe('');
+      expect(sanitized.backupWebhooks?.[0].authValue).toBe('');
       // Dados não sensíveis devem permanecer intactos
       expect(sanitized.llmProviders?.[0].name).toBe('OpenAI Test');
       expect(sanitized.llmProviders?.[0].model).toBe('gpt-4o-mini');
+      expect(sanitized.docSyncTargets?.[0].endpointUrl).toBe('https://api.getguru.com/sync');
+      expect(sanitized.backupWebhooks?.[0].endpointUrl).toBe('https://hooks.slack.com/x');
+    });
+
+    it('saveSettings preserva authValue existente de docSyncTargets/backupWebhooks quando o candidato reenvia vazio (mesmo comportamento de apiKey/authToken)', () => {
+      const service = new ConfigService();
+      service.saveSettings({
+        docSyncTargets: [
+          { id: 'sync-1', name: 'Guru KB', endpointUrl: 'https://api.getguru.com/sync', authValue: 'token-original', enabled: true }
+        ],
+        backupWebhooks: [
+          { id: 'hook-1', name: 'Slack Backups', endpointUrl: 'https://hooks.slack.com/x', authValue: 'hook-token-original', enabled: true }
+        ]
+      });
+
+      // Simula o cliente ecoando de volta o resultado sanitizado (authValue vazio), só
+      // alterando outro campo (enabled) — não deve apagar o token salvo.
+      const updated = service.saveSettings({
+        docSyncTargets: [
+          { id: 'sync-1', name: 'Guru KB Renomeada', endpointUrl: 'https://api.getguru.com/sync', authValue: '', enabled: false }
+        ],
+        backupWebhooks: [
+          { id: 'hook-1', name: 'Slack Backups', endpointUrl: 'https://hooks.slack.com/x', authValue: '', enabled: false }
+        ]
+      });
+
+      expect(updated.docSyncTargets?.[0].name).toBe('Guru KB Renomeada');
+      expect(updated.docSyncTargets?.[0].enabled).toBe(false);
+      expect(updated.docSyncTargets?.[0].authValue).toBe('token-original');
+      expect(updated.backupWebhooks?.[0].authValue).toBe('hook-token-original');
     });
 
     it('exportSettings(true) sanitiza segredos e exportSettings(false) preserva segredos', () => {
@@ -325,6 +370,12 @@ describe('ConfigService', () => {
         ],
         llmProviders: [
           { id: 'llm-1', name: 'OpenAI', provider: 'openai', model: 'gpt-4o-mini', apiKey: 'sk-segredo-789', enabled: true }
+        ],
+        docSyncTargets: [
+          { id: 'sync-1', name: 'Guru KB', endpointUrl: 'https://api.getguru.com/sync', authValue: 'token-sync-321', enabled: true }
+        ],
+        backupWebhooks: [
+          { id: 'hook-1', name: 'Slack Backups', endpointUrl: 'https://hooks.slack.com/x', authValue: 'token-hook-654', enabled: true }
         ]
       });
 
@@ -332,12 +383,16 @@ describe('ConfigService', () => {
       expect(rawDisk).not.toContain('senha-karaf-123');
       expect(rawDisk).not.toContain('senha-db-456');
       expect(rawDisk).not.toContain('sk-segredo-789');
+      expect(rawDisk).not.toContain('token-sync-321');
+      expect(rawDisk).not.toContain('token-hook-654');
       expect(rawDisk).toContain('enc:v1:');
 
       const settings = service.getSettings();
       expect(settings.karafPass).toBe('senha-karaf-123');
       expect(settings.databaseConnections?.[0].password).toBe('senha-db-456');
       expect(settings.llmProviders?.[0].apiKey).toBe('sk-segredo-789');
+      expect(settings.docSyncTargets?.[0].authValue).toBe('token-sync-321');
+      expect(settings.backupWebhooks?.[0].authValue).toBe('token-hook-654');
     });
 
     it('lê corretamente config.json escrito com segredos em texto plano (compatibilidade com versões anteriores)', () => {
