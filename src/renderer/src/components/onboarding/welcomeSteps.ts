@@ -1,4 +1,4 @@
-import { LucideIcon, Sparkles, Palette, Layers, Database, Code2, Rocket } from 'lucide-react';
+import { LucideIcon, Sparkles, Palette, Rocket } from 'lucide-react';
 
 export interface WelcomeStep {
   id?: string;
@@ -28,30 +28,6 @@ export const WELCOME_STEPS: WelcomeStep[] = [
     highlight: 'prefere?',
     desc: 'Escolha a aparência ideal para o seu dia a dia. Você pode alterar essa preferência quando quiser pelo cabeçalho.',
     icon: Palette
-  },
-  {
-    id: 'infra',
-    eyebrow: 'INFRAESTRUTURA',
-    title: 'Ambiente sob',
-    highlight: 'controle total',
-    desc: 'Serviços do Windows, containers OSGi Karaf, perfis de deploy e logs em tempo real — tudo monitorado em um único lugar.',
-    icon: Layers
-  },
-  {
-    id: 'data',
-    eyebrow: 'DADOS',
-    title: 'Banco de dados e',
-    highlight: 'rotinas na mão',
-    desc: 'Conecte a Oracle, MySQL ou Postgres e rode SQL direto daqui. O catálogo guarda suas rotinas favoritas para acesso rápido.',
-    icon: Database
-  },
-  {
-    id: 'dev',
-    eyebrow: 'DESENVOLVIMENTO',
-    title: 'Git, PRs e',
-    highlight: 'documentação',
-    desc: 'Gerencie repositórios e Pull Requests do Azure DevOps, pesquise na documentação semântica e conte com a Central de Ajuda.',
-    icon: Code2
   },
   {
     id: 'ready',

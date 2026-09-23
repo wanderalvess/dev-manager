@@ -746,7 +746,10 @@ export interface SystemAppInfo {
   freeMemoryMb: number;
   configPath: string;
   isAdmin: boolean;
+  /** true apenas na primeiríssima execução após instalação (nunca existiu marcador de versão) */
   isFirstRun?: boolean;
+  /** true quando o app foi atualizado para uma versão nova (marcador existia, mas com versão diferente) */
+  isAppUpdated?: boolean;
 }
 
 /**

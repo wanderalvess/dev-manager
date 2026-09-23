@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
-export type ToastVariant = 'success' | 'error';
+export type ToastVariant = 'success' | 'error' | 'info';
 
 interface ToastItem {
   id: string;
@@ -25,7 +25,8 @@ export function showToast(message: string, variant: ToastVariant = 'success'): v
 
 const AUTO_DISMISS_MS: Record<ToastVariant, number> = {
   success: 5000,
-  error: 10000
+  error: 10000,
+  info: 7000
 };
 
 export const ToastHost: React.FC = () => {
@@ -56,11 +57,15 @@ export const ToastHost: React.FC = () => {
           className={`flex items-start gap-2 p-3 rounded-xl border shadow-2xl text-xs animate-fade-in ${
             toast.variant === 'success'
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
-              : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+              : toast.variant === 'info'
+                ? 'bg-primary/10 border-primary/30 text-primary'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
           }`}
         >
           {toast.variant === 'success' ? (
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+          ) : toast.variant === 'info' ? (
+            <Info className="w-4 h-4 shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           )}

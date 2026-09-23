@@ -44,6 +44,7 @@ import { SystemAppInfo, UpdateStatus, getWebPort, getKarafSshPort, getWebUrl } f
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { MarkdownReader } from '../components/MarkdownReader';
 import { AppLogo } from '../components/AppLogo';
+import { getMissingRequiredPaths } from '../utils/environmentPageUtils';
 
 interface HelpPageProps {
   onNavigate?: (tab: string) => void;
@@ -80,6 +81,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
   const [isLoadingMcpDocs, setIsLoadingMcpDocs] = useState(false);
 
   const [settings, setSettings] = useState<any>(null);
+  const needsSetup = useMemo(() => getMissingRequiredPaths(settings).length > 0, [settings]);
 
   const { copy: copyDiag, copiedKey: copiedDiagKey } = useCopyToClipboard(2500);
   const copiedDiag = copiedDiagKey === 'diag';
@@ -635,11 +637,11 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   {onNavigate && (
                     <button
                       type="button"
-                      onClick={() => onNavigate('env')}
+                      onClick={() => onNavigate(needsSetup ? 'settings' : 'env')}
                       className="px-4 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-lg shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Zap className="w-4 h-4" />
-                      <span>Preparar Ambiente Dev</span>
+                      {needsSetup ? <Settings className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                      <span>{needsSetup ? 'Configurar Ambiente' : 'Preparar Ambiente Dev'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   )}

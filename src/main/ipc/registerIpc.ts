@@ -70,14 +70,22 @@ export function registerIpcHandlers(
   autoUpdateService?: AutoUpdateService,
   llmService: LlmService = new LlmService(configService, docsIndexService)
 ) {
-  // Detecta se é a primeira execução desta versão ou primeira execução após instalação
+  // Distingue instalação nova (nunca existiu marcador) de atualização de versão (marcador existia,
+  // versão mudou). Onboarding completo (Welcome + Tour) só deve resetar em instalação nova — numa
+  // atualização isso só incomoda quem já conhece o app e apaga preferências já escolhidas.
   let isFirstRunSession = false;
+  let isAppUpdatedSession = false;
   try {
     const markerPath = path.join(app.getPath('userData'), '.last_seen_version');
     const currentVersion = app.getVersion();
-    const lastVersion = fs.existsSync(markerPath) ? fs.readFileSync(markerPath, 'utf-8').trim() : null;
-    if (lastVersion !== currentVersion) {
+    const markerExisted = fs.existsSync(markerPath);
+    const lastVersion = markerExisted ? fs.readFileSync(markerPath, 'utf-8').trim() : null;
+    if (!markerExisted) {
       isFirstRunSession = true;
+    } else if (lastVersion !== currentVersion) {
+      isAppUpdatedSession = true;
+    }
+    if (!markerExisted || lastVersion !== currentVersion) {
       fs.writeFileSync(markerPath, currentVersion, 'utf-8');
     }
   } catch {
@@ -160,7 +168,8 @@ export function registerIpcHandlers(
       freeMemoryMb: Math.round(os.freemem() / 1024 / 1024),
       configPath,
       isAdmin,
-      isFirstRun: isFirstRunSession
+      isFirstRun: isFirstRunSession,
+      isAppUpdated: isAppUpdatedSession
     };
   });
 

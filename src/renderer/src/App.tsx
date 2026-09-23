@@ -9,6 +9,8 @@ import { PageToursPromptModal } from './components/onboarding/PageToursPromptMod
 import { PAGE_TOURS_PREF_KEY } from './components/onboarding/usePageTour';
 import { TOUR_STEPS, TOUR_STORAGE_KEY } from './components/onboarding/tourSteps';
 import { WELCOME_STORAGE_KEY } from './components/onboarding/welcomeSteps';
+import { getMissingRequiredPaths } from './utils/environmentPageUtils';
+import { extractLatestChangelogSection, extractChangelogVersion } from './utils/changelogUtils';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
 
 // Code-split cada página: cada aba só baixa/parseia seu próprio bundle na primeira
@@ -24,6 +26,8 @@ const DocsPage = lazy(() => import('./pages/DocsPage').then((m) => ({ default: m
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const LogsPage = lazy(() => import('./pages/LogsPage').then((m) => ({ default: m.LogsPage })));
+// Só é montado quando há novidades de uma atualização de versão para mostrar — mantém fora do bundle inicial.
+const MarkdownReader = lazy(() => import('./components/MarkdownReader').then((m) => ({ default: m.MarkdownReader })));
 
 const PageLoadingFallback: React.FC = () => (
   <div className="h-full w-full flex items-center justify-center">
@@ -71,6 +75,7 @@ export const App: React.FC = () => {
     }
   });
   const [isPageToursPromptOpen, setIsPageToursPromptOpen] = useState<boolean>(false);
+  const [whatsNewContent, setWhatsNewContent] = useState<string | null>(null);
 
   const handleFinishWelcome = useCallback(() => {
     setIsWelcomeOpen(false);
@@ -80,33 +85,69 @@ export const App: React.FC = () => {
     setIsTourOpen(false);
     try {
       window.localStorage.setItem(TOUR_STORAGE_KEY, JSON.stringify({ done: true, ts: Date.now() }));
-      // Se ainda não foi perguntado se quer ver tutoriais das próximas telas, abre o modal de escolha
-      if (window.localStorage.getItem(PAGE_TOURS_PREF_KEY) === null) {
-        setIsPageToursPromptOpen(true);
-      }
     } catch {
       // localStorage indisponível
     }
+
+    // O tour mostra onde ficam as telas, mas sem os caminhos essenciais (Karaf, repositórios, IDE)
+    // configurados o app não faz nada de útil ainda — prioriza mandar pra Configurações antes de
+    // perguntar sobre tutoriais por página.
+    (async () => {
+      let missingPaths: string[] = [];
+      try {
+        if (window.electronAPI?.getSettings) {
+          const st = await window.electronAPI.getSettings();
+          missingPaths = getMissingRequiredPaths(st);
+        }
+      } catch {
+        // segue sem checagem de setup — não bloqueia o fluxo de onboarding
+      }
+
+      if (missingPaths.length > 0) {
+        showToast('Antes de tudo: configure ' + missingPaths.join(' e ') + ' em Configurações.', 'info');
+        setActiveTab('settings');
+        return;
+      }
+
+      try {
+        // Se ainda não foi perguntado se quer ver tutoriais das próximas telas, abre o modal de escolha
+        if (window.localStorage.getItem(PAGE_TOURS_PREF_KEY) === null) {
+          setIsPageToursPromptOpen(true);
+        }
+      } catch {
+        // localStorage indisponível
+      }
+    })();
   }, []);
 
-  // Se o Electron detectar que é primeira execução após instalação/atualização, força Central de Ajuda
+  // Primeira execução após instalação: onboarding completo (Welcome + Tour) do zero.
+  // Execução após uma atualização de versão: só um resumo rápido do que mudou, sem
+  // resetar tour/preferências já concluídos — quem já conhece o app não deve ser
+  // jogado de volta pro onboarding inteiro a cada release.
   useEffect(() => {
-    if (window.electronAPI?.getAppInfo) {
-      window.electronAPI.getAppInfo().then((info) => {
-        if (info.isFirstRun) {
-          try {
-            window.localStorage.removeItem(TOUR_STORAGE_KEY);
-            window.localStorage.removeItem(WELCOME_STORAGE_KEY);
-            window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
-          } catch {
-            // localStorage indisponível
-          }
-          setActiveTab('help');
-          setIsWelcomeOpen(true);
-          setIsTourOpen(true);
+    if (!window.electronAPI?.getAppInfo) return;
+    window.electronAPI.getAppInfo().then((info) => {
+      if (info.isFirstRun) {
+        try {
+          window.localStorage.removeItem(TOUR_STORAGE_KEY);
+          window.localStorage.removeItem(WELCOME_STORAGE_KEY);
+          window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
+        } catch {
+          // localStorage indisponível
         }
-      }).catch(() => {});
-    }
+        setActiveTab('help');
+        setIsWelcomeOpen(true);
+        setIsTourOpen(true);
+        return;
+      }
+
+      if (info.isAppUpdated && window.electronAPI?.getChangelog) {
+        window.electronAPI.getChangelog().then((changelog) => {
+          const section = extractLatestChangelogSection(changelog);
+          if (section) setWhatsNewContent(section);
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -394,6 +435,17 @@ export const App: React.FC = () => {
         isOpen={isPageToursPromptOpen}
         onSelectChoice={() => setIsPageToursPromptOpen(false)}
       />
+
+      {whatsNewContent && (
+        <Suspense fallback={null}>
+          <MarkdownReader
+            title={`Novidades da versão ${extractChangelogVersion(whatsNewContent) || ''}`.trim()}
+            filePath="CHANGELOG.md"
+            content={whatsNewContent}
+            onClose={() => setWhatsNewContent(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
