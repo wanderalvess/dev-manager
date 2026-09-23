@@ -31,6 +31,7 @@ import {
   LlmTestResult,
   DocsIndexStatus
 } from '../../../shared/types';
+import { isLlmProviderActive, resolveActiveLlmProvider } from '../utils/llmProviderUtils';
 
 type TabType = 'folders' | 'sources' | 'llm';
 
@@ -370,7 +371,7 @@ export const DocSettingsModal: React.FC<DocSettingsModalProps> = ({
     }
   };
 
-  const activeProvider = llmProviders.find((p) => (activeLlmProviderId ? p.id === activeLlmProviderId : p.enabled));
+  const activeProvider = resolveActiveLlmProvider(llmProviders, activeLlmProviderId);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-0 duration-150">
@@ -1134,7 +1135,7 @@ export const DocSettingsModal: React.FC<DocSettingsModalProps> = ({
                 ) : (
                   <div className="space-y-2">
                     {llmProviders.map((p) => {
-                      const isActive = activeLlmProviderId ? p.id === activeLlmProviderId : p.enabled;
+                      const isActive = isLlmProviderActive(p, activeLlmProviderId);
                       return (
                         <div
                           key={p.id}
