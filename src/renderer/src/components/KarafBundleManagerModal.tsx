@@ -61,8 +61,11 @@ import {
   computeSnapshotDiff,
   filterBundles,
   getMatchedProject as getMatchedProjectUtil,
-  isWorkspaceBundle as isWorkspaceBundleUtil
+  isWorkspaceBundle as isWorkspaceBundleUtil,
+  getKarafStatusInfo,
+  KarafContainerStatus
 } from '../utils/karafBundleUtils';
+import { Routine801CatalogModal } from './Routine801CatalogModal';
 
 interface KarafBundleManagerModalProps {
   isOpen: boolean;
@@ -81,6 +84,13 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'Active' | 'Resolved' | 'Installed'>('ALL');
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({});
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+
+  // Status do Apache Karaf e controle de inicialização
+  const [karafStatus, setKarafStatus] = useState<KarafContainerStatus>('OFFLINE');
+  const [isEmbeddedRunning, setIsEmbeddedRunning] = useState(false);
+  const [isStartingKaraf, setIsStartingKaraf] = useState(false);
+  const [isStoppingKaraf, setIsStoppingKaraf] = useState(false);
+  const [isKarafStartMenuOpen, setIsKarafStartMenuOpen] = useState(false);
 
   // Filtro de Escopo / Domínio
   type ScopeFilter = 'ALL' | 'TOTVS' | 'WORKSPACE' | 'ISSUES' | 'SYSTEM';
@@ -115,6 +125,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
   // Sub-modal: Gerenciador de Features Karaf
   const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState(false);
+  const [isRoutine801ModalOpen, setIsRoutine801ModalOpen] = useState(false);
   const [featuresList, setFeaturesList] = useState<KarafFeatureInfo[]>([]);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(false);
   const [featuresSearch, setFeaturesSearch] = useState('');
@@ -321,19 +332,129 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     [selectedSnapshot, bundles]
   );
 
-  const fetchBundles = useCallback(async () => {
+  const fetchBundles = useCallback(async (isSilent = false) => {
     if (!window.electronAPI) return;
-    setIsLoading(true);
+    if (!isSilent) setIsLoading(true);
     setErrorBanner(null);
     try {
       const list = await window.electronAPI.listKarafBundles();
       setBundles(list || []);
+      setKarafStatus('ONLINE');
+      setIsStartingKaraf(false);
     } catch (err: any) {
-      setErrorBanner(`Falha ao listar bundles do Karaf: ${err?.message || err}`);
+      let isEmbedded = false;
+      try {
+        isEmbedded = (await window.electronAPI.isEmbeddedKarafRunning?.().catch(() => false)) ?? false;
+      } catch {
+        // ignore
+      }
+      setIsEmbeddedRunning(isEmbedded);
+
+      if (isEmbedded) {
+        setKarafStatus('STARTING');
+      } else {
+        setKarafStatus((prev) => (prev === 'STARTING' ? 'STARTING' : 'OFFLINE'));
+        setErrorBanner(`Apache Karaf offline ou inacessível via SSH (:8101). ${err?.message || ''}`);
+      }
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
   }, []);
+
+  // Polling automático enquanto o Karaf estiver inicializando
+  useEffect(() => {
+    if (!isOpen || !isStartingKaraf) return;
+    let attempts = 0;
+    const maxAttempts = 25; // 25 tentativas x 3s = 75 segundos
+    const timer = setInterval(async () => {
+      attempts++;
+      try {
+        if (!window.electronAPI?.listKarafBundles) return;
+        const list = await window.electronAPI.listKarafBundles();
+        if (Array.isArray(list)) {
+          setBundles(list);
+          setKarafStatus('ONLINE');
+          setIsStartingKaraf(false);
+          setErrorBanner(null);
+          clearInterval(timer);
+        }
+      } catch {
+        if (attempts >= maxAttempts) {
+          setIsStartingKaraf(false);
+          setKarafStatus('OFFLINE');
+          setErrorBanner('Tempo limite esgotado aguardando inicialização do Karaf. Verifique os logs.');
+          clearInterval(timer);
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [isOpen, isStartingKaraf]);
+
+  const handleLaunchKarafDebug = async () => {
+    setIsKarafStartMenuOpen(false);
+    if (!window.electronAPI?.launchServerDebug) return;
+    setIsStartingKaraf(true);
+    setKarafStatus('STARTING');
+    setErrorBanner(null);
+    try {
+      const ok = await window.electronAPI.launchServerDebug();
+      if (!ok) {
+        setIsStartingKaraf(false);
+        setKarafStatus('OFFLINE');
+        setErrorBanner('Falha ao acionar inicialização do Karaf. Verifique se o caminho do Karaf está configurado nas Configurações.');
+      }
+    } catch (err: any) {
+      setIsStartingKaraf(false);
+      setKarafStatus('OFFLINE');
+      setErrorBanner(`Erro ao iniciar Karaf: ${err?.message || err}`);
+    }
+  };
+
+  const handleStartEmbeddedKaraf = async () => {
+    setIsKarafStartMenuOpen(false);
+    if (!window.electronAPI?.startEmbeddedKaraf) return;
+    setIsStartingKaraf(true);
+    setKarafStatus('STARTING');
+    setErrorBanner(null);
+    try {
+      const ok = await window.electronAPI.startEmbeddedKaraf();
+      if (ok) {
+        setIsEmbeddedRunning(true);
+      } else {
+        setIsStartingKaraf(false);
+        setKarafStatus('OFFLINE');
+        setErrorBanner('Falha ao iniciar console embutido do Karaf.');
+      }
+    } catch (err: any) {
+      setIsStartingKaraf(false);
+      setKarafStatus('OFFLINE');
+      setErrorBanner(`Erro ao iniciar console embutido: ${err?.message || err}`);
+    }
+  };
+
+  const handleStopKaraf = async () => {
+    if (!window.confirm('Deseja realmente encerrar a execução do container Apache Karaf?')) {
+      return;
+    }
+    setIsStoppingKaraf(true);
+    try {
+      if (isEmbeddedRunning && window.electronAPI?.stopEmbeddedKaraf) {
+        await window.electronAPI.stopEmbeddedKaraf();
+      }
+      if (window.electronAPI?.killPort) {
+        await window.electronAPI.killPort(5005).catch(() => {});
+        await window.electronAPI.killPort(8101).catch(() => {});
+      }
+      setBundles([]);
+      setKarafStatus('OFFLINE');
+      setIsEmbeddedRunning(false);
+    } catch (err: any) {
+      setErrorBanner(`Erro ao parar Karaf: ${err?.message || err}`);
+    } finally {
+      setIsStoppingKaraf(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -967,32 +1088,54 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[97vw] 2xl:max-w-[1720px] h-[94vh] flex flex-col overflow-hidden animate-fade-in">
+      <div className="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-[97vw] 2xl:max-w-[1720px] h-[94vh] flex flex-col overflow-hidden animate-fade-in">
         {/* Cabeçalho */}
-        <div className="p-4 sm:px-6 border-b border-border flex items-center justify-between bg-muted/40 shrink-0 gap-3">
-          <div className="flex items-center space-x-3.5 min-w-0">
-            <div className="p-2.5 sm:p-3 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
-              <ListTree className="w-6 h-6" />
+        <div className="p-3.5 sm:px-6 border-b border-border flex items-center justify-between bg-muted/30 shrink-0 gap-3">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
+              <ListTree className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h3 className="text-lg font-bold text-foreground tracking-tight">Gerenciador de Bundles OSGi</h3>
-                <span className="text-[11px] bg-primary/15 text-primary border border-primary/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
-                  {stats.total} bundles
-                </span>
-                <span className="text-[11px] bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
-                  {stats.active} ativos
-                </span>
-                {stats.resolved > 0 && (
-                  <span className="text-[11px] bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
-                    {stats.resolved} resolvidos
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-bold text-foreground tracking-tight">Gerenciador de Bundles OSGi</h3>
+
+                {/* Status do Karaf */}
+                {(() => {
+                  const statusInfo = getKarafStatusInfo(karafStatus);
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold border ${statusInfo.badgeClass}`}
+                      title={statusInfo.description}
+                    >
+                      {karafStatus === 'STARTING' ? (
+                        <RotateCw className="w-3 h-3 animate-spin text-amber-500" />
+                      ) : (
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dotClass}`} />
+                      )}
+                      {statusInfo.label}
+                    </span>
+                  );
+                })()}
+
+                {/* Telemetria Compacta de Bundles */}
+                <div className="inline-flex items-center divide-x divide-border/60 bg-muted/40 border border-border/70 rounded-md text-[11px] font-mono text-muted-foreground">
+                  <span className="px-2 py-0.5 font-semibold text-foreground">
+                    <strong className="text-foreground">{stats.total}</strong> bundles
                   </span>
-                )}
-                {stats.installed > 0 && (
-                  <span className="text-[11px] bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold">
-                    {stats.installed} instalados
+                  <span className="px-2 py-0.5 text-emerald-600 dark:text-emerald-400">
+                    <strong>{stats.active}</strong> ativos
                   </span>
-                )}
+                  {stats.resolved > 0 && (
+                    <span className="px-2 py-0.5 text-amber-600 dark:text-amber-400">
+                      <strong>{stats.resolved}</strong> resolvidos
+                    </span>
+                  )}
+                  {stats.installed > 0 && (
+                    <span className="px-2 py-0.5 text-sky-600 dark:text-sky-400">
+                      <strong>{stats.installed}</strong> instalados
+                    </span>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Inspecione dependências, reinstale, desinstale ou publique novas versões com confirmação de impacto em tempo real.
@@ -1000,18 +1143,107 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
+            {/* Controle de Inicialização / Parada do Karaf */}
+            {karafStatus === 'ONLINE' ? (
+              <button
+                type="button"
+                onClick={handleStopKaraf}
+                disabled={isStoppingKaraf}
+                className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-rose-500/10 border border-border hover:border-rose-500/30 text-rose-600 dark:text-rose-400 cursor-pointer shadow-2xs disabled:opacity-50"
+                title="Encerrar a execução do container Apache Karaf"
+              >
+                {isStoppingKaraf ? (
+                  <>
+                    <RotateCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                    <span>Parando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Square className="w-3.5 h-3.5 fill-current text-rose-500" />
+                    <span className="hidden sm:inline">Parar Karaf</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="relative">
+                <div className="inline-flex rounded-md shadow-2xs overflow-hidden border border-emerald-600">
+                  <button
+                    type="button"
+                    onClick={handleLaunchKarafDebug}
+                    disabled={isStartingKaraf}
+                    className="px-3 py-1.5 font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer disabled:opacity-50"
+                    title="Iniciar o Apache Karaf em modo Debug com JDWP (:5005) em terminal"
+                  >
+                    {isStartingKaraf ? (
+                      <>
+                        <RotateCw className="w-3.5 h-3.5 animate-spin text-white" />
+                        <span>Iniciando Karaf...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3 fill-current text-white" />
+                        <span>Subir Karaf (Debug)</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsKarafStartMenuOpen((prev) => !prev)}
+                    disabled={isStartingKaraf}
+                    className="px-1.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white border-l border-emerald-500 cursor-pointer disabled:opacity-50"
+                    title="Mais opções de inicialização do Karaf"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {isKarafStartMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsKarafStartMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-1 w-60 bg-card border border-border rounded-lg shadow-xl z-40 py-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={handleLaunchKarafDebug}
+                        className="w-full text-left px-3 py-2 text-foreground hover:bg-muted flex items-start gap-2 cursor-pointer"
+                      >
+                        <Play className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0 fill-current" />
+                        <div>
+                          <div className="font-semibold text-xs">Subir em Modo Debug</div>
+                          <div className="text-[10px] text-muted-foreground">karaf.bat debug com porta JDWP (:5005)</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleStartEmbeddedKaraf}
+                        className="w-full text-left px-3 py-2 text-foreground hover:bg-muted flex items-start gap-2 cursor-pointer"
+                      >
+                        <Terminal className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <div className="font-semibold text-xs">Iniciar Console Embutido</div>
+                          <div className="text-[10px] text-muted-foreground">Executa o Karaf no console interno do app</div>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Exportar Inventário */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsExportMenuOpen((prev) => !prev)}
-                className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
+                className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
                 title="Exportar inventário de bundles OSGi filtrados"
               >
-                <Download className="w-4 h-4 text-emerald-400" />
+                <Download className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="hidden sm:inline">Exportar</span>
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                <ChevronDown className="w-3 h-3 text-muted-foreground" />
               </button>
               {isExportMenuOpen && (
                 <>
@@ -1019,22 +1251,22 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     className="fixed inset-0 z-30"
                     onClick={() => setIsExportMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-1.5 w-44 bg-card border border-border rounded-xl shadow-xl z-40 py-1 text-xs">
+                  <div className="absolute right-0 mt-1 w-44 bg-card border border-border rounded-lg shadow-xl z-40 py-1 text-xs">
                     <button
                       type="button"
                       onClick={() => handleExportBundles('json')}
                       className="w-full text-left px-3 py-2 text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer font-mono"
                     >
-                      <FileCode className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Exportar como JSON</span>
+                      <FileCode className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>Exportar JSON</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleExportBundles('csv')}
                       className="w-full text-left px-3 py-2 text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer font-mono"
                     >
-                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Exportar como CSV</span>
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span>Exportar CSV</span>
                     </button>
                   </div>
                 </>
@@ -1044,23 +1276,23 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={handleOpenLog}
-              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
+              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Ver log interno do Karaf (log:display)"
             >
-              <Terminal className="w-4 h-4 text-emerald-400" />
+              <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="hidden sm:inline">Log do Karaf</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsSnapshotModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
+              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Comparar estado atual de bundles com snapshot salvo"
             >
-              <Camera className="w-4 h-4 text-purple-400" />
+              <Camera className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="hidden sm:inline">Snapshots / Diff</span>
               {snapshots.length > 0 && (
-                <span className="bg-purple-500/20 text-purple-400 text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
+                <span className="bg-muted text-foreground text-[10px] px-1.5 py-0.2 rounded font-mono font-semibold border border-border/60">
                   {snapshots.length}
                 </span>
               )}
@@ -1069,119 +1301,168 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={handleOpenFeaturesModal}
-              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
+              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Gerenciar Features instaladas do Karaf (feature:list -i, feature:uninstall -r, feature:install)"
             >
-              <Layers className="w-4 h-4 text-indigo-400" />
+              <Layers className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="hidden sm:inline">Features Karaf</span>
             </button>
 
             <button
               type="button"
               onClick={handleOpenDeployHistory}
-              className="px-3.5 py-2 rounded-xl font-medium text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-xs"
+              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Ver histórico de deploys/builds Karaf já executados"
             >
-              <History className="w-4 h-4 text-sky-400" />
-              <span className="hidden sm:inline">Histórico de Deploys</span>
+              <History className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="hidden sm:inline">Histórico</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsRoutine801ModalOpen(true)}
+              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-primary/30 text-foreground cursor-pointer shadow-2xs"
+              title="Abrir catálogo oficial de serviços e rotinas (Rotina 801)"
+            >
+              <Download className="w-3.5 h-3.5 text-primary" />
+              <span>Catálogo 801</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleOpenInstall()}
-              className="px-4 py-2 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm cursor-pointer"
+              className="px-3.5 py-1.5 rounded-md font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs cursor-pointer"
               title="Instalar novo bundle ou outra versão"
             >
-              <UploadCloud className="w-4 h-4" />
-              <span>Instalar / Nova Versão</span>
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span>Instalar Bundle</span>
             </button>
 
             <button
               type="button"
-              onClick={fetchBundles}
+              onClick={() => fetchBundles()}
               disabled={isLoading}
-              className="p-2.5 bg-card hover:bg-muted border border-border rounded-xl text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-xs"
+              className="p-1.5 bg-card hover:bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-2xs"
               title="Atualizar lista de bundles"
             >
-              <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-primary' : ''}`} />
+              <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="p-2.5 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition cursor-pointer"
               title="Fechar"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Erro de conexão / aviso */}
         {errorBanner && (
-          <div className="bg-rose-500/10 border-b border-rose-500/30 p-3 px-6 text-xs text-rose-500 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{errorBanner}</span>
+          <div className="bg-rose-500/10 border-b border-rose-500/30 p-3 px-6 text-xs text-rose-700 dark:text-rose-400 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+              <span className="truncate">{errorBanner}</span>
             </div>
-            <button onClick={() => setErrorBanner(null)} className="hover:underline font-bold">
-              Fechar
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {karafStatus === 'OFFLINE' && (
+                <button
+                  type="button"
+                  onClick={handleLaunchKarafDebug}
+                  disabled={isStartingKaraf}
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-xs"
+                >
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>Subir Karaf Agora</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setErrorBanner(null)}
+                className="hover:underline font-bold text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         )}
 
         {/* Barra de Escopos Inteligentes (Smart Scope Tabs) */}
-        <div className="px-4 sm:px-6 py-2.5 border-b border-border/70 bg-muted/20 flex items-center gap-2 overflow-x-auto shrink-0">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mr-2 shrink-0">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-primary" /> Escopo:
-          </span>
-          <div className="flex items-center gap-2 shrink-0">
-            {[
-              { id: 'ALL', label: 'Todos os Módulos', count: scopeCounts.all },
-              { id: 'TOTVS', label: 'TOTVS / WinThor', count: scopeCounts.totvs },
-              { id: 'WORKSPACE', label: 'Workspace Local', count: scopeCounts.workspace },
-              { id: 'ISSUES', label: 'Com Alertas / Diag', count: scopeCounts.issues },
-              { id: 'SYSTEM', label: 'Framework & Sistema', count: scopeCounts.system }
-            ].map((tab) => {
-              const isActive = scopeFilter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setScopeFilter(tab.id as any)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm font-bold'
-                      : 'bg-card hover:bg-muted text-muted-foreground border border-border/60 hover:text-foreground'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
-                      isActive ? 'bg-black/25 text-white' : 'bg-muted text-muted-foreground'
+        <div className="px-4 sm:px-6 py-2 border-b border-border/70 bg-muted/20 flex items-center justify-between gap-3 overflow-x-auto shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 mr-1 shrink-0">
+              <SlidersHorizontal className="w-3 h-3 text-muted-foreground" /> Escopo:
+            </span>
+            <div className="inline-flex p-0.5 bg-muted/50 border border-border/70 rounded-lg">
+              {[
+                { id: 'ALL', label: 'Todos os Módulos', count: scopeCounts.all },
+                { id: 'TOTVS', label: 'TOTVS / WinThor', count: scopeCounts.totvs },
+                { id: 'WORKSPACE', label: 'Workspace Local', count: scopeCounts.workspace },
+                { id: 'ISSUES', label: 'Alertas / Diag', count: scopeCounts.issues },
+                { id: 'SYSTEM', label: 'Framework & Sistema', count: scopeCounts.system }
+              ].map((tab) => {
+                const isActive = scopeFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setScopeFilter(tab.id as any)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+                      isActive
+                        ? 'bg-card text-foreground font-semibold shadow-2xs border border-border/60'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {tab.count}
-                  </span>
+                    <span>{tab.label}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-semibold ${
+                        isActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Filtro de Estado como Segmented Control */}
+            <div className="inline-flex p-0.5 bg-muted/50 border border-border/70 rounded-lg">
+              {(['ALL', 'Active', 'Resolved', 'Installed'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                    statusFilter === st
+                      ? 'bg-card text-foreground font-semibold shadow-2xs border border-border/60'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {st === 'ALL' ? 'Todos' : st}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Barra de Filtros e Busca */}
-        <div className="p-3 sm:px-6 border-b border-border/70 bg-card/60 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="relative flex-1 min-w-[280px]">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
+        <div className="px-4 sm:px-6 py-2 border-b border-border/70 bg-card flex items-center justify-between gap-3 shrink-0">
+          <div className="relative flex-1 max-w-2xl">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-muted-foreground" />
             <input
               ref={searchRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Pesquisar por ID, nome do bundle, versão ou symbolic name... (Atalho: /)"
-              className="w-full bg-background border border-border rounded-xl pl-10 pr-14 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono transition"
+              className="w-full bg-background border border-border rounded-md pl-9 pr-12 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono transition"
             />
-            <div className="absolute right-3 top-2.5 text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/60 pointer-events-none">
+            <div className="absolute right-2.5 top-1.5 text-[10px] font-mono text-muted-foreground bg-muted/60 px-1 py-0.2 rounded border border-border/60 pointer-events-none">
               /
             </div>
           </div>
@@ -1191,28 +1472,14 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition cursor-pointer mr-1"
+                className="px-2.5 py-1 rounded-md text-xs font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition cursor-pointer"
                 title="Desmarcar todos os bundles"
               >
                 Limpar seleção ({selectedBundleIds.size})
               </button>
             )}
-            {(['ALL', 'Active', 'Resolved', 'Installed'] as const).map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                  statusFilter === st
-                    ? 'bg-primary text-primary-foreground font-bold shadow-xs'
-                    : 'bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {st === 'ALL' ? 'Todos' : st}
-              </button>
-            ))}
-            <span className="text-xs text-muted-foreground font-mono ml-2 font-semibold">
-              {filteredBundles.length} de {bundles.length}
+            <span className="text-xs text-muted-foreground font-mono tabular-nums font-medium">
+              {filteredBundles.length} de {bundles.length} bundles
             </span>
           </div>
         </div>
@@ -1221,14 +1488,65 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
         <div className="flex-1 overflow-auto relative">
           {isLoading ? (
             <div className="h-64 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2 p-6">
-              <RotateCw className="w-6 h-6 animate-spin text-primary" />
+              <RotateCw className="w-5 h-5 animate-spin text-primary" />
               <span>Consultando bundles no runtime Karaf via client.bat...</span>
             </div>
           ) : filteredBundles.length === 0 ? (
-            <div className="h-48 flex flex-col items-center justify-center text-xs text-muted-foreground p-6">
-              <Package className="w-8 h-8 opacity-30 mb-2" />
-              <p>Nenhum bundle encontrado para os filtros aplicados.</p>
-            </div>
+            karafStatus === 'OFFLINE' && bundles.length === 0 ? (
+              <div className="h-96 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto">
+                <div className="w-12 h-12 rounded-lg bg-muted border border-border/80 flex items-center justify-center mb-3 text-muted-foreground">
+                  <Terminal className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-semibold text-foreground">Apache Karaf Não Conectado</h4>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  O container OSGi do Karaf está inativo ou não respondeu na porta SSH (:8101). Inicie o runtime para visualizar bundles e dependências.
+                </p>
+                <div className="flex items-center gap-2.5 mt-5">
+                  <button
+                    type="button"
+                    onClick={handleLaunchKarafDebug}
+                    disabled={isStartingKaraf}
+                    className="px-3.5 py-1.5 rounded-md font-semibold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                  >
+                    {isStartingKaraf ? (
+                      <>
+                        <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Iniciando Karaf...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>Subir Karaf (Debug)</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fetchBundles(false)}
+                    disabled={isLoading}
+                    className="px-3 py-1.5 rounded-md font-medium text-xs bg-muted hover:bg-muted/80 border border-border text-foreground transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />
+                    <span>Reconectar</span>
+                  </button>
+                </div>
+              </div>
+            ) : karafStatus === 'STARTING' && bundles.length === 0 ? (
+              <div className="h-96 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto space-y-2.5">
+                <div className="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-1 text-amber-500">
+                  <RotateCw className="w-6 h-6 animate-spin" />
+                </div>
+                <h4 className="text-sm font-semibold text-foreground">Aguardando Inicialização do Karaf...</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  O container OSGi está subindo. O inventário será carregado automaticamente assim que a porta SSH (:8101) estiver disponível.
+                </p>
+              </div>
+            ) : (
+              <div className="h-48 flex flex-col items-center justify-center text-xs text-muted-foreground p-6">
+                <Package className="w-6 h-6 opacity-30 mb-2" />
+                <p>Nenhum bundle encontrado para os filtros aplicados.</p>
+              </div>
+            )
           ) : (
             <div className="min-w-full relative pb-28">
               <table className="min-w-full text-xs font-mono border-separate border-spacing-0">
@@ -1280,18 +1598,18 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                         <td className="px-4 py-3 border-b border-border/40">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 ${
+                              className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-medium border inline-flex items-center gap-1.5 ${
                                 b.state === 'Active'
-                                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
                                   : b.state === 'Resolved'
-                                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'
                                   : b.state === 'Installed'
-                                  ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                                  ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25'
                                   : 'bg-muted text-muted-foreground border-border'
                               }`}
                             >
                               <span className={`w-1.5 h-1.5 rounded-full ${
-                                b.state === 'Active' ? 'bg-emerald-500' : b.state === 'Resolved' ? 'bg-amber-500' : 'bg-blue-500'
+                                b.state === 'Active' ? 'bg-emerald-500' : b.state === 'Resolved' ? 'bg-amber-500' : 'bg-sky-500'
                               }`} />
                               {b.state}
                             </span>
@@ -1299,7 +1617,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               <button
                                 type="button"
                                 onClick={() => handleOpenInlineDiag(b)}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 border border-amber-500/40 transition cursor-pointer"
+                                className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
                                 title="Ver diagnóstico do Karaf para este bundle (bundle:diag)"
                               >
                                 Diag
@@ -1312,8 +1630,8 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-foreground font-bold text-xs">{b.name}</span>
                               {isWs && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/15 text-primary border border-primary/30">
-                                  <Sparkles className="w-3 h-3" /> Workspace
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-primary/15 text-primary border border-primary/30">
+                                  <Sparkles className="w-2.5 h-2.5" /> Workspace
                                 </span>
                               )}
                             </div>
@@ -1326,7 +1644,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                         </td>
                         <td className="px-4 py-3 border-b border-border/40 text-muted-foreground font-mono text-xs tabular-nums font-semibold">{b.version || '-'}</td>
                         <td className="px-4 py-3 border-b border-border/40 text-right">
-                          <div className="flex items-center justify-end space-x-1.5">
+                          <div className="flex items-center justify-end space-x-1">
                             {/* Recompilar Maven & Atualizar (1 clique para projetos do workspace) */}
                             {isWs && (
                               <button
@@ -1334,9 +1652,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleOneClickRebuild(b)}
                                 disabled={isRebuilding || isRowLoading}
                                 title="Recompilar projeto Maven (clean install) e atualizar bundle no Karaf em 1 clique"
-                                className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="p-1.5 rounded-md text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 cursor-pointer"
                               >
-                                <Hammer className={`w-4 h-4 ${isRebuilding ? 'animate-spin' : ''}`} />
+                                <Hammer className={`w-3.5 h-3.5 ${isRebuilding ? 'animate-spin' : ''}`} />
                               </button>
                             )}
 
@@ -1346,9 +1664,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleBasicAction('refresh', b.id)}
                               disabled={isRowLoading}
                               title="Atualizar fiações OSGi do bundle (bundle:refresh)"
-                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
                             >
-                              <RotateCw className="w-4 h-4" />
+                              <RotateCw className="w-3.5 h-3.5" />
                             </button>
 
                             {/* Reinstalar */}
@@ -1357,9 +1675,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenReinstall(b)}
                               disabled={isRowLoading}
                               title="Reinstalar bundle (update + refresh)"
-                              className="p-2 rounded-xl bg-card hover:bg-primary/15 border border-border hover:border-primary/40 text-primary hover:text-primary transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
                             >
-                              <RotateCcw className="w-4 h-4" />
+                              <RotateCcw className="w-3.5 h-3.5" />
                             </button>
 
                             {/* Instalar Outra Versão / Atualizar */}
@@ -1368,9 +1686,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenInstall(b)}
                               disabled={isRowLoading}
                               title="Instalar outra versão ou atualizar"
-                              className="p-2 rounded-xl bg-card hover:bg-sky-500/15 border border-border hover:border-sky-500/40 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
                             >
-                              <ArrowUpCircle className="w-4 h-4" />
+                              <ArrowUpCircle className="w-3.5 h-3.5" />
                             </button>
 
                             {/* Detalhes & Dependências */}
@@ -1379,9 +1697,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenDetails(b)}
                               disabled={isRowLoading}
                               title="Inspecionar dependências e manifesto"
-                              className="p-2 rounded-xl bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
                             >
-                              <Info className="w-4 h-4" />
+                              <Info className="w-3.5 h-3.5" />
                             </button>
 
                             {/* Resolver Dependências (bundle:resolve) */}
@@ -1391,9 +1709,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('resolve', b.id)}
                                 disabled={isRowLoading}
                                 title="Forçar resolução de dependências OSGi (bundle:resolve)"
-                                className="p-2 rounded-xl bg-card hover:bg-amber-500/20 border border-border text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="p-1.5 rounded-md text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-40 cursor-pointer"
                               >
-                                <Wrench className="w-4 h-4" />
+                                <Wrench className="w-3.5 h-3.5" />
                               </button>
                             )}
 
@@ -1404,9 +1722,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('stop', b.id)}
                                 disabled={isRowLoading}
                                 title="Parar bundle"
-                                className="p-2 rounded-xl bg-card hover:bg-amber-500/15 border border-border hover:border-amber-500/40 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="p-1.5 rounded-md text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-40 cursor-pointer"
                               >
-                                <Square className="w-4 h-4 fill-current" />
+                                <Square className="w-3.5 h-3.5 fill-current" />
                               </button>
                             ) : (
                               <button
@@ -1414,9 +1732,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                                 onClick={() => handleBasicAction('start', b.id)}
                                 disabled={isRowLoading}
                                 title="Iniciar bundle"
-                                className="p-2 rounded-xl bg-card hover:bg-emerald-500/15 border border-border hover:border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors disabled:opacity-40 cursor-pointer"
                               >
-                                <Play className="w-4 h-4 fill-current" />
+                                <Play className="w-3.5 h-3.5 fill-current" />
                               </button>
                             )}
 
@@ -1426,9 +1744,9 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                               onClick={() => handleOpenUninstall(b)}
                               disabled={isRowLoading}
                               title="Desinstalar bundle com verificação de dependências"
-                              className="p-2 rounded-xl bg-card hover:bg-rose-500/20 border border-border hover:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors disabled:opacity-40 cursor-pointer"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -1440,7 +1758,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
 
               {/* Barra Flutuante de Ações em Lote */}
               {selectedBundleIds.size > 0 && (
-                <div className="sticky bottom-3 mx-4 z-20 bg-card/95 backdrop-blur-md border border-primary/40 shadow-2xl rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs mt-2">
+                <div className="sticky bottom-3 mx-4 z-20 bg-card/95 backdrop-blur-md border border-border shadow-xl rounded-lg p-2.5 px-4 flex flex-wrap items-center justify-between gap-3 text-xs mt-2">
                   <div className="flex items-center gap-2 font-bold text-foreground pr-3">
                     <CheckSquare className="w-4 h-4 text-primary" />
                     <span>{selectedBundleIds.size} bundle(s) selecionado(s)</span>
@@ -3654,6 +3972,12 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
           </div>
         </div>
       )}
+
+      {/* Modal Catálogo Oficial WinThor - Rotina 801 */}
+      <Routine801CatalogModal
+        isOpen={isRoutine801ModalOpen}
+        onClose={() => setIsRoutine801ModalOpen(false)}
+      />
     </div>
   );
 };

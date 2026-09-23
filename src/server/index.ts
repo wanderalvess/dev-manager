@@ -26,6 +26,8 @@ import { KarafLogPersistenceService } from '../main/services/KarafLogPersistence
 import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
 import { JiraSource } from '../main/services/docSources/JiraSource';
 import { LlmService } from '../main/services/LlmService';
+import { Routine801Service } from '../main/services/Routine801Service';
+import { ApmService } from '../main/services/ApmService';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -34,7 +36,8 @@ import {
   AutomationStep,
   DocsIndexProgress,
   DocSyncProgress,
-  DeployProfile
+  DeployProfile,
+  ApmFilter
 } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 import { z } from 'zod';
@@ -133,6 +136,11 @@ const deployService = new DeployService(configService, karafService, dockerServi
 const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
+const routine801Service = new Routine801Service(configService, karafService);
+const apmService = new ApmService();
+apmService.onNewTrace = (summary) => {
+  broadcastWs('apm:new-trace', summary);
+};
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
 const wsClients = new Set<WebSocket>();
@@ -1346,6 +1354,44 @@ app.post('/api/karaf/bundles/update-version', async (req, res) => {
   res.json(result);
 });
 
+// Rotina 801: Catálogo Oficial e Instalação de Serviços Web
+app.get('/api/routine801/instalacao', async (req, res) => {
+  try {
+    const url = req.query.url ? String(req.query.url) : undefined;
+    const data = await routine801Service.fetchInstallations(url);
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Falha ao buscar instalações' });
+  }
+});
+
+app.get('/api/routine801/atualizacao', async (req, res) => {
+  try {
+    const url = req.query.url ? String(req.query.url) : undefined;
+    const data = await routine801Service.fetchUpdates(url);
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Falha ao buscar atualizações' });
+  }
+});
+
+app.get('/api/routine801/health', async (req, res) => {
+  const url = req.query.url ? String(req.query.url) : undefined;
+  const result = await routine801Service.checkServerHealth(url);
+  res.json(result);
+});
+
+app.post('/api/routine801/install', async (req, res) => {
+  try {
+    const result = await routine801Service.installFeatures(req.body, (chunk) => {
+      broadcastWs('karaf:log-chunk', chunk);
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Falha ao instalar pacotes da Rotina 801' });
+  }
+});
+
 // 13. Operações Git Avançadas
 app.post('/api/git/checkout', async (req, res) => {
   const { projectPath, branchName, createNew } = req.body;
@@ -1440,6 +1486,62 @@ app.post('/api/logs/clear-file', async (req, res) => {
   const { filePath } = req.body;
   const success = await logWatcherService.clearLogFile(filePath);
   res.json({ success });
+});
+
+// ==========================================
+// Rotas de APM & Ingestão OpenTelemetry (OTLP/HTTP)
+// ==========================================
+
+// Ingestão OTLP e simplificada
+const handleTraceIngestion = (req: express.Request, res: express.Response) => {
+  try {
+    const result = apmService.ingestOtlpJson(req.body);
+    res.json({ status: 'success', ...result });
+  } catch (err: any) {
+    res.status(400).json({ error: 'Erro ao processar traces OTLP', message: err?.message });
+  }
+};
+
+app.post('/v1/traces', handleTraceIngestion);
+app.post('/api/otlp/v1/traces', handleTraceIngestion);
+app.post('/api/telemetry/spans', handleTraceIngestion);
+app.post('/api/telemetry/traces', handleTraceIngestion);
+
+// Consultas e Operações REST
+app.get('/api/apm/overview', (req, res) => {
+  const serviceName = typeof req.query.serviceName === 'string' ? req.query.serviceName : undefined;
+  res.json(apmService.getOverview({ serviceName }));
+});
+
+app.post('/api/apm/traces', (req, res) => {
+  const filter = req.body as ApmFilter;
+  res.json(apmService.getTraces(filter));
+});
+
+app.get('/api/apm/traces/:id', (req, res) => {
+  const details = apmService.getTraceDetails(req.params.id);
+  if (!details) {
+    return res.status(404).json({ error: 'Trace não encontrado' });
+  }
+  res.json(details);
+});
+
+app.get('/api/apm/services', (_req, res) => {
+  res.json(apmService.getServices());
+});
+
+app.get('/api/apm/receiver-status', (_req, res) => {
+  res.json(apmService.getReceiverStatus());
+});
+
+app.delete('/api/apm/traces', (_req, res) => {
+  apmService.clear();
+  res.json({ success: true });
+});
+
+app.post('/api/apm/demo', (_req, res) => {
+  const result = apmService.generateDemoData();
+  res.json(result);
 });
 
 // Servir Frontend SPA estático se compilado

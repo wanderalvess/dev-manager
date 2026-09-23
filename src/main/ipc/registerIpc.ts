@@ -23,7 +23,10 @@ import { KarafLogPersistenceService } from '../services/KarafLogPersistenceServi
 import { AutoUpdateService } from '../services/AutoUpdateService';
 import { notifyUser } from '../services/NotificationService';
 import { LlmService } from '../services/LlmService';
+import { Routine801Service } from '../services/Routine801Service';
+import { ApmService } from '../services/ApmService';
 import {
+  Routine801InstallRequest,
   AppSettings,
   KarafDeployRequest,
   SelectFileOptions,
@@ -47,7 +50,8 @@ import {
   LogChunkEvent,
   LlmProviderConfig,
   LlmChatRequest,
-  LlmRagQueryRequest
+  LlmRagQueryRequest,
+  ApmFilter
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
@@ -68,7 +72,9 @@ export function registerIpcHandlers(
   logWatcherService: LogWatcherService = new LogWatcherService(),
   karafLogPersistenceService: KarafLogPersistenceService = new KarafLogPersistenceService(),
   autoUpdateService?: AutoUpdateService,
-  llmService: LlmService = new LlmService(configService, docsIndexService)
+  llmService: LlmService = new LlmService(configService, docsIndexService),
+  routine801Service: Routine801Service = new Routine801Service(configService, karafService),
+  apmService: ApmService = new ApmService()
 ) {
   // Distingue instalação nova (nunca existiu marcador) de atualização de versão (marcador existia,
   // versão mudou). Onboarding completo (Welcome + Tour) só deve resetar em instalação nova — numa
@@ -491,6 +497,25 @@ export function registerIpcHandlers(
 
   ipcMain.handle('karaf:parse-pom', async (_, projectPath: string) => {
     return karafService.parseProjectPomOrBat(projectPath);
+  });
+
+  // --- Rotina 801: Atualização e Instalação de Serviços Web Oficiais ---
+  ipcMain.handle('routine801:get-installations', async (_, customUrl?: string) => {
+    return await routine801Service.fetchInstallations(customUrl);
+  });
+
+  ipcMain.handle('routine801:get-updates', async (_, customUrl?: string) => {
+    return await routine801Service.fetchUpdates(customUrl);
+  });
+
+  ipcMain.handle('routine801:check-server', async (_, customUrl?: string) => {
+    return await routine801Service.checkServerHealth(customUrl);
+  });
+
+  ipcMain.handle('routine801:install-features', async (_, request: Routine801InstallRequest) => {
+    return await routine801Service.installFeatures(request, (chunk) => {
+      mainWindow.webContents.send('karaf:log-chunk', chunk);
+    });
   });
 
   // --- Orquestrador de Perfis de Deploy (Karaf / Docker / Comando Genérico) ---
@@ -1134,5 +1159,35 @@ export function registerIpcHandlers(
 
   ipcMain.handle('update:install', async () => {
     autoUpdateService?.quitAndInstall();
+  });
+
+  // --- APM & Observabilidade (OpenTelemetry / SigNoz) ---
+  ipcMain.handle('apm:get-overview', async (_, filter?: ApmFilter) => {
+    return apmService.getOverview(filter);
+  });
+
+  ipcMain.handle('apm:get-traces', async (_, filter?: ApmFilter) => {
+    return apmService.getTraces(filter);
+  });
+
+  ipcMain.handle('apm:get-trace-details', async (_, traceId: string) => {
+    return apmService.getTraceDetails(traceId);
+  });
+
+  ipcMain.handle('apm:get-services', async () => {
+    return apmService.getServices();
+  });
+
+  ipcMain.handle('apm:get-receiver-status', async () => {
+    return apmService.getReceiverStatus();
+  });
+
+  ipcMain.handle('apm:clear', async () => {
+    apmService.clear();
+    return { success: true };
+  });
+
+  ipcMain.handle('apm:generate-demo', async () => {
+    return apmService.generateDemoData();
   });
 }

@@ -15,7 +15,8 @@ import {
   ScrollText,
   Database,
   FileSearch,
-  GitBranch
+  GitBranch,
+  Activity
 } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { GitProjectInfo, RoutineItem } from '../../../shared/types';
@@ -193,6 +194,18 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         icon: ScrollText,
         onSelect: () => {
           onNavigate('logs');
+          onClose();
+        }
+      },
+      {
+        id: 'act-apm',
+        category: 'action',
+        title: 'APM & Traces (OpenTelemetry)',
+        subtitle: 'Métricas, traces distribuídos e observabilidade de APIs',
+        badge: 'Alt+0',
+        icon: Activity,
+        onSelect: () => {
+          onNavigate('apm');
           onClose();
         }
       },

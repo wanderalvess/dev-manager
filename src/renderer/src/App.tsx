@@ -26,6 +26,7 @@ const DocsPage = lazy(() => import('./pages/DocsPage').then((m) => ({ default: m
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const LogsPage = lazy(() => import('./pages/LogsPage').then((m) => ({ default: m.LogsPage })));
+const ApmPage = lazy(() => import('./pages/ApmPage').then((m) => ({ default: m.ApmPage })));
 // Só é montado quando há novidades de uma atualização de versão para mostrar — mantém fora do bundle inicial.
 const MarkdownReader = lazy(() => import('./components/MarkdownReader').then((m) => ({ default: m.MarkdownReader })));
 
@@ -389,6 +390,15 @@ export const App: React.FC = () => {
               onNavigateToSettings={() => setActiveTab('settings')}
               isActive={activeTab === 'logs'}
               settingsVersion={settingsVersion}
+            />
+          </div>
+        )}
+        {visitedTabs.has('apm') && (
+          <div className={`h-full w-full ${activeTab === 'apm' ? '' : 'hidden'}`}>
+            <ApmPage
+              isActive={activeTab === 'apm'}
+              onNavigateToSettings={() => setActiveTab('settings')}
+              onNavigateToDatabase={() => setActiveTab('database')}
             />
           </div>
         )}

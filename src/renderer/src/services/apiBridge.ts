@@ -49,6 +49,9 @@ import type {
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
   KarafFeatureInfo,
+  Routine801CatalogResponse,
+  Routine801InstallRequest,
+  Routine801InstallResult,
   GitCommitInfo,
   GitFileStatus,
   GitDiffResult,
@@ -73,7 +76,13 @@ import type {
   LlmChatResponse,
   LlmTestResult,
   LlmRagQueryRequest,
-  LlmRagQueryResponse
+  LlmRagQueryResponse,
+  TraceSummary,
+  TraceDetails,
+  ApmFilter,
+  ApmReceiverStatus,
+  ObservabilityOverview,
+  ServiceMetricsSummary
 } from '../../../shared/types';
 
 const API_KEY_STORAGE = 'devManagerApiKey';
@@ -624,6 +633,29 @@ export function initApiBridge() {
 
     onKarafLogChunk: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('karaf:log-chunk', callback);
+    },
+
+    // Rotina 801 - Atualização e Instalação de Serviços Web Oficiais
+    routine801GetInstallations: async (customUrl?: string): Promise<Routine801CatalogResponse> => {
+      const query = customUrl ? `?url=${encodeURIComponent(customUrl)}` : '';
+      return apiFetch(`/api/routine801/instalacao${query}`);
+    },
+
+    routine801GetUpdates: async (customUrl?: string): Promise<Routine801CatalogResponse> => {
+      const query = customUrl ? `?url=${encodeURIComponent(customUrl)}` : '';
+      return apiFetch(`/api/routine801/atualizacao${query}`);
+    },
+
+    routine801CheckServer: async (customUrl?: string): Promise<{ ok: boolean; status: number; message: string; url: string }> => {
+      const query = customUrl ? `?url=${encodeURIComponent(customUrl)}` : '';
+      return apiFetch(`/api/routine801/health${query}`);
+    },
+
+    routine801InstallFeatures: async (request: Routine801InstallRequest): Promise<Routine801InstallResult> => {
+      return apiFetch('/api/routine801/install', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
     },
 
     // Perfis de Deploy (Karaf / Docker / Comando Genérico)
@@ -1541,6 +1573,95 @@ export function initApiBridge() {
 
     onLogChunk: (callback: (event: LogChunkEvent) => void) => {
       return wsManager.subscribe('logs:chunk', callback);
+    },
+
+    // APM & Observabilidade (OpenTelemetry / SigNoz)
+    getApmOverview: async (filter?: ApmFilter): Promise<ObservabilityOverview> => {
+      try {
+        const query = filter?.serviceName ? `?serviceName=${encodeURIComponent(filter.serviceName)}` : '';
+        return await apiFetch<ObservabilityOverview>(`/api/apm/overview${query}`);
+      } catch (err: any) {
+        return {
+          totalTraces: 0,
+          totalSpans: 0,
+          requestsPerSecond: 0,
+          errorRate: 0,
+          avgLatencyMs: 0,
+          p50LatencyMs: 0,
+          p95LatencyMs: 0,
+          p99LatencyMs: 0,
+          services: [],
+          topEndpoints: [],
+          slowQueries: [],
+          timeSeries: [],
+          dbTimePercentage: 0,
+          receiverStatus: {
+            listening: false,
+            port: 4318,
+            error: err.message,
+            totalIngestedSpans: 0,
+            totalIngestedTraces: 0,
+            bufferSize: 0,
+            maxBufferSize: 5000
+          }
+        };
+      }
+    },
+    getApmTraces: async (filter?: ApmFilter): Promise<TraceSummary[]> => {
+      try {
+        return await apiFetch<TraceSummary[]>('/api/apm/traces', {
+          method: 'POST',
+          body: JSON.stringify(filter || {})
+        });
+      } catch {
+        return [];
+      }
+    },
+    getApmTraceDetails: async (traceId: string): Promise<TraceDetails | null> => {
+      try {
+        return await apiFetch<TraceDetails>(`/api/apm/traces/${encodeURIComponent(traceId)}`);
+      } catch {
+        return null;
+      }
+    },
+    getApmServices: async (): Promise<ServiceMetricsSummary[]> => {
+      try {
+        return await apiFetch<ServiceMetricsSummary[]>('/api/apm/services');
+      } catch {
+        return [];
+      }
+    },
+    getApmReceiverStatus: async (): Promise<ApmReceiverStatus> => {
+      try {
+        return await apiFetch<ApmReceiverStatus>('/api/apm/receiver-status');
+      } catch (err: any) {
+        return {
+          listening: false,
+          port: 4318,
+          error: err.message,
+          totalIngestedSpans: 0,
+          totalIngestedTraces: 0,
+          bufferSize: 0,
+          maxBufferSize: 5000
+        };
+      }
+    },
+    clearApmTraces: async (): Promise<{ success: boolean }> => {
+      try {
+        return await apiFetch<{ success: boolean }>('/api/apm/traces', { method: 'DELETE' });
+      } catch {
+        return { success: false };
+      }
+    },
+    generateApmDemo: async (): Promise<{ generatedSpans: number; generatedTraces: number }> => {
+      try {
+        return await apiFetch<{ generatedSpans: number; generatedTraces: number }>('/api/apm/demo', { method: 'POST' });
+      } catch {
+        return { generatedSpans: 0, generatedTraces: 0 };
+      }
+    },
+    onApmNewTrace: (callback: (trace: TraceSummary) => void) => {
+      return wsManager.subscribe('apm:new-trace', callback);
     }
   };
 }

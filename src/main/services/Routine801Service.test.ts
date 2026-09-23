@@ -1,0 +1,157 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Routine801Service } from './Routine801Service';
+import { ConfigService } from './ConfigService';
+import { KarafService } from './KarafService';
+import { httpRequest } from '../utils/httpRequest';
+
+vi.mock('../utils/httpRequest', () => ({
+  httpRequest: vi.fn()
+}));
+
+describe('Routine801Service', () => {
+  let configService: ConfigService;
+  let karafService: KarafService;
+  let routine801Service: Routine801Service;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    configService = {
+      getSettings: vi.fn().mockReturnValue({
+        routine801Url: 'http://localhost:8889',
+        wtaUrl: 'http://localhost:8889'
+      })
+    } as unknown as ConfigService;
+
+    karafService = {
+      executeKarafCommand: vi.fn().mockResolvedValue({ code: 0, stdout: 'OK', stderr: '' })
+    } as unknown as KarafService;
+
+    routine801Service = new Routine801Service(configService, karafService);
+  });
+
+  describe('getServerUrl', () => {
+    it('deve priorizar a URL informada explicitamente', () => {
+      const url = routine801Service.getServerUrl('http://192.168.1.100:8889/');
+      expect(url).toBe('http://192.168.1.100:8889');
+    });
+
+    it('deve usar routine801Url das configurações quando não fornecida', () => {
+      vi.mocked(configService.getSettings).mockReturnValue({
+        routine801Url: 'http://custom-host:9000'
+      } as any);
+
+      const url = routine801Service.getServerUrl();
+      expect(url).toBe('http://custom-host:9000');
+    });
+
+    it('deve usar fallback para http://localhost:8889 se nada estiver configurado', () => {
+      vi.mocked(configService.getSettings).mockReturnValue({} as any);
+
+      const url = routine801Service.getServerUrl();
+      expect(url).toBe('http://localhost:8889');
+    });
+  });
+
+  describe('checkServerHealth', () => {
+    it('deve retornar ok: true quando o servidor responde com status < 500', async () => {
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => '{"status":"OK"}',
+        buffer: async () => Buffer.from('')
+      });
+
+      const health = await routine801Service.checkServerHealth();
+      expect(health.ok).toBe(true);
+      expect(health.status).toBe(200);
+    });
+
+    it('deve retornar ok: false com mensagem informativa quando houver falha de conexão', async () => {
+      vi.mocked(httpRequest).mockRejectedValueOnce(new Error('ECONNREFUSED'));
+
+      const health = await routine801Service.checkServerHealth();
+      expect(health.ok).toBe(false);
+      expect(health.message).toContain('ECONNREFUSED');
+    });
+  });
+
+  describe('fetchInstallations', () => {
+    it('deve consultar o endpoint /instalacao e normalizar os resultados', async () => {
+      const fakeJson = JSON.stringify({
+        repositorios: [
+          {
+            comando: 'INSTALL',
+            repositorio: {
+              groupId: 'br.com.pcsist.winthor.rotina',
+              artifactId: 'winthor-fin-1531-features',
+              version: '1.38.0.2'
+            }
+          }
+        ],
+        funcionalidades: [
+          {
+            nome: 'winthor-fin-1531',
+            versao: '1.38.0.2',
+            codigoRotina: 1531,
+            codigoModulo: 15,
+            tipoProjeto: 'ROTINA',
+            descricao: '1531 - Conciliação',
+            status: 'LIBERADO'
+          }
+        ]
+      });
+
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => fakeJson,
+        buffer: async () => Buffer.from(fakeJson)
+      });
+
+      const res = await routine801Service.fetchInstallations();
+      expect(res.funcionalidades).toHaveLength(1);
+      expect(res.funcionalidades[0].nome).toBe('winthor-fin-1531');
+      expect(res.funcionalidades[0].featureMavenUrl).toContain('winthor-fin-1531-features');
+    });
+  });
+
+  describe('installFeatures', () => {
+    it('deve rejeitar lista vazia', async () => {
+      const result = await routine801Service.installFeatures({ funcionalidades: [] });
+      expect(result.success).toBe(false);
+      expect(result.installedCount).toBe(0);
+    });
+
+    it('deve executar repo-add e feature:install no Karaf para cada feature', async () => {
+      const logChunks: string[] = [];
+
+      const result = await routine801Service.installFeatures(
+        {
+          funcionalidades: [
+            {
+              nome: 'winthor-fin-1531',
+              versao: '1.38.0.2',
+              codigoRotina: 1531,
+              codigoModulo: 15,
+              tipoProjeto: 'ROTINA',
+              descricao: '1531',
+              status: 'LIBERADO',
+              featureMavenUrl: 'mvn:br.com.pcsist.winthor.rotina/winthor-fin-1531-features/1.38.0.2/xml/features'
+            }
+          ],
+          executeVia: 'karaf_cli'
+        },
+        (chunk) => logChunks.push(chunk)
+      );
+
+      expect(karafService.executeKarafCommand).toHaveBeenCalledTimes(2);
+      expect(result.success).toBe(true);
+      expect(result.installedCount).toBe(1);
+      expect(result.failedCount).toBe(0);
+      expect(logChunks.some((l) => l.includes('Sucesso'))).toBe(true);
+    });
+  });
+});

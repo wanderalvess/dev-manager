@@ -176,6 +176,14 @@ export const Header: React.FC<HeaderProps> = ({
           icon: ScrollText,
           description: 'Acompanhamento contínuo (tail -f) de logs de aplicações e microsserviços',
           shortcut: 'Alt+8'
+        },
+        {
+          id: 'apm',
+          label: 'APM & Traces',
+          shortLabel: 'APM',
+          icon: Activity,
+          description: 'Métricas, traces distribuídos (OTel/SigNoz) e observabilidade de APIs',
+          shortcut: 'Alt+0'
         }
       ]
     },

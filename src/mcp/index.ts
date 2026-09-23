@@ -30,6 +30,8 @@ import { DeployService } from '../main/services/DeployService';
 import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
 import { LlmService } from '../main/services/LlmService';
+import { Routine801Service } from '../main/services/Routine801Service';
+import { ApmService } from '../main/services/ApmService';
 import * as cron from 'node-cron';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
 import { analyzeExplainPlan } from '../main/services/explainAnalyzer';
@@ -51,6 +53,8 @@ const deployService = new DeployService(configService, karafService, dockerServi
 const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
+const routine801Service = new Routine801Service(configService, karafService);
+const apmService = new ApmService();
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -1813,6 +1817,164 @@ server.registerTool(
     if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
     const success = await logWatcherService.clearLogFile(filePath);
     return success ? ok({ success: true }) : fail('Não foi possível limpar o arquivo (não existe ou sem permissão).');
+  }
+);
+
+// --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
+server.registerTool(
+  'routine801_get_catalog',
+  {
+    title: 'Consultar catálogo oficial da Rotina 801',
+    description: 'Lista instalações ou atualizações disponíveis de serviços web e rotinas oficiais do WinThor.',
+    inputSchema: {
+      type: z.enum(['instalacao', 'atualizacao']).describe('Tipo de consulta: instalacao (novos) ou atualizacao (pendentes)'),
+      serverUrl: z.string().optional().describe('URL alternativa do servidor (ex: http://localhost:8889)')
+    }
+  },
+  async ({ type, serverUrl }) => {
+    try {
+      const data = type === 'instalacao'
+        ? await routine801Service.fetchInstallations(serverUrl)
+        : await routine801Service.fetchUpdates(serverUrl);
+      return ok(data);
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao consultar catálogo da Rotina 801.');
+    }
+  }
+);
+
+server.registerTool(
+  'routine801_check_health',
+  {
+    title: 'Verificar status da Rotina 801',
+    description: 'Testa a conectividade com o serviço HTTP da Rotina 801 no Karaf.',
+    inputSchema: {
+      serverUrl: z.string().optional().describe('URL do servidor a testar (padrão: http://localhost:8889)')
+    }
+  },
+  async ({ serverUrl }) => {
+    const result = await routine801Service.checkServerHealth(serverUrl);
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'routine801_install_features',
+  {
+    title: 'Instalar features da Rotina 801',
+    description: 'Instala uma ou mais funcionalidades oficiais selecionadas no container Apache Karaf com resolução de dependências.',
+    inputSchema: {
+      funcionalidades: z.array(
+        z.object({
+          nome: z.string(),
+          versao: z.string(),
+          codigoRotina: z.number().optional(),
+          codigoModulo: z.number().optional(),
+          tipoProjeto: z.string().optional(),
+          descricao: z.string().optional(),
+          status: z.string().optional(),
+          featureMavenUrl: z.string().optional()
+        })
+      ),
+      executeVia: z.enum(['karaf_cli', 'api']).optional().describe('Método de execução: karaf_cli (padrão) ou api'),
+      serverUrl: z.string().optional()
+    }
+  },
+  async ({ funcionalidades, executeVia, serverUrl }) => {
+    try {
+      const chunks: string[] = [];
+      const result = await routine801Service.installFeatures(
+        {
+          funcionalidades: funcionalidades.map((f) => ({
+            ...f,
+            codigoRotina: f.codigoRotina || 0,
+            codigoModulo: f.codigoModulo || 0,
+            tipoProjeto: f.tipoProjeto || 'SERVICO',
+            descricao: f.descricao || f.nome,
+            status: f.status || 'LIBERADO'
+          })),
+          executeVia: executeVia || 'karaf_cli',
+          serverUrl
+        },
+        (chunk) => chunks.push(chunk)
+      );
+      return ok({ ...result, collectedLogs: chunks.join('') });
+    } catch (err: any) {
+      return fail(err?.message || 'Falha na instalação das features da Rotina 801.');
+    }
+  }
+);
+
+// ==========================================
+// Tools de APM & Observabilidade (OpenTelemetry / SigNoz)
+// ==========================================
+
+server.tool(
+  'apm_get_overview',
+  'Retorna métricas consolidadas de observabilidade e APM (throughput RPS, taxa de erro, latências p50/p95/p99, serviços ativos e status do receptor OTLP).',
+  {
+    serviceName: z.string().optional().describe('Filtrar métricas para um serviço específico')
+  },
+  async ({ serviceName }) => {
+    try {
+      const overview = apmService.getOverview({ serviceName });
+      return ok(overview);
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao obter overview de APM.');
+    }
+  }
+);
+
+server.tool(
+  'apm_get_traces',
+  'Busca e filtra requisições/traces recentes coletados pelo APM (suporta filtro por serviço, busca por rota, apenas erros ou latência mínima).',
+  {
+    serviceName: z.string().optional().describe('Nome do serviço (ex: karaf-winthor)'),
+    search: z.string().optional().describe('Termo de busca na rota, nome do span ou traceId'),
+    hasError: z.boolean().optional().describe('Filtrar apenas traces com falha/erro HTTP'),
+    minDurationMs: z.number().optional().describe('Latência mínima em milissegundos para encontrar gargalos'),
+    limit: z.number().optional().describe('Quantidade máxima de traces a retornar (padrão: 50)')
+  },
+  async (args) => {
+    try {
+      const traces = apmService.getTraces({ ...args, limit: args.limit || 50 });
+      return ok({ count: traces.length, traces });
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao listar traces.');
+    }
+  }
+);
+
+server.tool(
+  'apm_get_trace_details',
+  'Inspeciona os detalhes completos de um trace pelo seu ID, retornando a árvore de spans em cascata (waterfall), atributos HTTP, queries SQL executadas e stacktraces de erro.',
+  {
+    traceId: z.string().describe('ID do trace a inspecionar')
+  },
+  async ({ traceId }) => {
+    try {
+      const details = apmService.getTraceDetails(traceId);
+      if (!details) {
+        return fail(`Trace com ID "${traceId}" não encontrado no buffer.`);
+      }
+      return ok(details);
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao obter detalhes do trace.');
+    }
+  }
+);
+
+server.tool(
+  'apm_get_services',
+  'Lista todos os serviços monitorados pelo APM com métricas de requisições, erros e latências agregadas.',
+  {},
+  async () => {
+    try {
+      const services = apmService.getServices();
+      return ok({ count: services.length, services });
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao listar serviços monitorados.');
+    }
   }
 );
 

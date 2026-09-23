@@ -21,7 +21,10 @@ import {
   XCircle,
   Download,
   Upload,
-  History
+  History,
+  Info,
+  Trash2,
+  Terminal
 } from 'lucide-react';
 import {
   GitProjectInfo,
@@ -34,6 +37,7 @@ import { TerminalViewer } from '../components/TerminalViewer';
 import { DeployProfileEditorModal } from '../components/DeployProfileEditorModal';
 import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
 import { DeployHistoryModal } from '../components/DeployHistoryModal';
+import { Routine801CatalogModal } from '../components/Routine801CatalogModal';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DEPLOY_TOUR_STEPS, DEPLOY_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/deployTour';
@@ -76,6 +80,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   // Modal de Histórico e Gestão de Bundles OSGi
   const [isBundlesModalOpen, setIsBundlesModalOpen] = useState<boolean>(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
+  const [isRoutine801ModalOpen, setIsRoutine801ModalOpen] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<DeployProfileHistoryEntry[]>([]);
   const [isConsoleMaximized, setIsConsoleMaximized] = useState<boolean>(false);
 
@@ -556,31 +561,41 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             <button
               type="button"
               onClick={handleOpenHistory}
-              className="px-3 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
+              className="px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
               title="Ver histórico completo das últimas execuções de deploy"
             >
-              <History className="w-3.5 h-3.5 text-primary" />
+              <History className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="hidden sm:inline">Histórico</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsBundlesModalOpen(true)}
-              className="px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
+              className="px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
               title="Abrir gerenciador visual de bundles OSGi"
             >
-              <ListTree className="w-3.5 h-3.5 text-primary" />
+              <ListTree className="w-3.5 h-3.5 text-muted-foreground" />
               <span>Bundles OSGi</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsRoutine801ModalOpen(true)}
+              className="px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-primary/30 text-foreground shadow-xs cursor-pointer"
+              title="Abrir catálogo oficial de serviços e rotinas (Rotina 801 - Atualização de Serviços Web)"
+            >
+              <Download className="w-3.5 h-3.5 text-primary" />
+              <span>Catálogo 801</span>
             </button>
 
             {isDeploying ? (
               <button
                 type="button"
                 onClick={handleAbortDeploy}
-                className="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg bg-rose-500 hover:bg-rose-600 text-white border border-rose-400/50 cursor-pointer animate-pulse"
+                className="px-4 py-2 rounded-lg font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-rose-600 hover:bg-rose-700 text-white shadow-xs cursor-pointer"
                 title="Interromper execução do perfil imediatamente"
               >
-                <Square className="w-4 h-4 fill-current" />
+                <Square className="w-3.5 h-3.5 fill-current" />
                 <span>Cancelar</span>
               </button>
             ) : (
@@ -588,9 +603,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                 data-tour="run-active-profile"
                 onClick={handleRunActiveProfile}
                 disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
-                className="px-6 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.02] border border-primary/40 cursor-pointer disabled:opacity-40 disabled:scale-100"
+                className="px-5 py-2 rounded-lg font-semibold text-xs flex items-center space-x-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-xs cursor-pointer disabled:opacity-40"
               >
-                <Play className="w-4 h-4 fill-current" />
+                <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Executar Perfil</span>
               </button>
             )}
@@ -603,7 +618,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         {/* Coluna Esquerda: Etapas do Perfil & Diagnósticos */}
         <div className={`${isConsoleMaximized ? 'hidden' : 'lg:col-span-4 xl:col-span-4'} flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1`}>
           {karafValid === false && (
-            <div className="bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
+            <div className="bg-rose-500/10 border border-rose-500/40 rounded-lg p-3 flex items-start space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
               <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <span className="font-bold block">Executável client.bat não localizado</span>
@@ -614,7 +629,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   <button
                     type="button"
                     onClick={onNavigateToSettings}
-                    className="mt-2 px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 rounded-lg text-[11px] font-bold text-rose-700 dark:text-rose-200 flex items-center gap-1 transition-all"
+                    className="mt-2 px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 rounded-md text-[11px] font-semibold text-rose-700 dark:text-rose-200 flex items-center gap-1 transition-all"
                   >
                     <Settings className="w-3 h-3" />
                     <span>Ajustar Diretório nas Configurações</span>
@@ -625,9 +640,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
           )}
 
           {/* Etapas do Perfil Ativo */}
-          <div className="cockpit-panel rounded-2xl p-4 space-y-2.5 border border-border" data-tour="steps-list-panel">
+          <div className="cockpit-panel rounded-xl p-3.5 space-y-2.5 border border-border/80 shadow-xs" data-tour="steps-list-panel">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-bold uppercase tracking-wider text-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Etapas ({activeProfile?.steps?.length || 0})
               </span>
               <button
@@ -753,21 +768,21 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
           </div>
 
           {/* Ferramentas de Diagnóstico Rápido do Karaf */}
-          <div className="cockpit-panel rounded-2xl p-4 space-y-3 shadow-xl border border-border">
+          <div className="cockpit-panel rounded-xl p-3.5 space-y-3 border border-border/80 shadow-xs">
             <div className="flex items-center justify-between">
-              <div className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos OSGi (client.bat)
               </div>
             </div>
 
             {/* Abas de Escopo: Rápidos | Features | Bundles */}
-            <div className="flex items-center gap-1 p-1 bg-muted/60 border border-border rounded-xl text-xs">
+            <div className="flex items-center gap-1 p-0.5 bg-muted/40 border border-border/70 rounded-lg text-xs">
               <button
                 type="button"
                 onClick={() => setDiagTab('quick')}
-                className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`flex-1 py-1.5 px-2 rounded-md font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
                   diagTab === 'quick'
-                    ? 'bg-card text-foreground shadow-xs border border-border/50'
+                    ? 'bg-card text-foreground font-semibold shadow-xs border border-border/60'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -778,9 +793,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               <button
                 type="button"
                 onClick={() => setDiagTab('feature')}
-                className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`flex-1 py-1.5 px-2 rounded-md font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
                   diagTab === 'feature'
-                    ? 'bg-card text-foreground shadow-xs border border-border/50'
+                    ? 'bg-card text-foreground font-semibold shadow-xs border border-border/60'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -791,13 +806,13 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               <button
                 type="button"
                 onClick={() => setDiagTab('bundle')}
-                className={`flex-1 py-1.5 px-2 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`flex-1 py-1.5 px-2 rounded-md font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
                   diagTab === 'bundle'
-                    ? 'bg-card text-foreground shadow-xs border border-border/50'
+                    ? 'bg-card text-foreground font-semibold shadow-xs border border-border/60'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Package className="w-3.5 h-3.5 text-sky-500" />
+                <Package className="w-3.5 h-3.5 text-primary" />
                 <span>Bundles</span>
               </button>
             </div>
@@ -809,12 +824,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   type="button"
                   onClick={() => handleRunDiagnostic('feature:list -i', 'features-i')}
                   disabled={isDeploying || isDiagRunning !== null}
-                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  className="p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   title="feature:list -i"
                 >
-                  <ListTree className="w-4 h-4 text-amber-500 shrink-0" />
+                  <ListTree className="w-3.5 h-3.5 text-primary shrink-0" />
                   <div className="truncate">
-                    <span className="font-bold block truncate">Features Ativas</span>
+                    <span className="font-semibold block truncate">Features Ativas</span>
                     <span className="text-[10px] text-muted-foreground font-mono">feature:list -i</span>
                   </div>
                 </button>
@@ -823,12 +838,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   type="button"
                   onClick={() => handleRunDiagnostic('bundle:list -s', 'bundles-s')}
                   disabled={isDeploying || isDiagRunning !== null}
-                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  className="p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   title="bundle:list -s"
                 >
-                  <Package className="w-4 h-4 text-primary shrink-0" />
+                  <Package className="w-3.5 h-3.5 text-primary shrink-0" />
                   <div className="truncate">
-                    <span className="font-bold block truncate">Bundles Ativos</span>
+                    <span className="font-semibold block truncate">Bundles Ativos</span>
                     <span className="text-[10px] text-muted-foreground font-mono">bundle:list -s</span>
                   </div>
                 </button>
@@ -837,12 +852,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   type="button"
                   onClick={() => handleRunDiagnostic('bundle:diag', 'bundles-diag')}
                   disabled={isDeploying || isDiagRunning !== null}
-                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  className="p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   title="bundle:diag (diagnostica todos os bundles com falha de resolução)"
                 >
-                  <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <div className="truncate">
-                    <span className="font-bold block truncate">Diag Falhas</span>
+                    <span className="font-semibold block truncate">Diag Falhas</span>
                     <span className="text-[10px] text-muted-foreground font-mono">bundle:diag</span>
                   </div>
                 </button>
@@ -851,12 +866,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   type="button"
                   onClick={() => handleRunDiagnostic('feature:repo-list', 'repos')}
                   disabled={isDeploying || isDiagRunning !== null}
-                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  className="p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   title="feature:repo-list"
                 >
-                  <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <Layers className="w-3.5 h-3.5 text-primary shrink-0" />
                   <div className="truncate">
-                    <span className="font-bold block truncate">Repositórios</span>
+                    <span className="font-semibold block truncate">Repositórios</span>
                     <span className="text-[10px] text-muted-foreground font-mono">feature:repo-list</span>
                   </div>
                 </button>
@@ -865,12 +880,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   type="button"
                   onClick={() => handleRunDiagnostic('log:display -n 50', 'logs-50')}
                   disabled={isDeploying || isDiagRunning !== null}
-                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  className="p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   title="log:display -n 50"
                 >
-                  <FileText className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
                   <div className="truncate">
-                    <span className="font-bold block truncate">Últimos Logs</span>
+                    <span className="font-semibold block truncate">Últimos Logs</span>
                     <span className="text-[10px] text-muted-foreground font-mono">log:display -n 50</span>
                   </div>
                 </button>
@@ -879,12 +894,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                   type="button"
                   onClick={() => handleRunDiagnostic('log:clear', 'clear')}
                   disabled={isDeploying || isDiagRunning !== null}
-                  className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                  className="p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   title="log:clear"
                 >
-                  <RotateCcw className="w-4 h-4 text-amber-500 shrink-0" />
+                  <RotateCcw className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   <div className="truncate">
-                    <span className="font-bold block truncate">Limpar Logs</span>
+                    <span className="font-semibold block truncate">Limpar Logs</span>
                     <span className="text-[10px] text-muted-foreground font-mono">log:clear</span>
                   </div>
                 </button>
@@ -899,11 +914,11 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                     type="button"
                     onClick={() => handleRunDiagnostic('feature:list -i', 'features-i')}
                     disabled={isDeploying || isDiagRunning !== null}
-                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                    className="flex-1 p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   >
-                    <ListTree className="w-4 h-4 text-amber-500 shrink-0" />
+                    <ListTree className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div className="truncate">
-                      <span className="font-bold block truncate">Listar Instaladas</span>
+                      <span className="font-semibold block truncate">Listar Instaladas</span>
                       <span className="text-[10px] text-muted-foreground font-mono">feature:list -i</span>
                     </div>
                   </button>
@@ -912,53 +927,59 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                     type="button"
                     onClick={() => handleRunDiagnostic('feature:repo-list', 'repos')}
                     disabled={isDeploying || isDiagRunning !== null}
-                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                    className="flex-1 p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   >
-                    <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <Layers className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div className="truncate">
-                      <span className="font-bold block truncate">Repositórios</span>
+                      <span className="font-semibold block truncate">Repositórios</span>
                       <span className="text-[10px] text-muted-foreground font-mono">feature:repo-list</span>
                     </div>
                   </button>
                 </div>
 
                 {/* Ação pontual por Nome da Feature */}
-                <div className="p-2.5 bg-muted/30 border border-border rounded-xl space-y-2 text-xs">
-                  <div className="text-[11px] font-bold text-foreground">Ação por Nome da Feature:</div>
+                <div className="p-2.5 bg-muted/20 border border-border/70 rounded-lg space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <span>Feature</span>
+                    <span className="font-mono text-[10px] text-muted-foreground/70">feature:cmd</span>
+                  </div>
                   <input
                     type="text"
                     value={diagFeatureName}
                     onChange={(e) => setDiagFeatureName(e.target.value)}
                     placeholder="Ex: winthor-integracao-varejo"
-                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-none focus:border-primary transition"
                   />
                   <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                     <button
                       type="button"
                       onClick={() => handleRunDiagnostic(`feature:info ${diagFeatureName.trim()}`, 'feat-info')}
                       disabled={!diagFeatureName.trim() || isDeploying || isDiagRunning !== null}
-                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-50 cursor-pointer transition"
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-md text-[11px] font-medium text-foreground disabled:opacity-40 cursor-pointer transition flex items-center gap-1"
                       title="Ver detalhes, bundles e dependências da feature"
                     >
-                      🔍 Info
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRunDiagnostic(`feature:uninstall -r ${diagFeatureName.trim()}`, 'feat-uninstall')}
-                      disabled={!diagFeatureName.trim() || isDeploying || isDiagRunning !== null}
-                      className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-lg text-[11px] font-bold text-rose-600 dark:text-rose-400 disabled:opacity-50 cursor-pointer transition"
-                      title="Desinstalar feature com -r (definitivo)"
-                    >
-                      🗑️ Desinstalar (-r)
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                      <span>Info</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRunDiagnostic(`feature:install -r -u ${diagFeatureName.trim()}`, 'feat-install')}
                       disabled={!diagFeatureName.trim() || isDeploying || isDiagRunning !== null}
-                      className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-[11px] font-bold text-emerald-600 dark:text-emerald-400 disabled:opacity-50 cursor-pointer transition"
-                      title="Instalar / atualizar feature"
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-md text-[11px] font-medium text-foreground disabled:opacity-40 cursor-pointer transition flex items-center gap-1"
+                      title="Instalar / atualizar feature (-r -u)"
                     >
-                      ⚡ Instalar
+                      <Download className="w-3 h-3 text-emerald-500" />
+                      <span>Instalar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRunDiagnostic(`feature:uninstall -r ${diagFeatureName.trim()}`, 'feat-uninstall')}
+                      disabled={!diagFeatureName.trim() || isDeploying || isDiagRunning !== null}
+                      className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-md text-[11px] font-medium text-rose-600 dark:text-rose-400 disabled:opacity-40 cursor-pointer transition flex items-center gap-1 ml-auto"
+                      title="Desinstalar feature com -r (definitivo)"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Desinstalar (-r)</span>
                     </button>
                   </div>
                 </div>
@@ -973,11 +994,11 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                     type="button"
                     onClick={() => handleRunDiagnostic('bundle:list -s', 'bundles-s')}
                     disabled={isDeploying || isDiagRunning !== null}
-                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                    className="flex-1 p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   >
-                    <Package className="w-4 h-4 text-primary shrink-0" />
+                    <Package className="w-3.5 h-3.5 text-primary shrink-0" />
                     <div className="truncate">
-                      <span className="font-bold block truncate">Listar Bundles</span>
+                      <span className="font-semibold block truncate">Listar Bundles</span>
                       <span className="text-[10px] text-muted-foreground font-mono">bundle:list -s</span>
                     </div>
                   </button>
@@ -986,91 +1007,105 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                     type="button"
                     onClick={() => handleRunDiagnostic('bundle:diag', 'bundles-diag')}
                     disabled={isDeploying || isDiagRunning !== null}
-                    className="flex-1 p-2 bg-card hover:bg-muted border border-border rounded-xl text-left transition-all text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
+                    className="flex-1 p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer"
                   >
-                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <div className="truncate">
-                      <span className="font-bold block truncate">Diag Falhas</span>
+                      <span className="font-semibold block truncate">Diag Falhas</span>
                       <span className="text-[10px] text-muted-foreground font-mono">bundle:diag</span>
                     </div>
                   </button>
                 </div>
 
                 {/* Ação pontual por ID do Bundle */}
-                <div className="p-2.5 bg-muted/30 border border-border rounded-xl space-y-2 text-xs">
-                  <div className="text-[11px] font-bold text-foreground">Ação por ID do Bundle:</div>
+                <div className="p-2.5 bg-muted/20 border border-border/70 rounded-lg space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <span>Bundle ID</span>
+                    <span className="font-mono text-[10px] text-muted-foreground/70">bundle:cmd</span>
+                  </div>
                   <input
                     type="text"
                     value={diagBundleId}
                     onChange={(e) => setDiagBundleId(e.target.value.replace(/\D/g, ''))}
                     placeholder="Ex: 185"
-                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-none focus:border-primary transition"
                   />
                   <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                     <button
                       type="button"
                       onClick={() => handleRunDiagnostic(`bundle:diag ${diagBundleId.trim()}`, 'b-diag')}
                       disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
-                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-50 cursor-pointer transition"
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-md text-[11px] font-medium text-foreground disabled:opacity-40 cursor-pointer transition flex items-center gap-1"
                       title="Diagnosticar falha de resolução do bundle"
                     >
-                      🩺 Diag
+                      <AlertTriangle className="w-3 h-3 text-amber-500" />
+                      <span>Diag</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRunDiagnostic(`bundle:headers ${diagBundleId.trim()}`, 'b-headers')}
                       disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
-                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-50 cursor-pointer transition"
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-md text-[11px] font-medium text-foreground disabled:opacity-40 cursor-pointer transition flex items-center gap-1"
                       title="Ver headers e Manifest do bundle"
                     >
-                      📋 Headers
+                      <FileText className="w-3 h-3 text-muted-foreground" />
+                      <span>Headers</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRunDiagnostic(`bundle:restart ${diagBundleId.trim()}`, 'b-restart')}
                       disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
-                      className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg text-[11px] font-bold text-amber-600 dark:text-amber-400 disabled:opacity-50 cursor-pointer transition"
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-md text-[11px] font-medium text-foreground disabled:opacity-40 cursor-pointer transition flex items-center gap-1"
                       title="Reiniciar bundle"
                     >
-                      🔄 Restart
+                      <RotateCw className="w-3 h-3 text-muted-foreground" />
+                      <span>Restart</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRunDiagnostic(`bundle:uninstall ${diagBundleId.trim()}`, 'b-uninstall')}
                       disabled={!diagBundleId.trim() || isDeploying || isDiagRunning !== null}
-                      className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-lg text-[11px] font-bold text-rose-600 dark:text-rose-400 disabled:opacity-50 cursor-pointer transition"
+                      className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-md text-[11px] font-medium text-rose-600 dark:text-rose-400 disabled:opacity-40 cursor-pointer transition flex items-center gap-1 ml-auto"
                       title="Desinstalar bundle da memória"
                     >
-                      🗑️ Desinstalar
+                      <Trash2 className="w-3 h-3" />
+                      <span>Desinstalar</span>
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Inserir Comando e Mandar */}
-            <div className="pt-2 border-t border-border space-y-1.5">
-              <div className="text-[11px] font-bold text-foreground flex items-center justify-between">
-                <span>Comando Personalizado:</span>
-                <span className="text-[10px] text-muted-foreground font-normal">Pressione Enter para enviar</span>
+            {/* Prompt de Comando Karaf (CLI Input) */}
+            <div className="pt-2.5 border-t border-border/70 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <Terminal className="w-3 h-3 text-primary" /> Prompt Karaf
+                </span>
+                <span className="text-[10px] text-muted-foreground font-mono">Histórico: ↑ / ↓</span>
               </div>
               <form onSubmit={handleCustomCommandSubmit} className="flex gap-1.5">
-                <input
-                  type="text"
-                  value={customCommand}
-                  onChange={(e) => setCustomCommand(e.target.value)}
-                  onKeyDown={handleCustomCommandKeyDown}
-                  placeholder="Ex: feature:uninstall -r winthor-integracao-varejo/1.0"
-                  className="flex-1 px-2.5 py-1.5 bg-background border border-border rounded-xl text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
-                />
+                <div className="relative flex-1">
+                  <span className="absolute left-2.5 top-2 text-[11px] font-mono text-muted-foreground/70 pointer-events-none select-none">
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    value={customCommand}
+                    onChange={(e) => setCustomCommand(e.target.value)}
+                    onKeyDown={handleCustomCommandKeyDown}
+                    placeholder="feature:uninstall -r winthor-integracao-varejo/versao"
+                    className="w-full pl-6 pr-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-none focus:border-primary transition"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={!customCommand.trim() || isDeploying || isDiagRunning !== null}
-                  className="px-3 py-1.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:bg-primary/90 disabled:opacity-50 cursor-pointer transition flex items-center gap-1 shrink-0"
-                  title="Executar comando no shell Karaf"
+                  className="px-3 py-1.5 bg-primary text-primary-foreground font-semibold rounded-md text-xs hover:bg-primary/90 disabled:opacity-40 cursor-pointer transition flex items-center gap-1.5 shrink-0"
+                  title="Executar comando no shell Karaf (Enter)"
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Enviar</span>
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>Executar</span>
                 </button>
               </form>
             </div>
@@ -1119,6 +1154,12 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         isOpen={isBundlesModalOpen}
         onClose={() => setIsBundlesModalOpen(false)}
         projects={projects}
+      />
+
+      {/* Modal Catálogo Oficial WinThor - Rotina 801 */}
+      <Routine801CatalogModal
+        isOpen={isRoutine801ModalOpen}
+        onClose={() => setIsRoutine801ModalOpen(false)}
       />
 
       {/* Modal Histórico de Execuções de Deploy */}

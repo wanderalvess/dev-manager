@@ -506,6 +506,24 @@ client.bat "feature:install -r custom-feature/2.0.0"
         Object.defineProperty(process, 'platform', { value: originalPlatform });
       }
     });
+
+    it('anexa automaticamente o agente OpenTelemetry em JAVA_TOOL_OPTIONS se encontrado no karafPath', () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      const agentPath = path.join(binDir, 'opentelemetry-javaagent.jar');
+      fs.writeFileSync(agentPath, 'mock-agent');
+
+      vi.spyOn(configService, 'getSettings').mockReturnValue({
+        ...configService.getSettings(),
+        karafPath: tmpDir
+      });
+
+      const env = karafService.getResolvedJavaEnv();
+      expect(env.JAVA_TOOL_OPTIONS).toContain('-javaagent:');
+      expect(env.JAVA_TOOL_OPTIONS).toContain('opentelemetry-javaagent.jar');
+      expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.exporter.otlp.protocol=http/protobuf');
+      expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.service.name=karaf-winthor');
+    });
   });
 
   describe('executeKarafCommand', () => {

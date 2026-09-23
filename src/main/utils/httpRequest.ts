@@ -17,7 +17,7 @@ export interface SimpleHttpResponse {
  */
 export async function httpRequest(
   urlStr: string,
-  options: { method: string; headers: Record<string, string>; body?: string }
+  options: { method: string; headers: Record<string, string>; body?: string; timeout?: number }
 ): Promise<SimpleHttpResponse> {
   return new Promise((resolve, reject) => {
     try {
@@ -53,6 +53,12 @@ export async function httpRequest(
       req.on('error', (err) => {
         reject(err);
       });
+
+      if (options.timeout && options.timeout > 0) {
+        req.setTimeout(options.timeout, () => {
+          req.destroy(new Error(`Timeout de requisição HTTP excedido (${options.timeout}ms)`));
+        });
+      }
 
       if (options.body) {
         req.write(options.body);

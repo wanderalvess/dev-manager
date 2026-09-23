@@ -323,6 +323,8 @@ export interface AppSettings {
   winthorStartPort?: number;
   /** URL do portal Winthor Anywhere (WTA) para obtenção de parâmetros de lançamento (padrão: http://localhost:8889) */
   wtaUrl?: string;
+  /** URL da API da Rotina 801 (ferramenta-servidor) no Karaf (padrão: http://localhost:8889 ou a wtaUrl configurada) */
+  routine801Url?: string;
   /** Usuário para login automático no WTA (ex: PCADMIN) */
   wtaLogin?: string;
   /** Senha ou hash MD5 da senha do usuário no WTA */
@@ -1313,6 +1315,79 @@ export interface BundleSnapshotDiff {
 }
 
 // ==========================================
+// Rotina 801 - Atualização e Instalação de Serviços Web (Ferramenta Servidor)
+// ==========================================
+
+export type Routine801Status =
+  | 'LIBERADO'
+  | 'HOMOLOGACAO'
+  | 'BLOQUEADO'
+  | 'APROVADO'
+  | 'AGUARDANDO_HOMOLOGACAO'
+  | 'NENHUM';
+
+export type Routine801ProjectType = 'SERVICO' | 'ROTINA';
+
+export type Routine801Command = 'INSTALL' | 'UPDATE' | 'REPLACE' | 'UNINSTALL';
+
+export interface Routine801Repository {
+  groupId: string;
+  artifactId: string;
+  version: string;
+  featureMavenUrl?: string;
+}
+
+export interface Routine801RepositoryUpdate {
+  comando: string;
+  repositorio: Routine801Repository;
+}
+
+export interface Routine801Dependency {
+  featureName?: string;
+  version?: string;
+  type?: string;
+}
+
+export interface Routine801Feature {
+  nome: string;
+  versao: string;
+  versaoAnterior?: string;
+  comando?: Routine801Command | string;
+  codigoRotina: number;
+  codigoModulo: number;
+  tipoProjeto: Routine801ProjectType | string;
+  descricao: string;
+  status: Routine801Status | string;
+  dependencias?: Routine801Dependency[];
+  featureMavenUrl?: string;
+}
+
+export interface Routine801CatalogResponse {
+  repositorios: Routine801RepositoryUpdate[];
+  funcionalidades: Routine801Feature[];
+}
+
+export interface Routine801InstallRequest {
+  funcionalidades: Routine801Feature[];
+  executeVia?: 'karaf_cli' | 'api';
+  serverUrl?: string;
+  credentials?: { user?: string; pass?: string; port?: number };
+}
+
+export interface Routine801InstallResult {
+  success: boolean;
+  output: string;
+  installedCount: number;
+  failedCount: number;
+  details?: {
+    featureName: string;
+    version: string;
+    success: boolean;
+    error?: string;
+  }[];
+}
+
+// ==========================================
 // Git Commits & Branching
 // ==========================================
 
@@ -1364,6 +1439,159 @@ export interface HttpHealthResult {
   timeMs: number;
   responseTimeMs?: number;
   error?: string;
+}
+
+// ==========================================
+// APM & Traces OpenTelemetry (OTel / SigNoz)
+// ==========================================
+
+export type TraceSpanKind = 'SERVER' | 'CLIENT' | 'INTERNAL' | 'PRODUCER' | 'CONSUMER' | 'UNSPECIFIED';
+
+export type TraceStatusCode = 'OK' | 'ERROR' | 'UNSET';
+
+export interface TraceSpanEvent {
+  name: string;
+  timestampUnixMs: number;
+  attributes?: Record<string, any>;
+}
+
+export interface TraceSpan {
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  name: string;
+  kind: TraceSpanKind;
+  serviceName: string;
+  startTimeUnixMs: number;
+  endTimeUnixMs: number;
+  durationMs: number;
+  statusCode: TraceStatusCode;
+  statusMessage?: string;
+  // Atributos semânticos HTTP
+  httpMethod?: string;
+  httpUrl?: string;
+  httpRoute?: string;
+  httpStatusCode?: number;
+  // Atributos de banco (Oracle, Postgres, MySQL)
+  dbSystem?: string;
+  dbStatement?: string;
+  dbName?: string;
+  // Atributos genéricos / tags
+  attributes: Record<string, any>;
+  events?: TraceSpanEvent[];
+}
+
+export interface TraceSpanTreeNode {
+  span: TraceSpan;
+  children: TraceSpanTreeNode[];
+  depth: number;
+  offsetPercent: number;
+  widthPercent: number;
+}
+
+export interface TraceSummary {
+  traceId: string;
+  rootSpanName: string;
+  serviceName: string;
+  httpMethod?: string;
+  httpRoute?: string;
+  httpStatusCode?: number;
+  startTimeUnixMs: number;
+  durationMs: number;
+  spanCount: number;
+  hasError: boolean;
+  errorCount: number;
+  hasDatabaseQuery: boolean;
+}
+
+export interface TraceDetails {
+  summary: TraceSummary;
+  spans: TraceSpan[];
+  rootTree: TraceSpanTreeNode[];
+}
+
+export interface ServiceMetricsSummary {
+  serviceName: string;
+  requestCount: number;
+  errorCount: number;
+  errorRate: number; // percentual de 0 a 100
+  avgDurationMs: number;
+  p50DurationMs: number;
+  p95DurationMs: number;
+  p99DurationMs: number;
+  lastSeenAt: number;
+}
+
+export interface EndpointMetricsSummary {
+  serviceName: string;
+  method: string;
+  route: string;
+  requestCount: number;
+  errorCount: number;
+  errorRate: number;
+  avgDurationMs: number;
+  p95DurationMs: number;
+}
+
+export interface ApmFilter {
+  serviceName?: string;
+  search?: string;
+  hasError?: boolean;
+  hasDatabaseQuery?: boolean;
+  minDurationMs?: number;
+  maxDurationMs?: number;
+  limit?: number;
+  startTimeMs?: number;
+  endTimeMs?: number;
+}
+
+export interface ApmReceiverStatus {
+  listening: boolean;
+  port: number;
+  error?: string;
+  totalIngestedSpans: number;
+  totalIngestedTraces: number;
+  bufferSize: number;
+  maxBufferSize: number;
+}
+
+export interface SlowQueryMetricsSummary {
+  statement: string;
+  dbSystem?: string;
+  dbName?: string;
+  executionCount: number;
+  totalDurationMs: number;
+  avgDurationMs: number;
+  maxDurationMs: number;
+  sampleTraceId: string;
+}
+
+export interface ApmTimeSeriesBucket {
+  timestampUnixMs: number;
+  label: string; // Ex: "16:20"
+  requestCount: number;
+  successCount: number;
+  clientErrorCount: number; // 4xx
+  serverErrorCount: number; // 5xx
+  avgDurationMs: number;
+  p95DurationMs: number;
+}
+
+export interface ObservabilityOverview {
+  totalTraces: number;
+  totalSpans: number;
+  requestsPerSecond: number;
+  errorRate: number;
+  avgLatencyMs: number;
+  p50LatencyMs: number;
+  p95LatencyMs: number;
+  p99LatencyMs: number;
+  services: ServiceMetricsSummary[];
+  topEndpoints: EndpointMetricsSummary[];
+  slowQueries: SlowQueryMetricsSummary[];
+  timeSeries: ApmTimeSeriesBucket[];
+  dbTimePercentage: number;
+  receiverStatus: ApmReceiverStatus;
 }
 
 // ==========================================

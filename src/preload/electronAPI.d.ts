@@ -49,6 +49,9 @@ import type {
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
+  Routine801CatalogResponse,
+  Routine801InstallRequest,
+  Routine801InstallResult,
   GitCommitInfo,
   GitFileStatus,
   GitDiffResult,
@@ -74,7 +77,13 @@ import type {
   LlmChatResponse,
   LlmTestResult,
   LlmRagQueryRequest,
-  LlmRagQueryResponse
+  LlmRagQueryResponse,
+  TraceSummary,
+  TraceDetails,
+  ApmFilter,
+  ApmReceiverStatus,
+  ObservabilityOverview,
+  ServiceMetricsSummary
 } from '../shared/types';
 
 export interface ElectronAPI {
@@ -195,6 +204,12 @@ export interface ElectronAPI {
     version?: string,
     credentials?: { user?: string; pass?: string; port?: number }
   ) => Promise<{ success: boolean; output: string }>;
+
+  // Rotina 801 - Atualização e Instalação de Serviços Web Oficiais
+  routine801GetInstallations: (customUrl?: string) => Promise<Routine801CatalogResponse>;
+  routine801GetUpdates: (customUrl?: string) => Promise<Routine801CatalogResponse>;
+  routine801CheckServer: (customUrl?: string) => Promise<{ ok: boolean; status: number; message: string; url: string }>;
+  routine801InstallFeatures: (request: Routine801InstallRequest) => Promise<Routine801InstallResult>;
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (profile: DeployProfile) => Promise<{ success: boolean; error?: string }>;
@@ -386,6 +401,16 @@ export interface ElectronAPI {
   downloadUpdate?: () => Promise<void>;
   installUpdate?: () => Promise<void>;
   onUpdateStatus?: (callback: (status: UpdateStatus) => void) => () => void;
+
+  // APM & Observabilidade (OpenTelemetry / SigNoz)
+  getApmOverview: (filter?: ApmFilter) => Promise<ObservabilityOverview>;
+  getApmTraces: (filter?: ApmFilter) => Promise<TraceSummary[]>;
+  getApmTraceDetails: (traceId: string) => Promise<TraceDetails | null>;
+  getApmServices: () => Promise<ServiceMetricsSummary[]>;
+  getApmReceiverStatus: () => Promise<ApmReceiverStatus>;
+  clearApmTraces: () => Promise<{ success: boolean }>;
+  generateApmDemo: () => Promise<{ generatedSpans: number; generatedTraces: number }>;
+  onApmNewTrace: (callback: (trace: TraceSummary) => void) => () => void;
 }
 
 declare global {

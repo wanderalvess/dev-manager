@@ -51,6 +51,7 @@ import type {
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
+  Routine801InstallRequest,
   TableColumnInfo,
   DockerContainerStats,
   ComposeServiceStatus,
@@ -67,7 +68,13 @@ import type {
   LlmChatResponse,
   LlmTestResult,
   LlmRagQueryRequest,
-  LlmRagQueryResponse
+  LlmRagQueryResponse,
+  TraceSummary,
+  TraceDetails,
+  ApmFilter,
+  ApmReceiverStatus,
+  ObservabilityOverview,
+  ServiceMetricsSummary
 } from '../shared/types';
 
 const electronAPI = {
@@ -228,6 +235,16 @@ const electronAPI = {
     ipcRenderer.on('karaf:log-chunk', subscription);
     return () => ipcRenderer.removeListener('karaf:log-chunk', subscription);
   },
+
+  // Rotina 801 - Atualização e Instalação de Serviços Web Oficiais
+  routine801GetInstallations: (customUrl?: string) =>
+    ipcRenderer.invoke('routine801:get-installations', customUrl),
+  routine801GetUpdates: (customUrl?: string) =>
+    ipcRenderer.invoke('routine801:get-updates', customUrl),
+  routine801CheckServer: (customUrl?: string) =>
+    ipcRenderer.invoke('routine801:check-server', customUrl),
+  routine801InstallFeatures: (request: Routine801InstallRequest) =>
+    ipcRenderer.invoke('routine801:install-features', request),
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (profile: DeployProfile): Promise<{ success: boolean; error?: string }> =>
@@ -534,6 +551,27 @@ const electronAPI = {
     const subscription = (_: any, status: UpdateStatus) => callback(status);
     ipcRenderer.on('update:status', subscription);
     return () => ipcRenderer.removeListener('update:status', subscription);
+  },
+
+  // APM & Observabilidade (OpenTelemetry / SigNoz)
+  getApmOverview: (filter?: ApmFilter): Promise<ObservabilityOverview> =>
+    ipcRenderer.invoke('apm:get-overview', filter),
+  getApmTraces: (filter?: ApmFilter): Promise<TraceSummary[]> =>
+    ipcRenderer.invoke('apm:get-traces', filter),
+  getApmTraceDetails: (traceId: string): Promise<TraceDetails | null> =>
+    ipcRenderer.invoke('apm:get-trace-details', traceId),
+  getApmServices: (): Promise<ServiceMetricsSummary[]> =>
+    ipcRenderer.invoke('apm:get-services'),
+  getApmReceiverStatus: (): Promise<ApmReceiverStatus> =>
+    ipcRenderer.invoke('apm:get-receiver-status'),
+  clearApmTraces: (): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('apm:clear'),
+  generateApmDemo: (): Promise<{ generatedSpans: number; generatedTraces: number }> =>
+    ipcRenderer.invoke('apm:generate-demo'),
+  onApmNewTrace: (callback: (trace: TraceSummary) => void) => {
+    const subscription = (_: any, trace: TraceSummary) => callback(trace);
+    ipcRenderer.on('apm:new-trace', subscription);
+    return () => ipcRenderer.removeListener('apm:new-trace', subscription);
   }
 };
 

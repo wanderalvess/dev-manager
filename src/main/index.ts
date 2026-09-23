@@ -18,6 +18,8 @@ import { LogWatcherService } from './services/LogWatcherService';
 import { KarafLogPersistenceService } from './services/KarafLogPersistenceService';
 import { AutoUpdateService } from './services/AutoUpdateService';
 import { LlmService } from './services/LlmService';
+import { Routine801Service } from './services/Routine801Service';
+import { ApmService } from './services/ApmService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 import { notifyUser } from './services/NotificationService';
 
@@ -123,6 +125,14 @@ function createWindow() {
     mainWindow?.webContents.send('update:status', status);
   });
   const llmService = new LlmService(configService, docsIndexService);
+  const routine801Service = new Routine801Service(configService, karafService);
+  const apmService = new ApmService();
+  apmService.onNewTrace = (summary) => {
+    mainWindow?.webContents.send('apm:new-trace', summary);
+  };
+  apmService.startReceiver(4318).catch((err) => {
+    console.warn('[ApmService] Falha ao iniciar receptor OTLP no boot:', err);
+  });
 
   registerIpcHandlers(
     mainWindow,
@@ -141,7 +151,9 @@ function createWindow() {
     logWatcherService,
     karafLogPersistenceService,
     autoUpdateService,
-    llmService
+    llmService,
+    routine801Service,
+    apmService
   );
 
   backupSchedulerService.rescheduleAll();
