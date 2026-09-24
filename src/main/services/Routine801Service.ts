@@ -36,6 +36,67 @@ export class Routine801Service {
   }
 
   /**
+   * Monta headers de autenticação para o WTA (suporta cookie suukie e Bearer token JWT).
+   */
+  public getAuthHeaders(): Record<string, string> {
+    const settings = this.configService.getSettings();
+    const headers: Record<string, string> = {
+      Accept: 'application/json'
+    };
+
+    if (settings.wtaAuthToken) {
+      const rawToken = settings.wtaAuthToken.trim().replace(/^suukie=/, '');
+      headers['Cookie'] = `suukie=${rawToken}`;
+      headers['Authorization'] = `Bearer ${rawToken}`;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Tenta renovar a autenticação no WTA caso o token tenha expirado ou a requisição retorne 401/403.
+   */
+  public async renewWtaAuth(baseUrl: string): Promise<string | null> {
+    const settings = this.configService.getSettings();
+    const login = settings.wtaLogin?.trim();
+    const senha = settings.wtaPassword?.trim();
+
+    if (!login || !senha) return null;
+
+    try {
+      const loginUrl = `${baseUrl}/winthor/autenticacao/v1/login`;
+      const res = await httpRequest(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ login, senha }),
+        timeout: 5000
+      });
+
+      if (res.ok) {
+        let token: string | null = null;
+        try {
+          const data = JSON.parse(await res.text());
+          if (data && typeof data.accessToken === 'string') {
+            token = data.accessToken;
+          }
+        } catch {
+          // ignore
+        }
+        if (token) {
+          this.configService.saveSettings({ wtaAuthToken: token });
+          return token;
+        }
+      }
+    } catch {
+      // Ignora erro de renovação automática
+    }
+    return null;
+  }
+
+  /**
    * Checa se o serviço HTTP da ferramenta servidor está acessível na porta configurada.
    */
   public async checkServerHealth(
@@ -48,20 +109,52 @@ export class Routine801Service {
 
     const testUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/instalacao`;
     try {
-      const res = await httpRequest(testUrl, {
+      let res = await httpRequest(testUrl, {
         method: 'GET',
-        headers: { Accept: 'application/json' },
-        timeout: 4000
+        headers: this.getAuthHeaders(),
+        timeout: 5000
       });
 
-      // Status 200 = sucesso; status 401/403 = servidor Karaf/Shiro ativo mas exigindo auth
-      const isAlive = res.status < 500;
+      // Se retornou 401/403, tenta renovar token e tentar novamente
+      if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
+        res = await httpRequest(testUrl, {
+          method: 'GET',
+          headers: this.getAuthHeaders(),
+          timeout: 5000
+        });
+      }
+
+      if (res.ok) {
+        return {
+          ok: true,
+          status: res.status,
+          message: 'Serviço da Rotina 801 online e respondendo.',
+          url: baseUrl
+        };
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        return {
+          ok: false,
+          status: res.status,
+          message: `Servidor ativo em ${baseUrl}, mas recusou acesso (HTTP ${res.status}). Verifique o usuário e senha do WTA nas Configurações.`,
+          url: baseUrl
+        };
+      }
+
+      if (res.status === 404) {
+        return {
+          ok: false,
+          status: res.status,
+          message: `Servidor ativo em ${baseUrl}, mas endpoint da Rotina 801 não foi encontrado (HTTP 404). Verifique se o pacote ferramenta-servidor está ativo no Karaf.`,
+          url: baseUrl
+        };
+      }
+
       return {
-        ok: isAlive,
+        ok: false,
         status: res.status,
-        message: isAlive
-          ? 'Serviço da Rotina 801 online e respondendo.'
-          : `Servidor retornou erro HTTP ${res.status}: ${res.statusText}`,
+        message: `Servidor retornou erro HTTP ${res.status}: ${res.statusText}`,
         url: baseUrl
       };
     } catch (err: any) {
@@ -84,14 +177,19 @@ export class Routine801Service {
     }
 
     const targetUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/instalacao`;
-    const res = await httpRequest(targetUrl, {
+    let res = await httpRequest(targetUrl, {
       method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
+      headers: this.getAuthHeaders(),
+      timeout: 15000
     });
+
+    if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
+      res = await httpRequest(targetUrl, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        timeout: 15000
+      });
+    }
 
     if (!res.ok) {
       throw new Error(
@@ -120,14 +218,19 @@ export class Routine801Service {
     }
 
     const targetUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/atualizacao`;
-    const res = await httpRequest(targetUrl, {
+    let res = await httpRequest(targetUrl, {
       method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
+      headers: this.getAuthHeaders(),
+      timeout: 15000
     });
+
+    if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
+      res = await httpRequest(targetUrl, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+        timeout: 15000
+      });
+    }
 
     if (!res.ok) {
       throw new Error(
@@ -190,7 +293,8 @@ export class Routine801Service {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Accept: 'application/json'
+            Accept: 'application/json',
+            ...this.getAuthHeaders()
           },
           body: JSON.stringify(funcionalidades),
           timeout: 60000

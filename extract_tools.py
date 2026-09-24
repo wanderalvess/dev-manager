@@ -16,10 +16,10 @@ tools = []
 #   async (args) => { ... }
 # )
 
-pattern = re.compile(r"server\.tool\(\s*['\"]([^'\"]+)['\"],\s*['\"]([^'\"]+)['\"]", re.MULTILINE)
+pattern = re.compile(r"server\.registerTool\(\s*['\"]([^'\"]+)['\"].*?description:\s*['\"]([^'\"]+)['\"]", re.DOTALL)
 matches = pattern.findall(content)
 
-with open(r'c:\Users\wanderson.alves\projetosTOTVS\winthor-dev-manager\docs\MCP_TOOLS.md', 'w', encoding='utf-8') as out:
+with open(r'c:\Users\wanderson.alves\projetosTOTVS\winthor-dev-manager\docs\MCP_TOOLS_GENERATED.md', 'w', encoding='utf-8') as out:
     out.write("# Ferramentas MCP (Model Context Protocol)\n\n")
     out.write("Esta documentação lista todas as ferramentas (tools) disponibilizadas pelo servidor MCP embutido no DevManager.\n\n")
     out.write(f"Total de ferramentas: {len(matches)}\n\n")

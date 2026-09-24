@@ -144,14 +144,18 @@ export function registerIpcHandlers(
 
   ipcMain.handle('system:get-mcp-docs', async () => {
     try {
-      const docsPath = path.join(process.cwd(), 'docs', 'MCP_TOOLS.md');
-      if (fs.existsSync(docsPath)) {
-        return fs.readFileSync(docsPath, 'utf-8');
-      }
-      // fallback in case cwd is different in packaged app
-      const fallbackPath = path.join(app.getAppPath(), 'docs', 'MCP_TOOLS.md');
-      if (fs.existsSync(fallbackPath)) {
-        return fs.readFileSync(fallbackPath, 'utf-8');
+      const candidates = [
+        path.join(app.getAppPath(), 'docs', 'MCP_TOOLS.md'),
+        path.join(process.cwd(), 'docs', 'MCP_TOOLS.md'),
+        path.join(process.resourcesPath, 'docs', 'MCP_TOOLS.md'),
+        path.join(process.resourcesPath, 'app.asar.unpacked', 'docs', 'MCP_TOOLS.md'),
+        path.join(__dirname, '../../docs/MCP_TOOLS.md'),
+        path.join(__dirname, '../../../docs/MCP_TOOLS.md')
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          return fs.readFileSync(p, 'utf-8');
+        }
       }
       return '# Documentação não encontrada\nNão foi possível localizar o arquivo MCP_TOOLS.md.';
     } catch (err: any) {
@@ -185,9 +189,19 @@ export function registerIpcHandlers(
 
   ipcMain.handle('system:get-changelog', async (): Promise<string | null> => {
     try {
-      const changelogPath = path.join(app.getAppPath(), 'CHANGELOG.md');
-      if (!fs.existsSync(changelogPath)) return null;
-      return fs.readFileSync(changelogPath, 'utf-8');
+      const candidates = [
+        path.join(app.getAppPath(), 'CHANGELOG.md'),
+        path.join(process.cwd(), 'CHANGELOG.md'),
+        path.join(process.resourcesPath, 'CHANGELOG.md'),
+        path.join(__dirname, '../../CHANGELOG.md'),
+        path.join(__dirname, '../../../CHANGELOG.md')
+      ];
+      for (const p of candidates) {
+        if (fs.existsSync(p)) {
+          return fs.readFileSync(p, 'utf-8');
+        }
+      }
+      return null;
     } catch {
       return null;
     }
@@ -613,8 +627,12 @@ export function registerIpcHandlers(
     return routinesService.listRoutines();
   });
 
-  ipcMain.handle('routines:launch', async (_, fullPath: string) => {
-    return routinesService.launchRoutine(fullPath);
+  ipcMain.handle('routines:launch', async (_, fullPath: string, forceDirect?: boolean) => {
+    return routinesService.launchRoutine(fullPath, forceDirect);
+  });
+
+  ipcMain.handle('routines:check-karaf-status', async () => {
+    return routinesService.checkKarafWtaStatus();
   });
 
   ipcMain.handle('routines:launch-mapped', async (_, id: string) => {

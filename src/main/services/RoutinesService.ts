@@ -2,9 +2,14 @@ import { spawn } from 'child_process';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
-import { RoutineItem } from '../../shared/types';
+import { RoutineItem, RoutineLaunchResult, KarafWtaStatusResult } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { isSafePath } from '../utils/security';
+import {
+  isConnectionRefusedError,
+  buildWinthorStartPayload,
+  shouldUseWinthorStart
+} from '../utils/routineLaunchUtils';
 
 const DEFAULT_ROUTINE_EXTENSIONS = ['.EXE'];
 
@@ -102,24 +107,58 @@ export class RoutinesService {
   }
 
   /**
+   * Checa se o Apache Karaf / WTA está online e respondendo na porta configurada (padrão 8889).
+   */
+  public async checkKarafWtaStatus(): Promise<KarafWtaStatusResult> {
+    const settings = this.configService.getSettings();
+    const wtaUrl = (settings.wtaUrl || 'http://localhost:8889').trim();
+
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${wtaUrl.replace(/\/+$/, '')}/winthor/autenticacao/v1/login`, {
+        method: 'OPTIONS',
+        signal: controller.signal
+      }).catch(async (optionsErr) => {
+        if (isConnectionRefusedError(optionsErr)) {
+          throw optionsErr;
+        }
+        return await fetch(wtaUrl, { signal: controller.signal });
+      });
+      clearTimeout(timer);
+
+      const isAlive = Boolean(res && res.status > 0);
+      return {
+        online: isAlive,
+        wtaUrl,
+        message: isAlive
+          ? `Apache Karaf / WTA online em ${wtaUrl}.`
+          : `Servidor em ${wtaUrl} não respondeu.`
+      };
+    } catch {
+      return {
+        online: false,
+        wtaUrl,
+        message: `Apache Karaf / WTA inacessível em ${wtaUrl}. O servidor não está em execução.`
+      };
+    }
+  }
+
+  /**
    * Tenta disparar a rotina através do serviço Winthor Start (DataSnap REST na porta 9195).
    */
-  public async launchViaWinthorStart(routineCode: string): Promise<boolean> {
+  public async launchViaWinthorStart(routineCode: string): Promise<RoutineLaunchResult> {
     let settings = this.configService.getSettings();
     const port = settings.winthorStartPort || 9195;
-    const wtaUrl = settings.wtaUrl || 'http://localhost:8889';
+    const wtaUrl = (settings.wtaUrl || 'http://localhost:8889').trim();
+
+    let isKarafUnreachable = false;
+    let isAuthRejected = false;
+    let rawWtaParams: Record<string, string> | undefined;
 
     try {
       // 1. Tentar obter parâmetros de launch autenticados do WTA (se disponível)
-      let payload: Record<string, string> = {
-        m: '',
-        u: '',
-        p: '',
-        t: '',
-        s: ''
-      };
-
-      const fetchParamsFromWta = async (token?: string): Promise<boolean> => {
+      const fetchParamsFromWta = async (token?: string): Promise<{ ok: boolean; status?: number; error?: string }> => {
         try {
           const fetchUrl = `${wtaUrl.replace(/\/+$/, '')}/winthor/ferramenta/acesso/v1/rotina/launch/parametros?rotina=${routineCode}`;
           const headers: Record<string, string> = {
@@ -140,60 +179,92 @@ export class RoutinesService {
           });
 
           if (res.ok) {
-            const data = await res.json();
-            if (data && typeof data === 'object' && data.m && data.u) {
-              payload = {
+            const data = await res.json().catch(() => null);
+            if (data && typeof data === 'object') {
+              rawWtaParams = {
                 m: data.m || '',
                 u: data.u || '',
                 p: data.p || '',
                 t: data.t || '',
                 s: data.s || ''
               };
-              return true;
+              return { ok: true, status: res.status };
             }
           }
-        } catch {
-          // Ignora para tentar login automático
+
+          if (res.status === 401 || res.status === 403) {
+            isAuthRejected = true;
+            return { ok: false, status: res.status, error: `HTTP ${res.status}` };
+          }
+
+          return { ok: false, status: res.status, error: `HTTP ${res.status} ${res.statusText}` };
+        } catch (err: any) {
+          if (isConnectionRefusedError(err)) {
+            isKarafUnreachable = true;
+          }
+          return { ok: false, error: err?.message || 'Falha de conexão com o WTA' };
         }
-        return false;
       };
 
-      let gotParams = await fetchParamsFromWta();
+      let fetchRes = await fetchParamsFromWta();
 
-      // Se falhou e temos credenciais configuradas, tenta renovar a sessão via login
-      if (!gotParams && settings.wtaLogin && settings.wtaPassword) {
+      // Se falhou e temos credenciais configuradas e o servidor não está inacessível, tenta renovar via login
+      if (!fetchRes.ok && !isKarafUnreachable && settings.wtaLogin && settings.wtaPassword) {
         const freshToken = await this.loginWta();
         if (freshToken) {
           settings = this.configService.getSettings();
-          gotParams = await fetchParamsFromWta(freshToken);
+          fetchRes = await fetchParamsFromWta(freshToken);
         }
       }
 
-      // Se o WTA não retornou os parâmetros obrigatórios, utiliza o payload de sessão padrão pré-configurado
-      const hasWtaParams = Boolean(payload.m && payload.u && payload.p && payload.t && payload.s);
-      if (!hasWtaParams && settings.winthorStartDefaultPayload) {
-        try {
-          const parsed = JSON.parse(settings.winthorStartDefaultPayload);
-          if (parsed && typeof parsed === 'object') {
-            payload = {
-              m: parsed.m || payload.m,
-              u: parsed.u || payload.u,
-              p: parsed.p || payload.p,
-              t: parsed.t || payload.t,
-              s: parsed.s || payload.s
-            };
-            console.log(`[RoutinesService] Utilizando payload de sessão pré-configurado para a rotina ${routineCode}.`);
-          }
-        } catch (parseErr) {
-          console.warn(`[RoutinesService] Erro ao interpretar winthorStartDefaultPayload como JSON:`, parseErr);
-        }
+      // Monta o payload validando parâmetros necessários para a sessão WinThor
+      const { payload, hasValidParams, fromDefault } = buildWinthorStartPayload(
+        rawWtaParams,
+        settings.winthorStartDefaultPayload
+      );
+
+      // Se não conseguimos parâmetros válidos e o Karaf está inacessível:
+      if (!hasValidParams && isKarafUnreachable) {
+        console.warn(`[RoutinesService] Falha ao disparar rotina ${routineCode}: Apache Karaf / WTA (${wtaUrl}) não está em execução.`);
+        return {
+          success: false,
+          karafOffline: true,
+          error: 'KARAF_OFFLINE',
+          message: `O Apache Karaf (WTA) não está em execução em ${wtaUrl}. O WinThor Start precisa do Karaf ativo na porta 8889 para autenticar a sessão do usuário. Inicie o Karaf antes de executar a rotina.`
+        };
+      }
+
+      // Se não conseguimos parâmetros válidos e houve rejeição de autenticação:
+      if (!hasValidParams && isAuthRejected) {
+        console.warn(`[RoutinesService] Falha de autenticação no WTA (${wtaUrl}) para a rotina ${routineCode}.`);
+        return {
+          success: false,
+          authFailed: true,
+          error: 'AUTH_FAILED',
+          message: `Falha de autenticação no WinThor Anywhere (${wtaUrl}). Verifique se o usuário e senha do WTA nas Configurações estão corretos.`
+        };
+      }
+
+      // Se ainda não temos parâmetros válidos:
+      if (!hasValidParams) {
+        console.warn(`[RoutinesService] Parâmetros de sessão incompletos para a rotina ${routineCode}.`);
+        return {
+          success: false,
+          authFailed: true,
+          error: 'SESSION_PARAMS_MISSING',
+          message: `Não foi possível obter os parâmetros de autenticação da rotina ${routineCode} junto ao WTA (${wtaUrl}). Verifique se o Karaf e o serviço WTA estão ativos.`
+        };
+      }
+
+      if (fromDefault) {
+        console.log(`[RoutinesService] Utilizando payload de sessão pré-configurado para a rotina ${routineCode}.`);
       }
 
       // 2. Disparar Winthor Start via DataSnap REST
       console.log(`[RoutinesService] Enviando POST para Winthor Start: http://localhost:${port}/datasnap/rest/TServicos/AbrirRotina/${routineCode}`);
       console.log(`[RoutinesService] Payload:`, JSON.stringify(payload));
 
-      return await new Promise<boolean>((resolve) => {
+      return await new Promise<RoutineLaunchResult>((resolve) => {
         const postData = JSON.stringify(payload);
         const req = http.request(
           {
@@ -218,16 +289,28 @@ export class RoutinesService {
                 try {
                   const bodyJson = JSON.parse(resBody);
                   if (bodyJson && bodyJson.status === 'ERRO') {
-                    console.warn(`[RoutinesService] Winthor Start retornou erro funcional: ${bodyJson.msg}`);
-                    resolve(false);
+                    const errMsg = bodyJson.msg || 'Erro funcional retornado pelo WinThor Start';
+                    console.warn(`[RoutinesService] Winthor Start retornou erro funcional: ${errMsg}`);
+                    resolve({
+                      success: false,
+                      error: 'WINTHOR_START_ERROR',
+                      message: `O WinThor Start recusou a inicialização da rotina ${routineCode}: ${errMsg}`
+                    });
                     return;
                   }
                 } catch {
                   // Se não for JSON, considera sucesso pelo status HTTP
                 }
-                resolve(true);
+                resolve({
+                  success: true,
+                  message: `Rotina ${routineCode} iniciada com sucesso via WinThor Start.`
+                });
               } else {
-                resolve(false);
+                resolve({
+                  success: false,
+                  error: 'WINTHOR_START_HTTP_ERROR',
+                  message: `WinThor Start retornou HTTP ${res.statusCode} ao tentar abrir a rotina ${routineCode}.`
+                });
               }
             });
           }
@@ -235,21 +318,35 @@ export class RoutinesService {
 
         req.on('error', (err) => {
           console.warn(`[RoutinesService] Erro de conexão com Winthor Start: ${err.message}`);
-          resolve(false);
+          resolve({
+            success: false,
+            winthorStartOffline: true,
+            error: 'WINTHOR_START_OFFLINE',
+            message: `O serviço WinThor Start não está em execução na porta ${port} (${err.message}).`
+          });
         });
 
         req.on('timeout', () => {
           console.warn(`[RoutinesService] Timeout ao aguardar resposta do Winthor Start.`);
           req.destroy();
-          resolve(false);
+          resolve({
+            success: false,
+            winthorStartOffline: true,
+            error: 'WINTHOR_START_TIMEOUT',
+            message: `Tempo limite esgotado ao aguardar resposta do serviço WinThor Start na porta ${port}.`
+          });
         });
 
         req.write(postData);
         req.end();
       });
-    } catch (err) {
+    } catch (err: any) {
       console.warn(`[RoutinesService] Falha ao acionar Winthor Start para rotina ${routineCode}:`, err);
-      return false;
+      return {
+        success: false,
+        error: 'WINTHOR_START_EXCEPTION',
+        message: err?.message || 'Falha ao acionar Winthor Start.'
+      };
     }
   }
 
@@ -314,29 +411,45 @@ export class RoutinesService {
     });
   }
 
-  public async launchRoutine(routinePath: string): Promise<boolean> {
+  public async launchRoutine(routinePath: string, forceDirect = false): Promise<RoutineLaunchResult> {
     try {
-      console.log(`[RoutinesService] Solicitada abertura de rotina: "${routinePath}"`);
+      console.log(`[RoutinesService] Solicitada abertura de rotina: "${routinePath}" (forceDirect: ${forceDirect})`);
       if (!routinePath || typeof routinePath !== 'string') {
         console.warn(`[RoutinesService] Caminho de rotina vazio ou inválido.`);
-        return false;
+        return {
+          success: false,
+          error: 'INVALID_PATH',
+          message: 'Caminho de rotina vazio ou inválido.'
+        };
       }
       const settings = this.configService.getSettings();
       const basePath = settings.appPath;
       if (!basePath) {
         console.warn(`[RoutinesService] Diretório appPath não configurado nas Configurações.`);
-        return false;
+        return {
+          success: false,
+          error: 'APP_PATH_NOT_CONFIGURED',
+          message: 'Diretório de rotinas não configurado nas Configurações do sistema.'
+        };
       }
       // Restringir a execução apenas a binários contidos na pasta de instalação configurada
       if (!isSafePath(routinePath, basePath)) {
         console.warn(`[Segurança] Bloqueada tentativa de executar binário fora da pasta configurada: ${routinePath} (base: ${basePath})`);
-        return false;
+        return {
+          success: false,
+          error: 'SECURITY_BLOCKED',
+          message: 'Tentativa de executar binário fora do diretório configurado foi bloqueada por segurança.'
+        };
       }
 
       const normalizedPath = path.normalize(path.resolve(routinePath));
       if (!fs.existsSync(normalizedPath)) {
         console.warn(`[RoutinesService] Arquivo não encontrado no disco: ${normalizedPath}`);
-        return false;
+        return {
+          success: false,
+          error: 'FILE_NOT_FOUND',
+          message: `Arquivo executável não encontrado no disco: ${normalizedPath}`
+        };
       }
 
       const dir = path.dirname(normalizedPath);
@@ -347,25 +460,40 @@ export class RoutinesService {
       if (launcher) {
         if (!fs.existsSync(launcher)) {
           console.warn(`[RoutinesService] Launcher configurado para ${ext} não encontrado: ${launcher}`);
-          return false;
+          return {
+            success: false,
+            error: 'LAUNCHER_NOT_FOUND',
+            message: `Launcher configurado para extensão ${ext} não encontrado: ${launcher}`
+          };
         }
         spawn(launcher, [normalizedPath], {
           cwd: path.dirname(launcher),
           detached: true,
           stdio: 'ignore'
         }).unref();
-        return true;
+        return {
+          success: true,
+          message: `Rotina iniciada através do launcher configurado: ${path.basename(launcher)}`
+        };
       }
 
-      // Se Winthor Start estiver habilitado (padrão true), tenta abrir via DataSnap REST
+      // Se Winthor Start estiver habilitado (padrão true), tenta abrir via DataSnap REST autenticado
       const winthorStartEnabled = settings.winthorStartEnabled ?? true;
       const routineCode = extractRoutineCode(normalizedPath);
-      if (winthorStartEnabled && routineCode) {
-        const launched = await this.launchViaWinthorStart(routineCode);
-        if (launched) {
-          return true;
+      if (shouldUseWinthorStart(winthorStartEnabled, routineCode) && !forceDirect) {
+        const wsResult = await this.launchViaWinthorStart(routineCode!);
+        if (wsResult.success) {
+          return wsResult;
         }
-        console.info(`[RoutinesService] Winthor Start indisponível ou recusou a chamada para rotina ${routineCode}. Executando fallback para execução direta.`);
+
+        // Se a falha foi porque o Karaf está offline ou autenticação falhou, NÃO faz fallback silencioso!
+        // O usuário PRECISA receber o motivo explícito da falta de autenticação no Karaf.
+        if (wsResult.karafOffline || wsResult.authFailed) {
+          return wsResult;
+        }
+
+        // Se o WinThor Start estiver offline (serviço não rodando localmente):
+        console.info(`[RoutinesService] Winthor Start indisponível para rotina ${routineCode}. Executando fallback para execução direta.`);
       }
 
       spawn(normalizedPath, [], {
@@ -373,10 +501,20 @@ export class RoutinesService {
         detached: true,
         stdio: 'ignore'
       }).unref();
-      return true;
-    } catch (err) {
+      return {
+        success: true,
+        fallbackDirect: true,
+        message: forceDirect
+          ? `Rotina ${path.basename(normalizedPath)} executada diretamente (forçada sem autenticação).`
+          : `Rotina ${path.basename(normalizedPath)} executada via inicialização direta.`
+      };
+    } catch (err: any) {
       console.error('Erro ao iniciar rotina:', err);
-      return false;
+      return {
+        success: false,
+        error: 'UNEXPECTED_ERROR',
+        message: err?.message || 'Erro inesperado ao iniciar a rotina.'
+      };
     }
   }
 

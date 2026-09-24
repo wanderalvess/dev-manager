@@ -14,19 +14,27 @@ import {
   AppWindow,
   Sparkles,
   AlertTriangle,
-  Activity
+  Activity,
+  Server,
+  Terminal
 } from 'lucide-react';
-import { RoutineItem, MappedProgram, AppSettings } from '../../../shared/types';
+import { RoutineItem, MappedProgram, AppSettings, KarafWtaStatusResult } from '../../../shared/types';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { ROUTINES_TOUR_STEPS, ROUTINES_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/routinesTour';
+import { getKarafWtaBadgeInfo, shouldShowKarafWarningBanner } from '../utils/routineLaunchUiUtils';
 
 interface RoutinesPageProps {
   onNavigateToSettings?: () => void;
+  onNavigateToEnv?: () => void;
   settingsVersion?: number;
 }
 
-export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings, settingsVersion }) => {
+export const RoutinesPage: React.FC<RoutinesPageProps> = ({
+  onNavigateToSettings,
+  onNavigateToEnv,
+  settingsVersion
+}) => {
   const tour = usePageTour(ROUTINES_TOUR_STORAGE_KEY);
   const [routines, setRoutines] = useState<RoutineItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -40,17 +48,56 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
   const [appPath, setAppPath] = useState<string>('');
   const [winthorStartActive, setWinthorStartActive] = useState<boolean>(true);
 
+  // Status e controle do servidor Apache Karaf / WTA
+  const [karafStatus, setKarafStatus] = useState<KarafWtaStatusResult | null>(null);
+  const [isCheckingKaraf, setIsCheckingKaraf] = useState<boolean>(false);
+  const [isStartingKaraf, setIsStartingKaraf] = useState<boolean>(false);
+
+  const checkKaraf = useCallback(async () => {
+    if (!window.electronAPI?.checkRoutineKarafStatus) return;
+    setIsCheckingKaraf(true);
+    try {
+      const status = await window.electronAPI.checkRoutineKarafStatus();
+      setKarafStatus(status);
+    } catch {
+      setKarafStatus({
+        online: false,
+        wtaUrl: 'http://localhost:8889',
+        message: 'Apache Karaf / WTA não está respondendo.'
+      });
+    } finally {
+      setIsCheckingKaraf(false);
+    }
+  }, []);
+
+  const handleStartEmbeddedKaraf = async () => {
+    if (!window.electronAPI?.startEmbeddedKaraf) return;
+    setIsStartingKaraf(true);
+    try {
+      await window.electronAPI.startEmbeddedKaraf();
+      setTimeout(async () => {
+        await checkKaraf();
+        setIsStartingKaraf(false);
+      }, 3500);
+    } catch {
+      setIsStartingKaraf(false);
+    }
+  };
+
   const loadRoutines = useCallback(async () => {
     setIsLoading(true);
     try {
       if (window.electronAPI) {
-        const data = await window.electronAPI.listRoutines();
+        const [data] = await Promise.all([
+          window.electronAPI.listRoutines(),
+          checkKaraf()
+        ]);
         setRoutines(data || []);
       }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [checkKaraf]);
 
   const loadSettingsAndPrograms = useCallback(async () => {
     if (window.electronAPI?.getSettings) {
@@ -70,6 +117,14 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
     loadSettingsAndPrograms();
   }, [loadRoutines, loadSettingsAndPrograms, settingsVersion]);
 
+  // Polling periódico suave para verificar status do Karaf/WTA
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkKaraf();
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [checkKaraf]);
+
   const handleToggleFavorite = async (id: string) => {
     if (window.electronAPI) {
       await window.electronAPI.toggleFavoriteRoutine(id);
@@ -79,28 +134,53 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
     }
   };
 
-  const [launchFeedback, setLaunchFeedback] = useState<{ id: string; success: boolean; message: string } | null>(null);
+  const [launchFeedback, setLaunchFeedback] = useState<{
+    id: string;
+    routine: RoutineItem;
+    success: boolean;
+    message: string;
+    karafOffline?: boolean;
+    authFailed?: boolean;
+    winthorStartOffline?: boolean;
+  } | null>(null);
 
-  const handleLaunchRoutine = async (routine: RoutineItem) => {
+  const handleLaunchRoutine = async (routine: RoutineItem, forceDirect = false) => {
     setRunningId(routine.id);
     setLaunchFeedback(null);
     try {
       if (window.electronAPI) {
-        console.log(`[RoutinesPage] Chamando launchRoutine para: ${routine.fullPath}`);
-        const success = await window.electronAPI.launchRoutine(routine.fullPath);
-        console.log(`[RoutinesPage] Resultado da abertura:`, success);
-        if (!success) {
+        console.log(`[RoutinesPage] Chamando launchRoutine para: ${routine.fullPath} (forceDirect: ${forceDirect})`);
+        const result = await window.electronAPI.launchRoutine(routine.fullPath, forceDirect);
+        console.log(`[RoutinesPage] Resultado da abertura:`, result);
+        if (!result.success) {
           setLaunchFeedback({
             id: routine.id,
+            routine,
             success: false,
-            message: 'Não foi possível iniciar a rotina. Verifique se o caminho existe e se o WinThor Start está ativo.'
+            message: result.message || 'Não foi possível iniciar a rotina.',
+            karafOffline: result.karafOffline,
+            authFailed: result.authFailed,
+            winthorStartOffline: result.winthorStartOffline
           });
+          if (result.karafOffline) {
+            setKarafStatus((prev) => ({
+              online: false,
+              wtaUrl: prev?.wtaUrl || 'http://localhost:8889',
+              message: result.message || 'Apache Karaf / WTA não está em execução.'
+            }));
+          }
+        } else {
+          // Em caso de sucesso pelo WinThor Start, sabemos que o Karaf está online
+          if (!result.fallbackDirect) {
+            setKarafStatus((prev) => (prev ? { ...prev, online: true } : null));
+          }
         }
       }
     } catch (err: any) {
       console.error(`[RoutinesPage] Erro ao disparar rotina:`, err);
       setLaunchFeedback({
         id: routine.id,
+        routine,
         success: false,
         message: err?.message || 'Erro inesperado ao iniciar a rotina.'
       });
@@ -206,6 +286,18 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
                   <Activity className="w-2.5 h-2.5" />
                   <span>WinThor Start: {winthorStartActive ? 'Ativo' : 'Desativado'}</span>
                 </span>
+                {(() => {
+                  const badgeInfo = getKarafWtaBadgeInfo(karafStatus, isCheckingKaraf, winthorStartActive);
+                  return (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold flex items-center gap-1 border ${badgeInfo.colorClass}`}
+                      title={badgeInfo.tooltip}
+                    >
+                      <Server className="w-2.5 h-2.5" />
+                      <span>{badgeInfo.label}</span>
+                    </span>
+                  );
+                })()}
               </div>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Escaneia a pasta configurada em busca de executáveis WinThor, com busca instantânea, favoritos e programas mapeados.
@@ -220,7 +312,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
               onClick={loadRoutines}
               disabled={isLoading}
               className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/40 rounded-xl text-xs font-semibold text-foreground transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
-              title="Reescanear diretório de rotinas"
+              title="Reescanear diretório de rotinas e revalidar status dos serviços"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : 'text-muted-foreground'}`} />
               <span>Atualizar Catálogo</span>
@@ -277,14 +369,119 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({ onNavigateToSettings
         </div>
       </div>
 
+      {/* Alerta Preventivo: Apache Karaf não está em execução */}
+      {shouldShowKarafWarningBanner(karafStatus, winthorStartActive) && (
+        <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start justify-between space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
+          <div className="flex items-start space-x-2.5 flex-1">
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-bold block">Apache Karaf não está em execução (WTA offline)</span>
+              <span className="text-[11px] text-muted-foreground block mt-0.5 leading-relaxed">
+                O WinThor Start está ativado e depende do servidor Apache Karaf / WTA ({karafStatus?.wtaUrl || 'http://localhost:8889'}) em execução para autenticar a sessão do usuário. Se você iniciar uma rotina agora, ela apresentará erro por falta de autenticação.
+              </span>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {onNavigateToEnv && (
+                  <button
+                    type="button"
+                    onClick={onNavigateToEnv}
+                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-[11px] font-bold text-amber-700 dark:text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                    title="Abrir o Gestor de Ambiente para iniciar o Karaf e ver logs"
+                  >
+                    <Terminal className="w-3 h-3" />
+                    <span>Ir para Ambiente Dev (Alt+1)</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleStartEmbeddedKaraf}
+                  disabled={isStartingKaraf}
+                  className="px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  title="Disparar inicialização do Apache Karaf embedded em segundo plano"
+                >
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>{isStartingKaraf ? 'Iniciando Karaf...' : 'Iniciar Karaf'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={checkKaraf}
+                  disabled={isCheckingKaraf}
+                  className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground flex items-center gap-1 transition-all cursor-pointer"
+                  title="Verificar novamente se a porta 8889 do Karaf já está respondendo"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isCheckingKaraf ? 'animate-spin' : ''}`} />
+                  <span>Verificar Status</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Banner de Feedback de Execução de Rotina */}
       {launchFeedback && (
-        <div className="shrink-0 bg-rose-500/10 border border-rose-500/40 rounded-xl p-3 flex items-start justify-between space-x-2.5 text-xs text-rose-700 dark:text-rose-200">
-          <div className="flex items-start space-x-2.5">
-            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block">Falha ao abrir rotina ({launchFeedback.id})</span>
-              <span className="text-[11px] text-muted-foreground block mt-0.5">{launchFeedback.message}</span>
+        <div className={`shrink-0 rounded-xl p-3 flex items-start justify-between space-x-2.5 text-xs border ${
+          launchFeedback.karafOffline
+            ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-200'
+            : 'bg-rose-500/10 border-rose-500/40 text-rose-700 dark:text-rose-200'
+        }`}>
+          <div className="flex items-start space-x-2.5 flex-1">
+            <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${launchFeedback.karafOffline ? 'text-amber-500' : 'text-rose-500'}`} />
+            <div className="flex-1">
+              <span className="font-bold block">
+                {launchFeedback.karafOffline
+                  ? `Erro de Autenticação: Apache Karaf não está em execução (${launchFeedback.id})`
+                  : launchFeedback.authFailed
+                  ? `Falha de Autenticação no WTA (${launchFeedback.id})`
+                  : `Falha ao abrir rotina (${launchFeedback.id})`}
+              </span>
+              <span className="text-[11px] text-muted-foreground block mt-0.5 leading-relaxed">
+                {launchFeedback.message}
+              </span>
+
+              {/* Ações contextuais de ajuda */}
+              <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                {launchFeedback.karafOffline && (
+                  <>
+                    {onNavigateToEnv && (
+                      <button
+                        type="button"
+                        onClick={onNavigateToEnv}
+                        className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-[11px] font-bold text-amber-700 dark:text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Terminal className="w-3 h-3" />
+                        <span>Ir para Ambiente Dev &amp; Iniciar Karaf (Alt+1)</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleStartEmbeddedKaraf}
+                      disabled={isStartingKaraf}
+                      className="px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    >
+                      <Play className="w-3 h-3 fill-current" />
+                      <span>{isStartingKaraf ? 'Iniciando Karaf...' : 'Iniciar Karaf Agora'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLaunchRoutine(launchFeedback.routine, true)}
+                      className="px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground flex items-center gap-1 transition-all cursor-pointer"
+                      title="Abre o executável diretamente pelo Windows sem passar pelos parâmetros autenticados do WinThor Start"
+                    >
+                      <span>Tentar abrir direto (sem autenticação)</span>
+                    </button>
+                  </>
+                )}
+                {launchFeedback.authFailed && onNavigateToSettings && (
+                  <button
+                    type="button"
+                    onClick={onNavigateToSettings}
+                    className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 rounded-lg text-[11px] font-bold text-rose-700 dark:text-rose-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Settings className="w-3 h-3" />
+                    <span>Configurar Credenciais do WTA</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <button

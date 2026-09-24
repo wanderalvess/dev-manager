@@ -138,6 +138,14 @@ async function start() {
   });
 
   child.on('close', (code) => {
+    if (code === 0) {
+      try {
+        const { generateReleaseNotes } = require('./generate-release-notes.cjs');
+        generateReleaseNotes();
+      } catch (err) {
+        console.warn('[Build] Aviso ao gerar notas de versão na release:', err.message);
+      }
+    }
     process.exit(code || 0);
   });
 }

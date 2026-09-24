@@ -20,7 +20,8 @@ describe('Routine801Service', () => {
       getSettings: vi.fn().mockReturnValue({
         routine801Url: 'http://localhost:8889',
         wtaUrl: 'http://localhost:8889'
-      })
+      }),
+      saveSettings: vi.fn()
     } as unknown as ConfigService;
 
     karafService = {
@@ -54,7 +55,7 @@ describe('Routine801Service', () => {
   });
 
   describe('checkServerHealth', () => {
-    it('deve retornar ok: true quando o servidor responde com status < 500', async () => {
+    it('deve retornar ok: true quando o servidor responde com status 200', async () => {
       vi.mocked(httpRequest).mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -66,6 +67,21 @@ describe('Routine801Service', () => {
       const health = await routine801Service.checkServerHealth();
       expect(health.ok).toBe(true);
       expect(health.status).toBe(200);
+    });
+
+    it('deve retornar ok: false quando o servidor responde com erro de autenticação 401', async () => {
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        text: async () => 'Unauthorized',
+        buffer: async () => Buffer.from('')
+      });
+
+      const health = await routine801Service.checkServerHealth();
+      expect(health.ok).toBe(false);
+      expect(health.status).toBe(401);
+      expect(health.message).toContain('401');
     });
 
     it('deve retornar ok: false com mensagem informativa quando houver falha de conexão', async () => {
@@ -152,6 +168,37 @@ describe('Routine801Service', () => {
       expect(result.installedCount).toBe(1);
       expect(result.failedCount).toBe(0);
       expect(logChunks.some((l) => l.includes('Sucesso'))).toBe(true);
+    });
+  });
+
+  describe('auth and tokens', () => {
+    it('deve incluir Cookie e Authorization quando wtaAuthToken estiver configurado', () => {
+      vi.mocked(configService.getSettings).mockReturnValue({
+        wtaAuthToken: 'token123'
+      } as any);
+
+      const headers = routine801Service.getAuthHeaders();
+      expect(headers['Cookie']).toBe('suukie=token123');
+      expect(headers['Authorization']).toBe('Bearer token123');
+    });
+
+    it('deve renovar token via login quando credenciais estiverem preenchidas', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({
+        wtaLogin: 'PCADMIN',
+        wtaPassword: '1'
+      } as any);
+
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => JSON.stringify({ accessToken: 'newToken999' }),
+        buffer: async () => Buffer.from('')
+      });
+
+      const token = await routine801Service.renewWtaAuth('http://localhost:8889');
+      expect(token).toBe('newToken999');
+      expect(configService.saveSettings).toHaveBeenCalledWith({ wtaAuthToken: 'newToken999' });
     });
   });
 });

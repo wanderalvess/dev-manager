@@ -42,6 +42,8 @@ RUN npm ci --omit=dev && npm install -g tsx
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/CHANGELOG.md ./CHANGELOG.md
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 # Expõe a porta do Web Cockpit

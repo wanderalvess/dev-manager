@@ -14,6 +14,8 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   RoutineItem,
+  RoutineLaunchResult,
+  KarafWtaStatusResult,
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
@@ -246,7 +248,8 @@ export interface ElectronAPI {
 
   // Catálogo de Rotinas
   listRoutines: () => Promise<RoutineItem[]>;
-  launchRoutine: (fullPath: string) => Promise<boolean>;
+  launchRoutine: (fullPath: string, forceDirect?: boolean) => Promise<RoutineLaunchResult>;
+  checkRoutineKarafStatus: () => Promise<KarafWtaStatusResult>;
   launchMappedProgram: (id: string) => Promise<boolean>;
   toggleFavoriteRoutine: (id: string) => Promise<AppSettings>;
 

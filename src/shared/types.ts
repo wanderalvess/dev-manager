@@ -284,6 +284,23 @@ export interface RoutineItem {
   isFavorite: boolean;
 }
 
+export interface RoutineLaunchResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  karafOffline?: boolean;
+  authFailed?: boolean;
+  winthorStartOffline?: boolean;
+  fallbackDirect?: boolean;
+}
+
+export interface KarafWtaStatusResult {
+  online: boolean;
+  wtaUrl: string;
+  isEmbedded?: boolean;
+  message: string;
+}
+
 export interface PathStatusInfo {
   path: string;
   exists: boolean;

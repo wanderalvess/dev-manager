@@ -76,13 +76,31 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
   // Carrega configurações iniciais e consulta catálogo
   useEffect(() => {
     if (!isOpen) return;
-    if (window.electronAPI?.getSettings) {
-      window.electronAPI.getSettings().then((st) => {
-        const url = st.routine801Url || st.wtaUrl || 'http://localhost:8889';
-        setServerUrlInput(url);
-      });
-    }
-    fetchCatalogs();
+    let cancelled = false;
+
+    const loadInitialCatalog = async () => {
+      let activeUrl = serverUrlInput;
+      if (window.electronAPI?.getSettings) {
+        try {
+          const st = await window.electronAPI.getSettings();
+          const configuredUrl = st.routine801Url || st.wtaUrl || 'http://localhost:8889';
+          if (!cancelled) {
+            setServerUrlInput(configuredUrl);
+            activeUrl = configuredUrl;
+          }
+        } catch (e) {
+          console.warn('[Rotina 801] Erro ao carregar configurações:', e);
+        }
+      }
+      if (!cancelled) {
+        fetchCatalogs(activeUrl);
+      }
+    };
+
+    loadInitialCatalog();
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen]);
 
   // Listener de streaming de logs do console Karaf
@@ -131,7 +149,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
 
   // Consulta catálogos no backend
   const fetchCatalogs = async (overrideUrl?: string) => {
-    const targetUrl = overrideUrl || serverUrlInput;
+    const targetUrl = (overrideUrl || serverUrlInput).trim();
     setIsLoading(true);
     setErrorBanner(null);
     try {
@@ -157,10 +175,15 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
         }
 
         if (!hasSuccess) {
+          const detail =
+            (installsData.status === 'rejected' && (installsData.reason?.message || String(installsData.reason))) ||
+            (updatesData.status === 'rejected' && (updatesData.reason?.message || String(updatesData.reason))) ||
+            'Não foi possível estabelecer conexão.';
+
           setErrorBanner(
-            `Falha na comunicação com a Rotina 801 em ${targetUrl}. Verifique se o container/instância Karaf está em execução na porta HTTP.`
+            `Falha na comunicação com a Rotina 801 em ${targetUrl}: ${detail}. Verifique se o Karaf/WTA está em execução e se a porta está acessível.`
           );
-          setConnectionHealth({ ok: false, message: 'Serviço inacessível' });
+          setConnectionHealth({ ok: false, message: detail });
         } else {
           setConnectionHealth({ ok: true, message: 'Conectado e respondendo' });
         }
@@ -384,18 +407,36 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
         {/* ========================================================================= */}
         {isConfigOpen && (
           <div className="px-5 py-3 border-b border-border bg-muted/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shrink-0 animate-in slide-in-from-top-2 duration-150">
-            <div className="flex flex-1 items-center gap-3">
+            <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-2">
               <label htmlFor="routine801-url-input" className="text-muted-foreground font-medium whitespace-nowrap">
                 URL da Ferramenta Servidor (WTA):
               </label>
-              <input
-                id="routine801-url-input"
-                type="text"
-                value={serverUrlInput}
-                onChange={(e) => setServerUrlInput(e.target.value)}
-                placeholder="http://localhost:8889"
-                className="flex-1 max-w-md px-2.5 py-1.5 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-              />
+              <div className="flex flex-1 items-center gap-1.5 max-w-lg">
+                <input
+                  id="routine801-url-input"
+                  type="text"
+                  value={serverUrlInput}
+                  onChange={(e) => setServerUrlInput(e.target.value)}
+                  placeholder="http://localhost:8889"
+                  className="flex-1 px-2.5 py-1.5 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setServerUrlInput('http://localhost:8889')}
+                  className="px-2 py-1 text-[11px] font-mono rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Usar localhost:8889"
+                >
+                  localhost
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setServerUrlInput('http://127.0.0.1:8889')}
+                  className="px-2 py-1 text-[11px] font-mono rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  title="Usar 127.0.0.1:8889 (IPv4 direto)"
+                >
+                  127.0.0.1
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button

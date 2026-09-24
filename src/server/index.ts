@@ -240,9 +240,17 @@ app.get('/api/system/info', async (_req, res) => {
 
 app.get('/api/system/changelog', (_req, res) => {
   try {
-    const changelogPath = path.join(repoRoot, 'CHANGELOG.md');
-    if (!fs.existsSync(changelogPath)) return res.json({ content: null });
-    res.json({ content: fs.readFileSync(changelogPath, 'utf-8') });
+    const candidates = [
+      path.join(repoRoot, 'CHANGELOG.md'),
+      path.join(process.cwd(), 'CHANGELOG.md'),
+      path.join(__dirname, '../../CHANGELOG.md')
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return res.json({ content: fs.readFileSync(p, 'utf-8') });
+      }
+    }
+    res.json({ content: null });
   } catch {
     res.json({ content: null });
   }
@@ -250,9 +258,17 @@ app.get('/api/system/changelog', (_req, res) => {
 
 app.get('/api/system/mcp-docs', (_req, res) => {
   try {
-    const docsPath = path.join(repoRoot, 'docs', 'MCP_TOOLS.md');
-    if (!fs.existsSync(docsPath)) return res.json({ content: '# Documentação não encontrada\nNão foi possível localizar o arquivo MCP_TOOLS.md.' });
-    res.json({ content: fs.readFileSync(docsPath, 'utf-8') });
+    const candidates = [
+      path.join(repoRoot, 'docs', 'MCP_TOOLS.md'),
+      path.join(process.cwd(), 'docs', 'MCP_TOOLS.md'),
+      path.join(__dirname, '../../docs/MCP_TOOLS.md')
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return res.json({ content: fs.readFileSync(p, 'utf-8') });
+      }
+    }
+    res.json({ content: '# Documentação não encontrada\nNão foi possível localizar o arquivo MCP_TOOLS.md.' });
   } catch (err: any) {
     res.json({ content: `# Erro ao ler documentação\n${err.message}` });
   }
@@ -554,13 +570,17 @@ app.get('/api/routines', (_req, res) => {
   res.json(routinesService.listRoutines());
 });
 
+app.get('/api/routines/karaf-status', async (_req, res) => {
+  res.json(await routinesService.checkKarafWtaStatus());
+});
+
 app.post('/api/routines/launch', async (req, res) => {
-  const { fullPath } = req.body;
+  const { fullPath, forceDirect } = req.body;
   if (!fullPath || typeof fullPath !== 'string' || !isSafeLocalPath(fullPath)) {
     return res.status(400).json({ success: false, error: 'Caminho inválido.' });
   }
-  const success = await routinesService.launchRoutine(fullPath);
-  res.json({ success });
+  const result = await routinesService.launchRoutine(fullPath, Boolean(forceDirect));
+  res.json(result);
 });
 
 app.post('/api/routines/launch-mapped', (req, res) => {

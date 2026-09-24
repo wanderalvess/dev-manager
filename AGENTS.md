@@ -175,3 +175,32 @@ Checklist ao entregar uma funcionalidade:
 - Se houver tour da página em
   [onboarding/tourSteps.ts](src/renderer/src/components/onboarding/tourSteps.ts), revise
   também.
+
+## Versionamento, Changelog e Release
+
+O modal de **"Novidades da Versão"** que o usuário vê ao abrir o app após um update
+([src/renderer/src/App.tsx](src/renderer/src/App.tsx)) consome diretamente a seção mais
+recente de [CHANGELOG.md](CHANGELOG.md). Portanto, **manter o CHANGELOG, o `package.json`,
+o catálogo de tools e os fallbacks sincronizados é obrigatório a cada fechamento de
+versão ou entrega de funcionalidade relevante.**
+
+Checklist automático a cada ciclo de versão / release:
+
+1. **`package.json` e `package-lock.json`**:
+   - Incrementar a versão seguindo SemVer (`patch` para correções/ajustes internos,
+     `minor` para features novas, `major` para mudanças que quebrem compatibilidade).
+2. **`CHANGELOG.md`**:
+   - Inserir a nova seção no topo no formato Keep a Changelog: `## [X.Y.Z] - AAAA-MM-DD`.
+   - Utilizar as subseções padrão: `### Adicionado`, `### Alterado`, `### Corrigido` e `### Segurança`.
+   - Redigir em português claro com foco no benefício para o desenvolvedor/usuário final
+     (o que mudou, onde acessar na interface e como utilizar).
+3. **Catálogo de Ferramentas MCP (`docs/MCP_TOOLS.md`)**:
+   - Se tools MCP foram criadas ou alteradas, atualizar a contagem total no texto (ex: `123 ferramentas`)
+     e incluir a tool com título, descrição resumida e exemplo prático de prompt entre aspas (`> "..."`).
+4. **Fallbacks de Versão no Código**:
+   - Alinhar os fallbacks fixos `'X.Y.Z'` na Central de Ajuda ([src/renderer/src/pages/HelpPage.tsx](src/renderer/src/pages/HelpPage.tsx))
+     e no servidor MCP ([src/mcp/index.ts](src/mcp/index.ts)) com o novo número de versão.
+5. **Tags Git e Commits**:
+   - Manter a tag correspondente (`vX.Y.Z`) criada no commit que introduz a versão, garantindo
+     que não existam versões no CHANGELOG sem tag no Git ou tags órfãs sem seção no changelog.
+

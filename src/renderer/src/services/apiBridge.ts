@@ -14,6 +14,8 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   RoutineItem,
+  RoutineLaunchResult,
+  KarafWtaStatusResult,
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
@@ -262,13 +264,21 @@ export function initApiBridge() {
     },
 
     getChangelog: async (): Promise<string | null> => {
-      const data = await apiFetch<{ content: string | null }>('/api/system/changelog');
-      return data.content;
+      try {
+        const data = await apiFetch<{ content: string | null }>('/api/system/changelog');
+        return data.content;
+      } catch {
+        return null;
+      }
     },
 
     getMcpDocs: async (): Promise<string> => {
-      const data = await apiFetch<{ content: string }>('/api/system/mcp-docs');
-      return data.content;
+      try {
+        const data = await apiFetch<{ content: string }>('/api/system/mcp-docs');
+        return data.content;
+      } catch {
+        return '';
+      }
     },
 
     // Gestor de Ambiente
@@ -766,12 +776,15 @@ export function initApiBridge() {
       return apiFetch('/api/routines');
     },
 
-    launchRoutine: async (fullPath: string): Promise<boolean> => {
-      const data = await apiFetch<{ success: boolean }>('/api/routines/launch', {
+    launchRoutine: async (fullPath: string, forceDirect?: boolean): Promise<RoutineLaunchResult> => {
+      return apiFetch<RoutineLaunchResult>('/api/routines/launch', {
         method: 'POST',
-        body: JSON.stringify({ fullPath })
+        body: JSON.stringify({ fullPath, forceDirect })
       });
-      return data.success;
+    },
+
+    checkRoutineKarafStatus: async (): Promise<KarafWtaStatusResult> => {
+      return apiFetch<KarafWtaStatusResult>('/api/routines/karaf-status');
     },
 
     launchMappedProgram: async (id: string): Promise<boolean> => {

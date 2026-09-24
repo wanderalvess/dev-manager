@@ -10,9 +10,9 @@ const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.1';
   } catch {
-    return '1.15.0';
+    return '1.15.1';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -1335,16 +1335,34 @@ server.registerTool(
 );
 
 server.registerTool(
+  'routines_check_karaf_status',
+  {
+    title: 'Verificar status do Karaf/WTA para rotinas',
+    description: 'Verifica se o servidor Apache Karaf / WTA está online e respondendo para permitir a autenticação de rotinas via WinThor Start.',
+    inputSchema: {}
+  },
+  async () => {
+    return ok(await routinesService.checkKarafWtaStatus());
+  }
+);
+
+server.registerTool(
   'routines_launch',
   {
     title: 'Executar rotina',
-    description: 'Executa uma rotina do catálogo pelo caminho completo do arquivo.',
-    inputSchema: { fullPath: z.string() }
+    description: 'Executa uma rotina do catálogo pelo caminho completo do arquivo, via WinThor Start autenticado ou execução direta.',
+    inputSchema: {
+      fullPath: z.string(),
+      forceDirect: z.boolean().optional()
+    }
   },
-  async ({ fullPath }) => {
+  async ({ fullPath, forceDirect }) => {
     if (!isSafeLocalPath(fullPath)) return fail('Caminho inválido.');
-    const success = await routinesService.launchRoutine(fullPath);
-    return ok({ success });
+    const result = await routinesService.launchRoutine(fullPath, Boolean(forceDirect));
+    if (!result.success) {
+      return fail(result.message || 'Falha ao iniciar rotina.');
+    }
+    return ok(result);
   }
 );
 

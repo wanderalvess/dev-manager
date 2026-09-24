@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Dev Manager expõe **123 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Dev Manager expõe **124 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -166,9 +166,10 @@ Catálogo e instalação das funcionalidades oficiais publicadas pela Rotina 801
 ## 12. Catálogo de Rotinas
 Rotinas (.EXE/.PC) descobertas no catálogo local e programas mapeados manualmente na UI.
 
-*   **`routines_list`**: Lista as rotinas descobertas no catálogo.
-*   **`routines_launch` / `routines_launch_mapped`**: Executa uma rotina pelo caminho completo do arquivo, ou um programa mapeado manualmente pelo id.
+*   **`routines_list` / `routines_check_karaf_status`**: Lista as rotinas descobertas no catálogo e checa se o servidor Apache Karaf / WTA está online e respondendo para autenticar rotinas via WinThor Start.
+*   **`routines_launch` / `routines_launch_mapped`**: Executa uma rotina pelo caminho completo do arquivo (suportando WinThor Start autenticado ou execução direta com `forceDirect`), ou um programa mapeado manualmente pelo id.
 *   **`routines_toggle_favorite`**: Marca ou desmarca uma rotina como favorita.
 
 **Exemplo de como pedir à IA:**
+> "Verifique se o Karaf está online e abra a rotina 132 pelo WinThor Start."
 > "Abra a rotina 316 do catálogo e marque ela como favorita."

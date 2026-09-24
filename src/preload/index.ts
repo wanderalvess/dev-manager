@@ -15,6 +15,8 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   RoutineItem,
+  RoutineLaunchResult,
+  KarafWtaStatusResult,
   PathStatusInfo,
   SelectFileOptions,
   SystemAppInfo,
@@ -296,7 +298,9 @@ const electronAPI = {
 
   // Catálogo de Rotinas
   listRoutines: (): Promise<RoutineItem[]> => ipcRenderer.invoke('routines:list'),
-  launchRoutine: (fullPath: string): Promise<boolean> => ipcRenderer.invoke('routines:launch', fullPath),
+  launchRoutine: (fullPath: string, forceDirect?: boolean): Promise<RoutineLaunchResult> =>
+    ipcRenderer.invoke('routines:launch', fullPath, forceDirect),
+  checkRoutineKarafStatus: (): Promise<KarafWtaStatusResult> => ipcRenderer.invoke('routines:check-karaf-status'),
   launchMappedProgram: (id: string): Promise<boolean> => ipcRenderer.invoke('routines:launch-mapped', id),
   toggleFavoriteRoutine: (id: string): Promise<AppSettings> => ipcRenderer.invoke('routines:toggle-favorite', id),
 

@@ -10,12 +10,7 @@ export interface SimpleHttpResponse {
   buffer: () => Promise<Buffer>;
 }
 
-/**
- * Executa requisição HTTP/HTTPS com suporte a certificados corporativos autoassinados
- * (Zscaler, proxy TOTVS, etc). Extraído do sync de documentação RAG para ser reutilizado
- * por qualquer integração de webhook/endpoint externo (ex: notificações de backup).
- */
-export async function httpRequest(
+function executeRequest(
   urlStr: string,
   options: { method: string; headers: Record<string, string>; body?: string; timeout?: number }
 ): Promise<SimpleHttpResponse> {
@@ -31,8 +26,11 @@ export async function httpRequest(
           method: options.method,
           headers: options.headers,
           // Em redes corporativas com proxy SSL inspect, evita erro "self signed certificate in certificate chain"
-          rejectUnauthorized: false
-        },
+          rejectUnauthorized: false,
+          // Suporte a Happy Eyeballs (IPv6/IPv4) no Node.js 18+ para evitar falha quando localhost resolve pra ::1
+          autoSelectFamily: true,
+          autoSelectFamilyAttemptTimeout: 250
+        } as any,
         (res) => {
           const chunks: Buffer[] = [];
           res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
@@ -68,4 +66,29 @@ export async function httpRequest(
       reject(err);
     }
   });
+}
+
+/**
+ * Executa requisição HTTP/HTTPS com suporte a certificados corporativos autoassinados
+ * (Zscaler, proxy TOTVS, etc). Se a conexão com localhost falhar por restrição IPv6 (comum no Windows),
+ * realiza fallback transparente para 127.0.0.1.
+ */
+export async function httpRequest(
+  urlStr: string,
+  options: { method: string; headers: Record<string, string>; body?: string; timeout?: number }
+): Promise<SimpleHttpResponse> {
+  try {
+    return await executeRequest(urlStr, options);
+  } catch (err: any) {
+    try {
+      const urlObj = new URL(urlStr);
+      if (urlObj.hostname.toLowerCase() === 'localhost') {
+        const ipv4Url = urlStr.replace('://localhost', '://127.0.0.1');
+        return await executeRequest(ipv4Url, options);
+      }
+    } catch {
+      // Ignora erro de parsing no fallback
+    }
+    throw err;
+  }
 }

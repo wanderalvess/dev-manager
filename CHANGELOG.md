@@ -4,7 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.15.1] - 2026-09-24
+### Corrigido
+- **Rotina 801 (Catálogo Oficial do WinThor - Porta 8889)**:
+  - **Resolução IPv4/IPv6 (Happy Eyeballs)**: Corrigida falha de comunicação falso-positiva onde a aplicação reportava que `http://localhost:8889` não estava respondendo (apesar da porta responder normalmente no navegador e cURL). No Windows com Node.js 18+, o `localhost` resolve primariamente para IPv6 (`::1`), enquanto a JVM do Apache Karaf/Jetty escuta apenas na pilha IPv4 (`127.0.0.1`). O utilitário central `httpRequest` agora adota o algoritmo Happy Eyeballs (RFC 8305) com `autoSelectFamily: true`, timeout de 250ms e fallback transparente e imediato para `127.0.0.1` em caso de recusa de conexão.
+  - **Autenticação e Renovação Automática WTA**: Implementado envio dinâmico de credenciais de sessão (`suukie` cookie e header `Authorization: Bearer <token>`). Caso o catálogo responda com HTTP 401/403 (sessão expirada ou protegida), o serviço autentica automaticamente via `POST /winthor/autenticacao/v1/login` utilizando as credenciais salvas e repete a requisição de forma transparente.
+  - **Diagnóstico Real de Erros na UI**: Substituído o banner fixo genérico de indisponibilidade pela exibição do motivo real retornado pela API (`reason`), prevenindo falsos diagnósticos de rede quando o servidor recusa autenticação ou o bundle não está instalado.
+  - **Drawer de Conexão com Alternância Rápida**: Adicionados botões de atalho no modal para alternar instantaneamente a URL entre `http://localhost:8889` e `http://127.0.0.1:8889`.
+  - **Sincronização de Inicialização**: Eliminada condição de corrida na montagem do modal, garantindo o carregamento prévio das configurações de autenticação antes da consulta ao catálogo.
+
+### Adicionado
+- **Central de Ajuda (FAQ)**: Incluído tópico de troubleshooting detalhado sobre a porta 8889 e a convivência entre pilhas IPv4/IPv6 no Karaf sob Windows, orientando como testar o endpoint e alternar para `127.0.0.1` caso a resolução de nomes local esteja instável.
 
 ## [1.15.0] - 2026-09-24
 ### Adicionado
@@ -18,6 +28,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - Onboarding: atualização de versão passa a mostrar só um resumo do changelog (sem resetar Welcome/Tour), e o tour inicial leva direto para Configurações quando faltam caminhos essenciais (repositórios/IDE).
 - Catálogo de tools MCP (`docs/MCP_TOOLS.md`) passa a documentar as tools `apm_*` e `routine801_*`, além de 27 tools que existiam mas não estavam listadas (`env_batch_*`, `env_check_admin`, `env_launch_server_debug`, 13 tools `karaf_*` de console embutido/bundles/histórico, `profile_kill_port`, `profile_stop_step`, `routines_*`, `settings_*`, `system_check_path` e `system_auto_detect_paths`), com uma seção nova de Catálogo de Rotinas (123 tools no total).
 - Central de Ajuda cobre as funcionalidades das últimas versões: card de **APM & Traces** no Guia dos Módulos e na Visão Geral, Statement Tracer no card de Banco de Dados, branches remotas/upstream/worktrees e GitHub/GitLab no card de Git, WinThor Start no card de Rotinas, e FAQs sobre o Statement Tracer, conexão do Java Agent ao receptor APM, WinThor Start/WTA e criptografia de segredos.
+- **Notas de Versão e Guia de Instalação na Release**: geração automática dos arquivos `RELEASE_NOTES.md` (Markdown) e `LEIA-ME.txt` (texto puro com quebras CRLF para o Bloco de Notas) na pasta `release/` ao empacotar os instaladores (`npm run build:electron`) ou sob demanda via `npm run release:notes`. Os arquivos acompanham os executáveis com instruções claras para quem for instalar, comparativo entre o instalador padrão e a versão portátil, instruções sobre o Windows SmartScreen, requisitos de sistema e resumo das alterações desta versão.
 ### Alterado
 - Nova identidade visual do ícone/logo (fundo índigo mais claro, fonte de luz e reflexo), aplicada ao `AppLogo`, `icon.svg`, `icon.png` e `favicon.ico`.
 - Welcome do onboarding reduzido de 3 telas para 1 (saudação + escolha de tema + começar).

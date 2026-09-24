@@ -46,6 +46,8 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { MarkdownReader } from '../components/MarkdownReader';
 import { AppLogo } from '../components/AppLogo';
 import { getMissingRequiredPaths } from '../utils/environmentPageUtils';
+import mcpDocsRaw from '../../../../docs/MCP_TOOLS.md?raw';
+import changelogRaw from '../../../../CHANGELOG.md?raw';
 
 interface HelpPageProps {
   onNavigate?: (tab: string) => void;
@@ -115,29 +117,33 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
 
   const handleOpenChangelog = async () => {
     setIsChangelogOpen(true);
-    setIsLoadingChangelog(true);
-    setChangelogContent('');
+    setChangelogContent(changelogRaw);
+    setIsLoadingChangelog(false);
     try {
       const content = await window.electronAPI?.getChangelog?.();
-      setChangelogContent(content || 'Nenhum registro de mudanças encontrado.');
-    } catch (err: any) {
-      setChangelogContent(`Erro ao carregar o changelog: ${err?.message || err}`);
-    } finally {
-      setIsLoadingChangelog(false);
+      if (content && !content.startsWith('Erro ao ler')) {
+        setChangelogContent(content);
+      }
+    } catch {
+      // Mantém o changelog embutido caso falhe a leitura dinâmica
     }
   };
 
   const handleOpenMcpDocs = async () => {
     setIsMcpDocsOpen(true);
-    setIsLoadingMcpDocs(true);
-    setMcpDocsContent('');
+    setMcpDocsContent(mcpDocsRaw);
+    setIsLoadingMcpDocs(false);
     try {
       const content = await window.electronAPI?.getMcpDocs?.();
-      setMcpDocsContent(content || 'Nenhuma documentação encontrada.');
-    } catch (err: any) {
-      setMcpDocsContent(`Erro ao carregar a documentação: ${err?.message || err}`);
-    } finally {
-      setIsLoadingMcpDocs(false);
+      if (
+        content &&
+        !content.startsWith('# Documentação não encontrada') &&
+        !content.startsWith('# Erro ao ler documentação')
+      ) {
+        setMcpDocsContent(content);
+      }
+    } catch {
+      // Mantém a documentação embutida caso falhe a leitura dinâmica
     }
   };
 
@@ -323,6 +329,66 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'routines-karaf-offline-auth',
+      question: 'Por que a rotina apresenta erro ao iniciar quando o Apache Karaf está desligado?',
+      category: 'Catálogo de Rotinas',
+      tags: ['rotinas', 'karaf', 'wta', 'winthor start', 'autenticação', 'datasnap', '8889', '9195', 'sessão', 'erro ao iniciar'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            A inicialização de rotinas pelo <strong className="text-foreground">WinThor Start</strong> depende da geração de parâmetros de autenticação e sessão pelo portal <strong className="text-foreground">WinThor Anywhere (WTA)</strong>, que roda dentro do container <strong className="text-foreground">Apache Karaf</strong> (na porta padrão <code className="font-mono text-primary font-bold">8889</code>).
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como funciona o fluxo de autenticação:</span>
+            <ol className="list-decimal pl-4 space-y-1.5">
+              <li>
+                O Dev Manager faz uma requisição HTTP para a API do WTA (<code className="font-mono text-primary">:8889</code>) buscando os tokens de sessão da rotina (<code className="font-mono text-primary">m, u, p, t, s</code>).
+              </li>
+              <li>
+                Com a sessão autenticada, envia os parâmetros para o serviço local do WinThor Start (<code className="font-mono text-primary">:9195</code>), que abre a rotina já logada no ERP.
+              </li>
+              <li>
+                <strong className="text-amber-500">Quando o Karaf não está em execução:</strong> a chamada ao WTA falha por conexão recusada. Sem a sessão do Karaf, a rotina não consegue autenticar e apresenta erro de inicialização.
+              </li>
+            </ol>
+            <p className="pt-1.5 border-t border-border/50">
+              <strong className="text-foreground">Como resolver:</strong> No próprio Catálogo de Rotinas, observe o badge <strong className="text-foreground">Karaf (WTA)</strong> no cabeçalho ou clique em <strong className="text-foreground">"Ir para Ambiente Dev &amp; Iniciar Karaf (Alt+1)"</strong> para subir o container antes de abrir rotinas. Caso queira abrir o executável diretamente pelo Windows sem sessão do ERP, utilize a opção <em>"Tentar abrir direto (sem autenticação)"</em> no aviso de erro.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'routine-801-connection-troubleshooting',
+      question: 'Por que o Catálogo da Rotina 801 informa que localhost:8889 não responde se a porta está aberta?',
+      category: 'Deploy & OSGi',
+      tags: ['801', 'rotina 801', 'wta', 'catalogo', '8889', 'localhost', '127.0.0.1', 'karaf', 'servidor', 'instalacao', 'conexão'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No Windows, o host <code className="font-mono text-primary font-bold">localhost</code> pode ser resolvido prioritariamente para o endereço IPv6 (<code className="font-mono text-primary">::1</code>), enquanto a JVM do Apache Karaf / WTA normalmente se vincula apenas à interface IPv4 (<code className="font-mono text-primary">127.0.0.1:8889</code>).
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como o Dev Manager trata e como resolver:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Fallback automático:</strong> O Dev Manager implementa detecção automática (Happy Eyeballs) e fallback transparente de <code className="font-mono text-primary">localhost</code> para <code className="font-mono text-primary">127.0.0.1</code> ao consultar a API da Rotina 801.
+              </li>
+              <li>
+                <strong className="text-foreground">Botões rápidos no modal:</strong> No cabeçalho do Catálogo Oficial (Rotina 801), clique em <strong className="text-foreground">Conexão</strong> e utilize os botões rápidos para alternar diretamente entre <code className="font-mono text-primary">localhost</code> e <code className="font-mono text-primary">127.0.0.1</code>.
+              </li>
+              <li>
+                <strong className="text-foreground">Bundle de serviço:</strong> Os endpoints do catálogo (<code className="font-mono text-primary">/winthor/ferramenta/servidor/v1/instalacao</code> e <code className="font-mono text-primary">/atualizacao</code>) exigem que o bundle <strong className="text-foreground">ferramenta-servidor</strong> esteja ativo no container Karaf.
+              </li>
+              <li>
+                <strong className="text-foreground">Credenciais WTA:</strong> Caso o ambiente exija autenticação (Apache Shiro), o Dev Manager envia automaticamente o token/cookie do usuário configurado em Configurações.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'build-executable',
       question: 'Como gerar o executável (.exe) de produção do Dev Manager para o Windows?',
       category: 'Build & Executável',
@@ -344,13 +410,16 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                 {copiedItem === 'cmd-build-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
-            <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados:</span>
+            <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados na pasta release/:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.15.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.15.1'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.15.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.15.1'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+              </li>
+              <li>
+                <strong className="text-foreground">LEIA-ME.txt &amp; RELEASE_NOTES.md (Notas da Versão):</strong> Gerados automaticamente ao empacotar a release ou via <code className="font-mono text-primary font-semibold">npm run release:notes</code>. Contêm o resumo das novidades extraídas do CHANGELOG, guia de instalação para anexar ao usuário e instruções do Windows SmartScreen ("Mais informações" &gt; "Executar assim mesmo").
               </li>
             </ul>
           </div>
@@ -389,7 +458,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">123 tools</strong> que um assistente de IA (Claude Code, Antigravity, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica.
+            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">124 tools</strong> que um assistente de IA (Claude Code, Antigravity, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
@@ -607,7 +676,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '9 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqList.length}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.15.0'}` }
+    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.15.1'}` }
   ];
 
   const handleSearchChange = (val: string) => {
@@ -711,7 +780,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       COCKPIT DO DESENVOLVEDOR
                     </span>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Dev Manager • v{appInfo?.appVersion || '1.15.0'}
+                      Dev Manager • v{appInfo?.appVersion || '1.15.1'}
                     </span>
                     {appInfo?.isAdmin ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
@@ -1654,7 +1723,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                      <span><strong>WinThor Start &amp; WTA:</strong> Abre rotinas já autenticadas pelo serviço local (<code className="font-mono text-primary">:9195</code>), com login no WTA e execução direta como fallback.</span>
+                      <span><strong>WinThor Start &amp; WTA:</strong> Abre rotinas já autenticadas pelo serviço local (<code className="font-mono text-primary">:9195</code>), com monitoramento de status do Karaf (WTA na porta <code className="font-mono text-primary">:8889</code>), alerta explícito de autenticação e fallback direto.</span>
                     </li>
                   </ul>
                 </div>
@@ -2007,7 +2076,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <h3 className="text-sm sm:text-base font-extrabold text-foreground flex items-center gap-2">
                       Dev <span className="text-primary font-bold">Manager</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-                        v{appInfo?.appVersion || '1.15.0'}
+                        v{appInfo?.appVersion || '1.15.1'}
                       </span>
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
@@ -2283,7 +2352,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      Dev Manager {appInfo?.appVersion || '1.15.0'}.exe (Portátil)
+                      Dev Manager {appInfo?.appVersion || '1.15.1'}.exe (Portátil)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Versão autônoma que não necessita instalação. Pode ser executada diretamente de pastas de rede ou pendrives.
@@ -2293,7 +2362,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-primary" />
-                      Dev Manager Setup {appInfo?.appVersion || '1.15.0'}.exe (Instalador)
+                      Dev Manager Setup {appInfo?.appVersion || '1.15.1'}.exe (Instalador)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Instalador padrão NSIS que cria atalhos no Menu Iniciar e Área de Trabalho com desinstalador integrado.

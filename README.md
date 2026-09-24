@@ -437,12 +437,19 @@ npm run build:electron
 
 ---
 
-### Tipos de Executáveis Gerados na pasta `release/`:
+### Arquivos Gerados na pasta `release/`:
 
 | Arquivo | Formato | Descrição |
 | :--- | :--- | :--- |
-| **`Dev Manager 1.0.0.exe`** | Portátil (*Standalone*) | Executa diretamente sem necessidade de instalação prévia. Ideal para pendrives, ambientes restritos ou compartilhamento rápido em rede. |
-| **`Dev Manager Setup 1.0.0.exe`** | Instalador NSIS | Assistente tradicional do Windows com opções de escolha do diretório de instalação e criação de atalhos no Desktop e Menu Iniciar. |
+| **`Dev Manager <versão>.exe`** | Portátil (*Standalone*) | Executa diretamente sem necessidade de instalação prévia. Ideal para pendrives, ambientes restritos ou compartilhamento rápido em rede. |
+| **`Dev Manager Setup <versão>.exe`** | Instalador NSIS | Assistente tradicional do Windows com opções de escolha do diretório de instalação e criação de atalhos no Desktop e Menu Iniciar. |
+| **`LEIA-ME.txt`** | Texto Puro (CRLF) | Guia rápido de instalação para o usuário final, ideal para abrir no Bloco de Notas, com explicação do executável a escolher, aviso do SmartScreen e resumo das mudanças. |
+| **`RELEASE_NOTES.md`** | Markdown | Notas completas da versão com as novidades extraídas do changelog, ideal para publicação em releases no GitHub ou documentações internas. |
+
+> **Dica:** Para gerar ou atualizar apenas os arquivos de notas da versão (`LEIA-ME.txt` e `RELEASE_NOTES.md`) sem precisar recompilar todo o instalador:
+> ```bash
+> npm run release:notes
+> ```
 
 ---
 
