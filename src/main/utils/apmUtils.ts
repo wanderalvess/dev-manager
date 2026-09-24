@@ -548,6 +548,54 @@ export function matchesTraceScope(trace: TraceSummary, filter?: ApmFilter): bool
   return true;
 }
 
+const APM_FILTER_STRING_KEYS = ['serviceName', 'search'] as const;
+const APM_FILTER_BOOLEAN_KEYS = ['hasError', 'hasDatabaseQuery'] as const;
+const APM_FILTER_NUMBER_KEYS = ['minDurationMs', 'maxDurationMs', 'limit', 'startTimeMs', 'endTimeMs'] as const;
+
+/**
+ * Serializa um `ApmFilter` como query string (`?chave=valor`), para a API de consulta do receptor.
+ */
+export function buildApmFilterQuery(filter?: ApmFilter): string {
+  if (!filter) return '';
+  const params = new URLSearchParams();
+  for (const key of APM_FILTER_STRING_KEYS) {
+    const value = filter[key];
+    if (value) params.set(key, value);
+  }
+  for (const key of APM_FILTER_BOOLEAN_KEYS) {
+    const value = filter[key];
+    if (value !== undefined) params.set(key, String(value));
+  }
+  for (const key of APM_FILTER_NUMBER_KEYS) {
+    const value = filter[key];
+    if (value !== undefined && Number.isFinite(value)) params.set(key, String(value));
+  }
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+/**
+ * Inverso de `buildApmFilterQuery`: valores ausentes, vazios ou malformados são ignorados.
+ */
+export function parseApmFilterQuery(params: URLSearchParams): ApmFilter {
+  const filter: ApmFilter = {};
+  for (const key of APM_FILTER_STRING_KEYS) {
+    const value = params.get(key);
+    if (value) filter[key] = value;
+  }
+  for (const key of APM_FILTER_BOOLEAN_KEYS) {
+    const value = params.get(key);
+    if (value === 'true' || value === 'false') filter[key] = value === 'true';
+  }
+  for (const key of APM_FILTER_NUMBER_KEYS) {
+    const value = params.get(key);
+    if (value === null || value.trim() === '') continue;
+    const num = Number(value);
+    if (Number.isFinite(num)) filter[key] = num;
+  }
+  return filter;
+}
+
 /**
  * Aplica escopo, erro, SQL, faixa de duração e busca textual à lista de traces.
  */

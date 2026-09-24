@@ -1090,7 +1090,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
       <div className="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-[97vw] 2xl:max-w-[1720px] h-[94vh] flex flex-col overflow-hidden animate-fade-in">
         {/* Cabeçalho */}
-        <div className="p-3.5 sm:px-6 border-b border-border flex items-center justify-between bg-muted/30 shrink-0 gap-3">
+        <div className="p-3.5 sm:px-6 border-b border-border flex items-center flex-wrap justify-between bg-muted/30 shrink-0 gap-3">
           <div className="flex items-center space-x-3 min-w-0">
             <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
               <ListTree className="w-5 h-5" />
@@ -1143,14 +1143,14 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             </div>
           </div>
 
-          <div className="flex items-center space-x-1.5">
+          <div className="flex items-center flex-wrap gap-1.5">
             {/* Controle de Inicialização / Parada do Karaf */}
             {karafStatus === 'ONLINE' ? (
               <button
                 type="button"
                 onClick={handleStopKaraf}
                 disabled={isStoppingKaraf}
-                className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-rose-500/10 border border-border hover:border-rose-500/30 text-rose-600 dark:text-rose-400 cursor-pointer shadow-2xs disabled:opacity-50"
+                className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-rose-500/10 border border-border hover:border-rose-500/30 text-rose-600 dark:text-rose-400 cursor-pointer shadow-2xs disabled:opacity-50"
                 title="Encerrar a execução do container Apache Karaf"
               >
                 {isStoppingKaraf ? (
@@ -1172,7 +1172,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     type="button"
                     onClick={handleLaunchKarafDebug}
                     disabled={isStartingKaraf}
-                    className="px-3 py-1.5 font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer disabled:opacity-50"
+                    className="h-[30px] px-3 py-1.5 font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer disabled:opacity-50"
                     title="Iniciar o Apache Karaf em modo Debug com JDWP (:5005) em terminal"
                   >
                     {isStartingKaraf ? (
@@ -1191,7 +1191,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
                     type="button"
                     onClick={() => setIsKarafStartMenuOpen((prev) => !prev)}
                     disabled={isStartingKaraf}
-                    className="px-1.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white border-l border-emerald-500 cursor-pointer disabled:opacity-50"
+                    className="h-[30px] px-1.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white border-l border-emerald-500 cursor-pointer disabled:opacity-50"
                     title="Mais opções de inicialização do Karaf"
                   >
                     <ChevronDown className="w-3.5 h-3.5" />
@@ -1238,7 +1238,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               <button
                 type="button"
                 onClick={() => setIsExportMenuOpen((prev) => !prev)}
-                className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
+                className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
                 title="Exportar inventário de bundles OSGi filtrados"
               >
                 <Download className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1276,7 +1276,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={handleOpenLog}
-              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
+              className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Ver log interno do Karaf (log:display)"
             >
               <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1286,7 +1286,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={() => setIsSnapshotModalOpen(true)}
-              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
+              className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Comparar estado atual de bundles com snapshot salvo"
             >
               <Camera className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1301,7 +1301,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={handleOpenFeaturesModal}
-              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
+              className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Gerenciar Features instaladas do Karaf (feature:list -i, feature:uninstall -r, feature:install)"
             >
               <Layers className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1311,7 +1311,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={handleOpenDeployHistory}
-              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
+              className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer shadow-2xs"
               title="Ver histórico de deploys/builds Karaf já executados"
             >
               <History className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1321,7 +1321,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={() => setIsRoutine801ModalOpen(true)}
-              className="px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-primary/30 text-foreground cursor-pointer shadow-2xs"
+              className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-primary/30 text-foreground cursor-pointer shadow-2xs"
               title="Abrir catálogo oficial de serviços e rotinas (Rotina 801)"
             >
               <Download className="w-3.5 h-3.5 text-primary" />
@@ -1331,7 +1331,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={() => handleOpenInstall()}
-              className="px-3.5 py-1.5 rounded-md font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs cursor-pointer"
+              className="h-[30px] px-3.5 py-1.5 rounded-md font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs cursor-pointer"
               title="Instalar novo bundle ou outra versão"
             >
               <UploadCloud className="w-3.5 h-3.5" />
@@ -1342,7 +1342,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
               type="button"
               onClick={() => fetchBundles()}
               disabled={isLoading}
-              className="p-1.5 bg-card hover:bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-2xs"
+              className="h-[30px] w-[30px] flex items-center justify-center bg-card hover:bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-2xs"
               title="Atualizar lista de bundles"
             >
               <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />
@@ -1351,7 +1351,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition cursor-pointer"
+              className="h-[30px] w-[30px] flex items-center justify-center hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition cursor-pointer"
               title="Fechar"
             >
               <X className="w-4 h-4" />

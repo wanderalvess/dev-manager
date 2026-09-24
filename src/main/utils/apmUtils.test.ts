@@ -13,6 +13,8 @@ import {
   computeDatabaseTimeRatio,
   computeTraceTimeBreakdown,
   filterTraceSummaries,
+  buildApmFilterQuery,
+  parseApmFilterQuery,
   aggregateTimeSeriesBuckets,
   buildCompactTraceDetails,
   generateMockTraces
@@ -648,6 +650,31 @@ describe('apmUtils', () => {
         makeSpan({ spanId: 'early', parentSpanId: 'root', name: 'early', startTimeUnixMs: 1010 })
       ];
       expect(buildTraceSummary('t1', spans).rootSpanName).toBe('early');
+    });
+  });
+
+  describe('buildApmFilterQuery / parseApmFilterQuery', () => {
+    it('faz ida e volta de todos os campos do filtro pela query string', () => {
+      const filter = {
+        serviceName: 'karaf winthor',
+        search: '/pedidos?x=1&y=2',
+        hasError: false,
+        hasDatabaseQuery: true,
+        minDurationMs: 250,
+        maxDurationMs: 1500.5,
+        limit: 20,
+        startTimeMs: 1_711_200_000_000,
+        endTimeMs: 1_711_200_900_000
+      };
+      const query = buildApmFilterQuery(filter);
+      expect(query.startsWith('?')).toBe(true);
+      expect(parseApmFilterQuery(new URLSearchParams(query.slice(1)))).toEqual(filter);
+    });
+
+    it('gera query vazia sem filtro e ignora valores malformados ao ler', () => {
+      expect(buildApmFilterQuery()).toBe('');
+      expect(buildApmFilterQuery({})).toBe('');
+      expect(parseApmFilterQuery(new URLSearchParams('limit=abc&hasError=sim&minDurationMs=&serviceName='))).toEqual({});
     });
   });
 

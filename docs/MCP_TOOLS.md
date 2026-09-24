@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Dev Manager expõe **106 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Dev Manager expõe **123 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -10,10 +10,15 @@ Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a en
 Permite verificar e manipular o ambiente local: matar processos, iniciar serviços, checar portas, e muito mais.
 
 *   **`system_get_info` / `system_get_metrics`**: Lê versão do SO, consumo de RAM, CPU e caminhos instalados.
+*   **`system_check_path` / `system_auto_detect_paths`**: Verifica se um caminho local existe (e se é arquivo ou pasta) e tenta localizar sozinho a IDE, o Karaf e a pasta de projetos.
+*   **`env_check_admin`**: Informa se o processo tem privilégios de administrador no Windows (necessário para gerenciar serviços).
 *   **`env_get_services_status` / `env_start_service` / `env_stop_service`**: Lista e gerencia Serviços do Windows.
+*   **`env_batch_start_services` / `env_batch_stop_services`**: Inicia ou para vários serviços Windows de uma vez.
 *   **`env_get_processes_status` / `env_batch_kill_processes` / `env_check_ports`**: Verifica processos rodando, libera portas ocupadas e mata tarefas travadas.
 *   **`env_launch_ide` / `env_launch_app`**: Inicia a sua IDE (IntelliJ, VS Code) ou outros executáveis no Windows.
+*   **`env_launch_server_debug`**: Abre o script de debug do Karaf em uma janela externa.
 *   **`env_reset_environment`**: Executa uma automação completa de "reset" para limpar o ambiente local e subir tudo do zero.
+*   **`settings_get` / `settings_save`**: Lê as configurações do Dev Manager (com segredos ofuscados) e grava um conjunto parcial delas.
 
 **Exemplo de como pedir à IA:**
 > "Verifique o status do meu ambiente, mate qualquer processo preso na porta 8181 e inicie a IDE."
@@ -24,7 +29,8 @@ Permite verificar e manipular o ambiente local: matar processos, iniciar serviç
 Ferramentas de orquestração local (macros).
 
 *   **`profile_run` / `profile_stop`**: Roda um perfil de automação completo que você tenha configurado na UI.
-*   **`profile_run_step` / `profile_restart_step`**: Roda ou reinicia um passo individual de automação.
+*   **`profile_run_step` / `profile_restart_step` / `profile_stop_step`**: Roda, reinicia ou interrompe um passo individual de automação.
+*   **`profile_kill_port`**: Mata o processo que está ocupando uma porta TCP.
 
 **Exemplo de como pedir à IA:**
 > "Rode meu perfil de automação 'Subir Ambiente Local' e avise quando terminar."
@@ -34,10 +40,19 @@ Ferramentas de orquestração local (macros).
 ## 3. Servidor Apache Karaf e Bundles
 Domínio completo para interagir com o Karaf, inspecionar logs, diagnosticar conflitos OSGi e fazer deploys.
 
-*   **`karaf_start_embedded` / `karaf_stop_embedded` / `karaf_get_embedded_output`**: Inicia/lê e encerra a instância do Karaf embutida do Dev Manager.
+*   **`karaf_start_embedded` / `karaf_stop_embedded` / `karaf_is_embedded_running`**: Inicia, encerra e verifica se a instância do Karaf embutida do Dev Manager está ativa.
+*   **`karaf_get_embedded_output` / `karaf_send_embedded_input`**: Lê a saída acumulada do console embutido desde a última leitura e envia uma linha de comando a ele.
+*   **`karaf_get_persisted_logs`**: Lê o final do log do console embutido gravado em disco, sem consumir o buffer (sobrevive a reinícios).
+*   **`karaf_exec_command`**: Executa um único comando no shell do Karaf via `client.bat` (ex.: `feature:list -i`).
 *   **`karaf_list_bundles` / `karaf_get_bundle_details` / `karaf_manage_bundle`**: Lista, inspeciona e reinicia (start/stop/refresh/resolve) bundles OSGi.
+*   **`karaf_install_bundle` / `karaf_uninstall_bundle`**: Instala um bundle a partir de coordenada Maven (`mvn:...`) ou arquivo local, e desinstala um bundle existente (com `bundle:refresh`).
+*   **`karaf_reinstall_bundle` / `karaf_update_bundle_version`**: Atualiza um bundle instalado (`bundle:update` + refresh + start), opcionalmente rodando `mvn clean install` antes, ou o aponta para uma nova versão/localização.
+*   **`karaf_check_install_dependencies` / `karaf_check_bundle_dependencies`**: Checagens antes de mexer em bundles — colisão com um bundle já instalado de mesmo nome/localização, e bundles dependentes (com nível de risco) antes de desinstalar ou alterar.
 *   **`karaf_detect_wiring_conflicts`**: Analisa ativamente todos os bundles parados, com falhas, ou duplicados e diagnostica erros (como *Unsatisfied Requirements* e conflitos de *Classloader*).
+*   **`karaf_parse_pom`**: Lê o `pom.xml`/`deploy-local.bat` do projeto e sugere os comandos de deploy.
 *   **`karaf_deploy` / `karaf_build_and_deploy` / `karaf_run_maven_build`**: Executa o maven local no seu repositório e injeta o bundle compilado dentro do Karaf.
+*   **`karaf_verify_bundle`**: Confirma após o deploy que a feature/bundle está instalada e ativa (`feature:list -i` + `bundle:list` filtrados pelo termo).
+*   **`karaf_get_deploy_history`**: Histórico persistido de deploys/builds (mais recente primeiro, até 200 entradas).
 *   **`karaf_get_log`**: Lê diretamente o arquivo `karaf.log` sem precisar abrir.
 
 **Exemplo de como pedir à IA:**
@@ -62,12 +77,15 @@ Ferramentas para manipular a stack do Docker. As ferramentas funcionam para cham
 ## 5. Git & Azure DevOps
 Ações automatizadas nos repositórios.
 
-*   **`git_list_projects` / `git_get_project_info`**: Lista projetos na pasta de trabalho e exibe branch atual e upstream.
-*   **`git_exec_command` / `git_checkout_branch`**: Permite fazer checkout de branches, pull, stash e status.
+*   **`git_list_projects` / `git_get_project_info`**: Lista projetos na pasta de trabalho e exibe branch atual, branches locais e do origin. Com `includeUncommittedCount`, `git_list_projects` também conta as alterações pendentes de cada repositório.
+*   **`git_get_status` / `git_get_diff` / `git_get_commit_history`** (somente leitura): Arquivos alterados, diff em relação ao HEAD (do repositório inteiro ou de um arquivo, com limite de tamanho) e últimos commits da branch atual.
+*   **`git_exec_command` / `git_checkout_branch`**: Permite fazer checkout de branches, pull, stash e status. Fetch e pull têm tempo limite de 3 minutos.
 *   **`git_build_pr_url`**: Monta um link direto para criar um Pull Request no Azure/GitHub/GitLab da branch atual.
 
 **Exemplo de como pedir à IA:**
 > "Em qual branch estou no repositório de vendas? Dê um git pull e monte a URL de Pull Request."
+>
+> "Quais repositórios têm alterações não commitadas? Me mostre o diff do de vendas e resuma o que mudou."
 
 ---
 
@@ -90,10 +108,15 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 *   **`db_list_tables` / `db_get_table_columns`**: Inspeciona a estrutura dos bancos de dados.
 *   **`db_execute_query`**: Executa SELECTs de modo seguro no banco e retorna resultados tabulares.
 *   **`db_explain_plan` / `db_analyze_explain_plan`**: Roda Planos de Execução do banco e usa Inteligência Artificial Heurística para avisar sobre lentidão (ex: Full Table Scans, falta de índices, ou ordenações custosas).
+*   **`db_get_oracle_active_sessions` / `db_get_oracle_recent_statements`**: Statement Tracer do Oracle — lista sessões conectadas com a SQL atual/última de cada uma (`v$session`/`v$sql`) ou as instruções mais recentes no cursor cache, com filtro opcional por schema/texto. Útil para descobrir qual query um app ou rotina disparou, quando vários sistemas compartilham o mesmo banco.
+*   **`db_start_oracle_capture` / `db_get_oracle_capture_state` / `db_stop_oracle_capture` / `db_clear_oracle_capture`**: Captura contínua do Statement Tracer — consulta `v$session`/`v$sql` em segundo plano (intervalo padrão de 3s, mínimo de 2s, parada automática após 30 minutos) e acumula as SQLs distintas e a linha do tempo de qual sessão passou a rodar qual SQL. A leitura devolve até 50 itens de cada lista por padrão (`limit`). É uma captura própria do servidor MCP: não enxerga a captura iniciada na tela do app, e vice-versa.
 
 **Exemplo de como pedir à IA:**
 > "Mostre as colunas da tabela PCEMPR."
 > "Rode um Explain Plan na query 'SELECT * FROM PCPEDIDO' e analise se há problemas de performance."
+> "Quais sessões estão ativas no Oracle agora e o que cada uma está rodando?"
+> "Quais foram as últimas queries que rodaram no schema APP_KARAF?"
+> "Liga a captura do Oracle no schema APP_KARAF; vou gravar um pedido no WinThor e depois te aviso para você me dizer quais SQLs rodaram."
 
 ---
 
@@ -118,3 +141,34 @@ Gestão de backup/restore agendado e leitura pontual de arquivos de log locais.
 
 **Exemplo de como pedir à IA:**
 > "Rode um backup manual da conexão 'Produção' para D:\Backups e me mostre as últimas 50 linhas do log do Karaf."
+
+## 10. APM & Traces (OpenTelemetry)
+Consulta os traces recebidos pelo receptor OTLP do app (porta 4318 por padrão, configurável na tela de APM). O buffer de traces vive na memória do processo que recebe os spans — o app desktop ou o servidor web (`npm run server`) —, então estas tools consultam esse processo por uma API local do receptor (somente loopback, protegida por token): o app precisa estar aberto.
+
+*   **`apm_get_overview`**: Vazão (RPS), taxa de erro, latências p50/p95/p99, % do tempo gasto em banco, top endpoints e queries mais lentas (filtros `serviceName` e `lastMinutes`).
+*   **`apm_get_traces`**: Busca traces por serviço, rota/traceId, apenas erros, apenas com SQL, latência mínima e janela de tempo.
+*   **`apm_get_trace_details`**: Spans na ordem do waterfall (profundidade e offset), SQL executado, exceções com stacktrace e a decomposição do tempo entre banco, chamadas externas e aplicação.
+*   **`apm_get_services` / `apm_get_receiver_status`**: Serviços monitorados com métricas agregadas; estado, porta, volume recebido e uso do buffer do receptor.
+
+**Exemplo de como pedir à IA:**
+> "Quais endpoints do Karaf estão mais lentos nos últimos 15 minutos? Abra o trace mais lento e me diga qual query está consumindo o tempo."
+
+## 11. Rotina 801 (Serviços Web Oficiais do WinThor)
+Catálogo e instalação das funcionalidades oficiais publicadas pela Rotina 801 (ferramenta-servidor) no Karaf.
+
+*   **`routine801_get_catalog`**: Lista instalações ou atualizações disponíveis de serviços web e rotinas oficiais do WinThor.
+*   **`routine801_check_health`**: Testa a conectividade com o serviço HTTP da Rotina 801 no Karaf.
+*   **`routine801_install_features`**: Instala funcionalidades selecionadas no Karaf com resolução de dependências (via `karaf_cli` ou `api`).
+
+**Exemplo de como pedir à IA:**
+> "Liste as atualizações pendentes da Rotina 801 e instale as que estão liberadas."
+
+## 12. Catálogo de Rotinas
+Rotinas (.EXE/.PC) descobertas no catálogo local e programas mapeados manualmente na UI.
+
+*   **`routines_list`**: Lista as rotinas descobertas no catálogo.
+*   **`routines_launch` / `routines_launch_mapped`**: Executa uma rotina pelo caminho completo do arquivo, ou um programa mapeado manualmente pelo id.
+*   **`routines_toggle_favorite`**: Marca ou desmarca uma rotina como favorita.
+
+**Exemplo de como pedir à IA:**
+> "Abra a rotina 316 do catálogo e marque ela como favorita."

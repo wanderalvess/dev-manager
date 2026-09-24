@@ -103,6 +103,8 @@ docker run -d \
 | `KARAF_PASS` | `karaf` | Senha para login no `client` Karaf |
 | `TARGET_PR_BRANCH` | `develop` | Branch de destino padrão nos PRs do Azure DevOps |
 | `API_KEY` | *(vazio)* | Chave exigida no header `x-api-key` em toda rota `/api/*`. **Recomendado sempre que o painel for acessado além de `localhost`** — sem ela, qualquer pessoa na rede controla serviços do Windows, mata processos e dispara deploys sem autenticação. |
+| `APM_OTLP_PORT` | *(porta configurada no app, ou `4318`)* | Porta do receptor OpenTelemetry (OTLP/HTTP) dedicado do APM |
+| `APM_OTLP_HOST` | *(o mesmo de `HOST`)* | Endereço de escuta do receptor OTLP dedicado |
 
 ---
 
@@ -115,6 +117,18 @@ O servidor escuta em `0.0.0.0`, permitindo que outros membros do time acessem pe
 Tecnicamente sim, mas **não é esse o modelo pensado para o Dev Manager**. Cada instância é *single-tenant*: existe um único arquivo de configurações (`CONFIG_DIR/config.json`) compartilhado por qualquer um que acesse aquela URL — conexões de banco, credenciais do Karaf, perfis de backup e chaves de LLM incluídos. Não há login nem separação por usuário; a `API_KEY` autentica o acesso à instância como um todo, não identifica quem está usando. Se duas pessoas editarem configurações ao mesmo tempo, uma sobrescreve a outra.
 
 O modelo pretendido é **uma instância por pessoa** (rodando localmente ou no seu próprio container). Para padronizar a configuração entre a equipe sem compartilhar credenciais, use **Configurações → Exportar** (com a opção de sanitizar senhas) e cada pessoa importa o arquivo na sua própria instância.
+
+### Como enviar traces OpenTelemetry para a tela de APM no Docker?
+O próprio servidor web aceita exportações OTLP/HTTP (JSON ou Protobuf, com ou sem gzip) em `/v1/traces`, na mesma porta do painel — basta apontar o exportador para a base do servidor, sem porta extra:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://<ip-do-host>:3000
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+```
+
+O receptor dedicado (`APM_OTLP_PORT`, padrão `4318`) também sobe dentro do contêiner, mas o `docker-compose.yml` não publica essa porta de propósito: é comum ela já estar ocupada no host por outro coletor (OTel Collector, Jaeger, SigNoz). Se quiser usá-la, publique uma porta livre do host apontando para ela (ex.: `"4418:4318"`).
+
+A rota `/v1/traces` fica fora de `/api/*` e por isso não exige a `API_KEY` (exportadores OTel raramente enviam cabeçalhos customizados); qualquer máquina que alcance o painel pode enviar spans. A API local de consulta usada pelas tools `apm_*` do MCP só atende conexões de dentro do próprio contêiner.
 
 ### Os meus arquivos Git são alterados no host?
 Sim! A montagem de volumes é bidirecional. Comandos como `git pull` ou `git stash` executados no painel Web refletem imediatamente na sua pasta local.

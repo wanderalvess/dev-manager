@@ -525,6 +525,20 @@ client.bat "feature:install -r custom-feature/2.0.0"
       expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.exporter.otlp.protocol=http/protobuf');
       expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.service.name=karaf-winthor');
     });
+
+    it('exporta para a porta do receptor APM configurada nas configurações', () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'opentelemetry-javaagent.jar'), 'mock-agent');
+
+      vi.spyOn(configService, 'getSettings').mockReturnValue({
+        ...configService.getSettings(),
+        karafPath: tmpDir,
+        apmReceiverPort: 4418
+      });
+
+      expect(karafService.getResolvedJavaEnv().JAVA_TOOL_OPTIONS).toContain('-Dotel.exporter.otlp.endpoint=http://127.0.0.1:4418');
+    });
   });
 
   describe('executeKarafCommand', () => {

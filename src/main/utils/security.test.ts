@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath, isSafePath } from './security';
+import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath, isSafePath, isLoopbackAddress } from './security';
+
+describe('isLoopbackAddress', () => {
+  it('aceita loopback IPv4, IPv6 e IPv4 mapeado em IPv6', () => {
+    expect(isLoopbackAddress('127.0.0.1')).toBe(true);
+    expect(isLoopbackAddress('127.10.0.3')).toBe(true);
+    expect(isLoopbackAddress('::1')).toBe(true);
+    expect(isLoopbackAddress('::ffff:127.0.0.1')).toBe(true);
+  });
+
+  it('rejeita endereços de rede e valores ausentes ou forjados', () => {
+    expect(isLoopbackAddress('192.168.0.10')).toBe(false);
+    expect(isLoopbackAddress('::ffff:10.0.0.5')).toBe(false);
+    expect(isLoopbackAddress('0.0.0.0')).toBe(false);
+    expect(isLoopbackAddress('127.0.0.1.evil.com')).toBe(false);
+    expect(isLoopbackAddress(undefined)).toBe(false);
+    expect(isLoopbackAddress('')).toBe(false);
+  });
+});
 
 describe('isValidIdentifier', () => {
   it('aceita nomes de serviço/processo comuns', () => {

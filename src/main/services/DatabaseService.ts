@@ -2,8 +2,22 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
-import { DatabaseConnectionConfig, QueryResult, TableColumnInfo, ExplainPlanResult } from '../../shared/types';
+import {
+  DatabaseConnectionConfig,
+  QueryResult,
+  TableColumnInfo,
+  ExplainPlanResult,
+  OracleTracerFilter,
+  OracleActiveSessionsResult,
+  OracleRecentStatementsResult
+} from '../../shared/types';
 import { getListeningPid } from '../utils/network';
+import {
+  buildActiveSessionsQuery,
+  buildRecentStatementsQuery,
+  mapActiveSessionRow,
+  mapRecentStatementRow
+} from '../utils/oracleTracerUtils';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +28,10 @@ if (typeof (globalThis as any).__dirname === 'undefined') {
 if (typeof (globalThis as any).__filename === 'undefined') {
   (globalThis as any).__filename = __filename;
 }
+
+// Teto de segurança da listagem de tabelas. Schemas de ERP passam fácil de alguns
+// milhares de tabelas, então o limite precisa ficar bem acima do de consultas comuns.
+const MAX_LISTED_TABLES = 50000;
 
 interface CachedConnection {
   conn: any;
@@ -269,7 +287,7 @@ export class DatabaseService {
         query = 'SHOW TABLES';
       }
 
-      const res = await this.executeQuery(config, query, 500);
+      const res = await this.executeQuery(config, query, MAX_LISTED_TABLES);
       if (!res.success || !res.rows) return [];
 
       return res.rows.map((row) => {
@@ -487,6 +505,80 @@ export class DatabaseService {
         error: await this.formatErrorMessage(err, config)
       };
     }
+  }
+
+  /**
+   * Statement Tracer: lista as sessões conectadas ao Oracle e a instrução SQL atual/última
+   * executada por cada uma (join de v$session com v$sql via SQL_ID/PREV_SQL_ID). Serve para
+   * responder "quem está rodando o quê agora" quando vários apps compartilham o mesmo banco.
+   */
+  public async getOracleActiveSessions(
+    config: DatabaseConnectionConfig,
+    filter?: OracleTracerFilter
+  ): Promise<OracleActiveSessionsResult> {
+    const startTime = Date.now();
+    if (config.type !== 'oracle') {
+      return {
+        success: false,
+        sessions: [],
+        executionTimeMs: 0,
+        error: 'Statement Tracer disponível apenas para conexões Oracle.'
+      };
+    }
+
+    const { sql, binds } = buildActiveSessionsQuery(filter);
+    const res = await this.executeQuery(config, sql, filter?.limit ?? 200, binds);
+    if (!res.success || !res.rows) {
+      return {
+        success: false,
+        sessions: [],
+        executionTimeMs: Date.now() - startTime,
+        error: res.error || 'Falha ao consultar sessões ativas no Oracle.'
+      };
+    }
+
+    return {
+      success: true,
+      sessions: res.rows.map(mapActiveSessionRow),
+      executionTimeMs: Date.now() - startTime
+    };
+  }
+
+  /**
+   * Statement Tracer: lista as instruções SQL mais recentes no cursor cache do Oracle
+   * (v$sql), mostrando o que rodou no banco mesmo que a sessão que executou já tenha
+   * encerrado — útil para correlacionar "qual query rodou quando cliquei nesse botão".
+   */
+  public async getOracleRecentStatements(
+    config: DatabaseConnectionConfig,
+    filter?: OracleTracerFilter
+  ): Promise<OracleRecentStatementsResult> {
+    const startTime = Date.now();
+    if (config.type !== 'oracle') {
+      return {
+        success: false,
+        statements: [],
+        executionTimeMs: 0,
+        error: 'Statement Tracer disponível apenas para conexões Oracle.'
+      };
+    }
+
+    const { sql, binds } = buildRecentStatementsQuery(filter);
+    const res = await this.executeQuery(config, sql, filter?.limit ?? 200, binds);
+    if (!res.success || !res.rows) {
+      return {
+        success: false,
+        statements: [],
+        executionTimeMs: Date.now() - startTime,
+        error: res.error || 'Falha ao consultar SQL recente no Oracle.'
+      };
+    }
+
+    return {
+      success: true,
+      statements: res.rows.map(mapRecentStatementRow),
+      executionTimeMs: Date.now() - startTime
+    };
   }
 
   // =========================================================================

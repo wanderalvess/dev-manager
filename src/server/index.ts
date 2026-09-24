@@ -14,6 +14,7 @@ import { GitAzureService } from '../main/services/GitAzureService';
 import { RoutinesService } from '../main/services/RoutinesService';
 import { DocsIndexService, DocSyncService } from '../main/services/DocsIndexService';
 import { DatabaseService } from '../main/services/DatabaseService';
+import { OracleTracerCaptureService } from '../main/services/OracleTracerCaptureService';
 import { BackupService } from '../main/services/BackupService';
 import { BackupSchedulerService } from '../main/services/BackupSchedulerService';
 import * as cron from 'node-cron';
@@ -27,7 +28,13 @@ import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
 import { JiraSource } from '../main/services/docSources/JiraSource';
 import { LlmService } from '../main/services/LlmService';
 import { Routine801Service } from '../main/services/Routine801Service';
-import { ApmService, ApmIngestError, MAX_OTLP_BODY_BYTES, OTLP_TRACE_INGEST_PATHS } from '../main/services/ApmService';
+import {
+  ApmService,
+  ApmIngestError,
+  MAX_OTLP_BODY_BYTES,
+  OTLP_TRACE_INGEST_PATHS,
+  getApmReceiverHandlePath
+} from '../main/services/ApmService';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -37,8 +44,7 @@ import {
   DocsIndexProgress,
   DocSyncProgress,
   DeployProfile,
-  ApmFilter,
-  DEFAULT_APM_OTLP_PORT
+  ApmFilter
 } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 import { z } from 'zod';
@@ -116,6 +122,7 @@ app.use((req, res, next) => {
 const configService = new ConfigService();
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService();
+const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
 const backupService = new BackupService();
 const backupSchedulerService = new BackupSchedulerService(configService, backupService);
 backupSchedulerService.onResult = (connectionName, result) => {
@@ -140,15 +147,16 @@ const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
 const routine801Service = new Routine801Service(configService, karafService);
-const apmService = new ApmService();
+const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
 apmService.onNewTrace = (summary) => {
   broadcastWs('apm:new-trace', summary);
 };
-// Mesmo receptor OTLP dedicado do app desktop, para que as instruções da tela de APM (porta 4318)
-// valham também no modo web. Em Docker a porta precisa ser publicada; alternativamente, os
-// exportadores podem apontar para a própria porta do servidor (rota /v1/traces).
+// Mesmo receptor OTLP dedicado do app desktop, para que as instruções da tela de APM valham também
+// no modo web (porta de APM_OTLP_PORT ou, sem ela, a configurada no app). Em Docker a porta precisa
+// ser publicada; alternativamente, os exportadores podem apontar para a própria porta do servidor
+// (rota /v1/traces).
 apmService
-  .startReceiver(Number(process.env.APM_OTLP_PORT) || DEFAULT_APM_OTLP_PORT, process.env.APM_OTLP_HOST || configuredHost)
+  .startReceiver(Number(process.env.APM_OTLP_PORT) || undefined, process.env.APM_OTLP_HOST || configuredHost)
   .catch((err) => {
     console.warn('[ApmService] Falha ao iniciar receptor OTLP:', err);
   });
@@ -795,6 +803,59 @@ app.post('/api/db/columns', async (req, res) => {
   }
 });
 
+app.post('/api/db/oracle-active-sessions', async (req, res) => {
+  try {
+    const { config, filter } = req.body;
+    const result = await databaseService.getOracleActiveSessions(config, filter);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, sessions: [], executionTimeMs: 0, error: err.message || 'Erro ao consultar sessões ativas no Oracle' });
+  }
+});
+
+app.post('/api/db/oracle-recent-statements', async (req, res) => {
+  try {
+    const { config, filter } = req.body;
+    const result = await databaseService.getOracleRecentStatements(config, filter);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, statements: [], executionTimeMs: 0, error: err.message || 'Erro ao consultar SQL recente no Oracle' });
+  }
+});
+
+app.post('/api/db/oracle-capture/start', (req, res) => {
+  try {
+    const { config, options } = req.body;
+    res.json(oracleTracerCaptureService.startCapture(config, options));
+  } catch (err: any) {
+    res.json({
+      isCapturing: false,
+      startedAt: null,
+      intervalMs: 0,
+      pollCount: 0,
+      lastPolledAt: null,
+      lastError: err?.message || 'Falha ao iniciar a captura.',
+      statements: [],
+      sessionEvents: []
+    });
+  }
+});
+
+app.post('/api/db/oracle-capture/stop', (req, res) => {
+  const { connectionId } = req.body;
+  res.json(oracleTracerCaptureService.stopCapture(connectionId));
+});
+
+app.post('/api/db/oracle-capture/clear', (req, res) => {
+  const { connectionId } = req.body;
+  res.json(oracleTracerCaptureService.clearCapture(connectionId));
+});
+
+app.post('/api/db/oracle-capture/state', (req, res) => {
+  const { connectionId } = req.body;
+  res.json(oracleTracerCaptureService.getCaptureState(connectionId));
+});
+
 app.post('/api/db/backup', async (req, res) => {
   try {
     const { config, destinationFolder, oracleDirectory, compress, useCustomCommand, customCommand } = req.body;
@@ -1406,12 +1467,18 @@ app.post('/api/routine801/install', async (req, res) => {
 // 13. Operações Git Avançadas
 app.post('/api/git/checkout', async (req, res) => {
   const { projectPath, branchName, createNew } = req.body;
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json({ success: false, output: 'Caminho de projeto inválido.' });
+  }
   const result = await gitAzureService.checkoutBranch(projectPath, branchName, createNew);
   res.json(result);
 });
 
 app.post('/api/git/commit-push', async (req, res) => {
   const { projectPath, message } = req.body;
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json({ success: false, output: 'Caminho de projeto inválido.' });
+  }
   const result = await gitAzureService.commitAndPush(projectPath, message);
   res.json(result);
 });
@@ -1419,6 +1486,9 @@ app.post('/api/git/commit-push', async (req, res) => {
 app.get('/api/git/commits', async (req, res) => {
   const projectPath = String(req.query.path || '');
   const limit = Number(req.query.limit) || 10;
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json([]);
+  }
   const commits = await gitAzureService.getCommitHistory(projectPath, limit);
   res.json(commits);
 });
@@ -1440,6 +1510,10 @@ app.get('/api/git/diff', async (req, res) => {
   }
   const result = await gitAzureService.getDiff(projectPath, targetFile);
   res.json(result);
+});
+
+app.get('/api/git/uncommitted-counts', async (_req, res) => {
+  res.json(await gitAzureService.getUncommittedCounts());
 });
 
 // 14. Exportação / Importação de Configurações
@@ -1576,6 +1650,14 @@ app.delete('/api/apm/traces', (_req, res) => {
 app.post('/api/apm/demo', (_req, res) => {
   const result = apmService.generateDemoData();
   res.json(result);
+});
+
+app.post('/api/apm/receiver-port', async (req, res) => {
+  const parsed = z.object({ port: z.number().int() }).safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Informe a porta do receptor como número inteiro.', details: parsed.error.issues });
+  }
+  res.json(await apmService.changeReceiverPort(parsed.data.port));
 });
 
 // Servir Frontend SPA estático se compilado

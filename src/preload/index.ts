@@ -42,6 +42,11 @@ import type {
   InfrDockerScriptStatus,
   NetworkIpInfo,
   ExplainPlanResult,
+  OracleTracerFilter,
+  OracleActiveSessionsResult,
+  OracleRecentStatementsResult,
+  OracleCaptureOptions,
+  OracleCaptureState,
   SystemMetrics,
   HttpHealthResult,
   DeployProfile,
@@ -73,6 +78,7 @@ import type {
   TraceDetails,
   ApmFilter,
   ApmReceiverStatus,
+  ApmReceiverPortChangeResult,
   ObservabilityOverview,
   ServiceMetricsSummary
 } from '../shared/types';
@@ -285,6 +291,7 @@ const electronAPI = {
     ipcRenderer.invoke('git:get-status-details', projectPath),
   getGitDiff: (projectPath: string, targetFile?: string) =>
     ipcRenderer.invoke('git:get-diff', projectPath, targetFile),
+  getGitUncommittedCounts: (): Promise<Record<string, number>> => ipcRenderer.invoke('git:get-uncommitted-counts'),
   openExternal: (url: string): Promise<boolean> => ipcRenderer.invoke('shell:open-external', url),
 
   // Catálogo de Rotinas
@@ -350,6 +357,18 @@ const electronAPI = {
     ipcRenderer.invoke('db:list-tables', config),
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
     ipcRenderer.invoke('db:get-table-columns', config, tableName),
+  getOracleActiveSessions: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleActiveSessionsResult> =>
+    ipcRenderer.invoke('db:get-oracle-active-sessions', config, filter),
+  getOracleRecentStatements: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleRecentStatementsResult> =>
+    ipcRenderer.invoke('db:get-oracle-recent-statements', config, filter),
+  startOracleCapture: (config: DatabaseConnectionConfig, options: OracleCaptureOptions): Promise<OracleCaptureState> =>
+    ipcRenderer.invoke('db:start-oracle-capture', config, options),
+  stopOracleCapture: (connectionId: string): Promise<OracleCaptureState> =>
+    ipcRenderer.invoke('db:stop-oracle-capture', connectionId),
+  clearOracleCapture: (connectionId: string): Promise<OracleCaptureState> =>
+    ipcRenderer.invoke('db:clear-oracle-capture', connectionId),
+  getOracleCaptureState: (connectionId: string): Promise<OracleCaptureState> =>
+    ipcRenderer.invoke('db:get-oracle-capture-state', connectionId),
   runDbBackup: (
     config: DatabaseConnectionConfig,
     destinationFolder: string,
@@ -568,6 +587,8 @@ const electronAPI = {
     ipcRenderer.invoke('apm:clear'),
   generateApmDemo: (): Promise<{ generatedSpans: number; generatedTraces: number }> =>
     ipcRenderer.invoke('apm:generate-demo'),
+  changeApmReceiverPort: (port: number): Promise<ApmReceiverPortChangeResult> =>
+    ipcRenderer.invoke('apm:change-receiver-port', port),
   onApmNewTrace: (callback: (trace: TraceSummary) => void) => {
     const subscription = (_: any, trace: TraceSummary) => callback(trace);
     ipcRenderer.on('apm:new-trace', subscription);

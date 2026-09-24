@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- Gradientes de Fundo -->
+    <!-- Gradiente de Fundo (dusk indigo, aberto para a luz) -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A" />
-      <stop offset="50%" stop-color="#0B0F17" />
-      <stop offset="100%" stop-color="#18152E" />
+      <stop offset="0%" stop-color="#1E1B4B" />
+      <stop offset="55%" stop-color="#161533" />
+      <stop offset="100%" stop-color="#0B1024" />
     </linearGradient>
 
     <!-- Gradiente da Borda Neon Ciano -->
@@ -14,18 +14,19 @@
       <stop offset="100%" stop-color="#818CF8" />
     </linearGradient>
 
-    <!-- Gradiente Fuselagem Foguete (Metal Escuro com Reflexo) -->
+    <!-- Gradiente Fuselagem Foguete (Metal Iluminado, sem cair no preto) -->
     <linearGradient id="fuselageGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E2E8F0" />
-      <stop offset="25%" stop-color="#94A3B8" />
-      <stop offset="65%" stop-color="#334155" />
-      <stop offset="100%" stop-color="#0F172A" />
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="20%" stop-color="#FDE68A" />
+      <stop offset="50%" stop-color="#CBD5E1" />
+      <stop offset="80%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
     </linearGradient>
 
     <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="40%" stop-color="#1E293B" />
-      <stop offset="100%" stop-color="#0F172A" />
+      <stop offset="0%" stop-color="#7DD3FC" />
+      <stop offset="40%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#1E3A5F" />
     </linearGradient>
 
     <!-- Gradiente do Visor / Cockpit HUD -->
@@ -53,6 +54,18 @@
       <stop offset="100%" stop-color="#A855F7" stop-opacity="0" />
     </linearGradient>
 
+    <!-- Brilho da fonte de luz distante -->
+    <radialGradient id="sunGlowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#FDE68A" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Brilho do reflexo na base -->
+    <radialGradient id="reflGlowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FDE68A" stop-opacity="0" />
+    </radialGradient>
+
     <!-- Filtros de Brilho Neon -->
     <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="8" result="blur" />
@@ -63,97 +76,111 @@
       <feGaussianBlur stdDeviation="12" result="blur" />
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
+
+    <clipPath id="squircleClip">
+      <rect x="24" y="24" width="464" height="464" rx="108" ry="108" />
+    </clipPath>
   </defs>
 
-  <!-- Fundo Squircle Arredondado com Sombra -->
+  <!-- Fundo Squircle Arredondado -->
   <rect x="24" y="24" width="464" height="464" rx="108" ry="108" fill="url(#bgGrad)" />
 
-  <!-- Borda Neon Iluminada -->
-  <rect x="24" y="24" width="464" height="464" rx="108" ry="108" fill="none" stroke="url(#borderGrad)" stroke-width="5" opacity="0.9" />
-  <rect x="26" y="26" width="460" height="460" rx="106" ry="106" fill="none" stroke="#22D3EE" stroke-width="1.5" opacity="0.4" filter="url(#neonGlow)" />
+  <g clip-path="url(#squircleClip)">
+    <!-- Fonte de luz distante (o farol que o foguete persegue) -->
+    <circle cx="120" cy="120" r="190" fill="url(#sunGlowGrad)" />
+    <circle cx="120" cy="120" r="22" fill="#FFF7E0" />
 
-  <!-- Linhas e Trilhares de Circuito Tech no Fundo -->
-  <g opacity="0.18" stroke="#38BDF8" stroke-width="2" fill="none" stroke-linecap="round">
-    <path d="M 64 160 L 120 160 L 160 200 L 160 280" />
-    <path d="M 80 380 L 140 380 L 180 340 L 180 300" />
-    <path d="M 400 120 L 350 120 L 320 150" />
-    <path d="M 440 280 L 380 280 L 340 320 L 340 400" />
-    <circle cx="160" cy="280" r="4" fill="#38BDF8" />
-    <circle cx="180" cy="300" r="4" fill="#38BDF8" />
-    <circle cx="320" cy="150" r="4" fill="#38BDF8" />
-    <circle cx="340" cy="400" r="4" fill="#38BDF8" />
-  </g>
-
-  <!-- ==================== FOGUETE TECH (DIAGONAL 45°) ==================== -->
-  <g transform="translate(256, 256) rotate(-45) translate(-256, -256)">
-
-    <!-- Partículas / Centelhas de Propulsão -->
-    <g filter="url(#neonGlow)">
-      <circle cx="256" cy="430" r="5" fill="#67E8F9" />
-      <circle cx="240" cy="460" r="4" fill="#38BDF8" />
-      <circle cx="272" cy="455" r="4" fill="#A855F7" />
-      <circle cx="230" cy="490" r="3" fill="#C084FC" />
-      <circle cx="282" cy="485" r="3" fill="#22D3EE" />
-      <circle cx="256" cy="510" r="2.5" fill="#E0E7FF" />
-      <circle cx="215" cy="440" r="3.5" fill="#67E8F9" />
-      <circle cx="295" cy="440" r="3.5" fill="#A855F7" />
+    <!-- Linhas e Trilhas de Circuito Tech no Fundo -->
+    <g opacity="0.18" stroke="#38BDF8" stroke-width="2" fill="none" stroke-linecap="round">
+      <path d="M 64 160 L 120 160 L 160 200 L 160 280" />
+      <path d="M 80 380 L 140 380 L 180 340 L 180 300" />
+      <path d="M 400 120 L 350 120 L 320 150" />
+      <path d="M 440 280 L 380 280 L 340 320 L 340 400" />
+      <circle cx="160" cy="280" r="4" fill="#38BDF8" />
+      <circle cx="180" cy="300" r="4" fill="#38BDF8" />
+      <circle cx="320" cy="150" r="4" fill="#38BDF8" />
+      <circle cx="340" cy="400" r="4" fill="#38BDF8" />
     </g>
 
-    <!-- Pluma de Plasma dos Motores Laterais -->
-    <path d="M 205 375 Q 195 440 185 470 Q 205 430 215 375 Z" fill="url(#sidePlasmaGrad)" filter="url(#plasmaGlow)" />
-    <path d="M 307 375 Q 317 440 327 470 Q 307 430 297 375 Z" fill="url(#sidePlasmaGrad)" filter="url(#plasmaGlow)" />
+    <!-- ==================== FOGUETE TECH (DIAGONAL 45°) ==================== -->
+    <g transform="translate(256, 256) rotate(-45) translate(-256, -256)">
 
-    <!-- Pluma de Plasma do Motor Principal -->
-    <path d="M 234 380 Q 215 450 256 500 Q 297 450 278 380 Z" fill="url(#mainPlasmaGrad)" filter="url(#plasmaGlow)" />
-    <!-- Núcleo Superaquecido Branco da Chama Principal -->
-    <path d="M 244 380 Q 235 430 256 460 Q 277 430 268 380 Z" fill="#FFFFFF" opacity="0.95" />
+      <!-- Partículas / Centelhas de Propulsão -->
+      <g filter="url(#neonGlow)">
+        <circle cx="256" cy="430" r="5" fill="#67E8F9" />
+        <circle cx="240" cy="460" r="4" fill="#38BDF8" />
+        <circle cx="272" cy="455" r="4" fill="#A855F7" />
+        <circle cx="230" cy="490" r="3" fill="#C084FC" />
+        <circle cx="282" cy="485" r="3" fill="#22D3EE" />
+        <circle cx="256" cy="510" r="2.5" fill="#E0E7FF" />
+        <circle cx="215" cy="440" r="3.5" fill="#67E8F9" />
+        <circle cx="295" cy="440" r="3.5" fill="#A855F7" />
+      </g>
 
-    <!-- Asas / Estabilizadores Laterais Tech -->
-    <!-- Asa Esquerda -->
-    <path d="M 220 280 L 160 360 L 166 385 L 216 360 Z" fill="url(#wingGrad)" stroke="#38BDF8" stroke-width="2" stroke-linejoin="round" />
-    <path d="M 160 360 L 166 385 L 180 375 Z" fill="#22D3EE" opacity="0.8" />
-    <!-- Borda luminosa asa esquerda -->
-    <line x1="160" y1="360" x2="220" y2="280" stroke="#67E8F9" stroke-width="3" stroke-linecap="round" filter="url(#neonGlow)" />
+      <!-- Pluma de Plasma dos Motores Laterais -->
+      <path d="M 205 375 Q 195 440 185 470 Q 205 430 215 375 Z" fill="url(#sidePlasmaGrad)" filter="url(#plasmaGlow)" />
+      <path d="M 307 375 Q 317 440 327 470 Q 307 430 297 375 Z" fill="url(#sidePlasmaGrad)" filter="url(#plasmaGlow)" />
 
-    <!-- Asa Direita -->
-    <path d="M 292 280 L 352 360 L 346 385 L 296 360 Z" fill="url(#wingGrad)" stroke="#38BDF8" stroke-width="2" stroke-linejoin="round" />
-    <path d="M 352 360 L 346 385 L 332 375 Z" fill="#22D3EE" opacity="0.8" />
-    <!-- Borda luminosa asa direita -->
-    <line x1="352" y1="360" x2="292" y2="280" stroke="#67E8F9" stroke-width="3" stroke-linecap="round" filter="url(#neonGlow)" />
+      <!-- Pluma de Plasma do Motor Principal -->
+      <path d="M 234 380 Q 215 450 256 500 Q 297 450 278 380 Z" fill="url(#mainPlasmaGrad)" filter="url(#plasmaGlow)" />
+      <!-- Núcleo Superaquecido Branco da Chama Principal -->
+      <path d="M 244 380 Q 235 430 256 460 Q 277 430 268 380 Z" fill="#FFFFFF" opacity="0.95" />
 
-    <!-- Motores Foguete (Bocais) -->
-    <rect x="200" y="365" width="18" height="15" rx="3" fill="#1E293B" stroke="#06B6D4" stroke-width="1.5" />
-    <rect x="294" y="365" width="18" height="15" rx="3" fill="#1E293B" stroke="#06B6D4" stroke-width="1.5" />
-    <rect x="236" y="375" width="40" height="15" rx="4" fill="#0F172A" stroke="#22D3EE" stroke-width="2" />
+      <!-- Asas / Estabilizadores Laterais Tech -->
+      <!-- Asa Esquerda -->
+      <path d="M 220 280 L 160 360 L 166 385 L 216 360 Z" fill="url(#wingGrad)" stroke="#38BDF8" stroke-width="2" stroke-linejoin="round" />
+      <path d="M 160 360 L 166 385 L 180 375 Z" fill="#22D3EE" opacity="0.8" />
+      <!-- Borda luminosa asa esquerda -->
+      <line x1="160" y1="360" x2="220" y2="280" stroke="#67E8F9" stroke-width="3" stroke-linecap="round" filter="url(#neonGlow)" />
 
-    <!-- Fuselagem Central (Corpo do Foguete) -->
-    <!-- Formato Aerodinâmico Ogival -->
-    <path d="M 256 86 C 220 150 216 260 218 375 L 294 375 C 296 260 292 150 256 86 Z" fill="url(#fuselageGrad)" stroke="#38BDF8" stroke-width="2.5" />
+      <!-- Asa Direita -->
+      <path d="M 292 280 L 352 360 L 346 385 L 296 360 Z" fill="url(#wingGrad)" stroke="#38BDF8" stroke-width="2" stroke-linejoin="round" />
+      <path d="M 352 360 L 346 385 L 332 375 Z" fill="#22D3EE" opacity="0.8" />
+      <!-- Borda luminosa asa direita -->
+      <line x1="352" y1="360" x2="292" y2="280" stroke="#67E8F9" stroke-width="3" stroke-linecap="round" filter="url(#neonGlow)" />
 
-    <!-- Painéis e Vincos Tech da Fuselagem -->
-    <path d="M 256 86 L 256 375" stroke="#38BDF8" stroke-width="1.5" opacity="0.7" />
-    <!-- Linhas de Junção Tech Horizontais -->
-    <path d="M 226 210 Q 256 220 286 210" fill="none" stroke="#38BDF8" stroke-width="2" opacity="0.75" />
-    <path d="M 220 310 Q 256 324 292 310" fill="none" stroke="#38BDF8" stroke-width="2" opacity="0.75" />
+      <!-- Motores Foguete (Bocais) -->
+      <rect x="200" y="365" width="18" height="15" rx="3" fill="#1E293B" stroke="#06B6D4" stroke-width="1.5" />
+      <rect x="294" y="365" width="18" height="15" rx="3" fill="#1E293B" stroke="#06B6D4" stroke-width="1.5" />
+      <rect x="236" y="375" width="40" height="15" rx="4" fill="#0F172A" stroke="#22D3EE" stroke-width="2" />
 
-    <!-- Faixas e Acentos Neon na Fuselagem -->
-    <line x1="228" y1="235" x2="228" y2="290" stroke="#A855F7" stroke-width="3.5" stroke-linecap="round" filter="url(#neonGlow)" />
-    <line x1="284" y1="235" x2="284" y2="290" stroke="#A855F7" stroke-width="3.5" stroke-linecap="round" filter="url(#neonGlow)" />
+      <!-- Fuselagem Central (Corpo do Foguete) -->
+      <!-- Formato Aerodinâmico Ogival -->
+      <path d="M 256 86 C 220 150 216 260 218 375 L 294 375 C 296 260 292 150 256 86 Z" fill="url(#fuselageGrad)" stroke="#38BDF8" stroke-width="2.5" />
 
-    <!-- Nariz Tech do Foguete com Ponteira Luminescente -->
-    <path d="M 256 86 L 250 135 L 262 135 Z" fill="#38BDF8" opacity="0.9" />
-    <line x1="256" y1="80" x2="256" y2="105" stroke="#67E8F9" stroke-width="4" stroke-linecap="round" filter="url(#neonGlow)" />
+      <!-- Painéis e Vincos Tech da Fuselagem -->
+      <path d="M 256 86 L 256 375" stroke="#38BDF8" stroke-width="1.5" opacity="0.7" />
+      <!-- Linhas de Junção Tech Horizontais -->
+      <path d="M 226 210 Q 256 220 286 210" fill="none" stroke="#38BDF8" stroke-width="2" opacity="0.75" />
+      <path d="M 220 310 Q 256 324 292 310" fill="none" stroke="#38BDF8" stroke-width="2" opacity="0.75" />
 
-    <!-- Cockpit HUD / Visor Redondo Circular -->
-    <circle cx="256" cy="180" r="26" fill="#0B0F17" stroke="#38BDF8" stroke-width="3.5" />
-    <circle cx="256" cy="180" r="20" fill="url(#hudVisorGrad)" filter="url(#neonGlow)" />
-    <!-- Retículo / Elementos Tech do HUD dentro do Visor -->
-    <circle cx="256" cy="180" r="13" fill="none" stroke="#E0F2FE" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.9" />
-    <path d="M 248 180 L 264 180 M 256 172 L 256 188" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8" />
-    <!-- Reflexo no Vidro -->
-    <ellipse cx="252" cy="174" rx="6" ry="3" fill="#FFFFFF" opacity="0.6" transform="rotate(-30 252 174)" />
+      <!-- Faixas e Acentos Neon na Fuselagem -->
+      <line x1="228" y1="235" x2="228" y2="290" stroke="#A855F7" stroke-width="3.5" stroke-linecap="round" filter="url(#neonGlow)" />
+      <line x1="284" y1="235" x2="284" y2="290" stroke="#A855F7" stroke-width="3.5" stroke-linecap="round" filter="url(#neonGlow)" />
 
-    <!-- Aleta Dorsal Central -->
-    <polygon points="253,300 259,300 262,370 250,370" fill="#0284C7" stroke="#38BDF8" stroke-width="1" />
+      <!-- Nariz Tech do Foguete com Ponteira Luminescente -->
+      <path d="M 256 86 L 250 135 L 262 135 Z" fill="#38BDF8" opacity="0.9" />
+      <line x1="256" y1="80" x2="256" y2="105" stroke="#67E8F9" stroke-width="4" stroke-linecap="round" filter="url(#neonGlow)" />
+
+      <!-- Cockpit HUD / Visor Redondo Circular -->
+      <circle cx="256" cy="180" r="26" fill="#0B0F17" stroke="#38BDF8" stroke-width="3.5" />
+      <circle cx="256" cy="180" r="20" fill="url(#hudVisorGrad)" filter="url(#neonGlow)" />
+      <!-- Retículo / Elementos Tech do HUD dentro do Visor -->
+      <circle cx="256" cy="180" r="13" fill="none" stroke="#E0F2FE" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.9" />
+      <path d="M 248 180 L 264 180 M 256 172 L 256 188" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8" />
+      <!-- Reflexo no Vidro -->
+      <ellipse cx="252" cy="174" rx="6" ry="3" fill="#FFFFFF" opacity="0.6" transform="rotate(-30 252 174)" />
+
+      <!-- Aleta Dorsal Central -->
+      <polygon points="253,300 259,300 262,370 250,370" fill="#0284C7" stroke="#38BDF8" stroke-width="1" />
+    </g>
+
+    <!-- Linha de reflexo perto da base (refletindo a luz do foguete) -->
+    <circle cx="360" cy="420" r="90" fill="url(#reflGlowGrad)" />
+    <line x1="70" y1="420" x2="442" y2="420" stroke="#FDE68A" stroke-width="2" stroke-opacity="0.45" stroke-linecap="round" />
   </g>
+
+  <!-- Borda Neon Iluminada (por cima do conteúdo recortado) -->
+  <rect x="24" y="24" width="464" height="464" rx="108" ry="108" fill="none" stroke="url(#borderGrad)" stroke-width="5" opacity="0.9" />
+  <rect x="26" y="26" width="460" height="460" rx="106" ry="106" fill="none" stroke="#22D3EE" stroke-width="1.5" opacity="0.4" filter="url(#neonGlow)" />
 </svg>

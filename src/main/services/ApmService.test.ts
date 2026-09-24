@@ -1,8 +1,57 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import http from 'http';
+import net from 'net';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import zlib from 'zlib';
-import { ApmService, ApmIngestError, MAX_OTLP_BODY_BYTES } from './ApmService';
-import { TraceSpan } from '../../shared/types';
+import {
+  ApmService,
+  ApmIngestError,
+  MAX_OTLP_BODY_BYTES,
+  APM_QUERY_PATH_PREFIX,
+  APM_QUERY_TOKEN_HEADER
+} from './ApmService';
+import { AppSettings, TraceSpan } from '../../shared/types';
+
+function requestJson(
+  port: number,
+  pathName: string,
+  headers: Record<string, string> = {},
+  method = 'GET'
+): Promise<{ statusCode: number; headers: http.IncomingHttpHeaders; body: any }> {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ hostname: '127.0.0.1', port, path: pathName, method, headers }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (c: Buffer) => chunks.push(c));
+      res.on('end', () => {
+        const text = Buffer.concat(chunks).toString();
+        let body: any = text;
+        try {
+          body = JSON.parse(text);
+        } catch {
+          // corpo não-JSON fica como texto
+        }
+        resolve({ statusCode: res.statusCode || 0, headers: res.headers, body });
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+async function listenOnFreePort(): Promise<net.Server> {
+  const server = net.createServer();
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+  return server;
+}
+
+async function findFreePort(): Promise<number> {
+  const probe = await listenOnFreePort();
+  const port = (probe.address() as net.AddressInfo).port;
+  await new Promise<void>((resolve) => probe.close(() => resolve()));
+  return port;
+}
 
 const makeSpan = (partial: Partial<TraceSpan>): TraceSpan => {
   const base: TraceSpan = {
@@ -448,5 +497,177 @@ describe('ApmService', () => {
     } finally {
       await apmService.stopReceiver();
     }
+  });
+
+  describe('API de consulta para outros processos (ex.: servidor MCP)', () => {
+    let tmpDir: string;
+    let handleFile: string;
+    let service: ApmService;
+    let port: number;
+    let token: string;
+
+    beforeEach(async () => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-query-'));
+      handleFile = path.join(tmpDir, '.apm-receiver.json');
+      service = new ApmService(500, { queryHandleFile: handleFile });
+      expect(await service.startReceiver(0)).toBe(true);
+      ({ port, token } = JSON.parse(fs.readFileSync(handleFile, 'utf-8')));
+      service.ingestSpans([
+        makeSpan({ traceId: 'q1', spanId: 'root', serviceName: 'karaf', statusCode: 'ERROR', startTimeUnixMs: Date.now() - 1000 })
+      ]);
+    });
+
+    afterEach(async () => {
+      await service.stopReceiver();
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('publica a porta real e um token aleatório no arquivo de acesso', () => {
+      expect(port).toBe(service.getReceiverStatus().port);
+      expect(token).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it('responde overview, traces, detalhes, serviços e status com o token', async () => {
+      const auth = { [APM_QUERY_TOKEN_HEADER]: token };
+
+      const overview = await requestJson(port, `${APM_QUERY_PATH_PREFIX}overview?serviceName=karaf`, auth);
+      expect(overview.statusCode).toBe(200);
+      expect(overview.body.totalTraces).toBe(1);
+
+      const traces = await requestJson(port, `${APM_QUERY_PATH_PREFIX}traces?hasError=true`, auth);
+      expect(traces.body.map((t: any) => t.traceId)).toEqual(['q1']);
+
+      expect((await requestJson(port, `${APM_QUERY_PATH_PREFIX}traces/q1`, auth)).body.summary.traceId).toBe('q1');
+      expect((await requestJson(port, `${APM_QUERY_PATH_PREFIX}traces/nao-existe`, auth)).statusCode).toBe(404);
+      expect((await requestJson(port, `${APM_QUERY_PATH_PREFIX}services`, auth)).body[0].serviceName).toBe('karaf');
+      expect((await requestJson(port, `${APM_QUERY_PATH_PREFIX}status`, auth)).body.bufferSize).toBe(1);
+    });
+
+    it('exige o token e não envia cabeçalhos CORS, para que páginas web não leiam os dados', async () => {
+      const noToken = await requestJson(port, `${APM_QUERY_PATH_PREFIX}overview`);
+      const wrongToken = await requestJson(port, `${APM_QUERY_PATH_PREFIX}overview`, { [APM_QUERY_TOKEN_HEADER]: 'f'.repeat(64) });
+      const preflight = await requestJson(
+        port,
+        `${APM_QUERY_PATH_PREFIX}overview`,
+        { Origin: 'https://site-malicioso.example', 'Access-Control-Request-Method': 'GET' },
+        'OPTIONS'
+      );
+
+      expect(noToken.statusCode).toBe(401);
+      expect(wrongToken.statusCode).toBe(401);
+      expect(preflight.statusCode).toBe(405);
+      for (const res of [noToken, wrongToken, preflight]) {
+        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+      }
+
+      // O restante do receptor segue com CORS para exportadores OTel rodando no navegador
+      expect((await requestJson(port, '/health')).headers['access-control-allow-origin']).toBe('*');
+    });
+
+    it('rejeita ID de trace com escape malformado', async () => {
+      const res = await requestJson(port, `${APM_QUERY_PATH_PREFIX}traces/%E0%A4%A`, { [APM_QUERY_TOKEN_HEADER]: token });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('remove o arquivo de acesso ao parar o receptor', async () => {
+      await service.stopReceiver();
+      expect(fs.existsSync(handleFile)).toBe(false);
+    });
+
+    it('preserva o arquivo de acesso publicado depois por outro processo', async () => {
+      fs.writeFileSync(handleFile, JSON.stringify({ port: 1, token: 'outro-processo' }));
+      await service.stopReceiver();
+      expect(JSON.parse(fs.readFileSync(handleFile, 'utf-8')).token).toBe('outro-processo');
+    });
+  });
+
+  describe('porta configurável do receptor', () => {
+    let tmpDir: string;
+    let handleFile: string;
+    let savedSettings: Array<Partial<AppSettings>>;
+    let service: ApmService;
+
+    const makeConfigService = (apmReceiverPort?: number) => ({
+      getSettings: () => ({ apmReceiverPort }) as AppSettings,
+      saveSettings: (settings: Partial<AppSettings>) => {
+        savedSettings.push(settings);
+        return settings as AppSettings;
+      }
+    });
+
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-port-'));
+      handleFile = path.join(tmpDir, '.apm-receiver.json');
+      savedSettings = [];
+      service = new ApmService(500, { queryHandleFile: handleFile, configService: makeConfigService() });
+    });
+
+    afterEach(async () => {
+      await service.stopReceiver();
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('abre na porta das configurações quando nenhuma é informada', async () => {
+      const configuredPort = await findFreePort();
+      const configured = new ApmService(500, { configService: makeConfigService(configuredPort) });
+      try {
+        expect(await configured.startReceiver()).toBe(true);
+        expect(configured.getReceiverStatus().port).toBe(configuredPort);
+      } finally {
+        await configured.stopReceiver();
+      }
+    });
+
+    it('troca para uma porta livre, grava a escolha e republica o acesso', async () => {
+      await service.startReceiver(0);
+      const target = await findFreePort();
+
+      const result = await service.changeReceiverPort(target);
+
+      expect(result).toMatchObject({ success: true, status: { listening: true, port: target } });
+      expect(savedSettings).toEqual([{ apmReceiverPort: target }]);
+      expect(JSON.parse(fs.readFileSync(handleFile, 'utf-8')).port).toBe(target);
+    });
+
+    it('mantém o receptor na porta atual quando a nova está ocupada', async () => {
+      await service.startReceiver(0);
+      const currentPort = service.getReceiverStatus().port;
+      const blocker = await listenOnFreePort();
+      const busyPort = (blocker.address() as net.AddressInfo).port;
+
+      try {
+        const result = await service.changeReceiverPort(busyPort);
+        expect(result.success).toBe(false);
+        expect(result.error).toContain('já em uso');
+        expect(result.status).toMatchObject({ listening: true, port: currentPort });
+        expect(savedSettings).toEqual([]);
+        expect((await requestJson(currentPort, '/health')).statusCode).toBe(200);
+      } finally {
+        await new Promise<void>((resolve) => blocker.close(() => resolve()));
+      }
+    });
+
+    it('com o receptor inativo, registra a falha da nova porta no status', async () => {
+      const blocker = await listenOnFreePort();
+      const busyPort = (blocker.address() as net.AddressInfo).port;
+      try {
+        const result = await service.changeReceiverPort(busyPort);
+        expect(result.success).toBe(false);
+        expect(result.status).toMatchObject({ listening: false, port: busyPort, error: `Porta ${busyPort} já em uso` });
+      } finally {
+        await new Promise<void>((resolve) => blocker.close(() => resolve()));
+      }
+    });
+
+    it('recusa porta fora da faixa permitida sem mexer no receptor', async () => {
+      await service.startReceiver(0);
+      const saveSpy = vi.fn();
+      const result = await new ApmService(500, { configService: { getSettings: () => ({}) as AppSettings, saveSettings: saveSpy } }).changeReceiverPort(80);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('1024');
+      expect(saveSpy).not.toHaveBeenCalled();
+      expect((await service.changeReceiverPort(70000)).status.listening).toBe(true);
+    });
   });
 });

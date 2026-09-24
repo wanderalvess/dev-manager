@@ -42,6 +42,11 @@ import type {
   InfrDockerScriptStatus,
   NetworkIpInfo,
   ExplainPlanResult,
+  OracleTracerFilter,
+  OracleActiveSessionsResult,
+  OracleRecentStatementsResult,
+  OracleCaptureOptions,
+  OracleCaptureState,
   KarafBundleInfo,
   KarafFeatureInfo,
   KarafBundleDetails,
@@ -55,6 +60,7 @@ import type {
   GitCommitInfo,
   GitFileStatus,
   GitDiffResult,
+  GitCommandResult,
   SystemMetrics,
   HttpHealthResult,
   DeployProfile,
@@ -82,6 +88,7 @@ import type {
   TraceDetails,
   ApmFilter,
   ApmReceiverStatus,
+  ApmReceiverPortChangeResult,
   ObservabilityOverview,
   ServiceMetricsSummary
 } from '../shared/types';
@@ -227,12 +234,14 @@ export interface ElectronAPI {
   execGitCommand: (
     projectPath: string,
     command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop'
-  ) => Promise<{ success: boolean; output: string }>;
-  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean) => Promise<{ success: boolean; output: string }>;
-  commitAndPush: (projectPath: string, message: string) => Promise<{ success: boolean; output: string }>;
+  ) => Promise<GitCommandResult>;
+  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean) => Promise<GitCommandResult>;
+  commitAndPush: (projectPath: string, message: string) => Promise<GitCommandResult>;
   getCommitHistory: (projectPath: string, limit?: number) => Promise<GitCommitInfo[]>;
   getGitStatusDetails: (projectPath: string) => Promise<GitFileStatus[]>;
   getGitDiff: (projectPath: string, targetFile?: string) => Promise<GitDiffResult>;
+  /** Alterações pendentes por caminho de repositório (roda git status em lote; chamar sob demanda). */
+  getGitUncommittedCounts: () => Promise<Record<string, number>>;
   openExternal: (url: string) => Promise<boolean>;
 
   // Catálogo de Rotinas
@@ -272,6 +281,12 @@ export interface ElectronAPI {
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
+  getOracleActiveSessions: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => Promise<OracleActiveSessionsResult>;
+  getOracleRecentStatements: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => Promise<OracleRecentStatementsResult>;
+  startOracleCapture: (config: DatabaseConnectionConfig, options: OracleCaptureOptions) => Promise<OracleCaptureState>;
+  stopOracleCapture: (connectionId: string) => Promise<OracleCaptureState>;
+  clearOracleCapture: (connectionId: string) => Promise<OracleCaptureState>;
+  getOracleCaptureState: (connectionId: string) => Promise<OracleCaptureState>;
   runDbBackup: (
     config: DatabaseConnectionConfig,
     destinationFolder: string,
@@ -410,6 +425,7 @@ export interface ElectronAPI {
   getApmReceiverStatus: () => Promise<ApmReceiverStatus>;
   clearApmTraces: () => Promise<{ success: boolean }>;
   generateApmDemo: () => Promise<{ generatedSpans: number; generatedTraces: number }>;
+  changeApmReceiverPort: (port: number) => Promise<ApmReceiverPortChangeResult>;
   onApmNewTrace: (callback: (trace: TraceSummary) => void) => () => void;
 }
 

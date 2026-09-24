@@ -14,7 +14,8 @@ import {
   KarafBundleDependent,
   KarafDeployHistoryEntry,
   KarafFeatureInfo,
-  buildOtelJavaAgentProperties
+  buildOtelJavaAgentProperties,
+  getApmReceiverPort
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
@@ -227,7 +228,7 @@ export class KarafService {
       ];
       const agentJar = agentCandidates.find((c) => fs.existsSync(c));
       if (agentJar && !childEnv.JAVA_TOOL_OPTIONS?.includes('opentelemetry-javaagent.jar')) {
-        childEnv.JAVA_TOOL_OPTIONS += ` -javaagent:"${agentJar}" ${buildOtelJavaAgentProperties().join(' ')}`;
+        childEnv.JAVA_TOOL_OPTIONS += ` -javaagent:"${agentJar}" ${buildOtelJavaAgentProperties(getApmReceiverPort(settings)).join(' ')}`;
       }
     }
 

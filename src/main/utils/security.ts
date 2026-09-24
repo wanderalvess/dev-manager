@@ -27,6 +27,17 @@ export function isSafeUrl(url: string): boolean {
 }
 
 /**
+ * Indica se o endereço remoto de um socket é a própria máquina (IPv4 127.0.0.0/8, IPv6 ::1 ou
+ * IPv4 mapeado em IPv6). Para rotas que só devem atender processos locais mesmo quando o servidor
+ * escuta em todas as interfaces (ex.: Docker).
+ */
+export function isLoopbackAddress(address: string | undefined): boolean {
+  if (!address) return false;
+  const normalized = address.startsWith('::ffff:') ? address.slice('::ffff:'.length) : address;
+  return normalized === '::1' || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(normalized);
+}
+
+/**
  * Valida se um comando destinado ao Karaf OSGi é seguro (sem quebras de linha ou encadeamento de shell).
  */
 export function isSafeKarafCommand(command: string): boolean {

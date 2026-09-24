@@ -90,6 +90,40 @@ describe('DatabaseService', () => {
     expect(res).toBe("SELECT 'Texto :CODPROD', -- :CODPROD comentário\n CODPROD FROM TAB WHERE CODPROD = 12345 AND CODFILIAL = '1' AND OBS = NULL");
   });
 
+  it('Statement Tracer (sessões ativas) recusa conexões não-Oracle', async () => {
+    const config: DatabaseConnectionConfig = {
+      id: 'test',
+      name: 'Postgres Test',
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      database: 'postgres',
+      user: 'postgres'
+    };
+
+    const res = await service.getOracleActiveSessions(config);
+    expect(res.success).toBe(false);
+    expect(res.sessions).toEqual([]);
+    expect(res.error).toContain('apenas para conexões Oracle');
+  });
+
+  it('Statement Tracer (SQL recente) recusa conexões não-Oracle', async () => {
+    const config: DatabaseConnectionConfig = {
+      id: 'test',
+      name: 'MySQL Test',
+      type: 'mysql',
+      host: 'localhost',
+      port: 3306,
+      database: 'test',
+      user: 'root'
+    };
+
+    const res = await service.getOracleRecentStatements(config);
+    expect(res.success).toBe(false);
+    expect(res.statements).toEqual([]);
+    expect(res.error).toContain('apenas para conexões Oracle');
+  });
+
   it('avisa sobre porta local ocupada quando o processo não parece ser o banco esperado', async () => {
     const spy = vi.spyOn(network, 'getListeningPid').mockResolvedValue({ pid: '1234', processName: 'nginx.exe' });
     try {
@@ -175,5 +209,31 @@ describe('DatabaseService', () => {
     const results = await Promise.all([task1, task2]);
     expect(results).toEqual([1, 2]);
     expect(order).toEqual([1, 2]);
+  });
+
+  it('lista todas as tabelas de schemas grandes, sem cortar em 500', async () => {
+    const tableRows = Array.from({ length: 1200 }, (_, i) => ({ table_name: `public.tabela_${i}` }));
+    const fakeClient = {
+      query: vi.fn().mockResolvedValue({ fields: [{ name: 'table_name' }], rows: tableRows }),
+      end: vi.fn().mockResolvedValue(undefined)
+    };
+    const spy = vi.spyOn(service as any, 'getPgClient').mockResolvedValue(fakeClient);
+    const config: DatabaseConnectionConfig = {
+      id: 'many-tables',
+      name: 'Schema Grande',
+      type: 'postgres',
+      host: 'db.remoto',
+      port: 5432,
+      database: 'erp',
+      user: 'postgres'
+    };
+
+    try {
+      const tables = await service.listTables(config);
+      expect(tables).toHaveLength(1200);
+      expect(tables[1199]).toBe('public.tabela_1199');
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

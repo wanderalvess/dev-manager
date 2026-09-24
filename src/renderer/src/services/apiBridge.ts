@@ -42,6 +42,11 @@ import type {
   InfrDockerScriptStatus,
   NetworkIpInfo,
   ExplainPlanResult,
+  OracleTracerFilter,
+  OracleActiveSessionsResult,
+  OracleRecentStatementsResult,
+  OracleCaptureOptions,
+  OracleCaptureState,
   KarafBundleInfo,
   KarafBundleDetails,
   BundleDependencyCheckResult,
@@ -55,6 +60,7 @@ import type {
   GitCommitInfo,
   GitFileStatus,
   GitDiffResult,
+  GitCommandResult,
   SystemMetrics,
   HttpHealthResult,
   DeployProfile,
@@ -81,6 +87,7 @@ import type {
   TraceDetails,
   ApmFilter,
   ApmReceiverStatus,
+  ApmReceiverPortChangeResult,
   ObservabilityOverview,
   ServiceMetricsSummary
 } from '../../../shared/types';
@@ -711,21 +718,21 @@ export function initApiBridge() {
     execGitCommand: async (
       projectPath: string,
       command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop'
-    ): Promise<{ success: boolean; output: string }> => {
+    ): Promise<GitCommandResult> => {
       return apiFetch('/api/git/command', {
         method: 'POST',
         body: JSON.stringify({ projectPath, command })
       });
     },
 
-    checkoutBranch: async (projectPath: string, branchName: string, createNew?: boolean): Promise<{ success: boolean; output: string }> => {
+    checkoutBranch: async (projectPath: string, branchName: string, createNew?: boolean): Promise<GitCommandResult> => {
       return apiFetch('/api/git/checkout', {
         method: 'POST',
         body: JSON.stringify({ projectPath, branchName, createNew })
       });
     },
 
-    commitAndPush: async (projectPath: string, message: string): Promise<{ success: boolean; output: string }> => {
+    commitAndPush: async (projectPath: string, message: string): Promise<GitCommandResult> => {
       return apiFetch('/api/git/commit-push', {
         method: 'POST',
         body: JSON.stringify({ projectPath, message })
@@ -743,6 +750,10 @@ export function initApiBridge() {
     getGitDiff: async (projectPath: string, targetFile?: string): Promise<GitDiffResult> => {
       const fileParam = targetFile ? `&file=${encodeURIComponent(targetFile)}` : '';
       return apiFetch(`/api/git/diff?path=${encodeURIComponent(projectPath)}${fileParam}`);
+    },
+
+    getGitUncommittedCounts: async (): Promise<Record<string, number>> => {
+      return apiFetch('/api/git/uncommitted-counts');
     },
 
     openExternal: async (url: string): Promise<boolean> => {
@@ -933,6 +944,48 @@ export function initApiBridge() {
       return apiFetch('/api/db/columns', {
         method: 'POST',
         body: JSON.stringify({ config, tableName })
+      });
+    },
+
+    getOracleActiveSessions: async (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleActiveSessionsResult> => {
+      return apiFetch('/api/db/oracle-active-sessions', {
+        method: 'POST',
+        body: JSON.stringify({ config, filter })
+      });
+    },
+
+    getOracleRecentStatements: async (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleRecentStatementsResult> => {
+      return apiFetch('/api/db/oracle-recent-statements', {
+        method: 'POST',
+        body: JSON.stringify({ config, filter })
+      });
+    },
+
+    startOracleCapture: async (config: DatabaseConnectionConfig, options: OracleCaptureOptions): Promise<OracleCaptureState> => {
+      return apiFetch('/api/db/oracle-capture/start', {
+        method: 'POST',
+        body: JSON.stringify({ config, options })
+      });
+    },
+
+    stopOracleCapture: async (connectionId: string): Promise<OracleCaptureState> => {
+      return apiFetch('/api/db/oracle-capture/stop', {
+        method: 'POST',
+        body: JSON.stringify({ connectionId })
+      });
+    },
+
+    clearOracleCapture: async (connectionId: string): Promise<OracleCaptureState> => {
+      return apiFetch('/api/db/oracle-capture/clear', {
+        method: 'POST',
+        body: JSON.stringify({ connectionId })
+      });
+    },
+
+    getOracleCaptureState: async (connectionId: string): Promise<OracleCaptureState> => {
+      return apiFetch('/api/db/oracle-capture/state', {
+        method: 'POST',
+        body: JSON.stringify({ connectionId })
       });
     },
 
@@ -1659,6 +1712,12 @@ export function initApiBridge() {
       } catch {
         return { generatedSpans: 0, generatedTraces: 0 };
       }
+    },
+    changeApmReceiverPort: async (port: number): Promise<ApmReceiverPortChangeResult> => {
+      return apiFetch<ApmReceiverPortChangeResult>('/api/apm/receiver-port', {
+        method: 'POST',
+        body: JSON.stringify({ port })
+      });
     },
     onApmNewTrace: (callback: (trace: TraceSummary) => void) => {
       return wsManager.subscribe('apm:new-trace', callback);

@@ -245,7 +245,14 @@ export interface GitProjectInfo {
   path: string;
   currentBranch: string;
   branches: string[];
+  /** Branches conhecidas do remote "origin" (refs/remotes/origin/*), atualizadas a cada fetch. */
+  remoteBranches?: string[];
+  /** HEAD aponta para um commit, não para uma branch; currentBranch traz o hash abreviado. */
+  detachedHead?: boolean;
+  /** URL do remote "origin" sem credenciais embutidas. */
   remoteUrl?: string;
+  /** Página do repositório no provedor, quando dedutível a partir do remote. */
+  webUrl?: string;
   isAzure: boolean;
   azureOrg?: string;
   azureProject?: string;
@@ -325,6 +332,8 @@ export interface AppSettings {
   wtaUrl?: string;
   /** URL da API da Rotina 801 (ferramenta-servidor) no Karaf (padrão: http://localhost:8889 ou a wtaUrl configurada) */
   routine801Url?: string;
+  /** Porta do receptor OTLP/HTTP do APM (padrão 4318); o Karaf iniciado pelo app exporta traces para ela */
+  apmReceiverPort?: number;
   /** Usuário para login automático no WTA (ex: PCADMIN) */
   wtaLogin?: string;
   /** Senha ou hash MD5 da senha do usuário no WTA */
@@ -1181,6 +1190,85 @@ export interface ExplainPlanResult {
   error?: string;
 }
 
+/**
+ * Filtros aceitos pelo Statement Tracer do Oracle (v$session/v$sql). Todos opcionais —
+ * sem filtro nenhum, retorna tudo que a query base já limita via `limit`.
+ */
+export interface OracleTracerFilter {
+  schemaFilter?: string;
+  textFilter?: string;
+  limit?: number;
+}
+
+/** Uma sessão conectada ao Oracle e a instrução SQL atual/última que ela executou. */
+export interface OracleActiveSession {
+  sid: number;
+  serialNum: number;
+  username: string | null;
+  program: string | null;
+  machine: string | null;
+  module: string | null;
+  action: string | null;
+  clientIdentifier: string | null;
+  status: string | null;
+  lastCallEt: number | null;
+  sqlId: string | null;
+  sqlText: string | null;
+}
+
+export interface OracleActiveSessionsResult {
+  success: boolean;
+  sessions: OracleActiveSession[];
+  executionTimeMs: number;
+  error?: string;
+}
+
+/** Uma instrução SQL recente no cursor cache do Oracle (v$sql). */
+export interface OracleRecentStatement {
+  sqlId: string;
+  sqlText: string;
+  parsingSchemaName: string | null;
+  module: string | null;
+  action: string | null;
+  executions: number | null;
+  firstLoadTime: string | null;
+  lastActiveTime: string | null;
+}
+
+export interface OracleRecentStatementsResult {
+  success: boolean;
+  statements: OracleRecentStatement[];
+  executionTimeMs: number;
+  error?: string;
+}
+
+/** Opções de uma captura contínua (Statement Tracer rodando em segundo plano). */
+export interface OracleCaptureOptions {
+  /** Intervalo entre consultas ao Oracle, em ms (piso de 2000ms aplicado pelo service). */
+  intervalMs: number;
+  schemaFilter?: string;
+  textFilter?: string;
+}
+
+/** Uma sessão Oracle observada durante a captura, no instante em que passou a rodar `sqlId`. */
+export interface OracleSessionCaptureEntry extends OracleActiveSession {
+  capturedAt: string;
+}
+
+/** Estado acumulado de uma captura contínua para uma conexão (sobrevive à navegação na UI). */
+export interface OracleCaptureState {
+  isCapturing: boolean;
+  startedAt: string | null;
+  intervalMs: number;
+  pollCount: number;
+  lastPolledAt: string | null;
+  lastError: string | null;
+  /** Instruções distintas vistas (deduplicadas por SQL_ID), mais recentes primeiro. */
+  statements: OracleRecentStatement[];
+  /** Linha do tempo de mudanças de SQL por sessão, mais recentes primeiro. */
+  sessionEvents: OracleSessionCaptureEntry[];
+}
+
 export interface SqlSnippet {
   id: string;
   title: string;
@@ -1402,6 +1490,15 @@ export interface GitFileStatus {
   path: string;
   status: 'modified' | 'added' | 'deleted' | 'untracked' | 'renamed' | 'copied';
   staged: boolean;
+  /** Caminho de origem em renomeações/cópias. */
+  originalPath?: string;
+}
+
+export interface GitCommandResult {
+  success: boolean;
+  output: string;
+  /** Commit criado, mas o push falhou (o commit continua só local). */
+  pushFailed?: boolean;
 }
 
 export interface GitDiffResult {
@@ -1447,6 +1544,17 @@ export interface HttpHealthResult {
 
 /** Porta padrão do OTLP/HTTP, usada pelo receptor embutido do APM. */
 export const DEFAULT_APM_OTLP_PORT = 4318;
+
+/** Porta aceitável para o receptor: inteira e fora da faixa privilegiada (< 1024 exige admin). */
+export function isValidApmReceiverPort(port: unknown): port is number {
+  return typeof port === 'number' && Number.isInteger(port) && port >= 1024 && port <= 65535;
+}
+
+/** Porta configurada para o receptor do APM, com fallback para a padrão do OTLP/HTTP. */
+export function getApmReceiverPort(settings?: Pick<AppSettings, 'apmReceiverPort'> | null): number {
+  const configured = settings?.apmReceiverPort;
+  return isValidApmReceiverPort(configured) ? configured : DEFAULT_APM_OTLP_PORT;
+}
 
 /**
  * Endpoint base do receptor OTLP do APM. Usa 127.0.0.1 porque o receptor escuta só em IPv4 e
@@ -1610,6 +1718,13 @@ export interface ApmReceiverStatus {
   maxBufferSize: number;
   /** Spans descartados por excederem o limite de spans por trace. */
   droppedSpans?: number;
+}
+
+export interface ApmReceiverPortChangeResult {
+  success: boolean;
+  /** Motivo da falha; nesse caso o receptor que estava ativo continua na porta atual. */
+  error?: string;
+  status: ApmReceiverStatus;
 }
 
 export interface SlowQueryMetricsSummary {

@@ -35,6 +35,9 @@ export const AppLogo: React.FC<AppLogoProps> = ({
   const hudVisorGradId = `hudVisorGrad_${uid}`;
   const mainPlasmaGradId = `mainPlasmaGrad_${uid}`;
   const sidePlasmaGradId = `sidePlasmaGrad_${uid}`;
+  const sunGlowGradId = `sunGlowGrad_${uid}`;
+  const reflGlowGradId = `reflGlowGrad_${uid}`;
+  const squircleClipId = `squircleClip_${uid}`;
   const neonGlowId = `neonGlow_${uid}`;
   const plasmaGlowId = `plasmaGlow_${uid}`;
 
@@ -49,11 +52,11 @@ export const AppLogo: React.FC<AppLogoProps> = ({
       aria-label={alt}
     >
       <defs>
-        {/* Gradientes de Fundo */}
+        {/* Gradiente de Fundo (dusk indigo, aberto para a luz) */}
         <linearGradient id={bgGradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0F172A" />
-          <stop offset="50%" stopColor="#0B0F17" />
-          <stop offset="100%" stopColor="#18152E" />
+          <stop offset="0%" stopColor="#1E1B4B" />
+          <stop offset="55%" stopColor="#161533" />
+          <stop offset="100%" stopColor="#0B1024" />
         </linearGradient>
 
         {/* Gradiente da Borda Neon Ciano */}
@@ -63,19 +66,32 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           <stop offset="100%" stopColor="#818CF8" />
         </linearGradient>
 
-        {/* Gradiente Fuselagem Foguete (Metal Escuro com Reflexo) */}
+        {/* Gradiente Fuselagem Foguete (Metal Iluminado, sem cair no preto) */}
         <linearGradient id={fuselageGradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#E2E8F0" />
-          <stop offset="25%" stopColor="#94A3B8" />
-          <stop offset="65%" stopColor="#334155" />
-          <stop offset="100%" stopColor="#0F172A" />
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="20%" stopColor="#FDE68A" />
+          <stop offset="50%" stopColor="#CBD5E1" />
+          <stop offset="80%" stopColor="#64748B" />
+          <stop offset="100%" stopColor="#334155" />
         </linearGradient>
 
         <linearGradient id={wingGradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38BDF8" />
-          <stop offset="40%" stopColor="#1E293B" />
-          <stop offset="100%" stopColor="#0F172A" />
+          <stop offset="0%" stopColor="#7DD3FC" />
+          <stop offset="40%" stopColor="#38BDF8" />
+          <stop offset="100%" stopColor="#1E3A5F" />
         </linearGradient>
+
+        {/* Brilho da fonte de luz distante */}
+        <radialGradient id={sunGlowGradId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FDE68A" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#FDE68A" stopOpacity="0" />
+        </radialGradient>
+
+        {/* Brilho do reflexo na base */}
+        <radialGradient id={reflGlowGradId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FDE68A" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#FDE68A" stopOpacity="0" />
+        </radialGradient>
 
         {/* Gradiente do Visor / Cockpit HUD */}
         <radialGradient id={hudVisorGradId} cx="40%" cy="40%" r="60%">
@@ -112,29 +128,34 @@ export const AppLogo: React.FC<AppLogoProps> = ({
           <feGaussianBlur stdDeviation="12" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
+
+        <clipPath id={squircleClipId}>
+          <rect x="24" y="24" width="464" height="464" rx="108" ry="108" />
+        </clipPath>
       </defs>
 
       {/* Fundo Squircle Arredondado */}
       <rect x="24" y="24" width="464" height="464" rx="108" ry="108" fill={`url(#${bgGradId})`} />
 
-      {/* Borda Neon Iluminada */}
-      <rect x="24" y="24" width="464" height="464" rx="108" ry="108" fill="none" stroke={`url(#${borderGradId})`} strokeWidth="8" opacity="0.9" />
-      <rect x="26" y="26" width="460" height="460" rx="106" ry="106" fill="none" stroke="#22D3EE" strokeWidth="2" opacity="0.4" filter={`url(#${neonGlowId})`} />
+      <g clipPath={`url(#${squircleClipId})`}>
+        {/* Fonte de luz distante (o farol que o foguete persegue) */}
+        <circle cx="120" cy="120" r="190" fill={`url(#${sunGlowGradId})`} />
+        <circle cx="120" cy="120" r="22" fill="#FFF7E0" />
 
-      {/* Linhas e Trilhas de Circuito Tech no Fundo */}
-      <g opacity="0.2" stroke="#38BDF8" strokeWidth="3" fill="none" strokeLinecap="round">
-        <path d="M 64 160 L 120 160 L 160 200 L 160 280" />
-        <path d="M 80 380 L 140 380 L 180 340 L 180 300" />
-        <path d="M 400 120 L 350 120 L 320 150" />
-        <path d="M 440 280 L 380 280 L 340 320 L 340 400" />
-        <circle cx="160" cy="280" r="5" fill="#38BDF8" />
-        <circle cx="180" cy="300" r="5" fill="#38BDF8" />
-        <circle cx="320" cy="150" r="5" fill="#38BDF8" />
-        <circle cx="340" cy="400" r="5" fill="#38BDF8" />
-      </g>
+        {/* Linhas e Trilhas de Circuito Tech no Fundo */}
+        <g opacity="0.2" stroke="#38BDF8" strokeWidth="3" fill="none" strokeLinecap="round">
+          <path d="M 64 160 L 120 160 L 160 200 L 160 280" />
+          <path d="M 80 380 L 140 380 L 180 340 L 180 300" />
+          <path d="M 400 120 L 350 120 L 320 150" />
+          <path d="M 440 280 L 380 280 L 340 320 L 340 400" />
+          <circle cx="160" cy="280" r="5" fill="#38BDF8" />
+          <circle cx="180" cy="300" r="5" fill="#38BDF8" />
+          <circle cx="320" cy="150" r="5" fill="#38BDF8" />
+          <circle cx="340" cy="400" r="5" fill="#38BDF8" />
+        </g>
 
-      {/* FOGUETE TECH COCKPIT (DIAGONAL 45°) */}
-      <g transform="translate(256, 256) rotate(-45) translate(-256, -256)">
+        {/* FOGUETE TECH COCKPIT (DIAGONAL 45°) */}
+        <g transform="translate(256, 256) rotate(-45) translate(-256, -256)">
         {/* Partículas / Centelhas de Propulsão */}
         <g filter={`url(#${neonGlowId})`}>
           <circle cx="256" cy="430" r="6" fill="#67E8F9" />
@@ -194,9 +215,18 @@ export const AppLogo: React.FC<AppLogoProps> = ({
         <path d="M 246 180 L 266 180 M 256 170 L 256 190" stroke="#FFFFFF" strokeWidth="2" opacity="0.85" />
         <ellipse cx="252" cy="174" rx="7" ry="3.5" fill="#FFFFFF" opacity="0.7" transform="rotate(-30 252 174)" />
 
-        {/* Aleta Dorsal Central */}
-        <polygon points="253,300 259,300 262,370 250,370" fill="#0284C7" stroke="#38BDF8" strokeWidth="1.5" />
+          {/* Aleta Dorsal Central */}
+          <polygon points="253,300 259,300 262,370 250,370" fill="#0284C7" stroke="#38BDF8" strokeWidth="1.5" />
+        </g>
+
+        {/* Reflexo perto da base (refletindo a luz do foguete) */}
+        <circle cx="360" cy="420" r="90" fill={`url(#${reflGlowGradId})`} />
+        <line x1="70" y1="420" x2="442" y2="420" stroke="#FDE68A" strokeWidth="2" strokeOpacity="0.45" strokeLinecap="round" />
       </g>
+
+      {/* Borda Neon Iluminada (por cima do conteúdo recortado) */}
+      <rect x="24" y="24" width="464" height="464" rx="108" ry="108" fill="none" stroke={`url(#${borderGradId})`} strokeWidth="8" opacity="0.9" />
+      <rect x="26" y="26" width="460" height="460" rx="106" ry="106" fill="none" stroke="#22D3EE" strokeWidth="2" opacity="0.4" filter={`url(#${neonGlowId})`} />
     </svg>
   );
 

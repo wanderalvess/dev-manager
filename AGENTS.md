@@ -33,8 +33,22 @@ via callbacks (`onLog`/`onChunk`/`onProgress`) pensados para WebSocket. `mcp/ind
 isso com um helper `collect()` que buffereia os eventos e devolve tudo de uma vez quando a
 tool call termina. O conjunto de tools do MCP cresce junto com os services — hoje inclui
 também backup/restore de banco (`db_run_backup`, `db_restore_backup`, `db_run_restore_drill`,
-`db_list_backups`/`db_list_backup_history`, `backup_test_webhook`, `db_save_backup_config`) e
-leitura/gestão de log watcher (`logs_read_last_lines`, `logs_check_file`, `logs_clear_file`).
+`db_list_backups`/`db_list_backup_history`, `backup_test_webhook`, `db_save_backup_config`),
+leitura/gestão de log watcher (`logs_read_last_lines`, `logs_check_file`, `logs_clear_file`) e
+consulta de APM (`apm_*`).
+
+**Estado em memória não atravessa processos.** O MCP roda num processo separado do app: um
+service que guarda estado só em memória não pode simplesmente ser reinstanciado em
+`mcp/index.ts` — a instância do MCP nasceria vazia (foi o caso do primeiro corte do APM). Para o
+buffer de traces do `ApmService`, o processo dono da porta OTLP (app desktop ou servidor web)
+serve uma API de consulta no próprio receptor (`/devmanager/apm/*`: só GET, só loopback, sem
+CORS e com token publicado em `.apm-receiver.json` na pasta de dados do usuário) e o MCP a lê
+via `ApmReceiverClient`. Siga esse padrão para o próximo service com estado em memória, em vez
+de subir no MCP uma segunda instância que disputaria recursos com o app (ex.: a porta 4318).
+A exceção é o estado que o próprio assistente cria e lê, sem disputar recurso com o app: a
+captura contínua do Statement Tracer (`OracleTracerCaptureService`) tem instância própria no MCP
+(`db_*_oracle_capture*`), independente da captura iniciada na tela — os timers usam `unref()`
+para uma captura esquecida não manter o processo MCP vivo após o cliente desconectar.
 
 **Modo Web/Docker é single-tenant**: quando `server/index.ts` roda exposto na rede, todo
 cliente que acessa a mesma URL compartilha o mesmo `config.json` — mesmas conexões de banco,
@@ -130,3 +144,34 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
   `perf(escopo):`, `chore:`) com corpo descritivo em português.
 - Ao escrever comentários, siga a política geral do Claude Code: só comente o "porquê" não
   óbvio, nunca o "o quê".
+
+## Central de Ajuda acompanha cada funcionalidade nova
+
+A Central de Ajuda ([src/renderer/src/pages/HelpPage.tsx](src/renderer/src/pages/HelpPage.tsx))
+é a documentação que o usuário final lê dentro do app. **Toda funcionalidade visível ao
+usuário (tela, aba, modo, integração, tool MCP ou mudança de atalho) só está pronta quando a
+Ajuda também foi atualizada, no mesmo commit/PR.** Não deixe para depois: a Ajuda já ficou
+várias versões atrás (APM, Statement Tracer, WinThor Start, criptografia de segredos e
+contagem de tools MCP ausentes ou desatualizadas).
+
+Checklist ao entregar uma funcionalidade:
+
+- **Guia dos Módulos** (`activeCategory === 'modules'`): adicione um bullet no card do
+  módulo afetado ou crie um card novo para página nova (e atualize o `badge` "N Módulos" em
+  `categories`).
+- **Visão Geral → Ecossistema & Módulos**: página nova ganha um card de acesso rápido com o
+  atalho correspondente.
+- **FAQ** (`faqList`): se o uso não for óbvio (pré-requisito, configuração, permissão,
+  porta, troubleshooting), adicione uma pergunta com `tags` pesquisáveis.
+- **Atalhos** (`keyboardShortcuts`): os atalhos `Alt+N` são definidos em 4 lugares que
+  precisam bater: o handler em [App.tsx](src/renderer/src/App.tsx), os `shortcut` do
+  [Header.tsx](src/renderer/src/components/Header.tsx), os `badge` do
+  [QuickLauncherModal.tsx](src/renderer/src/components/QuickLauncherModal.tsx) e a tabela
+  da Ajuda (mais a tabela do README).
+- **Números citados** (quantidade de tools MCP, portas padrão, limites): confira contra o
+  código ou contra [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md) em vez de copiar o texto antigo.
+- Use os nomes exatos da UI (rótulos de abas e botões) para o usuário achar o que o texto
+  descreve, e não descreva comportamento que o código não tem.
+- Se houver tour da página em
+  [onboarding/tourSteps.ts](src/renderer/src/components/onboarding/tourSteps.ts), revise
+  também.

@@ -239,7 +239,8 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [activeTab, fetchServices]);
 
-  // Suporte a atalhos de teclado (Alt+1 .. Alt+9 e Ctrl+K)
+  // Suporte a atalhos de teclado (Alt+0 .. Alt+9 e Ctrl+K) — manter em sincronia com os
+  // `shortcut` do Header, os `badge` do QuickLauncherModal e a tabela da Central de Ajuda.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -258,7 +259,7 @@ export const App: React.FC = () => {
         else if (e.key === '7') setActiveTab('docs');
         else if (e.key === '8') setActiveTab('logs');
         else if (e.key === '9') setActiveTab('help');
-        else if (e.key === '0') setActiveTab('settings');
+        else if (e.key === '0') setActiveTab('apm');
       }
     };
     window.addEventListener('keydown', handleKeyDown);

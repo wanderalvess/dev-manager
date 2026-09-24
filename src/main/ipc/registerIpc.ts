@@ -11,6 +11,7 @@ import { DocsIndexService, DocSyncService } from '../services/DocsIndexService';
 import { ConfluenceSource } from '../services/docSources/ConfluenceSource';
 import { JiraSource } from '../services/docSources/JiraSource';
 import { DatabaseService } from '../services/DatabaseService';
+import { OracleTracerCaptureService } from '../services/OracleTracerCaptureService';
 import { BackupService } from '../services/BackupService';
 import { BackupSchedulerService } from '../services/BackupSchedulerService';
 import * as cron from 'node-cron';
@@ -38,6 +39,8 @@ import {
   AutomationStep,
   DocsIndexProgress,
   DatabaseConnectionConfig,
+  OracleTracerFilter,
+  OracleCaptureOptions,
   BackupConfig,
   BackupWebhookConfig,
   ConfluenceSourceConfig,
@@ -74,7 +77,8 @@ export function registerIpcHandlers(
   autoUpdateService?: AutoUpdateService,
   llmService: LlmService = new LlmService(configService, docsIndexService),
   routine801Service: Routine801Service = new Routine801Service(configService, karafService),
-  apmService: ApmService = new ApmService()
+  apmService: ApmService = new ApmService(),
+  oracleTracerCaptureService: OracleTracerCaptureService = new OracleTracerCaptureService(databaseService)
 ) {
   // Distingue instalação nova (nunca existiu marcador) de atualização de versão (marcador existia,
   // versão mudou). Onboarding completo (Welcome + Tour) só deve resetar em instalação nova — numa
@@ -591,6 +595,10 @@ export function registerIpcHandlers(
     return await gitAzureService.getDiff(projectPath, targetFile);
   });
 
+  ipcMain.handle('git:get-uncommitted-counts', async () => {
+    return await gitAzureService.getUncommittedCounts();
+  });
+
   ipcMain.handle('shell:open-external', async (_, url: string) => {
     if (isSafeUrl(url)) {
       await shell.openExternal(url);
@@ -769,6 +777,43 @@ export function registerIpcHandlers(
 
   ipcMain.handle('db:get-table-columns', async (_, config: DatabaseConnectionConfig, tableName: string) => {
     return await databaseService.getTableColumns(config, tableName);
+  });
+
+  ipcMain.handle('db:get-oracle-active-sessions', async (_, config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => {
+    return await databaseService.getOracleActiveSessions(config, filter);
+  });
+
+  ipcMain.handle('db:get-oracle-recent-statements', async (_, config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => {
+    return await databaseService.getOracleRecentStatements(config, filter);
+  });
+
+  ipcMain.handle('db:start-oracle-capture', (_, config: DatabaseConnectionConfig, options: OracleCaptureOptions) => {
+    try {
+      return oracleTracerCaptureService.startCapture(config, options);
+    } catch (err: any) {
+      return {
+        isCapturing: false,
+        startedAt: null,
+        intervalMs: 0,
+        pollCount: 0,
+        lastPolledAt: null,
+        lastError: err?.message || 'Falha ao iniciar a captura.',
+        statements: [],
+        sessionEvents: []
+      };
+    }
+  });
+
+  ipcMain.handle('db:stop-oracle-capture', (_, connectionId: string) => {
+    return oracleTracerCaptureService.stopCapture(connectionId);
+  });
+
+  ipcMain.handle('db:clear-oracle-capture', (_, connectionId: string) => {
+    return oracleTracerCaptureService.clearCapture(connectionId);
+  });
+
+  ipcMain.handle('db:get-oracle-capture-state', (_, connectionId: string) => {
+    return oracleTracerCaptureService.getCaptureState(connectionId);
   });
 
   ipcMain.handle(
@@ -1189,5 +1234,9 @@ export function registerIpcHandlers(
 
   ipcMain.handle('apm:generate-demo', async () => {
     return apmService.generateDemoData();
+  });
+
+  ipcMain.handle('apm:change-receiver-port', async (_, port: number) => {
+    return apmService.changeReceiverPort(port);
   });
 }

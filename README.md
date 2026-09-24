@@ -21,7 +21,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 │ • Hub Git & Azure DevOps: Sincronização rápida, detecção de branches e gerador de Pull Requests                  │
 │ • Catálogo de Rotinas (.EXE e .PC) com busca rápida e favoritos                                                  │
 │ • RAG & IA Local: Busca semântica (FastEmbed), Conectores Confluence/Jira, Assistente IA (BYOK) e DocSync         │
-│ • Quick Launcher Spotlight (Ctrl+K) e Navegação Global por Teclado (Alt+1 .. Alt+9)                              │
+│ • Quick Launcher Spotlight (Ctrl+K) e Navegação Global por Teclado (Alt+0 .. Alt+9)                              │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -55,6 +55,10 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
   * Reutilização, cópia rápida ou reexecução direta a partir do histórico (`Ctrl + Enter` para executar).
 * **Biblioteca de Snippets Rápidos e Customizados:**
   * Snippets de fábrica (`SELECT`, `COUNT`, `JOIN`, `DDL`) e criação de snippets próprios do desenvolvedor para acelerar consultas recorrentes.
+* **Statement Tracer (Oracle):**
+  * Aba dedicada com captura contínua de `v$session`/`v$sql` rodando em segundo plano no processo do app — inicia com um clique, e continua capturando mesmo se você trocar de aba ou navegar para outra página do Dev Manager enquanto dispara a ação em outro sistema conectado ao mesmo banco.
+  * Mostra uma linha do tempo de qual sessão passou a rodar qual SQL (só registra quando o SQL muda, não a cada consulta) e a lista de instruções distintas vistas no cursor cache, com filtro por schema/texto e intervalo de consulta configurável (2s–30s).
+  * Responde à pergunta "qual query rodou quando cliquei nesse botão", útil quando várias aplicações (ex: instâncias Karaf) compartilham o mesmo banco.
 
 #### 🛡️ Central de Backup & Restauração Integrada (5 Abas de Controle)
 O Dev Manager conta com uma central avançada de backup acessível pelo botão **Backup & Restore**:
@@ -317,9 +321,9 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
 ### 10. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
   * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code — pode chamar diretamente, sem passar pela interface gráfica.
-* **106 Tools Organizadas por Domínio:**
+* **123 Tools Organizadas por Domínio:**
   * Para detalhes e exemplos de como usar cada ferramenta, **[acesse o Catálogo Completo de Ferramentas MCP](docs/MCP_TOOLS.md)**.
-  * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (inclui gerência de bundles: listar, instalar, reinstalar, atualizar versão, desinstalar e checar dependências), `docker_*`/`container_*`, `git_*`, `routines_*`, `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, inclui backup/restore/restore drill agendável), `logs_*` (leitura e limpeza de arquivos de log), `deploy_*`, `llm_*` e `network_*` — desde consultas de status até o pipeline completo de deploy Karaf e execução de perfis de automação.
+  * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (inclui gerência de bundles: listar, instalar, reinstalar, atualizar versão, desinstalar e checar dependências), `docker_*`/`container_*`, `git_*`, `routines_*`, `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, inclui backup/restore/restore drill agendável), `logs_*` (leitura e limpeza de arquivos de log), `apm_*` (traces e métricas do APM), `routine801_*`, `deploy_*`, `llm_*` e `network_*` — desde consultas de status até o pipeline completo de deploy Karaf e execução de perfis de automação.
 * **Terceiro Consumidor da Mesma Camada de Serviços:**
   * Reaproveita exatamente as mesmas classes de serviço e validações de segurança (`isValidIdentifier`, `isSafeLocalPath`, `isSafeKarafCommand`) já usadas pelo IPC do Electron e pela API REST (`src/server`) — nenhuma lógica de negócio duplicada.
 * **Protocolo Aberto — Funciona em Qualquer Cliente MCP:**
@@ -334,6 +338,23 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
   Inicia o servidor MCP via stdio (`tsx src/mcp/index.ts`) — mesmo mecanismo do script `server` (REST/Docker), agora falando o protocolo MCP.
 
 > ⚠️ **Nota de segurança:** o servidor MCP tem o mesmo poder que o próprio Cockpit — iniciar/parar serviços Windows, matar processos, rodar builds Maven e comandos Karaf. Ele roda localmente via stdio (sem porta de rede exposta) e é pensado para uso pelo mesmo desenvolvedor que já opera essas ações pela interface. Transporte remoto/HTTP não faz parte desta versão.
+
+---
+
+### 11. 📈 APM & Traces (OpenTelemetry)
+* **Receptor OTLP/HTTP Embutido (porta 4318, configurável):**
+  * Recebe traces em JSON ou Protobuf (com gzip/deflate) de qualquer aplicação instrumentada com OpenTelemetry.
+  * No Karaf iniciado pelo Cockpit, basta colocar o `opentelemetry-javaagent.jar` em `<karaf>/bin`: o agente é anexado automaticamente, exportando via `http/protobuf` para `127.0.0.1` na porta configurada.
+  * A porta pode ser trocada em **APM & Traces → Como Conectar** — útil quando outro coletor (OTel Collector, Jaeger, SigNoz) já ocupa a 4318. Se a nova porta falhar, o receptor continua na atual.
+* **Dashboard:**
+  * Vazão (RPM), latências p50/p95/p99, taxa de erros, % do tempo gasto em banco, volume e latência dos últimos 15 minutos, endpoints mais acessados e ranking de queries lentas com atalho para o DB Studio.
+* **Traces Explorer:**
+  * Filtros por serviço, erros, lentidão, SQL e faixa de latência; waterfall com a árvore de spans, atributos do span selecionado, queries SQL e stacktrace das exceções registradas pelo agente Java.
+  * Decomposição do tempo de cada requisição entre banco, chamadas externas e aplicação, com destaque do gargalo.
+* **Buffer em Memória:**
+  * Até 5.000 traces (100 mil spans, 2 mil por trace), descartando os menos recentes — nada é gravado em disco.
+* **Integração com Assistentes de IA:**
+  * As tools `apm_*` do servidor MCP consultam o buffer do app por uma API local do receptor (somente loopback, protegida por token e sem CORS).
 
 ---
 
@@ -557,8 +578,11 @@ dev-manager/
 | `Alt + 5` | Navega para a aba **Git & Azure DevOps** |
 | `Alt + 6` | Navega para a aba **Catálogo de Rotinas** |
 | `Alt + 7` | Navega para a aba **Documentação & RAG** |
-| `Alt + 8` | Navega para a aba **Configurações** |
+| `Alt + 8` | Navega para a aba **Logs em Tempo Real** |
 | `Alt + 9` | Navega para a aba **Ajuda & Diagnóstico** |
+| `Alt + 0` | Navega para a aba **APM & Traces** |
+
+**Configurações** não tem atalho `Alt`: abra pelo ícone de engrenagem no cabeçalho ou pelo `Ctrl + K`.
 
 ---
 

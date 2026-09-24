@@ -1,9 +1,43 @@
 import fs from 'fs';
 import path from 'path';
-import { GitProjectInfo, GitCommitInfo, GitFileStatus, GitDiffResult } from '../../shared/types';
+import { GitProjectInfo, GitCommitInfo, GitFileStatus, GitDiffResult, GitCommandResult } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { KarafService } from './KarafService';
 import { execFileAsync, isSafeLocalPath } from '../utils/security';
+import { killProcessTree } from '../utils/process';
+import {
+  GIT_LOG_FIELD_SEPARATOR,
+  parseCommitLog,
+  parseGitDirFile,
+  parsePackedRefs,
+  parseRemoteUrl,
+  parseStatusPorcelainZ,
+  sanitizeRemoteUrl
+} from '../utils/gitRepoUtils';
+
+const DIFF_MAX_BUFFER = 10 * 1024 * 1024;
+
+/**
+ * Teto para fetch/pull/push. Generoso porque o primeiro acesso pode abrir a janela de login do
+ * Git Credential Manager, mas finito: sem ele um prompt de credencial/host SSH sem resposta
+ * deixava o comando (e os botões da tela) presos indefinidamente.
+ */
+export const GIT_NETWORK_TIMEOUT_MS = 3 * 60 * 1000;
+
+/** `git status` em segundo plano: repositório gigante ou disco travado não pode segurar a lista. */
+export const GIT_STATUS_TIMEOUT_MS = 30 * 1000;
+
+/** Quantos `git status` simultâneos na contagem em lote (evita dezenas de git.exe de uma vez). */
+const STATUS_COUNT_CONCURRENCY = 4;
+
+/** Junta stdout e stderr de uma falha do git: conflitos e erros de hook se dividem entre os dois. */
+function gitErrorOutput(err: any, fallback: string): string {
+  const combined = [err?.stdout, err?.stderr]
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
+    .filter(Boolean)
+    .join('\n');
+  return combined || err?.message || fallback;
+}
 
 export class GitAzureService {
   private configService: ConfigService;
@@ -13,6 +47,139 @@ export class GitAzureService {
   constructor(configService: ConfigService, karafService: KarafService) {
     this.configService = configService;
     this.karafService = karafService;
+  }
+
+  // Validação centralizada aqui (e não só nas rotas) porque IPC, servidor web e MCP chamam o
+  // service diretamente: um caminho UNC apontaria o git para um .git/config/hooks de terceiros.
+  private isUsableProjectPath(projectPath: string): boolean {
+    return typeof projectPath === 'string' && isSafeLocalPath(projectPath) && fs.existsSync(projectPath);
+  }
+
+  /**
+   * Roda o git com tempo limite. No estouro mata a árvore inteira (taskkill /T): matar só o
+   * git.exe deixaria git-remote-https/credential helper/ssh órfãos segurando a conexão.
+   */
+  private async runGitWithTimeout(
+    projectPath: string,
+    args: string[],
+    timeoutMs: number
+  ): Promise<{ stdout: string; stderr: string }> {
+    const pending = execFileAsync('git', args, { cwd: projectPath });
+    const child = (pending as { child?: { pid?: number } }).child;
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        if (child?.pid) killProcessTree(child.pid);
+        const seconds = Math.round(timeoutMs / 1000);
+        reject(
+          new Error(
+            `Tempo limite de ${seconds}s excedido em "git ${args.join(' ')}". Verifique a conexão com o remoto ` +
+              'e se há uma janela de login/credencial ou confirmação de host SSH aguardando resposta.'
+          )
+        );
+      }, timeoutMs);
+    });
+    try {
+      return await Promise.race([pending, timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
+   * `--no-optional-locks` porque é uma leitura em segundo plano: sem ele o `git status` grava o
+   * index e pode disputar o index.lock com a IDE/terminal do usuário no mesmo repositório.
+   */
+  private async countUncommitted(projectPath: string): Promise<number | null> {
+    try {
+      const { stdout } = await this.runGitWithTimeout(
+        projectPath,
+        ['--no-optional-locks', 'status', '--porcelain'],
+        GIT_STATUS_TIMEOUT_MS
+      );
+      const count = stdout ? stdout.split('\n').filter((line) => line.trim()).length : 0;
+      this.uncommittedCache.set(projectPath, count);
+      return count;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Conta alterações pendentes de todos os repositórios da pasta de projetos, com concorrência
+   * limitada. Fica fora do listProjects (que só lê o filesystem, para não pesar na abertura do
+   * app) e é chamado sob demanda pela tela de Git. Repositórios em que o status falhou ficam de fora.
+   */
+  public async getUncommittedCounts(): Promise<Record<string, number>> {
+    const projects = await this.listProjects();
+    const counts: Record<string, number> = {};
+    let nextIndex = 0;
+
+    const worker = async () => {
+      while (nextIndex < projects.length) {
+        const project = projects[nextIndex++];
+        const count = await this.countUncommitted(project.path);
+        if (count !== null) counts[project.path] = count;
+      }
+    };
+
+    await Promise.all(Array.from({ length: Math.min(STATUS_COUNT_CONCURRENCY, projects.length) }, worker));
+    return counts;
+  }
+
+  /** Resolve o diretório git (HEAD) e o diretório comum (config/refs), cobrindo worktrees e submódulos. */
+  private resolveGitDirs(projectPath: string): { gitDir: string; commonDir: string } | null {
+    const dotGit = path.join(projectPath, '.git');
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(dotGit);
+    } catch {
+      return null;
+    }
+    if (stat.isDirectory()) {
+      return { gitDir: dotGit, commonDir: dotGit };
+    }
+
+    const gitDirRef = parseGitDirFile(fs.readFileSync(dotGit, 'utf-8'));
+    if (!gitDirRef) return null;
+    const gitDir = path.resolve(projectPath, gitDirRef);
+    const commonDirFile = path.join(gitDir, 'commondir');
+    const commonDir = fs.existsSync(commonDirFile)
+      ? path.resolve(gitDir, fs.readFileSync(commonDirFile, 'utf-8').trim())
+      : gitDir;
+    return { gitDir, commonDir };
+  }
+
+  /** Lista refs sob um prefixo lendo refs soltas e `packed-refs` (clones recentes guardam tudo compactado). */
+  private listRefNames(commonDir: string, prefix: string): string[] {
+    const names = new Set<string>();
+
+    const walk = (dir: string, relative: string) => {
+      let entries: fs.Dirent[];
+      try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const entry of entries) {
+        const refName = relative ? `${relative}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) {
+          walk(path.join(dir, entry.name), refName);
+        } else if (entry.isFile()) {
+          names.add(refName);
+        }
+      }
+    };
+    walk(path.join(commonDir, ...prefix.split('/').filter(Boolean)), '');
+
+    const packedRefsFile = path.join(commonDir, 'packed-refs');
+    if (fs.existsSync(packedRefsFile)) {
+      for (const name of parsePackedRefs(fs.readFileSync(packedRefsFile, 'utf-8'), prefix)) {
+        names.add(name);
+      }
+    }
+
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
   }
 
   public async listProjects(): Promise<GitProjectInfo[]> {
@@ -44,103 +211,59 @@ export class GitAzureService {
 
   public async getProjectInfo(projectPath: string, includeUncommittedCount = true): Promise<GitProjectInfo | null> {
     try {
-      if (!projectPath || !fs.existsSync(projectPath)) return null;
-      const gitDir = path.join(projectPath, '.git');
-      if (!fs.existsSync(gitDir)) return null;
+      if (!this.isUsableProjectPath(projectPath)) return null;
+      const dirs = this.resolveGitDirs(projectPath);
+      if (!dirs) return null;
 
       const projectName = path.basename(projectPath);
 
       // 1. Branch atual via HEAD
       let currentBranch = 'unknown';
-      const headFile = path.join(gitDir, 'HEAD');
+      let detachedHead = false;
+      const headFile = path.join(dirs.gitDir, 'HEAD');
       if (fs.existsSync(headFile)) {
         const headContent = fs.readFileSync(headFile, 'utf-8').trim();
         if (headContent.startsWith('ref: refs/heads/')) {
           currentBranch = headContent.replace('ref: refs/heads/', '');
         } else {
           currentBranch = headContent.substring(0, 8);
+          detachedHead = true;
         }
       }
 
-      // 2. Remote URL e lista de branches via .git/config
+      // 2. Remote URL via .git/config
       let remoteUrl = '';
-      const branches: string[] = [];
-      const configFile = path.join(gitDir, 'config');
+      const configFile = path.join(dirs.commonDir, 'config');
       if (fs.existsSync(configFile)) {
         const configContent = fs.readFileSync(configFile, 'utf-8');
 
         // Prioriza a URL do remote "origin"; só recorre ao primeiro "url =" do arquivo
         // se não houver remote "origin" (evita pegar um remote "upstream" listado antes
         // em repositórios com múltiplos remotes, ex: fluxo de fork).
-        const originMatch = configContent.match(/\[remote "origin"\][^[]*?url\s*=\s*(.+)/);
-        const anyUrlMatch = configContent.match(/url\s*=\s*(.+)/);
+        // Âncora no início da linha para não casar com "pushurl =".
+        const originMatch = configContent.match(/\[remote "origin"\][^[]*?^\s*url\s*=\s*(.+)$/m);
+        const anyUrlMatch = configContent.match(/^\s*url\s*=\s*(.+)$/m);
         const urlMatch = originMatch || anyUrlMatch;
         if (urlMatch) {
-          remoteUrl = urlMatch[1].trim();
-        }
-
-        const branchMatches = Array.from(configContent.matchAll(/\[branch "([^"]+)"\]/g));
-        for (const match of branchMatches) {
-          if (!branches.includes(match[1])) {
-            branches.push(match[1]);
-          }
+          remoteUrl = sanitizeRemoteUrl(urlMatch[1]);
         }
       }
 
-      if (!branches.includes(currentBranch) && currentBranch !== 'unknown') {
+      // 3. Branches locais e do origin. O .git/config só lista branches com upstream
+      // configurado; as refs trazem também as criadas localmente e ainda não publicadas.
+      const branches = this.listRefNames(dirs.commonDir, 'refs/heads/');
+      if (!detachedHead && currentBranch !== 'unknown' && !branches.includes(currentBranch)) {
         branches.unshift(currentBranch);
       }
+      const remoteBranches = this.listRefNames(dirs.commonDir, 'refs/remotes/origin/').filter((b) => b !== 'HEAD');
 
-      // 3. Parser Azure DevOps / GitHub / GitLab
-      let isAzure = false;
-      let azureOrg = '';
-      let azureProject = '';
-      let azureRepo = '';
-      let provider: GitProjectInfo['provider'];
-      let owner = '';
-      let repo = '';
+      // 4. Provedor (Azure DevOps / GitHub / GitLab)
+      const remote = parseRemoteUrl(remoteUrl);
 
-      if (remoteUrl) {
-        const httpsMatch = remoteUrl.match(/dev\.azure\.com\/([^/]+)\/([^/]+)\/_git\/([^/\s]+)/);
-        const sshMatch = !httpsMatch ? remoteUrl.match(/ssh\.dev\.azure\.com:v3\/([^/]+)\/([^/]+)\/([^/\s]+)/) : null;
-        const azureMatch = httpsMatch || sshMatch;
-
-        if (azureMatch) {
-          isAzure = true;
-          provider = 'azure';
-          azureOrg = azureMatch[1];
-          azureProject = azureMatch[2];
-          azureRepo = azureMatch[3].replace(/\.git$/, '');
-        } else {
-          const githubMatch = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/);
-          const gitlabMatch = !githubMatch ? remoteUrl.match(/gitlab\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/) : null;
-
-          if (githubMatch) {
-            provider = 'github';
-            owner = githubMatch[1];
-            repo = githubMatch[2];
-          } else if (gitlabMatch) {
-            provider = 'gitlab';
-            owner = gitlabMatch[1];
-            repo = gitlabMatch[2];
-          }
-        }
-      }
-
-      // 4. Alterações não commitadas (git status --porcelain)
+      // 5. Alterações não commitadas (git status --porcelain)
       let uncommittedCount = this.uncommittedCache.get(projectPath) ?? 0;
       if (includeUncommittedCount) {
-        try {
-          const { stdout } = await execFileAsync('git', ['status', '--porcelain'], { cwd: projectPath });
-          if (stdout) {
-            uncommittedCount = stdout.trim().split('\n').filter(Boolean).length;
-          } else {
-            uncommittedCount = 0;
-          }
-          this.uncommittedCache.set(projectPath, uncommittedCount);
-        } catch {
-          uncommittedCount = 0;
-        }
+        uncommittedCount = (await this.countUncommitted(projectPath)) ?? 0;
       }
 
       const pomInfo = this.karafService.parseProjectPomOrBat(projectPath) || undefined;
@@ -150,14 +273,17 @@ export class GitAzureService {
         path: projectPath,
         currentBranch,
         branches,
+        remoteBranches,
+        detachedHead,
         remoteUrl,
-        isAzure,
-        azureOrg,
-        azureProject,
-        azureRepo,
-        provider,
-        owner,
-        repo,
+        webUrl: remote.webUrl,
+        isAzure: remote.provider === 'azure',
+        azureOrg: remote.azureOrg,
+        azureProject: remote.azureProject,
+        azureRepo: remote.azureRepo,
+        provider: remote.provider,
+        owner: remote.owner,
+        repo: remote.repo,
         uncommittedCount,
         pomInfo
       };
@@ -167,18 +293,20 @@ export class GitAzureService {
     }
   }
 
-  public async buildAzurePrUrl(projectPath: string, targetBranch?: string): Promise<string | null> {
-    const info = await this.getProjectInfo(projectPath);
-    if (!info || !info.isAzure || !info.azureOrg || !info.azureProject || !info.azureRepo) {
+  private buildAzurePrUrlFromInfo(info: GitProjectInfo, targetBranch: string): string | null {
+    if (!info.isAzure || !info.azureOrg || !info.azureProject || !info.azureRepo) {
       return null;
     }
-
-    const settings = this.configService.getSettings();
-    const target = targetBranch || settings.targetPrBranch || 'develop';
     const source = encodeURIComponent(info.currentBranch);
-    const targetEncoded = encodeURIComponent(target);
-
+    const targetEncoded = encodeURIComponent(targetBranch);
     return `https://dev.azure.com/${info.azureOrg}/${info.azureProject}/_git/${info.azureRepo}/pullrequestcreate?sourceRef=${source}&targetRef=${targetEncoded}`;
+  }
+
+  public async buildAzurePrUrl(projectPath: string, targetBranch?: string): Promise<string | null> {
+    const info = await this.getProjectInfo(projectPath, false);
+    if (!info) return null;
+    const settings = this.configService.getSettings();
+    return this.buildAzurePrUrlFromInfo(info, targetBranch || settings.targetPrBranch || 'develop');
   }
 
   private buildGitHubPrUrl(info: GitProjectInfo, targetBranch: string): string {
@@ -195,18 +323,19 @@ export class GitAzureService {
 
   /**
    * Monta a URL de criação de PR/MR no provedor detectado do remote "origin" (Azure DevOps,
-   * GitHub ou GitLab). Retorna null se o remote não corresponder a nenhum provedor suportado.
+   * GitHub ou GitLab). Retorna null se o remote não corresponder a nenhum provedor suportado
+   * ou se o HEAD estiver destacado (não há branch de origem para o PR).
    */
   public async buildPrUrl(projectPath: string, targetBranch?: string): Promise<string | null> {
-    const info = await this.getProjectInfo(projectPath);
-    if (!info || !info.provider) return null;
+    const info = await this.getProjectInfo(projectPath, false);
+    if (!info || !info.provider || info.detachedHead) return null;
 
     const settings = this.configService.getSettings();
     const target = targetBranch || settings.targetPrBranch || 'develop';
 
     switch (info.provider) {
       case 'azure':
-        return this.buildAzurePrUrl(projectPath, target);
+        return this.buildAzurePrUrlFromInfo(info, target);
       case 'github':
         return info.owner && info.repo ? this.buildGitHubPrUrl(info, target) : null;
       case 'gitlab':
@@ -219,9 +348,9 @@ export class GitAzureService {
   public async executeGitCommand(
     projectPath: string,
     command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop'
-  ): Promise<{ success: boolean; output: string }> {
+  ): Promise<GitCommandResult> {
     try {
-      if (!projectPath || !fs.existsSync(projectPath)) {
+      if (!this.isUsableProjectPath(projectPath)) {
         return { success: false, output: 'Diretório do projeto não encontrado.' };
       }
 
@@ -231,7 +360,10 @@ export class GitAzureService {
       }
 
       const args = command === 'stash-pop' ? ['stash', 'pop'] : [command];
-      const { stdout, stderr } = await execFileAsync('git', args, { cwd: projectPath });
+      const { stdout, stderr } =
+        command === 'fetch' || command === 'pull'
+          ? await this.runGitWithTimeout(projectPath, args, GIT_NETWORK_TIMEOUT_MS)
+          : await execFileAsync('git', args, { cwd: projectPath });
 
       return {
         success: true,
@@ -240,7 +372,7 @@ export class GitAzureService {
     } catch (err: any) {
       return {
         success: false,
-        output: err?.stdout || err?.stderr || err?.message || 'Erro ao executar comando git'
+        output: gitErrorOutput(err, 'Erro ao executar comando git')
       };
     }
   }
@@ -249,17 +381,19 @@ export class GitAzureService {
     projectPath: string,
     branchName: string,
     createNew: boolean = false
-  ): Promise<{ success: boolean; output: string }> {
+  ): Promise<GitCommandResult> {
     try {
-      if (!projectPath || !fs.existsSync(projectPath)) {
+      if (!this.isUsableProjectPath(projectPath)) {
         return { success: false, output: 'Diretório do projeto não encontrado.' };
       }
-      const cleanBranch = branchName.trim();
-      if (!cleanBranch || cleanBranch.includes(' ') || cleanBranch.startsWith('-')) {
+      const cleanBranch = typeof branchName === 'string' ? branchName.trim() : '';
+      if (!cleanBranch || /\s/.test(cleanBranch) || cleanBranch.startsWith('-')) {
         return { success: false, output: 'Nome de branch inválido.' };
       }
 
-      const args = createNew ? ['checkout', '-b', cleanBranch] : ['checkout', cleanBranch];
+      // O "--" final obriga o git a tratar o nome como branch: sem ele, "git checkout ." ou
+      // "git checkout src" (sem branch com esse nome) descarta as alterações locais desses caminhos.
+      const args = createNew ? ['checkout', '-b', cleanBranch] : ['checkout', cleanBranch, '--'];
       const { stdout, stderr } = await execFileAsync('git', args, { cwd: projectPath });
       return {
         success: true,
@@ -268,95 +402,95 @@ export class GitAzureService {
     } catch (err: any) {
       return {
         success: false,
-        output: err?.stdout || err?.stderr || err?.message || 'Erro ao trocar de branch'
+        output: gitErrorOutput(err, 'Erro ao trocar de branch')
       };
     }
   }
 
-  public async commitAndPush(
-    projectPath: string,
-    message: string
-  ): Promise<{ success: boolean; output: string }> {
+  /** `git diff --cached --quiet` sai com 1 quando há algo no index; decide sem depender do idioma do git. */
+  private async hasStagedChanges(projectPath: string): Promise<boolean> {
     try {
-      if (!projectPath || !fs.existsSync(projectPath)) {
+      await execFileAsync('git', ['diff', '--cached', '--quiet'], { cwd: projectPath });
+      return false;
+    } catch (err: any) {
+      if (err?.code === 1) return true;
+      throw err;
+    }
+  }
+
+  private async hasUpstream(projectPath: string): Promise<boolean> {
+    try {
+      await execFileAsync('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], { cwd: projectPath });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public async commitAndPush(projectPath: string, message: string): Promise<GitCommandResult> {
+    try {
+      if (!this.isUsableProjectPath(projectPath)) {
         return { success: false, output: 'Diretório do projeto não encontrado.' };
       }
-      const cleanMsg = message.trim();
+      const cleanMsg = typeof message === 'string' ? message.trim() : '';
       if (!cleanMsg) {
         return { success: false, output: 'Mensagem de commit não pode ser vazia.' };
       }
 
       await execFileAsync('git', ['add', '-A'], { cwd: projectPath });
-      const commitRes = await execFileAsync('git', ['commit', '-m', cleanMsg], { cwd: projectPath });
-      let pushOutput = '';
-      try {
-        const pushRes = await execFileAsync('git', ['push'], { cwd: projectPath });
-        pushOutput = pushRes.stdout || pushRes.stderr || 'Push realizado com sucesso!';
-      } catch (pushErr: any) {
-        const pushMsg = pushErr?.stdout || pushErr?.stderr || pushErr?.message || '';
-        if (pushMsg.includes('no upstream branch') || pushMsg.includes('--set-upstream')) {
-          try {
-            const info = await this.getProjectInfo(projectPath);
-            const branch = info?.currentBranch;
-            if (branch && branch !== 'unknown') {
-              const upstreamRes = await execFileAsync('git', ['push', '--set-upstream', 'origin', branch], { cwd: projectPath });
-              pushOutput = upstreamRes.stdout || upstreamRes.stderr || `Push realizado com sucesso configurando upstream origin/${branch}!`;
-            } else {
-              pushOutput = `Commit realizado, mas o push falhou: ${pushMsg}`;
-            }
-          } catch (upstreamErr: any) {
-            pushOutput = `Commit realizado, mas o push com upstream falhou: ${upstreamErr?.stdout || upstreamErr?.stderr || upstreamErr?.message || upstreamErr}`;
-          }
-        } else {
-          pushOutput = `Commit realizado, mas o push falhou: ${pushMsg}`;
-        }
-      }
-
-      return {
-        success: true,
-        output: [commitRes.stdout, pushOutput].filter(Boolean).join('\n')
-      };
-    } catch (err: any) {
-      const errText = err?.stdout || err?.stderr || err?.message || '';
-      if (errText.includes('nothing to commit') || errText.includes('clean')) {
+      if (!(await this.hasStagedChanges(projectPath))) {
         return {
           success: false,
           output: 'Nenhuma alteração pendente para commitar (árvore de trabalho limpa).'
         };
       }
+
+      const commitRes = await execFileAsync('git', ['-c', 'core.quotePath=false', 'commit', '-m', cleanMsg], {
+        cwd: projectPath
+      });
+
+      // Branch nova sem upstream: publica em origin com o mesmo nome (HEAD) e já configura o tracking.
+      const upstreamConfigured = await this.hasUpstream(projectPath);
+      const pushArgs = upstreamConfigured ? ['push'] : ['push', '--set-upstream', 'origin', 'HEAD'];
+      let pushOutput: string;
+      let pushFailed = false;
+      try {
+        const pushRes = await this.runGitWithTimeout(projectPath, pushArgs, GIT_NETWORK_TIMEOUT_MS);
+        pushOutput =
+          pushRes.stdout ||
+          pushRes.stderr ||
+          (upstreamConfigured ? 'Push realizado com sucesso!' : 'Push realizado com sucesso configurando upstream em origin!');
+      } catch (pushErr: any) {
+        pushFailed = true;
+        pushOutput = `Commit realizado, mas o push falhou: ${gitErrorOutput(pushErr, String(pushErr))}`;
+      }
+
+      return {
+        success: true,
+        output: [commitRes.stdout, pushOutput].filter(Boolean).join('\n'),
+        ...(pushFailed ? { pushFailed } : {})
+      };
+    } catch (err: any) {
       return {
         success: false,
-        output: errText || 'Erro ao realizar commit'
+        output: gitErrorOutput(err, 'Erro ao realizar commit')
       };
     }
   }
 
-  public async getCommitHistory(
-    projectPath: string,
-    limit: number = 10
-  ): Promise<GitCommitInfo[]> {
+  public async getCommitHistory(projectPath: string, limit: number = 10): Promise<GitCommitInfo[]> {
     try {
-      if (!projectPath || !fs.existsSync(projectPath)) {
+      if (!this.isUsableProjectPath(projectPath)) {
         return [];
       }
-      const num = Math.min(Math.max(1, limit), 50);
+      const num = Math.min(Math.max(1, Number(limit) || 10), 50);
+      const sep = GIT_LOG_FIELD_SEPARATOR;
       const { stdout } = await execFileAsync(
         'git',
-        ['log', `-n`, String(num), '--pretty=format:%h|%an|%ad|%s', '--date=short'],
+        ['log', '-n', String(num), `--pretty=format:%h${sep}%an${sep}%ad${sep}%s`, '--date=short'],
         { cwd: projectPath }
       );
-      if (!stdout) return [];
-
-      const lines = stdout.split(/\r?\n/).filter(Boolean);
-      return lines.map((line) => {
-        const [hash, author, date, ...rest] = line.split('|');
-        return {
-          hash: hash || '',
-          author: author || '',
-          date: date || '',
-          message: rest.join('|') || ''
-        };
-      });
+      return stdout ? parseCommitLog(stdout) : [];
     } catch {
       return [];
     }
@@ -367,50 +501,15 @@ export class GitAzureService {
    */
   public async getStatusDetails(projectPath: string): Promise<GitFileStatus[]> {
     try {
-      if (!projectPath || !fs.existsSync(projectPath)) {
+      if (!this.isUsableProjectPath(projectPath)) {
         return [];
       }
-      const { stdout } = await execFileAsync('git', ['status', '--porcelain', '-u'], { cwd: projectPath });
+      const { stdout } = await execFileAsync('git', ['--no-optional-locks', 'status', '--porcelain', '-z', '-u'], {
+        cwd: projectPath
+      });
       if (!stdout) return [];
 
-      const lines = stdout.split(/\r?\n/).filter(Boolean);
-      const fileStatuses: GitFileStatus[] = [];
-
-      for (const line of lines) {
-        if (line.length < 4) continue;
-        const x = line[0];
-        const y = line[1];
-        const filePath = line.substring(3).trim();
-
-        let status: GitFileStatus['status'] = 'modified';
-        let staged = false;
-
-        if (x === '?' && y === '?') {
-          status = 'untracked';
-        } else if (x === 'A' || y === 'A') {
-          status = 'added';
-          staged = x === 'A';
-        } else if (x === 'D' || y === 'D') {
-          status = 'deleted';
-          staged = x === 'D';
-        } else if (x === 'R' || y === 'R') {
-          status = 'renamed';
-          staged = x === 'R';
-        } else if (x === 'C' || y === 'C') {
-          status = 'copied';
-          staged = x === 'C';
-        } else {
-          status = 'modified';
-          staged = x !== ' ' && x !== '?';
-        }
-
-        fileStatuses.push({
-          path: filePath,
-          status,
-          staged
-        });
-      }
-
+      const fileStatuses = parseStatusPorcelainZ(stdout);
       this.uncommittedCache.set(projectPath, fileStatuses.length);
       return fileStatuses;
     } catch {
@@ -418,12 +517,36 @@ export class GitAzureService {
     }
   }
 
+  private async hasHead(projectPath: string): Promise<boolean> {
+    try {
+      await execFileAsync('git', ['rev-parse', '--verify', '--quiet', 'HEAD'], { cwd: projectPath });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async isUntrackedFile(projectPath: string, targetFile: string): Promise<boolean> {
+    try {
+      const { stdout } = await execFileAsync(
+        'git',
+        ['ls-files', '--others', '--exclude-standard', '--', targetFile],
+        { cwd: projectPath }
+      );
+      return Boolean(stdout && stdout.trim());
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * Obtém o diff unificado de arquivos alterados (geral ou para um arquivo específico).
+   * Arquivos não rastreados não aparecem em `git diff HEAD`; quando um deles é pedido
+   * explicitamente, o conteúdo é mostrado como arquivo novo (`--no-index` contra /dev/null).
    */
   public async getDiff(projectPath: string, targetFile?: string): Promise<GitDiffResult> {
     try {
-      if (!projectPath || !fs.existsSync(projectPath)) {
+      if (!this.isUsableProjectPath(projectPath)) {
         return { success: false, diff: '', files: [], error: 'Diretório do projeto não encontrado.' };
       }
 
@@ -431,24 +554,31 @@ export class GitAzureService {
         return { success: false, diff: '', files: [], error: 'Caminho de arquivo inválido para diff.' };
       }
 
-      const args = ['diff', 'HEAD'];
-      if (targetFile) {
-        args.push('--', targetFile);
-      }
-
+      const baseArgs = ['-c', 'core.quotePath=false', 'diff'];
       let diffOutput = '';
-      try {
-        const { stdout } = await execFileAsync('git', args, { cwd: projectPath, maxBuffer: 10 * 1024 * 1024 });
-        diffOutput = stdout;
-      } catch {
-        // Fallback caso HEAD ainda não exista (ex: repositório sem commits iniciais)
-        const fallbackArgs = ['diff'];
-        if (targetFile) fallbackArgs.push('--', targetFile);
-        const { stdout } = await execFileAsync('git', fallbackArgs, { cwd: projectPath, maxBuffer: 10 * 1024 * 1024 });
+
+      if (targetFile && (await this.isUntrackedFile(projectPath, targetFile))) {
+        try {
+          const { stdout } = await execFileAsync(
+            'git',
+            [...baseArgs, '--no-index', '--', '/dev/null', targetFile],
+            { cwd: projectPath, maxBuffer: DIFF_MAX_BUFFER }
+          );
+          diffOutput = stdout;
+        } catch (err: any) {
+          // --no-index sai com 1 quando há diferença (sempre, para um arquivo novo não vazio).
+          if (err?.code !== 1) throw err;
+          diffOutput = err.stdout || '';
+        }
+      } else {
+        // Sem HEAD (repositório sem commits) compara working tree com o index.
+        const args = (await this.hasHead(projectPath)) ? [...baseArgs, 'HEAD'] : baseArgs;
+        if (targetFile) args.push('--', targetFile);
+        const { stdout } = await execFileAsync('git', args, { cwd: projectPath, maxBuffer: DIFF_MAX_BUFFER });
         diffOutput = stdout;
       }
 
-      const fileMatches = Array.from(diffOutput.matchAll(/diff --git a\/(.+) b\/(.+)/g)).map((m) => m[1]);
+      const fileMatches = Array.from(diffOutput.matchAll(/^diff --git a\/(.+?) b\//gm)).map((m) => m[1]);
 
       return {
         success: true,
@@ -456,11 +586,15 @@ export class GitAzureService {
         files: Array.from(new Set(fileMatches))
       };
     } catch (err: any) {
+      const message =
+        err?.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER'
+          ? 'Diff grande demais para exibir (acima de 10 MB). Selecione um arquivo específico.'
+          : gitErrorOutput(err, String(err));
       return {
         success: false,
         diff: '',
         files: [],
-        error: err?.message || String(err)
+        error: message
       };
     }
   }

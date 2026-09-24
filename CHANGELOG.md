@@ -4,6 +4,42 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+
+## [1.15.0] - 2026-09-24
+### Adicionado
+- **Statement Tracer (Oracle)**: nova aba no DB Studio com captura contínua de atividade (`v$session`/`v$sql`) rodando em segundo plano no processo do app (não no componente React) — sobrevive a trocar de aba ou navegar para outra página do Dev Manager, então dá pra iniciar a captura, ir disparar uma ação em outro app conectado ao mesmo Oracle e voltar depois para ver a linha do tempo de qual sessão rodou qual SQL. Intervalo de consulta configurável (2s a 30s, piso de 2s) e parada automática de segurança após 30 minutos. Consultas pontuais também ficam expostas via MCP (`db_get_oracle_active_sessions`, `db_get_oracle_recent_statements`).
+- Tools MCP de captura contínua do Statement Tracer: `db_start_oracle_capture`, `db_get_oracle_capture_state` (com `limit`, padrão 50), `db_stop_oracle_capture` e `db_clear_oracle_capture`. A IA liga a captura, o usuário executa a ação no app/rotina e a IA lê quais SQLs rodaram. A captura é própria do servidor MCP e independente da iniciada na tela do app.
+- **APM & Traces (OpenTelemetry)**: receptor OTLP/HTTP embutido (JSON ou Protobuf, com gzip/deflate), dashboard (vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries lentas) e Traces Explorer (waterfall, atributos, SQL, stacktrace e decomposição do tempo entre banco, chamadas externas e aplicação). O Karaf iniciado pelo Cockpit anexa o `opentelemetry-javaagent.jar` automaticamente quando ele está em `<karaf>/bin`.
+- Porta do receptor configurável em **APM & Traces → Como Conectar**: a porta nova é aberta antes de fechar a atual, então uma porta ocupada (ex.: por um OTel Collector/SigNoz local) não derruba o receptor em uso; o anexo automático do agente segue a porta escolhida.
+- Tools MCP `apm_*` (overview, traces, detalhes, serviços e status do receptor). Como o servidor MCP roda em outro processo, elas consultam o buffer do app por uma API local do receptor — somente loopback, sem CORS e protegida por um token publicado na pasta de dados do usuário.
+- **Git & Azure DevOps**: contagem de alterações pendentes de todos os repositórios (em lote, com concorrência limitada, só ao abrir/sincronizar a tela), link "Ver no GitHub/GitLab/Azure", seletor de branch de destino do PR montado a partir das branches reais do origin, lista de branches com filtro incluindo branches locais ainda não publicadas e branches que só existem no origin (o checkout cria a local rastreando o origin), aviso de HEAD destacado e suporte a remotes SSH/SCP, ao formato legado `{org}.visualstudio.com`, a worktrees/submódulos e a `packed-refs`.
+- Tools MCP de leitura de Git: `git_get_status`, `git_get_diff` (com limite de tamanho configurável) e `git_get_commit_history`; `git_list_projects` ganha `includeUncommittedCount`.
+- Onboarding: atualização de versão passa a mostrar só um resumo do changelog (sem resetar Welcome/Tour), e o tour inicial leva direto para Configurações quando faltam caminhos essenciais (repositórios/IDE).
+- Catálogo de tools MCP (`docs/MCP_TOOLS.md`) passa a documentar as tools `apm_*` e `routine801_*`, além de 27 tools que existiam mas não estavam listadas (`env_batch_*`, `env_check_admin`, `env_launch_server_debug`, 13 tools `karaf_*` de console embutido/bundles/histórico, `profile_kill_port`, `profile_stop_step`, `routines_*`, `settings_*`, `system_check_path` e `system_auto_detect_paths`), com uma seção nova de Catálogo de Rotinas (123 tools no total).
+- Central de Ajuda cobre as funcionalidades das últimas versões: card de **APM & Traces** no Guia dos Módulos e na Visão Geral, Statement Tracer no card de Banco de Dados, branches remotas/upstream/worktrees e GitHub/GitLab no card de Git, WinThor Start no card de Rotinas, e FAQs sobre o Statement Tracer, conexão do Java Agent ao receptor APM, WinThor Start/WTA e criptografia de segredos.
+### Alterado
+- Nova identidade visual do ícone/logo (fundo índigo mais claro, fonte de luz e reflexo), aplicada ao `AppLogo`, `icon.svg`, `icon.png` e `favicon.ico`.
+- Welcome do onboarding reduzido de 3 telas para 1 (saudação + escolha de tema + começar).
+- Listagem de tabelas do DB Studio sobe o teto de 500 para 50.000 tabelas (schemas de ERP passam fácil de alguns milhares), com a sidebar renderizando a lista em blocos conforme o scroll.
+- Cabeçalho do gerenciador de bundles do Karaf quebra linha em telas estreitas, com botões de altura uniforme.
+### Segurança
+- A URL do remote Git devolvida pela API web e pelo MCP tinha usuário/PAT embutidos (ex.: `https://user:PAT@dev.azure.com/...`) — agora é sanitizada.
+- O `GitAzureService` passa a validar o caminho do projeto no próprio service (e não só nas rotas), recusando caminhos UNC que apontariam o git para `.git/config`/hooks de terceiros, já que IPC, servidor web e MCP o chamam diretamente.
+### Corrigido
+- `git checkout` de um nome sem branch correspondente (ex.: `.` ou `src`) descartava as alterações locais desses caminhos; agora o nome é sempre tratado como branch.
+- Fetch/pull/push ficavam presos indefinidamente num prompt de credencial ou de host SSH sem resposta; agora têm tempo limite de 3 minutos, e o estouro encerra a árvore inteira de processos (credential helper, `git-remote-https`, `ssh`). O `git status` de segundo plano também tem limite e usa `--no-optional-locks` para não disputar o `index.lock` com a IDE.
+- Commit & Push numa branch nova sem upstream dependia de casar a mensagem de erro do git em inglês (falhava com o git em português); agora detecta o upstream antes, publica em `origin` com o mesmo nome e configura o tracking. A existência de algo no stage também deixou de depender do idioma do git. Erros de commit aparecem dentro do modal (mantendo a mensagem digitada), e falha só no push fecha o modal com o aviso em destaque.
+- Diff de arquivo não rastreado vinha vazio (passa a ser exibido como arquivo novo); cliques rápidos em arquivos diferentes podiam mostrar o diff errado; e o painel continuava exibindo branch/contagem anteriores após checkout ou commit.
+- Onboarding: condição de corrida no primeiro uso reabria Welcome/Tour depois que o usuário já tinha pulado; o botão "Ver Tour Guiado" da Central de Ajuda reabria a introdução completa em vez de só o tour; e o botão "Pular introdução" não recebia clique de mouse real (coberto pelo container de conteúdo).
+- O receptor OTLP descartava com resposta 200 o array JSON do exemplo cURL da própria tela de conexão (e JSON com espaço/BOM), tratados como protobuf; as rotas do servidor web não aceitavam protobuf — formato padrão do Java Agent — nem payloads acima de 100KB.
+- Decoder protobuf endurecido contra payload malformado (um varint longo tinha custo quadrático e podia travar o processo principal) e contra zip bomb; payload grande passa a receber 413, que o exportador não retenta.
+- A tela de APM não carregava dados no modo Web/Docker (`api` do apiBridge era capturado antes do `initApiBridge`).
+- O % do tempo em banco contava spans SERVER aninhados e spans sem pai como tempo total, e a taxa de erro do cabeçalho virava 100% com o filtro "Erros" ativo.
+- O drawer do trace selecionava o span errado, a aba Atributos mostrava sempre o mesmo span, a aba de erro não exibia o stacktrace e as queries SQL apareciam sem os números.
+- `Alt+0` abria Configurações, embora o menu e o Quick Launcher o anunciassem como atalho do **APM & Traces**; agora abre o APM. A tabela de atalhos da Ajuda e do README dizia que `Alt+8` abria Configurações (abre Logs) e não citava `Alt+0`.
+- A Central de Ajuda informava 73 tools MCP; são 123.
+
 ## [1.14.0] - 2026-09-23
 ### Adicionado
 - Criptografia em repouso (AES-256-GCM) dos segredos gravados no `config.json` — senha do Karaf, senhas de conexão de banco, tokens do Confluence/Jira e API keys de provedores LLM, antes salvos em texto plano no disco.

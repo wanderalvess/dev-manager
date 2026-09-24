@@ -9,6 +9,7 @@ import { GitAzureService } from './services/GitAzureService';
 import { RoutinesService } from './services/RoutinesService';
 import { DocsIndexService } from './services/DocsIndexService';
 import { DatabaseService } from './services/DatabaseService';
+import { OracleTracerCaptureService } from './services/OracleTracerCaptureService';
 import { BackupService } from './services/BackupService';
 import { BackupSchedulerService } from './services/BackupSchedulerService';
 import { DockerService } from './services/DockerService';
@@ -19,7 +20,7 @@ import { KarafLogPersistenceService } from './services/KarafLogPersistenceServic
 import { AutoUpdateService } from './services/AutoUpdateService';
 import { LlmService } from './services/LlmService';
 import { Routine801Service } from './services/Routine801Service';
-import { ApmService } from './services/ApmService';
+import { ApmService, getApmReceiverHandlePath } from './services/ApmService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 import { notifyUser } from './services/NotificationService';
 
@@ -90,6 +91,7 @@ function createWindow() {
   const configService = new ConfigService();
   const karafService = new KarafService(configService);
   const databaseService = new DatabaseService();
+  const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
   const backupService = new BackupService();
   const backupSchedulerService = new BackupSchedulerService(configService, backupService);
   backupSchedulerService.onResult = (connectionName, result) => {
@@ -126,11 +128,11 @@ function createWindow() {
   });
   const llmService = new LlmService(configService, docsIndexService);
   const routine801Service = new Routine801Service(configService, karafService);
-  const apmService = new ApmService();
+  const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
   apmService.onNewTrace = (summary) => {
     mainWindow?.webContents.send('apm:new-trace', summary);
   };
-  apmService.startReceiver(4318).catch((err) => {
+  apmService.startReceiver().catch((err) => {
     console.warn('[ApmService] Falha ao iniciar receptor OTLP no boot:', err);
   });
 
@@ -153,7 +155,8 @@ function createWindow() {
     autoUpdateService,
     llmService,
     routine801Service,
-    apmService
+    apmService,
+    oracleTracerCaptureService
   );
 
   backupSchedulerService.rescheduleAll();

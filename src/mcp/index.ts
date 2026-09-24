@@ -10,9 +10,9 @@ const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.14.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.0';
   } catch {
-    return '1.14.0';
+    return '1.15.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -31,7 +31,9 @@ import { KarafLogPersistenceService } from '../main/services/KarafLogPersistence
 import { LogWatcherService } from '../main/services/LogWatcherService';
 import { LlmService } from '../main/services/LlmService';
 import { Routine801Service } from '../main/services/Routine801Service';
-import { ApmService } from '../main/services/ApmService';
+import { OracleTracerCaptureService } from '../main/services/OracleTracerCaptureService';
+import { getApmReceiverHandlePath } from '../main/services/ApmService';
+import { ApmReceiverClient } from '../main/services/ApmReceiverClient';
 import { buildCompactTraceDetails } from '../main/utils/apmUtils';
 import * as cron from 'node-cron';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
@@ -55,7 +57,10 @@ const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
 const routine801Service = new Routine801Service(configService, karafService);
-const apmService = new ApmService();
+const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
+// Os traces vivem na memória do processo dono da porta OTLP (app desktop ou servidor web): este
+// processo não sobe receptor próprio — tomaria a porta do app — e consulta aquele buffer.
+const apmClient = new ApmReceiverClient(getApmReceiverHandlePath());
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -1164,8 +1169,24 @@ server.registerTool(
 // --- 4. Git & Azure DevOps ---
 server.registerTool(
   'git_list_projects',
-  { title: 'Listar repositórios', description: 'Lista os repositórios Git encontrados na pasta de projetos configurada.' },
-  async () => ok(await gitAzureService.listProjects())
+  {
+    title: 'Listar repositórios',
+    description:
+      'Lista os repositórios Git encontrados na pasta de projetos configurada. Por padrão só lê o filesystem; ' +
+      'com includeUncommittedCount=true roda git status em cada repositório e preenche uncommittedCount.',
+    inputSchema: {
+      includeUncommittedCount: z
+        .boolean()
+        .optional()
+        .describe('Conta as alterações pendentes de cada repositório (mais lento em pastas com muitos projetos).')
+    }
+  },
+  async ({ includeUncommittedCount }) => {
+    if (!includeUncommittedCount) return ok(await gitAzureService.listProjects());
+    const counts = await gitAzureService.getUncommittedCounts();
+    const projects = await gitAzureService.listProjects();
+    return ok(projects.map((p) => ({ ...p, uncommittedCount: counts[p.path] ?? p.uncommittedCount })));
+  }
 );
 
 server.registerTool(
@@ -1220,6 +1241,89 @@ server.registerTool(
   async ({ projectPath, branchName, createNew }) => {
     if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
     return ok(await gitAzureService.checkoutBranch(projectPath, branchName, createNew ?? false));
+  }
+);
+
+// Tools de leitura: o service devolve lista vazia para caminho que não é repositório, o que para
+// um agente pareceria "sem alterações". Por isso cada uma confirma o repositório antes.
+async function requireGitRepo(projectPath: string): Promise<string | null> {
+  if (!isSafeLocalPath(projectPath)) return 'Caminho de projeto inválido.';
+  const info = await gitAzureService.getProjectInfo(projectPath, false);
+  return info ? null : `Nenhum repositório Git encontrado em ${projectPath}.`;
+}
+
+server.registerTool(
+  'git_get_status',
+  {
+    title: 'Status do repositório',
+    description:
+      'Lista os arquivos alterados, novos, removidos e renomeados do repositório (git status), indicando se estão no stage.',
+    inputSchema: { projectPath: z.string() }
+  },
+  async ({ projectPath }) => {
+    const error = await requireGitRepo(projectPath);
+    if (error) return fail(error);
+    const files = await gitAzureService.getStatusDetails(projectPath);
+    return ok({ totalFiles: files.length, files });
+  }
+);
+
+const GIT_DIFF_DEFAULT_MAX_CHARS = 50_000;
+
+server.registerTool(
+  'git_get_diff',
+  {
+    title: 'Diff do repositório',
+    description:
+      'Diff unificado das alterações em relação ao HEAD (staged + não staged), do repositório inteiro ou de um arquivo. ' +
+      'Arquivos não rastreados só aparecem quando pedidos individualmente em `file`.',
+    inputSchema: {
+      projectPath: z.string(),
+      file: z.string().optional().describe('Caminho do arquivo relativo à raiz do repositório.'),
+      maxChars: z
+        .number()
+        .int()
+        .positive()
+        .max(500_000)
+        .optional()
+        .describe(`Limite de caracteres do diff devolvido (padrão ${GIT_DIFF_DEFAULT_MAX_CHARS}).`)
+    }
+  },
+  async ({ projectPath, file, maxChars }) => {
+    const error = await requireGitRepo(projectPath);
+    if (error) return fail(error);
+    const result = await gitAzureService.getDiff(projectPath, file);
+    if (!result.success) return fail(result.error || 'Falha ao obter o diff.');
+    const limit = maxChars ?? GIT_DIFF_DEFAULT_MAX_CHARS;
+    const truncated = result.diff.length > limit;
+    return ok({
+      files: result.files,
+      diff: truncated ? result.diff.slice(0, limit) : result.diff,
+      ...(truncated
+        ? {
+            truncated: true,
+            totalChars: result.diff.length,
+            notice: 'Diff cortado no limite; peça um arquivo específico em `file` ou aumente `maxChars`.'
+          }
+        : {})
+    });
+  }
+);
+
+server.registerTool(
+  'git_get_commit_history',
+  {
+    title: 'Histórico de commits',
+    description: 'Últimos commits da branch atual (hash abreviado, autor, data e assunto).',
+    inputSchema: {
+      projectPath: z.string(),
+      limit: z.number().int().min(1).max(50).optional().describe('Quantidade de commits (1 a 50, padrão 10).')
+    }
+  },
+  async ({ projectPath, limit }) => {
+    const error = await requireGitRepo(projectPath);
+    if (error) return fail(error);
+    return ok(await gitAzureService.getCommitHistory(projectPath, limit ?? 10));
   }
 );
 
@@ -1529,6 +1633,177 @@ server.registerTool(
     }
     const columns = await databaseService.getTableColumns(targetConfig, tableName);
     return ok({ tableName, columns, count: columns.length });
+  }
+);
+
+server.registerTool(
+  'db_get_oracle_active_sessions',
+  {
+    title: 'Statement Tracer: sessões ativas no Oracle',
+    description:
+      'Lista as sessões conectadas ao Oracle (v$session) com a instrução SQL atual/última executada por cada uma (join com v$sql via SQL_ID/PREV_SQL_ID). Use para descobrir o que cada app/rotina está rodando agora quando vários sistemas compartilham o mesmo banco.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      schemaFilter: z.string().optional().describe('Filtra por USERNAME da sessão (schema Oracle).'),
+      textFilter: z.string().optional().describe('Filtra sessões cuja SQL contém este texto (case-insensitive).'),
+      limit: z.number().int().positive().optional()
+    }
+  },
+  async ({ connectionId, config, schemaFilter, textFilter, limit }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const result = await databaseService.getOracleActiveSessions(targetConfig, { schemaFilter, textFilter, limit });
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_get_oracle_recent_statements',
+  {
+    title: 'Statement Tracer: SQL recente no Oracle',
+    description:
+      'Lista as instruções SQL mais recentes no cursor cache do Oracle (v$sql), ordenadas por última atividade, mesmo que a sessão que executou já tenha encerrado. Use para descobrir "qual query rodou" logo após uma ação em algum app conectado ao banco.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      schemaFilter: z.string().optional().describe('Filtra por PARSING_SCHEMA_NAME (schema que fez o parse da SQL).'),
+      textFilter: z.string().optional().describe('Filtra instruções cujo texto contém este trecho (case-insensitive).'),
+      limit: z.number().int().positive().optional()
+    }
+  },
+  async ({ connectionId, config, schemaFilter, textFilter, limit }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const result = await databaseService.getOracleRecentStatements(targetConfig, { schemaFilter, textFilter, limit });
+    return ok(result);
+  }
+);
+
+// Captura própria deste processo, independente da iniciada na tela do app (o estado não atravessa
+// processos). Não há o que buscar no app aqui: é o próprio assistente que liga a captura, espera o
+// usuário agir e lê o resultado — ver OracleTracerCaptureService.
+server.registerTool(
+  'db_start_oracle_capture',
+  {
+    title: 'Statement Tracer: iniciar captura contínua',
+    description:
+      'Inicia uma captura contínua no Oracle: consulta v$session/v$sql em segundo plano a cada intervalMs e acumula as SQLs distintas e a linha do tempo de qual sessão passou a rodar qual SQL. Fluxo típico: iniciar, pedir ao usuário que execute a ação no app/rotina, depois ler com db_get_oracle_capture_state. Reiniciar descarta a captura anterior da conexão. Para sozinha após 30 minutos. Captura própria do servidor MCP: não enxerga a captura iniciada na tela do app.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      intervalMs: z
+        .number()
+        .int()
+        .positive()
+        .optional()
+        .describe('Intervalo entre consultas ao Oracle em ms (padrão 3000, mínimo 2000).'),
+      schemaFilter: z.string().optional().describe('Filtra por schema (USERNAME da sessão / PARSING_SCHEMA_NAME).'),
+      textFilter: z.string().optional().describe('Filtra SQLs que contêm este texto (case-insensitive).')
+    }
+  },
+  async ({ connectionId, config, intervalMs, schemaFilter, textFilter }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    try {
+      const state = oracleTracerCaptureService.startCapture(targetConfig, {
+        intervalMs: intervalMs ?? 3000,
+        schemaFilter,
+        textFilter
+      });
+      return ok({ connectionId: targetConfig.id, connectionName: targetConfig.name, ...state });
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao iniciar a captura.');
+    }
+  }
+);
+
+server.registerTool(
+  'db_get_oracle_capture_state',
+  {
+    title: 'Statement Tracer: ler captura contínua',
+    description:
+      'Lê o que a captura contínua iniciada por db_start_oracle_capture acumulou até agora (sem pará-la): SQLs distintas (mais recentes primeiro) e a linha do tempo de mudanças de SQL por sessão, além de contadores e último erro.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      limit: z
+        .number()
+        .int()
+        .positive()
+        .max(500)
+        .optional()
+        .describe('Máximo de SQLs e de eventos de sessão devolvidos (padrão 50); os totais vêm em totalStatements/totalSessionEvents.')
+    }
+  },
+  async ({ connectionId, config, limit }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const max = limit ?? 50;
+    const state = oracleTracerCaptureService.getCaptureState(targetConfig.id);
+    return ok({
+      connectionId: targetConfig.id,
+      connectionName: targetConfig.name,
+      ...state,
+      totalStatements: state.statements.length,
+      totalSessionEvents: state.sessionEvents.length,
+      statements: state.statements.slice(0, max),
+      sessionEvents: state.sessionEvents.slice(0, max)
+    });
+  }
+);
+
+server.registerTool(
+  'db_stop_oracle_capture',
+  {
+    title: 'Statement Tracer: parar captura contínua',
+    description:
+      'Para a captura contínua da conexão, mantendo o que já foi acumulado para leitura com db_get_oracle_capture_state. Devolve só os contadores.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional()
+    }
+  },
+  async ({ connectionId, config }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const { statements, sessionEvents, ...state } = oracleTracerCaptureService.stopCapture(targetConfig.id);
+    return ok({
+      connectionId: targetConfig.id,
+      ...state,
+      totalStatements: statements.length,
+      totalSessionEvents: sessionEvents.length
+    });
+  }
+);
+
+server.registerTool(
+  'db_clear_oracle_capture',
+  {
+    title: 'Statement Tracer: descartar captura contínua',
+    description: 'Para a captura contínua da conexão (se estiver ativa) e descarta tudo o que ela acumulou.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional()
+    }
+  },
+  async ({ connectionId, config }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    oracleTracerCaptureService.clearCapture(targetConfig.id);
+    return ok({ connectionId: targetConfig.id, cleared: true });
   }
 );
 
@@ -1910,15 +2185,13 @@ server.registerTool(
 // Tools de APM & Observabilidade (OpenTelemetry / SigNoz)
 // ==========================================
 
-// O buffer de traces vive na memória do processo que recebe os spans (app desktop ou servidor web,
-// porta 4318). Este processo MCP não sobe receptor próprio para não tomar a porta do app; o aviso
-// impede o assistente de concluir "não houve tráfego" a partir do buffer vazio deste processo.
-const APM_EMPTY_BUFFER_NOTICE =
-  'O buffer de APM deste processo MCP está vazio: os spans OTLP são recebidos pelo app Dev Manager ' +
-  '(desktop ou servidor web, porta 4318), que roda em outro processo. Consulte a tela "APM & Traces" do app.';
+// Buffer vazio no app é diferente de "sem tráfego": o motivo mais comum é o Karaf sem o agente
+const APM_NO_TRACES_NOTICE =
+  'Nenhum trace recebido ainda. Para o Karaf iniciado pelo Dev Manager, coloque opentelemetry-javaagent.jar ' +
+  'em <karaf>/bin e reinicie o Karaf; outras aplicações devem exportar OTLP/HTTP para a porta do receptor.';
 
-function withApmBufferNotice<T extends object>(data: T): T & { notice?: string } {
-  return apmService.getReceiverStatus().bufferSize > 0 ? data : { ...data, notice: APM_EMPTY_BUFFER_NOTICE };
+function withNoTracesNotice<T extends object>(data: T, isEmpty: boolean): T & { notice?: string } {
+  return isEmpty ? { ...data, notice: APM_NO_TRACES_NOTICE } : data;
 }
 
 const apmLastMinutesSchema = z
@@ -1942,11 +2215,11 @@ server.registerTool(
   },
   async ({ serviceName, lastMinutes }) => {
     try {
-      const overview = apmService.getOverview({
+      const overview = await apmClient.getOverview({
         serviceName,
         startTimeMs: lastMinutes ? Date.now() - lastMinutes * 60_000 : undefined
       });
-      return ok(withApmBufferNotice(overview));
+      return ok(withNoTracesNotice(overview, overview.receiverStatus.bufferSize === 0));
     } catch (err: any) {
       return fail(err?.message || 'Falha ao obter overview de APM.');
     }
@@ -1971,12 +2244,13 @@ server.registerTool(
   },
   async ({ lastMinutes, limit, ...filter }) => {
     try {
-      const traces = apmService.getTraces({
+      const traces = await apmClient.getTraces({
         ...filter,
         startTimeMs: lastMinutes ? Date.now() - lastMinutes * 60_000 : undefined,
         limit: limit || 50
       });
-      return ok(withApmBufferNotice({ count: traces.length, traces }));
+      const bufferIsEmpty = traces.length === 0 && (await apmClient.getReceiverStatus()).bufferSize === 0;
+      return ok(withNoTracesNotice({ count: traces.length, traces }, bufferIsEmpty));
     } catch (err: any) {
       return fail(err?.message || 'Falha ao listar traces.');
     }
@@ -1995,10 +2269,9 @@ server.registerTool(
   },
   async ({ traceId }) => {
     try {
-      const details = apmService.getTraceDetails(traceId);
+      const details = await apmClient.getTraceDetails(traceId);
       if (!details) {
-        const empty = apmService.getReceiverStatus().bufferSize === 0;
-        return fail(`Trace com ID "${traceId}" não encontrado no buffer.${empty ? ` ${APM_EMPTY_BUFFER_NOTICE}` : ''}`);
+        return fail(`Trace com ID "${traceId}" não encontrado no buffer do app (pode ter sido descartado pelo limite do buffer).`);
       }
       return ok(buildCompactTraceDetails(details));
     } catch (err: any) {
@@ -2016,10 +2289,27 @@ server.registerTool(
   },
   async () => {
     try {
-      const services = apmService.getServices();
-      return ok(withApmBufferNotice({ count: services.length, services }));
+      const services = await apmClient.getServices();
+      return ok(withNoTracesNotice({ count: services.length, services }, services.length === 0));
     } catch (err: any) {
       return fail(err?.message || 'Falha ao listar serviços monitorados.');
+    }
+  }
+);
+
+server.registerTool(
+  'apm_get_receiver_status',
+  {
+    title: 'Status do receptor OTLP do APM',
+    description:
+      'Informa se o receptor OpenTelemetry do app está ativo, em qual porta, quantos spans/traces recebeu, o uso do buffer e quantos spans foram descartados por limite.',
+    inputSchema: {}
+  },
+  async () => {
+    try {
+      return ok(await apmClient.getReceiverStatus());
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao consultar o status do receptor APM.');
     }
   }
 );

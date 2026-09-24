@@ -38,7 +38,8 @@ import {
   KeyRound,
   Globe,
   Workflow,
-  HelpCircle
+  HelpCircle,
+  Activity
 } from 'lucide-react';
 import { SystemAppInfo, UpdateStatus, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -346,10 +347,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.14.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.15.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.14.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.15.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
             </ul>
           </div>
@@ -388,13 +389,16 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">73 tools</strong> que um assistente de IA (Claude Code, Antigravity, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica.
+            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">123 tools</strong> que um assistente de IA (Claude Code, Antigravity, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Catálogo de Ferramentas:</span>
               <p className="mb-2">
                 As ferramentas permitem executar desde o start do ambiente até comandos Karaf complexos e análise de queries no banco.
+              </p>
+              <p className="mb-2">
+                As tools <code className="font-mono text-primary">apm_*</code> (traces, latências e serviços) só funcionam com o <strong className="text-foreground">app aberto</strong>: o servidor MCP roda em outro processo e lê o buffer do APM por uma API local, restrita a loopback e protegida por token. Já as tools do Statement Tracer (<code className="font-mono text-primary">db_get_oracle_active_sessions</code>, <code className="font-mono text-primary">db_get_oracle_recent_statements</code> e a captura contínua <code className="font-mono text-primary">db_start_oracle_capture</code>/<code className="font-mono text-primary">db_stop_oracle_capture</code>) consultam o Oracle direto do processo MCP. A captura iniciada pela IA é independente da captura iniciada na tela.
               </p>
               <button
                 onClick={handleOpenMcpDocs}
@@ -448,6 +452,117 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
           </div>
         </div>
       )
+    },
+    {
+      id: 'oracle-statement-tracer',
+      question: 'Como descobrir qual SQL outro sistema executou no Oracle (Statement Tracer)?',
+      category: 'Banco de Dados & Backup',
+      tags: ['tracer', 'statement', 'oracle', 'v$session', 'v$sql', 'sql_id', 'sessão', 'captura', 'rastrear', 'winthor'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            A aba <strong className="text-foreground">Statement Tracer</strong> do Database Studio acompanha a atividade do Oracle consultando <code className="font-mono text-primary">v$session</code> e <code className="font-mono text-primary">v$sql</code> em intervalos. Serve para descobrir que SQL uma rotina ou API rodou sem precisar ligar trace no servidor.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Passo a passo:</span>
+            <ol className="list-decimal pl-4 space-y-1">
+              <li>Selecione uma conexão <strong className="text-foreground">Oracle</strong> na barra lateral do Banco de Dados e abra a aba <strong className="text-foreground">Statement Tracer</strong>.</li>
+              <li>Escolha o intervalo (2s, 5s, 10s ou 30s) e clique em <strong className="text-foreground">Iniciar Captura</strong>.</li>
+              <li>Vá até o outro sistema (rotina WinThor, API no Karaf etc.) e dispare a ação. A captura continua mesmo se você trocar de aba ou de página no Dev Manager.</li>
+              <li>Volte e veja a <strong className="text-foreground">Linha do tempo</strong> (cada troca de SQL por sessão, com SID/SERIAL, schema, programa e módulo) ou a lista <strong className="text-foreground">SQL capturado</strong> (instruções distintas por <code className="font-mono text-primary">SQL_ID</code>, com número de execuções). Os filtros por schema e por texto ajudam a achar a sua sessão.</li>
+            </ol>
+            <p className="pt-1">
+              A captura para sozinha depois de <strong className="text-foreground">30 minutos</strong>. O usuário da conexão precisa ter permissão de leitura nas views <code className="font-mono text-primary">v$session</code>/<code className="font-mono text-primary">v$sql</code> (ex.: <code className="font-mono text-primary">SELECT_CATALOG_ROLE</code>); sem isso, o painel mostra o erro do Oracle.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'apm-connect',
+      question: 'Como envio traces do Karaf/WinThor para a tela APM & Traces?',
+      category: 'APM & Traces',
+      tags: ['apm', 'traces', 'opentelemetry', 'otel', 'otlp', '4318', 'javaagent', 'telemetria', 'latência', 'span'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Dev Manager traz um receptor <strong className="text-foreground">OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> embutido, que escuta por padrão na porta <code className="font-mono text-primary font-semibold">4318</code>. Os spans recebidos alimentam o <strong className="text-foreground">Dashboard</strong> (vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries lentas) e o <strong className="text-foreground">Traces Explorer</strong> (waterfall, atributos, SQL, stacktrace e divisão do tempo entre banco, chamadas externas e aplicação). Métricas e logs OTLP não são coletados, só traces.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Karaf iniciado pelo Cockpit:</span>
+            <p>
+              Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf. Ao iniciar pelo Dev Manager, o agente é anexado automaticamente e exporta para a porta configurada. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong>.
+            </p>
+            <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Porta ocupada?</span>
+            <p>
+              Se outro coletor (OTel Collector, Jaeger, SigNoz) já usa a 4318, o receptor fica inativo e a tela avisa. Troque a porta em <strong className="text-foreground">Como Conectar</strong>: a nova porta é aberta antes de fechar a atual, então o receptor em uso não cai se a nova estiver ocupada. O Karaf passa a exportar para ela no próximo start.
+            </p>
+            <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Teste rápido:</span>
+            <p>
+              A aba <strong className="text-foreground">cURL</strong> de Como Conectar envia um span de exemplo; o botão <strong className="text-foreground">Simular Tráfego</strong> gera dados fictícios para conhecer a tela.
+            </p>
+          </div>
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('apm')}
+              className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-2 w-fit cursor-pointer"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span>Abrir APM &amp; Traces</span>
+            </button>
+          )}
+        </div>
+      )
+    },
+    {
+      id: 'winthor-start',
+      question: 'Como as rotinas do WinThor abrem já autenticadas (WinThor Start e WTA)?',
+      category: 'Catálogo de Rotinas',
+      tags: ['winthor', 'winthor start', 'wta', 'datasnap', '9195', '8889', 'rotinas', 'login', 'token'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Quando o serviço local <strong className="text-foreground">WinThor Start</strong> (<code className="font-mono text-primary">http://localhost:9195</code>) está ativo, o Catálogo de Rotinas abre executáveis (<code className="font-mono text-primary">.EXE</code>, <code className="font-mono text-primary">.PC</code>) por ele, já com contexto autenticado e sem precisar do menu do WinThor aberto. O badge no topo do Catálogo mostra se o serviço está disponível.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Login no WTA:</strong> o Dev Manager se autentica no portal WinThor Anywhere para obter token, matrícula e dados de banco da sessão.
+              </li>
+              <li>
+                <strong className="text-foreground">Payload fixo:</strong> se o login falhar, usa o payload de sessão salvo como contingência.
+              </li>
+              <li>
+                <strong className="text-foreground">Sem o serviço:</strong> cai para execução direta do executável ou para o launcher customizado.
+              </li>
+            </ul>
+            <p>
+              Configure em <strong className="text-foreground">Configurações → Diretórios → Integração WinThor Start (DataSnap) &amp; WTA</strong>. As portas 9195 e 8889 aparecem nas portas monitoradas.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'secrets-encryption',
+      question: 'As senhas e tokens que salvo nas Configurações ficam em texto puro no disco?',
+      category: 'Segurança & Configurações',
+      tags: ['senha', 'segredo', 'token', 'criptografia', 'aes', 'config.json', 'api key', 'segurança'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Não. Senhas de banco, senha do Karaf, tokens do Confluence/Jira, API keys de provedores de IA e credenciais de webhooks ficam <strong className="text-foreground">criptografados (AES-256-GCM)</strong> no <code className="font-mono text-primary">config.json</code>.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
+            <p>
+              A chave é gerada na primeira execução e fica no arquivo <code className="font-mono text-primary">.secrets.key</code>, ao lado do <code className="font-mono text-primary">config.json</code>. <strong className="text-foreground">Copiar o config.json para outra máquina sem essa chave faz os segredos serem perdidos</strong>: será preciso digitá-los de novo.
+            </p>
+            <p>
+              A interface e a API nunca devolvem o valor salvo, só uma máscara. Se você trocar o host ou a URL de um destino, a credencial antiga não é reaproveitada: informe-a de novo.
+            </p>
+          </div>
+        </div>
+      )
     }
   ], [appInfo, copiedItem, copyToClipboard, debugPort, onNavigate, sshPort, webPort]);
 
@@ -478,9 +593,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
     { key: 'Alt + 5', desc: 'Acessar "Git & Azure DevOps" (Branches, Commits e PRs)', category: 'Navegação' },
     { key: 'Alt + 6', desc: 'Acessar "Catálogo de Rotinas" (Executáveis Delphi .exe/.pc)', category: 'Navegação' },
     { key: 'Alt + 7', desc: 'Acessar "Documentação" (Busca Semântica RAG com IA)', category: 'Navegação' },
-    { key: 'Alt + 8', desc: 'Acessar "Configurações" (Diretórios, IDEs e Portas TCP)', category: 'Navegação' },
+    { key: 'Alt + 8', desc: 'Acessar "Logs em Tempo Real" (tail -f de logs de aplicações)', category: 'Navegação' },
     { key: 'Alt + 9', desc: 'Acessar esta Central de Ajuda & Launchpad do Sistema', category: 'Navegação' },
-    { key: 'Ctrl + K', desc: 'Abrir o Quick Launcher (Busca Rápida de Ações & Projetos)', category: 'Navegação' },
+    { key: 'Alt + 0', desc: 'Acessar "APM & Traces" (Dashboard e Traces Explorer OpenTelemetry)', category: 'Navegação' },
+    { key: 'Ctrl + K', desc: 'Abrir o Quick Launcher (busca aproximada de ações, projetos e Configurações)', category: 'Navegação' },
     { key: 'Ctrl + Enter', desc: 'Executar consulta SQL selecionada no Database Studio', category: 'Banco de Dados' },
     { key: 'Shift + F9', desc: `Depuração Remota JVM no IntelliJ IDEA (Porta :${debugPort})`, category: 'Desenvolvimento' },
     { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' }
@@ -488,10 +604,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
 
   const categories = [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
-    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '8 Módulos' },
+    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '9 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqList.length}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.14.0'}` }
+    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.15.0'}` }
   ];
 
   const handleSearchChange = (val: string) => {
@@ -595,7 +711,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       COCKPIT DO DESENVOLVEDOR
                     </span>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Dev Manager • v{appInfo?.appVersion || '1.14.0'}
+                      Dev Manager • v{appInfo?.appVersion || '1.15.0'}
                     </span>
                     {appInfo?.isAdmin ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
@@ -863,11 +979,11 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   </h3>
                 </div>
                 <span className="text-[11px] text-muted-foreground font-mono">
-                  Atalhos globais de acesso direto (Alt + 1..8)
+                  Atalhos globais de acesso direto (Alt + 0..9)
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
                 {/* 1. Ambiente */}
                 <div
                   onClick={() => onNavigate?.('env')}
@@ -1015,7 +1131,49 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   </kbd>
                 </div>
 
-                {/* 8. Configurações */}
+                {/* 8. Logs */}
+                <div
+                  onClick={() => onNavigate?.('logs')}
+                  className="p-3.5 rounded-xl bg-card/60 border border-border hover:border-sky-500/50 transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-xs"
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-sky-500 shrink-0" />
+                      <span className="text-xs font-bold text-foreground group-hover:text-sky-500 transition-colors truncate">
+                        Logs em Tempo Real
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2">
+                      Acompanhamento contínuo (tail -f) de logs de aplicações.
+                    </p>
+                  </div>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shrink-0">
+                    Alt+8
+                  </kbd>
+                </div>
+
+                {/* 9. APM & Traces */}
+                <div
+                  onClick={() => onNavigate?.('apm')}
+                  className="p-3.5 rounded-xl bg-card/60 border border-border hover:border-rose-500/50 transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-xs"
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <Activity className="w-4 h-4 text-rose-500 shrink-0" />
+                      <span className="text-xs font-bold text-foreground group-hover:text-rose-500 transition-colors truncate">
+                        APM &amp; Traces
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2">
+                      Receptor OpenTelemetry, latências, erros e waterfall de traces.
+                    </p>
+                  </div>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shrink-0">
+                    Alt+0
+                  </kbd>
+                </div>
+
+                {/* 10. Configurações (sem atalho Alt; acessível pelo ícone no cabeçalho ou Ctrl+K) */}
                 <div
                   onClick={() => onNavigate?.('settings')}
                   className="p-3.5 rounded-xl bg-card/60 border border-border hover:border-primary/50 transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-xs"
@@ -1031,9 +1189,6 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       Pastas do workspace, portas monitoradas, Karaf e IDEs.
                     </p>
                   </div>
-                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shrink-0">
-                    Alt+8
-                  </kbd>
                 </div>
               </div>
             </div>
@@ -1281,6 +1436,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                       <span><strong>Restore Drill &amp; Webhooks:</strong> Teste de restauração em base temporária e avisos no Discord/Slack.</span>
                     </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span><strong>Statement Tracer (Oracle):</strong> Captura em segundo plano de <code className="font-mono text-primary">v$session</code>/<code className="font-mono text-primary">v$sql</code> para ver qual sessão rodou qual SQL enquanto você usa outro sistema.</span>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -1427,7 +1586,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <ul className="space-y-1.5 pl-1">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                      <span><strong>Varredura Automática:</strong> Detecta branch atual e status de arquivos modificados em cada projeto.</span>
+                      <span><strong>Varredura Automática:</strong> Detecta branch atual, contagem de arquivos não commitados em cada projeto (incluindo worktrees e submódulos) e aviso de HEAD destacado.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
@@ -1435,7 +1594,11 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                      <span><strong>Abertura de PR Direta:</strong> Abre a página de criação de Pull Request no Azure DevOps sem preenchimento manual.</span>
+                      <span><strong>Branches Remotas:</strong> Branches que só existem no <code className="font-mono text-primary">origin</code> aparecem na lista; o checkout cria a branch local já rastreando a remota. O push de uma branch nova publica em <code className="font-mono text-primary">origin</code> e configura o upstream.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                      <span><strong>Abertura de PR Direta:</strong> Abre a criação de Pull Request no Azure DevOps ou GitHub (ou Merge Request no GitLab) sem preenchimento manual.</span>
                     </li>
                   </ul>
                 </div>
@@ -1488,6 +1651,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
                       <span><strong>Favoritos Persistidos:</strong> Fixe suas rotinas de trabalho com estrela (★) para acesso no topo.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                      <span><strong>WinThor Start &amp; WTA:</strong> Abre rotinas já autenticadas pelo serviço local (<code className="font-mono text-primary">:9195</code>), com login no WTA e execução direta como fallback.</span>
                     </li>
                   </ul>
                 </div>
@@ -1552,7 +1719,63 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
               )}
             </div>
 
-            {/* 8. Servidor MCP */}
+            {/* 8. APM & Traces */}
+            <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3.5 shadow-md flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                      <Activity className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
+                        8. APM &amp; Traces (OpenTelemetry)
+                      </h3>
+                      <span className="text-[10px] text-muted-foreground font-mono">Receptor OTLP/HTTP embutido · porta 4318</span>
+                    </div>
+                  </div>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold">
+                    Alt+0
+                  </kbd>
+                </div>
+
+                <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
+                  <p>
+                    Observabilidade local das suas APIs sem subir um OTel Collector ou SigNoz:
+                  </p>
+                  <ul className="space-y-1.5 pl-1">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Dashboard:</strong> Vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries mais lentos.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Traces Explorer:</strong> Waterfall de spans, atributos, SQL executado, stacktrace e divisão do tempo entre banco, chamadas externas e aplicação.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Karaf Instrumentado:</strong> Com o <code className="font-mono text-primary">opentelemetry-javaagent.jar</code> em <code className="font-mono text-primary">&lt;karaf&gt;/bin</code>, o agente é anexado sozinho ao iniciar pelo Cockpit.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Porta Configurável:</strong> Troque a porta em <em>Como Conectar</em> se outro coletor já ocupa a 4318.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {onNavigate && (
+                <button
+                  onClick={() => onNavigate('apm')}
+                  className="mt-3 w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>Abrir APM &amp; Traces</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* 9. Servidor MCP */}
             <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3.5 shadow-md flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-border">
@@ -1562,9 +1785,9 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     </div>
                     <div>
                       <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
-                        8. Servidor MCP (Automação por IA)
+                        9. Servidor MCP (Automação por IA)
                       </h3>
-                      <span className="text-[10px] text-muted-foreground font-mono">73 Tools expostas via stdio para IAs</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">123 Tools expostas via stdio para IAs</span>
                     </div>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 font-mono font-bold">
@@ -1579,7 +1802,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <ul className="space-y-1.5 pl-1">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
-                      <span><strong>73 Tools Especializadas:</strong> Controle de serviços Windows, Karaf, Docker, Git, Banco, Deploy, e RAG.</span>
+                      <span><strong>123 Tools Especializadas:</strong> Controle de serviços Windows, Karaf, Docker, Git, Banco, Deploy, RAG, Rotinas e APM.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
@@ -1784,7 +2007,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <h3 className="text-sm sm:text-base font-extrabold text-foreground flex items-center gap-2">
                       Dev <span className="text-primary font-bold">Manager</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-                        v{appInfo?.appVersion || '1.14.0'}
+                        v{appInfo?.appVersion || '1.15.0'}
                       </span>
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
@@ -2060,7 +2283,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      Dev Manager {appInfo?.appVersion || '1.14.0'}.exe (Portátil)
+                      Dev Manager {appInfo?.appVersion || '1.15.0'}.exe (Portátil)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Versão autônoma que não necessita instalação. Pode ser executada diretamente de pastas de rede ou pendrives.
@@ -2070,7 +2293,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-primary" />
-                      Dev Manager Setup {appInfo?.appVersion || '1.14.0'}.exe (Instalador)
+                      Dev Manager Setup {appInfo?.appVersion || '1.15.0'}.exe (Instalador)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Instalador padrão NSIS que cria atalhos no Menu Iniciar e Área de Trabalho com desinstalador integrado.

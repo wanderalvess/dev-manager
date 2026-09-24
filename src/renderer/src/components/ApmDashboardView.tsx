@@ -31,6 +31,8 @@ interface ApmDashboardViewProps {
   onSelectTrace?: (traceId: string) => void;
   onNavigateToDatabase?: () => void;
   onGenerateDemo?: () => void;
+  /** Abre "Como Conectar", onde a porta do receptor pode ser trocada */
+  onOpenSetup?: () => void;
 }
 
 export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
@@ -38,7 +40,8 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
   onFilterByEndpoint,
   onSelectTrace,
   onNavigateToDatabase,
-  onGenerateDemo
+  onGenerateDemo,
+  onOpenSetup
 }) => {
   const { copy: copyToClipboard, copiedKey: copyFeedback } = useCopyToClipboard(2000);
   const [hoveredBucketIdx, setHoveredBucketIdx] = useState<number | null>(null);
@@ -151,11 +154,22 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
           </div>
 
           {receiverState === 'down' ? (
-            <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
-              O receptor não conseguiu abrir a porta {port}: <strong>{receiver?.error || 'erro desconhecido'}</strong>. Se
-              outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o e reinicie o
-              Dev Manager.
-            </p>
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+                O receptor não conseguiu abrir a porta {port}: <strong>{receiver?.error || 'erro desconhecido'}</strong>. Se
+                outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o ou escolha
+                outra porta para o receptor.
+              </p>
+              {onOpenSetup && (
+                <button
+                  type="button"
+                  onClick={onOpenSetup}
+                  className="self-start px-3 py-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold cursor-pointer transition"
+                >
+                  Trocar porta do receptor
+                </button>
+              )}
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground leading-relaxed">
               O hub de observabilidade do Dev Manager aguarda requisições em{' '}

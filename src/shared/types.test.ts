@@ -1,5 +1,35 @@
 import { describe, expect, it } from 'vitest';
-import { getWebPort, getWebUrl, getKarafSshPort, detectIdeInfo } from './types';
+import {
+  getWebPort,
+  getWebUrl,
+  getKarafSshPort,
+  detectIdeInfo,
+  getApmReceiverPort,
+  isValidApmReceiverPort,
+  buildOtelJavaAgentProperties
+} from './types';
+
+describe('getApmReceiverPort / isValidApmReceiverPort', () => {
+  it('usa a porta configurada quando válida e 4318 caso contrário', () => {
+    expect(getApmReceiverPort({ apmReceiverPort: 4418 })).toBe(4418);
+    expect(getApmReceiverPort({})).toBe(4318);
+    expect(getApmReceiverPort(null)).toBe(4318);
+    expect(getApmReceiverPort({ apmReceiverPort: 80 })).toBe(4318);
+    expect(getApmReceiverPort({ apmReceiverPort: 70000 })).toBe(4318);
+  });
+
+  it('aceita só inteiros fora da faixa privilegiada', () => {
+    expect(isValidApmReceiverPort(1024)).toBe(true);
+    expect(isValidApmReceiverPort(65535)).toBe(true);
+    expect(isValidApmReceiverPort(1023)).toBe(false);
+    expect(isValidApmReceiverPort(4318.5)).toBe(false);
+    expect(isValidApmReceiverPort('4318')).toBe(false);
+  });
+
+  it('monta as propriedades do agente Java apontando para a porta informada', () => {
+    expect(buildOtelJavaAgentProperties(4418)).toContain('-Dotel.exporter.otlp.endpoint=http://127.0.0.1:4418');
+  });
+});
 
 describe('getWebPort', () => {
   it('usa settings.webPort quando definido', () => {

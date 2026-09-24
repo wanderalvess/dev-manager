@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Database,
   Plus,
@@ -38,6 +38,10 @@ export interface DatabaseSidebarProps {
   getDbBadge: (type: DatabaseType) => React.ReactNode;
 }
 
+// Schemas grandes chegam a milhares de tabelas; renderizar tudo de uma vez trava a
+// sidebar, então a lista é desenhada em blocos conforme o scroll se aproxima do fim.
+const TABLES_RENDER_STEP = 300;
+
 export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
   connections,
   activeConnectionId,
@@ -61,6 +65,23 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
   activeConnection,
   getDbBadge
 }) => {
+  const [renderLimit, setRenderLimit] = useState(TABLES_RENDER_STEP);
+
+  useEffect(() => {
+    setRenderLimit(TABLES_RENDER_STEP);
+  }, [filteredTables]);
+
+  const visibleTables = filteredTables.slice(0, renderLimit);
+  const hasMoreTables = filteredTables.length > renderLimit;
+  const showMoreTables = () => setRenderLimit((n) => n + TABLES_RENDER_STEP);
+
+  const handleTablesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (hasMoreTables && el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
+      showMoreTables();
+    }
+  };
+
   return (
     <aside className="w-72 bg-card/60 border-r border-border/70 flex flex-col shrink-0" data-tour="connections-sidebar">
       {/* Topo da Sidebar: Seletor de Conexão */}
@@ -184,7 +205,7 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-1 space-y-0.5 font-mono text-[11px]">
+        <div onScroll={handleTablesScroll} className="flex-1 overflow-y-auto p-1 space-y-0.5 font-mono text-[11px]">
           {tables.length === 0 ? (
             <div className="p-4 text-center text-xs text-muted-foreground">
               {isLoadingTables ? (
@@ -204,7 +225,7 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
               )}
             </div>
           ) : (
-            filteredTables.map((tbl) => {
+            visibleTables.map((tbl) => {
               const isExpanded = expandedTable === tbl;
               const cols = tableColumns[tbl];
               const isLoadingCols = isLoadingColumns[tbl];
@@ -283,6 +304,15 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
                 </div>
               );
             })
+          )}
+          {hasMoreTables && (
+            <button
+              type="button"
+              onClick={showMoreTables}
+              className="w-full py-1.5 text-center text-[10px] text-muted-foreground hover:text-primary cursor-pointer transition"
+            >
+              Mostrando {visibleTables.length} de {filteredTables.length} — carregar mais
+            </button>
           )}
         </div>
       </div>

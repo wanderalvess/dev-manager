@@ -7,7 +7,8 @@ import {
   CheckCircle2,
   AlertCircle,
   BookmarkPlus,
-  Trash2
+  Trash2,
+  Radio
 } from 'lucide-react';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
@@ -40,6 +41,7 @@ import { ConnectionModal } from '../components/database/ConnectionModal';
 import { BackupModal } from '../components/database/BackupModal';
 import { SaveSnippetModal } from '../components/database/SaveSnippetModal';
 import { BindVariablesModal } from '../components/database/BindVariablesModal';
+import { StatementTracerPanel } from '../components/database/StatementTracerPanel';
 
 export { DEFAULT_SQL_SNIPPETS };
 
@@ -76,7 +78,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
   const [maxRows, setMaxRows] = useState<number>(100);
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
-  const [activeResultTab, setActiveResultTab] = useState<'grid' | 'history' | 'explain'>('grid');
+  const [activeResultTab, setActiveResultTab] = useState<'grid' | 'history' | 'explain' | 'tracer'>('grid');
   const [isExplaining, setIsExplaining] = useState<boolean>(false);
   const [explainResult, setExplainResult] = useState<ExplainPlanResult | null>(null);
 
@@ -789,6 +791,18 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
               <span>Explain Plan</span>
             </button>
             <button
+              type="button"
+              onClick={() => setActiveResultTab('tracer')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
+                activeResultTab === 'tracer'
+                  ? 'bg-sky-500/20 text-sky-500 border border-sky-500/30'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Radio className="w-3 h-3" />
+              <span>Statement Tracer</span>
+            </button>
+            <button
               onClick={() => setActiveResultTab('history')}
               className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
                 activeResultTab === 'history'
@@ -906,6 +920,8 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
                 </div>
               )}
             </div>
+          ) : activeResultTab === 'tracer' ? (
+            <StatementTracerPanel activeConnection={activeConnection} />
           ) : (
             /* Tab de Histórico */
             <div className="p-3 space-y-2">

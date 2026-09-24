@@ -106,35 +106,46 @@ function drawRocketScene(ctx, size) {
   ctx.save();
   ctx.scale(s, s);
 
-  // 1. Fundo Squircle Arredondado
+  // 1. Fundo Squircle Arredondado (dusk indigo, mais claro/quente que o preto anterior)
   const x = 24, y = 24, w = 464, h = 464, r = 108;
   const bgGrad = ctx.createLinearGradient(0, 0, 512, 512);
-  bgGrad.addColorStop(0, '#0F172A');
-  bgGrad.addColorStop(0.5, '#0B0F17');
-  bgGrad.addColorStop(1, '#18152E');
+  bgGrad.addColorStop(0, '#1E1B4B');
+  bgGrad.addColorStop(0.55, '#161533');
+  bgGrad.addColorStop(1, '#0B1024');
 
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
+  const path2 = () => {
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, w, h, r);
+    } else {
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+  };
+  path2();
   ctx.fillStyle = bgGrad;
   ctx.fill();
 
-  // 2. Borda Neon Ciano Iluminada
-  const borderGrad = ctx.createLinearGradient(0, 0, 512, 512);
-  borderGrad.addColorStop(0, '#22D3EE');
-  borderGrad.addColorStop(0.5, '#38BDF8');
-  borderGrad.addColorStop(1, '#818CF8');
-  ctx.lineWidth = 5;
-  ctx.strokeStyle = borderGrad;
-  ctx.stroke();
+  ctx.save();
+  path2();
+  ctx.clip();
+
+  // 2. Fonte de luz distante (o farol que o foguete persegue) no canto superior esquerdo
+  const sunGlow = ctx.createRadialGradient(120, 120, 0, 120, 120, 190);
+  sunGlow.addColorStop(0, 'rgba(253,230,138,0.5)');
+  sunGlow.addColorStop(1, 'rgba(253,230,138,0)');
+  ctx.fillStyle = sunGlow;
+  ctx.beginPath();
+  ctx.arc(120, 120, 190, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#FFF7E0';
+  ctx.beginPath();
+  ctx.arc(120, 120, 22, 0, Math.PI * 2);
+  ctx.fill();
 
   // 3. Trilhas de Circuito Tech no Fundo
   ctx.save();
@@ -224,9 +235,9 @@ function drawRocketScene(ctx, size) {
 
   // Asas / Estabilizadores
   const wingGrad = ctx.createLinearGradient(160, 300, 350, 380);
-  wingGrad.addColorStop(0, '#38BDF8');
-  wingGrad.addColorStop(0.4, '#1E293B');
-  wingGrad.addColorStop(1, '#0F172A');
+  wingGrad.addColorStop(0, '#7DD3FC');
+  wingGrad.addColorStop(0.4, '#38BDF8');
+  wingGrad.addColorStop(1, '#1E3A5F');
   ctx.fillStyle = wingGrad;
   ctx.strokeStyle = '#38BDF8';
   ctx.lineWidth = 2;
@@ -271,10 +282,11 @@ function drawRocketScene(ctx, size) {
 
   // Fuselagem do Foguete (Corpo Central Ogival)
   const fuseGrad = ctx.createLinearGradient(218, 86, 296, 375);
-  fuseGrad.addColorStop(0, '#E2E8F0');
-  fuseGrad.addColorStop(0.25, '#94A3B8');
-  fuseGrad.addColorStop(0.65, '#334155');
-  fuseGrad.addColorStop(1, '#0F172A');
+  fuseGrad.addColorStop(0, '#FFFFFF');
+  fuseGrad.addColorStop(0.2, '#FDE68A');
+  fuseGrad.addColorStop(0.5, '#CBD5E1');
+  fuseGrad.addColorStop(0.8, '#64748B');
+  fuseGrad.addColorStop(1, '#334155');
   ctx.fillStyle = fuseGrad;
   ctx.strokeStyle = '#38BDF8';
   ctx.lineWidth = 2.5;
@@ -360,6 +372,34 @@ function drawRocketScene(ctx, size) {
   ctx.fill();
 
   ctx.restore(); // Fim da rotação do foguete
+
+  // 5. Linha de reflexo perto da base (refletindo a luz do foguete)
+  ctx.strokeStyle = 'rgba(253, 230, 138, 0.45)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(70, 420);
+  ctx.lineTo(442, 420);
+  ctx.stroke();
+  const reflGlow = ctx.createRadialGradient(360, 420, 0, 360, 420, 90);
+  reflGlow.addColorStop(0, 'rgba(253, 230, 138, 0.35)');
+  reflGlow.addColorStop(1, 'rgba(253, 230, 138, 0)');
+  ctx.fillStyle = reflGlow;
+  ctx.beginPath();
+  ctx.arc(360, 420, 90, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore(); // Fim do clip do squircle
+
+  // 6. Borda Neon Ciano Iluminada (por cima do clip, para não cortar o traço)
+  const borderGrad = ctx.createLinearGradient(0, 0, 512, 512);
+  borderGrad.addColorStop(0, '#22D3EE');
+  borderGrad.addColorStop(0.5, '#38BDF8');
+  borderGrad.addColorStop(1, '#818CF8');
+  path2();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = borderGrad;
+  ctx.stroke();
+
   ctx.restore(); // Fim da escala
 }
 

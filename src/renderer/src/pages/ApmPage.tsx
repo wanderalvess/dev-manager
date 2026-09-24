@@ -29,7 +29,8 @@ import {
   TraceSpanTreeNode,
   ObservabilityOverview,
   ApmFilter,
-  DEFAULT_APM_OTLP_PORT
+  DEFAULT_APM_OTLP_PORT,
+  isValidApmReceiverPort
 } from '../../../shared/types';
 import { api } from '../services/apiBridge';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -81,6 +82,8 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
   const [searchText, setSearchText] = useState<string>('');
   const [detailTab, setDetailTab] = useState<DetailTab>('waterfall');
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
+  const [portDraft, setPortDraft] = useState<string>('');
+  const [isChangingPort, setIsChangingPort] = useState<boolean>(false);
   const [setupTab, setSetupTab] = useState<'karaf' | 'curl' | 'node'>('karaf');
 
   const { copy: copyToClipboard, copiedKey: copyFeedback } = useCopyToClipboard(2000);
@@ -303,6 +306,37 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
   const receiverPort = overview?.receiverStatus.port || DEFAULT_APM_OTLP_PORT;
   const setupSnippets = useMemo(() => buildApmSetupSnippets(receiverPort), [receiverPort]);
 
+  const openSetupModal = () => {
+    setPortDraft(String(receiverPort));
+    setIsSetupModalOpen(true);
+  };
+
+  const handleApplyReceiverPort = async () => {
+    const port = Number(portDraft);
+    if (!isValidApmReceiverPort(port)) {
+      showToast('Informe uma porta inteira entre 1024 e 65535.', 'error');
+      return;
+    }
+    if (!api?.changeApmReceiverPort) return;
+
+    setIsChangingPort(true);
+    try {
+      const result = await api.changeApmReceiverPort(port);
+      if (result.success) {
+        showToast(`Receptor OTLP escutando na porta ${result.status.port}.`, 'success');
+      } else {
+        const fallback = result.status.listening ? ` Receptor mantido na porta ${result.status.port}.` : '';
+        showToast(`Não foi possível usar a porta ${port}: ${result.error}.${fallback}`, 'error');
+      }
+      setPortDraft(String(result.status.port));
+      refreshData();
+    } catch (err: any) {
+      showToast(`Falha ao trocar a porta do receptor: ${err?.message || err}`, 'error');
+    } finally {
+      setIsChangingPort(false);
+    }
+  };
+
   // Duração máxima na lista atual para cálculo da microbarra proporcional
   const maxListDuration = useMemo(() => {
     if (displayedTraces.length === 0) return 100;
@@ -342,17 +376,19 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
       <header className="h-11 px-3 border-b border-border bg-card/75 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0 text-xs">
         {/* Lado Esquerdo: Status do Receptor & Métricas Chave */}
         <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
-          {/* Status OTLP */}
-          <div
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-mono shrink-0 ${
+          {/* Status OTLP (abre a configuração de conexão/porta) */}
+          <button
+            type="button"
+            onClick={openSetupModal}
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-mono shrink-0 cursor-pointer ${
               overview?.receiverStatus.listening
                 ? 'bg-emerald-500/15 dark:bg-emerald-950/30 border-emerald-500/30 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400'
                 : 'bg-rose-500/15 dark:bg-rose-950/30 border-rose-500/30 dark:border-rose-800/60 text-rose-700 dark:text-rose-400'
             }`}
             title={
               overview?.receiverStatus.listening
-                ? `Receptor OpenTelemetry (OTLP/HTTP) escutando em :${overview.receiverStatus.port}`
-                : `Receptor OTLP inativo: ${overview?.receiverStatus.error || 'Porta ocupada'}`
+                ? `Receptor OpenTelemetry (OTLP/HTTP) escutando em :${overview.receiverStatus.port} — clique para conexão e porta`
+                : `Receptor OTLP inativo: ${overview?.receiverStatus.error || 'Porta ocupada'} — clique para trocar a porta`
             }
           >
             <span
@@ -362,7 +398,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
             />
             <span className="font-semibold">:{receiverPort}</span>
             <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-sans font-medium">OTLP</span>
-          </div>
+          </button>
 
           <div className="h-4 w-[1px] bg-border shrink-0" />
 
@@ -512,7 +548,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
           {/* Botão Como Conectar */}
           <button
             type="button"
-            onClick={() => setIsSetupModalOpen(true)}
+            onClick={openSetupModal}
             title="Instruções para conectar o Karaf ou outras aplicações no receptor OpenTelemetry"
             className="h-7 px-2.5 rounded border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition"
           >
@@ -535,6 +571,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
           }}
           onNavigateToDatabase={onNavigateToDatabase}
           onGenerateDemo={handleGenerateDemo}
+          onOpenSetup={openSetupModal}
         />
       ) : (
         <>
@@ -791,7 +828,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                   {rawTraces.length === 0 ? (
                     <button
                       type="button"
-                      onClick={() => setIsSetupModalOpen(true)}
+                      onClick={openSetupModal}
                       className="h-8 px-3 rounded border border-border bg-card hover:bg-muted text-foreground text-xs font-medium transition cursor-pointer"
                     >
                       Instruções de Conexão
@@ -1408,9 +1445,39 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:bg-rose-950/30 dark:border-rose-800/60 dark:text-rose-300 font-sans text-xs leading-relaxed">
                   <strong>Receptor inativo:</strong> {overview.receiverStatus.error || 'não foi possível abrir a porta'}.
                   Se outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o e
-                  reinicie o Dev Manager.
+                  aplique a porta de novo — ou escolha outra porta abaixo.
                 </div>
               )}
+
+              {/* Porta do receptor (persistida em config.json; o Karaf iniciado pelo app a segue) */}
+              <div className="flex flex-wrap items-center gap-2 font-sans text-xs">
+                <label htmlFor="apm-receiver-port" className="text-muted-foreground font-medium">
+                  Porta do receptor
+                </label>
+                <input
+                  id="apm-receiver-port"
+                  type="number"
+                  min={1024}
+                  max={65535}
+                  value={portDraft}
+                  onChange={(e) => setPortDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleApplyReceiverPort();
+                  }}
+                  className="h-7 w-24 px-2 bg-background border border-border rounded font-mono text-xs text-foreground focus:outline-hidden focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyReceiverPort}
+                  disabled={isChangingPort}
+                  className="h-7 px-3 rounded bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-wait cursor-pointer transition"
+                >
+                  {isChangingPort ? 'Aplicando…' : 'Aplicar'}
+                </button>
+                <span className="text-[11px] text-muted-foreground">
+                  O Karaf iniciado pelo Dev Manager passa a exportar para esta porta no próximo start.
+                </span>
+              </div>
 
               {/* Tabs de Conexão */}
               <div className="flex items-center gap-1 border-b border-border pb-1">
