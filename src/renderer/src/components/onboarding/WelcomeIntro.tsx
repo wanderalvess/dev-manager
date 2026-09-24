@@ -90,17 +90,21 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
         }}
       />
 
-      {/* Topo: progresso + pular */}
-      <div className="absolute top-0 inset-x-0 flex items-center justify-between gap-4 p-5 sm:p-6">
+      {/* Topo: progresso (só com mais de uma tela) + pular.
+          z-10 é essencial aqui: sem isso, o botão "Pular introdução" fica visualmente por cima mas
+          clicos nele são engolidos pelo <div> de conteúdo abaixo (irmão posicionado que vem depois
+          no DOM, então empilha acima em z-index:auto — o clique nunca chega ao botão). */}
+      <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between gap-4 p-5 sm:p-6">
         <div className="flex items-center gap-1.5">
-          {WELCOME_STEPS.map((_, i) => (
-            <div key={i} className="h-1 w-8 rounded-full bg-border overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
-                style={{ width: i <= stepIndex ? '100%' : '0%' }}
-              />
-            </div>
-          ))}
+          {WELCOME_STEPS.length > 1 &&
+            WELCOME_STEPS.map((_, i) => (
+              <div key={i} className="h-1 w-8 rounded-full bg-border overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                  style={{ width: i <= stepIndex ? '100%' : '0%' }}
+                />
+              </div>
+            ))}
         </div>
         <button
           type="button"
@@ -213,7 +217,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
       {/* Navegação inferior */}
       <div className="absolute bottom-0 inset-x-0 flex items-center justify-between gap-3 p-5 sm:p-6">
         <span className="text-[11px] font-mono text-muted-foreground">
-          {stepIndex + 1} de {WELCOME_STEPS.length}
+          {WELCOME_STEPS.length > 1 ? `${stepIndex + 1} de ${WELCOME_STEPS.length}` : ''}
         </span>
         <div className="flex items-center gap-2">
           {!isFirst && (

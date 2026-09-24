@@ -1,4 +1,4 @@
-import { LucideIcon, Sparkles, Palette, Rocket } from 'lucide-react';
+import { LucideIcon, Sparkles } from 'lucide-react';
 
 export interface WelcomeStep {
   id?: string;
@@ -12,29 +12,16 @@ export interface WelcomeStep {
 
 export const WELCOME_STORAGE_KEY = 'devManager:welcomeIntroV2';
 
+// Uma tela só: a versão anterior exigia 3 cliques (Avançar, Avançar, Começar) antes de o
+// usuário conseguir usar o app — as duas primeiras eram só texto de efeito, sem decisão
+// nenhuma. Aqui já entra com a única escolha real (tema) e um clique pra começar.
 export const WELCOME_STEPS: WelcomeStep[] = [
   {
-    id: 'intro',
+    id: 'theme',
     eyebrow: 'PRAZER, EU SOU',
     title: 'O seu',
     highlight: 'Dev Manager',
-    desc: 'Mais que um painel — um cockpit que organiza seu ambiente WinThor, cuida da infraestrutura e fala a sua língua. A partir de agora, trabalhamos juntos.',
+    desc: 'Organizo seu ambiente WinThor e cuido da infraestrutura pra você. Escolha o tema — dá pra trocar depois pelo cabeçalho — e use Ctrl+K a qualquer momento para a busca rápida.',
     icon: Sparkles
-  },
-  {
-    id: 'theme',
-    eyebrow: 'APARÊNCIA',
-    title: 'Qual tema você',
-    highlight: 'prefere?',
-    desc: 'Escolha a aparência ideal para o seu dia a dia. Você pode alterar essa preferência quando quiser pelo cabeçalho.',
-    icon: Palette
-  },
-  {
-    id: 'ready',
-    eyebrow: 'TUDO PRONTO',
-    title: 'Vamos',
-    highlight: 'começar?',
-    desc: 'Use Ctrl+K para a busca rápida a qualquer momento. Agora vamos te mostrar rapidamente onde fica cada recurso.',
-    icon: Rocket
   }
 ];

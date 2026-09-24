@@ -91,8 +91,9 @@ export const App: React.FC = () => {
     }
 
     // O tour mostra onde ficam as telas, mas sem os caminhos essenciais (Karaf, repositórios, IDE)
-    // configurados o app não faz nada de útil ainda — prioriza mandar pra Configurações antes de
-    // perguntar sobre tutoriais por página.
+    // configurados o app não faz nada de útil ainda — manda pra Configurações, que já tem seu
+    // próprio checklist detalhado (computeSetupChecklistStatus) pra guiar os campos específicos;
+    // o toast aqui só aponta pra lá, sem repetir/discordar da lista de campos que o checklist define.
     (async () => {
       let missingPaths: string[] = [];
       try {
@@ -105,13 +106,14 @@ export const App: React.FC = () => {
       }
 
       if (missingPaths.length > 0) {
-        showToast('Antes de tudo: configure ' + missingPaths.join(' e ') + ' em Configurações.', 'info');
+        showToast('Configure seu ambiente antes de continuar — veja o checklist em Configurações.', 'info');
         setActiveTab('settings');
-        return;
       }
 
       try {
-        // Se ainda não foi perguntado se quer ver tutoriais das próximas telas, abre o modal de escolha
+        // Se ainda não foi perguntado se quer ver tutoriais das próximas telas, abre o modal de escolha.
+        // Roda independente do redirecionamento acima: sem isso, quem tem caminhos pendentes (a
+        // maioria das instalações novas) nunca chegaria a ser perguntado.
         if (window.localStorage.getItem(PAGE_TOURS_PREF_KEY) === null) {
           setIsPageToursPromptOpen(true);
         }
