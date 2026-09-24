@@ -121,10 +121,14 @@ export const App: React.FC = () => {
     })();
   }, []);
 
-  // Primeira execução após instalação: onboarding completo (Welcome + Tour) do zero.
-  // Execução após uma atualização de versão: só um resumo rápido do que mudou, sem
-  // resetar tour/preferências já concluídos — quem já conhece o app não deve ser
-  // jogado de volta pro onboarding inteiro a cada release.
+  // Primeira execução após instalação: o estado inicial de isWelcomeOpen/isTourOpen/activeTab já
+  // é calculado de forma síncrona a partir do localStorage (vazio nessa hora, pois é instalação
+  // nova) — então Welcome+Tour já abrem certo antes mesmo deste efeito rodar. Esta chamada ao
+  // Electron (isFirstRun) é assíncrona e pode demorar (ela aguarda checkAdminPrivileges, que
+  // spawna um processo do Windows); NÃO reforçamos aqui a reabertura de Welcome/Tour, porque se o
+  // usuário for rápido e já tiver pulado a introdução antes dela responder, forçar de novo jogava
+  // ele de volta pro onboarding do nada. Só usamos o resultado pra limpar um marcador desalinhado
+  // (ex: pasta de dados restaurada de outra máquina).
   useEffect(() => {
     if (!window.electronAPI?.getAppInfo) return;
     window.electronAPI.getAppInfo().then((info) => {
@@ -136,9 +140,6 @@ export const App: React.FC = () => {
         } catch {
           // localStorage indisponível
         }
-        setActiveTab('help');
-        setIsWelcomeOpen(true);
-        setIsTourOpen(true);
         return;
       }
 
@@ -414,14 +415,14 @@ export const App: React.FC = () => {
               initialSearch={helpSearch}
               settingsVersion={settingsVersion}
               onRestartTour={() => {
+                // O botão só promete o tour de spotlight — reabrir também a introdução (tema,
+                // slides de boas-vindas) surpreendia quem só queria rever onde ficam os recursos.
                 try {
                   window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
                   window.localStorage.removeItem(TOUR_STORAGE_KEY);
-                  window.localStorage.removeItem(WELCOME_STORAGE_KEY);
                 } catch {
                   // localStorage indisponível
                 }
-                setIsWelcomeOpen(true);
                 setIsTourOpen(true);
               }}
             />
