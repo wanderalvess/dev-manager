@@ -19,8 +19,6 @@ import {
   Layers,
   LayoutDashboard,
   Clock,
-  ArrowDown,
-  ArrowUp,
   Filter
 } from 'lucide-react';
 import { ApmDashboardView } from '../components/ApmDashboardView';
@@ -30,7 +28,8 @@ import {
   TraceSpan,
   TraceSpanTreeNode,
   ObservabilityOverview,
-  ApmFilter
+  ApmFilter,
+  DEFAULT_APM_OTLP_PORT
 } from '../../../shared/types';
 import { api } from '../services/apiBridge';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -38,12 +37,15 @@ import { showToast } from '../components/ToastHost';
 import {
   FilterPreset,
   LatencyBracket,
+  buildApmSetupSnippets,
   computeLatencySpectrum,
   computeTimeBudget,
   filterTraces,
   findNextTraceId,
+  formatSpanErrorForClipboard,
   getMethodBadgeClass,
   getStatusBadgeClass,
+  mergeLiveTraces,
   splitSqlTokens
 } from '../utils/apmUiUtils';
 
@@ -54,6 +56,10 @@ interface ApmPageProps {
 }
 
 type DetailTab = 'waterfall' | 'attributes' | 'sql' | 'error';
+
+// Um lote do Java Agent (até 512 spans) gera uma notificação por trace; acumular por esse intervalo
+// e aplicar tudo de uma vez evita re-renderizar a tabela centenas de vezes por lote.
+const LIVE_TRACE_FLUSH_MS = 400;
 
 export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToDatabase }) => {
   // Dados principais
@@ -68,7 +74,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
 
   // Estados de controle e captura
   const [isRecording, setIsRecording] = useState<boolean>(true);
-  const [limit, setLimit] = useState<number>(250);
+  const [limit] = useState<number>(250);
   const [activePreset, setActivePreset] = useState<FilterPreset>('ALL');
   const [latencyBracket, setLatencyBracket] = useState<LatencyBracket>('ALL');
   const [selectedService, setSelectedService] = useState<string>('ALL');
@@ -79,25 +85,27 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
 
   const { copy: copyToClipboard, copiedKey: copyFeedback } = useCopyToClipboard(2000);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  // Espelho síncrono do trace aberto, lido por respostas assíncronas e pela assinatura em tempo real
+  const selectedTraceIdRef = useRef<string | null>(null);
 
   // Carregar lista de traces e overview do backend
   const refreshData = useCallback(async () => {
     if (!api?.getApmOverview || !api?.getApmTraces) return;
 
     try {
+      const serviceName = selectedService !== 'ALL' ? selectedService : undefined;
       const filter: ApmFilter = {
         limit,
-        serviceName: selectedService !== 'ALL' ? selectedService : undefined,
+        serviceName,
         search: searchText.trim() || undefined,
         hasError: activePreset === 'ERRORS' ? true : undefined,
         minDurationMs: activePreset === 'SLOW' ? 1000 : undefined,
         hasDatabaseQuery: activePreset === 'DB' ? true : undefined
       };
 
-      const [ov, tr] = await Promise.all([
-        api.getApmOverview(filter),
-        api.getApmTraces(filter)
-      ]);
+      // O overview (faixa de métricas e dashboard) segue só o serviço: com o filtro "Erros" ativo,
+      // a taxa de erro do cabeçalho viraria 100% e deixaria de descrever o tráfego real
+      const [ov, tr] = await Promise.all([api.getApmOverview({ serviceName }), api.getApmTraces(filter)]);
 
       setOverview(ov);
       setRawTraces(tr);
@@ -116,45 +124,74 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
     return () => clearInterval(interval);
   }, [isActive, isRecording, refreshData]);
 
-  // Inscrição em tempo real para novos traces via WebSocket / IPC
-  useEffect(() => {
-    if (!isActive || !api?.onApmNewTrace) return;
-
-    const unsubscribe = api.onApmNewTrace((newTrace) => {
-      if (!isRecording) return;
-      setRawTraces((prev) => {
-        const filtered = prev.filter((t) => t.traceId !== newTrace.traceId);
-        return [newTrace, ...filtered].slice(0, limit);
-      });
-    });
-
-    return () => {
-      unsubscribe?.();
-    };
-  }, [isActive, isRecording, limit]);
-
   // Carregar detalhes do trace selecionado
-  const loadTraceDetails = useCallback(async (traceId: string) => {
+  const loadTraceDetails = useCallback(async (traceId: string, options?: { keepSelectedSpan?: boolean }) => {
     if (!api?.getApmTraceDetails) return;
     try {
       const details = await api.getApmTraceDetails(traceId);
+      // Resposta atrasada de um trace que já foi fechado ou trocado (navegação rápida por teclado)
+      if (selectedTraceIdRef.current !== traceId) return;
       setTraceDetails(details);
-      if (details?.spans && details.spans.length > 0) {
-        setSelectedSpanId(details.summary.traceId);
+      if (!options?.keepSelectedSpan) {
+        setSelectedSpanId(details?.rootTree[0]?.span.spanId ?? null);
       }
     } catch (err) {
       console.warn('[ApmPage] Erro ao carregar detalhes do trace:', err);
     }
   }, []);
 
-  const handleSelectTrace = (traceId: string) => {
-    if (selectedTraceId === traceId) {
-      setSelectedTraceId(null);
-      setTraceDetails(null);
-      setSelectedSpanId(null);
-    } else {
+  const openTrace = useCallback(
+    (traceId: string) => {
+      selectedTraceIdRef.current = traceId;
       setSelectedTraceId(traceId);
       loadTraceDetails(traceId);
+    },
+    [loadTraceDetails]
+  );
+
+  const closeTrace = useCallback(() => {
+    selectedTraceIdRef.current = null;
+    setSelectedTraceId(null);
+    setTraceDetails(null);
+    setSelectedSpanId(null);
+  }, []);
+
+  // Inscrição em tempo real para novos traces via WebSocket / IPC
+  useEffect(() => {
+    if (!isActive || !isRecording || !api?.onApmNewTrace) return;
+
+    const pending = new Map<string, TraceSummary>();
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const flush = () => {
+      flushTimer = null;
+      const batch = Array.from(pending.values());
+      pending.clear();
+      setRawTraces((prev) => mergeLiveTraces(prev, batch, limit));
+
+      // Spans atrasados (ex.: o raiz chega depois dos filhos) atualizam o trace que está aberto
+      const openTraceId = selectedTraceIdRef.current;
+      if (openTraceId && batch.some((t) => t.traceId === openTraceId)) {
+        loadTraceDetails(openTraceId, { keepSelectedSpan: true });
+      }
+    };
+
+    const unsubscribe = api.onApmNewTrace((newTrace) => {
+      pending.set(newTrace.traceId, newTrace);
+      if (!flushTimer) flushTimer = setTimeout(flush, LIVE_TRACE_FLUSH_MS);
+    });
+
+    return () => {
+      unsubscribe?.();
+      if (flushTimer) clearTimeout(flushTimer);
+    };
+  }, [isActive, isRecording, limit, loadTraceDetails]);
+
+  const handleSelectTrace = (traceId: string) => {
+    if (selectedTraceId === traceId) {
+      closeTrace();
+    } else {
+      openTrace(traceId);
     }
   };
 
@@ -184,8 +221,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
 
       if (e.key === 'Escape') {
         if (selectedTraceId) {
-          setSelectedTraceId(null);
-          setTraceDetails(null);
+          closeTrace();
         } else if (isSetupModalOpen) {
           setIsSetupModalOpen(false);
         }
@@ -198,15 +234,13 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
           e.preventDefault();
           const nextId = findNextTraceId(displayedTraces, selectedTraceId, 'next');
           if (nextId && nextId !== selectedTraceId) {
-            setSelectedTraceId(nextId);
-            loadTraceDetails(nextId);
+            openTrace(nextId);
           }
         } else if (e.key === 'ArrowUp' || e.key === 'k') {
           e.preventDefault();
           const prevId = findNextTraceId(displayedTraces, selectedTraceId, 'prev');
           if (prevId && prevId !== selectedTraceId) {
-            setSelectedTraceId(prevId);
-            loadTraceDetails(prevId);
+            openTrace(prevId);
           }
         }
       }
@@ -214,7 +248,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTraceId, isSetupModalOpen, displayedTraces, loadTraceDetails]);
+  }, [selectedTraceId, isSetupModalOpen, displayedTraces, openTrace, closeTrace]);
 
   // Gerar dados demo
   const handleGenerateDemo = async () => {
@@ -234,8 +268,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
     try {
       await api.clearApmTraces();
       setRawTraces([]);
-      setSelectedTraceId(null);
-      setTraceDetails(null);
+      closeTrace();
       showToast('Buffer de telemetria limpo.', 'info');
       refreshData();
     } catch {
@@ -243,15 +276,32 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
     }
   };
 
-  // Span atualmente inspecionado no drawer
+  // Span atualmente inspecionado no drawer (padrão: o span raiz do waterfall)
   const activeSpan = useMemo<TraceSpan | null>(() => {
     if (!traceDetails?.spans) return null;
     if (selectedSpanId) {
       const found = traceDetails.spans.find((s) => s.spanId === selectedSpanId);
       if (found) return found;
     }
-    return traceDetails.spans[0] || null;
+    return traceDetails.rootTree[0]?.span || traceDetails.spans[0] || null;
   }, [traceDetails, selectedSpanId]);
+
+  // Spans com erro, os que trazem exceção/stacktrace primeiro: costumam ser a causa raiz
+  // (ex.: SQLException no span JDBC), enquanto o span HTTP só informa o 500
+  const errorSpans = useMemo<TraceSpan[]>(() => {
+    if (!traceDetails?.spans) return [];
+    const withError = traceDetails.spans.filter((s) => s.statusCode === 'ERROR' || !!s.statusMessage || !!s.exception);
+    return [...withError].sort((a, b) => Number(!!b.exception) - Number(!!a.exception));
+  }, [traceDetails]);
+
+  const hasSqlTab = !!traceDetails?.spans.some((s) => !!s.dbStatement);
+  const hasErrorTab = !!traceDetails?.summary.hasError || errorSpans.length > 0;
+  // Ao trocar de trace, uma aba que não existe no novo trace (SQL/Erro) volta para o waterfall
+  const visibleDetailTab: DetailTab =
+    (detailTab === 'sql' && !hasSqlTab) || (detailTab === 'error' && !hasErrorTab) ? 'waterfall' : detailTab;
+
+  const receiverPort = overview?.receiverStatus.port || DEFAULT_APM_OTLP_PORT;
+  const setupSnippets = useMemo(() => buildApmSetupSnippets(receiverPort), [receiverPort]);
 
   // Duração máxima na lista atual para cálculo da microbarra proporcional
   const maxListDuration = useMemo(() => {
@@ -310,7 +360,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 overview?.receiverStatus.listening ? 'bg-emerald-500 dark:bg-emerald-400 radar-live' : 'bg-rose-500 dark:bg-rose-400'
               }`}
             />
-            <span className="font-semibold">:{overview?.receiverStatus.port || 4318}</span>
+            <span className="font-semibold">:{receiverPort}</span>
             <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-sans font-medium">OTLP</span>
           </div>
 
@@ -349,11 +399,23 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
               </strong>
             </span>
             <span className="text-border">•</span>
-            <span className="text-muted-foreground">
+            <span
+              className="text-muted-foreground"
+              title={
+                overview?.receiverStatus.droppedSpans
+                  ? `${overview.receiverStatus.droppedSpans} spans descartados por exceder o limite de spans por trace`
+                  : 'Traces mantidos em memória (os mais antigos são descartados ao atingir o limite)'
+              }
+            >
               Buffer:{' '}
               <strong className="text-foreground">
-                {overview?.totalTraces || rawTraces.length} / {overview?.receiverStatus.maxBufferSize || 5000}
+                {overview?.receiverStatus.bufferSize ?? rawTraces.length} / {overview?.receiverStatus.maxBufferSize || 5000}
               </strong>
+              {!!overview?.receiverStatus.droppedSpans && (
+                <strong className="ml-1 text-amber-600 dark:text-amber-400">
+                  (−{overview.receiverStatus.droppedSpans} spans)
+                </strong>
+              )}
             </span>
           </div>
         </div>
@@ -468,8 +530,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
             setViewMode('traces');
           }}
           onSelectTrace={(traceId) => {
-            setSelectedTraceId(traceId);
-            loadTraceDetails(traceId);
+            openTrace(traceId);
             setViewMode('traces');
           }}
           onNavigateToDatabase={onNavigateToDatabase}
@@ -711,7 +772,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                     <>
                       Envie spans OTLP/HTTP para{' '}
                       <code className="px-1.5 py-0.5 rounded bg-muted border border-border text-foreground font-mono text-[11px]">
-                        http://localhost:{overview?.receiverStatus.port || 4318}/v1/traces
+                        {setupSnippets.tracesUrl}
                       </code>
                     </>
                   ) : (
@@ -917,10 +978,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedTraceId(null);
-                    setTraceDetails(null);
-                  }}
+                  onClick={closeTrace}
                   title="Fechar painel (Esc)"
                   className="h-6 w-6 rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition"
                 >
@@ -935,7 +993,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 <span>
                   Status:{' '}
                   <strong className={getStatusBadgeClass(traceDetails?.summary.httpStatusCode, traceDetails?.summary.hasError)}>
-                    {traceDetails?.summary.httpStatusCode || 'OK'}
+                    {traceDetails?.summary.httpStatusCode || (traceDetails?.summary.hasError ? 'ERR' : 'OK')}
                   </strong>
                 </span>
                 <span>•</span>
@@ -1019,7 +1077,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 type="button"
                 onClick={() => setDetailTab('waterfall')}
                 className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-                  detailTab === 'waterfall'
+                  visibleDetailTab === 'waterfall'
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
@@ -1032,7 +1090,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 type="button"
                 onClick={() => setDetailTab('attributes')}
                 className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-                  detailTab === 'attributes'
+                  visibleDetailTab === 'attributes'
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
@@ -1041,12 +1099,12 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 <span>Atributos</span>
               </button>
 
-              {traceDetails?.spans.some((s) => !!s.dbStatement) && (
+              {hasSqlTab && (
                 <button
                   type="button"
                   onClick={() => setDetailTab('sql')}
                   className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-                    detailTab === 'sql'
+                    visibleDetailTab === 'sql'
                       ? 'border-sky-500 text-sky-700 dark:border-sky-400 dark:text-sky-400 font-bold'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
@@ -1056,12 +1114,12 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 </button>
               )}
 
-              {traceDetails?.summary.hasError && (
+              {hasErrorTab && (
                 <button
                   type="button"
                   onClick={() => setDetailTab('error')}
                   className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-                    detailTab === 'error'
+                    visibleDetailTab === 'error'
                       ? 'border-rose-500 text-rose-700 dark:border-rose-400 dark:text-rose-400 font-bold'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
@@ -1075,7 +1133,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
             {/* Conteúdo da Aba Selecionada */}
             <div className="flex-1 overflow-auto p-3">
               {/* ABA 1: WATERFALL (Cascata Temporal com Régua Milimétrica e Árvore Conectada) */}
-              {detailTab === 'waterfall' && (
+              {visibleDetailTab === 'waterfall' && (
                 <div className="flex flex-col gap-2">
                   {/* Régua Milimétrica no Topo */}
                   <div className="px-2 py-1 bg-muted/40 rounded border border-border font-mono text-[10px] text-muted-foreground flex justify-between select-none tabular-nums">
@@ -1159,9 +1217,22 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                         </div>
                       )}
 
-                      {activeSpan.statusMessage && (
-                        <div className="p-2.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-300 text-[11px]">
-                          <strong>Erro:</strong> {activeSpan.statusMessage}
+                      {(activeSpan.statusMessage || activeSpan.exception) && (
+                        <div className="p-2.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-300 text-[11px] flex items-start justify-between gap-2">
+                          <span className="break-words min-w-0">
+                            <strong>Erro:</strong>{' '}
+                            {activeSpan.statusMessage ||
+                              [activeSpan.exception?.type, activeSpan.exception?.message].filter(Boolean).join(': ')}
+                          </span>
+                          {activeSpan.exception?.stacktrace && (
+                            <button
+                              type="button"
+                              onClick={() => setDetailTab('error')}
+                              className="shrink-0 underline font-bold cursor-pointer hover:text-rose-950 dark:hover:text-rose-100"
+                            >
+                              Stacktrace &rarr;
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1169,27 +1240,35 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 </div>
               )}
 
-              {/* ABA 2: ATRIBUTOS */}
-              {detailTab === 'attributes' && (
+              {/* ABA 2: ATRIBUTOS (do span selecionado no waterfall) */}
+              {visibleDetailTab === 'attributes' && (
                 <div className="flex flex-col gap-2 font-mono text-xs">
-                  <div className="text-[11px] text-muted-foreground mb-1">
-                    Atributos semânticos do span raiz e requisição:
+                  <div className="text-[11px] text-muted-foreground mb-1 flex items-center justify-between gap-2">
+                    <span className="truncate">
+                      Span <strong className="text-foreground">{activeSpan?.name}</strong>
+                      {activeSpan && <span className="ml-1">({activeSpan.kind})</span>}
+                    </span>
+                    <span className="shrink-0 text-[10px]">Selecione outro span no Waterfall</span>
                   </div>
-                  <div className="border border-border rounded-lg overflow-hidden divide-y divide-border/50 bg-card">
-                    {Object.entries(traceDetails?.spans[0]?.attributes || {}).map(([key, val]) => (
-                      <div key={key} className="p-2 flex items-start justify-between gap-3 text-[11px]">
-                        <span className="text-muted-foreground shrink-0 select-text">{key}</span>
-                        <span className="text-foreground text-right break-all font-semibold select-text">
-                          {typeof val === 'object' ? JSON.stringify(val) : String(val)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {activeSpan && Object.keys(activeSpan.attributes).length > 0 ? (
+                    <div className="border border-border rounded-lg overflow-hidden divide-y divide-border/50 bg-card">
+                      {Object.entries(activeSpan.attributes).map(([key, val]) => (
+                        <div key={key} className="p-2 flex items-start justify-between gap-3 text-[11px]">
+                          <span className="text-muted-foreground shrink-0 select-text">{key}</span>
+                          <span className="text-foreground text-right break-all font-semibold select-text">
+                            {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">Este span não possui atributos.</p>
+                  )}
                 </div>
               )}
 
               {/* ABA 3: QUERIES SQL */}
-              {detailTab === 'sql' && (
+              {visibleDetailTab === 'sql' && (
                 <div className="flex flex-col gap-3 font-mono text-xs">
                   {traceDetails?.spans
                     .filter((s) => !!s.dbStatement)
@@ -1240,21 +1319,24 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
               )}
 
               {/* ABA 4: ERROS / STACKTRACE */}
-              {detailTab === 'error' && (
+              {visibleDetailTab === 'error' && (
                 <div className="flex flex-col gap-3 font-mono text-xs">
-                  {traceDetails?.spans
-                    .filter((s) => s.statusCode === 'ERROR' || s.statusMessage)
-                    .map((s) => (
+                  {errorSpans.map((s) => {
+                    const exceptionHeadline = [s.exception?.type, s.exception?.message].filter(Boolean).join(': ');
+                    return (
                       <div key={s.spanId} className="p-3 rounded-lg border border-rose-500/30 bg-rose-500/10 dark:border-rose-800/60 dark:bg-rose-950/30 flex flex-col gap-2">
-                        <div className="flex items-center justify-between text-[11px] text-rose-800 dark:text-rose-300 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                            {s.name}
+                        <div className="flex items-center justify-between gap-2 text-[11px] text-rose-800 dark:text-rose-300 font-bold">
+                          <span className="flex items-center gap-1.5 min-w-0">
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                            <span className="truncate" title={s.name}>
+                              {s.name}
+                            </span>
+                            <span className="px-1 rounded bg-rose-500/15 text-[9px] font-semibold shrink-0">{s.kind}</span>
                           </span>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(s.statusMessage || '', `err-${s.spanId}`)}
-                            className="px-2 py-0.5 rounded border border-rose-500/30 bg-rose-500/15 text-[10px] text-rose-700 hover:bg-rose-500/25 dark:border-rose-800/80 dark:bg-rose-900/40 dark:text-rose-200 dark:hover:bg-rose-900/60 cursor-pointer flex items-center gap-1"
+                            onClick={() => copyToClipboard(formatSpanErrorForClipboard(s), `err-${s.spanId}`)}
+                            className="px-2 py-0.5 rounded border border-rose-500/30 bg-rose-500/15 text-[10px] text-rose-700 hover:bg-rose-500/25 dark:border-rose-800/80 dark:bg-rose-900/40 dark:text-rose-200 dark:hover:bg-rose-900/60 cursor-pointer flex items-center gap-1 shrink-0"
                           >
                             {copyFeedback === `err-${s.spanId}` ? (
                               <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
@@ -1264,11 +1346,28 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                             Copiar Erro
                           </button>
                         </div>
-                        <pre className="p-2.5 rounded bg-card border border-rose-500/30 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                          {s.statusMessage || 'Erro sem mensagem explícita'}
-                        </pre>
+
+                        {(exceptionHeadline || s.statusMessage) && (
+                          <div className="text-[11px] text-rose-800 dark:text-rose-300 break-words select-text">
+                            {exceptionHeadline || s.statusMessage}
+                          </div>
+                        )}
+
+                        {s.exception?.stacktrace ? (
+                          <pre className="p-2.5 rounded bg-card border border-rose-500/30 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-[10.5px] overflow-auto max-h-80 whitespace-pre leading-relaxed select-text">
+                            {s.exception.stacktrace}
+                          </pre>
+                        ) : (
+                          !exceptionHeadline &&
+                          !s.statusMessage && (
+                            <pre className="p-2.5 rounded bg-card border border-rose-500/30 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-[11px] whitespace-pre-wrap leading-relaxed">
+                              {s.httpStatusCode ? `HTTP ${s.httpStatusCode} sem mensagem de erro` : 'Erro sem mensagem explícita'}
+                            </pre>
+                          )
+                        )}
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1300,10 +1399,18 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
             {/* Modal Body */}
             <div className="p-4 flex flex-col gap-3 font-mono text-xs">
               <p className="text-muted-foreground leading-relaxed font-sans text-xs">
-                O Dev Manager escuta traces padrão <strong>OpenTelemetry (OTLP/HTTP)</strong> na porta{' '}
-                <code className="text-primary font-bold">{overview?.receiverStatus.port || 4318}</code>.
-                Qualquer aplicação instrumentada envia métricas e spans automaticamente.
+                O Dev Manager escuta traces padrão <strong>OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> na porta{' '}
+                <code className="text-primary font-bold">{receiverPort}</code>. Qualquer aplicação instrumentada envia
+                seus spans automaticamente — métricas e logs OTLP não são coletados.
               </p>
+
+              {overview && !overview.receiverStatus.listening && (
+                <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:bg-rose-950/30 dark:border-rose-800/60 dark:text-rose-300 font-sans text-xs leading-relaxed">
+                  <strong>Receptor inativo:</strong> {overview.receiverStatus.error || 'não foi possível abrir a porta'}.
+                  Se outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o e
+                  reinicie o Dev Manager.
+                </div>
+              )}
 
               {/* Tabs de Conexão */}
               <div className="flex items-center gap-1 border-b border-border pb-1">
@@ -1344,19 +1451,11 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                   </p>
                   <div className="relative">
                     <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-emerald-400 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
-{`set JAVA_OPTS=%JAVA_OPTS% -javaagent:opentelemetry-javaagent.jar ^
-  -Dotel.exporter.otlp.endpoint=http://localhost:4318 ^
-  -Dotel.service.name=karaf-winthor ^
-  -Dotel.traces.sampler=always_on`}
+                      {setupSnippets.karafDisplay}
                     </pre>
                     <button
                       type="button"
-                      onClick={() =>
-                        copyToClipboard(
-                          'set JAVA_OPTS=%JAVA_OPTS% -javaagent:opentelemetry-javaagent.jar -Dotel.exporter.otlp.endpoint=http://localhost:4318 -Dotel.service.name=karaf-winthor',
-                          'karafCmd'
-                        )
-                      }
+                      onClick={() => copyToClipboard(setupSnippets.karafCopy, 'karafCmd')}
                       className="absolute top-2 right-2 px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-200 cursor-pointer flex items-center gap-1"
                     >
                       {copyFeedback === 'karafCmd' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -1374,25 +1473,11 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                   </p>
                   <div className="relative">
                     <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-sky-300 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
-{`curl -X POST http://localhost:4318/v1/traces \\
-  -H "Content-Type: application/json" \\
-  -d '[{
-    "traceId": "trace-manual-01",
-    "spanId": "span-manual-01",
-    "name": "GET /api/v1/ping",
-    "serviceName": "meu-servico",
-    "durationMs": 42,
-    "httpStatusCode": 200
-  }]'`}
+                      {setupSnippets.curlDisplay}
                     </pre>
                     <button
                       type="button"
-                      onClick={() =>
-                        copyToClipboard(
-                          `curl -X POST http://localhost:4318/v1/traces -H "Content-Type: application/json" -d "[{\\"traceId\\":\\"trace-manual-01\\",\\"spanId\\":\\"span-manual-01\\",\\"name\\":\\"GET /api/v1/ping\\",\\"serviceName\\":\\"meu-servico\\",\\"durationMs\\":42,\\"httpStatusCode\\":200}]"`,
-                          'curlCmd'
-                        )
-                      }
+                      onClick={() => copyToClipboard(setupSnippets.curlCopy, 'curlCmd')}
                       className="absolute top-2 right-2 px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-200 cursor-pointer flex items-center gap-1"
                     >
                       {copyFeedback === 'curlCmd' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -1409,10 +1494,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                     Com a biblioteca oficial <code className="text-foreground">@opentelemetry/sdk-node</code>:
                   </p>
                   <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-amber-300 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
-{`const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-const traceExporter = new OTLPTraceExporter({
-  url: 'http://localhost:4318/v1/traces',
-});`}
+                    {setupSnippets.nodeDisplay}
                   </pre>
                 </div>
               )}

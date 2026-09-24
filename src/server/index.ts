@@ -27,7 +27,7 @@ import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
 import { JiraSource } from '../main/services/docSources/JiraSource';
 import { LlmService } from '../main/services/LlmService';
 import { Routine801Service } from '../main/services/Routine801Service';
-import { ApmService } from '../main/services/ApmService';
+import { ApmService, ApmIngestError, MAX_OTLP_BODY_BYTES, OTLP_TRACE_INGEST_PATHS } from '../main/services/ApmService';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -37,7 +37,8 @@ import {
   DocsIndexProgress,
   DocSyncProgress,
   DeployProfile,
-  ApmFilter
+  ApmFilter,
+  DEFAULT_APM_OTLP_PORT
 } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 import { z } from 'zod';
@@ -84,7 +85,9 @@ app.use(
   })
 );
 
-app.use(express.json());
+// As rotas de ingestão OTLP leem o corpo cru (Protobuf, payloads maiores que o limite padrão do JSON)
+const jsonBodyParser = express.json();
+app.use((req, res, next) => (OTLP_TRACE_INGEST_PATHS.includes(req.path) ? next() : jsonBodyParser(req, res, next)));
 
 // Autenticação por API Key (opcional, mas fortemente recomendada quando o painel
 // é exposto além de localhost — todas as rotas abaixo controlam serviços do SO,
@@ -141,6 +144,14 @@ const apmService = new ApmService();
 apmService.onNewTrace = (summary) => {
   broadcastWs('apm:new-trace', summary);
 };
+// Mesmo receptor OTLP dedicado do app desktop, para que as instruções da tela de APM (porta 4318)
+// valham também no modo web. Em Docker a porta precisa ser publicada; alternativamente, os
+// exportadores podem apontar para a própria porta do servidor (rota /v1/traces).
+apmService
+  .startReceiver(Number(process.env.APM_OTLP_PORT) || DEFAULT_APM_OTLP_PORT, process.env.APM_OTLP_HOST || configuredHost)
+  .catch((err) => {
+    console.warn('[ApmService] Falha ao iniciar receptor OTLP:', err);
+  });
 
 // Gerenciamento de conexões WebSocket com proteção contra CSWSH (Cross-Site WebSocket Hijacking)
 const wsClients = new Set<WebSocket>();
@@ -1492,20 +1503,39 @@ app.post('/api/logs/clear-file', async (req, res) => {
 // Rotas de APM & Ingestão OpenTelemetry (OTLP/HTTP)
 // ==========================================
 
-// Ingestão OTLP e simplificada
-const handleTraceIngestion = (req: express.Request, res: express.Response) => {
-  try {
-    const result = apmService.ingestOtlpJson(req.body);
-    res.json({ status: 'success', ...result });
-  } catch (err: any) {
-    res.status(400).json({ error: 'Erro ao processar traces OTLP', message: err?.message });
+// Ingestão OTLP (JSON ou Protobuf, gzip/deflate) e simplificada — mesma decodificação do
+// receptor embutido. O corpo chega cru porque o parser JSON global pula estas rotas.
+app.post(
+  OTLP_TRACE_INGEST_PATHS,
+  // express.raw já descomprime gzip/deflate e aplica o limite ao corpo descomprimido
+  express.raw({ type: () => true, limit: MAX_OTLP_BODY_BYTES }),
+  async (req, res) => {
+    try {
+      const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+      const result = await apmService.ingestOtlpBody(body, req.headers['content-type']);
+      if (result.format === 'protobuf') {
+        res.status(200).type('application/x-protobuf').send(Buffer.alloc(0));
+      } else {
+        res.json({ status: 'success', ingestedSpans: result.ingestedSpans, updatedTraces: result.updatedTraces });
+      }
+    } catch (err: any) {
+      const statusCode = err instanceof ApmIngestError ? err.statusCode : 400;
+      res.status(statusCode).json({ error: 'Erro ao processar traces OTLP', message: err?.message });
+    }
   }
-};
+);
 
-app.post('/v1/traces', handleTraceIngestion);
-app.post('/api/otlp/v1/traces', handleTraceIngestion);
-app.post('/api/telemetry/spans', handleTraceIngestion);
-app.post('/api/telemetry/traces', handleTraceIngestion);
+const apmFilterSchema = z.object({
+  serviceName: z.string().optional(),
+  search: z.string().optional(),
+  hasError: z.boolean().optional(),
+  hasDatabaseQuery: z.boolean().optional(),
+  minDurationMs: z.number().optional(),
+  maxDurationMs: z.number().optional(),
+  limit: z.number().int().positive().optional(),
+  startTimeMs: z.number().optional(),
+  endTimeMs: z.number().optional()
+});
 
 // Consultas e Operações REST
 app.get('/api/apm/overview', (req, res) => {
@@ -1514,7 +1544,11 @@ app.get('/api/apm/overview', (req, res) => {
 });
 
 app.post('/api/apm/traces', (req, res) => {
-  const filter = req.body as ApmFilter;
+  const parsed = apmFilterSchema.safeParse(req.body || {});
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Filtro de traces inválido.', details: parsed.error.issues });
+  }
+  const filter: ApmFilter = parsed.data;
   res.json(apmService.getTraces(filter));
 });
 

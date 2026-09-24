@@ -4,7 +4,8 @@ import {
   readVarint,
   decodeAnyValue,
   decodeKeyValue,
-  skipField
+  skipField,
+  OtlpDecodeError
 } from './otlpProtobufUtils';
 import { parseOtlpTracesPayload } from './apmUtils';
 
@@ -55,19 +56,65 @@ describe('otlpProtobufUtils', () => {
     });
 
     it('deve pular campos com wireType 0, 1, 2, 5 sem erro', () => {
-      const buf = Buffer.concat([
-        encodeVarint(12345),
-        Buffer.alloc(8),
-        encodeLengthDelimited(99, Buffer.from('skipme')),
-        Buffer.alloc(4)
-      ]);
+      // skipField recebe o offset logo após a tag: o campo length-delimited começa pelo comprimento
+      const lengthDelimited = Buffer.concat([encodeVarint(6), Buffer.from('skipme')]);
+      const buf = Buffer.concat([encodeVarint(12345), Buffer.alloc(8), lengthDelimited, Buffer.alloc(4)]);
 
       let offset = 0;
       offset = skipField(buf, offset, 0);
+      expect(offset).toBe(encodeVarint(12345).length);
       offset = skipField(buf, offset, 1);
       offset = skipField(buf, offset, 2);
+      expect(offset).toBe(buf.length - 4);
       offset = skipField(buf, offset, 5);
       expect(offset).toBe(buf.length);
+    });
+  });
+
+  describe('payload malformado ou hostil', () => {
+    it('rejeita varint com mais de 10 bytes sem custo quadrático', () => {
+      const hostile = Buffer.alloc(5 * 1024 * 1024, 0xff);
+      const start = performance.now();
+      expect(() => readVarint(hostile, 0)).toThrow(OtlpDecodeError);
+      expect(() => decodeOtlpProtobufTraces(hostile)).toThrow(OtlpDecodeError);
+      expect(performance.now() - start).toBeLessThan(500);
+    });
+
+    it('rejeita varint truncado no fim do buffer', () => {
+      expect(() => readVarint(Buffer.from([0x80, 0x80]), 0)).toThrow(OtlpDecodeError);
+    });
+
+    it('rejeita campo length-delimited que declara mais bytes do que existem', () => {
+      // resource_spans declarando 127 bytes, com apenas 2 presentes
+      expect(() => decodeOtlpProtobufTraces(Buffer.from([0x0a, 0x7f, 0x01, 0x02]))).toThrow(OtlpDecodeError);
+    });
+
+    it('rejeita campo fixed64 truncado', () => {
+      const span = Buffer.concat([encodeTag(7, 1), Buffer.alloc(3)]);
+      const scope = encodeLengthDelimited(2, span);
+      const resource = encodeLengthDelimited(2, scope);
+      expect(() => decodeOtlpProtobufTraces(encodeLengthDelimited(1, resource))).toThrow(OtlpDecodeError);
+    });
+
+    it('rejeita wire type de grupo (inexistente no OTLP)', () => {
+      expect(() => decodeOtlpProtobufTraces(Buffer.from([0x0b]))).toThrow(OtlpDecodeError);
+    });
+
+    it('ignora chave de atributo __proto__', () => {
+      const kv = (key: string, value: string) =>
+        encodeLengthDelimited(9, Buffer.concat([encodeStringField(1, key), encodeLengthDelimited(2, encodeStringField(1, value))]));
+      const span = Buffer.concat([
+        encodeLengthDelimited(1, Buffer.alloc(16, 1)),
+        encodeLengthDelimited(2, Buffer.alloc(8, 2)),
+        kv('__proto__', 'x'),
+        kv('ok', 'sim')
+      ]);
+      const decoded = decodeOtlpProtobufTraces(
+        encodeLengthDelimited(1, encodeLengthDelimited(2, encodeLengthDelimited(2, span)))
+      );
+      const attrs = decoded.resourceSpans[0].scopeSpans![0].spans[0].attributes!;
+      expect(Object.getPrototypeOf(attrs)).toBe(Object.prototype);
+      expect(attrs).toEqual({ ok: 'sim' });
     });
   });
 
@@ -85,6 +132,16 @@ describe('otlpProtobufUtils', () => {
     it('deve decodificar AnyValue do tipo int', () => {
       const anyBuf = Buffer.concat([encodeTag(3, 0), encodeVarint(42)]);
       expect(decodeAnyValue(anyBuf)).toBe(42);
+    });
+
+    it('deve decodificar int64 negativo (complemento de dois em varint de 10 bytes)', () => {
+      const anyBuf = Buffer.concat([encodeTag(3, 0), encodeVarint(BigInt.asUintN(64, -5n))]);
+      expect(decodeAnyValue(anyBuf)).toBe(-5);
+    });
+
+    it('deve devolver int64 fora do intervalo seguro como string', () => {
+      const anyBuf = Buffer.concat([encodeTag(3, 0), encodeVarint(9_007_199_254_740_993n)]);
+      expect(decodeAnyValue(anyBuf)).toBe('9007199254740993');
     });
 
     it('deve decodificar KeyValue corretamente', () => {
@@ -175,6 +232,34 @@ describe('otlpProtobufUtils', () => {
       expect(span.durationMs).toBe(150);
       expect(span.httpMethod).toBe('GET');
       expect(span.statusCode).toBe('OK');
+    });
+
+    it('deve decodificar evento de exceção do Java Agent e expor o stacktrace no span', () => {
+      const kv = (key: string, value: string) =>
+        Buffer.concat([encodeStringField(1, key), encodeLengthDelimited(2, encodeStringField(1, value))]);
+      const eventBuf = Buffer.concat([
+        encodeFixed64Field(1, 1711200000100000000n),
+        encodeStringField(2, 'exception'),
+        encodeLengthDelimited(3, kv('exception.type', 'java.lang.NullPointerException')),
+        encodeLengthDelimited(3, kv('exception.stacktrace', 'java.lang.NullPointerException\n\tat Foo.bar(Foo.java:10)'))
+      ]);
+      const spanBuf = Buffer.concat([
+        encodeLengthDelimited(1, Buffer.from('0123456789abcdef0123456789abcdef', 'hex')),
+        encodeLengthDelimited(2, Buffer.from('abcdef0123456789', 'hex')),
+        encodeStringField(5, 'POST /pedidos'),
+        encodeFixed64Field(7, 1711200000000000000n),
+        encodeFixed64Field(8, 1711200000200000000n),
+        encodeLengthDelimited(11, eventBuf),
+        encodeLengthDelimited(15, Buffer.concat([encodeTag(3, 0), encodeVarint(2)])) // STATUS_CODE_ERROR
+      ]);
+      const exportReqBuf = encodeLengthDelimited(1, encodeLengthDelimited(2, encodeLengthDelimited(2, spanBuf)));
+
+      const [span] = parseOtlpTracesPayload(decodeOtlpProtobufTraces(exportReqBuf));
+      expect(span.statusCode).toBe('ERROR');
+      expect(span.exception?.type).toBe('java.lang.NullPointerException');
+      expect(span.exception?.stacktrace).toContain('at Foo.bar(Foo.java:10)');
+      expect(span.statusMessage).toBe('java.lang.NullPointerException');
+      expect(span.events?.[0].timestampUnixMs).toBe(1711200000100);
     });
   });
 });

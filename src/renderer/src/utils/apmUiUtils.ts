@@ -1,4 +1,10 @@
-import { TraceSummary, TraceDetails } from '../../../shared/types';
+import {
+  TraceSummary,
+  TraceDetails,
+  TraceSpan,
+  getApmOtlpEndpoint,
+  buildOtelJavaAgentProperties
+} from '../../../shared/types';
 
 export type FilterPreset = 'ALL' | 'ERRORS' | 'SLOW' | 'DB';
 export type LatencyBracket = 'ALL' | 'FAST' | 'NORMAL' | 'SLOW' | 'CRITICAL';
@@ -55,25 +61,17 @@ export function computeLatencySpectrum(traces: TraceSummary[]): LatencySpectrumD
 }
 
 /**
- * Decompõe a duração total do trace entre Banco de Dados (SQL), Chamadas Externas (HTTP)
- * e Processamento Interno da Aplicação (OSGi / CXF / Spring), identificando gargalos.
+ * Converte a decomposição de tempo calculada no backend (banco, chamadas externas e processamento
+ * interno da aplicação — OSGi / CXF / Spring) em percentuais, identificando o gargalo principal.
+ * Os percentuais sempre somam 100: o backend já descontou sobreposições entre categorias.
  */
 export function computeTimeBudget(traceDetails: TraceDetails | null): TimeBudgetData | null {
-  if (!traceDetails?.spans || traceDetails.spans.length === 0) return null;
-  const total = traceDetails.summary.durationMs || 1;
-  let dbTime = 0;
-  let clientHttpTime = 0;
-
-  for (const span of traceDetails.spans) {
-    if (span.dbStatement) {
-      dbTime += span.durationMs;
-    } else if (span.kind === 'CLIENT') {
-      clientHttpTime += span.durationMs;
-    }
-  }
+  if (!traceDetails?.spans || traceDetails.spans.length === 0 || !traceDetails.breakdown) return null;
+  const { totalMs, dbMs: dbTime, externalMs: clientHttpTime } = traceDetails.breakdown;
+  const total = totalMs || 1;
 
   const dbPct = Math.min(100, Math.round((dbTime / total) * 100));
-  const clientPct = Math.min(100, Math.round((clientHttpTime / total) * 100));
+  const clientPct = Math.min(100 - dbPct, Math.round((clientHttpTime / total) * 100));
   const appPct = Math.max(0, 100 - dbPct - clientPct);
 
   let topBottleneck: 'db' | 'app' | 'ext' | 'none' = 'none';
@@ -94,6 +92,62 @@ export function computeTimeBudget(traceDetails: TraceDetails | null): TimeBudget
     appPct,
     hasDbBottleneck: dbPct >= 50,
     topBottleneck
+  };
+}
+
+/**
+ * Incorpora traces recebidos em tempo real à lista exibida: substitui versões antigas do mesmo
+ * trace (ex.: o span raiz chegou depois dos filhos), mantém a ordem por início (mais recente
+ * primeiro) — um trace antigo que recebeu um span atrasado não pula para o topo — e respeita o limite.
+ */
+export function mergeLiveTraces(current: TraceSummary[], incoming: TraceSummary[], limit: number): TraceSummary[] {
+  if (incoming.length === 0) return current;
+  const byId = new Map<string, TraceSummary>();
+  for (const t of current) byId.set(t.traceId, t);
+  for (const t of incoming) byId.set(t.traceId, t);
+  return Array.from(byId.values())
+    .sort((a, b) => b.startTimeUnixMs - a.startTimeUnixMs)
+    .slice(0, Math.max(1, limit));
+}
+
+/**
+ * Texto completo da exceção de um span para copiar (tipo, mensagem e stacktrace).
+ */
+export function formatSpanErrorForClipboard(span: TraceSpan): string {
+  const headline = [span.exception?.type, span.exception?.message].filter(Boolean).join(': ');
+  const stacktrace = span.exception?.stacktrace;
+  // O stacktrace Java já começa com "Tipo: mensagem"; repetir a linha só polui a cópia
+  if (stacktrace) return headline && !stacktrace.startsWith(headline) ? `${headline}\n${stacktrace}` : stacktrace;
+  return headline || span.statusMessage || '';
+}
+
+/**
+ * Snippets da tela "Como Conectar", montados a partir da porta real do receptor.
+ */
+export function buildApmSetupSnippets(port: number) {
+  const endpoint = getApmOtlpEndpoint(port);
+  const agentOptions = ['-javaagent:opentelemetry-javaagent.jar', ...buildOtelJavaAgentProperties(port)];
+  const curlBody = '[{"traceId":"trace-manual-01","spanId":"span-manual-01","name":"GET /api/v1/ping","serviceName":"meu-servico","durationMs":42,"httpStatusCode":200}]';
+
+  return {
+    endpoint,
+    tracesUrl: `${endpoint}/v1/traces`,
+    karafDisplay: `set JAVA_OPTS=%JAVA_OPTS% ${agentOptions.join(' ^\n  ')}`,
+    karafCopy: `set JAVA_OPTS=%JAVA_OPTS% ${agentOptions.join(' ')}`,
+    curlDisplay: [
+      `curl -X POST ${endpoint}/v1/traces \\`,
+      '  -H "Content-Type: application/json" \\',
+      `  -d '${curlBody}'`
+    ].join('\n'),
+    // Aspas duplas escapadas: o cmd.exe do Windows não reconhece aspas simples
+    curlCopy: `curl -X POST ${endpoint}/v1/traces -H "Content-Type: application/json" -d "${curlBody.replace(/"/g, '\\"')}"`,
+    powershellCopy: `Invoke-RestMethod -Uri "${endpoint}/v1/traces" -Method POST -ContentType "application/json" -Body '{"resourceSpans":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"winthor-teste"}}]},"scopeSpans":[{"spans":[{"traceId":"4bf92f3577b34da6a3ce929d0e0e4736","spanId":"00f067aa0ba902b7","name":"GET /teste-cockpit","kind":2,"startTimeUnixNano":"1711200000000000000","endTimeUnixNano":"1711200000085000000","status":{"code":1}}]}]}]}'`,
+    nodeDisplay: [
+      "const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');",
+      'const traceExporter = new OTLPTraceExporter({',
+      `  url: '${endpoint}/v1/traces',`,
+      '});'
+    ].join('\n')
   };
 }
 
@@ -217,7 +271,9 @@ export function splitSqlTokens(sql: string): Array<{ text: string; isKeyword: bo
     'THEN', 'ELSE', 'END', 'EXISTS', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'DISTINCT'
   ]);
 
-  const regex = /(\b[A-Za-z_][A-Za-z0-9_]*\b|[^\s\w]+|\s+)/g;
+  // As alternativas cobrem todo caractere (identificador, número, símbolo, espaço): um trecho sem
+  // alternativa seria pulado pelo exec e sumiria da exibição (ex.: os números de VALUES (1, 2))
+  const regex = /([A-Za-z_][A-Za-z0-9_]*|\d+|[^\sA-Za-z0-9_]+|\s+)/g;
   const tokens: Array<{ text: string; isKeyword: boolean }> = [];
   let match: RegExpExecArray | null;
 

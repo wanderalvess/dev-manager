@@ -3,6 +3,7 @@ import {
   unpackOtelAttributeValue,
   normalizeOtelAttributes,
   parseOtlpTracesPayload,
+  decodeOtlpTraceBody,
   buildTraceSummary,
   buildTraceTree,
   computePercentiles,
@@ -10,10 +11,52 @@ import {
   aggregateEndpointMetrics,
   aggregateSlowQueries,
   computeDatabaseTimeRatio,
+  computeTraceTimeBreakdown,
+  filterTraceSummaries,
   aggregateTimeSeriesBuckets,
+  buildCompactTraceDetails,
   generateMockTraces
 } from './apmUtils';
-import { TraceSpan } from '../../shared/types';
+import { TraceSpan, TraceSummary } from '../../shared/types';
+
+const makeSpan = (partial: Partial<TraceSpan>): TraceSpan => ({
+  traceId: 't1',
+  spanId: 's1',
+  name: 'span',
+  kind: 'INTERNAL',
+  serviceName: 'karaf',
+  startTimeUnixMs: 1000,
+  endTimeUnixMs: 1100,
+  durationMs: 100,
+  statusCode: 'UNSET',
+  attributes: {},
+  ...partial
+});
+
+const makeSummary = (partial: Partial<TraceSummary>): TraceSummary => ({
+  traceId: 't1',
+  rootSpanName: 'GET /api',
+  serviceName: 'karaf',
+  startTimeUnixMs: 1000,
+  durationMs: 100,
+  spanCount: 1,
+  hasError: false,
+  errorCount: 0,
+  hasDatabaseQuery: false,
+  ...partial
+});
+
+// PRNG determinístico (mulberry32) para testar geração de dados simulados
+function seededRandom(seed: number): () => number {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 describe('apmUtils', () => {
   describe('unpackOtelAttributeValue & normalizeOtelAttributes', () => {
@@ -279,6 +322,31 @@ describe('apmUtils', () => {
       // Deve ter pelo menos um span com query de banco
       expect(mockSpans.some((s) => !!s.dbStatement)).toBe(true);
     });
+
+    it('usa IDs novos a cada lote, para que simular de novo some tráfego em vez de sobrescrever', () => {
+      const now = 1_711_200_000_000;
+      const first = new Set(generateMockTraces(now, seededRandom(1)).map((s) => s.traceId));
+      const second = generateMockTraces(now, seededRandom(2)).map((s) => s.traceId);
+      expect(second.some((id) => first.has(id))).toBe(false);
+      expect([...first].every((id) => /^[0-9a-f]{32}$/.test(id))).toBe(true);
+    });
+
+    it('espalha o tráfego pela janela do gráfico e inclui stacktrace, 4xx e chamada externa', () => {
+      const now = 1_711_200_000_000;
+      const spans = generateMockTraces(now, seededRandom(42));
+
+      expect(spans.every((s) => s.startTimeUnixMs >= now - 15 * 60_000 && s.endTimeUnixMs <= now)).toBe(true);
+      const buckets = aggregateTimeSeriesBuckets(
+        Array.from(new Set(spans.map((s) => s.traceId)), (id) => buildTraceSummary(id, spans.filter((s) => s.traceId === id))),
+        15,
+        now
+      );
+      expect(buckets.filter((b) => b.requestCount > 0).length).toBeGreaterThan(3);
+
+      expect(spans.some((s) => !!s.exception?.stacktrace)).toBe(true);
+      expect(spans.some((s) => s.kind === 'SERVER' && s.httpStatusCode === 404)).toBe(true);
+      expect(spans.some((s) => s.kind === 'CLIENT' && !s.dbStatement && !!s.httpUrl)).toBe(true);
+    });
   });
 
   describe('aggregateSlowQueries', () => {
@@ -382,6 +450,255 @@ describe('apmUtils', () => {
 
     it('retorna 0 para spans vazios', () => {
       expect(computeDatabaseTimeRatio([])).toBe(0);
+    });
+
+    it('não infla o denominador com spans SERVER aninhados de trace distribuído', () => {
+      const spans = [
+        makeSpan({ spanId: 'gw', kind: 'SERVER', startTimeUnixMs: 0, durationMs: 1000 }),
+        makeSpan({ spanId: 'call', parentSpanId: 'gw', kind: 'CLIENT', startTimeUnixMs: 10, durationMs: 900 }),
+        makeSpan({ spanId: 'karaf', parentSpanId: 'call', kind: 'SERVER', startTimeUnixMs: 20, durationMs: 800 }),
+        makeSpan({ spanId: 'db', parentSpanId: 'karaf', kind: 'CLIENT', startTimeUnixMs: 30, durationMs: 500, dbStatement: 'SELECT 1' })
+      ];
+      // 500ms de banco em um trace de 1000ms (antes: 500 / (1000 + 800) = 27.8%)
+      expect(computeDatabaseTimeRatio(spans)).toBe(50);
+    });
+
+    it('agrega por trace, sem misturar a duração de traces diferentes', () => {
+      const spans = [
+        makeSpan({ traceId: 'a', spanId: 'a-root', kind: 'SERVER', startTimeUnixMs: 0, durationMs: 100 }),
+        makeSpan({ traceId: 'a', spanId: 'a-db', parentSpanId: 'a-root', kind: 'CLIENT', startTimeUnixMs: 0, durationMs: 100, dbStatement: 'SELECT 1' }),
+        makeSpan({ traceId: 'b', spanId: 'b-root', kind: 'SERVER', startTimeUnixMs: 5000, durationMs: 300 })
+      ];
+      expect(computeDatabaseTimeRatio(spans)).toBe(25);
+    });
+  });
+
+  describe('computeTraceTimeBreakdown', () => {
+    it('conta uma única vez queries paralelas ou aninhadas', () => {
+      const spans = [
+        makeSpan({ spanId: 'root', kind: 'SERVER', startTimeUnixMs: 0, durationMs: 1000 }),
+        makeSpan({ spanId: 'q1', kind: 'CLIENT', startTimeUnixMs: 100, durationMs: 400, dbStatement: 'SELECT A' }),
+        makeSpan({ spanId: 'q2', kind: 'CLIENT', startTimeUnixMs: 300, durationMs: 400, dbStatement: 'SELECT B' })
+      ];
+      const breakdown = computeTraceTimeBreakdown(spans);
+      expect(breakdown).toEqual({ totalMs: 1000, dbMs: 600, externalMs: 0, appMs: 400 });
+    });
+
+    it('não conta como chamada externa o banco executado dentro dela por outro serviço', () => {
+      const spans = [
+        makeSpan({ spanId: 'root', kind: 'SERVER', startTimeUnixMs: 0, durationMs: 1000 }),
+        makeSpan({ spanId: 'http', kind: 'CLIENT', startTimeUnixMs: 100, durationMs: 600, httpMethod: 'POST' }),
+        makeSpan({ spanId: 'remote-db', kind: 'CLIENT', startTimeUnixMs: 200, durationMs: 300, dbStatement: 'UPDATE X' })
+      ];
+      const breakdown = computeTraceTimeBreakdown(spans);
+      expect(breakdown.dbMs).toBe(300);
+      expect(breakdown.externalMs).toBe(300);
+      expect(breakdown.appMs).toBe(400);
+      expect(breakdown.dbMs + breakdown.externalMs + breakdown.appMs).toBe(breakdown.totalMs);
+    });
+
+    it('reconhece span de banco sem statement (ex.: Redis) pelo db.system em spans CLIENT', () => {
+      const spans = [
+        makeSpan({ spanId: 'root', kind: 'SERVER', startTimeUnixMs: 0, durationMs: 100 }),
+        makeSpan({ spanId: 'redis', kind: 'CLIENT', startTimeUnixMs: 10, durationMs: 20, dbSystem: 'redis' })
+      ];
+      expect(computeTraceTimeBreakdown(spans).dbMs).toBe(20);
+    });
+
+    it('respeita a duração informada do trace e nunca excede o total', () => {
+      const spans = [makeSpan({ spanId: 'db', kind: 'CLIENT', startTimeUnixMs: 0, durationMs: 500, dbStatement: 'SELECT 1' })];
+      expect(computeTraceTimeBreakdown(spans, 200)).toEqual({ totalMs: 200, dbMs: 200, externalMs: 0, appMs: 0 });
+    });
+  });
+
+  describe('decodeOtlpTraceBody', () => {
+    it('lê array JSON simplificado (exemplo cURL da tela "Como Conectar")', () => {
+      const body = Buffer.from('[{"traceId":"t","spanId":"s","name":"GET /ping","durationMs":42}]');
+      const { format, payload } = decodeOtlpTraceBody(body, 'application/json');
+      expect(format).toBe('json');
+      expect(parseOtlpTracesPayload(payload)).toHaveLength(1);
+    });
+
+    it('detecta JSON com espaços iniciais ou BOM mesmo sem Content-Type', () => {
+      const bom = Buffer.from([0xef, 0xbb, 0xbf]);
+      const pretty = Buffer.concat([bom, Buffer.from(['', '  {"spans":[{"traceId":"t","spanId":"s"}]}'].join('\n'))]);
+      const { format, payload } = decodeOtlpTraceBody(pretty, 'text/plain');
+      expect(format).toBe('json');
+      expect(parseOtlpTracesPayload(payload)).toHaveLength(1);
+    });
+
+    it('trata como protobuf um corpo binário que começa com 0x0a seguido de 0x7b', () => {
+      // 0x0a = tag de resource_spans (e também '\n'); 0x7b = comprimento 123 (e também '{')
+      const scopeSpans = Buffer.concat([Buffer.from([0x1a, 119]), Buffer.alloc(119, 0x61)]); // schema_url
+      const resourceSpans = Buffer.concat([Buffer.from([0x12, scopeSpans.length]), scopeSpans]);
+      expect(resourceSpans.length).toBe(0x7b);
+      const body = Buffer.concat([Buffer.from([0x0a, resourceSpans.length]), resourceSpans]);
+
+      const { format, payload } = decodeOtlpTraceBody(body);
+      expect(format).toBe('protobuf');
+      expect((payload as any).resourceSpans).toHaveLength(1);
+    });
+
+    it('respeita Content-Type protobuf e propaga erro de payload malformado', () => {
+      expect(() => decodeOtlpTraceBody(Buffer.from([0x0a, 0x7f, 0x01]), 'application/x-protobuf')).toThrow();
+    });
+  });
+
+  describe('conversão de span (convenções semânticas)', () => {
+    it('extrai exceção do evento "exception" e usa como mensagem de erro do span', () => {
+      const [span] = parseOtlpTracesPayload([
+        {
+          traceId: 't',
+          spanId: 's',
+          name: 'SELECT PCNFSAID',
+          status: { code: 2 },
+          events: [
+            {
+              name: 'exception',
+              timeUnixNano: '1711200000000000000',
+              attributes: [
+                { key: 'exception.type', value: { stringValue: 'java.sql.SQLException' } },
+                { key: 'exception.message', value: { stringValue: 'ORA-00001' } },
+                { key: 'exception.stacktrace', value: { stringValue: 'java.sql.SQLException: ORA-00001\n\tat Foo.bar(Foo.java:1)' } }
+              ]
+            }
+          ]
+        }
+      ]);
+      expect(span.exception).toEqual({
+        type: 'java.sql.SQLException',
+        message: 'ORA-00001',
+        stacktrace: 'java.sql.SQLException: ORA-00001\n\tat Foo.bar(Foo.java:1)'
+      });
+      expect(span.statusMessage).toBe('java.sql.SQLException: ORA-00001');
+    });
+
+    it('não transforma exceção tratada (span sem ERROR) em mensagem de erro', () => {
+      const [span] = parseOtlpTracesPayload([
+        {
+          traceId: 't',
+          spanId: 's',
+          events: [{ name: 'exception', attributes: { 'exception.type': 'java.io.IOException' } }]
+        }
+      ]);
+      expect(span.exception?.type).toBe('java.io.IOException');
+      expect(span.statusMessage).toBeUndefined();
+    });
+
+    it('entende a convenção estável de banco (db.query.text, db.namespace, db.system.name)', () => {
+      const [span] = parseOtlpTracesPayload([
+        {
+          traceId: 't',
+          spanId: 's',
+          attributes: {
+            'db.system.name': 'oracle',
+            'db.query.text': 'SELECT * FROM PCPEDC',
+            'db.namespace': 'WINT'
+          }
+        }
+      ]);
+      expect(span.dbSystem).toBe('oracle');
+      expect(span.dbStatement).toBe('SELECT * FROM PCPEDC');
+      expect(span.dbName).toBe('WINT');
+    });
+
+    it('remove a query string de http.target para não explodir o agrupamento por endpoint', () => {
+      const [span] = parseOtlpTracesPayload([
+        { traceId: 't', spanId: 's', attributes: { 'http.target': '/winthor/api/v1/pedidos?page=2&size=50' } }
+      ]);
+      expect(span.httpRoute).toBe('/winthor/api/v1/pedidos');
+    });
+
+    it('calcula o fim do span a partir de durationMs no formato simplificado', () => {
+      const [span] = parseOtlpTracesPayload([{ traceId: 't', spanId: 's', startTimeUnixMs: 1711200000000, durationMs: 42 }]);
+      expect(span.endTimeUnixMs - span.startTimeUnixMs).toBe(42);
+      expect(buildTraceTree([span])[0].widthPercent).toBe(100);
+    });
+
+    it('registra o escopo de instrumentação do OTLP como atributo', () => {
+      const [span] = parseOtlpTracesPayload({
+        resourceSpans: [{ scopeSpans: [{ scope: { name: 'io.opentelemetry.jdbc' }, spans: [{ traceId: 't', spanId: 's' }] }] }]
+      });
+      expect(span.attributes['otel.scope.name']).toBe('io.opentelemetry.jdbc');
+    });
+
+    it('ignora atributo com chave __proto__ sem alterar o protótipo do objeto', () => {
+      const attrs = normalizeOtelAttributes([
+        { key: '__proto__', value: { kvlistValue: { values: [{ key: 'polluted', value: { boolValue: true } }] } } },
+        { key: 'ok', value: { stringValue: 'sim' } }
+      ]);
+      expect(attrs).toEqual({ ok: 'sim' });
+      expect((attrs as any).polluted).toBeUndefined();
+    });
+  });
+
+  describe('buildTraceSummary (escolha do span raiz)', () => {
+    it('prefere o span sem pai, mesmo que tenha chegado depois dos filhos', () => {
+      const spans = [
+        makeSpan({ spanId: 'db', parentSpanId: 'root', name: 'SELECT PCPEDC', startTimeUnixMs: 1010, durationMs: 50 }),
+        makeSpan({ spanId: 'orphan', parentSpanId: 'missing', name: 'orphan', startTimeUnixMs: 1005, durationMs: 5 }),
+        makeSpan({ spanId: 'root', name: 'GET /pedidos', kind: 'SERVER', startTimeUnixMs: 1000, durationMs: 100 })
+      ];
+      expect(buildTraceSummary('t1', spans).rootSpanName).toBe('GET /pedidos');
+    });
+
+    it('sem raiz recebida ainda, usa o órfão mais antigo', () => {
+      const spans = [
+        makeSpan({ spanId: 'late', parentSpanId: 'root', name: 'late', startTimeUnixMs: 1050 }),
+        makeSpan({ spanId: 'early', parentSpanId: 'root', name: 'early', startTimeUnixMs: 1010 })
+      ];
+      expect(buildTraceSummary('t1', spans).rootSpanName).toBe('early');
+    });
+  });
+
+  describe('filterTraceSummaries', () => {
+    const traces = [
+      makeSummary({ traceId: 'old', startTimeUnixMs: 1_000, serviceName: 'karaf' }),
+      makeSummary({ traceId: 'new', startTimeUnixMs: 9_000, serviceName: 'Karaf' }),
+      makeSummary({ traceId: 'other', startTimeUnixMs: 9_500, serviceName: 'gateway' })
+    ];
+
+    it('aplica janela de tempo e serviço sem diferenciar maiúsculas', () => {
+      const res = filterTraceSummaries(traces, { serviceName: 'KARAF', startTimeMs: 5_000 });
+      expect(res.map((t) => t.traceId)).toEqual(['new']);
+    });
+
+    it('sem filtro devolve uma cópia (quem ordena não altera a origem)', () => {
+      const res = filterTraceSummaries(traces);
+      expect(res).toEqual(traces);
+      expect(res).not.toBe(traces);
+    });
+  });
+
+  describe('aggregateEndpointMetrics (nomes com separadores)', () => {
+    it('não corrompe rotas ou nomes de span que contêm "::"', () => {
+      const endpoints = aggregateEndpointMetrics([
+        makeSummary({ traceId: '1', rootSpanName: 'PedidoService::listar', httpMethod: undefined, httpRoute: undefined })
+      ]);
+      expect(endpoints[0].route).toBe('PedidoService::listar');
+      expect(endpoints[0].method).toBe('HTTP');
+    });
+  });
+
+  describe('buildCompactTraceDetails', () => {
+    it('lista spans na ordem do waterfall com profundidade e trunca textos longos', () => {
+      const spans = [
+        makeSpan({ spanId: 'db', parentSpanId: 'root', kind: 'CLIENT', startTimeUnixMs: 1010, durationMs: 50, dbStatement: 'X'.repeat(50) }),
+        makeSpan({ spanId: 'root', kind: 'SERVER', startTimeUnixMs: 1000, durationMs: 100, attributes: { big: 'y'.repeat(400) } })
+      ];
+      const summary = buildTraceSummary('t1', spans);
+      const compact = buildCompactTraceDetails(
+        { summary, spans, rootTree: buildTraceTree(spans), breakdown: computeTraceTimeBreakdown(spans, summary.durationMs) },
+        20
+      );
+
+      expect(compact.spans.map((s) => [s.spanId, s.depth, s.offsetMs])).toEqual([
+        ['root', 0, 0],
+        ['db', 1, 10]
+      ]);
+      expect(compact.spans[1].db?.statement).toContain('(+30 caracteres)');
+      expect(String(compact.spans[0].attributes.big)).toContain('(+100 caracteres)');
+      expect(compact.breakdown.dbMs).toBe(50);
     });
   });
 

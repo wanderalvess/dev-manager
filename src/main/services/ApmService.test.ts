@@ -1,6 +1,50 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ApmService } from './ApmService';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import http from 'http';
+import zlib from 'zlib';
+import { ApmService, ApmIngestError, MAX_OTLP_BODY_BYTES } from './ApmService';
 import { TraceSpan } from '../../shared/types';
+
+const makeSpan = (partial: Partial<TraceSpan>): TraceSpan => {
+  const base: TraceSpan = {
+    traceId: 't1',
+    spanId: 's1',
+    name: 'GET /api',
+    kind: 'SERVER',
+    serviceName: 'karaf',
+    startTimeUnixMs: 1000,
+    endTimeUnixMs: 0,
+    durationMs: 100,
+    statusCode: 'UNSET',
+    attributes: {},
+    ...partial
+  };
+  return { ...base, endTimeUnixMs: partial.endTimeUnixMs ?? base.startTimeUnixMs + base.durationMs };
+};
+
+function postToReceiver(
+  port: number,
+  body: Buffer | string,
+  headers: Record<string, string | number>
+): Promise<{ statusCode: number; contentType?: string; body: string }> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const req = http.request({ hostname: '127.0.0.1', port, path: '/v1/traces', method: 'POST', headers }, (res) => {
+      const chunks: Buffer[] = [];
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve({ statusCode: res.statusCode || 0, contentType: res.headers['content-type'], body: Buffer.concat(chunks).toString() });
+      };
+      res.on('data', (c: Buffer) => chunks.push(c));
+      res.on('end', finish);
+      res.on('close', finish);
+    });
+    req.on('error', (err) => {
+      if (!settled) reject(err);
+    });
+    req.end(body);
+  });
+}
 
 describe('ApmService', () => {
   let apmService: ApmService;
@@ -164,6 +208,162 @@ describe('ApmService', () => {
     expect(details?.rootTree).toHaveLength(1);
     expect(details?.rootTree[0].children).toHaveLength(1);
     expect(details?.rootTree[0].children[0].span.dbStatement).toBe('SELECT * FROM PCPRODUT');
+    expect(details?.breakdown).toEqual({ totalMs: 200, dbMs: 160, externalMs: 0, appMs: 40 });
+  });
+
+  it('aplica o filtro de serviço a todas as métricas do overview, não só às latências', () => {
+    const now = Date.now();
+    apmService.ingestSpans([
+      makeSpan({ traceId: 'k', spanId: 'root', serviceName: 'karaf', startTimeUnixMs: now - 1000, durationMs: 100 }),
+      makeSpan({
+        traceId: 'k',
+        spanId: 'db',
+        parentSpanId: 'root',
+        kind: 'CLIENT',
+        serviceName: 'karaf',
+        startTimeUnixMs: now - 990,
+        durationMs: 50,
+        dbStatement: 'SELECT 1'
+      }),
+      makeSpan({ traceId: 'g', spanId: 'root', serviceName: 'gateway', startTimeUnixMs: now - 500, durationMs: 10, statusCode: 'ERROR' })
+    ]);
+
+    const overview = apmService.getOverview({ serviceName: 'gateway' });
+    expect(overview.totalTraces).toBe(1);
+    expect(overview.totalSpans).toBe(1);
+    expect(overview.errorRate).toBe(100);
+    expect(overview.slowQueries).toEqual([]);
+    expect(overview.dbTimePercentage).toBe(0);
+    expect(overview.timeSeries.reduce((acc, b) => acc + b.requestCount, 0)).toBe(1);
+    // O status do receptor continua descrevendo o buffer inteiro
+    expect(overview.receiverStatus.bufferSize).toBe(2);
+
+    expect(apmService.getOverview().dbTimePercentage).toBeGreaterThan(0);
+  });
+
+  it('filtra traces por janela de tempo', () => {
+    apmService.ingestSpans([
+      makeSpan({ traceId: 'old', startTimeUnixMs: 1000 }),
+      makeSpan({ traceId: 'new', startTimeUnixMs: 5000 })
+    ]);
+    expect(apmService.getTraces({ startTimeMs: 2000 }).map((t) => t.traceId)).toEqual(['new']);
+    expect(apmService.getTraces({ endTimeMs: 2000 }).map((t) => t.traceId)).toEqual(['old']);
+  });
+
+  it('despeja o trace menos recentemente atualizado ao exceder o limite (LRU)', () => {
+    const service = new ApmService(500);
+    for (let i = 0; i < 500; i++) {
+      service.ingestSpans([makeSpan({ traceId: `t${i}`, spanId: 'root', startTimeUnixMs: 1000 + i })]);
+    }
+    // t0 é o mais antigo, mas acabou de receber um span atrasado: continua ativo
+    service.ingestSpans([makeSpan({ traceId: 't0', spanId: 'late', parentSpanId: 'root' })]);
+    service.ingestSpans([makeSpan({ traceId: 't500', spanId: 'root' })]);
+
+    expect(service.getReceiverStatus().bufferSize).toBe(500);
+    expect(service.getTraceDetails('t0')?.spans).toHaveLength(2);
+    expect(service.getTraceDetails('t1')).toBeNull();
+    expect(service.getTraceDetails('t500')).not.toBeNull();
+  });
+
+  it('descarta spans acima do limite por trace e contabiliza no status do receptor', () => {
+    const service = new ApmService(500, { maxSpansPerTrace: 3 });
+    const res = service.ingestSpans([1, 2, 3, 4, 5].map((i) => makeSpan({ spanId: `s${i}` })));
+
+    expect(res.ingestedSpans).toBe(3);
+    expect(service.getTraceDetails('t1')?.spans).toHaveLength(3);
+    expect(service.getReceiverStatus().droppedSpans).toBe(2);
+
+    // Re-emissão de um span já guardado continua permitida
+    expect(service.ingestSpans([makeSpan({ spanId: 's1', durationMs: 999 })]).ingestedSpans).toBe(1);
+    expect(service.getReceiverStatus().droppedSpans).toBe(2);
+  });
+
+  it('respeita o teto global de spans despejando os traces mais antigos', () => {
+    const service = new ApmService(500, { maxSpans: 10 });
+    for (let i = 0; i < 5; i++) {
+      service.ingestSpans(['a', 'b', 'c'].map((spanId) => makeSpan({ traceId: `t${i}`, spanId })));
+    }
+
+    expect(service.getOverview().totalSpans).toBeLessThanOrEqual(10);
+    expect(service.getTraceDetails('t0')).toBeNull();
+    expect(service.getTraceDetails('t4')).not.toBeNull();
+  });
+
+  it('rejeita payload comprimido que estoura o limite ao descomprimir (zip bomb)', async () => {
+    const bomb = zlib.gzipSync(Buffer.alloc(MAX_OTLP_BODY_BYTES + 1024, 0x20));
+    expect(bomb.length).toBeLessThan(100 * 1024);
+
+    const err = await apmService.ingestOtlpBody(bomb, 'application/json', 'gzip').catch((e) => e);
+    expect(err).toBeInstanceOf(ApmIngestError);
+    expect(err.statusCode).toBe(413);
+  });
+
+  describe('receptor HTTP (porta dinâmica)', () => {
+    let service: ApmService;
+    let port: number;
+
+    beforeEach(async () => {
+      service = new ApmService();
+      expect(await service.startReceiver(0)).toBe(true);
+      port = service.getReceiverStatus().port;
+    });
+
+    afterEach(async () => {
+      await service.stopReceiver();
+    });
+
+    it('reporta a porta real escolhida pelo SO', () => {
+      expect(port).toBeGreaterThan(0);
+      expect(service.getReceiverStatus().listening).toBe(true);
+    });
+
+    it('ingere o array JSON simplificado do exemplo cURL do app (antes era tratado como protobuf)', async () => {
+      const body = JSON.stringify([
+        { traceId: 'trace-manual-01', spanId: 'span-manual-01', name: 'GET /api/v1/ping', serviceName: 'meu-servico', durationMs: 42 }
+      ]);
+      const res = await postToReceiver(port, body, { 'Content-Type': 'application/json' });
+
+      expect(res.statusCode).toBe(200);
+      expect(JSON.parse(res.body)).toMatchObject({ status: 'success', ingestedSpans: 1 });
+      expect(service.getTraces().map((t) => t.traceId)).toEqual(['trace-manual-01']);
+    });
+
+    it('ingere JSON OTLP comprimido com gzip', async () => {
+      const payload = {
+        resourceSpans: [
+          {
+            resource: { attributes: [{ key: 'service.name', value: { stringValue: 'karaf-winthor' } }] },
+            scopeSpans: [{ spans: [{ traceId: 'gz-trace', spanId: 'gz-span', name: 'GET /gz', kind: 2 }] }]
+          }
+        ]
+      };
+      const res = await postToReceiver(port, zlib.gzipSync(JSON.stringify(payload)), {
+        'Content-Type': 'application/json',
+        'Content-Encoding': 'gzip'
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(service.getTraces()[0]).toMatchObject({ traceId: 'gz-trace', serviceName: 'karaf-winthor' });
+    });
+
+    it('responde 400 para protobuf malformado', async () => {
+      const res = await postToReceiver(port, Buffer.from([0x0a, 0x7f, 0x01]), { 'Content-Type': 'application/x-protobuf' });
+      expect(res.statusCode).toBe(400);
+      expect(service.getTraces()).toHaveLength(0);
+    });
+
+    it('responde 413 (não-retentável) quando o corpo declarado excede o limite', async () => {
+      const res = await postToReceiver(port, Buffer.from('{}'), {
+        'Content-Type': 'application/json',
+        'Content-Length': MAX_OTLP_BODY_BYTES + 1
+      });
+      expect(res.statusCode).toBe(413);
+    });
+
+    it('responde 415 para Content-Encoding não suportado', async () => {
+      const res = await postToReceiver(port, Buffer.from('{}'), { 'Content-Type': 'application/json', 'Content-Encoding': 'br' });
+      expect(res.statusCode).toBe(415);
+    });
   });
 
   it('respeita o limite do buffer descartando o trace mais antigo', () => {
@@ -216,7 +416,6 @@ describe('ApmService', () => {
       ]);
 
       const res = await new Promise<{ statusCode: number; contentType: string }>((resolve, reject) => {
-        const http = require('http');
         const req = http.request(
           {
             hostname: '127.0.0.1',

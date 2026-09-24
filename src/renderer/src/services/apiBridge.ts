@@ -1667,8 +1667,12 @@ export function initApiBridge() {
 }
 
 /**
- * Instância exportada para conveniência de importação direta,
- * apontando para a interface `window.electronAPI`.
+ * Instância exportada para conveniência de importação direta, apontando para a interface
+ * `window.electronAPI`. Resolvida a cada acesso: no modo Web o bridge só é instalado por
+ * `initApiBridge()`, que roda depois de este módulo ser avaliado (import em main.tsx) — capturar
+ * o valor na carga deixaria `api` indefinido para sempre fora do Electron.
  */
-export const api = (typeof window !== 'undefined' ? (window as any).electronAPI : undefined) as typeof window.electronAPI;
+export const api = new Proxy({} as typeof window.electronAPI, {
+  get: (_target, prop) => (typeof window !== 'undefined' ? (window as any).electronAPI?.[prop] : undefined)
+});
 

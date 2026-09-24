@@ -32,6 +32,7 @@ import { LogWatcherService } from '../main/services/LogWatcherService';
 import { LlmService } from '../main/services/LlmService';
 import { Routine801Service } from '../main/services/Routine801Service';
 import { ApmService } from '../main/services/ApmService';
+import { buildCompactTraceDetails } from '../main/utils/apmUtils';
 import * as cron from 'node-cron';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
 import { analyzeExplainPlan } from '../main/services/explainAnalyzer';
@@ -1909,69 +1910,114 @@ server.registerTool(
 // Tools de APM & Observabilidade (OpenTelemetry / SigNoz)
 // ==========================================
 
-server.tool(
+// O buffer de traces vive na memória do processo que recebe os spans (app desktop ou servidor web,
+// porta 4318). Este processo MCP não sobe receptor próprio para não tomar a porta do app; o aviso
+// impede o assistente de concluir "não houve tráfego" a partir do buffer vazio deste processo.
+const APM_EMPTY_BUFFER_NOTICE =
+  'O buffer de APM deste processo MCP está vazio: os spans OTLP são recebidos pelo app Dev Manager ' +
+  '(desktop ou servidor web, porta 4318), que roda em outro processo. Consulte a tela "APM & Traces" do app.';
+
+function withApmBufferNotice<T extends object>(data: T): T & { notice?: string } {
+  return apmService.getReceiverStatus().bufferSize > 0 ? data : { ...data, notice: APM_EMPTY_BUFFER_NOTICE };
+}
+
+const apmLastMinutesSchema = z
+  .number()
+  .int()
+  .positive()
+  .max(24 * 60)
+  .optional()
+  .describe('Considerar apenas traces iniciados nos últimos N minutos');
+
+server.registerTool(
   'apm_get_overview',
-  'Retorna métricas consolidadas de observabilidade e APM (throughput RPS, taxa de erro, latências p50/p95/p99, serviços ativos e status do receptor OTLP).',
   {
-    serviceName: z.string().optional().describe('Filtrar métricas para um serviço específico')
+    title: 'Métricas consolidadas de APM',
+    description:
+      'Retorna métricas consolidadas de observabilidade e APM (throughput RPS, taxa de erro, latências p50/p95/p99, % do tempo gasto em banco, top endpoints, queries lentas e status do receptor OTLP).',
+    inputSchema: {
+      serviceName: z.string().optional().describe('Filtrar métricas para um serviço específico'),
+      lastMinutes: apmLastMinutesSchema
+    }
   },
-  async ({ serviceName }) => {
+  async ({ serviceName, lastMinutes }) => {
     try {
-      const overview = apmService.getOverview({ serviceName });
-      return ok(overview);
+      const overview = apmService.getOverview({
+        serviceName,
+        startTimeMs: lastMinutes ? Date.now() - lastMinutes * 60_000 : undefined
+      });
+      return ok(withApmBufferNotice(overview));
     } catch (err: any) {
       return fail(err?.message || 'Falha ao obter overview de APM.');
     }
   }
 );
 
-server.tool(
+server.registerTool(
   'apm_get_traces',
-  'Busca e filtra requisições/traces recentes coletados pelo APM (suporta filtro por serviço, busca por rota, apenas erros ou latência mínima).',
   {
-    serviceName: z.string().optional().describe('Nome do serviço (ex: karaf-winthor)'),
-    search: z.string().optional().describe('Termo de busca na rota, nome do span ou traceId'),
-    hasError: z.boolean().optional().describe('Filtrar apenas traces com falha/erro HTTP'),
-    minDurationMs: z.number().optional().describe('Latência mínima em milissegundos para encontrar gargalos'),
-    limit: z.number().optional().describe('Quantidade máxima de traces a retornar (padrão: 50)')
+    title: 'Buscar traces do APM',
+    description:
+      'Busca e filtra requisições/traces recentes coletados pelo APM (filtro por serviço, busca por rota, apenas erros, apenas com SQL, latência mínima e janela de tempo).',
+    inputSchema: {
+      serviceName: z.string().optional().describe('Nome do serviço (ex: karaf-winthor)'),
+      search: z.string().optional().describe('Termo de busca na rota, nome do span ou traceId'),
+      hasError: z.boolean().optional().describe('Filtrar apenas traces com falha/erro HTTP'),
+      hasDatabaseQuery: z.boolean().optional().describe('Filtrar apenas traces que executaram SQL'),
+      minDurationMs: z.number().optional().describe('Latência mínima em milissegundos para encontrar gargalos'),
+      lastMinutes: apmLastMinutesSchema,
+      limit: z.number().int().positive().max(500).optional().describe('Quantidade máxima de traces a retornar (padrão: 50)')
+    }
   },
-  async (args) => {
+  async ({ lastMinutes, limit, ...filter }) => {
     try {
-      const traces = apmService.getTraces({ ...args, limit: args.limit || 50 });
-      return ok({ count: traces.length, traces });
+      const traces = apmService.getTraces({
+        ...filter,
+        startTimeMs: lastMinutes ? Date.now() - lastMinutes * 60_000 : undefined,
+        limit: limit || 50
+      });
+      return ok(withApmBufferNotice({ count: traces.length, traces }));
     } catch (err: any) {
       return fail(err?.message || 'Falha ao listar traces.');
     }
   }
 );
 
-server.tool(
+server.registerTool(
   'apm_get_trace_details',
-  'Inspeciona os detalhes completos de um trace pelo seu ID, retornando a árvore de spans em cascata (waterfall), atributos HTTP, queries SQL executadas e stacktraces de erro.',
   {
-    traceId: z.string().describe('ID do trace a inspecionar')
+    title: 'Detalhar trace do APM',
+    description:
+      'Inspeciona um trace pelo ID: spans na ordem do waterfall (com profundidade e offset), atributos HTTP, queries SQL, exceções com stacktrace e a decomposição do tempo entre banco, chamadas externas e aplicação.',
+    inputSchema: {
+      traceId: z.string().describe('ID do trace a inspecionar')
+    }
   },
   async ({ traceId }) => {
     try {
       const details = apmService.getTraceDetails(traceId);
       if (!details) {
-        return fail(`Trace com ID "${traceId}" não encontrado no buffer.`);
+        const empty = apmService.getReceiverStatus().bufferSize === 0;
+        return fail(`Trace com ID "${traceId}" não encontrado no buffer.${empty ? ` ${APM_EMPTY_BUFFER_NOTICE}` : ''}`);
       }
-      return ok(details);
+      return ok(buildCompactTraceDetails(details));
     } catch (err: any) {
       return fail(err?.message || 'Falha ao obter detalhes do trace.');
     }
   }
 );
 
-server.tool(
+server.registerTool(
   'apm_get_services',
-  'Lista todos os serviços monitorados pelo APM com métricas de requisições, erros e latências agregadas.',
-  {},
+  {
+    title: 'Listar serviços monitorados pelo APM',
+    description: 'Lista todos os serviços monitorados pelo APM com métricas de requisições, erros e latências agregadas.',
+    inputSchema: {}
+  },
   async () => {
     try {
       const services = apmService.getServices();
-      return ok({ count: services.length, services });
+      return ok(withApmBufferNotice({ count: services.length, services }));
     } catch (err: any) {
       return fail(err?.message || 'Falha ao listar serviços monitorados.');
     }

@@ -1445,6 +1445,36 @@ export interface HttpHealthResult {
 // APM & Traces OpenTelemetry (OTel / SigNoz)
 // ==========================================
 
+/** Porta padrão do OTLP/HTTP, usada pelo receptor embutido do APM. */
+export const DEFAULT_APM_OTLP_PORT = 4318;
+
+/**
+ * Endpoint base do receptor OTLP do APM. Usa 127.0.0.1 porque o receptor escuta só em IPv4 e
+ * `localhost` resolve primeiro para ::1 em alguns runtimes (ex.: Node 17–19), derrubando o export.
+ */
+export function getApmOtlpEndpoint(port: number = DEFAULT_APM_OTLP_PORT): string {
+  return `http://127.0.0.1:${port}`;
+}
+
+/**
+ * Propriedades de sistema do OpenTelemetry Java Agent para exportar apenas traces ao APM.
+ * O protocolo é explícito porque o agente 1.x usa gRPC (porta 4317) por padrão; métricas e logs
+ * ficam desligados porque o receptor só aceita traces e o agente encheria o console de erros 404.
+ */
+export function buildOtelJavaAgentProperties(
+  port: number = DEFAULT_APM_OTLP_PORT,
+  serviceName: string = 'karaf-winthor'
+): string[] {
+  return [
+    `-Dotel.exporter.otlp.endpoint=${getApmOtlpEndpoint(port)}`,
+    '-Dotel.exporter.otlp.protocol=http/protobuf',
+    `-Dotel.service.name=${serviceName}`,
+    '-Dotel.traces.sampler=always_on',
+    '-Dotel.metrics.exporter=none',
+    '-Dotel.logs.exporter=none'
+  ];
+}
+
 export type TraceSpanKind = 'SERVER' | 'CLIENT' | 'INTERNAL' | 'PRODUCER' | 'CONSUMER' | 'UNSPECIFIED';
 
 export type TraceStatusCode = 'OK' | 'ERROR' | 'UNSET';
@@ -1453,6 +1483,13 @@ export interface TraceSpanEvent {
   name: string;
   timestampUnixMs: number;
   attributes?: Record<string, any>;
+}
+
+/** Exceção registrada no span (evento `exception` da convenção semântica OpenTelemetry). */
+export interface TraceSpanException {
+  type?: string;
+  message?: string;
+  stacktrace?: string;
 }
 
 export interface TraceSpan {
@@ -1479,6 +1516,7 @@ export interface TraceSpan {
   // Atributos genéricos / tags
   attributes: Record<string, any>;
   events?: TraceSpanEvent[];
+  exception?: TraceSpanException;
 }
 
 export interface TraceSpanTreeNode {
@@ -1504,10 +1542,23 @@ export interface TraceSummary {
   hasDatabaseQuery: boolean;
 }
 
+/**
+ * Decomposição do tempo de parede de um trace. Intervalos sobrepostos de uma mesma categoria
+ * contam uma única vez (queries paralelas, spans aninhados), então db + externo + app = total.
+ */
+export interface TraceTimeBreakdown {
+  totalMs: number;
+  dbMs: number;
+  /** Chamadas CLIENT que não são banco (HTTP/RPC externos), descontado o banco feito dentro delas. */
+  externalMs: number;
+  appMs: number;
+}
+
 export interface TraceDetails {
   summary: TraceSummary;
   spans: TraceSpan[];
   rootTree: TraceSpanTreeNode[];
+  breakdown: TraceTimeBreakdown;
 }
 
 export interface ServiceMetricsSummary {
@@ -1533,6 +1584,10 @@ export interface EndpointMetricsSummary {
   p95DurationMs: number;
 }
 
+/**
+ * Filtro de traces. O overview agregado só considera o escopo (`serviceName`, `startTimeMs`,
+ * `endTimeMs`); os demais campos filtram apenas a listagem de traces.
+ */
 export interface ApmFilter {
   serviceName?: string;
   search?: string;
@@ -1553,6 +1608,8 @@ export interface ApmReceiverStatus {
   totalIngestedTraces: number;
   bufferSize: number;
   maxBufferSize: number;
+  /** Spans descartados por excederem o limite de spans por trace. */
+  droppedSpans?: number;
 }
 
 export interface SlowQueryMetricsSummary {

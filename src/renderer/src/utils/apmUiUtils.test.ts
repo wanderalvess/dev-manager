@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
+  buildApmSetupSnippets,
   computeLatencySpectrum,
   computeTimeBudget,
   filterTraces,
   findNextTraceId,
+  formatSpanErrorForClipboard,
   getMethodBadgeClass,
   getStatusBadgeClass,
+  mergeLiveTraces,
   splitSqlTokens
 } from './apmUiUtils';
 import { TraceSummary, TraceDetails, TraceSpan } from '../../../shared/types';
@@ -88,7 +91,8 @@ describe('apmUiUtils', () => {
             dbStatement: 'SELECT * FROM PCPEDC WHERE NUMPED = 1234'
           })
         ],
-        rootTree: []
+        rootTree: [],
+        breakdown: { totalMs: 100, dbMs: 80, externalMs: 0, appMs: 20 }
       };
 
       const budget = computeTimeBudget(details);
@@ -99,9 +103,86 @@ describe('apmUiUtils', () => {
       expect(budget?.topBottleneck).toBe('db');
     });
 
+    it('mantém a soma dos percentuais em 100 mesmo com arredondamento', () => {
+      const budget = computeTimeBudget({
+        summary: makeTrace({ durationMs: 3 }),
+        spans: [makeSpan({})],
+        rootTree: [],
+        breakdown: { totalMs: 3, dbMs: 1, externalMs: 1, appMs: 1 }
+      });
+      expect(budget!.dbPct + budget!.clientPct + budget!.appPct).toBe(100);
+    });
+
     it('retorna null se não houver detalhes ou spans', () => {
       expect(computeTimeBudget(null)).toBeNull();
-      expect(computeTimeBudget({ summary: makeTrace({}), spans: [], rootTree: [] })).toBeNull();
+      expect(
+        computeTimeBudget({
+          summary: makeTrace({}),
+          spans: [],
+          rootTree: [],
+          breakdown: { totalMs: 0, dbMs: 0, externalMs: 0, appMs: 0 }
+        })
+      ).toBeNull();
+    });
+  });
+
+  describe('mergeLiveTraces', () => {
+    it('substitui a versão antiga do trace e mantém a ordem por início, sem pular para o topo', () => {
+      const current = [
+        makeTrace({ traceId: 'new', startTimeUnixMs: 3000 }),
+        makeTrace({ traceId: 'old', startTimeUnixMs: 1000, spanCount: 1 })
+      ];
+      const merged = mergeLiveTraces(current, [makeTrace({ traceId: 'old', startTimeUnixMs: 1000, spanCount: 5 })], 10);
+
+      expect(merged.map((t) => t.traceId)).toEqual(['new', 'old']);
+      expect(merged[1].spanCount).toBe(5);
+    });
+
+    it('insere traces novos na posição certa e respeita o limite', () => {
+      const current = [makeTrace({ traceId: 'a', startTimeUnixMs: 3000 }), makeTrace({ traceId: 'b', startTimeUnixMs: 1000 })];
+      const merged = mergeLiveTraces(current, [makeTrace({ traceId: 'c', startTimeUnixMs: 2000 })], 2);
+      expect(merged.map((t) => t.traceId)).toEqual(['a', 'c']);
+    });
+
+    it('devolve a mesma lista quando não há novidades (evita re-render)', () => {
+      const current = [makeTrace({ traceId: 'a' })];
+      expect(mergeLiveTraces(current, [], 10)).toBe(current);
+    });
+  });
+
+  describe('formatSpanErrorForClipboard', () => {
+    it('copia o stacktrace completo sem repetir a linha de cabeçalho', () => {
+      const span = makeSpan({
+        exception: {
+          type: 'java.sql.SQLException',
+          message: 'ORA-00001',
+          stacktrace: 'java.sql.SQLException: ORA-00001\n\tat Foo.bar(Foo.java:1)'
+        }
+      });
+      expect(formatSpanErrorForClipboard(span)).toBe('java.sql.SQLException: ORA-00001\n\tat Foo.bar(Foo.java:1)');
+    });
+
+    it('usa a mensagem de status quando não há exceção registrada', () => {
+      expect(formatSpanErrorForClipboard(makeSpan({ statusMessage: 'Timeout' }))).toBe('Timeout');
+    });
+  });
+
+  describe('buildApmSetupSnippets', () => {
+    it('monta os comandos com a porta real e 127.0.0.1', () => {
+      const snippets = buildApmSetupSnippets(4400);
+      expect(snippets.tracesUrl).toBe('http://127.0.0.1:4400/v1/traces');
+      expect(snippets.curlCopy).toContain('http://127.0.0.1:4400/v1/traces');
+      expect(snippets.powershellCopy).toContain('http://127.0.0.1:4400/v1/traces');
+      expect(snippets.nodeDisplay).toContain("url: 'http://127.0.0.1:4400/v1/traces'");
+    });
+
+    it('usa no snippet do Karaf as mesmas opções do anexo automático do agente (http/protobuf)', () => {
+      const { karafCopy, karafDisplay } = buildApmSetupSnippets(4318);
+      expect(karafCopy).toContain('-javaagent:opentelemetry-javaagent.jar');
+      expect(karafCopy).toContain('-Dotel.exporter.otlp.endpoint=http://127.0.0.1:4318');
+      expect(karafCopy).toContain('-Dotel.exporter.otlp.protocol=http/protobuf');
+      expect(karafCopy).toContain('-Dotel.metrics.exporter=none');
+      expect(karafDisplay.split('\n').every((line, i, lines) => i === lines.length - 1 || line.endsWith(' ^'))).toBe(true);
     });
   });
 
@@ -187,6 +268,11 @@ describe('apmUiUtils', () => {
       expect(keywords).toContain('SELECT');
       expect(keywords).toContain('FROM');
       expect(keywords).toContain('WHERE');
+    });
+
+    it('preserva todo o texto da query, inclusive números e acentos', () => {
+      const sql = "INSERT INTO PCNFSAID (NUMTRANSVENDA, NUMNOTA, CODFILIAL) VALUES (982314, 10452, '01') -- emissão 2ª via";
+      expect(splitSqlTokens(sql).map((t) => t.text).join('')).toBe(sql);
     });
   });
 

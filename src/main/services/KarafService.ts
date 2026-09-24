@@ -13,7 +13,8 @@ import {
   UpdateBundleVersionRequest,
   KarafBundleDependent,
   KarafDeployHistoryEntry,
-  KarafFeatureInfo
+  KarafFeatureInfo,
+  buildOtelJavaAgentProperties
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
@@ -226,7 +227,7 @@ export class KarafService {
       ];
       const agentJar = agentCandidates.find((c) => fs.existsSync(c));
       if (agentJar && !childEnv.JAVA_TOOL_OPTIONS?.includes('opentelemetry-javaagent.jar')) {
-        childEnv.JAVA_TOOL_OPTIONS += ` -javaagent:"${agentJar}" -Dotel.exporter.otlp.endpoint=http://localhost:4318 -Dotel.exporter.otlp.protocol=http/protobuf -Dotel.service.name=karaf-winthor -Dotel.traces.sampler=always_on -Dotel.metrics.exporter=none -Dotel.logs.exporter=none`;
+        childEnv.JAVA_TOOL_OPTIONS += ` -javaagent:"${agentJar}" ${buildOtelJavaAgentProperties().join(' ')}`;
       }
     }
 
