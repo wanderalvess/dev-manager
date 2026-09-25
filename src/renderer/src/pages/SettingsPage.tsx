@@ -36,7 +36,9 @@ import {
   Bot,
   Sliders,
   Cpu,
-  Activity
+  Activity,
+  Search,
+  X
 } from 'lucide-react';
 import {
   AppSettings,
@@ -97,6 +99,36 @@ const DEFAULT_LOG_SOURCES: RealtimeLogSource[] = [];
 
 type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai';
 
+interface SettingsSearchEntry {
+  id: string;
+  tab: SettingsTab;
+  tabLabel: string;
+  label: string;
+  keywords: string;
+}
+
+/** Índice curado de campos-chave para a busca da tela de Configurações (não cobre 100% dos campos). */
+const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
+  { id: 'field-appPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório Raiz das Rotinas / Binários (Prod)', keywords: 'app path diretorio pasta rotinas binarios prod' },
+  { id: 'field-karafPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório do Apache Karaf', keywords: 'karaf path diretorio pasta osgi' },
+  { id: 'field-jdkPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório do JDK', keywords: 'jdk java path diretorio' },
+  { id: 'field-intellijPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Executável do IntelliJ / IDE', keywords: 'intellij ide editor idea' },
+  { id: 'field-projectsPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório de Projetos', keywords: 'projetos path diretorio workspace' },
+  { id: 'field-wtaLogin', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Usuário WTA (Login Automático)', keywords: 'wta login usuario winthor' },
+  { id: 'field-wtaPassword', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Senha / Hash WTA', keywords: 'wta senha password hash winthor' },
+  { id: 'field-wtaAuthToken', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Cookie de Autenticação WTA (suukie)', keywords: 'wta cookie token suukie sessao autenticacao' },
+  { id: 'field-karafUser', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Usuário Karaf (SSH)', keywords: 'karaf usuario ssh client.bat' },
+  { id: 'field-karafPass', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Senha Karaf', keywords: 'karaf senha password ssh' },
+  { id: 'field-azure', tab: 'azure', tabLabel: 'Azure DevOps & Git', label: 'Token / Organização Azure DevOps', keywords: 'azure devops git token pat organizacao pull request branch' },
+  { id: 'field-services', tab: 'services', tabLabel: 'Serviços Windows & Processos', label: 'Serviços Windows Monitorados', keywords: 'servicos windows service monitorado parar iniciar' },
+  { id: 'field-processes', tab: 'services', tabLabel: 'Serviços Windows & Processos', label: 'Processos Conflitantes (Kill)', keywords: 'processos kill matar finalizar conflitante' },
+  { id: 'field-ports', tab: 'ports', tabLabel: 'Portas de Rede Monitoradas', label: 'Portas TCP Monitoradas', keywords: 'porta port tcp rede monitorada' },
+  { id: 'field-automation', tab: 'automation', tabLabel: 'Automação Padrão', label: 'Automação Padrão do Pipeline de Ambiente', keywords: 'automacao pipeline padrao debug embedded launch' },
+  { id: 'field-logs', tab: 'logs', tabLabel: 'Logs em Tempo Real', label: 'Fontes de Logs em Tempo Real', keywords: 'logs tail arquivo fonte tempo real' },
+  { id: 'field-backup', tab: 'backup', tabLabel: 'Backup de Bancos', label: 'Backup e Restore de Bancos de Dados', keywords: 'backup restore banco dados expdp impdp pg_dump agendamento webhook' },
+  { id: 'field-ai', tab: 'ai', tabLabel: 'IA & Provedores LLM', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' }
+];
+
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onNavigate }) => {
   const tour = usePageTour(SETTINGS_TOUR_STORAGE_KEY);
   const [activeTab, setActiveTab] = useState<SettingsTab>('dirs');
@@ -140,10 +172,59 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   const [newEnvironmentProfileLabel, setNewEnvironmentProfileLabel] = useState('');
   const [isDetecting, setIsDetecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showWtaPassword, setShowWtaPassword] = useState(false);
+  const [showWtaAuthToken, setShowWtaAuthToken] = useState(false);
   const [launcherRows, setLauncherRows] = useState<{ ext: string; path: string }[]>([]);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [importStatusMessage, setImportStatusMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [settingsSearchQuery, setSettingsSearchQuery] = useState('');
+  const [settingsSearchOpen, setSettingsSearchOpen] = useState(false);
+  const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+  const hasUnsavedChanges = savedSnapshot !== null && JSON.stringify(settings) !== savedSnapshot;
+
+  const settingsSearchResults = useMemo(() => {
+    const query = settingsSearchQuery.trim().toLowerCase();
+    if (!query) return [];
+    return SETTINGS_SEARCH_INDEX.filter(
+      (entry) => entry.label.toLowerCase().includes(query) || entry.keywords.toLowerCase().includes(query)
+    ).slice(0, 8);
+  }, [settingsSearchQuery]);
+
+  const handleSettingsSearchSelect = (entry: SettingsSearchEntry) => {
+    setActiveTab(entry.tab);
+    setSettingsSearchQuery('');
+    setSettingsSearchOpen(false);
+    setHighlightedFieldId(entry.id);
+    window.setTimeout(() => {
+      document.getElementById(entry.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+    window.setTimeout(() => setHighlightedFieldId(null), 2200);
+  };
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsavedChanges]);
+
+  // Aplica um realce temporário (ring) no campo encontrado pela busca de Configurações, sem
+  // precisar fiar a className condicional em cada um dos ~15 campos do índice de busca.
+  useEffect(() => {
+    if (!highlightedFieldId) return undefined;
+    const el = document.getElementById(highlightedFieldId);
+    if (!el) return undefined;
+    const highlightClasses = ['ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background', 'rounded-xl'];
+    el.classList.add(...highlightClasses);
+    return () => {
+      el.classList.remove(...highlightClasses);
+    };
+  }, [highlightedFieldId, activeTab]);
 
   // IA & Provedores LLM (BYOK)
   const [editingLlmProvider, setEditingLlmProvider] = useState<Partial<LlmProviderConfig> | null>(null);
@@ -339,9 +420,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           mysqldumpPath: st.mysqldumpPath || '',
           psqlPath: st.psqlPath || '',
           impdpPath: st.impdpPath || '',
-          mysqlPath: st.mysqlPath || ''
+          mysqlPath: st.mysqlPath || '',
+          // O efeito que sincroniza launcherRows -> routineLauncherMap roda no mount (antes deste
+          // load resolver) e de novo assim que setLauncherRows for chamado logo abaixo, sempre
+          // reconstruindo o mapa a partir de st.routineLauncherMap. Se o snapshot "salvo" aqui não
+          // incluir esse mesmo valor, o badge "Não salvo" acende sozinho mesmo sem edição do
+          // usuário — o efeito reescreve settings.routineLauncherMap um instante depois deste load.
+          routineLauncherMap: st.routineLauncherMap || {}
         };
         setSettings(loaded);
+        setSavedSnapshot(JSON.stringify(loaded));
         setLauncherRows(Object.entries(st.routineLauncherMap || {}).map(([ext, path]) => ({ ext, path })));
         validateAllPaths(loaded);
       });
@@ -425,6 +513,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     try {
       if (window.electronAPI) {
         await window.electronAPI.saveSettings(settings);
+        setSavedSnapshot(JSON.stringify(settings));
         setSavedSuccess(true);
         setTimeout(() => setSavedSuccess(false), 2500);
         if (onSettingsSaved) onSettingsSaved();
@@ -559,6 +648,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   };
 
   const handleResetServices = () => {
+    const count = (settings.trackedServices || DEFAULT_SERVICES).length;
+    if (count > 0 && !window.confirm(`Remover os ${count} serviço(s) monitorado(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      return;
+    }
     setSettings({ ...settings, trackedServices: DEFAULT_SERVICES });
   };
 
@@ -587,6 +680,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   };
 
   const handleResetProcesses = () => {
+    const count = (settings.trackedProcesses || DEFAULT_PROCESSES).length;
+    if (count > 0 && !window.confirm(`Remover os ${count} processo(s) conflitante(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      return;
+    }
     setSettings({ ...settings, trackedProcesses: DEFAULT_PROCESSES });
   };
 
@@ -612,6 +709,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   };
 
   const handleResetPorts = () => {
+    if (!window.confirm('Restaurar a lista de portas monitoradas para o padrão (:8889, :9195, :8101, :5005, :1521)? Qualquer porta personalizada adicionada será perdida ao salvar.')) {
+      return;
+    }
     setSettings({ ...settings, monitoredPorts: DEFAULT_PORTS });
   };
 
@@ -645,6 +745,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   };
 
   const handleResetLogSources = () => {
+    const count = (settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length;
+    if (count > 0 && !window.confirm(`Remover as ${count} fonte(s) de log configurada(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      return;
+    }
     setSettings({ ...settings, realtimeLogSources: DEFAULT_LOG_SOURCES });
   };
 
@@ -795,25 +899,100 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             <span>{isDetecting ? 'Detectando...' : 'Auto-Detectar'}</span>
           </button>
 
-          <button
-            data-tour="save-settings-button"
-            onClick={() => handleSave()}
-            disabled={isSaving}
-            className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs rounded-xl shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] flex items-center space-x-2 border border-primary/40"
-          >
-            {savedSuccess ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-white" />
-                <span>Salvo com Sucesso!</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>Salvar Configurações</span>
-              </>
+          <div className="relative flex items-center">
+            {hasUnsavedChanges && !isSaving && (
+              <span
+                className="mr-2 flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-lg"
+                title="Existem alterações que ainda não foram salvas"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                Não salvo
+              </span>
             )}
-          </button>
+            <button
+              data-tour="save-settings-button"
+              onClick={() => handleSave()}
+              disabled={isSaving}
+              className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs rounded-xl shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] flex items-center space-x-2 border border-primary/40"
+            >
+              {savedSuccess ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                  <span>Salvo com Sucesso!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Salvar Configurações</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Busca Rápida dentro de Configurações */}
+      <div className="relative shrink-0">
+        <div className="relative">
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={settingsSearchQuery}
+            onChange={(e) => {
+              setSettingsSearchQuery(e.target.value);
+              setSettingsSearchOpen(true);
+            }}
+            onFocus={() => setSettingsSearchOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setSettingsSearchQuery('');
+                setSettingsSearchOpen(false);
+              } else if (e.key === 'Enter' && settingsSearchResults.length > 0) {
+                handleSettingsSearchSelect(settingsSearchResults[0]);
+              }
+            }}
+            placeholder="Buscar em Configurações (ex: senha, porta, cookie, backup, api key)..."
+            className="w-full bg-card border border-border rounded-xl pl-9 pr-9 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary shadow-sm"
+          />
+          {settingsSearchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSettingsSearchQuery('');
+                setSettingsSearchOpen(false);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              title="Limpar busca"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {settingsSearchOpen && settingsSearchQuery.trim() && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setSettingsSearchOpen(false)} />
+            <div className="absolute left-0 right-0 mt-1.5 rounded-xl bg-card border border-border shadow-2xl z-50 overflow-hidden">
+              {settingsSearchResults.length === 0 ? (
+                <div className="px-3.5 py-3 text-xs text-muted-foreground">Nenhum campo encontrado para "{settingsSearchQuery}".</div>
+              ) : (
+                settingsSearchResults.map((entry) => (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => handleSettingsSearchSelect(entry)}
+                    className="w-full px-3.5 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-muted transition-colors border-b border-border/60 last:border-b-0"
+                  >
+                    <span className="text-xs font-semibold text-foreground">{entry.label}</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-mono shrink-0">
+                      {entry.tabLabel}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Banner de Feedback de Importação / Exportação */}
@@ -1077,7 +1256,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 {/* Diretório de Repositórios Git */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5" id="field-projectsPath">
                   <div className="flex items-center justify-between">
                     <label
                       className="font-bold text-foreground flex items-center gap-1.5"
@@ -1114,7 +1293,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 </div>
 
                 {/* Diretório do Apache Karaf */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5" id="field-karafPath">
                   <div className="flex items-center justify-between">
                     <label
                       className="font-bold text-foreground flex items-center gap-1.5"
@@ -1151,7 +1330,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 </div>
 
                 {/* Diretório Java JDK / JRE (JAVA_HOME) */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5" id="field-jdkPath">
                   <div className="flex items-center justify-between">
                     <label
                       className="font-bold text-foreground flex items-center gap-1.5"
@@ -1224,7 +1403,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 </div>
 
                 {/* Diretório Base das Rotinas (Prod) */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5" id="field-appPath">
                   <div className="flex items-center justify-between">
                     <label className="font-bold text-foreground flex items-center gap-1.5">
                       <Folder className="w-3.5 h-3.5 text-emerald-500" />
@@ -1386,7 +1565,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
-                    <div>
+                    <div id="field-wtaLogin">
                       <label className="block text-[11px] font-semibold text-foreground mb-1">
                         Usuário WTA (Login Automático):
                       </label>
@@ -1398,12 +1577,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                         placeholder="Ex: PCADMIN"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-foreground mb-1">
-                        Senha / Hash WTA:
+                    <div id="field-wtaPassword">
+                      <label className="block text-[11px] font-semibold text-foreground mb-1 flex items-center justify-between">
+                        <span>Senha / Hash WTA:</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowWtaPassword(!showWtaPassword)}
+                          className="text-[10px] text-muted-foreground hover:text-foreground font-normal flex items-center gap-1"
+                        >
+                          {showWtaPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          <span>{showWtaPassword ? 'Ocultar' : 'Exibir'}</span>
+                        </button>
                       </label>
                       <input
-                        type="password"
+                        type={showWtaPassword ? 'text' : 'password'}
                         value={settings.wtaPassword || ''}
                         onChange={(e) => setSettings({ ...settings, wtaPassword: e.target.value })}
                         className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
@@ -1413,19 +1600,31 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   </div>
 
                   <div className="space-y-2 pt-2 border-t border-border/40">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-foreground mb-1">
-                        Cookie de Autenticação WTA (Cookie <code>suukie</code>):
+                    <div id="field-wtaAuthToken">
+                      <label className="block text-[11px] font-semibold text-foreground mb-1 flex items-center justify-between">
+                        <span>
+                          Cookie de Autenticação WTA (Cookie <code>suukie</code>):
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowWtaAuthToken(!showWtaAuthToken)}
+                          className="text-[10px] text-muted-foreground hover:text-foreground font-normal flex items-center gap-1"
+                        >
+                          {showWtaAuthToken ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          <span>{showWtaAuthToken ? 'Ocultar' : 'Exibir'}</span>
+                        </button>
                       </label>
                       <input
-                        type="password"
+                        type={showWtaAuthToken ? 'text' : 'password'}
                         value={settings.wtaAuthToken || ''}
                         onChange={(e) => setSettings({ ...settings, wtaAuthToken: e.target.value })}
                         className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
                         placeholder="Cole o valor do cookie 'suukie' do WTA (opcional)"
                       />
                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Permite que o Dev Manager consulte os parâmetros atualizados direto da sua sessão web.
+                        Permite que o Dev Manager consulte os parâmetros atualizados direto da sua sessão web. Abra o
+                        DevTools do navegador (F12) na tela do WTA logado, aba Application/Cookies, e copie o valor
+                        de <code>suukie</code>.
                       </p>
                     </div>
 
@@ -1448,7 +1647,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 </div>
 
                 {/* Executável da IDE */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5" id="field-intellijPath">
                   <div className="flex items-center justify-between">
                     <label
                       className="font-bold text-foreground flex items-center gap-1.5"
@@ -1524,7 +1723,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div>
+                <div id="field-karafUser">
                   <label className="block font-bold text-foreground mb-1">Usuário Karaf (SSH / client.bat):</label>
                   <input
                     type="text"
@@ -1538,7 +1737,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   </p>
                 </div>
 
-                <div>
+                <div id="field-karafPass">
                   <label className="block font-bold text-foreground mb-1 flex items-center justify-between">
                     <span>Senha Karaf:</span>
                     <button
@@ -1607,7 +1806,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
       {/* Conteúdo da Aba 3: Azure DevOps & Git */}
       {activeTab === 'azure' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-azure">
           <div className="lg:col-span-12 space-y-4 flex flex-col">
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
@@ -1719,7 +1918,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       {activeTab === 'services' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
           {/* Card: Serviços Windows Monitorados */}
-          <div className="lg:col-span-7 space-y-4 flex flex-col">
+          <div className="lg:col-span-7 space-y-4 flex flex-col" id="field-services">
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
                 <div>
@@ -1735,10 +1934,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   <button
                     type="button"
                     onClick={handleResetServices}
-                    className="px-2.5 py-1 bg-card hover:bg-muted text-foreground border border-border rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
+                    className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
                     title="Restaurar lista de serviços padrão"
                   >
-                    <RotateCcw className="w-3 h-3 text-muted-foreground" />
+                    <RotateCcw className="w-3 h-3" />
                     <span>Restaurar Padrões</span>
                   </button>
 
@@ -1832,7 +2031,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           </div>
 
           {/* Card: Processos Conflitantes (Encerramento de Travas) */}
-          <div className="lg:col-span-5 space-y-4 flex flex-col">
+          <div className="lg:col-span-5 space-y-4 flex flex-col" id="field-processes">
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
                 <div>
@@ -1848,10 +2047,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   <button
                     type="button"
                     onClick={handleResetProcesses}
-                    className="px-2.5 py-1 bg-card hover:bg-muted text-foreground border border-border rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
+                    className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
                     title="Restaurar padrões de processos"
                   >
-                    <RotateCcw className="w-3 h-3 text-muted-foreground" />
+                    <RotateCcw className="w-3 h-3" />
                     <span>Padrões</span>
                   </button>
 
@@ -1923,7 +2122,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
       {/* Conteúdo da Aba 3: Portas de Rede Monitoradas */}
       {activeTab === 'ports' && (
-        <div className="space-y-4 flex-1 flex flex-col">
+        <div className="space-y-4 flex-1 flex flex-col" id="field-ports">
           {/* Card: Portas Principais de Integração */}
           <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
             <div className="flex items-center justify-between pb-1 border-b border-border/60">
@@ -2051,10 +2250,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 <button
                   type="button"
                   onClick={handleResetPorts}
-                  className="px-2.5 py-1 bg-card hover:bg-muted text-foreground border border-border rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
+                  className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
                   title="Restaurar portas padrão (:8889, :8101, :5005, :1521)"
                 >
-                  <RotateCcw className="w-3 h-3 text-muted-foreground" />
+                  <RotateCcw className="w-3 h-3" />
                   <span>Restaurar Padrões</span>
                 </button>
 
@@ -2199,7 +2398,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
       {/* Conteúdo da Aba 4: Automação Padrão */}
       {activeTab === 'automation' && (
-        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1">
+        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1" id="field-automation">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
               <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
@@ -2364,7 +2563,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
       {/* Conteúdo da Aba: Logs em Tempo Real */}
       {activeTab === 'logs' && (
-        <div className="space-y-4 flex flex-col flex-1">
+        <div className="space-y-4 flex flex-col flex-1" id="field-logs">
           <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
               <div>
@@ -2380,7 +2579,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                 <button
                   type="button"
                   onClick={handleResetLogSources}
-                  className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground border border-border/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+                  className="px-3 py-1.5 bg-muted hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
                   title="Remove todas as fontes de log configuradas"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -2483,7 +2682,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
       {/* Conteúdo da Aba: Backup de Bancos de Dados */}
       {activeTab === 'backup' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-backup">
           <div className="lg:col-span-12 space-y-4 flex flex-col">
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
               <div className="flex items-center justify-between pb-1 border-b border-border/60">
@@ -2660,7 +2859,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
 
       {/* Conteúdo da Aba: IA & Modelos LLM (BYOK) */}
       {activeTab === 'ai' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-ai">
           <div className="lg:col-span-12 space-y-4 flex flex-col">
             <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border bg-card">
               {/* Cabeçalho com Status Operacional */}

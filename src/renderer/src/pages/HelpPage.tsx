@@ -53,6 +53,13 @@ interface HelpPageProps {
   initialSearch?: string;
   /** Reabre o tour guiado de boas-vindas (spotlight nos itens do Header) */
   onRestartTour?: () => void;
+  /**
+   * Limpa a marca de "já visto" dos tours individuais de cada tela (Banco, Rotinas, Deploy,
+   * Containers, Git, etc.) e reabre o modal de escolha — a única forma de recuperar esses tours
+   * pra quem clicou "Pular e explorar sozinho" na primeira vez, já que essa escolha hoje é
+   * permanente (ver PAGE_TOURS_PREF_KEY em usePageTour.ts).
+   */
+  onResetPageTours?: () => void;
   settingsVersion?: number;
 }
 
@@ -76,7 +83,13 @@ interface FaqItem {
   tags: string[];
 }
 
-export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, onRestartTour, settingsVersion }) => {
+export const HelpPage: React.FC<HelpPageProps> = ({
+  onNavigate,
+  initialSearch,
+  onRestartTour,
+  onResetPageTours,
+  settingsVersion
+}) => {
   const [activeCategory, setActiveCategory] = useState<HelpCategory>(initialSearch ? 'faq' : 'overview');
   const [searchQuery, setSearchQuery] = useState(initialSearch || '');
   const [faqCategoryFilter, setFaqCategoryFilter] = useState<string>('all');
@@ -894,6 +907,18 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     >
                       <Sparkles className="w-3.5 h-3.5 text-primary" />
                       <span>Ver Tour Guiado</span>
+                    </button>
+                  )}
+
+                  {onResetPageTours && (
+                    <button
+                      type="button"
+                      onClick={onResetPageTours}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                      title="Reativa os tutoriais rápidos de cada tela (Banco, Rotinas, Deploy, Containers, Git...)"
+                    >
+                      <Compass className="w-3.5 h-3.5 text-primary" />
+                      <span>Rever Tours das Telas</span>
                     </button>
                   )}
 

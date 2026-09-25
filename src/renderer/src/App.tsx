@@ -344,7 +344,7 @@ export const App: React.FC = () => {
         )}
         {visitedTabs.has('database') && (
           <div className={`h-full w-full ${activeTab === 'database' ? '' : 'hidden'}`}>
-            <DatabasePage settingsVersion={settingsVersion} />
+            <DatabasePage settingsVersion={settingsVersion} onNavigateToSettings={() => setActiveTab('settings')} />
           </div>
         )}
         {visitedTabs.has('containers') && (
@@ -427,6 +427,24 @@ export const App: React.FC = () => {
                   // localStorage indisponível
                 }
                 setIsTourOpen(true);
+              }}
+              onResetPageTours={() => {
+                // Diferente de "Ver Tour Guiado": não replaya o tour global inteiro, só limpa a
+                // marca de "já visto" dos tours de cada tela (devManager:tour:*) e a preferência
+                // sim/não — quem clicou "Pular e explorar sozinho" na primeira vez fica preso
+                // nessa escolha pra sempre sem este botão.
+                try {
+                  const keysToRemove: string[] = [];
+                  for (let i = 0; i < window.localStorage.length; i++) {
+                    const key = window.localStorage.key(i);
+                    if (key && key.startsWith('devManager:tour:')) keysToRemove.push(key);
+                  }
+                  keysToRemove.forEach((key) => window.localStorage.removeItem(key));
+                  window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
+                } catch {
+                  // localStorage indisponível
+                }
+                setIsPageToursPromptOpen(true);
               }}
             />
           </div>
