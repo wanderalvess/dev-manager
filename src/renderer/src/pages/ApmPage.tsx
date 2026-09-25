@@ -30,6 +30,7 @@ import {
   ObservabilityOverview,
   ApmFilter,
   DEFAULT_APM_OTLP_PORT,
+  DEFAULT_APM_SERVICE_NAME,
   isValidApmReceiverPort
 } from '../../../shared/types';
 import { api } from '../services/apiBridge';
@@ -85,6 +86,11 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
   const [portDraft, setPortDraft] = useState<string>('');
   const [isChangingPort, setIsChangingPort] = useState<boolean>(false);
   const [setupTab, setSetupTab] = useState<'karaf' | 'curl' | 'node'>('karaf');
+  const [serviceName, setServiceName] = useState<string>(DEFAULT_APM_SERVICE_NAME);
+  const [serviceNameDraft, setServiceNameDraft] = useState<string>('');
+  const [isSavingServiceName, setIsSavingServiceName] = useState<boolean>(false);
+  const [instrumentationEnabled, setInstrumentationEnabled] = useState<boolean>(false);
+  const [isSavingInstrumentation, setIsSavingInstrumentation] = useState<boolean>(false);
 
   const { copy: copyToClipboard, copiedKey: copyFeedback } = useCopyToClipboard(2000);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -126,6 +132,18 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
     const interval = setInterval(refreshData, 3000);
     return () => clearInterval(interval);
   }, [isActive, isRecording, refreshData]);
+
+  // Nome de serviço (otel.service.name) e liga/desliga da instrumentação automática, configurados nas Configurações
+  useEffect(() => {
+    if (!isActive || !api?.getSettings) return;
+    api
+      .getSettings()
+      .then((settings) => {
+        setServiceName(settings.apmServiceName?.trim() || DEFAULT_APM_SERVICE_NAME);
+        setInstrumentationEnabled(!!settings.apmInstrumentationEnabled);
+      })
+      .catch((err) => console.warn('[ApmPage] Falha ao carregar as configurações do APM:', err));
+  }, [isActive]);
 
   // Carregar detalhes do trace selecionado
   const loadTraceDetails = useCallback(async (traceId: string, options?: { keepSelectedSpan?: boolean }) => {
@@ -304,11 +322,52 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
     (detailTab === 'sql' && !hasSqlTab) || (detailTab === 'error' && !hasErrorTab) ? 'waterfall' : detailTab;
 
   const receiverPort = overview?.receiverStatus.port || DEFAULT_APM_OTLP_PORT;
-  const setupSnippets = useMemo(() => buildApmSetupSnippets(receiverPort), [receiverPort]);
+  const setupSnippets = useMemo(() => buildApmSetupSnippets(receiverPort, serviceName), [receiverPort, serviceName]);
 
   const openSetupModal = () => {
     setPortDraft(String(receiverPort));
+    setServiceNameDraft(serviceName);
     setIsSetupModalOpen(true);
+  };
+
+  const handleApplyServiceName = async () => {
+    const trimmed = serviceNameDraft.trim();
+    if (!trimmed) {
+      showToast('Informe um nome de serviço.', 'error');
+      return;
+    }
+    if (!api?.saveSettings) return;
+
+    setIsSavingServiceName(true);
+    try {
+      await api.saveSettings({ apmServiceName: trimmed });
+      setServiceName(trimmed);
+      showToast('Nome de serviço salvo. O próximo start do Karaf já exporta com esse nome.', 'success');
+    } catch (err: any) {
+      showToast(`Falha ao salvar o nome de serviço: ${err?.message || err}`, 'error');
+    } finally {
+      setIsSavingServiceName(false);
+    }
+  };
+
+  const handleToggleInstrumentation = async (next: boolean) => {
+    if (!api?.saveSettings) return;
+
+    setIsSavingInstrumentation(true);
+    try {
+      await api.saveSettings({ apmInstrumentationEnabled: next });
+      setInstrumentationEnabled(next);
+      showToast(
+        next
+          ? 'Instrumentação automática ligada. O próximo start do Karaf pelo Cockpit já anexa o agente.'
+          : 'Instrumentação automática desligada. O Karaf volta a subir sem o agente OpenTelemetry.',
+        'success'
+      );
+    } catch (err: any) {
+      showToast(`Falha ao salvar a configuração: ${err?.message || err}`, 'error');
+    } finally {
+      setIsSavingInstrumentation(false);
+    }
   };
 
   const handleApplyReceiverPort = async () => {
@@ -1441,6 +1500,28 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 seus spans automaticamente — métricas e logs OTLP não são coletados.
               </p>
 
+              {/* Liga/desliga o anexo automático do agente Java ao iniciar o Karaf pelo Cockpit */}
+              <label
+                htmlFor="apm-instrumentation-toggle"
+                className="flex items-start gap-2.5 p-2.5 rounded-lg border border-border bg-muted/20 font-sans text-xs cursor-pointer"
+              >
+                <input
+                  id="apm-instrumentation-toggle"
+                  type="checkbox"
+                  checked={instrumentationEnabled}
+                  disabled={isSavingInstrumentation}
+                  onChange={(e) => handleToggleInstrumentation(e.target.checked)}
+                  className="mt-0.5 w-3.5 h-3.5 accent-primary cursor-pointer disabled:cursor-wait"
+                />
+                <span className="text-muted-foreground leading-relaxed">
+                  <strong className="text-foreground">Anexar o agente automaticamente ao iniciar o Karaf pelo Cockpit.</strong>{' '}
+                  Desligado por padrão: o agente OpenTelemetry deixa o log do Karaf mais verboso, então só liga quando
+                  você quiser mesmo capturar traces. Com a opção desligada, o Karaf sobe normalmente mesmo com o
+                  <code className="font-mono text-primary mx-1">opentelemetry-javaagent.jar</code>presente em
+                  <code className="font-mono text-primary mx-1">bin</code>.
+                </span>
+              </label>
+
               {overview && !overview.receiverStatus.listening && (
                 <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:bg-rose-950/30 dark:border-rose-800/60 dark:text-rose-300 font-sans text-xs leading-relaxed">
                   <strong>Receptor inativo:</strong> {overview.receiverStatus.error || 'não foi possível abrir a porta'}.
@@ -1479,6 +1560,35 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 </span>
               </div>
 
+              {/* Nome de serviço (otel.service.name) do agente Java anexado automaticamente pelo Cockpit */}
+              <div className="flex flex-wrap items-center gap-2 font-sans text-xs">
+                <label htmlFor="apm-service-name" className="text-muted-foreground font-medium">
+                  Nome do serviço
+                </label>
+                <input
+                  id="apm-service-name"
+                  type="text"
+                  value={serviceNameDraft}
+                  onChange={(e) => setServiceNameDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleApplyServiceName();
+                  }}
+                  placeholder={DEFAULT_APM_SERVICE_NAME}
+                  className="h-7 w-40 px-2 bg-background border border-border rounded font-mono text-xs text-foreground focus:outline-hidden focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyServiceName}
+                  disabled={isSavingServiceName}
+                  className="h-7 px-3 rounded bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-wait cursor-pointer transition"
+                >
+                  {isSavingServiceName ? 'Salvando…' : 'Aplicar'}
+                </button>
+                <span className="text-[11px] text-muted-foreground">
+                  Identifica esta aplicação no APM (<code className="font-mono">otel.service.name</code>); use o nome do seu sistema.
+                </span>
+              </div>
+
               {/* Tabs de Conexão */}
               <div className="flex items-center gap-1 border-b border-border pb-1">
                 <button
@@ -1514,7 +1624,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
               {setupTab === 'karaf' && (
                 <div className="flex flex-col gap-2 mt-1">
                   <p className="text-muted-foreground font-sans text-xs">
-                    Basta colocar o arquivo <code className="text-foreground font-mono">opentelemetry-javaagent.jar</code> dentro da pasta <code className="text-foreground font-mono">bin</code> do seu Karaf — o Dev Manager detecta e anexa automaticamente ao iniciar pelo Cockpit! Para scripts externos (<code className="text-foreground font-mono">winthor.bat</code>), use:
+                    Coloque o arquivo <code className="text-foreground font-mono">opentelemetry-javaagent.jar</code> dentro da pasta <code className="text-foreground font-mono">bin</code> do seu Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> acima — o Dev Manager passa a anexar o agente sozinho ao iniciar pelo Cockpit. Para scripts externos (<code className="text-foreground font-mono">winthor.bat</code>), use:
                   </p>
                   <div className="relative">
                     <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-emerald-400 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">

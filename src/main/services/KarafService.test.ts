@@ -507,7 +507,20 @@ client.bat "feature:install -r custom-feature/2.0.0"
       }
     });
 
-    it('anexa automaticamente o agente OpenTelemetry em JAVA_TOOL_OPTIONS se encontrado no karafPath', () => {
+    it('NÃO anexa o agente OpenTelemetry por padrão, mesmo com o jar presente no karafPath', () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'opentelemetry-javaagent.jar'), 'mock-agent');
+
+      vi.spyOn(configService, 'getSettings').mockReturnValue({
+        ...configService.getSettings(),
+        karafPath: tmpDir
+      });
+
+      expect(karafService.getResolvedJavaEnv().JAVA_TOOL_OPTIONS).not.toContain('opentelemetry-javaagent.jar');
+    });
+
+    it('anexa o agente OpenTelemetry em JAVA_TOOL_OPTIONS quando apmInstrumentationEnabled está ligado', () => {
       const binDir = path.join(tmpDir, 'bin');
       fs.mkdirSync(binDir, { recursive: true });
       const agentPath = path.join(binDir, 'opentelemetry-javaagent.jar');
@@ -515,7 +528,8 @@ client.bat "feature:install -r custom-feature/2.0.0"
 
       vi.spyOn(configService, 'getSettings').mockReturnValue({
         ...configService.getSettings(),
-        karafPath: tmpDir
+        karafPath: tmpDir,
+        apmInstrumentationEnabled: true
       });
 
       const env = karafService.getResolvedJavaEnv();
@@ -523,7 +537,22 @@ client.bat "feature:install -r custom-feature/2.0.0"
       expect(env.JAVA_TOOL_OPTIONS).toContain('opentelemetry-javaagent.jar');
       expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.exporter.otlp.endpoint=http://127.0.0.1:4318');
       expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.exporter.otlp.protocol=http/protobuf');
-      expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.service.name=karaf-winthor');
+      expect(env.JAVA_TOOL_OPTIONS).toContain('-Dotel.service.name=karaf-app');
+    });
+
+    it('usa o nome de serviço configurado em apmServiceName no lugar do padrão', () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'opentelemetry-javaagent.jar'), 'mock-agent');
+
+      vi.spyOn(configService, 'getSettings').mockReturnValue({
+        ...configService.getSettings(),
+        karafPath: tmpDir,
+        apmInstrumentationEnabled: true,
+        apmServiceName: 'minha-empresa-erp'
+      });
+
+      expect(karafService.getResolvedJavaEnv().JAVA_TOOL_OPTIONS).toContain('-Dotel.service.name=minha-empresa-erp');
     });
 
     it('exporta para a porta do receptor APM configurada nas configurações', () => {
@@ -534,6 +563,7 @@ client.bat "feature:install -r custom-feature/2.0.0"
       vi.spyOn(configService, 'getSettings').mockReturnValue({
         ...configService.getSettings(),
         karafPath: tmpDir,
+        apmInstrumentationEnabled: true,
         apmReceiverPort: 4418
       });
 

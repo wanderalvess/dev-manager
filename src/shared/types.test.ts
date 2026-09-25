@@ -6,7 +6,8 @@ import {
   detectIdeInfo,
   getApmReceiverPort,
   isValidApmReceiverPort,
-  buildOtelJavaAgentProperties
+  buildOtelJavaAgentProperties,
+  getApmServiceName
 } from './types';
 
 describe('getApmReceiverPort / isValidApmReceiverPort', () => {
@@ -28,6 +29,20 @@ describe('getApmReceiverPort / isValidApmReceiverPort', () => {
 
   it('monta as propriedades do agente Java apontando para a porta informada', () => {
     expect(buildOtelJavaAgentProperties(4418)).toContain('-Dotel.exporter.otlp.endpoint=http://127.0.0.1:4418');
+  });
+
+  it('usa o nome de serviço informado, com fallback genérico quando ausente', () => {
+    expect(buildOtelJavaAgentProperties(4418, 'meu-app')).toContain('-Dotel.service.name=meu-app');
+    expect(buildOtelJavaAgentProperties(4418)).toContain('-Dotel.service.name=karaf-app');
+  });
+});
+
+describe('getApmServiceName', () => {
+  it('usa o nome configurado quando presente e não vazio, com fallback genérico caso contrário', () => {
+    expect(getApmServiceName({ apmServiceName: 'minha-empresa-erp' })).toBe('minha-empresa-erp');
+    expect(getApmServiceName({ apmServiceName: '  ' })).toBe('karaf-app');
+    expect(getApmServiceName({})).toBe('karaf-app');
+    expect(getApmServiceName(null)).toBe('karaf-app');
   });
 });
 

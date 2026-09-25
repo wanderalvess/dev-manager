@@ -587,7 +587,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Karaf iniciado pelo Cockpit:</span>
             <p>
-              Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf. Ao iniciar pelo Dev Manager, o agente é anexado automaticamente e exporta para a porta configurada. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong>.
+              Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong> — desligado por padrão, para não poluir o log do Karaf quando ninguém está olhando a telemetria. Com a opção ligada, o agente é anexado e exporta para a porta configurada a cada start pelo Dev Manager. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto na mesma tela.
             </p>
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Porta ocupada?</span>
             <p>
@@ -596,6 +596,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Teste rápido:</span>
             <p>
               A aba <strong className="text-foreground">cURL</strong> de Como Conectar envia um span de exemplo; o botão <strong className="text-foreground">Simular Tráfego</strong> gera dados fictícios para conhecer a tela.
+            </p>
+            <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Nome do serviço:</span>
+            <p>
+              O campo <strong className="text-foreground">Nome do serviço</strong> em Como Conectar define o <code className="font-mono text-primary">otel.service.name</code> anexado pelo Cockpit (padrão genérico <code className="font-mono text-primary">karaf-app</code>) — use o nome real da sua aplicação para identificá-la no Dashboard e nos filtros por serviço.
             </p>
           </div>
           {onNavigate && (
@@ -1850,11 +1854,15 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                      <span><strong>Karaf Instrumentado:</strong> Com o <code className="font-mono text-primary">opentelemetry-javaagent.jar</code> em <code className="font-mono text-primary">&lt;karaf&gt;/bin</code>, o agente é anexado sozinho ao iniciar pelo Cockpit.</span>
+                      <span><strong>Karaf Instrumentado:</strong> Com o <code className="font-mono text-primary">opentelemetry-javaagent.jar</code> em <code className="font-mono text-primary">&lt;karaf&gt;/bin</code> e o toggle "Anexar automaticamente" ligado em <em>Como Conectar</em>, o agente é anexado sozinho ao iniciar pelo Cockpit (desligado por padrão, para não poluir o log do Karaf).</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
                       <span><strong>Porta Configurável:</strong> Troque a porta em <em>Como Conectar</em> se outro coletor já ocupa a 4318.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Nome do Serviço Configurável:</strong> Defina o <code className="font-mono text-primary">otel.service.name</code> em <em>Como Conectar</em> — identifica sua aplicação no APM em vez do padrão genérico <code className="font-mono text-primary">karaf-app</code>.</span>
                     </li>
                   </ul>
                 </div>

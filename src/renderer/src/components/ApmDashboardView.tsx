@@ -206,7 +206,7 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
           <div className="flex items-center justify-between pt-1">
             <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>Dica: Iniciar o Karaf pelo painel anexa o agente automaticamente.</span>
+              <span>Dica: ligue "Anexar o agente automaticamente" em Como Conectar para o Karaf exportar sozinho.</span>
             </div>
             {onGenerateDemo && (
               <button

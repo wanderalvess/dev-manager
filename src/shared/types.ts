@@ -334,6 +334,10 @@ export interface AppSettings {
   routine801Url?: string;
   /** Porta do receptor OTLP/HTTP do APM (padrão 4318); o Karaf iniciado pelo app exporta traces para ela */
   apmReceiverPort?: number;
+  /** Nome de serviço (`otel.service.name`) anexado pelo agente Java do APM (padrão: karaf-app) */
+  apmServiceName?: string;
+  /** Anexa o agente OpenTelemetry automaticamente ao iniciar o Karaf pelo Cockpit (padrão: desligado, para não poluir o log quando a telemetria não é usada) */
+  apmInstrumentationEnabled?: boolean;
   /** Usuário para login automático no WTA (ex: PCADMIN) */
   wtaLogin?: string;
   /** Senha ou hash MD5 da senha do usuário no WTA */
@@ -1556,6 +1560,15 @@ export function getApmReceiverPort(settings?: Pick<AppSettings, 'apmReceiverPort
   return isValidApmReceiverPort(configured) ? configured : DEFAULT_APM_OTLP_PORT;
 }
 
+/** Nome de serviço (`otel.service.name`) usado quando o usuário não configurou um próprio. */
+export const DEFAULT_APM_SERVICE_NAME = 'karaf-app';
+
+/** Nome de serviço configurado para o agente OTel anexado pelo Cockpit, com fallback genérico. */
+export function getApmServiceName(settings?: Pick<AppSettings, 'apmServiceName'> | null): string {
+  const configured = settings?.apmServiceName?.trim();
+  return configured || DEFAULT_APM_SERVICE_NAME;
+}
+
 /**
  * Endpoint base do receptor OTLP do APM. Usa 127.0.0.1 porque o receptor escuta só em IPv4 e
  * `localhost` resolve primeiro para ::1 em alguns runtimes (ex.: Node 17–19), derrubando o export.
@@ -1571,7 +1584,7 @@ export function getApmOtlpEndpoint(port: number = DEFAULT_APM_OTLP_PORT): string
  */
 export function buildOtelJavaAgentProperties(
   port: number = DEFAULT_APM_OTLP_PORT,
-  serviceName: string = 'karaf-winthor'
+  serviceName: string = DEFAULT_APM_SERVICE_NAME
 ): string[] {
   return [
     `-Dotel.exporter.otlp.endpoint=${getApmOtlpEndpoint(port)}`,

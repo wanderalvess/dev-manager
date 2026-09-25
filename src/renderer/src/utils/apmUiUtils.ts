@@ -3,7 +3,8 @@ import {
   TraceDetails,
   TraceSpan,
   getApmOtlpEndpoint,
-  buildOtelJavaAgentProperties
+  buildOtelJavaAgentProperties,
+  DEFAULT_APM_SERVICE_NAME
 } from '../../../shared/types';
 
 export type FilterPreset = 'ALL' | 'ERRORS' | 'SLOW' | 'DB';
@@ -122,11 +123,12 @@ export function formatSpanErrorForClipboard(span: TraceSpan): string {
 }
 
 /**
- * Snippets da tela "Como Conectar", montados a partir da porta real do receptor.
+ * Snippets da tela "Como Conectar", montados a partir da porta real do receptor e do nome de
+ * serviço configurado (`apmServiceName`), para o comando copiado já sair com os valores do usuário.
  */
-export function buildApmSetupSnippets(port: number) {
+export function buildApmSetupSnippets(port: number, serviceName: string = DEFAULT_APM_SERVICE_NAME) {
   const endpoint = getApmOtlpEndpoint(port);
-  const agentOptions = ['-javaagent:opentelemetry-javaagent.jar', ...buildOtelJavaAgentProperties(port)];
+  const agentOptions = ['-javaagent:opentelemetry-javaagent.jar', ...buildOtelJavaAgentProperties(port, serviceName)];
   const curlBody = '[{"traceId":"trace-manual-01","spanId":"span-manual-01","name":"GET /api/v1/ping","serviceName":"meu-servico","durationMs":42,"httpStatusCode":200}]';
 
   return {
