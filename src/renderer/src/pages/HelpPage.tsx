@@ -433,10 +433,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.15.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.16.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.15.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.16.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
               <li>
                 <strong className="text-foreground">LEIA-ME.txt, instalar-extras.cmd e mcp\:</strong> guia do usuário com os links dos downloads opcionais, script que instala o modelo do RAG e o Oracle Instant Client colocados na pasta, e o servidor MCP pronto para uso. Para regenerar só esses arquivos: <code className="font-mono text-primary">npm run release:folder</code>.
@@ -743,7 +743,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '9 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqList.length}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.15.0'}` }
+    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.16.0'}` }
   ];
 
   const handleSearchChange = (val: string) => {
@@ -847,7 +847,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
                       COCKPIT DO DESENVOLVEDOR
                     </span>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Dev Manager • v{appInfo?.appVersion || '1.15.0'}
+                      Dev Manager • v{appInfo?.appVersion || '1.16.0'}
                     </span>
                     {appInfo?.isAdmin ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
@@ -2163,7 +2163,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
                     <h3 className="text-sm sm:text-base font-extrabold text-foreground flex items-center gap-2">
                       Dev <span className="text-primary font-bold">Manager</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-                        v{appInfo?.appVersion || '1.15.0'}
+                        v{appInfo?.appVersion || '1.16.0'}
                       </span>
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
@@ -2439,7 +2439,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      Dev Manager {appInfo?.appVersion || '1.15.0'}.exe (Portátil)
+                      Dev Manager {appInfo?.appVersion || '1.16.0'}.exe (Portátil)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Versão autônoma que não necessita instalação. Pode ser executada diretamente de pastas de rede ou pendrives.
@@ -2449,7 +2449,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-primary" />
-                      Dev Manager Setup {appInfo?.appVersion || '1.15.0'}.exe (Instalador)
+                      Dev Manager Setup {appInfo?.appVersion || '1.16.0'}.exe (Instalador)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Instalador padrão NSIS que cria atalhos no Menu Iniciar e Área de Trabalho com desinstalador integrado.

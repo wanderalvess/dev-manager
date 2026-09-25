@@ -5,9 +5,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+
+## [1.16.0] - 2026-09-25
 ### Adicionado
 - Pasta do release mais completa: o `npm run build:electron` passa a gerar também `LEIA-ME.txt` (instalação, links dos downloads opcionais e registro do MCP, com a versão preenchida), `instalar-extras.cmd` (instala o modelo do RAG e extrai o Oracle Instant Client colocados na pasta) e `mcp/`, um servidor MCP autossuficiente que roda com o próprio `Dev Manager.exe` instalado, sem Node.js nem código-fonte. Novos scripts `npm run build:mcp` e `npm run release:folder`.
 - Central de Ajuda: FAQ "O que preciso baixar à parte?" com links do Oracle Instant Client, Visual C++ Redistributable, modelo do RAG e Ollama; o FAQ do MCP ganha o passo a passo para quem usa o app instalado.
+- **APM & Traces**: nome do serviço reportado pelo Java Agent (`otel.service.name`) configurável pela UI (`settings.apmServiceName`, tela Como Conectar), com fallback genérico `karaf-app` no lugar do nome fixo `karaf-winthor`. O anexo automático do agente ao Karaf passa a ser opt-in via o toggle "Anexar o agente automaticamente" (`settings.apmInstrumentationEnabled`, desligado por padrão) — antes bastava o `opentelemetry-javaagent.jar` existir em `<karaf>/bin` para ser anexado sempre, poluindo o log do Karaf mesmo com ninguém olhando o APM.
+- **Database Studio**: grade de resultados editável no estilo planilha quando o resultado vem de um `SELECT * FROM <tabela única>` (ex.: clique numa tabela na sidebar) — botão "Nova linha", duplo-clique para editar célula (com `[NULL]` para gravar nulo) e exclusão de linha pelo menu de contexto. `DatabaseService` ganha `insertRow`/`updateRow`/`deleteRow` (binds posicionais, validação de tabela/colunas como identificadores SQL, `UPDATE`/`DELETE` sem `WHERE` bloqueado por segurança), expostos nos três transportes sem duplicar lógica de negócio.
+- Configurações: busca rápida entre as abas que realça o campo encontrado, toggle de exibir/ocultar nas credenciais WTA (senha e cookie de sessão, mesmo padrão já usado na senha do Karaf) e indicador de alterações não salvas (badge ao lado do botão Salvar + aviso ao tentar fechar a janela com edições pendentes).
+- Banco de Dados: aviso de primeiro uso quando não há nenhuma conexão cadastrada, com atalho direto para criar uma ou abrir Configurações.
+- Central de Ajuda: botão "Rever Tours das Telas" reativa os tours individuais de cada módulo (Banco, Rotinas, Deploy, Containers, Git...), que antes ficavam perdidos para sempre depois da escolha inicial de pular no modal de onboarding.
+### Alterado
+- Configurações: botões "Restaurar Padrões" (serviços monitorados, processos conflitantes, portas e fontes de log) passam a pedir confirmação e usam estilo destrutivo, evitando perda acidental de listas configuradas manualmente.
 
 ## [1.15.0] - 2026-09-24
 ### Adicionado
