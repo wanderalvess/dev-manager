@@ -83,11 +83,67 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   const [isRoutine801ModalOpen, setIsRoutine801ModalOpen] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<DeployProfileHistoryEntry[]>([]);
   const [isConsoleMaximized, setIsConsoleMaximized] = useState<boolean>(false);
+  const [isKarafOnline, setIsKarafOnline] = useState<boolean | null>(null);
+  const [isStartingKaraf, setIsStartingKaraf] = useState<boolean>(false);
 
   const activeProfile = useMemo(() => {
     if (!profiles || profiles.length === 0) return null;
     return profiles.find((p) => p.id === activeProfileId) || profiles[0];
   }, [profiles, activeProfileId]);
+
+  const activeProfileNeedsKaraf = useMemo(() => {
+    if (!activeProfile?.steps) return false;
+    const hasKarafStep = activeProfile.steps.some(
+      (s) => s.enabled !== false && (s.type === 'karaf-command' || s.type === 'karaf-bundle')
+    );
+    const hasStartStep = activeProfile.steps.some(
+      (s) =>
+        s.enabled !== false &&
+        ((s.type === 'service-action' && s.serviceAction === 'start') ||
+          (s.type === 'command' && /(?:karaf|winthor)(?:\.bat|\.sh)?/i.test(s.command || '')))
+    );
+    return hasKarafStep && !hasStartStep;
+  }, [activeProfile]);
+
+  // Monitora o status de escuta do Karaf OSGi em segundo plano
+  useEffect(() => {
+    let mounted = true;
+    const checkKaraf = async () => {
+      try {
+        if (window.electronAPI?.isKarafRunning) {
+          const running = await window.electronAPI.isKarafRunning();
+          if (mounted) setIsKarafOnline(running);
+        }
+      } catch {
+        if (mounted) setIsKarafOnline(false);
+      }
+    };
+    checkKaraf();
+    const interval = setInterval(checkKaraf, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleStartEmbeddedKaraf = async () => {
+    if (isStartingKaraf) return;
+    setIsStartingKaraf(true);
+    try {
+      if (window.electronAPI?.startEmbeddedKaraf) {
+        await window.electronAPI.startEmbeddedKaraf();
+        setTimeout(async () => {
+          if (window.electronAPI?.isKarafRunning) {
+            const running = await window.electronAPI.isKarafRunning();
+            setIsKarafOnline(running);
+          }
+          setIsStartingKaraf(false);
+        }, 3000);
+      }
+    } catch {
+      setIsStartingKaraf(false);
+    }
+  };
 
   // Carregar e sincronizar configurações do Karaf e perfis de deploy
   useEffect(() => {
@@ -635,6 +691,27 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
                     <span>Ajustar Diretório nas Configurações</span>
                   </button>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeProfileNeedsKaraf && isKarafOnline === false && (
+            <div className="bg-amber-500/10 border border-amber-500/40 rounded-lg p-3 flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <span className="font-bold block">Karaf / OSGi offline</span>
+                <span className="text-[11px] text-muted-foreground block mt-0.5">
+                  O contêiner Karaf não está rodando (porta SSH inacessível). As etapas OSGi deste perfil falharão se ele não for iniciado.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleStartEmbeddedKaraf}
+                  disabled={isStartingKaraf}
+                  className="mt-2 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-md text-[11px] font-semibold text-amber-700 dark:text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Play className={`w-3 h-3 ${isStartingKaraf ? 'animate-spin' : ''}`} />
+                  <span>{isStartingKaraf ? 'Iniciando Karaf...' : 'Iniciar Karaf Embutido'}</span>
+                </button>
               </div>
             </div>
           )}

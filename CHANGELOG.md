@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.15.2] - 2026-09-25
+### Corrigido
+- **Perfis de Deploy & Karaf CLI (Prevenção de Falsos Positivos)**:
+  - **Detecção de Sessão Falha (`client.bat`)**: Corrigida falha crítica onde o `client.bat` no Windows retornava exit code `0` com a mensagem `"Failed to get the session."` quando o Karaf estava offline, fazendo com que o pipeline de deploy registrasse falsos sucessos (`"PERFIL EXECUTADO COM SUCESSO!"`). O parser de erros do `KarafService` agora reconhece adequadamente mensagens de falha de conexão SSH (`Failed to get the session`, `Connection refused`, `ConnectException`, `Session is closed`), sinalizando o erro real e emitindo dicas de diagnóstico para o desenvolvedor.
+  - **Validação Prévia do Container OSGi**: Implementada checagem antecipada de disponibilidade do Apache Karaf (porta SSH 8101) em `DeployService.executeProfile`. Caso o perfil contenha etapas Karaf (`karaf-command`, `karaf-bundle`) e não inclua uma etapa de inicialização prévia, a execução é interrompida imediatamente antes do primeiro passo, evitando esperas de 60s+ em compilações Maven inúteis (`mvn clean install`).
+  - **Proteção em `deploy` e `buildAndDeployMaven`**: Adicionada verificação prévia de status do Karaf também nos deploys diretos e nas instalações de features da Rotina 801 (`karaf_cli`).
+
+### Adicionado
+- **Serviço Central e Transportes (`isKarafRunning`)**:
+  - Nova checagem `isKarafRunning` exposta no processo principal Electron (`karaf:is-running`), no preload (`window.electronAPI.isKarafRunning`), na API Web/Docker (`GET /api/karaf/status`) e no MCP (`karaf_is_running`), unificando o diagnóstico de conectividade SSH local.
+- **Interface de Deploy**:
+  - Banner contextual de alerta na tela de Deploy avisando quando o perfil ativo requer o Karaf mas o container OSGi se encontra offline, acompanhado de botão de ação rápida para iniciar o Karaf Embutido em modo debug diretamente da tela.
+- **Documentação e Central de Ajuda**:
+  - Nova pergunta no FAQ da Central de Ajuda detalhando o comportamento do `client.bat`, a importância da porta SSH e como resolver falhas de sessão.
+  - Atualização do catálogo de ferramentas MCP (`docs/MCP_TOOLS.md`) para 125 ferramentas com a inclusão de `karaf_is_running`.
+
 ## [1.15.1] - 2026-09-24
 ### Corrigido
 - **Rotina 801 (Catálogo Oficial do WinThor - Porta 8889)**:

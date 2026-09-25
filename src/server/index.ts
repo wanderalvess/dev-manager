@@ -406,6 +406,12 @@ app.post('/api/profile/kill-port', async (req, res) => {
 });
 
 // 3. Karaf Deployer & Console Embutido
+app.get('/api/karaf/status', async (req, res) => {
+  const port = req.query.port ? Number(req.query.port) : undefined;
+  const isRunning = await karafService.isKarafRunning(port);
+  res.json({ isRunning });
+});
+
 app.get('/api/karaf/embedded/status', (_req, res) => {
   res.json({ isRunning: karafService.isEmbeddedRunning() });
 });

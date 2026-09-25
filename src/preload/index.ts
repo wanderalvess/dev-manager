@@ -155,6 +155,7 @@ const electronAPI = {
   sendKarafInput: (input: string): Promise<boolean> => ipcRenderer.invoke('karaf:send-input', input),
   stopEmbeddedKaraf: (): Promise<boolean> => ipcRenderer.invoke('karaf:stop-embedded'),
   isEmbeddedKarafRunning: (): Promise<boolean> => ipcRenderer.invoke('karaf:is-embedded-running'),
+  isKarafRunning: (sshPort?: number): Promise<boolean> => ipcRenderer.invoke('karaf:is-running', sshPort),
   onKarafStdout: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('karaf:stdout', subscription);

@@ -632,6 +632,30 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
           </div>
         </div>
       )
+    },
+    {
+      id: 'karaf-offline-deploy',
+      question: 'Por que o deploy avisa "Karaf / OSGi offline (porta SSH fechada)" ou falha com "Failed to get the session"?',
+      category: 'Deploy & Pipelines',
+      tags: ['karaf', 'osgi', 'deploy', 'client.bat', 'failed to get the session', 'ssh', '8101', 'offline', 'pipeline'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Para comandos Karaf (<code className="font-mono text-primary font-semibold">feature:repo-add</code>, <code className="font-mono text-primary font-semibold">feature:install</code>, <code className="font-mono text-primary font-semibold">bundle:*</code>), o Dev Manager valida previamente se o contêiner OSGi está rodando e escutando na porta SSH (padrão <code className="font-mono text-primary font-semibold">8101</code>).
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
+            <p>
+              O script oficial <code className="font-mono text-primary">client.bat</code> do Windows frequentemente retorna código de saída <code className="font-mono text-primary">0</code> mesmo ao exibir a mensagem de erro <code className="font-mono text-primary">"Failed to get the session."</code> quando o Karaf não está ativo.
+            </p>
+            <p>
+              A verificação prévia do Dev Manager impede que você gaste tempo esperando compilações Maven lentas (<code className="font-mono text-primary">mvn clean install</code>) para depois falhar no deploy, e garante que falhas de conexão SSH não sejam mascaradas como falso sucesso.
+            </p>
+            <p className="pt-1">
+              <strong>Como resolver:</strong> Inicie o Karaf pelo botão <strong className="text-foreground">Iniciar Karaf Embutido</strong> no banner de alerta da tela de Deploy, pela tela de <strong className="text-foreground">Ambiente Dev</strong>, ou adicione uma etapa que inicie o serviço/script Karaf antes dos comandos no seu perfil.
+            </p>
+          </div>
+        </div>
+      )
     }
   ], [appInfo, copiedItem, copyToClipboard, debugPort, onNavigate, sshPort, webPort]);
 
@@ -676,7 +700,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '9 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqList.length}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.15.1'}` }
+    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.15.2'}` }
   ];
 
   const handleSearchChange = (val: string) => {
@@ -1604,6 +1628,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                       <span><strong>Karaf OSGi:</strong> Comandos <code className="font-mono text-primary">feature:repo-add</code> e <code className="font-mono text-primary">feature:install</code> sugeridos pelo <code className="font-mono text-primary">pom.xml</code>.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      <span><strong>Proteção Prévia OSGi:</strong> Validação automática do status do Karaf (porta SSH 8101) antes de compilar ou instalar, prevenindo falsos sucessos e esperas desnecessárias com container offline.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />

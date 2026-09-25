@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Dev Manager expõe **124 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Dev Manager expõe **125 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -40,6 +40,7 @@ Ferramentas de orquestração local (macros).
 ## 3. Servidor Apache Karaf e Bundles
 Domínio completo para interagir com o Karaf, inspecionar logs, diagnosticar conflitos OSGi e fazer deploys.
 
+*   **`karaf_is_running`**: Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101).
 *   **`karaf_start_embedded` / `karaf_stop_embedded` / `karaf_is_embedded_running`**: Inicia, encerra e verifica se a instância do Karaf embutida do Dev Manager está ativa.
 *   **`karaf_get_embedded_output` / `karaf_send_embedded_input`**: Lê a saída acumulada do console embutido desde a última leitura e envia uma linha de comando a ele.
 *   **`karaf_get_persisted_logs`**: Lê o final do log do console embutido gravado em disco, sem consumir o buffer (sobrevive a reinícios).
@@ -56,6 +57,7 @@ Domínio completo para interagir com o Karaf, inspecionar logs, diagnosticar con
 *   **`karaf_get_log`**: Lê diretamente o arquivo `karaf.log` sem precisar abrir.
 
 **Exemplo de como pedir à IA:**
+> "Verifique se o Apache Karaf está em execução antes de iniciar o deploy."
 > "Faça o build Maven do projeto em c:\projetos\meu-servico e faça deploy no Karaf."
 > "Verifique se há conflitos de versão OSGi ou bundles em estado de erro no meu Karaf."
 

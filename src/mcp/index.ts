@@ -10,9 +10,9 @@ const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.1';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.2';
   } catch {
-    return '1.15.1';
+    return '1.15.2';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -494,6 +494,17 @@ server.registerTool(
 );
 
 // --- 3. Karaf ---
+server.registerTool(
+  'karaf_is_running',
+  {
+    title: 'Verificar status do Karaf/OSGi',
+    description:
+      'Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101). Use antes de tentar executar comandos ou deploys.',
+    inputSchema: { sshPort: z.number().int().positive().optional() }
+  },
+  async ({ sshPort }) => ok({ isRunning: await karafService.isKarafRunning(sshPort) })
+);
+
 server.registerTool(
   'karaf_is_embedded_running',
   { title: 'Console embutido rodando?', description: 'Verifica se o console Karaf embutido está ativo.' },

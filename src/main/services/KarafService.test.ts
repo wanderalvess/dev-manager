@@ -10,6 +10,7 @@ import {
 } from './KarafService';
 import { ConfigService } from './ConfigService';
 import * as processUtils from '../utils/process';
+import * as networkUtils from '../utils/network';
 
 describe('KarafService', () => {
   let tmpDir: string;
@@ -541,7 +542,62 @@ client.bat "feature:install -r custom-feature/2.0.0"
     });
   });
 
+  describe('isKarafRunning', () => {
+    it('retorna true quando checkPortOpen resolve true', async () => {
+      vi.spyOn(networkUtils, 'checkPortOpen').mockResolvedValueOnce(true);
+      const running = await karafService.isKarafRunning(8101);
+      expect(running).toBe(true);
+    });
+
+    it('retorna false quando checkPortOpen resolve false', async () => {
+      vi.spyOn(networkUtils, 'checkPortOpen').mockResolvedValueOnce(false);
+      const running = await karafService.isKarafRunning(8101);
+      expect(running).toBe(false);
+    });
+  });
+
   describe('executeKarafCommand', () => {
+    beforeEach(() => {
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValue(true);
+    });
+
+    it('aborta execução com código 1 quando Karaf OSGi está offline', async () => {
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValueOnce(false);
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('bundle:list', (c) => chunks.push(c));
+
+      expect(res.code).toBe(1);
+      expect(res.stderr).toContain('Karaf OSGi offline');
+      expect(chunks.some((c) => c.includes('não está em execução'))).toBe(true);
+      expect(chunks.some((c) => c.includes('💡 [DICA]'))).toBe(true);
+    });
+
+    it('detecta falha quando client.bat retorna exit code 0 com "Failed to get the session."', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: [
+          'client.bat: Ignoring predefined value for KARAF_HOME',
+          'Failed to get the session.',
+          'Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8'
+        ].join('\r\n'),
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('feature:repo-add mvn:com.br.com.pcsist/matcon/1.0/xml/features', (c) => chunks.push(c));
+
+      expect(res.code).toBe(1);
+      expect(res.stderr).toContain('Failed to get the session.');
+      expect(chunks.some((c) => c.includes('💡 [DICA] O cliente Karaf não conseguiu estabelecer sessão'))).toBe(true);
+    });
+
     it('bloqueia comandos com caracteres perigosos (isSafeKarafCommand)', async () => {
       const chunks: string[] = [];
       const res = await karafService.executeKarafCommand('feature:list; rm -rf /', (c) => chunks.push(c));

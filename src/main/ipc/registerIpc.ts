@@ -345,6 +345,10 @@ export function registerIpcHandlers(
     return karafService.isEmbeddedRunning();
   });
 
+  ipcMain.handle('karaf:is-running', async (_, sshPort?: number) => {
+    return await karafService.isKarafRunning(sshPort);
+  });
+
   ipcMain.handle('karaf:deploy', async (_, request: KarafDeployRequest) => {
     const result = await karafService.deploy(request, (chunk) => {
       mainWindow.webContents.send('karaf:log-chunk', chunk);

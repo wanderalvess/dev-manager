@@ -6,7 +6,8 @@ import {
   Routine801CatalogResponse,
   Routine801Feature,
   Routine801InstallRequest,
-  Routine801InstallResult
+  Routine801InstallResult,
+  getKarafSshPort
 } from '../../shared/types';
 import {
   buildKarafInstallCommands,
@@ -332,6 +333,19 @@ export class Routine801Service {
     }
 
     // Modo 2: Execução direta no Karaf CLI via KarafService (padrão)
+    const isRunning = await this.karafService.isKarafRunning(credentials?.port);
+    if (!isRunning) {
+      const port = credentials?.port || getKarafSshPort(this.configService.getSettings());
+      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} fechada). Inicie o Karaf antes de instalar features do catálogo.`;
+      onChunk(`[ERRO] ${err}\r\n`);
+      return {
+        success: false,
+        output: err,
+        installedCount: 0,
+        failedCount: funcionalidades.length
+      };
+    }
+
     let totalOutput = '';
     const details: Routine801InstallResult['details'] = [];
     let installedCount = 0;

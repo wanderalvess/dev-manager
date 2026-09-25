@@ -407,6 +407,47 @@ export class DeployService {
       return { success: true };
     }
 
+    // Se o perfil depende do Karaf (etapas karaf-command ou karaf-bundle) e NÃO possui nenhuma
+    // etapa que inicie o container previamente (ex: service start ou karaf.bat), valida se o
+    // container está online antes de começar a executar (evitando aguardar builds Maven demorados
+    // para falhar no deploy ou ter falsos positivos com client.bat offline).
+    const hasKarafSteps = steps.some((s) => s.type === 'karaf-command' || s.type === 'karaf-bundle');
+    const hasStepThatStartsKaraf = steps.some((s) => {
+      if (s.type === 'service-action' && s.serviceAction === 'start') return true;
+      if (s.type === 'command' && s.command && /(?:karaf|winthor)(?:\.bat|\.sh)?/i.test(s.command)) return true;
+      return false;
+    });
+
+    if (hasKarafSteps && !hasStepThatStartsKaraf) {
+      const isRunning = await this.karafService.isKarafRunning();
+      if (!isRunning) {
+        const settings = this.configService.getSettings();
+        const port = getKarafSshPort(settings);
+        const karafStepNames = steps
+          .filter((s) => s.type === 'karaf-command' || s.type === 'karaf-bundle')
+          .map((s) => `"${s.name}"`)
+          .join(', ');
+        const offlineErr = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} inacessível). Inicie o Karaf antes de executar este perfil de deploy.`;
+        onChunk(`\r\n==========================================\r\n`);
+        onChunk(`❌ EXECUÇÃO ABORTADA: Karaf OSGi offline (porta SSH ${port} fechada).\r\n`);
+        onChunk(`💡 [DICA] Este perfil contém etapas OSGi (${karafStepNames}). Inicie o Karaf pelo Console Embutido ou gere o pipeline antes de prosseguir.\r\n`);
+        onChunk(`==========================================\r\n`);
+        this.saveHistoryEntry({
+          id: `deploy-history-${Date.now()}`,
+          profileId: profile.id,
+          profileName: profile.name,
+          success: false,
+          error: offlineErr,
+          startedAt: new Date(profileStartTime).toISOString(),
+          durationMs: Date.now() - profileStartTime,
+          totalSteps: total,
+          aborted: false,
+          stepResults: []
+        });
+        return { success: false, error: offlineErr };
+      }
+    }
+
     for (let i = 0; i < total; i++) {
       const step = steps[i];
 

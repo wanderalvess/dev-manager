@@ -20,6 +20,7 @@ import {
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
 import { runCapturedProcess } from '../utils/process';
+import { checkPortOpen } from '../utils/network';
 
 const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall', 'refresh', 'resolve'] as const;
 type BundleAction = (typeof BUNDLE_ACTIONS)[number];
@@ -243,6 +244,16 @@ export class KarafService {
     return childEnv;
   }
 
+  /**
+   * Verifica se o contêiner Apache Karaf/OSGi está rodando e escutando na porta SSH (padrão 8101).
+   * Essencial antes de disparar deploys ou comandos via client.bat para evitar timeouts ou falsos positivos.
+   */
+  public async isKarafRunning(sshPort?: number): Promise<boolean> {
+    const settings = this.configService.getSettings();
+    const port = sshPort || getKarafSshPort(settings);
+    return await checkPortOpen(port, '127.0.0.1', 800);
+  }
+
   public async executeKarafCommand(
     command: string,
     onChunk: (chunk: string) => void,
@@ -259,6 +270,16 @@ export class KarafService {
     const user = credentials?.user || settings.karafUser || 'karaf';
     const pass = credentials?.pass || settings.karafPass || 'karaf';
     const sshPort = credentials?.port || getKarafSshPort(settings);
+
+    // Valida se o contêiner OSGi está de fato em execução antes de acionar client.bat.
+    // client.bat frequentemente retorna exit code 0 com "Failed to get the session." quando
+    // o Karaf está offline, gerando falsos positivos na automação.
+    const isOnline = await this.isKarafRunning(sshPort);
+    if (!isOnline) {
+      const errMsg = `[ERRO] O contêiner Apache Karaf/OSGi não está em execução (porta SSH ${sshPort} inacessível).\r\n💡 [DICA] Inicie o Karaf pelo Cockpit (Console Karaf ou pipeline de ambiente) antes de executar comandos ou deploys.\r\n`;
+      onChunk(errMsg);
+      return { code: 1, stdout: '', stderr: `Karaf OSGi offline: porta SSH ${sshPort} fechada` };
+    }
 
     const scriptName = karafClient ? path.basename(karafClient) : 'client.bat';
     const portDesc = sshPort && sshPort !== 8101 ? ` -a ${sshPort}` : '';
@@ -291,9 +312,20 @@ export class KarafService {
     const cleanCombined = `${cleanStdout}\n${cleanStderr}`;
 
     const isLogDisplay = command.trim().startsWith('log:display');
-    const karafErrorMatch = !isLogDisplay
-      ? cleanCombined.match(/(?:Error executing command(?: on bundles)?|Command not found|Failed to get the session|Authentication failed):\s*([^\r\n]+)/i)
-      : (cleanCombined.trim().startsWith('Error executing command:') ? cleanCombined.match(/Error executing command:\s*([^\r\n]+)/i) : null);
+    const errorPattern = /(?:Error executing command(?: on bundles)?|Command not found|Failed to get the session|Authentication failed|Connection refused|ConnectException|Session is closed)/i;
+    let karafErrorMatch: RegExpMatchArray | null = null;
+
+    if (!isLogDisplay) {
+      const lines = cleanCombined.split(/\r?\n/);
+      for (const line of lines) {
+        if (errorPattern.test(line)) {
+          karafErrorMatch = [line.trim()] as RegExpMatchArray;
+          break;
+        }
+      }
+    } else if (cleanCombined.trim().startsWith('Error executing command:')) {
+      karafErrorMatch = cleanCombined.match(/Error executing command:\s*([^\r\n]+)/i);
+    }
 
     if (karafErrorMatch) {
       const errLine = karafErrorMatch[0].trim();
@@ -301,6 +333,8 @@ export class KarafService {
 
       if (/No matching features for/i.test(errLine)) {
         onChunk(`\r\n💡 [DICA] O Karaf não encontrou a feature no repositório. Verifique se o atributo name="..." no features.xml do projeto coincide com o nome informado no comando.\r\n`);
+      } else if (/Failed to get the session|Connection refused|ConnectException|Session is closed/i.test(errLine)) {
+        onChunk(`\r\n💡 [DICA] O cliente Karaf não conseguiu estabelecer sessão com o contêiner OSGi. Verifique se o Karaf está rodando e com a porta SSH ativa.\r\n`);
       }
 
       return {
@@ -514,6 +548,16 @@ export class KarafService {
     const startedAt = new Date().toISOString();
     const t0 = Date.now();
 
+    const isRunning = await this.isKarafRunning(request.port);
+    if (!isRunning) {
+      const port = request.port || getKarafSshPort(this.configService.getSettings());
+      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} inacessível). Inicie o Karaf antes de realizar o deploy.`;
+      onChunk(`\r\n[ERRO] ${err}\r\n💡 [DICA] Inicie o Karaf pelo Console Karaf integrado ou pipeline de ambiente.\r\n`);
+      const result = { success: false, error: err };
+      this.recordDeployHistory(request, result, startedAt, Date.now() - t0, trigger, projectPath);
+      return result;
+    }
+
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`INICIANDO DEPLOY NO KARAF LOCAL\r\n`);
     onChunk(`==========================================\r\n`);
@@ -606,6 +650,20 @@ export class KarafService {
   ): Promise<{ success: boolean; error?: string }> {
     const startedAt = new Date().toISOString();
     const t0 = Date.now();
+
+    // Valida previamente se o Karaf está rodando para não gastar tempo compilando se o container estiver offline
+    const isRunning = await this.isKarafRunning(request.port);
+    if (!isRunning) {
+      const port = request.port || getKarafSshPort(this.configService.getSettings());
+      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} inacessível). Inicie o Karaf antes de compilar e fazer o deploy.`;
+      onChunk(`\r\n==========================================\r\n`);
+      onChunk(`❌ DEPLOY ABORTADO: Karaf OSGi offline (porta SSH ${port} fechada).\r\n`);
+      onChunk(`💡 [DICA] Inicie o Karaf pelo Cockpit antes de rodar o deploy.\r\n`);
+      onChunk(`==========================================\r\n`);
+      const result = { success: false, error: err };
+      this.recordDeployHistory(request, result, startedAt, Date.now() - t0, trigger, projectPath);
+      return result;
+    }
 
     const buildRes = await this.runMavenBuild(projectPath, skipTests, onChunk);
     if (buildRes.code !== 0) {

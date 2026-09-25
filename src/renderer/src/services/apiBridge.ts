@@ -447,6 +447,12 @@ export function initApiBridge() {
       return data.isRunning;
     },
 
+    isKarafRunning: async (sshPort?: number): Promise<boolean> => {
+      const query = sshPort ? `?port=${sshPort}` : '';
+      const data = await apiFetch<{ isRunning: boolean }>(`/api/karaf/status${query}`);
+      return data.isRunning;
+    },
+
     onKarafStdout: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('karaf:stdout', callback);
     },
