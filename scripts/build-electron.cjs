@@ -137,7 +137,17 @@ async function start() {
     }
   });
 
-  child.on('close', (code) => {
+  child.on('close', async (code) => {
+    // `--dir` (npm run pack) é build de teste local, não release para distribuir.
+    if (code === 0 && !args.includes('--dir')) {
+      try {
+        const { prepareRelease } = require('./prepare-release.cjs');
+        await prepareRelease();
+      } catch (err) {
+        console.error('[Build] Falha ao gerar LEIA-ME/MCP do release:', err);
+        process.exit(1);
+      }
+    }
     process.exit(code || 0);
   });
 }

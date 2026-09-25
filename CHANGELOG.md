@@ -5,6 +5,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Adicionado
+- Pasta do release mais completa: o `npm run build:electron` passa a gerar também `LEIA-ME.txt` (instalação, links dos downloads opcionais e registro do MCP, com a versão preenchida), `instalar-extras.cmd` (instala o modelo do RAG e extrai o Oracle Instant Client colocados na pasta) e `mcp/`, um servidor MCP autossuficiente que roda com o próprio `Dev Manager.exe` instalado, sem Node.js nem código-fonte. Novos scripts `npm run build:mcp` e `npm run release:folder`.
+- Central de Ajuda: FAQ "O que preciso baixar à parte?" com links do Oracle Instant Client, Visual C++ Redistributable, modelo do RAG e Ollama; o FAQ do MCP ganha o passo a passo para quem usa o app instalado.
 
 ## [1.15.0] - 2026-09-24
 ### Adicionado

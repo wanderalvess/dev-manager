@@ -58,6 +58,16 @@ interface HelpPageProps {
 
 type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
 
+const MCP_ADD_COMMAND = 'claude mcp add dev-manager --scope user -- cmd /c C:\\DevManager\\mcp\\dev-manager-mcp.cmd';
+
+// Mesmos links do LEIA-ME.txt gerado no release (scripts/release-templates/LEIA-ME.txt) e do README.
+const OPTIONAL_DOWNLOADS = {
+  ragModel: 'https://storage.googleapis.com/qdrant-fastembed/sentence-transformers-all-MiniLM-L6-v2.tar.gz',
+  oracleInstantClient: 'https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html',
+  vcRedist: 'https://aka.ms/vs/17/release/vc_redist.x64.exe',
+  ollama: 'https://ollama.com/download'
+};
+
 interface FaqItem {
   id: string;
   question: string;
@@ -323,6 +333,69 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'optional-downloads',
+      question: 'O que preciso baixar à parte? (Oracle Instant Client, modelo do RAG, LLM)',
+      category: 'Instalação & Pré-requisitos',
+      tags: ['download', 'instalar', 'instant client', 'oracle', 'thick', '11g', 'expdp', 'modelo', 'rag', 'embeddings', 'proxy', 'offline', 'llm', 'ollama', 'leia-me', 'extras'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Nada disso é obrigatório para usar o Dev Manager: cada item só libera uma funcionalidade. Se a pasta do release já trouxer os arquivos, rode o <code className="font-mono text-primary font-semibold">instalar-extras.cmd</code> que está nela: ele instala o modelo do RAG e extrai o Instant Client em <code className="font-mono text-primary">C:\oracle</code>.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+            <div className="space-y-1">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Modelo do RAG (busca semântica):</span>
+              <p>
+                O app baixa sozinho na primeira indexação da <strong className="text-foreground">Documentação Semântica</strong>. Baixe à mão só se a rede bloquear (proxy corporativo) e extraia em <code className="font-mono text-primary">%APPDATA%\dev-manager\models</code>, de modo que exista <code className="font-mono text-primary">models\fast-all-MiniLM-L6-v2\model.onnx</code>. Sem o modelo, a busca funciona em modo textual.
+              </p>
+              <button
+                onClick={() => handleOpenLink(OPTIONAL_DOWNLOADS.ragModel)}
+                className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 w-fit cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Baixar modelo (.tar.gz)</span>
+              </button>
+            </div>
+            <div className="space-y-1 pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Oracle Instant Client 64-bit:</span>
+              <p>
+                Só para Oracle 11g ou anterior (<strong className="text-foreground">Modo Thick / Suporte a Oracle 11g (Instant Client)</strong> na conexão) e para backup/restore com <code className="font-mono text-primary">expdp</code>/<code className="font-mono text-primary">impdp</code>/<code className="font-mono text-primary">exp</code>/<code className="font-mono text-primary">imp</code>. Oracle 12c ou mais novo conecta sem nada instalado. Baixe os pacotes <strong className="text-foreground">Basic</strong> e, para backup, <strong className="text-foreground">Tools</strong>, extraia os dois na mesma pasta e informe essa pasta na conexão. Requer o Visual C++ Redistributable x64.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleOpenLink(OPTIONAL_DOWNLOADS.oracleInstantClient)}
+                  className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 w-fit cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Oracle Instant Client</span>
+                </button>
+                <button
+                  onClick={() => handleOpenLink(OPTIONAL_DOWNLOADS.vcRedist)}
+                  className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 w-fit cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Visual C++ Redistributable x64</span>
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1 pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">LLM para o Assistente IA:</span>
+              <p>
+                Use uma chave de API sua (OpenAI, Gemini, Anthropic, OpenRouter, Groq, DeepSeek) ou rode um modelo local com o Ollama (<code className="font-mono text-primary">ollama pull llama3.2</code>). Configure em <strong className="text-foreground">Configurações → IA &amp; LLM (BYOK)</strong>.
+              </p>
+              <button
+                onClick={() => handleOpenLink(OPTIONAL_DOWNLOADS.ollama)}
+                className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 w-fit cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Baixar Ollama</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'build-executable',
       question: 'Como gerar o executável (.exe) de produção do Dev Manager para o Windows?',
       category: 'Build & Executável',
@@ -351,6 +424,9 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
               </li>
               <li>
                 <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.15.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+              </li>
+              <li>
+                <strong className="text-foreground">LEIA-ME.txt, instalar-extras.cmd e mcp\:</strong> guia do usuário com os links dos downloads opcionais, script que instala o modelo do RAG e o Oracle Instant Client colocados na pasta, e o servidor MCP pronto para uso. Para regenerar só esses arquivos: <code className="font-mono text-primary">npm run release:folder</code>.
               </li>
             </ul>
           </div>
@@ -410,7 +486,27 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
             </div>
             
             <div className="pt-2 border-t border-border/50">
-              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Ativar no Claude Code:</span>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Com o app instalado (pasta do release):</span>
+              <p className="mb-2">
+                A pasta do release traz o servidor pronto em <code className="font-mono text-primary font-semibold">mcp\</code>, sem precisar do código-fonte nem de Node.js: o launcher usa o próprio <code className="font-mono text-primary">Dev Manager.exe</code> instalado pelo Setup. Copie a pasta para um local fixo (ex.: <code className="font-mono text-primary">C:\DevManager\mcp</code>) e registre no Claude Code:
+              </p>
+              <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60 mb-2">
+                <code className="break-all">{MCP_ADD_COMMAND}</code>
+                <button
+                  onClick={() => copyToClipboard(MCP_ADD_COMMAND, 'cmd-mcp-add-faq')}
+                  className="p-1 hover:text-foreground transition-colors cursor-pointer shrink-0"
+                  title="Copiar comando"
+                >
+                  {copiedItem === 'cmd-mcp-add-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+              <p className="mb-2">
+                No VS Code/Copilot e no Antigravity, use <code className="font-mono text-primary">"command": "cmd"</code> com <code className="font-mono text-primary">"args": ["/c", "C:\\DevManager\\mcp\\dev-manager-mcp.cmd"]</code>. Se instalou o app fora da pasta padrão, defina a variável <code className="font-mono text-primary">DEV_MANAGER_EXE</code> com o caminho do executável no campo <code className="font-mono text-primary">env</code>. O <code className="font-mono text-primary">LEIA-ME.txt</code> do release traz os exemplos completos. A versão portátil não serve de runtime: sem o Setup, é preciso ter Node.js 20+ no PATH.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">A partir do código-fonte (Claude Code):</span>
               <p className="mb-2">
                 O arquivo <code className="font-mono text-primary font-semibold">.mcp.json</code> na raiz do projeto já registra o servidor. Basta abrir esta pasta no Claude Code e rodar <code className="font-mono text-primary">/mcp</code> para conectar.
               </p>

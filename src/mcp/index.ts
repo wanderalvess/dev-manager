@@ -6,9 +6,14 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Injetada pelo bundle de release (scripts/build-mcp.cjs): na máquina do usuário não existe o
+// package.json do repositório para ler.
+declare const __DEV_MANAGER_VERSION__: string | undefined;
+
 const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
+  if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
     return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.0';
   } catch {

@@ -1,0 +1,159 @@
+===============================================================================
+  DEV MANAGER {{VERSION}} - LEIA-ME
+===============================================================================
+
+Cockpit para desenvolvedores Apache Karaf/OSGi: ambiente, Karaf, banco de
+dados, Docker, deploy, Git/Azure DevOps, busca em documentação (RAG), assistente
+de IA e servidor MCP para Claude Code, VS Code/Copilot e Antigravity.
+
+Documentação completa: https://github.com/wanderalvess/dev-manager#readme
+Dentro do app: Central de Ajuda (Alt+9).
+
+
+-------------------------------------------------------------------------------
+1. O QUE TEM NESTA PASTA
+-------------------------------------------------------------------------------
+
+  Dev Manager Setup {{VERSION}}.exe   Instalador (recomendado). Cria atalhos,
+                                     recebe atualizações automáticas e serve
+                                     de runtime para o servidor MCP.
+  Dev Manager {{VERSION}}.exe         Versão portátil: não instala nada.
+  mcp\                               Servidor MCP para assistentes de IA
+                                     (veja a seção 4).
+  instalar-extras.cmd                Instala o modelo do RAG e o Oracle
+                                     Instant Client, se estiverem nesta pasta
+                                     (veja a seção 3).
+  LEIA-ME.txt                        Este arquivo.
+
+  Se a pasta também tiver os arquivos da seção 3 (modelo do RAG, Instant
+  Client), eles foram colocados aqui para você não precisar baixar.
+
+
+-------------------------------------------------------------------------------
+2. INSTALAÇÃO RÁPIDA
+-------------------------------------------------------------------------------
+
+  1) Execute "Dev Manager Setup {{VERSION}}.exe" e siga o assistente.
+  2) Abra o Dev Manager. Na primeira execução um tour apresenta as telas.
+  3) Se precisar de algum item da seção 3, dê dois cliques em
+     instalar-extras.cmd (ou siga as instruções manuais de cada item).
+
+  Nada da seção 3 é obrigatório para abrir o app: cada item só libera uma
+  funcionalidade específica.
+
+
+-------------------------------------------------------------------------------
+3. DOWNLOADS OPCIONAIS
+-------------------------------------------------------------------------------
+
+3.1 Modelo de IA do RAG (busca semântica em "Documentação Semântica")
+    Para que serve: busca por significado nos documentos indexados.
+    Precisa?        O app baixa sozinho na primeira indexação. Baixe à mão
+                    só se a rede bloquear o download (proxy corporativo).
+                    Sem o modelo, a busca continua funcionando em modo
+                    textual.
+    Download:       https://storage.googleapis.com/qdrant-fastembed/sentence-transformers-all-MiniLM-L6-v2.tar.gz
+    Instalação:     coloque o .tar.gz nesta pasta e rode instalar-extras.cmd,
+                    ou extraia manualmente pelo Prompt de Comando:
+                      mkdir "%APPDATA%\dev-manager\models"
+                      tar -xzf sentence-transformers-all-MiniLM-L6-v2.tar.gz -C "%APPDATA%\dev-manager\models"
+                    Resultado esperado:
+                      %APPDATA%\dev-manager\models\fast-all-MiniLM-L6-v2\model.onnx
+
+3.2 Oracle Instant Client (64 bits)
+    Para que serve: conectar em Oracle 11g ou anterior (Modo Thick) e rodar
+                    backup/restore com expdp/impdp/exp/imp.
+    Precisa?        Só nesses casos. Oracle 12c ou mais novo conecta sem
+                    nada instalado (Thin Mode).
+    Download:       https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html
+                    Pacotes: "Basic" (ou "Basic Light") para conectar e
+                    "Tools" para backup/restore. Extraia os dois na mesma
+                    pasta.
+    Requisito:      Microsoft Visual C++ Redistributable x64
+                    https://aka.ms/vs/17/release/vc_redist.x64.exe
+    Instalação:     coloque os .zip nesta pasta e rode instalar-extras.cmd
+                    (extrai em C:\oracle), ou extraia onde preferir.
+                    Depois, no app: Banco de Dados > conexão Oracle > marque
+                    "Modo Thick / Suporte a Oracle 11g (Instant Client)" e
+                    informe a pasta (ex.: C:\oracle\instantclient_19_25).
+                    Para backup, informe o caminho do expdp.exe/impdp.exe em
+                    Configurações > Backup de Bancos.
+
+3.3 LLM para o Assistente IA
+    Para que serve: chat com IA e respostas sobre a documentação indexada.
+    Opção A - nuvem (BYOK): use uma chave de API sua de OpenAI, Gemini,
+              Anthropic, OpenRouter, Groq ou DeepSeek.
+    Opção B - local, sem internet: instale o Ollama e baixe um modelo:
+              https://ollama.com/download
+                ollama pull llama3.2
+    Configuração:   Configurações > IA & LLM (BYOK).
+
+
+-------------------------------------------------------------------------------
+4. SERVIDOR MCP (Claude Code, VS Code/Copilot, Antigravity)
+-------------------------------------------------------------------------------
+
+  O servidor MCP expõe as automações do Dev Manager como ferramentas para
+  assistentes de IA. Catálogo das ferramentas:
+  https://github.com/wanderalvess/dev-manager/blob/main/docs/MCP_TOOLS.md
+
+  Pré-requisito: o Dev Manager instalado pelo Setup (o launcher usa o próprio
+  executável como runtime, sem precisar de Node.js). Sem o Setup, é preciso
+  ter o Node.js 20 ou mais novo no PATH (https://nodejs.org). A versão
+  portátil não serve de runtime, porque é extraída numa pasta temporária a
+  cada execução.
+
+  1) Copie a pasta "mcp" para um local fixo, por exemplo:
+       C:\DevManager\mcp
+  2) Registre no seu assistente (ajuste o caminho se usou outra pasta):
+
+     Claude Code (Prompt de Comando):
+       claude mcp add dev-manager --scope user -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd
+
+     Claude Code / Antigravity (arquivo JSON - .mcp.json ou
+     %USERPROFILE%\.gemini\config\mcp_config.json):
+       {
+         "mcpServers": {
+           "dev-manager": {
+             "type": "stdio",
+             "command": "cmd",
+             "args": ["/c", "C:\\DevManager\\mcp\\dev-manager-mcp.cmd"]
+           }
+         }
+       }
+
+     VS Code / GitHub Copilot (mcp.json):
+       {
+         "servers": {
+           "dev-manager": {
+             "type": "stdio",
+             "command": "cmd",
+             "args": ["/c", "C:\\DevManager\\mcp\\dev-manager-mcp.cmd"]
+           }
+         }
+       }
+
+  3) Reinicie o assistente e confira se o servidor "dev-manager" conectou
+     (no Claude Code: /mcp).
+
+  Observações:
+  - Instalou o Dev Manager em outra pasta? Adicione ao registro do servidor
+    a variável de ambiente DEV_MANAGER_EXE com o caminho completo do
+    "Dev Manager.exe" (campo "env" nos arquivos JSON).
+  - O MCP usa as mesmas configurações do app (%APPDATA%\dev-manager).
+  - As ferramentas apm_* (traces) só respondem com o app aberto.
+  - A cada nova versão, substitua a pasta mcp pela do novo release.
+
+
+-------------------------------------------------------------------------------
+5. ONDE FICAM OS DADOS
+-------------------------------------------------------------------------------
+
+  %APPDATA%\dev-manager
+    config.json       configurações (senhas e tokens criptografados)
+    .secrets.key      chave de criptografia - não compartilhe
+    models\           modelo do RAG
+    docs-index.json   índice da documentação
+
+  Para levar suas configurações para outra máquina, use o botão "Exportar"
+  em Configurações em vez de copiar esses arquivos.

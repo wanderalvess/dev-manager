@@ -127,6 +127,17 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
   após um `npm install`, é aqui que se investiga primeiro.
 - `electron-builder.json5`: build só para Windows (nsis + portable), com `asarUnpack` para os
   binários nativos do onnxruntime/tokenizers.
+- Ao fim do `build:electron`, [scripts/prepare-release.cjs](scripts/prepare-release.cjs) completa
+  `release/` com `LEIA-ME.txt`, `instalar-extras.cmd` (templates em
+  [scripts/release-templates/](scripts/release-templates)) e `mcp/`. O `mcp/` é gerado por
+  [scripts/build-mcp.cjs](scripts/build-mcp.cjs): bundle ESM único de `src/mcp/index.ts` via
+  esbuild + cópia só dos módulos nativos (mesma lista de `external` do Vite, podada para
+  win32-x64). O launcher `dev-manager-mcp.cmd` roda o bundle com o `Dev Manager.exe` instalado
+  em modo `ELECTRON_RUN_AS_NODE`, para o usuário não precisar de Node nem do repositório — por
+  isso não desligue o fuse `RunAsNode` do Electron. Código do MCP não pode depender de arquivos
+  do repositório em runtime (a versão, por exemplo, é injetada via `__DEV_MANAGER_VERSION__`).
+  Links de downloads opcionais (modelo do RAG, Instant Client, Ollama) aparecem no template do
+  LEIA-ME, no README e em `OPTIONAL_DOWNLOADS` da HelpPage; mude os três juntos.
 - Docker (`Dockerfile`, `docker-compose.yml`, `DOCKER.md`) empacota o `server/index.ts`
   headless, não o app Electron.
 - `.claude/launch.json` já define os dev servers (`renderer` porta 5173, `server` porta 3000)

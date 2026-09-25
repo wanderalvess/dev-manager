@@ -337,6 +337,19 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
   ```
   Inicia o servidor MCP via stdio (`tsx src/mcp/index.ts`) — mesmo mecanismo do script `server` (REST/Docker), agora falando o protocolo MCP.
 
+#### Uso a partir do release (sem o repositório)
+O `npm run build:electron` gera `release/mcp/`: um bundle único do servidor (`dev-manager-mcp.mjs`), só os módulos nativos que não cabem no bundle (`oracledb`, `fastembed`/`onnxruntime-node`) e o launcher `dev-manager-mcp.cmd`. O launcher usa o próprio `Dev Manager.exe` instalado pelo Setup como runtime (Electron em modo Node, via `ELECTRON_RUN_AS_NODE`), então o usuário não precisa de Node.js nem do código-fonte. Sem o app instalado, cai para o Node.js 20+ do PATH. A versão portátil não serve de runtime, porque é extraída numa pasta temporária a cada execução.
+
+1. Copie a pasta `mcp` para um local fixo (ex.: `C:\DevManager\mcp`).
+2. Registre no assistente:
+   ```bash
+   claude mcp add dev-manager --scope user -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd
+   ```
+   Em arquivos JSON (`.mcp.json`, `mcp.json` do VS Code ou `mcp_config.json` do Antigravity), use `"command": "cmd"` e `"args": ["/c", "C:\\DevManager\\mcp\\dev-manager-mcp.cmd"]` (no VS Code a chave raiz é `servers`, nos demais `mcpServers`).
+3. Instalou o app fora da pasta padrão (`%LOCALAPPDATA%\Programs\Dev Manager`)? Defina a variável `DEV_MANAGER_EXE` com o caminho do `Dev Manager.exe` no campo `env` do registro.
+
+Para gerar só essa pasta, sem empacotar o app: `npm run build:mcp`.
+
 > ⚠️ **Nota de segurança:** o servidor MCP tem o mesmo poder que o próprio Cockpit — iniciar/parar serviços Windows, matar processos, rodar builds Maven e comandos Karaf. Ele roda localmente via stdio (sem porta de rede exposta) e é pensado para uso pelo mesmo desenvolvedor que já opera essas ações pela interface. Transporte remoto/HTTP não faz parte desta versão.
 
 ---
@@ -370,6 +383,22 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
 | **Documentação & RAG** | [FastEmbed](https://github.com/qdrant/fastembed) (`AllMiniLML6V2`), [pdf-parse](https://www.npmjs.com/package/pdf-parse), [mammoth](https://www.npmjs.com/package/mammoth), [Chokidar](https://github.com/paulmillr/chokidar) |
 | **Inteligência Artificial (BYOK)** | Google Gemini, OpenAI, Anthropic Claude, Ollama (Local), [Model Context Protocol](https://modelcontextprotocol.io/) (`@modelcontextprotocol/sdk`), [Zod](https://zod.dev/) |
 | **Servidor Web/Docker** | [Express](https://expressjs.com/), [ws](https://github.com/websockets/ws) (WebSocket), [tsx](https://github.com/privatenumber/tsx) |
+
+---
+
+## 📥 Instalação para Usuários (Pacote de Release)
+
+A pasta de cada release traz o instalador, a versão portátil, o servidor MCP pronto para uso (`mcp/`), o `instalar-extras.cmd` e um `LEIA-ME.txt` com o passo a passo. Basta rodar o `Dev Manager Setup <versão>.exe`: nada abaixo é obrigatório para abrir o app, cada item só libera uma funcionalidade específica.
+
+| Item | Para que serve | Quando precisa | Download |
+| :--- | :--- | :--- | :--- |
+| **Modelo de embeddings do RAG** (`all-MiniLM-L6-v2`) | Busca semântica em **Documentação Semântica** | O app baixa sozinho na primeira indexação. Baixe à mão só se a rede bloquear (proxy corporativo). Sem ele, a busca funciona em modo textual. | [sentence-transformers-all-MiniLM-L6-v2.tar.gz](https://storage.googleapis.com/qdrant-fastembed/sentence-transformers-all-MiniLM-L6-v2.tar.gz) |
+| **Oracle Instant Client 64-bit** (Basic + Tools) | Oracle 11g ou anterior (Modo Thick) e backup/restore com `expdp`/`impdp`/`exp`/`imp` | Só nesses casos. Oracle 12c+ conecta em Thin Mode, sem nada instalado. | [Oracle Instant Client for Windows x64](https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html) + [Visual C++ Redistributable x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) |
+| **LLM para o Assistente IA** | Chat com IA e respostas sobre a documentação indexada | Chave de API própria (OpenAI, Gemini, Anthropic, OpenRouter, Groq, DeepSeek) ou modelo local | [Ollama](https://ollama.com/download) (`ollama pull llama3.2`) — configure em **Configurações → IA & LLM (BYOK)** |
+
+**Instalação manual dos extras:** coloque o `.tar.gz` do modelo e/ou os `.zip` do Instant Client na pasta do release e rode `instalar-extras.cmd`. Ele extrai o modelo em `%APPDATA%\dev-manager\models` (resultado: `models\fast-all-MiniLM-L6-v2\model.onnx`) e o Instant Client em `C:\oracle`. Depois, informe a pasta do Instant Client em **Banco de Dados → conexão Oracle → Modo Thick / Suporte a Oracle 11g (Instant Client)** e, para backup, o caminho do `expdp.exe`/`impdp.exe` em **Configurações → Backup de Bancos**.
+
+**Servidor MCP sem o repositório:** veja [Uso a partir do release](#uso-a-partir-do-release-sem-o-repositório) na seção do Servidor MCP.
 
 ---
 
@@ -443,6 +472,11 @@ npm run build:electron
 | :--- | :--- | :--- |
 | **`Dev Manager 1.0.0.exe`** | Portátil (*Standalone*) | Executa diretamente sem necessidade de instalação prévia. Ideal para pendrives, ambientes restritos ou compartilhamento rápido em rede. |
 | **`Dev Manager Setup 1.0.0.exe`** | Instalador NSIS | Assistente tradicional do Windows com opções de escolha do diretório de instalação e criação de atalhos no Desktop e Menu Iniciar. |
+| **`LEIA-ME.txt`** | Texto | Guia para o usuário final: instalação, links dos downloads opcionais (modelo do RAG, Oracle Instant Client, LLM) e como registrar o MCP. Gerado a partir de [`scripts/release-templates/LEIA-ME.txt`](scripts/release-templates/LEIA-ME.txt), com a versão preenchida. |
+| **`instalar-extras.cmd`** | Script | Extrai o modelo do RAG e o Oracle Instant Client que forem colocados à mão na mesma pasta. |
+| **`mcp/`** | Servidor MCP | Servidor MCP autossuficiente (ver [Uso a partir do release](#uso-a-partir-do-release-sem-o-repositório)). |
+
+Os três últimos são gerados por [`scripts/prepare-release.cjs`](scripts/prepare-release.cjs) ao fim do `build:electron` (o `npm run pack` pula essa etapa). Para regenerá-los sem reempacotar o app: `npm run release:folder`. Arquivos colocados à mão na pasta, como o `.tar.gz` do modelo ou os `.zip` do Instant Client, não são apagados.
 
 ---
 
