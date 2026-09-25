@@ -31,7 +31,7 @@ export const DATABASE_TOUR_STEPS: TourStep[] = [
   {
     target: 'results-panel',
     title: 'Painel de Resultados',
-    desc: 'Mostra os dados retornados pela consulta, com filtros, ordenação e exportação para CSV.'
+    desc: 'Mostra os dados retornados pela consulta, com filtros, ordenação e exportação para CSV. Ao abrir uma tabela pela barra lateral, a grade fica editável: insira, edite ou exclua linhas sem escrever SQL.'
   },
   {
     target: 'backup-button',

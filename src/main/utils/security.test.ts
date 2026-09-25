@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath, isSafePath, isLoopbackAddress } from './security';
+import {
+  isValidIdentifier,
+  isValidSqlIdentifier,
+  isValidSqlTableName,
+  isSafeUrl,
+  isSafeKarafCommand,
+  isSafeLocalPath,
+  isSafePath,
+  isLoopbackAddress
+} from './security';
 
 describe('isLoopbackAddress', () => {
   it('aceita loopback IPv4, IPv6 e IPv4 mapeado em IPv6', () => {
@@ -33,6 +42,39 @@ describe('isValidIdentifier', () => {
     expect(isValidIdentifier('svc\n2')).toBe(false);
     expect(isValidIdentifier('svc|pipe')).toBe(false);
     expect(isValidIdentifier(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe('isValidSqlIdentifier', () => {
+  it('aceita nomes de coluna comuns, incluindo $ do Oracle', () => {
+    expect(isValidSqlIdentifier('CODPROD')).toBe(true);
+    expect(isValidSqlIdentifier('user_id')).toBe(true);
+    expect(isValidSqlIdentifier('COL$1')).toBe(true);
+    expect(isValidSqlIdentifier('_private')).toBe(true);
+  });
+
+  it('rejeita espaços, ponto, aspas e tentativas de injection', () => {
+    expect(isValidSqlIdentifier('')).toBe(false);
+    expect(isValidSqlIdentifier('col name')).toBe(false);
+    expect(isValidSqlIdentifier('schema.tabela')).toBe(false);
+    expect(isValidSqlIdentifier("col; DROP TABLE x --")).toBe(false);
+    expect(isValidSqlIdentifier("col' OR '1'='1")).toBe(false);
+    expect(isValidSqlIdentifier('1col')).toBe(false);
+    expect(isValidSqlIdentifier(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe('isValidSqlTableName', () => {
+  it('aceita nome simples e schema.tabela', () => {
+    expect(isValidSqlTableName('CLIENTES')).toBe(true);
+    expect(isValidSqlTableName('public.clientes')).toBe(true);
+  });
+
+  it('rejeita mais de um ponto e metacaracteres SQL', () => {
+    expect(isValidSqlTableName('a.b.c')).toBe(false);
+    expect(isValidSqlTableName('tabela; DROP TABLE x')).toBe(false);
+    expect(isValidSqlTableName('tabela--')).toBe(false);
+    expect(isValidSqlTableName('')).toBe(false);
   });
 });
 

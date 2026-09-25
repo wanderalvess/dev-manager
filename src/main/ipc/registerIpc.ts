@@ -779,6 +779,18 @@ export function registerIpcHandlers(
     return await databaseService.getTableColumns(config, tableName);
   });
 
+  ipcMain.handle('db:insert-row', async (_, config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>) => {
+    return await databaseService.insertRow(config, tableName, values);
+  });
+
+  ipcMain.handle('db:update-row', async (_, config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>) => {
+    return await databaseService.updateRow(config, tableName, changes, where);
+  });
+
+  ipcMain.handle('db:delete-row', async (_, config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>) => {
+    return await databaseService.deleteRow(config, tableName, where);
+  });
+
   ipcMain.handle('db:get-oracle-active-sessions', async (_, config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => {
     return await databaseService.getOracleActiveSessions(config, filter);
   });

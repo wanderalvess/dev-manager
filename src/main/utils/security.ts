@@ -14,6 +14,28 @@ export function isValidIdentifier(name: string): boolean {
 }
 
 /**
+ * Valida se uma string é um identificador SQL seguro (nome de coluna): letras, dígitos,
+ * underscore e $ (comum em colunas Oracle), sem ponto — usado para montar INSERT/UPDATE/DELETE
+ * dinâmicos a partir da UI sem abrir brecha de injection via nome de coluna.
+ */
+export function isValidSqlIdentifier(name: string): boolean {
+  if (!name || typeof name !== 'string') return false;
+  return /^[a-zA-Z_][a-zA-Z0-9_$]*$/.test(name.trim());
+}
+
+/**
+ * Como isValidSqlIdentifier, mas aceita um único "schema.tabela" (formato usado pelo Postgres
+ * na listagem de tabelas do DB Studio).
+ */
+export function isValidSqlTableName(name: string): boolean {
+  if (!name || typeof name !== 'string') return false;
+  const trimmed = name.trim();
+  const parts = trimmed.split('.');
+  if (parts.length > 2) return false;
+  return parts.every((part) => isValidSqlIdentifier(part));
+}
+
+/**
  * Valida se uma URL utiliza protocolo http:// ou https:// seguro.
  */
 export function isSafeUrl(url: string): boolean {

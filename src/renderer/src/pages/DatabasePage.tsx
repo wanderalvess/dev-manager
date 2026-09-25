@@ -32,6 +32,7 @@ import {
   BindInputState
 } from '../utils/sqlBinds';
 import { detectColumnDataTypes, processQueryRows, hasActiveQueryFilters } from '../utils/databaseResultsUtils';
+import { parseSingleTableSelect, getRowKeyColumns } from '../utils/databaseMutationUtils';
 
 // Subcomponentes Modularizados
 import { DatabaseSidebar } from '../components/database/DatabaseSidebar';
@@ -135,6 +136,10 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
   const [tableColumns, setTableColumns] = useState<Record<string, TableColumnInfo[]>>({});
   const [isLoadingColumns, setIsLoadingColumns] = useState<Record<string, boolean>>({});
 
+  // Tabela editável: só existe quando o resultado atual veio de um SELECT * FROM <tabela única>
+  const [editableTable, setEditableTable] = useState<{ name: string; columns: TableColumnInfo[] } | null>(null);
+  const [isMutatingRow, setIsMutatingRow] = useState<boolean>(false);
+
   // Modal de Conexão
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingConn, setEditingConn] = useState<Partial<DatabaseConnectionConfig>>({
@@ -228,6 +233,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     if (activeConnectionId) {
       setTables([]);
       setQueryResult(null);
+      setEditableTable(null);
     }
   }, [activeConnectionId]);
 
@@ -373,6 +379,26 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
     try {
       const res = await window.electronAPI.executeDbQuery(activeConnection, cleanSql, maxRows, overrideBinds);
       setQueryResult(res);
+
+      // Detecta se o resultado veio de um SELECT * FROM <tabela única> — só nesse caso a grid
+      // consegue editar/inserir/excluir linhas com segurança (sabe de qual tabela e, com sorte,
+      // qual é a chave primária de cada linha).
+      const editableTableName = res.success && res.isQuery ? parseSingleTableSelect(cleanSql) : null;
+      if (editableTableName) {
+        let cols = tableColumns[editableTableName];
+        if (!cols && window.electronAPI?.getDbTableColumns) {
+          try {
+            cols = await window.electronAPI.getDbTableColumns(activeConnection, editableTableName);
+            setTableColumns((prev) => ({ ...prev, [editableTableName]: cols || [] }));
+          } catch (err) {
+            console.error('Erro ao carregar colunas para edição inline:', err);
+            cols = [];
+          }
+        }
+        setEditableTable({ name: editableTableName, columns: cols || [] });
+      } else {
+        setEditableTable(null);
+      }
 
       // Adicionar ao histórico
       const historyItem: ExecutionHistoryItem = {
@@ -610,6 +636,61 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
       query = `SELECT * FROM ${tableName}`;
     }
     setSql(query);
+  };
+
+  const handleInsertRow = async (values: Record<string, any>) => {
+    if (!activeConnection || !editableTable || !window.electronAPI?.insertDbRow) return;
+    setIsMutatingRow(true);
+    try {
+      const res = await window.electronAPI.insertDbRow(activeConnection, editableTable.name, values);
+      if (!res.success) {
+        alert(`Falha ao inserir linha:\n${res.error}`);
+        return;
+      }
+      await handleExecuteSql();
+    } finally {
+      setIsMutatingRow(false);
+    }
+  };
+
+  const handleUpdateCell = async (row: Record<string, any>, column: string, newValue: any) => {
+    if (!activeConnection || !editableTable || !window.electronAPI?.updateDbRow) return;
+    const keyColumns = getRowKeyColumns(editableTable.columns);
+    const where: Record<string, any> = {};
+    for (const k of keyColumns) where[k] = row[k];
+
+    setIsMutatingRow(true);
+    try {
+      const res = await window.electronAPI.updateDbRow(activeConnection, editableTable.name, { [column]: newValue }, where);
+      if (!res.success) {
+        alert(`Falha ao atualizar célula:\n${res.error}`);
+        return;
+      }
+      await handleExecuteSql();
+    } finally {
+      setIsMutatingRow(false);
+    }
+  };
+
+  const handleDeleteRow = async (row: Record<string, any>) => {
+    if (!activeConnection || !editableTable || !window.electronAPI?.deleteDbRow) return;
+    if (!confirm('Deseja realmente excluir esta linha? Essa ação não pode ser desfeita.')) return;
+
+    const keyColumns = getRowKeyColumns(editableTable.columns);
+    const where: Record<string, any> = {};
+    for (const k of keyColumns) where[k] = row[k];
+
+    setIsMutatingRow(true);
+    try {
+      const res = await window.electronAPI.deleteDbRow(activeConnection, editableTable.name, where);
+      if (!res.success) {
+        alert(`Falha ao excluir linha:\n${res.error}`);
+        return;
+      }
+      await handleExecuteSql();
+    } finally {
+      setIsMutatingRow(false);
+    }
   };
 
   // Detecção de tipo de dado por coluna (lógica pura extraída/testada em utils/databaseResultsUtils.ts)
@@ -878,6 +959,12 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
               setCellContextMenu={setCellContextMenu}
               onCopyCell={handleCopyCell}
               onFilterByCellValue={handleFilterByCellValue}
+              editableTableName={editableTable?.name || null}
+              editableColumns={editableTable?.columns || []}
+              isMutatingRow={isMutatingRow}
+              onInsertRow={handleInsertRow}
+              onUpdateCell={handleUpdateCell}
+              onDeleteRow={handleDeleteRow}
             />
           ) : activeResultTab === 'explain' ? (
             <div className="p-4 space-y-4">

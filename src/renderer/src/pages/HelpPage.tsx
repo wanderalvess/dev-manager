@@ -550,6 +550,29 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'database-edit-grid',
+      question: 'Como inserir, editar ou excluir linhas de uma tabela sem escrever SQL na mão?',
+      category: 'Banco de Dados & Backup',
+      tags: ['insert', 'update', 'delete', 'editar', 'inserir', 'excluir', 'grid', 'planilha', 'linha', 'célula', 'chave primária'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Clique numa tabela na barra lateral do Database Studio para abrir um <code className="font-mono text-primary">SELECT * FROM</code> simples — quando o resultado vem exatamente desse tipo de consulta (uma única tabela, sem JOIN/agregação), a grade de resultados exibe o selo <strong className="text-foreground">"Editável"</strong> e passa a funcionar como uma planilha:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <ul className="list-disc pl-4 space-y-1">
+              <li><strong className="text-foreground">Nova linha:</strong> botão na barra da grade abre uma linha em branco no topo — preencha e confirme (✓) para inserir.</li>
+              <li><strong className="text-foreground">Editar célula:</strong> duplo-clique no valor, digite o novo valor e pressione Enter (ou clique fora para confirmar). Digite <code className="font-mono text-primary">[NULL]</code> para gravar nulo.</li>
+              <li><strong className="text-foreground">Excluir linha:</strong> botão direito na linha → "Excluir linha".</li>
+            </ul>
+          </div>
+          <p>
+            A edição usa a <strong className="text-foreground">chave primária</strong> da tabela (via metadados já lidos pelo navegador de colunas) para montar o <code className="font-mono text-primary">WHERE</code> do UPDATE/DELETE. Tabelas sem chave primária definida caem no fallback de usar todas as colunas da linha como condição — funciona na maioria dos casos, mas pode afetar mais de uma linha se houver registros duplicados. Resultado de consultas com JOIN, agregação ou múltiplas tabelas continua somente leitura (não há como saber de qual tabela cada linha veio); para esses casos, use o editor SQL com INSERT/UPDATE/DELETE manual, que sempre esteve disponível.
+          </p>
+        </div>
+      )
+    },
+    {
       id: 'oracle-statement-tracer',
       question: 'Como descobrir qual SQL outro sistema executou no Oracle (Statement Tracer)?',
       category: 'Banco de Dados & Backup',
@@ -1539,6 +1562,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                       <span><strong>Statement Tracer (Oracle):</strong> Captura em segundo plano de <code className="font-mono text-primary">v$session</code>/<code className="font-mono text-primary">v$sql</code> para ver qual sessão rodou qual SQL enquanto você usa outro sistema.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span><strong>Grade de dados editável:</strong> ao abrir uma tabela pela barra lateral (SELECT * simples), a grade de resultados vira uma planilha — botão <em>Nova linha</em>, duplo-clique numa célula para editar e botão direito para excluir a linha, sem precisar escrever INSERT/UPDATE/DELETE na mão.</span>
                     </li>
                   </ul>
                 </div>

@@ -236,4 +236,106 @@ describe('DatabaseService', () => {
       spy.mockRestore();
     }
   });
+
+  describe('insertRow / updateRow / deleteRow', () => {
+    const config: DatabaseConnectionConfig = {
+      id: 'mut-test',
+      name: 'Mutation Test',
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      database: 'erp',
+      user: 'postgres'
+    };
+
+    it('insertRow monta INSERT com binds posicionais e delega para executeQuery', async () => {
+      const spy = vi.spyOn(service, 'executeQuery').mockResolvedValue({
+        success: true,
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        affectedRows: 1,
+        executionTimeMs: 1,
+        isQuery: false
+      });
+
+      const res = await service.insertRow(config, 'public.clientes', { nome: 'Ana', idade: 30 });
+
+      expect(spy).toHaveBeenCalledWith(
+        config,
+        'INSERT INTO public.clientes (nome, idade) VALUES (:p0, :p1)',
+        1,
+        { p0: 'Ana', p1: 30 }
+      );
+      expect(res.affectedRows).toBe(1);
+      spy.mockRestore();
+    });
+
+    it('insertRow rejeita nome de tabela ou coluna inválidos sem chamar o banco', async () => {
+      const spy = vi.spyOn(service, 'executeQuery');
+
+      const badTable = await service.insertRow(config, 'clientes; DROP TABLE x', { nome: 'Ana' });
+      expect(badTable.success).toBe(false);
+      expect(badTable.error).toContain('Nome de tabela inválido');
+
+      const badColumn = await service.insertRow(config, 'clientes', { "nome' OR '1'='1": 'Ana' });
+      expect(badColumn.success).toBe(false);
+      expect(badColumn.error).toContain('Nome de coluna inválido');
+
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('updateRow monta UPDATE com SET e WHERE, tratando valor null como IS NULL', async () => {
+      const spy = vi.spyOn(service, 'executeQuery').mockResolvedValue({
+        success: true,
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        affectedRows: 1,
+        executionTimeMs: 1,
+        isQuery: false
+      });
+
+      await service.updateRow(config, 'clientes', { nome: 'Ana Paula' }, { id: 42, deleted_at: null });
+
+      expect(spy).toHaveBeenCalledWith(
+        config,
+        'UPDATE clientes SET nome = :p0 WHERE id = :p1 AND deleted_at IS NULL',
+        1,
+        { p0: 'Ana Paula', p1: 42 }
+      );
+      spy.mockRestore();
+    });
+
+    it('updateRow bloqueia atualização sem condição WHERE', async () => {
+      const spy = vi.spyOn(service, 'executeQuery');
+      const res = await service.updateRow(config, 'clientes', { nome: 'Ana' }, {});
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('WHERE vazia');
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    });
+
+    it('deleteRow monta DELETE com WHERE e bloqueia quando a condição está vazia', async () => {
+      const spy = vi.spyOn(service, 'executeQuery').mockResolvedValue({
+        success: true,
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        affectedRows: 1,
+        executionTimeMs: 1,
+        isQuery: false
+      });
+
+      await service.deleteRow(config, 'clientes', { id: 42 });
+      expect(spy).toHaveBeenCalledWith(config, 'DELETE FROM clientes WHERE id = :p0', 1, { p0: 42 });
+
+      const blocked = await service.deleteRow(config, 'clientes', {});
+      expect(blocked.success).toBe(false);
+      expect(blocked.error).toContain('WHERE vazia');
+
+      spy.mockRestore();
+    });
+  });
 });

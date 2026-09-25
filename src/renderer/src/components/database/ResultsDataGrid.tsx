@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Search,
   X,
@@ -11,10 +11,15 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
-  RotateCw
+  RotateCw,
+  Plus,
+  Check,
+  Trash2,
+  Pencil
 } from 'lucide-react';
-import { QueryResult } from '../../../../shared/types';
+import { QueryResult, TableColumnInfo } from '../../../../shared/types';
 import { useVirtualScroll } from '../../hooks/useVirtualScroll';
+import { castEditedValue, buildEmptyRowDraft, draftToInsertValues, NULL_SIGIL } from '../../utils/databaseMutationUtils';
 
 export interface ResultsDataGridProps {
   queryResult: QueryResult | null;
@@ -49,6 +54,13 @@ export interface ResultsDataGridProps {
   } | null>>;
   onCopyCell: (text: any, cellKey?: string) => void;
   onFilterByCellValue: (col: string, val: any) => void;
+  /** Nome da tabela de origem quando o resultado atual é um `SELECT * FROM <tabela>` simples — habilita inserir/editar/excluir linhas. */
+  editableTableName?: string | null;
+  editableColumns?: TableColumnInfo[];
+  isMutatingRow?: boolean;
+  onInsertRow?: (values: Record<string, any>) => void;
+  onUpdateCell?: (row: Record<string, any>, column: string, newValue: any) => void;
+  onDeleteRow?: (row: Record<string, any>) => void;
 }
 
 export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
@@ -71,9 +83,59 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
   cellContextMenu,
   setCellContextMenu,
   onCopyCell,
-  onFilterByCellValue
+  onFilterByCellValue,
+  editableTableName = null,
+  editableColumns = [],
+  isMutatingRow = false,
+  onInsertRow,
+  onUpdateCell,
+  onDeleteRow
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
+  const isEditable = Boolean(editableTableName && onUpdateCell && onInsertRow && onDeleteRow);
+
+  const [editingCell, setEditingCell] = useState<{ rowIndex: number; column: string; value: string } | null>(null);
+  const [isAddingRow, setIsAddingRow] = useState(false);
+  const [newRowDraft, setNewRowDraft] = useState<Record<string, string>>({});
+
+  const columnByName = new Map((editableColumns || []).map((c) => [c.name, c]));
+
+  const startAddingRow = () => {
+    setNewRowDraft(buildEmptyRowDraft(editableColumns));
+    setIsAddingRow(true);
+  };
+
+  const cancelAddingRow = () => {
+    setIsAddingRow(false);
+    setNewRowDraft({});
+  };
+
+  const confirmAddingRow = () => {
+    if (!onInsertRow) return;
+    onInsertRow(draftToInsertValues(newRowDraft, editableColumns));
+    setIsAddingRow(false);
+    setNewRowDraft({});
+  };
+
+  const startEditingCell = (rowIndex: number, column: string, currentValue: any) => {
+    if (!isEditable || isMutatingRow) return;
+    const display = currentValue === null || currentValue === undefined ? '' : String(currentValue);
+    setEditingCell({ rowIndex, column, value: display });
+  };
+
+  const cancelEditingCell = () => setEditingCell(null);
+
+  const commitEditingCell = (row: Record<string, any>) => {
+    if (!editingCell || !onUpdateCell) return;
+    const originalDisplay = row[editingCell.column] === null || row[editingCell.column] === undefined
+      ? ''
+      : String(row[editingCell.column]);
+    if (editingCell.value !== originalDisplay) {
+      const casted = castEditedValue(editingCell.value, columnByName.get(editingCell.column));
+      onUpdateCell(row, editingCell.column, casted);
+    }
+    setEditingCell(null);
+  };
 
   // Hook de Virtualização de Alta Performance (Windowing a 60 FPS)
   const ROW_HEIGHT = 33;
@@ -180,6 +242,34 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 text-xs">
+          {isEditable ? (
+            <>
+              <span
+                className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                title={`Editável: duplo-clique numa célula para editar, botão direito para excluir a linha. Tabela: ${editableTableName}`}
+              >
+                <Pencil className="w-3 h-3" />
+                <span>Editável</span>
+              </span>
+              <button
+                type="button"
+                onClick={startAddingRow}
+                disabled={isAddingRow || isMutatingRow}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-primary/15 text-primary hover:bg-primary/25 border border-primary/30 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Inserir uma nova linha nesta tabela"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Nova linha</span>
+              </button>
+            </>
+          ) : (
+            <span
+              className="hidden sm:inline text-[10px] text-muted-foreground/70"
+              title="Edição inline só fica disponível para um SELECT * simples de uma única tabela (ex: clique numa tabela na barra lateral)."
+            >
+              Somente leitura
+            </span>
+          )}
           {isVirtual && (
             <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="Virtual scrolling ativo para rolagem a 60 FPS">
               Virtual 60 FPS
@@ -412,6 +502,46 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
           </thead>
 
           <tbody className="divide-y divide-border/40">
+            {isAddingRow && (
+              <tr className="bg-emerald-500/10 dark:bg-emerald-500/15" style={{ height: `${ROW_HEIGHT}px` }}>
+                <td className="px-1 py-1 text-center border-r border-border/30 select-none">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      type="button"
+                      onClick={confirmAddingRow}
+                      disabled={isMutatingRow}
+                      title="Confirmar inserção (Enter)"
+                      className="p-0.5 rounded text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 cursor-pointer disabled:opacity-50"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelAddingRow}
+                      title="Cancelar (Esc)"
+                      className="p-0.5 rounded text-muted-foreground hover:bg-muted cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </td>
+                {queryResult.columns.map((col) => (
+                  <td key={col} className="px-1.5 py-1 border-r border-border/30">
+                    <input
+                      type="text"
+                      value={newRowDraft[col] ?? ''}
+                      onChange={(e) => setNewRowDraft((prev) => ({ ...prev, [col]: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') confirmAddingRow();
+                        if (e.key === 'Escape') cancelAddingRow();
+                      }}
+                      placeholder={col}
+                      className="w-full px-1.5 py-0.5 text-xs bg-background border border-emerald-500/40 rounded font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </td>
+                ))}
+              </tr>
+            )}
             {processedRows.length === 0 ? (
               <tr className="bg-background">
                 <td
@@ -468,11 +598,43 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                         const val = row[col];
                         const isNull = val === null || val === undefined;
                         const dType = columnDataTypes[col] || 'string';
+                        const isEditingThisCell =
+                          isEditable && editingCell?.rowIndex === idx && editingCell?.column === col;
+
+                        if (isEditingThisCell) {
+                          return (
+                            <td key={col} className="px-1.5 py-1 border-r border-border/30 bg-sky-500/5">
+                              <input
+                                autoFocus
+                                type="text"
+                                value={editingCell!.value}
+                                onChange={(e) =>
+                                  setEditingCell((prev) => (prev ? { ...prev, value: e.target.value } : prev))
+                                }
+                                onFocus={(e) => e.currentTarget.select()}
+                                onBlur={() => commitEditingCell(row)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    commitEditingCell(row);
+                                  }
+                                  if (e.key === 'Escape') {
+                                    e.preventDefault();
+                                    cancelEditingCell();
+                                  }
+                                }}
+                                title={`Valor especial "${NULL_SIGIL}" grava NULL na coluna`}
+                                className="w-full px-1.5 py-0.5 text-xs bg-background border border-sky-500 rounded font-mono focus:outline-none"
+                              />
+                            </td>
+                          );
+                        }
 
                         return (
                           <td
                             key={col}
                             onClick={() => onCopyCell(val, `cell_${idx}_${col}`)}
+                            onDoubleClick={() => startEditingCell(idx, col, val)}
                             onContextMenu={(e) => {
                               e.preventDefault();
                               setSelectedRowIndex(idx);
@@ -484,7 +646,11 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                                 rowIndex: idx
                               });
                             }}
-                            title="Clique para copiar | Botão direito para filtrar por valor"
+                            title={
+                              isEditable
+                                ? 'Clique para copiar | Duplo-clique para editar | Botão direito para mais opções'
+                                : 'Clique para copiar | Botão direito para filtrar por valor'
+                            }
                             className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate hover:bg-sky-500/10 dark:hover:bg-sky-500/20 transition-colors cursor-pointer"
                           >
                             {isNull ? (
@@ -574,6 +740,37 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
               <Copy className="w-3.5 h-3.5 shrink-0" />
               <span>Copiar valor</span>
             </button>
+
+            {isEditable && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    startEditingCell(cellContextMenu.rowIndex, cellContextMenu.column, cellContextMenu.value);
+                    setCellContextMenu(null);
+                  }}
+                  className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-accent transition text-left text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5 shrink-0" />
+                  <span>Editar valor</span>
+                </button>
+                <div className="pt-1 mt-1 border-t border-border/60">
+                  <button
+                    type="button"
+                    disabled={isMutatingRow}
+                    onClick={() => {
+                      const targetRow = processedRows[cellContextMenu.rowIndex];
+                      setCellContextMenu(null);
+                      if (targetRow && onDeleteRow) onDeleteRow(targetRow);
+                    }}
+                    className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-rose-500/10 transition text-left text-rose-600 dark:text-rose-400 font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Excluir linha</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </>
       )}

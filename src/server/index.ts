@@ -803,6 +803,36 @@ app.post('/api/db/columns', async (req, res) => {
   }
 });
 
+app.post('/api/db/row/insert', async (req, res) => {
+  try {
+    const { config, tableName, values } = req.body;
+    const result = await databaseService.insertRow(config, tableName, values);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, columns: [], rows: [], rowCount: 0, executionTimeMs: 0, isQuery: false, error: err.message || 'Erro ao inserir linha' });
+  }
+});
+
+app.post('/api/db/row/update', async (req, res) => {
+  try {
+    const { config, tableName, changes, where } = req.body;
+    const result = await databaseService.updateRow(config, tableName, changes, where);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, columns: [], rows: [], rowCount: 0, executionTimeMs: 0, isQuery: false, error: err.message || 'Erro ao atualizar linha' });
+  }
+});
+
+app.post('/api/db/row/delete', async (req, res) => {
+  try {
+    const { config, tableName, where } = req.body;
+    const result = await databaseService.deleteRow(config, tableName, where);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, columns: [], rows: [], rowCount: 0, executionTimeMs: 0, isQuery: false, error: err.message || 'Erro ao excluir linha' });
+  }
+});
+
 app.post('/api/db/oracle-active-sessions', async (req, res) => {
   try {
     const { config, filter } = req.body;

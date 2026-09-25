@@ -947,6 +947,27 @@ export function initApiBridge() {
       });
     },
 
+    insertDbRow: async (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>): Promise<QueryResult> => {
+      return apiFetch('/api/db/row/insert', {
+        method: 'POST',
+        body: JSON.stringify({ config, tableName, values })
+      });
+    },
+
+    updateDbRow: async (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>): Promise<QueryResult> => {
+      return apiFetch('/api/db/row/update', {
+        method: 'POST',
+        body: JSON.stringify({ config, tableName, changes, where })
+      });
+    },
+
+    deleteDbRow: async (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>): Promise<QueryResult> => {
+      return apiFetch('/api/db/row/delete', {
+        method: 'POST',
+        body: JSON.stringify({ config, tableName, where })
+      });
+    },
+
     getOracleActiveSessions: async (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleActiveSessionsResult> => {
       return apiFetch('/api/db/oracle-active-sessions', {
         method: 'POST',
