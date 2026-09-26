@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.15.3] - 2026-09-26
+### Corrigido
+- **Tipagem Preload e Integridade do Build**:
+  - Declarada a assinatura de `isKarafRunning: (sshPort?: number) => Promise<boolean>` na interface `ElectronAPI` (`electronAPI.d.ts`), eliminando inconsistências de tipagem TypeScript no `apiBridge.ts` e na página de Deploy.
+- **Validação de Executável Karaf (`client.bat`)**:
+  - Em `executeKarafCommand`, a validação de existência do executável do cliente Karaf no disco agora é executada antes do teste de conectividade da porta SSH, emitindo diagnóstico imediato e preciso caso o caminho esteja incorreto ou o arquivo não exista.
+- **Detecção de Conexões Recusadas e Rede**:
+  - Refatorado o utilitário `isConnectionRefusedError` em `routineLaunchUtils.ts` para inspecionar apenas propriedades reais do erro (`message`, `code`, `name` e `cause`), removendo a leitura direta de `err.stack` e evitando falsos-positivos com identificadores internos de runners de teste (`runWithTimeout`).
+- **Testes Unitários & Central de Ajuda**:
+  - Ajustados os mocks de `isKarafRunning` e `getKarafClientExecutable` nas suítes de testes (`Routine801Service.test.ts` e `KarafService.test.ts`).
+  - Sincronizados todos os fallbacks de versão para `1.15.3` na Central de Ajuda (`HelpPage.tsx`) e no servidor MCP (`src/mcp/index.ts`).
+
 ## [1.15.2] - 2026-09-25
 ### Corrigido
 - **Perfis de Deploy & Karaf CLI (Prevenção de Falsos Positivos)**:

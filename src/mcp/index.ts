@@ -10,9 +10,9 @@ const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.2';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.3';
   } catch {
-    return '1.15.2';
+    return '1.15.3';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
