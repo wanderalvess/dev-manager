@@ -25,7 +25,8 @@ describe('Routine801Service', () => {
     } as unknown as ConfigService;
 
     karafService = {
-      executeKarafCommand: vi.fn().mockResolvedValue({ code: 0, stdout: 'OK', stderr: '' })
+      executeKarafCommand: vi.fn().mockResolvedValue({ code: 0, stdout: 'OK', stderr: '' }),
+      isKarafRunning: vi.fn().mockResolvedValue(true)
     } as unknown as KarafService;
 
     routine801Service = new Routine801Service(configService, karafService);

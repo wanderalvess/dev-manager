@@ -137,6 +137,7 @@ export interface ElectronAPI {
   sendKarafInput: (input: string) => Promise<boolean>;
   stopEmbeddedKaraf: () => Promise<boolean>;
   isEmbeddedKarafRunning: () => Promise<boolean>;
+  isKarafRunning: (sshPort?: number) => Promise<boolean>;
   onKarafStdout: (callback: (chunk: string) => void) => () => void;
   getKarafPersistedLogs: (maxChars?: number) => Promise<{ output: string }>;
   clearKarafPersistedLogs: () => Promise<{ success: boolean }>;

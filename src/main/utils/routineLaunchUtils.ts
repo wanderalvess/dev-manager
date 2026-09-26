@@ -5,16 +5,32 @@ import { RoutineLaunchResult } from '../../shared/types';
  */
 export function isConnectionRefusedError(err: unknown): boolean {
   if (!err) return false;
-  const msg = err instanceof Error ? `${err.message} ${err.stack || ''} ${String((err as any).cause || '')}` : String(err);
+  const anyErr = err as any;
+  const parts: string[] = [];
+  if (err instanceof Error) {
+    parts.push(err.message, err.name);
+    if (anyErr.code) parts.push(String(anyErr.code));
+    if (anyErr.cause) {
+      if (anyErr.cause instanceof Error) {
+        parts.push(anyErr.cause.message, anyErr.cause.name);
+        if ((anyErr.cause as any).code) parts.push(String((anyErr.cause as any).code));
+      } else {
+        parts.push(String(anyErr.cause));
+      }
+    }
+  } else {
+    parts.push(String(err));
+  }
+  const text = parts.join(' ');
   return (
-    /ECONNREFUSED/i.test(msg) ||
-    /fetch failed/i.test(msg) ||
-    /ETIMEDOUT/i.test(msg) ||
-    /ENOTFOUND/i.test(msg) ||
-    /ECONNRESET/i.test(msg) ||
-    /conexão recusada/i.test(msg) ||
-    /timeout/i.test(msg) ||
-    /AbortError/i.test(msg)
+    /ECONNREFUSED/i.test(text) ||
+    /fetch failed/i.test(text) ||
+    /ETIMEDOUT/i.test(text) ||
+    /ENOTFOUND/i.test(text) ||
+    /ECONNRESET/i.test(text) ||
+    /conexão recusada/i.test(text) ||
+    /timeout/i.test(text) ||
+    /AbortError/i.test(text)
   );
 }
 

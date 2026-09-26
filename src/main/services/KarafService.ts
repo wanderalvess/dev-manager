@@ -271,6 +271,12 @@ export class KarafService {
     const pass = credentials?.pass || settings.karafPass || 'karaf';
     const sshPort = credentials?.port || getKarafSshPort(settings);
 
+    if (!karafClient) {
+      const errMsg = `[ERRO] Executável client do Karaf não encontrado em: ${path.join(settings.karafPath, 'bin')}\r\n`;
+      onChunk(errMsg);
+      return { code: 1, stdout: '', stderr: errMsg };
+    }
+
     // Valida se o contêiner OSGi está de fato em execução antes de acionar client.bat.
     // client.bat frequentemente retorna exit code 0 com "Failed to get the session." quando
     // o Karaf está offline, gerando falsos positivos na automação.
@@ -281,15 +287,9 @@ export class KarafService {
       return { code: 1, stdout: '', stderr: `Karaf OSGi offline: porta SSH ${sshPort} fechada` };
     }
 
-    const scriptName = karafClient ? path.basename(karafClient) : 'client.bat';
+    const scriptName = path.basename(karafClient);
     const portDesc = sshPort && sshPort !== 8101 ? ` -a ${sshPort}` : '';
     onChunk(`> ${scriptName} -u ${user} -p ****${portDesc} "${command}"\r\n`);
-
-    if (!karafClient) {
-      const errMsg = `[ERRO] Executável client do Karaf não encontrado em: ${path.join(settings.karafPath, 'bin')}\r\n`;
-      onChunk(errMsg);
-      return { code: 1, stdout: '', stderr: errMsg };
-    }
 
     const clientArgs = sshPort && sshPort !== 8101
       ? ['-u', user, '-p', pass, '-a', String(sshPort), command]

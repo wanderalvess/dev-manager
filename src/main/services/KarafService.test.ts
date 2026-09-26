@@ -558,6 +558,7 @@ client.bat "feature:install -r custom-feature/2.0.0"
 
   describe('executeKarafCommand', () => {
     beforeEach(() => {
+      vi.spyOn(karafService, 'getKarafClientExecutable').mockReturnValue(path.join(tmpDir, 'bin', 'client.bat'));
       vi.spyOn(karafService, 'isKarafRunning').mockResolvedValue(true);
     });
 
