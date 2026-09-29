@@ -29,6 +29,7 @@ import { ApmService } from '../services/ApmService';
 import {
   Routine801InstallRequest,
   AppSettings,
+  CreateTaskBranchOptions,
   KarafDeployRequest,
   SelectFileOptions,
   SystemAppInfo,
@@ -54,7 +55,9 @@ import {
   LlmProviderConfig,
   LlmChatRequest,
   LlmRagQueryRequest,
-  ApmFilter
+  ApmFilter,
+  RoutineDownloadRequest,
+  BatchRoutineDownloadRequest
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
 
@@ -521,6 +524,59 @@ export function registerIpcHandlers(
     return karafService.parseProjectPomOrBat(projectPath);
   });
 
+  // --- Monitor de Memória JVM (JMX / Karaf) ---
+  ipcMain.handle('karaf:get-jvm-memory', async (_, credentials?: { user?: string; pass?: string; port?: number }) => {
+    return await karafService.getJvmMemoryMetrics(credentials);
+  });
+
+  ipcMain.handle('karaf:trigger-gc', async (_, credentials?: { user?: string; pass?: string; port?: number }) => {
+    return await karafService.triggerGarbageCollection(credentials);
+  });
+
+  // --- Repositórios de Features Maven / Karaf ---
+  ipcMain.handle('karaf:list-feature-repos', async (_, credentials?: { user?: string; pass?: string; port?: number }) => {
+    return await karafService.listFeatureRepositories(credentials);
+  });
+
+  ipcMain.handle(
+    'karaf:add-feature-repo',
+    async (_, url: string, credentials?: { user?: string; pass?: string; port?: number }) => {
+      return await karafService.addFeatureRepository(url, credentials, (chunk) => {
+        mainWindow.webContents.send('karaf:log-chunk', chunk);
+      });
+    }
+  );
+
+  ipcMain.handle(
+    'karaf:remove-feature-repo',
+    async (_, nameOrUrl: string, credentials?: { user?: string; pass?: string; port?: number }) => {
+      return await karafService.removeFeatureRepository(nameOrUrl, credentials, (chunk) => {
+        mainWindow.webContents.send('karaf:log-chunk', chunk);
+      });
+    }
+  );
+
+  ipcMain.handle(
+    'karaf:refresh-feature-repo',
+    async (_, nameOrUrl?: string, credentials?: { user?: string; pass?: string; port?: number }) => {
+      return await karafService.refreshFeatureRepository(nameOrUrl, credentials, (chunk) => {
+        mainWindow.webContents.send('karaf:log-chunk', chunk);
+      });
+    }
+  );
+
+  ipcMain.handle(
+    'karaf:list-all-features',
+    async (_, installedOnly?: boolean, credentials?: { user?: string; pass?: string; port?: number }) => {
+      return await karafService.listAllFeatures(installedOnly, credentials);
+    }
+  );
+
+  // --- Log Analyzer & Destaque de Exceções ---
+  ipcMain.handle('karaf:analyze-log', async (_, content: string | string[]) => {
+    return karafService.analyzeLogText(content);
+  });
+
   // --- Rotina 801: Atualização e Instalação de Serviços Web Oficiais ---
   ipcMain.handle('routine801:get-installations', async (_, customUrl?: string) => {
     return await routine801Service.fetchInstallations(customUrl);
@@ -592,10 +648,22 @@ export function registerIpcHandlers(
 
   ipcMain.handle(
     'git:checkout-branch',
-    async (_, projectPath: string, branchName: string, createNew?: boolean) => {
-      return await gitAzureService.checkoutBranch(projectPath, branchName, createNew);
+    async (_, projectPath: string, branchName: string, createNew?: boolean, baseBranch?: string) => {
+      return await gitAzureService.checkoutBranch(projectPath, branchName, createNew, baseBranch);
     }
   );
+
+  ipcMain.handle('git:create-task-branch', async (_, projectPath: string, options: CreateTaskBranchOptions) => {
+    return await gitAzureService.createTaskBranch(projectPath, options);
+  });
+
+  ipcMain.handle('git:open-file-in-ide', async (_, projectPath: string, relativePath: string) => {
+    return await gitAzureService.openFileInIde(projectPath, relativePath);
+  });
+
+  ipcMain.handle('git:fetch-tasks', async (_, projectPath?: string, query?: string) => {
+    return await gitAzureService.fetchTasks(projectPath, query);
+  });
 
   ipcMain.handle('git:commit-and-push', async (_, projectPath: string, message: string) => {
     return await gitAzureService.commitAndPush(projectPath, message);
@@ -645,6 +713,47 @@ export function registerIpcHandlers(
 
   ipcMain.handle('routines:toggle-favorite', async (_, routineId: string) => {
     return configService.toggleFavoriteRoutine(routineId);
+  });
+
+  ipcMain.handle('routines:download-ccw', async (_, req: RoutineDownloadRequest) => {
+    return routinesService.downloadAndInstallRoutine(req);
+  });
+
+  ipcMain.handle(
+    'routines:install-local',
+    async (_, filePath: string, routineCodeOrName?: string, targetModule?: string, backupExisting?: boolean) => {
+      return routinesService.installRoutineFromFile(filePath, routineCodeOrName, targetModule, backupExisting);
+    }
+  );
+
+  ipcMain.handle('routines:get-ccw-catalog', async (_, authCookie?: string) => {
+    return routinesService.getCcwCatalog(authCookie);
+  });
+
+  ipcMain.handle('routines:get-ccw-download-url', async (_, routineName: string, winthorVersion?: string) => {
+    return routinesService.getCcwRoutineDownloadLink(routineName, winthorVersion);
+  });
+
+  ipcMain.handle('routines:list-backups', async (_, routineIdOrName: string, moduleFolder?: string) => {
+    return routinesService.listRoutineBackups(routineIdOrName, moduleFolder);
+  });
+
+  ipcMain.handle('routines:restore-backup', async (_, backupFilePath: string, targetRoutinePath: string) => {
+    return routinesService.restoreRoutineBackup(backupFilePath, targetRoutinePath);
+  });
+
+  ipcMain.handle('routines:delete-backup', async (_, backupFilePath: string) => {
+    return routinesService.deleteRoutineBackup(backupFilePath);
+  });
+
+  ipcMain.handle('routines:get-version', async (_, filePath: string) => {
+    return routinesService.getExecutableVersion(filePath);
+  });
+
+  ipcMain.handle('routines:batch-download', async (_, request: BatchRoutineDownloadRequest) => {
+    return routinesService.downloadRoutinesBatch(request, (progress) => {
+      mainWindow.webContents.send('routines:batch-progress', progress);
+    });
   });
 
   // --- Índice de Documentação (RAG local) ---
@@ -807,6 +916,10 @@ export function registerIpcHandlers(
 
   ipcMain.handle('db:get-oracle-recent-statements', async (_, config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => {
     return await databaseService.getOracleRecentStatements(config, filter);
+  });
+
+  ipcMain.handle('db:get-oracle-statement-binds', async (_, config: DatabaseConnectionConfig, sqlId: string, sqlText?: string) => {
+    return await databaseService.getOracleStatementBinds(config, sqlId, sqlText);
   });
 
   ipcMain.handle('db:start-oracle-capture', (_, config: DatabaseConnectionConfig, options: OracleCaptureOptions) => {

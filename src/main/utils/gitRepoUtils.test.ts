@@ -5,7 +5,11 @@ import {
   parsePackedRefs,
   parseRemoteUrl,
   parseStatusPorcelainZ,
-  sanitizeRemoteUrl
+  sanitizeRemoteUrl,
+  slugifyTaskTitle,
+  parseTaskInput,
+  generateTaskBranchName,
+  validateBranchName
 } from './gitRepoUtils';
 
 describe('sanitizeRemoteUrl', () => {
@@ -114,5 +118,108 @@ describe('parseCommitLog', () => {
       { hash: 'abc123', author: 'Fulano | Consultoria', date: '2026-09-20', message: 'feat: a | b' },
       { hash: 'def456', author: 'Beltrano', date: '2026-09-19', message: 'fix: c' }
     ]);
+  });
+});
+
+describe('slugifyTaskTitle', () => {
+  it('remove acentos, caracteres especiais e converte em slug kebab-case', () => {
+    expect(slugifyTaskTitle('Cálculo de Preço & Desconto Especial!')).toBe('calculo-de-preco-desconto-especial');
+  });
+
+  it('respeita o tamanho máximo sem deixar hífen solto no final', () => {
+    const longTitle = 'Implementação da nova rotina de importação de dados cadastrais fiscais para faturamento';
+    const slug = slugifyTaskTitle(longTitle, 25);
+    expect(slug.length).toBeLessThanOrEqual(25);
+    expect(slug.endsWith('-')).toBe(false);
+  });
+
+  it('retorna string vazia para entrada vazia', () => {
+    expect(slugifyTaskTitle('')).toBe('');
+  });
+});
+
+describe('parseTaskInput', () => {
+  it('reconhece URL do Azure DevOps e extrai o ID do work item', () => {
+    expect(parseTaskInput('https://dev.azure.com/minhaorg/meuproj/_workitems/edit/98765')).toEqual({
+      taskId: '98765'
+    });
+  });
+
+  it('reconhece URL do Jira e extrai a chave da issue em maiúsculas', () => {
+    expect(parseTaskInput('https://jira.corp.com/browse/dev-4321')).toEqual({
+      taskId: 'DEV-4321'
+    });
+  });
+
+  it('reconhece formato "#id - Título"', () => {
+    expect(parseTaskInput('#12345 - Corrigir bug no checkout')).toEqual({
+      taskId: '12345',
+      taskTitle: 'Corrigir bug no checkout'
+    });
+  });
+
+  it('reconhece formato "KEY-123: Título"', () => {
+    expect(parseTaskInput('WMS-789: Ajustar emissão de nota')).toEqual({
+      taskId: 'WMS-789',
+      taskTitle: 'Ajustar emissão de nota'
+    });
+  });
+
+  it('reconhece ID numérico isolado', () => {
+    expect(parseTaskInput('54321')).toEqual({ taskId: '54321' });
+  });
+
+  it('interpreta texto sem ID como título', () => {
+    expect(parseTaskInput('Atualização de dependências')).toEqual({
+      taskTitle: 'Atualização de dependências'
+    });
+  });
+});
+
+describe('generateTaskBranchName', () => {
+  it('monta nome com prefixo, taskId e slug do título', () => {
+    expect(
+      generateTaskBranchName({
+        prefix: 'feature/',
+        taskId: '12345',
+        title: 'Ajuste de Cálculo'
+      })
+    ).toBe('feature/12345-ajuste-de-calculo');
+  });
+
+  it('adiciona barra ao prefixo se faltar', () => {
+    expect(
+      generateTaskBranchName({
+        prefix: 'bugfix',
+        taskId: 'WMS-10',
+        title: 'Erro de validação'
+      })
+    ).toBe('bugfix/WMS-10-erro-de-validacao');
+  });
+
+  it('suporta apenas taskId ou apenas título', () => {
+    expect(generateTaskBranchName({ prefix: 'hotfix/', taskId: '999' })).toBe('hotfix/999');
+    expect(generateTaskBranchName({ prefix: 'chore/', title: 'Clean code' })).toBe('chore/clean-code');
+  });
+});
+
+describe('validateBranchName', () => {
+  it('aprova nomes válidos de branch Git', () => {
+    expect(validateBranchName('feature/12345-ajuste-de-calculo').valid).toBe(true);
+    expect(validateBranchName('main').valid).toBe(true);
+    expect(validateBranchName('develop').valid).toBe(true);
+  });
+
+  it('rejeita nomes vazios, com espaços, barras duplas ou caracteres proibidos', () => {
+    expect(validateBranchName('').valid).toBe(false);
+    expect(validateBranchName('   ').valid).toBe(false);
+    expect(validateBranchName('feature/com espaco').valid).toBe(false);
+    expect(validateBranchName('/inicia-com-barra').valid).toBe(false);
+    expect(validateBranchName('termina-com-barra/').valid).toBe(false);
+    expect(validateBranchName('feature//dupla-barra').valid).toBe(false);
+    expect(validateBranchName('feature..dois-pontos').valid).toBe(false);
+    expect(validateBranchName('branch.lock').valid).toBe(false);
+    expect(validateBranchName('feature/caractere?invalido').valid).toBe(false);
+    expect(validateBranchName('branch@{upstream}').valid).toBe(false);
   });
 });

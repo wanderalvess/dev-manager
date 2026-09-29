@@ -921,7 +921,13 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion }) =
               )}
             </div>
           ) : activeResultTab === 'tracer' ? (
-            <StatementTracerPanel activeConnection={activeConnection} />
+            <StatementTracerPanel
+              activeConnection={activeConnection}
+              onSelectSql={(newSql) => {
+                setSql(newSql);
+                setActiveResultTab('grid');
+              }}
+            />
           ) : (
             /* Tab de Histórico */
             <div className="p-3 space-y-2">

@@ -411,6 +411,8 @@ export class ConfigService {
     settings.backupWebhooks?.forEach((w) => {
       if (w.authValue) w.authValue = decryptSecret(w.authValue, dir)!;
     });
+    if (settings.ccwAuthCookie) settings.ccwAuthCookie = decryptSecret(settings.ccwAuthCookie, dir)!;
+    if (settings.azureDevOpsToken) settings.azureDevOpsToken = decryptSecret(settings.azureDevOpsToken, dir)!;
   }
 
   /**
@@ -439,6 +441,8 @@ export class ConfigService {
     clone.backupWebhooks = clone.backupWebhooks?.map((w) =>
       w.authValue ? { ...w, authValue: encryptSecret(w.authValue, dir)! } : w
     );
+    if (clone.ccwAuthCookie) clone.ccwAuthCookie = encryptSecret(clone.ccwAuthCookie, dir)!;
+    if (clone.azureDevOpsToken) clone.azureDevOpsToken = encryptSecret(clone.azureDevOpsToken, dir)!;
     return clone;
   }
 
@@ -499,7 +503,8 @@ export class ConfigService {
           realtimeLogSources,
           activeLogSourceId,
           llmProviders: Array.isArray(parsed.llmProviders) ? parsed.llmProviders : [],
-          activeLlmProviderId: typeof parsed.activeLlmProviderId === 'string' ? parsed.activeLlmProviderId : (Array.isArray(parsed.llmProviders) ? parsed.llmProviders[0]?.id : undefined)
+          activeLlmProviderId: typeof parsed.activeLlmProviderId === 'string' ? parsed.activeLlmProviderId : (Array.isArray(parsed.llmProviders) ? parsed.llmProviders[0]?.id : undefined),
+          azureDevOpsToken: typeof parsed.azureDevOpsToken === 'string' ? parsed.azureDevOpsToken : undefined
         };
         this.decryptSecretsInPlace(result);
         this.cachedSettings = { data: result, mtimeMs: stat.mtimeMs };
@@ -590,6 +595,13 @@ export class ConfigService {
         const destinationChanged = !!existing && !!w.endpointUrl && w.endpointUrl !== existing.endpointUrl;
         return { ...w, authValue: w.authValue || (destinationChanged ? '' : existing?.authValue || '') };
       });
+    }
+    if (!merged.ccwAuthCookie && current.ccwAuthCookie) {
+      const destinationChanged = !!merged.ccwBaseUrl && !!current.ccwBaseUrl && merged.ccwBaseUrl !== current.ccwBaseUrl;
+      merged.ccwAuthCookie = destinationChanged ? '' : current.ccwAuthCookie;
+    }
+    if (!merged.azureDevOpsToken && current.azureDevOpsToken) {
+      merged.azureDevOpsToken = current.azureDevOpsToken;
     }
 
     return merged;
@@ -688,6 +700,12 @@ export class ConfigService {
         authValue: ''
       }));
     }
+    if (sanitized.ccwAuthCookie) {
+      sanitized.ccwAuthCookie = '';
+    }
+    if (sanitized.azureDevOpsToken) {
+      sanitized.azureDevOpsToken = '';
+    }
     return sanitized;
   }
 
@@ -757,6 +775,9 @@ export class ConfigService {
       if (typeof parsed.wtaPassword === 'string') merged.wtaPassword = parsed.wtaPassword;
       if (typeof parsed.wtaAuthToken === 'string') merged.wtaAuthToken = parsed.wtaAuthToken;
       if (typeof parsed.winthorStartDefaultPayload === 'string') merged.winthorStartDefaultPayload = parsed.winthorStartDefaultPayload;
+      if (typeof parsed.ccwBaseUrl === 'string') merged.ccwBaseUrl = parsed.ccwBaseUrl;
+      if (typeof parsed.ccwWinthorVersion === 'string') merged.ccwWinthorVersion = parsed.ccwWinthorVersion;
+      if (typeof parsed.ccwAuthCookie === 'string' && parsed.ccwAuthCookie) merged.ccwAuthCookie = parsed.ccwAuthCookie;
       if (typeof parsed.karafSshPort === 'number') merged.karafSshPort = parsed.karafSshPort;
       if (typeof parsed.karafDebugPort === 'number') merged.karafDebugPort = parsed.karafDebugPort;
       if (typeof parsed.ideName === 'string') merged.ideName = parsed.ideName;
@@ -805,6 +826,7 @@ export class ConfigService {
       if (typeof parsed.targetPrBranch === 'string') merged.targetPrBranch = parsed.targetPrBranch;
       if (typeof parsed.karafUser === 'string') merged.karafUser = parsed.karafUser;
       if (typeof parsed.karafPass === 'string' && parsed.karafPass) merged.karafPass = parsed.karafPass;
+      if (typeof parsed.azureDevOpsToken === 'string' && parsed.azureDevOpsToken) merged.azureDevOpsToken = parsed.azureDevOpsToken;
 
       const warnings = [
         ...this.collectCommandStepWarnings(merged.automationProfiles, 'Perfil de automação'),

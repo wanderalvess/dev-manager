@@ -26,14 +26,26 @@ import {
   Eye,
   Copy,
   FileCode,
-  Sparkles
+  Code2,
+  KeyRound,
+  Layers,
+  Link,
+  HelpCircle
 } from 'lucide-react';
-import { GitProjectInfo, GitCommitInfo, GitFileStatus } from '../../../shared/types';
+import { GitProjectInfo, GitCommitInfo, GitFileStatus, GitTaskItem } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { GIT_TOUR_STEPS, GIT_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/gitAzureTour';
-import { buildTargetBranchOptions, fileStatusBadge, limitDiffLines } from '../utils/gitPageUtils';
+import {
+  buildTargetBranchOptions,
+  fileStatusBadge,
+  limitDiffLines,
+  slugifyTaskTitle,
+  parseTaskInput,
+  generateTaskBranchName,
+  validateBranchName
+} from '../utils/gitPageUtils';
 
 const MAX_RENDERED_DIFF_LINES = 4000;
 
@@ -66,7 +78,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
   // Sincroniza configurações globais (ex: branch alvo padrão configurado nas configurações)
   useEffect(() => {
-    if (window.electronAPI?.getSettings) {
+    if (Boolean(window.electronAPI?.getSettings)) {
       window.electronAPI.getSettings().then((st) => {
         setPreferredTarget(st.targetPrBranch || '');
         if (st.targetPrBranch) {
@@ -130,7 +142,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const isCountingRef = useRef(false);
 
   const refreshUncommittedCounts = useCallback(async () => {
-    if (isCountingRef.current || !window.electronAPI?.getGitUncommittedCounts) return;
+    if (isCountingRef.current || !Boolean(window.electronAPI?.getGitUncommittedCounts)) return;
     isCountingRef.current = true;
     try {
       setUncommittedCounts((await window.electronAPI.getGitUncommittedCounts()) || {});
@@ -146,7 +158,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   }, [settingsVersion, refreshUncommittedCounts]);
 
   const refreshSelectedProject = useCallback(async (projectPath: string) => {
-    if (!projectPath || !window.electronAPI?.getProjectInfo) return;
+    if (!projectPath || !Boolean(window.electronAPI?.getProjectInfo)) return;
     try {
       const info = await window.electronAPI.getProjectInfo(projectPath);
       if (info) {
@@ -161,18 +173,156 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
     }
   }, []);
 
+  // Lista de arquivos alterados no repositório selecionado
+  const [pendingChanges, setPendingChanges] = useState<GitFileStatus[]>([]);
+  const [isLoadingPendingChanges, setIsLoadingPendingChanges] = useState<boolean>(false);
+  const [ideFeedback, setIdeFeedback] = useState<string | null>(null);
+
+  const refreshPendingChanges = useCallback(async (projectPath: string) => {
+    if (!projectPath || !Boolean(window.electronAPI?.getGitStatusDetails)) return;
+    setIsLoadingPendingChanges(true);
+    try {
+      const files = await window.electronAPI.getGitStatusDetails(projectPath);
+      setPendingChanges(files || []);
+    } catch {
+      setPendingChanges([]);
+    } finally {
+      setIsLoadingPendingChanges(false);
+    }
+  }, []);
+
+  const handleOpenFileInIde = async (filePath: string) => {
+    if (!currentProject || !Boolean(window.electronAPI?.openFileInIde)) return;
+    try {
+      const res = await window.electronAPI.openFileInIde(currentProject.path, filePath);
+      if (!res.success) {
+        setGitOutputIsError(true);
+        setGitOutput(`Falha ao abrir '${filePath}' na IDE: ${res.error || 'Erro desconhecido'}`);
+      } else {
+        setIdeFeedback(filePath);
+        setTimeout(() => setIdeFeedback(null), 3500);
+      }
+    } catch (err: any) {
+      setGitOutputIsError(true);
+      setGitOutput(`Erro ao acionar IDE: ${err?.message || err}`);
+    }
+  };
+
+  // Estados para Criação Integrada de Branch por Tarefa (Azure DevOps / Jira)
+  const [isTaskBranchModalOpen, setIsTaskBranchModalOpen] = useState<boolean>(false);
+  const [taskSearchQuery, setTaskSearchQuery] = useState<string>('');
+  const [taskItems, setTaskItems] = useState<GitTaskItem[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(false);
+  const [selectedTask, setSelectedTask] = useState<GitTaskItem | null>(null);
+
+  const [taskBranchPrefix, setTaskBranchPrefix] = useState<string>('feature/');
+  const [taskBranchId, setTaskBranchId] = useState<string>('');
+  const [taskBranchTitle, setTaskBranchTitle] = useState<string>('');
+  const [taskBaseBranch, setTaskBaseBranch] = useState<string>('develop');
+  const [taskRawInput, setTaskRawInput] = useState<string>('');
+  const [isCreatingTaskBranch, setIsCreatingTaskBranch] = useState<boolean>(false);
+  const [taskBranchError, setTaskBranchError] = useState<string | null>(null);
+
+  const handleTaskRawInputChange = (val: string) => {
+    setTaskRawInput(val);
+    const parsed = parseTaskInput(val);
+    if (parsed.taskId) setTaskBranchId(parsed.taskId);
+    if (parsed.taskTitle) setTaskBranchTitle(parsed.taskTitle);
+  };
+
+  const handleSearchTasks = async (query?: string) => {
+    if (!currentProject || !Boolean(window.electronAPI?.fetchTasks)) return;
+    setIsLoadingTasks(true);
+    try {
+      const tasks = await window.electronAPI.fetchTasks(currentProject.path, query);
+      setTaskItems(tasks || []);
+    } catch (err) {
+      console.warn('[Git] Erro ao buscar tarefas integradas:', err);
+      setTaskItems([]);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  };
+
+  const handleSelectTask = (task: GitTaskItem) => {
+    setSelectedTask(task);
+    setTaskBranchId(task.id);
+    setTaskBranchTitle(task.title);
+    const lowerType = (task.type || '').toLowerCase();
+    if (lowerType.includes('bug') || lowerType.includes('fix') || lowerType.includes('defeito')) {
+      setTaskBranchPrefix('bugfix/');
+    } else if (lowerType.includes('hotfix')) {
+      setTaskBranchPrefix('hotfix/');
+    } else {
+      setTaskBranchPrefix('feature/');
+    }
+  };
+
+  const computedTaskBranchName = useMemo(() => {
+    return generateTaskBranchName({
+      prefix: taskBranchPrefix,
+      taskId: taskBranchId,
+      title: taskBranchTitle
+    });
+  }, [taskBranchPrefix, taskBranchId, taskBranchTitle]);
+
+  const taskBranchValidation = useMemo(() => {
+    return validateBranchName(computedTaskBranchName);
+  }, [computedTaskBranchName]);
+
+  const closeTaskBranchModal = () => {
+    setIsTaskBranchModalOpen(false);
+    setTaskBranchError(null);
+    setTaskSearchQuery('');
+  };
+
+  const handleCreateTaskBranch = async () => {
+    if (!currentProject || !taskBranchValidation.valid || isCreatingTaskBranch) return;
+    setIsCreatingTaskBranch(true);
+    setTaskBranchError(null);
+    try {
+      const res = await window.electronAPI.createTaskBranch(currentProject.path, {
+        prefix: taskBranchPrefix,
+        taskId: taskBranchId,
+        title: taskBranchTitle,
+        baseBranch: taskBaseBranch || undefined
+      });
+      if (res.success) {
+        closeTaskBranchModal();
+        setTaskRawInput('');
+        setTaskBranchId('');
+        setTaskBranchTitle('');
+        setSelectedTask(null);
+        setGitOutput(`Branch '${res.branchName}' criada com sucesso a partir de '${taskBaseBranch}'!`);
+        setGitOutputIsError(false);
+        await refreshAfterGitChange(currentProject.path);
+      } else {
+        setTaskBranchError(res.output);
+      }
+    } catch (err: any) {
+      setTaskBranchError(err?.message || 'Falha ao criar branch de tarefa.');
+    } finally {
+      setIsCreatingTaskBranch(false);
+    }
+  };
+
   useEffect(() => {
-    // A saída do terminal é do repositório anterior; mantê-la sugere que o erro é do atual.
     setGitOutput(null);
     setGitOutputIsError(false);
-    if (selectedPath) refreshSelectedProject(selectedPath);
-  }, [selectedPath, refreshSelectedProject]);
+    if (selectedPath) {
+      refreshSelectedProject(selectedPath);
+      refreshPendingChanges(selectedPath);
+    }
+  }, [selectedPath, refreshSelectedProject, refreshPendingChanges]);
 
   // Em sequência: a lista (listProjects) usa a contagem de alterações em cache no service, que só
   // fica atualizada depois do git status disparado por getProjectInfo do repositório selecionado.
   const refreshAfterGitChange = async (projectPath: string) => {
-    await refreshSelectedProject(projectPath);
-    await onRefreshProjects();
+    await Promise.all([
+      refreshSelectedProject(projectPath),
+      refreshPendingChanges(projectPath),
+      onRefreshProjects()
+    ]);
   };
 
   const filteredProjects = projects.filter(
@@ -438,7 +588,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
                   title="Rever o tour guiado desta página"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <HelpCircle className="w-3.5 h-3.5" />
                 </button>
               </h2>
               <p className="text-[11px] text-muted-foreground">
@@ -597,6 +747,21 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                         >
                           Trocar / Nova
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (currentProject) {
+                              setTaskBaseBranch(currentProject.currentBranch);
+                            }
+                            setIsTaskBranchModalOpen(true);
+                            handleSearchTasks();
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 border border-primary/25 text-[10px] font-semibold text-primary transition-colors cursor-pointer flex items-center gap-1.5"
+                          title="Criar branch vinculada a tarefa do Azure DevOps ou Jira"
+                        >
+                          <GitBranch className="w-3 h-3 text-primary" />
+                          <span>Branch por Tarefa</span>
+                        </button>
                       </div>
                     </div>
 
@@ -682,6 +847,115 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                       <ArchiveRestore className="w-3.5 h-3.5 text-emerald-500" />
                     </button>
                   </div>
+                </div>
+
+                {/* Painel: Alterações Pendentes (Uncommitted Changes) */}
+                <div className="bg-card border border-border/80 rounded-xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileEdit className="w-4 h-4 text-amber-500" />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                        Alterações Pendentes
+                      </span>
+                      <span className="text-[10px] bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded font-mono font-medium">
+                        {pendingChanges.length} {pendingChanges.length === 1 ? 'arquivo' : 'arquivos'}
+                      </span>
+                      {ideFeedback && (
+                        <span className="text-[11px] text-emerald-500 font-medium flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" /> Aberto na IDE ({ideFeedback})
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDiff()}
+                        disabled={pendingChanges.length === 0}
+                        className="px-2.5 py-1 bg-card hover:bg-muted border border-border text-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer"
+                        title="Abrir visualizador de diff completo"
+                      >
+                        <Split className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span>Ver Diff Geral</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={openCommitModal}
+                        disabled={pendingChanges.length === 0}
+                        className="px-2.5 py-1 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer"
+                        title="Prosseguir para commit"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        <span>Commitar</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {isLoadingPendingChanges ? (
+                    <div className="py-6 flex items-center justify-center text-xs text-muted-foreground gap-2 font-mono">
+                      <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+                      <span>Verificando status dos arquivos...</span>
+                    </div>
+                  ) : pendingChanges.length === 0 ? (
+                    <div className="py-3 px-3 bg-muted/20 border border-border/50 rounded-lg flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-500" />
+                        <span>Árvore de trabalho limpa. Nenhuma modificação pendente neste repositório.</span>
+                      </div>
+                      <span className="text-[10px] font-mono opacity-60">git status limpo</span>
+                    </div>
+                  ) : (
+                    <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                      {pendingChanges.map((file) => {
+                        const badge = fileStatusBadge(file.status);
+                        return (
+                          <div
+                            key={file.path}
+                            className="group flex items-center justify-between p-1.5 px-2 rounded-lg bg-muted/20 hover:bg-muted/50 border border-border/50 hover:border-border transition-colors"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDiff(file.path)}
+                              className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
+                              title={`Clique para ver o diff de ${file.path}`}
+                            >
+                              <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border shrink-0 ${badge.className}`}>
+                                {badge.label}
+                              </span>
+                              <span className="font-mono text-xs text-foreground truncate group-hover:text-primary transition-colors">
+                                {file.path}
+                              </span>
+                              {file.originalPath && (
+                                <span className="text-[10px] text-muted-foreground font-mono truncate">
+                                  (de {file.originalPath})
+                                </span>
+                              )}
+                            </button>
+
+                            <div className="flex items-center space-x-1 shrink-0 ml-2">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenFileInIde(file.path)}
+                                className="px-2 py-0.5 bg-card hover:bg-muted border border-border/70 text-muted-foreground hover:text-foreground rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                                title="Abrir na IDE / Editor"
+                              >
+                                <Code2 className="w-3.5 h-3.5 text-primary" />
+                                <span className="hidden sm:inline">Abrir na IDE</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenDiff(file.path)}
+                                className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors cursor-pointer"
+                                title="Visualizar diff deste arquivo"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Fluxo Visual de Pull Request */}
@@ -987,14 +1261,22 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                     {commitFiles.map((file) => {
                       const badge = fileStatusBadge(file.status);
                       return (
-                        <div
+                        <button
                           key={file.path}
-                          className="flex items-center gap-2 px-1.5 py-0.5 font-mono text-[11px] text-foreground"
-                          title={file.originalPath ? `${file.originalPath} → ${file.path}` : file.path}
+                          type="button"
+                          onClick={() => {
+                            setIsCommitModalOpen(false);
+                            handleOpenDiff(file.path);
+                          }}
+                          className="w-full text-left flex items-center justify-between gap-2 px-1.5 py-1 rounded-md font-mono text-[11px] text-foreground hover:bg-muted/70 transition cursor-pointer"
+                          title={`Clique para inspecionar o diff de ${file.path}`}
                         >
-                          <span className={`px-1 rounded text-[9px] font-bold border shrink-0 ${badge.className}`}>{badge.label}</span>
-                          <span className="truncate">{file.path}</span>
-                        </div>
+                          <div className="flex items-center gap-2 truncate">
+                            <span className={`px-1 rounded text-[9px] font-bold border shrink-0 ${badge.className}`}>{badge.label}</span>
+                            <span className="truncate">{file.path}</span>
+                          </div>
+                          <Eye className="w-3.5 h-3.5 text-muted-foreground shrink-0 opacity-70" />
+                        </button>
                       );
                     })}
                   </div>
@@ -1096,29 +1378,46 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
       {/* Modal de Inspeção de Diff */}
       {isDiffModalOpen && currentProject && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-fade-in">
+          <div className="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-fade-in">
             {/* Cabeçalho do Modal de Diff */}
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
-              <div className="flex items-center space-x-2">
-                <Split className="w-5 h-5 text-amber-400" />
+            <div className="p-3 px-4 border-b border-border flex items-center justify-between bg-muted/30 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center border border-border text-primary shrink-0">
+                  <Split className="w-4 h-4" />
+                </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground">
-                    Alterações e Diff - {currentProject.name}
+                  <h3 className="text-xs font-semibold text-foreground tracking-tight">
+                    Diff de Alterações · {currentProject.name}
                   </h3>
                   <span className="text-[11px] text-muted-foreground font-mono">
                     {diffFiles.length} arquivo(s) modificado(s) em relação a HEAD
                   </span>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5">
+                {selectedDiffFile && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenFileInIde(selectedDiffFile)}
+                    className="px-2.5 py-1 bg-card hover:bg-muted border border-border text-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title={`Abrir ${selectedDiffFile} na IDE`}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-primary" />
+                    <span>Abrir na IDE</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => copyDiff(diffText)}
                   disabled={!diffText || isLoadingDiff}
-                  className="px-2.5 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-40"
+                  className="px-2.5 py-1 bg-card hover:bg-muted border border-border text-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
                   title="Copiar diff unificado para a área de transferência"
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  {copiedDiffKey === diffText ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
                   <span>{copiedDiffKey === diffText ? 'Copiado!' : 'Copiar Diff'}</span>
                 </button>
                 <button
@@ -1127,7 +1426,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                     setIsDiffModalOpen(false);
                     openCommitModal();
                   }}
-                  className="px-2.5 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                  className="px-2.5 py-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                   title="Prosseguir para commit destas alterações"
                 >
                   <UploadCloud className="w-3.5 h-3.5" />
@@ -1136,7 +1435,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDiffModalOpen(false)}
-                  className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="p-1 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   title="Fechar"
                 >
                   <X className="w-4 h-4" />
@@ -1147,25 +1446,25 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
             {/* Corpo do Modal: Split entre lista de arquivos e visualizador */}
             <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
               {/* Painel lateral: lista de arquivos alterados */}
-              <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-border bg-muted/20 flex flex-col shrink-0">
-                <div className="p-3 border-b border-border flex items-center justify-between text-xs font-bold text-muted-foreground shrink-0">
+              <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-border bg-muted/15 flex flex-col shrink-0">
+                <div className="p-2.5 px-3 border-b border-border flex items-center justify-between text-xs font-semibold text-muted-foreground shrink-0">
                   <span>Arquivos Alterados</span>
                   <button
                     type="button"
                     onClick={() => handleSelectDiffFile(null)}
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition cursor-pointer ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer ${
                       selectedDiffFile === null
-                        ? 'bg-primary text-primary-foreground font-bold'
-                        : 'bg-muted hover:bg-muted/80 text-foreground'
+                        ? 'bg-primary text-primary-foreground font-semibold'
+                        : 'bg-muted hover:bg-muted/80 text-foreground border border-border/60'
                     }`}
                   >
                     Ver Todos
                   </button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
                   {diffFiles.length === 0 ? (
                     <div className="h-32 flex flex-col items-center justify-center text-xs text-muted-foreground text-center p-3">
-                      <Check className="w-6 h-6 text-emerald-500 mb-1" />
+                      <Check className="w-5 h-5 text-emerald-500 mb-1" />
                       <span>Árvore de trabalho limpa.</span>
                     </div>
                   ) : (
@@ -1174,84 +1473,359 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                       const badge = fileStatusBadge(file.status);
 
                       return (
-                        <button
+                        <div
                           key={file.path}
-                          type="button"
-                          onClick={() => handleSelectDiffFile(file.path)}
-                          className={`w-full text-left p-2 rounded-lg text-xs font-mono flex items-center gap-2 transition cursor-pointer ${
+                          className={`w-full p-1.5 px-2 rounded-md text-xs font-mono flex items-center gap-1.5 transition-colors ${
                             isSelected
-                              ? 'bg-primary/15 border border-primary/40 text-foreground font-semibold'
-                              : 'hover:bg-muted/60 text-muted-foreground hover:text-foreground border border-transparent'
+                              ? 'bg-muted border border-border text-foreground font-semibold'
+                              : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground border border-transparent'
                           }`}
                         >
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border shrink-0 ${badge.className}`}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDiffFile(file.path)}
+                            className="flex-1 flex items-center gap-1.5 min-w-0 text-left cursor-pointer"
                           >
-                            {badge.label}
-                          </span>
-                          <span
-                            className="truncate flex-1"
-                            title={file.originalPath ? `${file.originalPath} → ${file.path}` : file.path}
+                            <span
+                              className={`px-1.5 py-0.2 rounded text-[10px] font-bold border shrink-0 ${badge.className}`}
+                            >
+                              {badge.label}
+                            </span>
+                            <span
+                              className="truncate flex-1"
+                              title={file.originalPath ? `${file.originalPath} → ${file.path}` : file.path}
+                            >
+                              {file.path}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenFileInIde(file.path);
+                            }}
+                            className="p-1 rounded hover:bg-card text-muted-foreground hover:text-primary transition-colors shrink-0 cursor-pointer"
+                            title={`Abrir ${file.path} na IDE`}
                           >
-                            {file.path}
-                          </span>
-                        </button>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       );
                     })
                   )}
                 </div>
               </div>
 
-              {/* Painel Principal: Visualizador de Diff com coloração de sintaxe */}
-              <div className="flex-1 bg-background/80 flex flex-col min-h-0 overflow-hidden">
+              {/* Painel Principal: Visualizador de Diff com coloração de sintaxe e calha de linhas */}
+              <div className="flex-1 bg-background flex flex-col min-h-0 overflow-hidden">
                 {isLoadingDiff ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
-                    <RefreshCw className="w-6 h-6 animate-spin text-primary" />
-                    <span>Carregando diff do Git...</span>
+                    <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+                    <span className="font-mono">Carregando diff do Git...</span>
                   </div>
                 ) : diffError ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-xs text-rose-500 p-6 space-y-2 text-center">
-                    <AlertCircle className="w-8 h-8 opacity-70" />
-                    <p className="font-bold text-foreground">Erro ao carregar diff</p>
+                    <AlertCircle className="w-6 h-6 opacity-70" />
+                    <p className="font-semibold text-foreground">Erro ao carregar diff</p>
                     <p className="font-mono text-muted-foreground">{diffError}</p>
                   </div>
                 ) : !diffText || diffText.trim() === '' ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
-                    <FileCode className="w-8 h-8 opacity-30" />
+                  <div className="flex-1 flex flex-col items-center justify-center text-xs text-muted-foreground space-y-1.5">
+                    <FileCode className="w-6 h-6 opacity-30" />
                     <p>Nenhuma alteração detectada para este arquivo.</p>
                   </div>
                 ) : (
-                  <div className="flex-1 overflow-auto p-3 font-mono text-xs select-text">
+                  <div className="flex-1 overflow-auto font-mono text-[12px] leading-5 select-text">
                     {renderedDiff.hiddenCount > 0 && (
-                      <div className="mb-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-sans text-[11px]">
+                      <div className="m-2 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-sans text-xs">
                         Diff extenso: exibindo as primeiras {MAX_RENDERED_DIFF_LINES} linhas ({renderedDiff.hiddenCount} ocultas).
                         Selecione um arquivo na lista ou use "Copiar Diff" para obter o conteúdo completo.
                       </div>
                     )}
-                    <pre className="whitespace-pre font-mono">
+                    <div className="min-w-full divide-y divide-border/20">
                       {renderedDiff.lines.map((line, idx) => {
-                        let lineStyle = 'text-muted-foreground';
-                        if (line.startsWith('+++') || line.startsWith('---')) {
-                          lineStyle = 'text-foreground font-bold';
-                        } else if (line.startsWith('+')) {
-                          lineStyle = 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded-xs block';
-                        } else if (line.startsWith('-')) {
-                          lineStyle = 'text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1 rounded-xs block';
-                        } else if (line.startsWith('@@')) {
-                          lineStyle = 'text-sky-600 dark:text-sky-400 bg-sky-500/10 px-1 rounded-xs font-bold block my-1';
-                        } else if (line.startsWith('diff --git')) {
-                          lineStyle = 'text-foreground font-bold border-t border-border pt-2 mt-2 block';
+                        let rowBg = 'hover:bg-muted/20 text-muted-foreground/90';
+                        let gutterBorder = 'border-l-2 border-transparent';
+                        const isAdd = line.startsWith('+') && !line.startsWith('+++');
+                        const isDel = line.startsWith('-') && !line.startsWith('---');
+                        const isHunk = line.startsWith('@@');
+                        const isHeader = line.startsWith('diff --git') || line.startsWith('index') || line.startsWith('+++') || line.startsWith('---');
+
+                        if (isAdd) {
+                          rowBg = 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
+                          gutterBorder = 'border-l-2 border-emerald-500';
+                        } else if (isDel) {
+                          rowBg = 'bg-rose-500/10 text-rose-700 dark:text-rose-300';
+                          gutterBorder = 'border-l-2 border-rose-500';
+                        } else if (isHunk) {
+                          rowBg = 'bg-muted/70 text-primary font-semibold border-y border-border/40';
+                        } else if (isHeader) {
+                          rowBg = 'text-foreground font-semibold bg-muted/30';
                         }
+
                         return (
-                          <div key={idx} className={lineStyle}>
-                            {line || ' '}
+                          <div
+                            key={idx}
+                            className={`flex items-start ${rowBg} ${gutterBorder} px-2 py-0.2`}
+                          >
+                            <span className="w-10 shrink-0 text-right pr-3 select-none text-[11px] text-muted-foreground/40 font-mono">
+                              {idx + 1}
+                            </span>
+                            <span className="whitespace-pre overflow-x-auto flex-1 font-mono">
+                              {line || ' '}
+                            </span>
                           </div>
                         );
                       })}
-                    </pre>
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 5: Criação Integrada de Branch por Tarefa (Azure DevOps / Jira) */}
+      {isTaskBranchModalOpen && currentProject && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+            {/* Header */}
+            <div className="p-3 px-4 border-b border-border flex items-center justify-between bg-muted/30 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center border border-border text-primary shrink-0">
+                  <GitBranch className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-foreground tracking-tight">
+                    Criar Branch por Tarefa
+                  </h3>
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    {currentProject.name} [{currentProject.currentBranch}]
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeTaskBranchModal}
+                className="p-1 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                title="Fechar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+              {taskBranchError && (
+                <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{taskBranchError}</span>
+                </div>
+              )}
+
+              {/* Colar URL / Tarefa ou Buscar */}
+              <div className="p-3 bg-muted/20 border border-border/60 rounded-lg space-y-2">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Link className="w-3.5 h-3.5 text-primary" />
+                  Importar de URL ou Identificador:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={taskRawInput}
+                    onChange={(e) => handleTaskRawInputChange(e.target.value)}
+                    placeholder="URL do Azure/Jira ou 'SRE-1234 Ajustes no faturamento'"
+                    className="flex-1 bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary placeholder:text-muted-foreground/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSearchTasks(taskSearchQuery || taskRawInput)}
+                    disabled={isLoadingTasks}
+                    className="px-3 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+                    title="Buscar tarefas vinculadas no Jira / Azure DevOps"
+                  >
+                    <Search className={`w-3.5 h-3.5 ${isLoadingTasks ? 'animate-spin' : ''}`} />
+                    <span>{isLoadingTasks ? 'Buscando...' : 'Buscar'}</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-normal">
+                  Extrai automaticamente o código e o título a partir de URLs do Azure DevOps e Jira.
+                </p>
+
+                {/* Lista de tarefas retornadas da busca, se houver */}
+                {taskItems.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                      Tarefas encontradas ({taskItems.length}):
+                    </span>
+                    <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                      {taskItems.map((task) => (
+                        <button
+                          key={task.id}
+                          type="button"
+                          onClick={() => handleSelectTask(task)}
+                          className={`w-full text-left p-1.5 px-2 rounded-md text-xs flex items-center justify-between gap-2 transition-colors border cursor-pointer ${
+                            selectedTask?.id === task.id
+                              ? 'bg-muted border-border text-foreground font-semibold'
+                              : 'bg-card border-border/50 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-muted border border-border shrink-0">
+                              {task.id}
+                            </span>
+                            <span className="truncate">{task.title}</span>
+                          </div>
+                          {task.type && (
+                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                              {task.type}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Parâmetros da Branch */}
+              <div className="space-y-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="text-xs font-semibold text-foreground block mb-1">
+                      Prefixo:
+                    </label>
+                    <select
+                      value={taskBranchPrefix}
+                      onChange={(e) => setTaskBranchPrefix(e.target.value)}
+                      className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
+                    >
+                      <option value="feature/">feature/</option>
+                      <option value="bugfix/">bugfix/</option>
+                      <option value="fix/">fix/</option>
+                      <option value="hotfix/">hotfix/</option>
+                      <option value="chore/">chore/</option>
+                      <option value="refactor/">refactor/</option>
+                      <option value="test/">test/</option>
+                      <option value="docs/">docs/</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-foreground block mb-1">
+                      ID da Tarefa:
+                    </label>
+                    <input
+                      type="text"
+                      value={taskBranchId}
+                      onChange={(e) => setTaskBranchId(e.target.value)}
+                      placeholder="Ex: 10482"
+                      className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary placeholder:text-muted-foreground/50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-foreground block mb-1">
+                      Branch Base:
+                    </label>
+                    <select
+                      value={taskBaseBranch}
+                      onChange={(e) => setTaskBaseBranch(e.target.value)}
+                      className="w-full bg-background border border-border rounded-md px-2 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
+                    >
+                      <option value={currentProject.currentBranch}>
+                        {currentProject.currentBranch} (atual)
+                      </option>
+                      {currentProject.branches
+                        .filter((b) => b !== currentProject.currentBranch)
+                        .map((b) => (
+                          <option key={b} value={b}>
+                            {b}
+                          </option>
+                        ))}
+                      {(currentProject.remoteBranches || [])
+                        .filter(
+                          (rb) =>
+                            !currentProject.branches.includes(rb) &&
+                            rb !== currentProject.currentBranch
+                        )
+                        .map((rb) => (
+                          <option key={rb} value={rb}>
+                            {rb} (remota)
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-foreground block mb-1">
+                    Título / Resumo da Tarefa:
+                  </label>
+                  <input
+                    type="text"
+                    value={taskBranchTitle}
+                    onChange={(e) => setTaskBranchTitle(e.target.value)}
+                    placeholder="Ex: Ajustes na rotina de faturamento"
+                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary placeholder:text-muted-foreground/50"
+                  />
+                </div>
+              </div>
+
+              {/* Preview da Branch Gerada estilo Terminal */}
+              <div className="p-3 bg-muted/20 border border-border/60 rounded-lg space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                  <span className="uppercase tracking-wider font-semibold text-[10px]">Branch Destino</span>
+                  <span className="text-[10px] text-muted-foreground/60">checkout &amp; switch</span>
+                </div>
+                <div className="flex items-center gap-2 bg-background border border-border rounded-md px-2.5 py-1.5 font-mono text-xs">
+                  <span className="text-muted-foreground select-none">$</span>
+                  <span className="text-muted-foreground/70 select-none">git checkout -b</span>
+                  <span className="font-semibold text-primary flex-1 truncate">
+                    {computedTaskBranchName || '...'}
+                  </span>
+                  {computedTaskBranchName && (
+                    <button
+                      type="button"
+                      onClick={() => copyDiff(computedTaskBranchName)}
+                      className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer shrink-0"
+                      title="Copiar nome da branch"
+                    >
+                      {copiedDiffKey === computedTaskBranchName ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {!taskBranchValidation.valid && (
+                  <p className="text-[11px] text-rose-500 font-medium">
+                    {taskBranchValidation.error}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 px-4 border-t border-border bg-muted/15 flex items-center justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={closeTaskBranchModal}
+                className="px-3 py-1.5 rounded-md text-xs font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateTaskBranch}
+                disabled={!taskBranchValidation.valid || isCreatingTaskBranch}
+                className="px-3.5 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md text-xs flex items-center space-x-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <GitBranch className={`w-3.5 h-3.5 ${isCreatingTaskBranch ? 'animate-pulse' : ''}`} />
+                <span>{isCreatingTaskBranch ? 'Criando e Alternando...' : 'Criar e Alternar Branch'}</span>
+              </button>
             </div>
           </div>
         </div>

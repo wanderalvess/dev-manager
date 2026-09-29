@@ -474,12 +474,16 @@ export function isDatabaseSpan(span: TraceSpan): boolean {
  * dobro, e o banco executado por outro serviço dentro de uma chamada externa conta só como banco.
  */
 export function computeTraceTimeBreakdown(spans: TraceSpan[], traceDurationMs?: number): TraceTimeBreakdown {
-  if (spans.length === 0) return { totalMs: 0, dbMs: 0, externalMs: 0, appMs: 0 };
+  if (spans.length === 0) return { totalMs: 0, dbMs: 0, externalMs: 0, appMs: 0, httpMs: 0, javaMs: 0, jdbcMs: 0 };
 
   let earliest = Infinity;
   let latest = -Infinity;
   const dbIntervals: TimeInterval[] = [];
   const externalIntervals: TimeInterval[] = [];
+  const javaIntervals: TimeInterval[] = [];
+
+  const rootSpan = spans.find((s) => !s.parentSpanId) || spans[0];
+  const isHttpRoot = rootSpan?.kind === 'SERVER' || !!rootSpan?.httpMethod || !!rootSpan?.httpRoute || !!rootSpan?.httpUrl;
 
   for (const span of spans) {
     const interval: TimeInterval = [span.startTimeUnixMs, span.startTimeUnixMs + Math.max(0, span.durationMs)];
@@ -489,6 +493,8 @@ export function computeTraceTimeBreakdown(spans: TraceSpan[], traceDurationMs?: 
       dbIntervals.push(interval);
     } else if (span.kind === 'CLIENT') {
       externalIntervals.push(interval);
+    } else if (span.kind === 'INTERNAL' || (span !== rootSpan && !span.httpMethod)) {
+      javaIntervals.push(interval);
     }
   }
 
@@ -500,8 +506,44 @@ export function computeTraceTimeBreakdown(spans: TraceSpan[], traceDurationMs?: 
     totalMs - dbMs,
     Math.max(0, intervalsLength(mergedExternal) - overlapLength(mergedExternal, mergedDb))
   );
+  const appMs = Math.max(0, totalMs - dbMs - externalMs);
 
-  return { totalMs, dbMs, externalMs, appMs: Math.max(0, totalMs - dbMs - externalMs) };
+  // Queries JDBC no banco
+  const jdbcMs = dbMs;
+
+  // Decomposição semântica: Requisição HTTP, Processamento Java e Queries JDBC
+  let httpMs: number;
+  let javaMs: number;
+
+  if (isHttpRoot) {
+    // Para requisições HTTP recebidas pelo container/servidor
+    const mergedJava = mergeIntervals(javaIntervals);
+    const measuredJavaMs = Math.min(totalMs - jdbcMs, intervalsLength(mergedJava));
+    if (measuredJavaMs > 0) {
+      javaMs = measuredJavaMs;
+      httpMs = Math.max(0, totalMs - jdbcMs - javaMs);
+    } else {
+      // Sem spans internos granulares: chamadas HTTP externas + overhead de protocolo/filtro HTTP
+      const baseHttp = externalMs;
+      const httpOverhead = Math.min(Math.round(totalMs * 0.1), Math.max(0, totalMs - jdbcMs - baseHttp));
+      httpMs = Math.min(totalMs - jdbcMs, baseHttp + httpOverhead);
+      javaMs = Math.max(0, totalMs - jdbcMs - httpMs);
+    }
+  } else {
+    // Job ou processo interno
+    httpMs = externalMs;
+    javaMs = appMs;
+  }
+
+  return {
+    totalMs,
+    dbMs,
+    externalMs,
+    appMs,
+    httpMs,
+    javaMs,
+    jdbcMs
+  };
 }
 
 /**
@@ -548,8 +590,8 @@ export function matchesTraceScope(trace: TraceSummary, filter?: ApmFilter): bool
   return true;
 }
 
-const APM_FILTER_STRING_KEYS = ['serviceName', 'search'] as const;
-const APM_FILTER_BOOLEAN_KEYS = ['hasError', 'hasDatabaseQuery'] as const;
+const APM_FILTER_STRING_KEYS = ['serviceName', 'search', 'sortBy'] as const;
+const APM_FILTER_BOOLEAN_KEYS = ['hasError', 'hasDatabaseQuery', 'slowOnly'] as const;
 const APM_FILTER_NUMBER_KEYS = ['minDurationMs', 'maxDurationMs', 'limit', 'startTimeMs', 'endTimeMs'] as const;
 
 /**
@@ -581,34 +623,35 @@ export function parseApmFilterQuery(params: URLSearchParams): ApmFilter {
   const filter: ApmFilter = {};
   for (const key of APM_FILTER_STRING_KEYS) {
     const value = params.get(key);
-    if (value) filter[key] = value;
+    if (value) (filter as any)[key] = value;
   }
   for (const key of APM_FILTER_BOOLEAN_KEYS) {
     const value = params.get(key);
-    if (value === 'true' || value === 'false') filter[key] = value === 'true';
+    if (value === 'true' || value === 'false') (filter as any)[key] = value === 'true';
   }
   for (const key of APM_FILTER_NUMBER_KEYS) {
     const value = params.get(key);
     if (value === null || value.trim() === '') continue;
     const num = Number(value);
-    if (Number.isFinite(num)) filter[key] = num;
+    if (Number.isFinite(num)) (filter as any)[key] = num;
   }
   return filter;
 }
 
 /**
- * Aplica escopo, erro, SQL, faixa de duração e busca textual à lista de traces.
+ * Aplica escopo, erro, SQL, faixa de duração, filtro de lentidão e busca textual à lista de traces.
  */
 export function filterTraceSummaries(traces: TraceSummary[], filter?: ApmFilter): TraceSummary[] {
   if (!filter) return [...traces];
   const query = filter.search?.trim().toLowerCase();
 
-  return traces.filter((t) => {
+  const filtered = traces.filter((t) => {
     if (!matchesTraceScope(t, filter)) return false;
     if (filter.hasError !== undefined && t.hasError !== filter.hasError) return false;
     if (filter.hasDatabaseQuery !== undefined && t.hasDatabaseQuery !== filter.hasDatabaseQuery) return false;
     if (filter.minDurationMs !== undefined && t.durationMs < filter.minDurationMs) return false;
     if (filter.maxDurationMs !== undefined && t.durationMs > filter.maxDurationMs) return false;
+    if (filter.slowOnly && t.durationMs < 400 && !t.hasError) return false;
     if (query) {
       const matches =
         t.traceId.toLowerCase().includes(query) ||
@@ -619,6 +662,12 @@ export function filterTraceSummaries(traces: TraceSummary[], filter?: ApmFilter)
     }
     return true;
   });
+
+  if (filter.sortBy === 'duration') {
+    filtered.sort((a, b) => b.durationMs - a.durationMs);
+  }
+
+  return filtered;
 }
 
 /**
@@ -686,21 +735,34 @@ export function aggregateEndpointMetrics(traces: TraceSummary[]): EndpointMetric
     const percentiles = computePercentiles(latencies);
     const errorCount = list.filter((t) => t.hasError).length;
     const errorRate = list.length > 0 ? Math.round((errorCount / list.length) * 1000) / 10 : 0;
+    const maxDurationMs = latencies.reduce((max, d) => Math.max(max, d), 0);
 
     result.push({
       serviceName,
       method,
       route,
       requestCount: list.length,
+      count: list.length,
       errorCount,
       errorRate,
       avgDurationMs: percentiles.avg,
-      p95DurationMs: percentiles.p95
+      p95DurationMs: percentiles.p95,
+      maxDurationMs
     });
   }
 
   result.sort((a, b) => b.requestCount - a.requestCount);
   return result;
+}
+
+/**
+ * Agrega e ranqueia os endpoints mais lentos (por p95 / avg latência) a partir dos resumos de traces.
+ */
+export function aggregateSlowEndpoints(traces: TraceSummary[], maxEndpoints: number = 10): EndpointMetricsSummary[] {
+  const list = aggregateEndpointMetrics(traces);
+  return list
+    .sort((a, b) => b.p95DurationMs - a.p95DurationMs || b.avgDurationMs - a.avgDurationMs)
+    .slice(0, maxEndpoints);
 }
 
 /**

@@ -376,7 +376,8 @@ describe('ConfigService', () => {
         ],
         backupWebhooks: [
           { id: 'hook-1', name: 'Slack Backups', endpointUrl: 'https://hooks.slack.com/x', authValue: 'token-hook-654', enabled: true }
-        ]
+        ],
+        azureDevOpsToken: 'pat-azure-devops-999'
       });
 
       const rawDisk = fs.readFileSync(service.getConfigFilePath(), 'utf-8');
@@ -385,6 +386,7 @@ describe('ConfigService', () => {
       expect(rawDisk).not.toContain('sk-segredo-789');
       expect(rawDisk).not.toContain('token-sync-321');
       expect(rawDisk).not.toContain('token-hook-654');
+      expect(rawDisk).not.toContain('pat-azure-devops-999');
       expect(rawDisk).toContain('enc:v1:');
 
       const settings = service.getSettings();
@@ -393,6 +395,10 @@ describe('ConfigService', () => {
       expect(settings.llmProviders?.[0].apiKey).toBe('sk-segredo-789');
       expect(settings.docSyncTargets?.[0].authValue).toBe('token-sync-321');
       expect(settings.backupWebhooks?.[0].authValue).toBe('token-hook-654');
+      expect(settings.azureDevOpsToken).toBe('pat-azure-devops-999');
+
+      const sanitized = service.sanitizeSecrets(settings);
+      expect(sanitized.azureDevOpsToken).toBe('');
     });
 
     it('lê corretamente config.json escrito com segredos em texto plano (compatibilidade com versões anteriores)', () => {

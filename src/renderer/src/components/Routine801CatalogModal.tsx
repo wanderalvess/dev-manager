@@ -58,6 +58,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
 
   // Execução e Telemetria em Tempo Real
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
+  const [executeVia, setExecuteVia] = useState<'karaf_cli' | 'api'>('karaf_cli');
   const [executingTargetName, setExecutingTargetName] = useState<string | null>(null);
   const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
   const [isConsoleExpanded, setIsConsoleExpanded] = useState<boolean>(false);
@@ -286,7 +287,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
       if (window.electronAPI?.routine801InstallFeatures) {
         const res = await window.electronAPI.routine801InstallFeatures({
           funcionalidades: featuresToInstall,
-          executeVia: 'karaf_cli',
+          executeVia,
           serverUrl: serverUrlInput
         });
         setLastResult(res);
@@ -369,6 +370,34 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Seletor de Modo de Instalação */}
+            <div className="flex items-center bg-muted/70 p-0.5 rounded-md border border-border text-xs" title="Escolha o mecanismo de execução da instalação">
+              <button
+                type="button"
+                onClick={() => setExecuteVia('karaf_cli')}
+                className={`px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
+                  executeVia === 'karaf_cli'
+                    ? 'bg-card text-foreground shadow-xs font-semibold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title="Executa via Apache Karaf CLI (client.bat) com comandos OSGi em tempo real"
+              >
+                Console Karaf
+              </button>
+              <button
+                type="button"
+                onClick={() => setExecuteVia('api')}
+                className={`px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
+                  executeVia === 'api'
+                    ? 'bg-card text-foreground shadow-xs font-semibold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title="Executa via API REST do WTA (/winthor/ferramenta/servidor/v1/sistema/instala-com-dependencias)"
+              >
+                API WTA
+              </button>
+            </div>
+
             <button
               onClick={() => setIsConfigOpen(!isConfigOpen)}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors ${

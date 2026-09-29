@@ -9,6 +9,7 @@ import {
   computePercentiles,
   aggregateServiceMetrics,
   aggregateEndpointMetrics,
+  aggregateSlowEndpoints,
   aggregateSlowQueries,
   computeDatabaseTimeRatio,
   computeTraceTimeBreakdown,
@@ -476,14 +477,19 @@ describe('apmUtils', () => {
   });
 
   describe('computeTraceTimeBreakdown', () => {
-    it('conta uma única vez queries paralelas ou aninhadas', () => {
+    it('conta uma única vez queries paralelas ou aninhadas e provê divisão semântica HTTP/Java/JDBC', () => {
       const spans = [
-        makeSpan({ spanId: 'root', kind: 'SERVER', startTimeUnixMs: 0, durationMs: 1000 }),
+        makeSpan({ spanId: 'root', kind: 'SERVER', startTimeUnixMs: 0, durationMs: 1000, httpMethod: 'GET' }),
         makeSpan({ spanId: 'q1', kind: 'CLIENT', startTimeUnixMs: 100, durationMs: 400, dbStatement: 'SELECT A' }),
         makeSpan({ spanId: 'q2', kind: 'CLIENT', startTimeUnixMs: 300, durationMs: 400, dbStatement: 'SELECT B' })
       ];
       const breakdown = computeTraceTimeBreakdown(spans);
-      expect(breakdown).toEqual({ totalMs: 1000, dbMs: 600, externalMs: 0, appMs: 400 });
+      expect(breakdown.totalMs).toBe(1000);
+      expect(breakdown.dbMs).toBe(600);
+      expect(breakdown.jdbcMs).toBe(600);
+      expect(breakdown.externalMs).toBe(0);
+      expect(breakdown.appMs).toBe(400);
+      expect(breakdown.httpMs! + breakdown.javaMs! + breakdown.jdbcMs!).toBe(1000);
     });
 
     it('não conta como chamada externa o banco executado dentro dela por outro serviço', () => {
@@ -497,6 +503,7 @@ describe('apmUtils', () => {
       expect(breakdown.externalMs).toBe(300);
       expect(breakdown.appMs).toBe(400);
       expect(breakdown.dbMs + breakdown.externalMs + breakdown.appMs).toBe(breakdown.totalMs);
+      expect(breakdown.httpMs! + breakdown.javaMs! + breakdown.jdbcMs!).toBe(breakdown.totalMs);
     });
 
     it('reconhece span de banco sem statement (ex.: Redis) pelo db.system em spans CLIENT', () => {
@@ -509,7 +516,11 @@ describe('apmUtils', () => {
 
     it('respeita a duração informada do trace e nunca excede o total', () => {
       const spans = [makeSpan({ spanId: 'db', kind: 'CLIENT', startTimeUnixMs: 0, durationMs: 500, dbStatement: 'SELECT 1' })];
-      expect(computeTraceTimeBreakdown(spans, 200)).toEqual({ totalMs: 200, dbMs: 200, externalMs: 0, appMs: 0 });
+      const breakdown = computeTraceTimeBreakdown(spans, 200);
+      expect(breakdown.totalMs).toBe(200);
+      expect(breakdown.dbMs).toBe(200);
+      expect(breakdown.jdbcMs).toBe(200);
+      expect(breakdown.httpMs! + breakdown.javaMs! + breakdown.jdbcMs!).toBe(200);
     });
   });
 
@@ -664,7 +675,9 @@ describe('apmUtils', () => {
         maxDurationMs: 1500.5,
         limit: 20,
         startTimeMs: 1_711_200_000_000,
-        endTimeMs: 1_711_200_900_000
+        endTimeMs: 1_711_200_900_000,
+        sortBy: 'duration' as const,
+        slowOnly: true
       };
       const query = buildApmFilterQuery(filter);
       expect(query.startsWith('?')).toBe(true);
@@ -694,6 +707,42 @@ describe('apmUtils', () => {
       const res = filterTraceSummaries(traces);
       expect(res).toEqual(traces);
       expect(res).not.toBe(traces);
+    });
+
+    it('ordena por duração decrescente quando sortBy for duration', () => {
+      const items = [
+        makeSummary({ traceId: 'fast', durationMs: 50 }),
+        makeSummary({ traceId: 'slow', durationMs: 1200 }),
+        makeSummary({ traceId: 'mid', durationMs: 300 })
+      ];
+      const res = filterTraceSummaries(items, { sortBy: 'duration' });
+      expect(res.map((t) => t.traceId)).toEqual(['slow', 'mid', 'fast']);
+    });
+
+    it('filtra apenas traces lentos quando slowOnly for true', () => {
+      const items = [
+        makeSummary({ traceId: 'fast', durationMs: 150 }),
+        makeSummary({ traceId: 'slow1', durationMs: 400 }),
+        makeSummary({ traceId: 'slow2', durationMs: 1200 })
+      ];
+      const res = filterTraceSummaries(items, { slowOnly: true });
+      expect(res.map((t) => t.traceId)).toEqual(['slow1', 'slow2']);
+    });
+  });
+
+  describe('aggregateSlowEndpoints', () => {
+    it('agrega e ranqueia endpoints mais lentos por p95 e maxDurationMs', () => {
+      const traces = [
+        makeSummary({ traceId: 't1', httpRoute: '/api/pedidos', httpMethod: 'POST', durationMs: 900 }),
+        makeSummary({ traceId: 't2', httpRoute: '/api/pedidos', httpMethod: 'POST', durationMs: 1100 }),
+        makeSummary({ traceId: 't3', httpRoute: '/api/produtos', httpMethod: 'GET', durationMs: 200 }),
+        makeSummary({ traceId: 't4', httpRoute: '/api/clientes', httpMethod: 'GET', durationMs: 500 })
+      ];
+      const slowEndpoints = aggregateSlowEndpoints(traces, 5);
+      expect(slowEndpoints.length).toBeGreaterThan(0);
+      expect(slowEndpoints[0].route).toBe('/api/pedidos');
+      expect(slowEndpoints[0].maxDurationMs).toBe(1100);
+      expect(slowEndpoints[0].count).toBe(2);
     });
   });
 

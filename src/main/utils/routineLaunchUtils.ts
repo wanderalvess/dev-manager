@@ -1,4 +1,50 @@
+import { spawn } from 'child_process';
+import path from 'path';
 import { RoutineLaunchResult } from '../../shared/types';
+
+/**
+ * Executa um aplicativo ou rotina de forma segura e desacoplada no Windows e Linux.
+ * No Windows, utiliza cmd.exe /c start para garantir o acionamento via ShellExecute,
+ * que trata elevação UAC, scripts (.bat, .cmd), executáveis (.exe), caminhos com espaços
+ * e evita o erro 'spawn EFTYPE' (ERROR_BAD_EXE_FORMAT) causado pelo spawn direto via CreateProcessW.
+ */
+export function launchProcessSafely(executablePath: string, args: string[] = [], cwd?: string): void {
+  const dir = cwd || path.dirname(executablePath);
+  if (process.platform === 'win32') {
+    const cmdExe = process.env.ComSpec || process.env.COMSPEC || 'C:\\Windows\\System32\\cmd.exe';
+    const title = path.basename(executablePath);
+    const child = spawn(cmdExe, ['/c', 'start', title, '/d', dir, executablePath, ...args], {
+      cwd: dir,
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true
+    });
+    child.on('error', (err) => {
+      console.warn('[launchProcessSafely] Falha no spawn via cmd start, tentando fallback com shell: true:', err);
+      try {
+        spawn(executablePath, args, {
+          cwd: dir,
+          detached: true,
+          stdio: 'ignore',
+          shell: true
+        }).unref();
+      } catch (fallbackErr) {
+        console.error('[launchProcessSafely] Falha definitiva ao disparar processo:', fallbackErr);
+      }
+    });
+    child.unref();
+  } else {
+    const child = spawn(executablePath, args, {
+      cwd: dir,
+      detached: true,
+      stdio: 'ignore'
+    });
+    child.on('error', (err) => {
+      console.error('[launchProcessSafely] Erro ao disparar processo:', err);
+    });
+    child.unref();
+  }
+}
 
 /**
  * Identifica se um erro lançado por requisições de rede indica que a porta/servidor está desligada ou inacessível.

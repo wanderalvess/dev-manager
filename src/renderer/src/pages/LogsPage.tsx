@@ -23,13 +23,16 @@ import {
   Sparkles,
   SlidersHorizontal,
   Lock,
-  Unlock
+  Unlock,
+  Bug
 } from 'lucide-react';
 import { RealtimeLogSource, LogWatchStatus, LogChunkEvent, AppSettings } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { LOGS_TOUR_STEPS, LOGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/logsTour';
+import { LogExceptionAnalyzerDrawer } from '../components/LogExceptionAnalyzerDrawer';
+import { analyzeLogLine } from '../utils/logAnalyzerUtils';
 
 interface LogsPageProps {
   onNavigateToSettings?: () => void;
@@ -71,6 +74,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
   // Modais
   const [isManageModalOpen, setIsManageModalOpen] = useState<boolean>(false);
   const [isClearFileConfirmOpen, setIsClearFileConfirmOpen] = useState<boolean>(false);
+  const [isAnalyzerOpen, setIsAnalyzerOpen] = useState<boolean>(false);
   const [editingSource, setEditingSource] = useState<Partial<RealtimeLogSource> | null>(null);
 
   const { copy: copyToClipboard, copiedKey: copyFeedback } = useCopyToClipboard(1800);
@@ -388,6 +392,26 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
     }
   };
 
+  // Rolar diretamente para uma linha específica (usado pelo Log Analyzer Drawer)
+  const handleScrollToLine = (targetLineIndex: number) => {
+    setActiveErrorIndex(targetLineIndex);
+    const el = document.getElementById(`log-line-${targetLineIndex}`);
+    if (el) {
+      isAutoScrollingRef.current = true;
+      setIsAutoScroll(false);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  // Contagem de exceções críticas identificadas pelo analisador WinThor
+  const detectedExceptionsCount = useMemo(() => {
+    let count = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (analyzeLogLine(lines[i], i)) count++;
+    }
+    return count;
+  }, [lines]);
+
   // Contagem de níveis
   const levelCounts = useMemo(() => {
     let errorCount = 0;
@@ -525,6 +549,8 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
         ? 'text-xs leading-[22px]'
         : 'text-sm leading-[26px]';
 
+    const exceptionMatch = analyzeLogLine(line, index);
+
     return (
       <div
         id={`log-line-${index}`}
@@ -539,6 +565,16 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
 
         <div className="flex-1 flex items-baseline flex-wrap">
           {badge}
+          {exceptionMatch && (
+            <button
+              type="button"
+              onClick={() => setIsAnalyzerOpen(true)}
+              className="text-[9px] font-bold font-mono tracking-wider px-1.5 py-0.2 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 uppercase shrink-0 mr-2 cursor-pointer hover:bg-rose-500/40 select-none"
+              title={`${exceptionMatch.title} — clique para abrir diagnóstico e comandos recomendados`}
+            >
+              {exceptionMatch.code}
+            </button>
+          )}
           <span className={`${textClass} ${wordWrap ? 'break-all whitespace-pre-wrap' : 'whitespace-pre'}`}>
             {contentNode}
           </span>
@@ -797,6 +833,21 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
             </button>
           </div>
         )}
+
+        {/* Botão Log Analyzer & Exceções WinThor */}
+        <button
+          onClick={() => setIsAnalyzerOpen(true)}
+          className="px-2 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 border transition-colors bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30 cursor-pointer"
+          title="Abrir Log Analyzer com diagnóstico detalhado de erros WinThor (ORA, NPE, OSGi, OOM)"
+        >
+          <Bug className="w-3.5 h-3.5" />
+          <span>Exceções</span>
+          {detectedExceptionsCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-500 text-white font-mono font-bold tabular-nums">
+              {detectedExceptionsCount}
+            </span>
+          )}
+        </button>
 
         {/* Controles do Console */}
         <div className="flex items-center space-x-1.5">
@@ -1235,6 +1286,14 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
           </div>
         </div>
       )}
+
+      {/* Drawer do Analisador de Exceções WinThor */}
+      <LogExceptionAnalyzerDrawer
+        isOpen={isAnalyzerOpen}
+        onClose={() => setIsAnalyzerOpen(false)}
+        lines={lines}
+        onScrollToLine={handleScrollToLine}
+      />
 
       <OnboardingTour
         steps={LOGS_TOUR_STEPS}

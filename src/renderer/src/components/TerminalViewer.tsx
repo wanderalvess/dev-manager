@@ -192,9 +192,9 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   };
 
   return (
-    <div className="flex flex-col bg-[#070b12] border border-border rounded-2xl overflow-hidden shadow-2xl h-full w-full min-w-0">
+    <div className="flex flex-col bg-[#070b12] border border-border/80 rounded-xl overflow-hidden shadow-xl h-full w-full min-w-0">
       {/* Topo do Terminal com Controles */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-[#0e1422] border-b border-[#1b283f] gap-2 shrink-0">
+      <div className="flex flex-wrap items-center justify-between px-3.5 py-2 bg-[#0e1422] border-b border-[#1b283f] gap-2 shrink-0">
         <div className="flex items-center space-x-2.5">
           <div className="p-1 rounded-lg bg-primary/15 border border-primary/30 text-primary">
             <Terminal className="w-3.5 h-3.5" />

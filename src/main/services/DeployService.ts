@@ -5,7 +5,8 @@ import {
   DeployProfileHistoryEntry,
   DeployStepResult,
   DeployProgressEvent,
-  getKarafSshPort
+  getKarafSshPort,
+  OsgiResolutionDiagnosticSummary
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { KarafService } from './KarafService';
@@ -106,8 +107,9 @@ export class DeployService {
 
   private async runStep(
     step: DeployStep,
-    onChunk: (chunk: string) => void
-  ): Promise<{ code: number; stderr?: string }> {
+    onChunk: (chunk: string) => void,
+    contextProjectPath?: string
+  ): Promise<{ code: number; stderr?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     if (this.isAborted) {
       const err = `[CANCELADO] Execução abortada pelo usuário antes da etapa "${step.name}".\r\n`;
       onChunk(err);
@@ -131,17 +133,23 @@ export class DeployService {
           onChunk(err);
           return { code: 1, stderr: err };
         }
-        const res = await this.karafService.executeKarafCommand(cmd, onChunk, {
-          user: settings.karafUser,
-          pass: settings.karafPass,
-          port: getKarafSshPort(settings)
-        });
+        const res = await this.karafService.executeKarafCommand(
+          cmd,
+          onChunk,
+          {
+            user: settings.karafUser,
+            pass: settings.karafPass,
+            port: getKarafSshPort(settings)
+          },
+          step.timeoutSeconds ? step.timeoutSeconds * 1000 : undefined,
+          { projectPath: contextProjectPath }
+        );
         const combinedOutput = `${res.stdout}\n${res.stderr || ''}`;
         if (res.code !== 0 && combinedOutput.includes('already registered')) {
           onChunk(`\r\n[AVISO] "${step.name}" já registrado, prosseguindo...\r\n`);
           return { code: 0 };
         }
-        return { code: res.code, stderr: res.stderr };
+        return { code: res.code, stderr: res.stderr, resolutionDiagnostic: res.resolutionDiagnostic };
       }
 
       case 'karaf-bundle': {
@@ -391,12 +399,13 @@ export class DeployService {
     profile: DeployProfile,
     onChunk: (chunk: string) => void,
     onStepProgress?: (event: DeployProgressEvent) => void
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     this.isAborted = false;
     const profileStartTime = Date.now();
     const steps = (profile.steps || []).filter((s) => s.enabled !== false);
     const total = steps.length;
     const stepResults: DeployStepResult[] = [];
+    const contextProjectPath = steps.find((s) => s.projectPath)?.projectPath;
 
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`INICIANDO PERFIL DE DEPLOY: "${profile.name}"\r\n`);
@@ -484,7 +493,7 @@ export class DeployService {
       });
 
       const stepStart = Date.now();
-      const result = await this.runStep(step, onChunk);
+      const result = await this.runStep(step, onChunk, contextProjectPath);
       const stepDuration = Date.now() - stepStart;
 
       if (result.code !== 0) {
@@ -498,7 +507,8 @@ export class DeployService {
             code: result.code,
             durationMs: stepDuration,
             ignoredError: true,
-            error: result.stderr
+            error: result.stderr,
+            resolutionDiagnostic: result.resolutionDiagnostic
           });
           onStepProgress?.({
             stepId: step.id,
@@ -506,7 +516,8 @@ export class DeployService {
             totalSteps: total,
             status: 'completed',
             ignoredError: true,
-            durationMs: stepDuration
+            durationMs: stepDuration,
+            resolutionDiagnostic: result.resolutionDiagnostic
           });
           continue;
         }
@@ -523,7 +534,8 @@ export class DeployService {
           code: result.code,
           durationMs: stepDuration,
           ignoredError: false,
-          error: result.stderr
+          error: result.stderr,
+          resolutionDiagnostic: result.resolutionDiagnostic
         });
 
         const stepErrorMessage = `Falha na etapa "${step.name}"${result.stderr ? `: ${result.stderr}` : ''}`;
@@ -534,7 +546,8 @@ export class DeployService {
           totalSteps: total,
           status: 'failed',
           error: stepErrorMessage,
-          durationMs: stepDuration
+          durationMs: stepDuration,
+          resolutionDiagnostic: result.resolutionDiagnostic
         });
 
         const durationMs = Date.now() - profileStartTime;
@@ -551,7 +564,7 @@ export class DeployService {
           stepResults
         });
 
-        return { success: false, error: stepErrorMessage };
+        return { success: false, error: stepErrorMessage, resolutionDiagnostic: result.resolutionDiagnostic };
       }
 
       stepResults.push({
@@ -595,14 +608,21 @@ export class DeployService {
     step: DeployStep,
     onChunk: (chunk: string) => void,
     profileName?: string
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     this.isAborted = false;
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`EXECUTANDO ETAPA INDIVIDUAL: "${step.name}"${profileName ? ` (Perfil: ${profileName})` : ''}\r\n`);
     onChunk(`Tipo: ${step.type}\r\n`);
     onChunk(`==========================================\r\n`);
 
-    const result = await this.runStep(step, onChunk);
+    let contextProjectPath = step.projectPath;
+    if (!contextProjectPath && profileName) {
+      const profiles = this.configService.getSettings().deployProfiles || [];
+      const parentProfile = profiles.find((p) => p.name === profileName || p.id === profileName);
+      contextProjectPath = parentProfile?.steps?.find((s) => s.projectPath)?.projectPath;
+    }
+
+    const result = await this.runStep(step, onChunk, contextProjectPath);
     if (result.code !== 0) {
       if (step.continueOnError) {
         onChunk(`\r\n⚠️ [AVISO] Etapa "${step.name}" finalizou com código ${result.code}, mas "continueOnError" está ativado.\r\n`);
@@ -611,7 +631,11 @@ export class DeployService {
       onChunk(`\r\n==========================================\r\n`);
       onChunk(`❌ ETAPA "${step.name}" FALHOU (Código ${result.code}).\r\n`);
       onChunk(`==========================================\r\n`);
-      return { success: false, error: `Falha na etapa "${step.name}"${result.stderr ? `: ${result.stderr}` : ''}` };
+      return {
+        success: false,
+        error: `Falha na etapa "${step.name}"${result.stderr ? `: ${result.stderr}` : ''}`,
+        resolutionDiagnostic: result.resolutionDiagnostic
+      };
     }
 
     onChunk(`\r\n==========================================\r\n`);

@@ -39,7 +39,9 @@ import {
   Globe,
   Workflow,
   HelpCircle,
-  Activity
+  Activity,
+  RotateCcw,
+  ScrollText
 } from 'lucide-react';
 import { SystemAppInfo, UpdateStatus, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -267,6 +269,126 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'karaf-resolution-missing-requirement',
+      question: 'O deploy de uma feature Karaf falhou com "missing requirement" ou erro de resolução OSGi. O que fazer?',
+      category: 'Karaf OSGi',
+      tags: ['karaf', 'deploy', 'missing requirement', 'resolutionexception', 'dependencia', 'osgi', 'bundle', 'pom'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No ecossistema OSGi/Karaf, quando um bundle importa um pacote ou serviço Java (<code className="font-mono text-primary font-semibold">osgi.wiring.package</code>) fornecido por outro módulo ou feature, o container só consegue ativar a feature se esse fornecedor já estiver instalado e ativo na versão exigida.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Diagnóstico Inteligente do Dev Manager:</span>
+            <p>
+              Ao detectar esse erro, o Dev Manager analisa automaticamente a árvore causal da falha, extrai o pacote e a faixa de versão requerida e correlaciona com o <code className="font-mono text-primary font-semibold">pom.xml</code> do projeto.
+            </p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Card de Ação Rápida:</strong> Se você já possui um perfil de deploy ou projeto local cadastrado para essa dependência (ex: <em>matcon</em>), um botão destacado permite executar o perfil correspondente em 1 clique.
+              </li>
+              <li>
+                <strong className="text-foreground">Release do Nexus:</strong> Oferece botão para instalar a release oficial diretamente do repositório remoto via comandos Karaf (<code className="font-mono text-primary font-semibold">feature:repo-add</code> / <code className="font-mono text-primary font-semibold">feature:install</code>).
+              </li>
+              <li>
+                <strong className="text-foreground">Verificação:</strong> O botão de verificação roda <code className="font-mono text-primary font-semibold">bundle:diag</code> para analisar bundles com pendências no container.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'karaf-jvm-memory-oom',
+      question: 'Como funciona o monitor de memória Heap da JVM e a prevenção de OutOfMemoryError no Karaf?',
+      category: 'Karaf OSGi',
+      tags: ['jvm', 'heap', 'non-heap', 'metaspace', 'outofmemory', 'oom', 'gc', 'garbage collection', 'jmx'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Apache Karaf roda sobre uma Java Virtual Machine (JVM). Durante compilações volumosas ou múltiplos deploys de bundles OSGi sem reinício, o consumo de memória Heap e Metaspace pode crescer até causar um <strong className="text-rose-500 font-bold">java.lang.OutOfMemoryError (OOM)</strong>, travando os serviços.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Recursos do Monitor de Memória JVM:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Telemetria em Tempo Real:</strong> Gráfico SVG com histórico temporal do consumo de Heap (usado, alocado e máximo em MB) e Non-Heap (Metaspace/CodeCache), com contagem de threads e classes carregadas.
+              </li>
+              <li>
+                <strong className="text-foreground">Alertas Preventivos de OOM:</strong> Quando o consumo ultrapassa 70%, o painel entra em estado de <span className="text-amber-500 font-bold">AVISO</span>; acima de 85%, é emitido um alerta <span className="text-rose-500 font-bold">CRÍTICO</span> de risco iminente de travamento.
+              </li>
+              <li>
+                <strong className="text-foreground">Disparo de GC em 1 Clique:</strong> Botão <em>"Executar GC"</em> que solicita coleta imediata de lixo via JMX (<code className="font-mono text-primary font-semibold">java.lang:type=Memory gc</code>) ou shell nativo.
+              </li>
+            </ul>
+            <p className="pt-1 text-[11px]">
+              Acesse o monitor pelo botão <strong className="text-foreground">"Memória JVM"</strong> no cabeçalho da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Alt+4</kbd>).
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'karaf-features-repos',
+      question: 'Como gerenciar repositórios Maven e features OSGi na tela de Deploy?',
+      category: 'Karaf OSGi',
+      tags: ['feature', 'repositório', 'repo-list', 'repo-add', 'repo-refresh', 'maven', 'xml', 'winthor'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No Apache Karaf, features são grupos lógicos de bundles e dependências declarados em arquivos XML distribuídos via Maven.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Gerenciador de Features & Repositórios:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Aba Features:</strong> Lista todas as features disponíveis e instaladas com filtro rápido para módulos WinThor/TOTVS e botão de 1 clique para instalar ou desinstalar.
+              </li>
+              <li>
+                <strong className="text-foreground">Aba Repositórios:</strong> Lista repositórios registrados (<code className="font-mono text-primary font-semibold">feature:repo-list</code>) com destaque para WinThor, botão de atualização (<code className="font-mono text-primary font-semibold">feature:repo-refresh</code>), remoção segura e formulário para cadastrar novos repositórios com URL Maven (<code className="font-mono text-primary font-semibold">mvn:groupId/artifactId/version/xml/features</code>).
+              </li>
+            </ul>
+            <p className="pt-1 text-[11px]">
+              Acesse pelo botão <strong className="text-foreground">"Features Karaf"</strong> na barra de ferramentas da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Alt+4</kbd>).
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'log-analyzer-winthor',
+      question: 'Como utilizar o Log Analyzer para diagnosticar erros ORA-XXXXX, NullPointer e conflitos OSGi?',
+      category: 'Logs & Diagnóstico',
+      tags: ['log', 'analyzer', 'ora', 'oracle', 'nullpointer', 'npe', 'bundleexception', 'exceção', 'diagnóstico'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O módulo de Logs conta com um analisador contínuo de exceções projetado especificamente para o ecossistema WinThor e Apache Karaf:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Classificação Automática de Falhas:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Erros Oracle (ORA-XXXXX):</strong> Reconhece códigos comuns (ex: <code className="font-mono text-primary font-semibold">ORA-00942</code> Tabela inexistente, <code className="font-mono text-primary font-semibold">ORA-00001</code> Unique constraint, <code className="font-mono text-primary font-semibold">ORA-01403</code> No data found) e sugere queries de diagnóstico.
+              </li>
+              <li>
+                <strong className="text-foreground">NullPointerException (NPE):</strong> Detecta a classe e método do stacktrace onde o valor nulo foi acessado.
+              </li>
+              <li>
+                <strong className="text-foreground">BundleException & OSGi:</strong> Aponta pacotes ou serviços que não puderam ser resolvidos pelo ClassLoader OSGi.
+              </li>
+              <li>
+                <strong className="text-foreground">OutOfMemoryError:</strong> Identifica esgotamento de Heap ou Metaspace.
+              </li>
+            </ul>
+            <p className="pt-1 text-[11px]">
+              As linhas do log exibem pílulas com o código do erro (ex: <span className="bg-rose-500/20 text-rose-400 px-1 py-0.2 rounded font-mono font-bold">ORA-00942</span>). Clique na pílula ou no botão <strong className="text-foreground">"Analisar Exceções"</strong> na barra de ferramentas para abrir a gaveta com filtros e comandos sugeridos de diagnóstico!
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'port-in-use',
       question: `Uma porta monitorada (:${webPort}, :${sshPort}, :${debugPort}, etc.) está aparecendo como "Em uso" (Ocupada). Como liberar ou customizar?`,
       category: 'Ambiente & Rede',
@@ -359,6 +481,78 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'routines-ccw-download-and-backup',
+      question: 'Como baixar e atualizar rotinas do WinThor direto da Central de Controle (CCW)?',
+      category: 'Catálogo de Rotinas',
+      tags: ['ccw', 'central de controle', 'download rotinas', 'backup', 'prod', 'atualizar rotina', 'totvs', 'pc sistemas'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Dev Manager se integra diretamente à <strong className="text-foreground">Central de Controle do WinThor (CCW)</strong> em <code className="font-mono text-primary">centraldecontrole.pcinformatica.com.br</code> para baixar e atualizar rotinas sem precisar abrir o navegador nem descompactar arquivos manualmente.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como utilizar:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Botão "Atualizar Rotina (CCW)":</strong> No cabeçalho da página de Rotinas, clique no botão azul para abrir a central de download.
+              </li>
+              <li>
+                <strong className="text-foreground">Atualização Rápida no Cartão:</strong> No card de qualquer rotina existente, clique no ícone de nuvem (<Download className="w-3 h-3 inline text-primary" />) para abrir o diálogo já com o código da rotina e versão preenchidos.
+              </li>
+              <li>
+                <strong className="text-foreground">Backup Automático (.bak):</strong> Sempre que um executável já existir no diretório de destino (ex.: <code className="font-mono text-primary">C:\Winthor\Prod\MOD-001\PCSIS101.EXE</code>), o Dev Manager cria automaticamente uma cópia de segurança renomeada com timestamp (ex.: <code className="font-mono text-primary">PCSIS101.EXE.20260929_120000.bak</code>).
+              </li>
+              <li>
+                <strong className="text-foreground">Suporte a ZIP e EXE:</strong> Caso a CCW retorne um pacote ZIP compactado, o Dev Manager extrai os binários transparentemente sem requerer ferramentas externas.
+              </li>
+              <li>
+                <strong className="text-foreground">Instalação Local ou Árvore CCW:</strong> Você também pode instalar arquivos <code className="font-mono text-primary">.exe</code> ou <code className="font-mono text-primary">.zip</code> baixados manualmente ou explorar a árvore oficial com cookie de sessão.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'routines-rollback-versioning-batch',
+      question: 'Como funciona o Gerenciador de Rollback (.bak), a leitura de versão PE e o download em lote de rotinas?',
+      category: 'Catálogo de Rotinas',
+      tags: ['rollback', 'bak', 'backup', 'pe header', 'fileversion', 'productversion', 'batch', 'download em lote', 'versao executavel'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Dev Manager oferece gestão completa do ciclo de vida das rotinas WinThor no disco local:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
+                1. Histórico de Versões &amp; Rollback em 1 Clique (.bak)
+              </span>
+              <p>
+                No card de qualquer rotina, clique no ícone de retorno (<RotateCcw className="w-3 h-3 inline text-amber-500" />) ou na aba <strong>Histórico &amp; Rollback</strong> da central de rotinas. O sistema lista todos os arquivos <code className="font-mono text-primary">.bak</code> encontrados com data, hora e tamanho. Ao clicar em <strong>Restaurar</strong>, uma cópia preventiva de segurança (<code className="font-mono text-primary">_pre_rollback.bak</code>) é gerada automaticamente antes da substituição do executável, garantindo reversibilidade total.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
+                2. Leitura Binária de Versão do Executável (PE Header / FileVersion)
+              </span>
+              <p>
+                O Dev Manager inspeciona o cabeçalho binário (PE Header / <code className="font-mono text-primary">.rsrc</code>) do executável sem depender de ferramentas externas do Windows. Ele extrai e exibe diretamente no card o badge verde com a <code className="font-mono text-primary">FileVersion</code> (ex: <span className="text-emerald-500 font-bold">v30.0.12</span>) e a <code className="font-mono text-primary">ProductVersion</code>, facilitando a comparação visual com as versões publicadas na CCW.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
+                3. Download e Atualização em Lote (Batch Download)
+              </span>
+              <p>
+                No cabeçalho do catálogo, clique em <strong>Atualização em Lote</strong> para atualizar de uma só vez todas as suas rotinas favoritas, um módulo funcional inteiro (ex: <code className="font-mono text-primary">MOD-001</code>) ou uma lista personalizada de códigos. O processo exibe progresso em tempo real rotina a rotina com preservação de backups.
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'routine-801-connection-troubleshooting',
       question: 'Por que o Catálogo da Rotina 801 informa que localhost:8889 não responde se a porta está aberta?',
       category: 'Deploy & OSGi',
@@ -379,6 +573,12 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
               </li>
               <li>
                 <strong className="text-foreground">Bundle de serviço:</strong> Os endpoints do catálogo (<code className="font-mono text-primary">/winthor/ferramenta/servidor/v1/instalacao</code> e <code className="font-mono text-primary">/atualizacao</code>) exigem que o bundle <strong className="text-foreground">ferramenta-servidor</strong> esteja ativo no container Karaf.
+              </li>
+              <li>
+                <strong className="text-foreground">Modos de Instalação:</strong> Você pode alternar no cabeçalho do catálogo entre o <strong className="text-foreground">Console Karaf</strong> (executa client.bat com streaming em tempo real dos comandos feature:repo-add e feature:install) e a <strong className="text-foreground">API WTA</strong> (dispara a instalação diretamente via endpoint REST da ferramenta servidor).
+              </li>
+              <li>
+                <strong className="text-foreground">Download e Timeout Estendido:</strong> Instalar serviços ou rotinas completas baixa dezenas de dependências Maven do Nexus/Artifactory. O Dev Manager aplica timeouts dedicados de até 5 minutos para que downloads pesados nunca sejam cancelados prematuramente.
               </li>
               <li>
                 <strong className="text-foreground">Credenciais WTA:</strong> Caso o ambiente exija autenticação (Apache Shiro), o Dev Manager envia automaticamente o token/cookie do usuário configurado em Configurações.
@@ -413,15 +613,52 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados na pasta release/:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.15.3'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.22.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.15.3'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.22.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
               <li>
                 <strong className="text-foreground">LEIA-ME.txt &amp; RELEASE_NOTES.md (Notas da Versão):</strong> Gerados automaticamente ao empacotar a release ou via <code className="font-mono text-primary font-semibold">npm run release:notes</code>. Contêm o resumo das novidades extraídas do CHANGELOG, guia de instalação para anexar ao usuário e instruções do Windows SmartScreen ("Mais informações" &gt; "Executar assim mesmo").
               </li>
             </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'git-diff-and-task-branches',
+      question: 'Como funciona o Visualizador de Diff de Arquivos e a Criação de Branch por Tarefa (Azure DevOps / Jira)?',
+      category: 'Git & Azure DevOps',
+      tags: ['git', 'diff', 'ide', 'intellij', 'branch', 'azure', 'jira', 'tarefa', 'uncommitted', 'work items'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Hub <strong className="text-foreground">Git &amp; Azure DevOps</strong> centraliza o ciclo de vida do código antes do commit e agiliza a abertura de branches padronizadas vinculadas a tarefas:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
+                1. Visualizador de Diff &amp; Ação "Abrir na IDE"
+              </span>
+              <p>
+                No painel de <strong>Alterações Pendentes</strong> do repositório selecionado ou na janela de Commit, clique em qualquer arquivo modificado para inspecionar o diff em modal com realce de sintaxe (linhas adicionadas em verde, removidas em vermelho e blocos de contexto). Use o botão <strong>"Abrir na IDE"</strong> (<ExternalLink className="w-3 h-3 inline text-primary" />) no cabeçalho ou ao lado de cada arquivo para abrir diretamente o arquivo e linha no seu IntelliJ IDEA ou editor do sistema.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
+                2. Criação Integrada de Branch por Tarefa
+              </span>
+              <p>
+                Clique no botão <strong>"Branch por Tarefa"</strong> no cabeçalho da branch ativa. Você pode:
+              </p>
+              <ul className="list-disc pl-4 space-y-1 mt-1">
+                <li>Colar a URL completa da tarefa (Azure DevOps ou Jira) ou texto como <code className="font-mono text-primary font-semibold">SRE-1234 Ajustes no faturamento</code>; o sistema faz o parsing automático do ID e título.</li>
+                <li>Buscar tarefas ativas no Azure DevOps ou Jira diretamente pela API REST / WIQL (usando o Personal Access Token configurado em Configurações &gt; Azure/Jira).</li>
+                <li>Escolher o prefixo semântico (<code className="font-mono text-primary">feature/</code>, <code className="font-mono text-primary">bugfix/</code>, <code className="font-mono text-primary">hotfix/</code>, etc.) e a branch base (ex: <code className="font-mono text-primary">develop</code> ou <code className="font-mono text-primary">main</code>).</li>
+                <li>Gerar o slug normalizado (sem acentos e caracteres inválidos) e executar o checkout em 1 clique com validação completa de nomes de branch do Git.</li>
+              </ul>
+            </div>
           </div>
         </div>
       )
@@ -452,36 +689,38 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
     },
     {
       id: 'mcp-server',
-      question: 'O que é o servidor MCP e como uso o Dev Manager a partir de um assistente de IA (Claude Code)?',
+      question: 'O que é o servidor MCP e como automatizar tarefas via assistentes de IA (Copilot, IntelliJ, Claude)?',
       category: 'Integração & MCP',
-      tags: ['mcp', 'claude', 'ia', 'agente', 'automação', 'model context protocol', 'stdio'],
+      tags: ['mcp', 'claude', 'copilot', 'intellij', 'ia', 'agente', 'automação', 'model context protocol', 'stdio'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">124 tools</strong> que um assistente de IA (Claude Code, Antigravity, Copilot, etc.) pode chamar diretamente — sem passar pela interface gráfica.
+            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">145 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
-              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Catálogo de Ferramentas:</span>
-              <p className="mb-2">
-                As ferramentas permitem executar desde o start do ambiente até comandos Karaf complexos e análise de queries no banco.
-              </p>
-              <p className="mb-2">
-                As tools <code className="font-mono text-primary">apm_*</code> (traces, latências e serviços) só funcionam com o <strong className="text-foreground">app aberto</strong>: o servidor MCP roda em outro processo e lê o buffer do APM por uma API local, restrita a loopback e protegida por token. Já as tools do Statement Tracer (<code className="font-mono text-primary">db_get_oracle_active_sessions</code>, <code className="font-mono text-primary">db_get_oracle_recent_statements</code> e a captura contínua <code className="font-mono text-primary">db_start_oracle_capture</code>/<code className="font-mono text-primary">db_stop_oracle_capture</code>) consultam o Oracle direto do processo MCP. A captura iniciada pela IA é independente da captura iniciada na tela.
-              </p>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">O que a IA consegue realizar por você:</span>
+              <ul className="list-disc pl-4 space-y-1 mb-2">
+                <li><strong className="text-foreground">Build Maven &amp; Deploy Karaf:</strong> Roda <code className="font-mono text-primary font-semibold">mvn clean install</code>, instala features Maven via <code className="font-mono text-primary font-semibold">client.bat</code> e confirma se os bundles ficaram no estado <strong className="text-emerald-500 font-semibold">Started / Active</strong>.</li>
+                <li><strong className="text-foreground">Diagnóstico OSGi:</strong> Identifica bundles parados, com falha de fiação (wiring) ou dependências ausentes (<code className="font-mono text-primary">ResolutionException</code>).</li>
+                <li><strong className="text-foreground">Ambiente Windows:</strong> Checa portas TCP ocupadas, finaliza processos conflitantes e inicia/para serviços.</li>
+                <li><strong className="text-foreground">Banco de Dados:</strong> Executa consultas no Oracle/Postgres/MySQL e rastreia queries lentas com captura de binds.</li>
+                <li><strong className="text-foreground">Documentação RAG:</strong> Pesquisa semanticamente em manuais, arquivos Markdown e contratos de API locais.</li>
+                <li><strong className="text-foreground">Git &amp; Tarefas:</strong> Cria branches padronizadas a partir de work items do Azure DevOps/Jira e inspeciona diffs de arquivos.</li>
+              </ul>
               <button
                 onClick={handleOpenMcpDocs}
                 className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-2 w-fit cursor-pointer"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Ver Catálogo e Exemplos de Prompts</span>
+                <span>Ver Catálogo Completo das 145 Ferramentas e Prompts</span>
               </button>
             </div>
             
             <div className="pt-2 border-t border-border/50">
-              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Ativar no Claude Code:</span>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Execução Manual do Servidor:</span>
               <p className="mb-2">
-                O arquivo <code className="font-mono text-primary font-semibold">.mcp.json</code> na raiz do projeto já registra o servidor. Basta abrir esta pasta no Claude Code e rodar <code className="font-mono text-primary">/mcp</code> para conectar.
+                O servidor roda localmente via stdio utilizando Node.js/tsx (mesmo mecanismo do app, sem portas HTTP expostas):
               </p>
               <div className="flex items-center justify-between p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60">
                 <code>npm run mcp</code>
@@ -493,6 +732,241 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   {copiedItem === 'cmd-mcp-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'mcp-intellij-setup',
+      question: 'Como configurar e conectar o servidor MCP no IntelliJ IDEA (GitHub Copilot e JetBrains AI)?',
+      category: 'Integração & MCP',
+      tags: ['mcp', 'intellij', 'copilot', 'github copilot', 'ai assistant', 'jetbrains', 'configuracao', 'mcp.json', 'stdio'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Você pode conectar o servidor MCP do Dev Manager ao <strong className="text-foreground">IntelliJ IDEA</strong> tanto pelo <strong className="text-foreground">GitHub Copilot Chat</strong> (modo Agent) quanto pelo <strong className="text-foreground">JetBrains AI Assistant</strong> ou pelo plugin <strong className="text-foreground">Continue</strong>.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 1: GitHub Copilot no IntelliJ IDEA</span>
+              <p className="mb-2">
+                Crie ou edite o arquivo <code className="font-mono text-primary font-semibold">.mcp.json</code> (ou <code className="font-mono text-primary font-semibold">mcp.json</code>) na raiz do projeto aberto na IDE com a seguinte configuração:
+              </p>
+              <div className="relative p-2.5 rounded-lg bg-muted font-mono text-[11px] text-foreground border border-border/60 overflow-x-auto">
+                <pre>{`{
+  "mcpServers": {
+    "dev-manager": {
+      "command": "npx.cmd",
+      "args": [
+        "tsx",
+        "C:/caminho/para/winthor-dev-manager/src/mcp/index.ts"
+      ],
+      "cwd": "C:/caminho/para/winthor-dev-manager"
+    }
+  }
+}`}</pre>
+                <button
+                  onClick={() =>
+                    copyToClipboard(
+                      JSON.stringify(
+                        {
+                          mcpServers: {
+                            'dev-manager': {
+                              command: 'npx.cmd',
+                              args: ['tsx', 'C:/caminho/para/winthor-dev-manager/src/mcp/index.ts'],
+                              cwd: 'C:/caminho/para/winthor-dev-manager'
+                            }
+                          }
+                        },
+                        null,
+                        2
+                      ),
+                      'snippet-mcp-copilot'
+                    )
+                  }
+                  className="absolute right-2 top-2 p-1.5 bg-card/80 hover:bg-card text-foreground rounded-md border border-border transition-colors cursor-pointer"
+                  title="Copiar JSON"
+                >
+                  {copiedItem === 'snippet-mcp-copilot' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 2: JetBrains AI Assistant (Nativo - 2025.1+)</span>
+              <ol className="list-decimal pl-4 space-y-1 text-[11px]">
+                <li>No IntelliJ IDEA, abra as configurações: <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Ctrl+Alt+S</kbd>.</li>
+                <li>Navegue até <strong className="text-foreground">Tools &gt; AI Assistant &gt; Model Context Protocol (MCP)</strong>.</li>
+                <li>Clique no botão <strong className="text-foreground">+</strong> (Add Server):
+                  <ul className="list-disc pl-4 mt-1 space-y-0.5">
+                    <li><strong className="text-foreground">Type:</strong> STDIO</li>
+                    <li><strong className="text-foreground">Name:</strong> <code className="font-mono text-primary">dev-manager</code></li>
+                    <li><strong className="text-foreground">Command:</strong> <code className="font-mono text-primary">npx.cmd</code> (ou <code className="font-mono text-primary">npm.cmd</code>)</li>
+                    <li><strong className="text-foreground">Arguments:</strong> <code className="font-mono text-primary">tsx src/mcp/index.ts</code> (ou <code className="font-mono text-primary">run mcp</code>)</li>
+                    <li><strong className="text-foreground">Working Directory:</strong> pasta raiz do winthor-dev-manager</li>
+                  </ul>
+                </li>
+                <li>Clique em <strong className="text-foreground">Apply</strong> e <strong className="text-foreground">OK</strong>. As ferramentas surgirão automaticamente no chat do assistente!</li>
+              </ol>
+            </div>
+
+            <div className="pt-2 border-t border-border/50 bg-amber-500/5 p-2 rounded-lg border border-amber-500/20">
+              <span className="font-bold text-amber-500 block text-[11px] uppercase tracking-wider mb-0.5">⚠️ Dica Essencial para Windows:</span>
+              <p className="text-[11px]">
+                No Windows, sempre utilize <code className="font-mono text-foreground font-bold">npx.cmd</code> ou <code className="font-mono text-foreground font-bold">npm.cmd</code> no campo <code className="font-mono text-foreground">command</code>. Executar apenas <code className="font-mono text-foreground">npx</code> sem extensão faz o subprocesso do IntelliJ acusar erro de arquivo não encontrado (<code className="font-mono text-amber-500">CreateProcess error=2</code>).
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'mcp-vscode-setup',
+      question: 'Como configurar e conectar o servidor MCP no Visual Studio Code (VS Code & Copilot)?',
+      category: 'Integração & MCP',
+      tags: ['mcp', 'vscode', 'vs code', 'copilot', 'github copilot', 'agent mode', 'cline', 'roo code', 'mcp.json', 'stdio'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No <strong className="text-foreground">Visual Studio Code (VS Code)</strong>, você pode utilizar o servidor MCP do Dev Manager tanto com o <strong className="text-foreground">GitHub Copilot Chat</strong> (no modo <em>Agent</em>) quanto com extensões agênticas como <strong className="text-foreground">Cline</strong>, <strong className="text-foreground">Roo Code</strong> ou <strong className="text-foreground">Continue</strong>.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 1: GitHub Copilot Chat (Arquivo .vscode/mcp.json)</span>
+              <p className="mb-2">
+                O VS Code com GitHub Copilot Chat suporta servidores MCP diretamente pelo arquivo de configuração de workspace. Crie a pasta <code className="font-mono text-primary font-semibold">.vscode</code> na raiz do projeto e dentro dela o arquivo <code className="font-mono text-primary font-semibold">mcp.json</code>:
+              </p>
+              <div className="relative p-2.5 rounded-lg bg-muted font-mono text-[11px] text-foreground border border-border/60 overflow-x-auto">
+                <pre>{`{
+  "servers": {
+    "dev-manager": {
+      "type": "stdio",
+      "command": "npx.cmd",
+      "args": [
+        "tsx",
+        "C:/caminho/para/winthor-dev-manager/src/mcp/index.ts"
+      ],
+      "cwd": "C:/caminho/para/winthor-dev-manager"
+    }
+  }
+}`}</pre>
+                <button
+                  onClick={() =>
+                    copyToClipboard(
+                      JSON.stringify(
+                        {
+                          servers: {
+                            'dev-manager': {
+                              type: 'stdio',
+                              command: 'npx.cmd',
+                              args: ['tsx', 'C:/caminho/para/winthor-dev-manager/src/mcp/index.ts'],
+                              cwd: 'C:/caminho/para/winthor-dev-manager'
+                            }
+                          }
+                        },
+                        null,
+                        2
+                      ),
+                      'snippet-mcp-vscode'
+                    )
+                  }
+                  className="absolute right-2 top-2 p-1.5 bg-card/80 hover:bg-card text-foreground rounded-md border border-border transition-colors cursor-pointer"
+                  title="Copiar JSON para VS Code"
+                >
+                  {copiedItem === 'snippet-mcp-vscode' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+              <p className="mt-2 text-[11px]">
+                💡 <em>Dica:</em> Se o projeto aberto no VS Code for o próprio Dev Manager, você também pode usar <code className="font-mono text-primary font-semibold">{'${workspaceFolder}'}/src/mcp/index.ts</code>.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Como acionar no GitHub Copilot Chat do VS Code:</span>
+              <ol className="list-decimal pl-4 space-y-1 text-[11px]">
+                <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Ctrl+Alt+I</kbd>).</li>
+                <li>Selecione o modo <strong className="text-foreground">Agent</strong> (ou digite <code className="font-mono text-primary">@agent</code> no campo de mensagem).</li>
+                <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 145 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
+                <li>Envie sua solicitação diretamente (ex.: <em>"Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."</em>).</li>
+              </ol>
+            </div>
+
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 2: Extensões Cline / Roo Code / Continue</span>
+              <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                <li>
+                  <strong className="text-foreground">Cline / Roo Code:</strong> Abra a aba da extensão, clique em ⚙️ (Configurações) ➔ aba <strong>MCP Servers</strong> ➔ clique em <em>"Edit MCP Settings"</em> e adicione a chave <code className="font-mono text-primary">"mcpServers"</code> com o comando <code className="font-mono text-primary">npx.cmd</code>.
+                </li>
+                <li>
+                  <strong className="text-foreground">Continue.dev:</strong> Adicione no arquivo <code className="font-mono text-primary">%USERPROFILE%\.continue\config.json</code> dentro do array <code className="font-mono text-primary">"mcpServers"</code>.
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-2 border-t border-border/50 bg-amber-500/5 p-2 rounded-lg border border-amber-500/20">
+              <span className="font-bold text-amber-500 block text-[11px] uppercase tracking-wider mb-0.5">⚠️ Dica Windows:</span>
+              <p className="text-[11px]">
+                No Windows, utilize sempre <code className="font-mono text-foreground font-bold">npx.cmd</code> ou <code className="font-mono text-foreground font-bold">npm.cmd</code> no campo <code className="font-mono text-foreground">command</code>. Isso impede que o VS Code falhe com erro de <code className="font-mono text-amber-500">spawn ENOENT</code> ao inicializar o servidor em segundo plano.
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'mcp-karaf-maven-deploy',
+      question: 'Como pedir para a IA (Copilot no IntelliJ/VS Code ou Claude) fazer Clean Install Maven e Deploy da Feature no Karaf?',
+      category: 'Integração & MCP',
+      tags: ['mcp', 'copilot', 'karaf', 'clean install', 'maven', 'deploy', 'feature', 'prompt', 'exemplo', 'verify', 'active', 'intellij', 'vscode', 'vs code'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Com o MCP conectado no IntelliJ IDEA, VS Code (Copilot/Cline) ou Claude Code, você pode solicitar o ciclo completo de build Maven e publicação de features OSGi no Apache Karaf em uma única frase em linguagem natural.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Exemplo de Prompt Recomendado (Testado e Aprovado):</span>
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-primary/10 border border-primary/30 text-foreground font-medium text-xs">
+                <span>"Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."</span>
+                <button
+                  onClick={() =>
+                    copyToClipboard(
+                      'Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa.',
+                      'prompt-deploy-karaf'
+                    )
+                  }
+                  className="p-1 hover:text-primary transition-colors cursor-pointer shrink-0 ml-2"
+                  title="Copiar prompt"
+                >
+                  {copiedItem === 'prompt-deploy-karaf' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-primary" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Como a IA orquestra os passos nos bastidores:</span>
+              <ol className="list-decimal pl-4 space-y-1.5 text-[11px]">
+                <li>
+                  <strong className="text-foreground">Compilação Maven:</strong> A IA dispara <code className="font-mono text-primary font-semibold">mvn clean install -DskipTests</code> (ou chama <code className="font-mono text-primary font-semibold">karaf_run_maven_build</code>) no diretório do projeto e aguarda o <code className="font-mono text-emerald-500 font-bold">BUILD SUCCESS</code>.
+                </li>
+                <li>
+                  <strong className="text-foreground">Injeção no Karaf:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_exec_command</code> do Dev Manager para executar <code className="font-mono text-primary">feature:repo-add mvn:.../features.xml</code> e <code className="font-mono text-primary">feature:install &lt;nome-da-feature&gt;</code> via <code className="font-mono text-primary">client.bat</code>.
+                </li>
+                <li>
+                  <strong className="text-foreground">Verificação Pós-Deploy:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_verify_bundle</code> para validar <code className="font-mono text-primary">feature:list -i</code> e <code className="font-mono text-primary">bundle:list</code>, confirmando que a feature passou para o estado <strong className="text-emerald-500 font-bold">Started (Ativa)</strong>.
+                </li>
+              </ol>
+            </div>
+
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Outros Exemplos de Prompts Úteis para o Chat da IA:</span>
+              <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                <li><em className="text-foreground">"Verifique se o Apache Karaf está rodando antes de iniciar o deploy."</em> (Chama <code className="font-mono text-primary">karaf_is_running</code>)</li>
+                <li><em className="text-foreground">"Liste os bundles que estão com status de falha ou problema de fiação no Karaf."</em> (Chama <code className="font-mono text-primary">karaf_detect_wiring_conflicts</code>)</li>
+                <li><em className="text-foreground">"Verifique o status do meu ambiente, mate qualquer processo na porta 8181 e inicie a IDE."</em> (Chama <code className="font-mono text-primary">env_check_ports</code> e <code className="font-mono text-primary">env_batch_kill_processes</code>)</li>
+                <li><em className="text-foreground">"Consulte as últimas 50 linhas do arquivo karaf.log e resuma se há exceções recentes."</em> (Chama <code className="font-mono text-primary">karaf_get_log</code> ou <code className="font-mono text-primary">logs_read_last_lines</code>)</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -548,6 +1022,40 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'oracle-bind-capture-tracer',
+      question: 'Como inspecionar os parâmetros (binds) passados nas queries do Oracle e evitar o log:set trace root no Karaf?',
+      category: 'Banco de Dados & Backup',
+      tags: ['binds', 'parametros', 'tracer', 'oracle', 'v$sql_bind_capture', 'sql interpolado', 'karaf', 'trace root', 'oratrace', 'winthor'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O <strong className="text-foreground">Statement Tracer</strong> do Dev Manager agora captura automaticamente os valores dos parâmetros passados nas instruções SQL (<code className="font-mono text-primary">v$sql_bind_capture</code>), eliminando a necessidade de habilitar <code className="font-mono text-primary font-bold">log:set trace root</code> no Karaf ou depender de utilitários externos como o <em>Statement Tracer for Oracle (OraTracer.exe)</em>.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
+            <div>
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
+                Por que evitar o "log:set trace root" no Karaf?
+              </span>
+              <p>
+                Ativar o nível <code className="font-mono text-primary">TRACE</code> em todo o contêiner OSGi satura o log com milhares de linhas internas do framework por segundo, degrada a performance da JVM, enche o disco e torna difícil achar a query que você procura. Consultar <code className="font-mono text-primary">v$sql_bind_capture</code> direto no Oracle lê apenas os parâmetros reais gravados no cursor da query (<code className="font-mono text-primary">SQL_ID</code>) com zero impacto nos logs do servidor.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-border/50">
+              <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
+                Como inspecionar e rodar o SQL pronto:
+              </span>
+              <ol className="list-decimal pl-4 space-y-1">
+                <li>No <strong>Statement Tracer</strong>, selecione qualquer query na tabela para abrir o inspetor inferior.</li>
+                <li>Na aba <strong>Parâmetros (Binds)</strong>, veja a posição (<code className="font-mono text-primary">:1</code>, <code className="font-mono text-primary">:NOME</code>), o tipo do dado (VARCHAR2, NUMBER, DATE, etc.) e o valor exato capturado.</li>
+                <li>O Dev Manager formata e interpola os valores no SQL automaticamente, tratando aspas, datas e números.</li>
+                <li>Clique em <strong>"Usar no Editor"</strong> para abrir a query já pronta no Editor SQL do DB Studio, ou <strong>"Copiar SQL"</strong> para colar onde precisar.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'apm-connect',
       question: 'Como envio traces do Karaf/WinThor para a tela APM & Traces?',
       category: 'APM & Traces',
@@ -584,6 +1092,37 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'apm-waterfall-and-slow-queries',
+      question: 'Como funciona o gráfico Waterfall e a detecção de chamadas e queries lentas no APM?',
+      category: 'APM & Traces',
+      tags: ['apm', 'waterfall', 'régua', 'http', 'java', 'jdbc', 'gargalo', 'queries lentas', 'endpoints', 'top lentos'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O <strong className="text-foreground">Traces Explorer</strong> decompõe automaticamente cada requisição em uma régua de tempo visual dividida em 3 camadas semânticas essenciais:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Régua de Tempo Visual (Time Budget):</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-sky-600 dark:text-sky-400">Requisição HTTP:</strong> tempo gasto em I/O de rede, filtros de servlet e recepção/despacho do servidor web.
+              </li>
+              <li>
+                <strong className="text-purple-600 dark:text-purple-400">Processamento Java:</strong> tempo gasto em regras de negócio, transformações de dados e handlers OSGi dentro do Apache Karaf.
+              </li>
+              <li>
+                <strong className="text-amber-600 dark:text-amber-400">Queries JDBC no banco:</strong> tempo dedicado a consultas e comandos SQL executados no Oracle/PostgreSQL.
+              </li>
+            </ul>
+            <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Detecção de Consultas e Endpoints Lentos:</span>
+            <p>
+              O sistema detecta automaticamente chamadas com duração elevada (&gt;400ms ou &gt;1s) e exibe o badge <code className="font-mono text-amber-500 font-bold">⚡ Lenta</code> diretamente nos spans do Waterfall. Na barra de filtros e no Dashboard, use os botões rápidos <strong className="text-foreground">Top Lentos</strong>, <strong className="text-foreground">🗄️ Queries Lentas</strong>, <strong className="text-foreground">🌐 Endpoints Lentos</strong> ou ordene por <strong className="text-foreground">Mais Lentos</strong> em 1 clique.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'winthor-start',
       question: 'Como as rotinas do WinThor abrem já autenticadas (WinThor Start e WTA)?',
       category: 'Catálogo de Rotinas',
@@ -613,6 +1152,33 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       )
     },
     {
+      id: 'routine-launch-eftype',
+      question: 'Por que ao abrir uma rotina aparecia erro "spawn EFTYPE" e como funciona o lançamento seguro?',
+      category: 'Catálogo de Rotinas',
+      tags: ['spawn', 'eftype', 'rotina', 'delphi', 'uac', 'winthor start', 'timeout', 'execução', 'contingência'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No Windows, o erro <code className="font-mono text-primary font-semibold">spawn EFTYPE</code> (código do sistema <code className="font-mono text-primary">ERROR_BAD_EXE_FORMAT</code>) ocorria quando um processo era invocado via chamada direta da API do sistema sem shell em situações onde o executável exigia elevação UAC (Administrador), continha travas temporárias de antivírus ou quando havia concorrência prematura com o WinThor Start.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Melhorias implementadas:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Lançador Seguro Windows:</strong> Todas as rotinas e aplicativos agora utilizam delegação ao Shell do Windows (<code className="font-mono text-primary">cmd /c start</code>), respeitando o diretório de trabalho (<code className="font-mono text-primary">cwd</code>) indispensável para carregar DLLs e arquivos INI das rotinas Delphi, além de suportar elevação UAC e scripts transparentemente.
+              </li>
+              <li>
+                <strong className="text-foreground">Timeouts Estendidos &amp; Sem Concorrência:</strong> O tempo limite de espera pelo WinThor Start foi ampliado de 3s para 8s. Se a requisição expirar ou o serviço responder com erro, o Dev Manager não dispara um processo concorrente às cegas, prevenindo contenção e travamento de arquivos.
+              </li>
+              <li>
+                <strong className="text-foreground">Contingência com 1 Clique:</strong> Caso o WinThor Start demore ou retorne erro, o botão <strong className="text-foreground">"Tentar abrir direto (sem autenticação)"</strong> surge instantaneamente no banner de feedback para abrir a rotina localmente de forma isolada.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'secrets-encryption',
       question: 'As senhas e tokens que salvo nas Configurações ficam em texto puro no disco?',
       category: 'Segurança & Configurações',
@@ -620,7 +1186,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Não. Senhas de banco, senha do Karaf, tokens do Confluence/Jira, API keys de provedores de IA e credenciais de webhooks ficam <strong className="text-foreground">criptografados (AES-256-GCM)</strong> no <code className="font-mono text-primary">config.json</code>.
+            Não. Senhas de banco, senha do Karaf, token pessoal do Azure DevOps (PAT), tokens do Confluence/Jira, API keys de provedores de IA e credenciais de webhooks ficam <strong className="text-foreground">criptografados (AES-256-GCM)</strong> no <code className="font-mono text-primary">config.json</code>.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
             <p>
@@ -697,10 +1263,10 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
 
   const categories = [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
-    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '9 Módulos' },
+    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '10 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqList.length}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.15.3'}` }
+    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appInfo?.appVersion || '1.22.0'}` }
   ];
 
   const handleSearchChange = (val: string) => {
@@ -804,7 +1370,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       COCKPIT DO DESENVOLVEDOR
                     </span>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Dev Manager • v{appInfo?.appVersion || '1.15.3'}
+                      Dev Manager • v{appInfo?.appVersion || '1.22.0'}
                     </span>
                     {appInfo?.isAdmin ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
@@ -1009,11 +1575,12 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       Catálogo de Rotinas
                     </h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Localização instantânea de executáveis Delphi (.exe e .pc) por código ou nome, com favoritos salvos para abertura rápida.
+                      Localização instantânea de executáveis Delphi (.exe e .pc), download direto e atualização pela Central de Controle WinThor (CCW) com backup .bak automático.
                     </p>
                     <div className="flex flex-wrap gap-1 pt-1 font-mono text-[9px] text-muted-foreground">
                       <span className="px-1.5 py-0.5 rounded bg-muted/70">Delphi .exe</span>
-                      <span className="px-1.5 py-0.5 rounded bg-muted/70">Favoritos</span>
+                      <span className="px-1.5 py-0.5 rounded bg-muted/70">CCW Download</span>
+                      <span className="px-1.5 py-0.5 rounded bg-muted/70">Backup .bak</span>
                     </div>
                   </div>
 
@@ -1195,7 +1762,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground line-clamp-2">
-                      Busca rápida por código de executáveis Delphi (.exe e .pc).
+                      Busca rápida de executáveis Delphi, download e atualização via CCW.
                     </p>
                   </div>
                   <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shrink-0">
@@ -1531,7 +2098,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span><strong>Statement Tracer (Oracle):</strong> Captura em segundo plano de <code className="font-mono text-primary">v$session</code>/<code className="font-mono text-primary">v$sql</code> para ver qual sessão rodou qual SQL enquanto você usa outro sistema.</span>
+                      <span><strong>Statement Tracer &amp; Parâmetros (Binds):</strong> Rastreamento de queries Oracle (<code className="font-mono text-primary">v$session</code>/<code className="font-mono text-primary">v$sql</code>) com captura de valores de binds (<code className="font-mono text-primary">v$sql_bind_capture</code>), dispensando <code className="font-mono text-primary">log:set trace root</code> no Karaf e gerando SQL executável interpolado em 1 clique.</span>
                     </li>
                   </ul>
                 </div>
@@ -1639,7 +2206,19 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      <span><strong>Diagnóstico Inteligente de Dependências OSGi:</strong> Detecção e parsing automático de falhas <code className="font-mono text-primary">ResolutionException</code> / <code className="font-mono text-primary">missing requirement</code>, correlacionando o pacote ausente com o <code className="font-mono text-primary">pom.xml</code> e sugerindo card de ação com 1 clique para rodar o perfil da dependência ou instalar a release necessária.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                       <span><strong>Diagnóstico Karaf:</strong> Listar bundles instalados (<code className="font-mono text-primary">bundle:list</code>) e logs (<code className="font-mono text-primary">log:display</code>).</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      <span><strong>Monitor de Memória Heap da JVM (JMX):</strong> Telemetria contínua com gráfico de consumo de Heap e Non-Heap (Metaspace), alertas automáticos de risco de OutOfMemoryError (OOM) e botão de 1 clique para executar Garbage Collection (GC) na JVM.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      <span><strong>Gerenciador de Features Maven &amp; Repositórios:</strong> Interface interativa para listar repositórios (<code className="font-mono text-primary">feature:repo-list</code>), atualizar (<code className="font-mono text-primary">feature:repo-refresh</code>), cadastrar URLs Maven e instalar/desinstalar features OSGi do WinThor com 1 clique.</span>
                     </li>
                   </ul>
                 </div>
@@ -1684,6 +2263,14 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                       <span><strong>Varredura Automática:</strong> Detecta branch atual, contagem de arquivos não commitados em cada projeto (incluindo worktrees e submódulos) e aviso de HEAD destacado.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                      <span><strong>Visualizador de Diff &amp; Alterações Pendentes:</strong> Painel dedicado de arquivos modificados com status visual (M, A, D, ?, R), modal de diff com syntax highlighting e atalho "Abrir na IDE" em 1 clique para navegar direto ao arquivo no IntelliJ IDEA ou VS Code.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                      <span><strong>Criação Integrada de Branch por Tarefa:</strong> Criação e checkout de branches padronizadas baseadas em itens de trabalho do Azure DevOps ou Jira (busca via API, importação por URL/texto, prefixos <code className="font-mono text-primary">feature/</code>, <code className="font-mono text-primary">bugfix/</code>, <code className="font-mono text-primary">hotfix/</code> e seleção de branch base).</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
@@ -1752,6 +2339,26 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
                       <span><strong>WinThor Start &amp; WTA:</strong> Abre rotinas já autenticadas pelo serviço local (<code className="font-mono text-primary">:9195</code>), com monitoramento de status do Karaf (WTA na porta <code className="font-mono text-primary">:8889</code>), alerta explícito de autenticação e fallback direto.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                      <span><strong>Download e Atualização via CCW:</strong> Baixe rotinas oficiais diretamente da Central de Controle WinThor para a pasta <code className="font-mono text-primary">Prod</code> do módulo, com descompactação de ZIP automática.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                      <span><strong>Gerenciador de Rollback (.bak):</strong> Histórico de versões anteriores com data, hora, tamanho e restauração em 1 clique com backup prévio de segurança (<code className="font-mono text-primary">_pre_rollback.bak</code>).</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                      <span><strong>Leitura de Versão do Executável (PE Header):</strong> Inspeção de metadados binários (<code className="font-mono text-primary">FileVersion</code> / <code className="font-mono text-primary">ProductVersion</code>) exibida diretamente nos cartões para validação instantânea de releases.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                      <span><strong>Atualização em Lote (Batch Download):</strong> Atualize todas as rotinas favoritas ou módulos inteiros com um único clique e acompanhamento em tempo real.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                      <span><strong>Instalação Local &amp; Árvore Oficial:</strong> Atualize a partir de arquivos <code className="font-mono text-primary">.exe</code> ou <code className="font-mono text-primary">.zip</code> baixados localmente ou explore a árvore de rotinas da CCW.</span>
                     </li>
                   </ul>
                 </div>
@@ -1843,11 +2450,11 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <ul className="space-y-1.5 pl-1">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                      <span><strong>Dashboard:</strong> Vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries mais lentos.</span>
+                      <span><strong>Dashboard &amp; Detecção de Gargalos:</strong> Vazão (RPS), percentis (p50/p95/p99), taxa de erros, ranking dos endpoints mais lentos e consultas SQL demoradas com filtros instantâneos em 1 clique.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                      <span><strong>Traces Explorer:</strong> Waterfall de spans, atributos, SQL executado, stacktrace e divisão do tempo entre banco, chamadas externas e aplicação.</span>
+                      <span><strong>Waterfall com Régua Visual:</strong> Linha do tempo com régua graduada dividindo proporcionalmente o tempo total entre <em>Requisição HTTP</em>, <em>Processamento Java</em> e <em>Queries JDBC no banco</em>, tags de queries lentas e filtros por camada.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
@@ -1884,48 +2491,127 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                       <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
                         9. Servidor MCP (Automação por IA)
                       </h3>
-                      <span className="text-[10px] text-muted-foreground font-mono">123 Tools expostas via stdio para IAs</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">145 Tools via stdio · IntelliJ · VS Code · Claude</span>
                     </div>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 font-mono font-bold">
-                    MCP STDIO
+                    145 TOOLS
                   </span>
                 </div>
 
                 <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
                   <p>
-                    Permite que agentes de IA controlem seu ambiente, rodem builds, verifiquem portas e pesquisem docs:
+                    Permite que assistentes de IA (GitHub Copilot no IntelliJ IDEA e VS Code, Claude Code, JetBrains AI, Cline, Roo Code, Cursor e Antigravity) executem ações operacionais no seu computador sem passar pela interface gráfica:
                   </p>
                   <ul className="space-y-1.5 pl-1">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
-                      <span><strong>123 Tools Especializadas:</strong> Controle de serviços Windows, Karaf, Docker, Git, Banco, Deploy, RAG, Rotinas e APM.</span>
+                      <span><strong>Clean Install &amp; Deploy Karaf:</strong> Peça à IA para rodar <code className="font-mono text-primary">mvn clean install</code>, instalar features OSGi no Karaf e confirmar se o bundle ficou no estado <strong className="text-emerald-500 font-semibold">Started (Ativo)</strong> com 1 único prompt.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
-                      <span><strong>Catálogo de Ferramentas:</strong> Documentação completa e dicas de prompts para a IA.</span>
+                      <span><strong>Diagnóstico &amp; Fiação OSGi:</strong> Detecção de bundles parados, pacotes em conflito e dependências ausentes (<code className="font-mono text-primary">missing requirement</code>).</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                      <span><strong>Telemetria JVM &amp; Repositórios:</strong> Inspeção de consumo Heap/Non-Heap, alertas de OOM, disparo de GC e gestão de repositórios Maven em 1 comando.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                      <span><strong>Ambiente &amp; Portas:</strong> Verificação de status, liberação de portas presas (<code className="font-mono text-primary">:8889</code>, <code className="font-mono text-primary">:8101</code>, <code className="font-mono text-primary">:5005</code>) e gerenciamento de serviços Windows.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                      <span><strong>Banco de Dados &amp; Binds:</strong> Execução de queries no Oracle/Postgres, Statement Tracer com captura e interpolação de binds e busca semântica em manuais locais.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                      <span><strong>Git, Tarefas &amp; Rotinas:</strong> Criação de branch padronizada vinculada a tarefas Azure DevOps/Jira, rollback de rotinas .bak e download CCW.</span>
                     </li>
                   </ul>
+
+                  <div className="p-2.5 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-inner">
+                    <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Exemplo de Prompt no IntelliJ / VS Code Copilot:</span>
+                    <p className="font-mono text-[11px] text-foreground bg-muted/80 p-2 rounded-lg border border-border/50">
+                      "Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."
+                    </p>
+                  </div>
+
                   <button
                     onClick={handleOpenMcpDocs}
                     className="w-full mt-2 py-2 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
-                    <span>Ver Catálogo de Ferramentas MCP</span>
+                    <span>Ver Catálogo Completo das 145 Ferramentas MCP</span>
                   </button>
                 </div>
               </div>
 
               <div className="mt-3 flex items-center justify-between p-2 rounded-xl bg-muted/60 border border-border/60">
-                <code className="font-mono text-[11px] text-primary">npm run mcp</code>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Terminal className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <code className="font-mono text-[11px] text-primary truncate">npm run mcp</code>
+                </div>
                 <button
                   onClick={() => copyToClipboard('npm run mcp', 'cmd-mcp-module')}
-                  className="px-2.5 py-1 bg-card hover:bg-card/90 text-foreground border border-border rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 bg-card hover:bg-card/90 text-foreground border border-border rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
                 >
                   {copiedItem === 'cmd-mcp-module' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                   <span>Copiar Comando</span>
                 </button>
               </div>
+            </div>
+
+            {/* 10. Logs em Tempo Real & Analisador de Exceções */}
+            <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3.5 shadow-md flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      <ScrollText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
+                        10. Logs em Tempo Real &amp; Log Analyzer
+                      </h3>
+                      <span className="text-[10px] text-muted-foreground font-mono">Tail -f · Diagnóstico ORA / NPE / OSGi</span>
+                    </div>
+                  </div>
+                  <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold">
+                    Alt+8
+                  </kbd>
+                </div>
+
+                <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
+                  <p>
+                    Monitoramento contínuo em tempo real (tail -f) de arquivos de log do Karaf e serviços locais:
+                  </p>
+                  <ul className="space-y-1.5 pl-1">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                      <span><strong>Log Analyzer WinThor:</strong> Classificação instantânea de falhas críticas (ORA-XXXXX, NullPointerException, BundleException, OutOfMemoryError).</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                      <span><strong>Comandos Sugeridos:</strong> Diagnósticos recomendados e queries SQL prontas para copiar com 1 clique.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                      <span><strong>Navegação Rápida:</strong> Pílulas interativas com o código da falha e salto direto para a linha afetada no console.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {onNavigate && (
+                <button
+                  onClick={() => onNavigate('logs')}
+                  className="mt-3 w-full py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>Abrir Logs em Tempo Real</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -1970,7 +2656,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
             </div>
 
             {/* Dicas Pro para Desenvolvedores */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Dica 1: Debug IntelliJ */}
               <div className="cockpit-panel rounded-2xl p-5 border border-border shadow-md space-y-3">
                 <div className="flex items-center space-x-2 text-primary font-bold text-xs uppercase tracking-wider">
@@ -2003,6 +2689,27 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     title="Copiar comando"
                   >
                     {copiedItem === 'cmd-karaf-bl' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Dica 3: Automação por IA via MCP */}
+              <div className="cockpit-panel rounded-2xl p-5 border border-border shadow-md space-y-3">
+                <div className="flex items-center space-x-2 text-violet-400 font-bold text-xs uppercase tracking-wider">
+                  <Bot className="w-4 h-4" />
+                  <span>Dica Pro: Automação por IA no IntelliJ &amp; VS Code (Copilot / MCP)</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Conecte o servidor MCP do Dev Manager ao seu GitHub Copilot no IntelliJ IDEA ou VS Code. Basta pedir em linguagem natural: <strong className="text-foreground">"Faça o clean install do projeto atual e instale a feature no Karaf"</strong>. A IA compila via Maven, aciona os comandos Karaf e verifica se o bundle ficou ativo automaticamente!
+                </p>
+                <div className="flex items-center justify-between p-2 rounded-xl bg-muted/60 border border-border font-mono text-[11px]">
+                  <code className="text-primary truncate" title="Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa.">Faça o clean install... e instale a feature</code>
+                  <button
+                    onClick={() => copyToClipboard('Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa.', 'tip-mcp-prompt')}
+                    className="p-1 hover:text-foreground text-muted-foreground transition cursor-pointer shrink-0 ml-2"
+                    title="Copiar prompt completo"
+                  >
+                    {copiedItem === 'tip-mcp-prompt' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               </div>
@@ -2104,7 +2811,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                     <h3 className="text-sm sm:text-base font-extrabold text-foreground flex items-center gap-2">
                       Dev <span className="text-primary font-bold">Manager</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-                        v{appInfo?.appVersion || '1.15.3'}
+                        v{appInfo?.appVersion || '1.22.0'}
                       </span>
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
@@ -2237,7 +2944,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   </div>
 
                   {/* Versão do App & Atualizações */}
-                  {window.electronAPI?.onUpdateStatus && (
+                  {Boolean(window.electronAPI?.onUpdateStatus) && (
                     <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
                       <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
                         Versão do Aplicativo:
@@ -2380,7 +3087,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      Dev Manager {appInfo?.appVersion || '1.15.3'}.exe (Portátil)
+                      Dev Manager {appInfo?.appVersion || '1.22.0'}.exe (Portátil)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Versão autônoma que não necessita instalação. Pode ser executada diretamente de pastas de rede ou pendrives.
@@ -2390,7 +3097,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate, initialSearch, o
                   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
                     <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-primary" />
-                      Dev Manager Setup {appInfo?.appVersion || '1.15.3'}.exe (Instalador)
+                      Dev Manager Setup {appInfo?.appVersion || '1.22.0'}.exe (Instalador)
                     </span>
                     <p className="text-[11px] text-muted-foreground">
                       Instalador padrão NSIS que cria atalhos no Menu Iniciar e Área de Trabalho com desinstalador integrado.

@@ -165,6 +165,20 @@ describe('Routine801Service', () => {
       );
 
       expect(karafService.executeKarafCommand).toHaveBeenCalledTimes(2);
+      expect(karafService.executeKarafCommand).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('feature:repo-add'),
+        expect.any(Function),
+        undefined,
+        180000
+      );
+      expect(karafService.executeKarafCommand).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining('feature:install'),
+        expect.any(Function),
+        undefined,
+        300000
+      );
       expect(result.success).toBe(true);
       expect(result.installedCount).toBe(1);
       expect(result.failedCount).toBe(0);

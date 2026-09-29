@@ -298,7 +298,7 @@ export class Routine801Service {
             ...this.getAuthHeaders()
           },
           body: JSON.stringify(funcionalidades),
-          timeout: 60000
+          timeout: 180000
         });
 
         const text = await res.text();
@@ -364,7 +364,7 @@ export class Routine801Service {
       let stepSuccess = true;
       let stepError = '';
 
-      // 1. Adicionar repositório maven caso exista URL configurada
+      // 1. Adicionar repositório maven caso exista URL configurada (timeout 180s para download remoto)
       if (cmds.repoCommand) {
         onChunk(`${stepIdx} Registrando repositório: ${cmds.repoCommand}\r\n`);
         const repoRes = await this.karafService.executeKarafCommand(
@@ -373,7 +373,8 @@ export class Routine801Service {
             totalOutput += chunk;
             onChunk(chunk);
           },
-          credentials
+          credentials,
+          180000
         );
 
         if (repoRes.code !== 0 && !repoRes.stderr?.includes('already registered')) {
@@ -381,7 +382,7 @@ export class Routine801Service {
         }
       }
 
-      // 2. Instalar a feature (feature:install -r -u)
+      // 2. Instalar a feature (feature:install -r -u) (timeout 300s para download de bundles e resolução OSGi)
       onChunk(`${stepIdx} Executando: ${cmds.installCommand}\r\n`);
       const installRes = await this.karafService.executeKarafCommand(
         cmds.installCommand,
@@ -389,7 +390,8 @@ export class Routine801Service {
           totalOutput += chunk;
           onChunk(chunk);
         },
-        credentials
+        credentials,
+        300000
       );
 
       if (installRes.code === 0) {

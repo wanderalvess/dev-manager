@@ -24,20 +24,27 @@ import {
   History,
   Info,
   Trash2,
-  Terminal
+  Terminal,
+  X,
+  Activity,
+  Boxes
 } from 'lucide-react';
 import {
   GitProjectInfo,
   DeployProfile,
   DeployStep,
   DeployProgressEvent,
-  DeployProfileHistoryEntry
+  DeployProfileHistoryEntry,
+  OsgiResolutionDiagnosticSummary
 } from '../../../shared/types';
 import { TerminalViewer } from '../components/TerminalViewer';
+import { OsgiResolutionDiagnosticCard } from '../components/OsgiResolutionDiagnosticCard';
 import { DeployProfileEditorModal } from '../components/DeployProfileEditorModal';
 import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
 import { DeployHistoryModal } from '../components/DeployHistoryModal';
 import { Routine801CatalogModal } from '../components/Routine801CatalogModal';
+import { KarafJvmMemoryModal } from '../components/KarafJvmMemoryModal';
+import { KarafFeaturesManagerModal } from '../components/KarafFeaturesManagerModal';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DEPLOY_TOUR_STEPS, DEPLOY_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/deployTour';
@@ -81,10 +88,13 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   const [isBundlesModalOpen, setIsBundlesModalOpen] = useState<boolean>(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isRoutine801ModalOpen, setIsRoutine801ModalOpen] = useState<boolean>(false);
+  const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState<boolean>(false);
+  const [isJvmMemoryModalOpen, setIsJvmMemoryModalOpen] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<DeployProfileHistoryEntry[]>([]);
   const [isConsoleMaximized, setIsConsoleMaximized] = useState<boolean>(false);
   const [isKarafOnline, setIsKarafOnline] = useState<boolean | null>(null);
   const [isStartingKaraf, setIsStartingKaraf] = useState<boolean>(false);
+  const [activeResolutionDiag, setActiveResolutionDiag] = useState<OsgiResolutionDiagnosticSummary | null>(null);
 
   const activeProfile = useMemo(() => {
     if (!profiles || profiles.length === 0) return null;
@@ -227,6 +237,10 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             });
           }
 
+          if (progress.status === 'failed' && progress.resolutionDiagnostic) {
+            setActiveResolutionDiag(progress.resolutionDiagnostic);
+          }
+
           if (progress.durationMs !== undefined) {
             setStepExecutionTimes((prev) => ({
               ...prev,
@@ -360,17 +374,21 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     }
   };
 
-  const handleRunActiveProfile = async () => {
-    if (isDeploying || isDiagRunning || !activeProfile) return;
+  const runProfileDirect = async (profileToRun: DeployProfile) => {
+    if (isDeploying || isDiagRunning || !profileToRun) return;
     setIsDeploying(true);
     setStepStatuses({});
-    const enabledSteps = activeProfile.steps.filter((s) => s.enabled !== false);
+    setActiveResolutionDiag(null);
+    const enabledSteps = profileToRun.steps.filter((s) => s.enabled !== false);
     setCurrentProgress({ current: 0, total: enabledSteps.length, stepId: enabledSteps[0]?.id || '' });
     streamRemainderRef.current = '';
     setTerminalLogs([]);
 
     try {
-      await window.electronAPI.runDeployProfile(activeProfile);
+      const res = await window.electronAPI.runDeployProfile(profileToRun);
+      if (res && !res.success && res.resolutionDiagnostic) {
+        setActiveResolutionDiag(res.resolutionDiagnostic);
+      }
     } catch (err: any) {
       setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
     } finally {
@@ -381,9 +399,24 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     }
   };
 
+  const handleRunActiveProfile = () => {
+    if (activeProfile) runProfileDirect(activeProfile);
+  };
+
+  const handleExecuteMatchedProfile = (profileIdOrName: string) => {
+    const target = profiles.find((p) => p.id === profileIdOrName || p.name === profileIdOrName);
+    if (!target) return;
+    setActiveProfileId(target.id);
+    setActiveResolutionDiag(null);
+    setTimeout(() => {
+      runProfileDirect(target);
+    }, 150);
+  };
+
   const handleRunSingleStep = async (step: DeployStep) => {
     if (isDeploying || runningStepId || isDiagRunning || !window.electronAPI?.runDeployStep) return;
     setRunningStepId(step.id);
+    setActiveResolutionDiag(null);
     setStepStatuses((prev) => ({
       ...prev,
       [step.id]: { status: 'running' }
@@ -404,6 +437,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
           error: res.error
         }
       }));
+      if (res && !res.success && res.resolutionDiagnostic) {
+        setActiveResolutionDiag(res.resolutionDiagnostic);
+      }
     } catch (err: any) {
       const dur = Date.now() - startTime;
       setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
@@ -414,6 +450,24 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     } finally {
       flushRemainder();
       setRunningStepId(null);
+    }
+  };
+
+  const handleInstallReleaseFeature = async () => {
+    if (!activeResolutionDiag?.suggestedKarafCommands?.installCommand) return;
+    const { repoAddCommand, installCommand } = activeResolutionDiag.suggestedKarafCommands;
+    setActiveResolutionDiag(null);
+    if (repoAddCommand) {
+      await handleRunDiagnostic(repoAddCommand, 'repo-add');
+    }
+    if (installCommand) {
+      await handleRunDiagnostic(installCommand, 'install-feature');
+    }
+  };
+
+  const handleRunSuggestedDiagnostic = () => {
+    if (activeResolutionDiag?.suggestedKarafCommands?.diagnosticCommand) {
+      handleRunDiagnostic(activeResolutionDiag.suggestedKarafCommands.diagnosticCommand, 'diag');
     }
   };
 
@@ -642,6 +696,26 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             >
               <Download className="w-3.5 h-3.5 text-primary" />
               <span>Catálogo 801</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsFeaturesModalOpen(true)}
+              className="px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
+              title="Gerenciador de Features Maven/Karaf e repositórios (feature:repo-list)"
+            >
+              <Boxes className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Features Karaf</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsJvmMemoryModalOpen(true)}
+              className="px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground shadow-xs cursor-pointer"
+              title="Monitor de Memória Heap e Non-Heap da JVM em tempo real (JMX / Karaf)"
+            >
+              <Activity className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Memória JVM</span>
             </button>
 
             {isDeploying ? (
@@ -1198,11 +1272,24 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
           } flex flex-col min-w-0 transition-all duration-200`}
           data-tour="deploy-console-output"
         >
+          {activeResolutionDiag && (
+            <OsgiResolutionDiagnosticCard
+              diagnostic={activeResolutionDiag}
+              isDeploying={isDeploying}
+              runningStepId={runningStepId}
+              onExecuteMatchedProfile={handleExecuteMatchedProfile}
+              onInstallReleaseFeature={handleInstallReleaseFeature}
+              onRunSuggestedDiagnostic={handleRunSuggestedDiagnostic}
+              onDismiss={() => setActiveResolutionDiag(null)}
+            />
+          )}
+
           <TerminalViewer
             logs={terminalLogs}
             onClear={() => {
               streamRemainderRef.current = '';
               setTerminalLogs([]);
+              setActiveResolutionDiag(null);
             }}
             title={isConsoleMaximized ? 'Console de Deploy (Modo Expandido)' : 'Console de Deploy'}
             isRunning={isDeploying || runningStepId !== null || isDiagRunning !== null}
@@ -1245,6 +1332,18 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         onClose={() => setIsHistoryModalOpen(false)}
         history={historyList}
         onClear={handleClearHistory}
+      />
+
+      {/* Modal Gerenciador de Features & Repositórios Maven */}
+      <KarafFeaturesManagerModal
+        isOpen={isFeaturesModalOpen}
+        onClose={() => setIsFeaturesModalOpen(false)}
+      />
+
+      {/* Modal Monitor de Memória JVM (Heap/Non-Heap/GC) */}
+      <KarafJvmMemoryModal
+        isOpen={isJvmMemoryModalOpen}
+        onClose={() => setIsJvmMemoryModalOpen(false)}
       />
 
       <OnboardingTour

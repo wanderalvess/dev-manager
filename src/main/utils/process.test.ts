@@ -69,6 +69,20 @@ describe('runCapturedProcess', () => {
     expect(result.code).toBe(0);
     expect(result.stdout.trim()).toBe('teste-cmd');
   });
+
+  it('fecha stdin imediatamente para que programas que aguardam EOF não travem', async () => {
+    const result = await runCapturedProcess(
+      process.execPath,
+      ['-e', "process.stdin.resume(); process.stdin.on('end', () => { process.stdout.write('eof-recebido'); process.exit(0); });"],
+      {},
+      undefined,
+      5000
+    );
+
+    expect(result.timedOut).toBeUndefined();
+    expect(result.code).toBe(0);
+    expect(result.stdout).toBe('eof-recebido');
+  });
 });
 
 describe('createStreamDecoder', () => {

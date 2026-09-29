@@ -32,6 +32,7 @@ import { DatabaseService } from './DatabaseService';
 import { NetworkService } from './NetworkService';
 import { execFileAsync, isValidIdentifier } from '../utils/security';
 import { checkPortOpen } from '../utils/network';
+import { launchProcessSafely } from '../utils/routineLaunchUtils';
 
 export const TRACKED_SERVICES = DEFAULT_TRACKED_SERVICES;
 
@@ -355,7 +356,7 @@ export class WindowsService {
 
     const dir = path.dirname(idePath);
     try {
-      spawn(idePath, [], { cwd: dir, detached: true, stdio: 'ignore' }).unref();
+      launchProcessSafely(idePath, [], dir);
       return true;
     } catch (err) {
       console.error('Erro ao acionar IDE:', err);
@@ -374,7 +375,7 @@ export class WindowsService {
         return false;
       }
       const dir = path.dirname(fullPath);
-      spawn(fullPath, [], { cwd: dir, detached: true, stdio: 'ignore' }).unref();
+      launchProcessSafely(fullPath, [], dir);
       return true;
     } catch (err) {
       console.error('Erro ao abrir aplicativo externo:', err);

@@ -1,12 +1,32 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   isConnectionRefusedError,
   buildWinthorStartPayload,
   shouldUseWinthorStart,
-  formatRoutineLaunchErrorMessage
+  formatRoutineLaunchErrorMessage,
+  launchProcessSafely
 } from './routineLaunchUtils';
 
+const spawnMock = vi.fn((..._args: unknown[]) => ({ unref: vi.fn(), on: vi.fn() }));
+vi.mock('child_process', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('child_process')>();
+  return {
+    ...actual,
+    spawn: (...args: unknown[]) => spawnMock(...args)
+  };
+});
+
 describe('routineLaunchUtils', () => {
+  describe('launchProcessSafely', () => {
+    beforeEach(() => {
+      spawnMock.mockClear();
+    });
+
+    it('dispara o processo desacoplado sem erro', () => {
+      launchProcessSafely('C:\\Winthor\\Prod\\PCSIS132.EXE', []);
+      expect(spawnMock).toHaveBeenCalled();
+    });
+  });
   describe('isConnectionRefusedError', () => {
     it('reconhece erros de conexão recusada e rede fechada', () => {
       expect(isConnectionRefusedError(new Error('connect ECONNREFUSED 127.0.0.1:8889'))).toBe(true);

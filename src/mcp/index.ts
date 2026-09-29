@@ -10,9 +10,9 @@ const __mcpDirname = path.dirname(fileURLToPath(import.meta.url));
 const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.15.3';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.22.0';
   } catch {
-    return '1.15.3';
+    return '1.22.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -922,6 +922,121 @@ server.registerTool(
   }
 );
 
+// --- 3c. Karaf - Métricas de Memória JVM ---
+server.registerTool(
+  'karaf_get_jvm_memory',
+  {
+    title: 'Consultar métricas de memória JVM (Heap/Non-Heap)',
+    description:
+      'Obtém telemetria em tempo real da JVM do Karaf: consumo de Heap e Non-Heap (usado, alocado, máximo), percentual, contagem de threads, classes carregadas e status de alerta de OutOfMemory (OOM).',
+    inputSchema: { credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ credentials }) => ok(await karafService.getJvmMemoryMetrics(credentials))
+);
+
+server.registerTool(
+  'karaf_trigger_gc',
+  {
+    title: 'Executar Garbage Collection (GC) na JVM',
+    description: 'Solicita a execução imediata do Garbage Collector na JVM do Apache Karaf via comando nativo ou JMX.',
+    inputSchema: { credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ credentials }) => ok(await karafService.triggerGarbageCollection(credentials))
+);
+
+// --- 3d. Karaf - Features e Repositórios Maven ---
+server.registerTool(
+  'karaf_list_feature_repos',
+  {
+    title: 'Listar repositórios de features Karaf',
+    description: 'Lista todos os repositórios Maven/XML de features registrados no Apache Karaf (feature:repo-list).',
+    inputSchema: { credentials: KarafCredentialsSchema.optional() }
+  },
+  async ({ credentials }) => ok(await karafService.listFeatureRepositories(credentials))
+);
+
+server.registerTool(
+  'karaf_add_feature_repo',
+  {
+    title: 'Adicionar repositório de feature',
+    description:
+      'Registra uma nova URL de repositório de features (ex: mvn:br.com.totvs.winthor/features/1.0.0/xml/features) no Karaf.',
+    inputSchema: {
+      url: z.string(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ url, credentials }) =>
+    ok(await karafService.addFeatureRepository(url, credentials))
+);
+
+server.registerTool(
+  'karaf_remove_feature_repo',
+  {
+    title: 'Remover repositório de feature',
+    description: 'Remove um repositório de features registrado pelo nome ou URL (feature:repo-remove).',
+    inputSchema: {
+      repoNameOrUrl: z.string(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ repoNameOrUrl, credentials }) =>
+    ok(await karafService.removeFeatureRepository(repoNameOrUrl, credentials))
+);
+
+server.registerTool(
+  'karaf_refresh_feature_repo',
+  {
+    title: 'Atualizar repositório de feature',
+    description:
+      'Recarrega as definições de um repositório de features registrado ou de todos os repositórios (feature:repo-refresh).',
+    inputSchema: {
+      repoNameOrUrl: z.string().optional(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ repoNameOrUrl, credentials }) =>
+    ok(await karafService.refreshFeatureRepository(repoNameOrUrl, credentials))
+);
+
+server.registerTool(
+  'karaf_list_all_features',
+  {
+    title: 'Listar todas as features do Karaf',
+    description:
+      'Lista todas as features registradas no Karaf (instaladas e disponíveis), com nome, versão, status e repositório de origem.',
+    inputSchema: {
+      installedOnly: z.boolean().optional(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ installedOnly, credentials }) =>
+    ok(await karafService.listAllFeatures(installedOnly, credentials))
+);
+
+// --- 3e. Karaf - Análise de Logs e Exceções ---
+server.registerTool(
+  'karaf_analyze_log',
+  {
+    title: 'Analisar log de exceções WinThor e Karaf',
+    description:
+      'Analisa um texto de log ou o log recente do Karaf, detectando e categorizando erros críticos (ORA-XXXXX, NullPointerException, BundleException, OutOfMemoryError, ClassNotFoundException) com comandos sugeridos de diagnóstico.',
+    inputSchema: {
+      logText: z.string().optional(),
+      lines: z.number().int().positive().optional(),
+      credentials: KarafCredentialsSchema.optional()
+    }
+  },
+  async ({ logText, lines, credentials }) => {
+    let text = logText;
+    if (!text) {
+      const res = await karafService.getKarafLog(lines ?? 300, credentials);
+      text = res.output;
+    }
+    return ok(karafService.analyzeLogText(text || ''));
+  }
+);
+
 // --- 3.5. Containers (Docker / Podman) ---
 server.registerTool(
   'docker_status',
@@ -1247,11 +1362,56 @@ server.registerTool(
   {
     title: 'Trocar/criar branch',
     description: 'Faz checkout de uma branch existente ou cria uma nova (createNew) no repositório informado.',
-    inputSchema: { projectPath: z.string(), branchName: z.string(), createNew: z.boolean().optional() }
+    inputSchema: {
+      projectPath: z.string(),
+      branchName: z.string(),
+      createNew: z.boolean().optional(),
+      baseBranch: z.string().optional().describe('Branch base de onde derivar ao criar nova branch.')
+    }
   },
-  async ({ projectPath, branchName, createNew }) => {
+  async ({ projectPath, branchName, createNew, baseBranch }) => {
     if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
-    return ok(await gitAzureService.checkoutBranch(projectPath, branchName, createNew ?? false));
+    return ok(await gitAzureService.checkoutBranch(projectPath, branchName, createNew ?? false, baseBranch));
+  }
+);
+
+server.registerTool(
+  'git_create_task_branch',
+  {
+    title: 'Criar branch a partir de tarefa (Azure DevOps / Jira)',
+    description:
+      'Cria e alterna para uma nova branch padronizada baseada em ID/chave e título de tarefa (Azure DevOps ou Jira), gerando o slug correto e permitindo escolher prefixo e branch base.',
+    inputSchema: {
+      projectPath: z.string().describe('Caminho absoluto do repositório Git.'),
+      taskId: z.string().optional().describe('ID numérico da tarefa no Azure DevOps (ex: "12345") ou chave no Jira (ex: "PROJ-10").'),
+      title: z.string().optional().describe('Título ou descrição resumida da tarefa para slugificação.'),
+      prefix: z.string().optional().describe('Prefixo da branch (ex: "feature/", "bugfix/", "hotfix/", "task/"). Padrão: "feature/".'),
+      baseBranch: z.string().optional().describe('Branch base a partir da qual a nova branch será criada (ex: "develop", "main"). Padrão: branch atual.')
+    }
+  },
+  async ({ projectPath, taskId, title, prefix, baseBranch }) => {
+    if (!isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
+    const result = await gitAzureService.createTaskBranch(projectPath, { taskId, title, prefix, baseBranch });
+    if (!result.success) return fail(result.output || 'Falha ao criar branch de tarefa.');
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'git_list_tasks',
+  {
+    title: 'Listar tarefas integradas (Azure DevOps e Jira)',
+    description:
+      'Consulta tarefas de trabalho ativas no Azure DevOps (Work Items) e no Jira para vinculação de branches e commits.',
+    inputSchema: {
+      projectPath: z.string().optional().describe('Caminho do repositório para detectar contexto do Azure DevOps.'),
+      query: z.string().optional().describe('Termo de busca opcional (ID da tarefa, chave ou parte do título).')
+    }
+  },
+  async ({ projectPath, query }) => {
+    if (projectPath && !isSafeLocalPath(projectPath)) return fail('Caminho de projeto inválido.');
+    const tasks = await gitAzureService.fetchTasks(projectPath, query);
+    return ok({ total: tasks.length, tasks });
   }
 );
 
@@ -1395,6 +1555,203 @@ server.registerTool(
     inputSchema: { routineId: z.string().min(1) }
   },
   async ({ routineId }) => ok(configService.toggleFavoriteRoutine(routineId))
+);
+
+server.registerTool(
+  'routines_download_ccw_routine',
+  {
+    title: 'Baixar e atualizar rotina da Central de Controle (CCW)',
+    description:
+      'Baixa a rotina (executável ou pacote ZIP) diretamente da Central de Controle WinThor (CCW) e atualiza na pasta correspondente em C:\\Winthor\\Prod, criando backup prévio (.bak).',
+    inputSchema: {
+      routineCodeOrName: z
+        .string()
+        .min(1)
+        .describe('Código numérico (ex: "132", "529") ou nome da rotina (ex: "PCSIS132", "PC1406").'),
+      winthorVersion: z
+        .string()
+        .optional()
+        .describe('Versão major do WinThor na CCW (ex: "30", "31", "29"). Padrão: "30".'),
+      targetModule: z
+        .string()
+        .optional()
+        .describe('Pasta do módulo de destino específico (ex: "MOD-001", "MOD-014", "Raiz"). Se omitido, deduz automaticamente.'),
+      backupExisting: z
+        .boolean()
+        .optional()
+        .describe('Se true (padrão), cria cópia de segurança (.bak) do executável existente antes de substituir.')
+    }
+  },
+  async ({ routineCodeOrName, winthorVersion, targetModule, backupExisting }) => {
+    const result = await routinesService.downloadAndInstallRoutine({
+      routineCodeOrName,
+      winthorVersion,
+      targetModule,
+      backupExisting: backupExisting !== false
+    });
+    if (!result.success) {
+      return fail(result.message || 'Falha ao baixar/atualizar rotina da Central de Controle.');
+    }
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'routines_install_local_file',
+  {
+    title: 'Instalar rotina a partir de arquivo local',
+    description:
+      'Instala uma rotina no diretório do WinThor (C:\\Winthor\\Prod) a partir de um arquivo .EXE ou .ZIP já baixado localmente na máquina.',
+    inputSchema: {
+      filePath: z.string().describe('Caminho absoluto do arquivo (.EXE ou .ZIP) no disco local.'),
+      routineCodeOrName: z.string().optional().describe('Código ou nome da rotina (opcional, deduzido do nome do arquivo se omitido).'),
+      targetModule: z.string().optional().describe('Módulo de destino específico (ex: "MOD-001"). Se omitido, deduz automaticamente.'),
+      backupExisting: z.boolean().optional().describe('Se deve criar backup (.bak) do arquivo atual. Padrão: true.')
+    }
+  },
+  async ({ filePath, routineCodeOrName, targetModule, backupExisting }) => {
+    if (!isSafeLocalPath(filePath)) return fail('Caminho inválido.');
+    const result = await routinesService.installRoutineFromFile(filePath, routineCodeOrName, targetModule, backupExisting !== false);
+    if (!result.success) {
+      return fail(result.message || 'Falha ao instalar arquivo local da rotina.');
+    }
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'routines_get_ccw_catalog',
+  {
+    title: 'Consultar catálogo de rotinas da Central de Controle',
+    description:
+      'Consulta a árvore de rotinas e versões disponíveis na Central de Controle (CCW) caso um cookie de sessão esteja configurado.',
+    inputSchema: {
+      authCookie: z.string().optional().describe('Cookie de autenticação da sessão CCW (opcional se já configurado no app).')
+    }
+  },
+  async ({ authCookie }) => {
+    return ok(await routinesService.getCcwCatalog(authCookie));
+  }
+);
+
+server.registerTool(
+  'routines_get_ccw_download_link',
+  {
+    title: 'Obter link de download da CCW',
+    description: 'Retorna a URL oficial direta para download da rotina na Central de Controle do WinThor.',
+    inputSchema: {
+      routineCodeOrName: z.string().describe('Código numérico ou nome da rotina (ex: "132", "PCSIS132").'),
+      winthorVersion: z.string().optional().describe('Versão major do WinThor (ex: "30", "31"). Padrão: "30".')
+    }
+  },
+  async ({ routineCodeOrName, winthorVersion }) => {
+    return ok({ url: routinesService.getCcwRoutineDownloadLink(routineCodeOrName, winthorVersion) });
+  }
+);
+
+server.registerTool(
+  'routines_list_backups',
+  {
+    title: 'Listar backups de rotina',
+    description: 'Lista os backups (.bak) existentes para uma rotina ou módulo específico, com data/hora, tamanho e versão PE extraída.',
+    inputSchema: {
+      routineIdOrName: z.string().describe('Código ou nome da rotina (ex: "PCSIS132", "132") ou nome do arquivo de backup.'),
+      moduleFolder: z.string().optional().describe('Pasta do módulo (ex: "MOD-001"). Se omitido, pesquisa no diretório da rotina ou em todos.')
+    }
+  },
+  async ({ routineIdOrName, moduleFolder }) => {
+    try {
+      const backups = await routinesService.listRoutineBackups(routineIdOrName, moduleFolder);
+      return ok({ total: backups.length, backups });
+    } catch (err: any) {
+      return fail(err.message || 'Falha ao listar backups de rotina.');
+    }
+  }
+);
+
+server.registerTool(
+  'routines_restore_backup',
+  {
+    title: 'Restaurar backup de rotina (Rollback)',
+    description: 'Restaura uma versão anterior (.bak) de uma rotina do WinThor, criando preventivamente um backup de segurança (_pre_rollback.bak) da versão atual antes da substituição.',
+    inputSchema: {
+      backupFilePath: z.string().describe('Caminho absoluto do arquivo .bak a ser restaurado.'),
+      targetRoutinePath: z.string().describe('Caminho absoluto do executável .EXE que receberá a versão restaurada.')
+    }
+  },
+  async ({ backupFilePath, targetRoutinePath }) => {
+    if (!isSafeLocalPath(backupFilePath)) return fail('Caminho de arquivo de backup inválido.');
+    if (!isSafeLocalPath(targetRoutinePath)) return fail('Caminho de executável de destino inválido.');
+    const result = await routinesService.restoreRoutineBackup(backupFilePath, targetRoutinePath);
+    if (!result.success) {
+      return fail(result.message || 'Falha ao restaurar backup da rotina.');
+    }
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'routines_delete_backup',
+  {
+    title: 'Excluir backup de rotina',
+    description: 'Exclui definitivamente um arquivo de backup (.bak) de rotina do disco.',
+    inputSchema: {
+      backupFilePath: z.string().describe('Caminho absoluto do arquivo .bak a ser removido.')
+    }
+  },
+  async ({ backupFilePath }) => {
+    if (!isSafeLocalPath(backupFilePath)) return fail('Caminho de backup inválido.');
+    const result = await routinesService.deleteRoutineBackup(backupFilePath);
+    if (!result.success) {
+      return fail(result.message || (result as any).error || 'Falha ao excluir backup de rotina.');
+    }
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'routines_get_executable_version',
+  {
+    title: 'Inspecionar versão do executável (PE Header)',
+    description: 'Lê os metadados do cabeçalho PE de um executável .EXE do WinThor para extrair a FileVersion e ProductVersion reais gravadas no binário.',
+    inputSchema: {
+      filePath: z.string().describe('Caminho absoluto do executável .EXE.')
+    }
+  },
+  async ({ filePath }) => {
+    if (!isSafeLocalPath(filePath)) return fail('Caminho de executável inválido.');
+    const versionInfo = await routinesService.getExecutableVersion(filePath);
+    return ok({ versionInfo });
+  }
+);
+
+server.registerTool(
+  'routines_batch_download',
+  {
+    title: 'Download em lote de rotinas da CCW',
+    description: 'Executa download e atualização em lote de rotinas da Central de Controle (CCW) para todas as favoritas, um módulo funcional ou uma lista específica.',
+    inputSchema: {
+      targetType: z.enum(['favorites', 'module', 'custom']).describe('Alvo do download em lote: "favorites", "module" ou "custom".'),
+      winthorVersion: z.string().optional().describe('Versão major do WinThor na CCW (ex: "30", "31"). Padrão: "30".'),
+      moduleFolder: z.string().optional().describe('Pasta do módulo caso targetType seja "module" (ex: "MOD-001").'),
+      routineCodes: z.array(z.string()).optional().describe('Lista de códigos/nomes de rotina caso targetType seja "custom".'),
+      backupExisting: z.boolean().optional().describe('Se deve gerar backup (.bak) dos executáveis antes de substituir. Padrão: true.')
+    }
+  },
+  async ({ targetType, winthorVersion, moduleFolder, routineCodes, backupExisting }) => {
+    const { events, push } = collect();
+    const result = await routinesService.downloadRoutinesBatch(
+      {
+        targetType,
+        winthorVersion,
+        moduleFolder,
+        routineCodes,
+        backupExisting: backupExisting !== false
+      },
+      push('batch-progress')
+    );
+    return ok({ result, events });
+  }
 );
 
 // --- 6. Documentação (RAG local) ---
@@ -1709,6 +2066,29 @@ server.registerTool(
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
     }
     const result = await databaseService.getOracleRecentStatements(targetConfig, { schemaFilter, textFilter, limit });
+    return ok(result);
+  }
+);
+
+server.registerTool(
+  'db_get_oracle_statement_binds',
+  {
+    title: 'Statement Tracer: ler parâmetros de bind (v$sql_bind_capture)',
+    description:
+      'Consulta no Oracle (v$sql_bind_capture) os parâmetros e variáveis de bind passados na execução de uma instrução SQL (pelo SQL_ID). Retorna a lista de parâmetros (nome, posição, tipo, valor) e o SQL interpolado pronto para execução.',
+    inputSchema: {
+      connectionId: z.string().optional(),
+      config: DatabaseConnectionConfigSchema.optional(),
+      sqlId: z.string().describe('O SQL_ID da instrução no Oracle.'),
+      sqlText: z.string().optional().describe('Texto original da consulta para gerar o SQL interpolado com os valores de bind.')
+    }
+  },
+  async ({ connectionId, config, sqlId, sqlText }) => {
+    const targetConfig = resolveDbConfig(connectionId, config);
+    if (!targetConfig) {
+      return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    const result = await databaseService.getOracleStatementBinds(targetConfig, sqlId, sqlText);
     return ok(result);
   }
 );
@@ -2268,7 +2648,9 @@ server.registerTool(
       hasDatabaseQuery: z.boolean().optional().describe('Filtrar apenas traces que executaram SQL'),
       minDurationMs: z.number().optional().describe('Latência mínima em milissegundos para encontrar gargalos'),
       lastMinutes: apmLastMinutesSchema,
-      limit: z.number().int().positive().max(500).optional().describe('Quantidade máxima de traces a retornar (padrão: 50)')
+      limit: z.number().int().positive().max(500).optional().describe('Quantidade máxima de traces a retornar (padrão: 50)'),
+      sortBy: z.enum(['time', 'duration']).optional().describe('Ordenar por mais recente (time, padrão) ou mais lento primeiro (duration)'),
+      slowOnly: z.boolean().optional().describe('Filtrar apenas chamadas e queries lentas')
     }
   },
   async ({ lastMinutes, limit, ...filter }) => {

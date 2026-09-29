@@ -15,11 +15,13 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 │ ⚡ Ambiente │ 🗄️ Database  │ 🐳 Docker   │ 📦 Karaf Deploy │ 🔀 Git/Azure │ 📑 Rotinas │ 📚 Docs  │⚙ Config│ ❓ Ajuda│
 ├─────────────┴──────────────┴─────────────┴─────────────────┴──────────────┴────────────┴──────────┴────────┴─────────┤
 │ • Pipeline 1-Clique (Stop Srv -> Kill -> Launch IDE -> Servidor Debug)                                           │
-│ • Database Studio Multi-Vendor (Oracle, Postgres, MySQL) com Inspetor de Colunas, Histórico e Snippets Custom     │
+│ • Database Studio Multi-Vendor (Oracle, Postgres, MySQL): Inspetor, Snippets, Statement Tracer com Binds         │
 │ • Docker Cockpit: CPU/RAM em Tempo Real (docker stats), Terminal Interativo (docker exec) e Inspeção de Logs    │
-│ • Karaf OSGi Deployer: Snapshots & Comparativo de Estado (Diff), Árvore de Dependências e Fiações Wired          │
-│ • Hub Git & Azure DevOps: Sincronização rápida, detecção de branches e gerador de Pull Requests                  │
-│ • Catálogo de Rotinas (.EXE e .PC) com busca rápida e favoritos                                                  │
+│ • Karaf OSGi Deployer: Snapshots/Diff, Diagnóstico Causal OSGi, Memória JVM (JMX) e Features/Repos Maven         │
+│ • Hub Git & Azure DevOps: Sincronização, Visualizador de Diff de Arquivos e Criação de Branch por Tarefa         │
+│ • Catálogo de Rotinas (.EXE/.PC): Download CCW, Histórico & Rollback (.bak), Versão PE Header e Lote             │
+│ • APM & Traces (OpenTelemetry): Waterfall com Régua Semântica (HTTP/Java/JDBC) e Detecção de Top Lentos         │
+│ • Logs em Tempo Real: Tail contínuo com Log Analyzer e Destaque de Exceções WinThor (ORA, NPE, OSGi, OOM)       │
 │ • RAG & IA Local: Busca semântica (FastEmbed), Conectores Confluence/Jira, Assistente IA (BYOK) e DocSync         │
 │ • Quick Launcher Spotlight (Ctrl+K) e Navegação Global por Teclado (Alt+0 .. Alt+9)                              │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -55,10 +57,13 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
   * Reutilização, cópia rápida ou reexecução direta a partir do histórico (`Ctrl + Enter` para executar).
 * **Biblioteca de Snippets Rápidos e Customizados:**
   * Snippets de fábrica (`SELECT`, `COUNT`, `JOIN`, `DDL`) e criação de snippets próprios do desenvolvedor para acelerar consultas recorrentes.
-* **Statement Tracer (Oracle):**
-  * Aba dedicada com captura contínua de `v$session`/`v$sql` rodando em segundo plano no processo do app — inicia com um clique, e continua capturando mesmo se você trocar de aba ou navegar para outra página do Dev Manager enquanto dispara a ação em outro sistema conectado ao mesmo banco.
-  * Mostra uma linha do tempo de qual sessão passou a rodar qual SQL (só registra quando o SQL muda, não a cada consulta) e a lista de instruções distintas vistas no cursor cache, com filtro por schema/texto e intervalo de consulta configurável (2s–30s).
-  * Responde à pergunta "qual query rodou quando cliquei nesse botão", útil quando várias aplicações (ex: instâncias Karaf) compartilham o mesmo banco.
+* **Statement Tracer (Oracle) & Captura Nativa de Binds:**
+  * Aba dedicada com captura contínua de `v$session`/`v$sql` rodando em segundo plano no processo do app — inicia com um clique e continua capturando mesmo se você trocar de aba ou página.
+  * Linha do tempo de qual sessão passou a rodar qual SQL e lista de instruções distintas vistas no cursor cache, com filtros por schema/texto e intervalo configurável (2s–30s).
+  * **Captura de Parâmetros (Binds) via `v$sql_bind_capture`**: Inspecione sob demanda os parâmetros passados na execução de queries Oracle (`:1`, `:NOME`, etc.) com tipo de dado, posição e valor capturado real.
+  * **Interpolação de SQL Executável (`oracleSqlInterpolator`)**: Substituição inteligente dos marcadores pelos literais formatados (strings com escape, números, datas com `TO_DATE` e `NULL`), preservando comentários e literais existentes.
+  * **Eliminação de `log:set trace root` no Karaf**: Depure queries Delphi e serviços Java/OSGi direto no banco sem poluir o `karaf.log`, degradar a JVM ou depender de softwares externos (`OraTracer.exe`).
+  * **Inspetor Dedicado (`StatementInspector`)**: Tabela de binds com botões *"Copiar SQL"* e *"Usar no Editor"*, transferindo a query já interpolada direto para a aba de execução SQL.
 
 #### 🛡️ Central de Backup & Restauração Integrada (5 Abas de Controle)
 O Dev Manager conta com uma central avançada de backup acessível pelo botão **Backup & Restore**:
@@ -150,6 +155,13 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
   * Identificação instantânea de versões atualizadas, novos bundles adicionados, bundles ausentes e componentes que mudaram de estado (ex: Active -> Resolved).
 * **Árvore Hierárquica de Dependências OSGi:**
   * Visualização gráfica conectando o bundle selecionado aos seus bundles clientes dependentes (consumidores) e pacotes importados/exportados.
+* **Diagnóstico Inteligente de Resolução OSGi (`ResolutionException`):**
+  * Parser causal automático de falhas `ResolutionException` e `missing requirement`, identificando o pacote ausente e analisando filtros de versão.
+  * Correlação automática com o `pom.xml` e card de ação rápida em 1 clique para executar o perfil local da dependência ou instalar a release do Nexus.
+* **Monitor de Memória Heap da JVM (JMX / Karaf):**
+  * Telemetria contínua com gráfico SVG em tempo real de consumo de Heap e Non-Heap (Metaspace), alertas automáticos de risco de OutOfMemoryError (70% aviso, 85% crítico) e botão de 1 clique para executar Garbage Collection (GC).
+* **Gerenciador de Features Maven e Repositórios Karaf:**
+  * Interface dedicada para listar repositórios (`feature:repo-list`), atualizar (`repo-refresh`), cadastrar novas URLs Maven e instalar/desinstalar features OSGi com filtros por rotinas WinThor.
 * **Gerenciamento Seguro de Bundles:**
   * Instalação via Maven/JAR/Projeto, atualização in-place de versão (`bundle:update`), reinstalação com rebuild Maven opcional e desinstalação com análise de risco de fiação.
 
@@ -159,6 +171,14 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 * **Varredura Automática de Repositórios:**
   * Localização automática de todos os projetos clonados na pasta de repositórios.
   * Detecção instantânea da branch atual ativa e contador de arquivos modificados (*uncommitted changes*).
+* **Visualizador de Diff de Arquivos & Ação "Abrir na IDE":**
+  * Painel dedicado de arquivos modificados com badges semânticos (`M` Modificado, `A` Adicionado, `D` Deletado, `?` Não rastreado, `R` Renomeado).
+  * Modal visual de diff com realce de sintaxe colorido (linhas verdes para inserções, vermelhas para remoções) para inspecionar arquivos individuais ou o repositório completo antes do commit.
+  * Botão em 1 clique para abrir o arquivo diretamente no IntelliJ IDEA ou no editor padrão configurado.
+* **Criação Integrada de Branch por Tarefa (Azure DevOps & Jira):**
+  * Modal inteligente com extração e parsing automático de IDs de tarefas e títulos a partir de URLs (`/workitems/edit/10482`, `/browse/SRE-1234`) ou texto livre.
+  * Busca integrada de tarefas via API REST (WIQL no Azure DevOps e JQL no Jira) usando o PAT/Token configurado.
+  * Geração de slug normalizado sem acentos, prefixos padronizados (`feature/`, `bugfix/`, `hotfix/`), escolha de branch base e validação estrita de nomenclatura Git.
 * **Ações Rápidas de Sincronização:**
   * Botões diretos para `git fetch`, `git pull`, `git stash` e `git stash pop` sem precisar abrir o terminal.
 * **Gerador de Pull Request no Azure DevOps:**
@@ -170,10 +190,22 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 ### 6. 📑 Catálogo & Lançador de Rotinas
 * **Varredura Completa do Diretório Configurado:**
   * Reconhece executáveis (`.EXE`) e rotinas compiladas (`.PC`) organizadas por módulos funcionais.
-* **Filtros e Busca Instantânea:**
-  * Busca por código da rotina ou nome e filtro por módulo.
-* **Sistema de Favoritos:**
-  * Marcação de rotinas favoritas com estrelas fixadas no topo e salvas localmente.
+* **Integração com a Central de Controle WinThor (CCW):**
+  * Download direto da nuvem TOTVS/PC Sistemas (`centraldecontrole.pcinformatica.com.br`) por código numérico (ex: `132`, `316`) ou módulo e versão (padrão `30`).
+  * Descompactação automática de arquivos compactados `.ZIP` em memória sem depender de ferramentas externas.
+  * Navegação na árvore oficial de módulos e rotinas disponibilizada pela Central de Controle.
+* **Gerenciador de Rollback de Rotinas (.bak) com Reversibilidade Segura:**
+  * Criação automática preventiva de cópia `.bak` com timestamp antes de qualquer substituição de executável em `Prod`.
+  * Histórico de versões anteriores com data/hora, tamanho e botão de 1 clique para restaurar versão de backup com cópia prévia de segurança (`_pre_rollback.bak`).
+* **Leitura de Versão do Executável (PE Header / FileVersion):**
+  * Parser nativo em TypeScript de baixo custo de I/O que extrai `FileVersion` e `ProductVersion` diretamente do cabeçalho binário `.rsrc`, exibindo badges verdes nos cartões para validação instantânea contra a CCW.
+* **Download e Atualização em Lote (Batch Download):**
+  * Atualização simultânea em 1 clique de todas as rotinas favoritas ou de um módulo funcional inteiro, com barra de progresso em tempo real.
+* **Lançador Seguro de Processos & WinThor Start:**
+  * Inicialização via shell do Windows (`launchProcessSafely`) imune a erros `spawn EFTYPE`, com preservação do diretório de trabalho (`cwd`) essencial para DLLs Delphi e suporte a UAC.
+  * Abertura autenticada via WinThor Start / WTA com alerta de status e botão de contingência para abertura direta.
+* **Filtros e Sistema de Favoritos:**
+  * Busca por código da rotina ou nome, filtro por módulo funcional e fixação de favoritas com estrelas (★).
 
 ---
 
@@ -320,14 +352,15 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
 
 ### 10. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
-  * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code — pode chamar diretamente, sem passar pela interface gráfica.
-* **123 Tools Organizadas por Domínio:**
+  * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code ou GitHub Copilot — pode chamar diretamente, sem passar pela interface gráfica.
+* **145 Tools Organizadas por Domínio:**
   * Para detalhes e exemplos de como usar cada ferramenta, **[acesse o Catálogo Completo de Ferramentas MCP](docs/MCP_TOOLS.md)**.
-  * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (inclui gerência de bundles: listar, instalar, reinstalar, atualizar versão, desinstalar e checar dependências), `docker_*`/`container_*`, `git_*`, `routines_*`, `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, inclui backup/restore/restore drill agendável), `logs_*` (leitura e limpeza de arquivos de log), `apm_*` (traces e métricas do APM), `routine801_*`, `deploy_*`, `llm_*` e `network_*` — desde consultas de status até o pipeline completo de deploy Karaf e execução de perfis de automação.
+  * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (gerência de bundles, diagnóstico de dependências OSGi, telemetria Heap/Metaspace JVM com alertas OOM, disparo de GC, gestão de repositórios/features Maven e Log Analyzer), `docker_*`/`container_*`, `git_*` (inspeção de diff, criação de branch por tarefas Azure DevOps/Jira e links de PR), `routines_*` (execução com WinThor Start, download CCW, rollback de `.bak`, versão PE Header e atualização em lote), `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, backup/restore/restore drill, Statement Tracer com captura e interpolação de binds), `logs_*` (leitura pontual e limpeza de arquivos), `apm_*` (traces OTLP, waterfall analítico e top endpoints/queries lentas), `routine801_*`, `deploy_*`, `llm_*` e `network_*`.
 * **Terceiro Consumidor da Mesma Camada de Serviços:**
   * Reaproveita exatamente as mesmas classes de serviço e validações de segurança (`isValidIdentifier`, `isSafeLocalPath`, `isSafeKarafCommand`) já usadas pelo IPC do Electron e pela API REST (`src/server`) — nenhuma lógica de negócio duplicada.
 * **Protocolo Aberto — Funciona em Qualquer Cliente MCP:**
   * O servidor é MCP puro via stdio, sem nada específico de um cliente. Só muda o arquivo de registro:
+  * **IntelliJ IDEA / GitHub Copilot:** `mcp.json` na raiz ou `.idea/mcp.json`, ou nativamente no JetBrains AI Assistant (**Settings ➔ Tools ➔ AI Assistant ➔ Model Context Protocol (MCP)**).
   * **Claude Code:** [`.mcp.json`](.mcp.json) na raiz — abra o projeto e rode `/mcp`.
   * **VS Code / GitHub Copilot Chat (agent mode):** [`.vscode/mcp.json`](.vscode/mcp.json).
   * **Google Antigravity:** [`.agents/mcp_config.json`](.agents/mcp_config.json) (workspace) ou `~/.gemini/config/mcp_config.json` (global).
@@ -346,15 +379,25 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
   * Recebe traces em JSON ou Protobuf (com gzip/deflate) de qualquer aplicação instrumentada com OpenTelemetry.
   * No Karaf iniciado pelo Cockpit, basta colocar o `opentelemetry-javaagent.jar` em `<karaf>/bin`: o agente é anexado automaticamente, exportando via `http/protobuf` para `127.0.0.1` na porta configurada.
   * A porta pode ser trocada em **APM & Traces → Como Conectar** — útil quando outro coletor (OTel Collector, Jaeger, SigNoz) já ocupa a 4318. Se a nova porta falhar, o receptor continua na atual.
-* **Dashboard:**
+* **Dashboard & Top Lentos:**
   * Vazão (RPM), latências p50/p95/p99, taxa de erros, % do tempo gasto em banco, volume e latência dos últimos 15 minutos, endpoints mais acessados e ranking de queries lentas com atalho para o DB Studio.
-* **Traces Explorer:**
-  * Filtros por serviço, erros, lentidão, SQL e faixa de latência; waterfall com a árvore de spans, atributos do span selecionado, queries SQL e stacktrace das exceções registradas pelo agente Java.
-  * Decomposição do tempo de cada requisição entre banco, chamadas externas e aplicação, com destaque do gargalo.
+  * Popover dedicado "Top Lentos" e presets rápidos (`🐢 Lentos`, `🗄️ Queries Lentas`, `🌐 Endpoints Lentos`) com alternância de ordenação por latência decrescente (`Mais Lentos`).
+* **Traces Explorer & Waterfall Semântico (Time Budget):**
+  * Filtros por serviço, erros, lentidão, SQL e faixa de latência; visualização em cascata (Waterfall) com régua de tempo visual dividindo proporcionalmente o tempo entre **Requisição HTTP**, **Processamento Java** e **Queries JDBC no banco**.
+  * Chips interativos por camada com opacidade dinâmica, destaque automático do gargalo principal e tags de lentidão (`⚡ Lenta`) em spans que ultrapassam limites aceitáveis.
 * **Buffer em Memória:**
   * Até 5.000 traces (100 mil spans, 2 mil por trace), descartando os menos recentes — nada é gravado em disco.
 * **Integração com Assistentes de IA:**
   * As tools `apm_*` do servidor MCP consultam o buffer do app por uma API local do receptor (somente loopback, protegida por token e sem CORS).
+
+---
+
+### 12. 📜 Logs em Tempo Real & Log Analyzer WinThor
+* **Monitoramento Contínuo (tail -f):**
+  * Acompanhamento em tempo real de arquivos de log do Apache Karaf (`karaf.log`) e serviços Windows com rolagem automática, controle de pausa e limpeza de arquivo em 1 clique.
+* **Log Analyzer & Destaque de Exceções Críticas:**
+  * Parser contínuo que identifica e destaca falhas típicas do ecossistema WinThor e OSGi: códigos `ORA-XXXXX` (com catálogo explicativo em português), `NullPointerException`, `BundleException`, `OutOfMemoryError` e falhas de conexão de rede.
+  * Pílulas clicáveis diretamente nas linhas do console com salto rápido para o erro e gaveta lateral de diagnósticos com comandos recomendados prontos para copiar.
 
 ---
 

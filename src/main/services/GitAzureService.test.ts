@@ -8,6 +8,8 @@ import { KarafService } from './KarafService';
 
 const mockExecFileAsync = vi.fn();
 const mockKillProcessTree = vi.fn();
+const mockLaunchProcessSafely = vi.fn();
+const mockHttpRequest = vi.fn();
 
 vi.mock('../utils/security', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../utils/security')>();
@@ -25,6 +27,18 @@ vi.mock('../utils/process', async (importOriginal) => {
   };
 });
 
+vi.mock('../utils/routineLaunchUtils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../utils/routineLaunchUtils')>();
+  return {
+    ...actual,
+    launchProcessSafely: (...args: any[]) => mockLaunchProcessSafely(...args)
+  };
+});
+
+vi.mock('../utils/httpRequest', () => ({
+  httpRequest: (...args: any[]) => mockHttpRequest(...args)
+}));
+
 describe('GitAzureService', () => {
   let tmpDir: string;
   let configService: ConfigService;
@@ -34,6 +48,8 @@ describe('GitAzureService', () => {
   beforeEach(() => {
     mockExecFileAsync.mockReset();
     mockKillProcessTree.mockReset();
+    mockLaunchProcessSafely.mockReset();
+    mockHttpRequest.mockReset();
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'git-azure-test-'));
     process.env.CONFIG_DIR = tmpDir;
 
@@ -305,6 +321,17 @@ describe('GitAzureService', () => {
       expect(res.success).toBe(false);
       expect(mockExecFileAsync).toHaveBeenCalledWith('git', ['checkout', '.', '--'], { cwd: repoDir });
     });
+
+    it('cria branch nova a partir de uma branch base informada', async () => {
+      const repoDir = path.join(tmpDir, 'repo-chk');
+      fs.mkdirSync(repoDir);
+
+      mockExecFileAsync.mockResolvedValueOnce({ stdout: "Switched to a new branch 'feature/task-1'", stderr: '' });
+
+      const res = await gitService.checkoutBranch(repoDir, 'feature/task-1', true, 'develop');
+      expect(res.success).toBe(true);
+      expect(mockExecFileAsync).toHaveBeenCalledWith('git', ['checkout', '-b', 'feature/task-1', 'develop'], { cwd: repoDir });
+    });
   });
 
   describe('commitAndPush', () => {
@@ -561,6 +588,187 @@ describe('GitAzureService', () => {
         ['-c', 'core.quotePath=false', 'diff', '--no-index', '--', '/dev/null', 'novo.txt'],
         expect.objectContaining({ cwd: repoDir })
       );
+    });
+  });
+
+  describe('createTaskBranch', () => {
+    it('cria e troca de branch a partir dos dados de uma tarefa', async () => {
+      const repoDir = path.join(tmpDir, 'repo-task-branch');
+      fs.mkdirSync(repoDir);
+
+      mockExecFileAsync.mockResolvedValueOnce({ stdout: "Switched to a new branch 'feature/12345-ajuste-calculo'", stderr: '' });
+
+      const res = await gitService.createTaskBranch(repoDir, {
+        prefix: 'feature/',
+        taskId: '12345',
+        title: 'Ajuste Cálculo',
+        baseBranch: 'develop'
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.branchName).toBe('feature/12345-ajuste-calculo');
+      expect(mockExecFileAsync).toHaveBeenCalledWith(
+        'git',
+        ['checkout', '-b', 'feature/12345-ajuste-calculo', 'develop'],
+        { cwd: repoDir }
+      );
+    });
+
+    it('rejeita parâmetros que resultem em nome de branch inválido', async () => {
+      const repoDir = path.join(tmpDir, 'repo-task-branch');
+      fs.mkdirSync(repoDir);
+
+      const res = await gitService.createTaskBranch(repoDir, {
+        prefix: 'feature/',
+        taskId: '',
+        title: ''
+      });
+
+      expect(res.success).toBe(false);
+      expect(mockExecFileAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('openFileInIde', () => {
+    it('rejeita caminho fora dos limites do projeto (directory traversal)', async () => {
+      const repoDir = path.join(tmpDir, 'repo-files');
+      fs.mkdirSync(repoDir);
+
+      const res = await gitService.openFileInIde(repoDir, '../fora-do-projeto.ts');
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('fora dos limites');
+      expect(mockLaunchProcessSafely).not.toHaveBeenCalled();
+    });
+
+    it('rejeita arquivo que não existe no disco', async () => {
+      const repoDir = path.join(tmpDir, 'repo-files');
+      fs.mkdirSync(repoDir);
+
+      const res = await gitService.openFileInIde(repoDir, 'src/inexistente.ts');
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('não encontrado');
+      expect(mockLaunchProcessSafely).not.toHaveBeenCalled();
+    });
+
+    it('abre com a IDE configurada quando definida em AppSettings', async () => {
+      const repoDir = path.join(tmpDir, 'repo-files');
+      fs.mkdirSync(path.join(repoDir, 'src'), { recursive: true });
+      const targetFile = path.join(repoDir, 'src', 'App.tsx');
+      fs.writeFileSync(targetFile, 'content');
+
+      const ideExe = path.join(tmpDir, 'idea64.exe');
+      fs.writeFileSync(ideExe, '');
+      configService.saveSettings({ intellijPath: ideExe });
+
+      const res = await gitService.openFileInIde(repoDir, 'src/App.tsx');
+      expect(res.success).toBe(true);
+      expect(mockLaunchProcessSafely).toHaveBeenCalledWith(ideExe, [targetFile], repoDir);
+    });
+
+    it('faz fallback para o arquivo diretamente quando nenhuma IDE estiver configurada', async () => {
+      const repoDir = path.join(tmpDir, 'repo-files');
+      fs.mkdirSync(path.join(repoDir, 'src'), { recursive: true });
+      const targetFile = path.join(repoDir, 'src', 'App.tsx');
+      fs.writeFileSync(targetFile, 'content');
+
+      configService.saveSettings({ intellijPath: '' });
+
+      const res = await gitService.openFileInIde(repoDir, 'src/App.tsx');
+      expect(res.success).toBe(true);
+      expect(mockLaunchProcessSafely).toHaveBeenCalledWith(targetFile, [], path.dirname(targetFile));
+    });
+  });
+
+  describe('fetchTasks', () => {
+    it('consulta tarefas no Jira quando configurado', async () => {
+      configService.saveSettings({
+        jiraSources: [
+          {
+            id: 'jira-1',
+            name: 'Jira Corp',
+            baseUrl: 'https://jira.corp.com',
+            authToken: 'token123',
+            projectKey: 'PROJ',
+            enabled: true
+          }
+        ]
+      });
+
+      mockHttpRequest.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            issues: [
+              {
+                id: '1001',
+                key: 'PROJ-55',
+                fields: {
+                  summary: 'Correção de cálculo',
+                  issuetype: { name: 'Bug' },
+                  status: { name: 'In Progress' }
+                }
+              }
+            ]
+          })
+      });
+
+      const tasks = await gitService.fetchTasks(undefined, 'calculo');
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0]).toEqual({
+        id: 'PROJ-55',
+        title: 'Correção de cálculo',
+        provider: 'jira',
+        type: 'Bug',
+        status: 'In Progress',
+        url: 'https://jira.corp.com/browse/PROJ-55'
+      });
+      expect(mockHttpRequest).toHaveBeenCalledWith(
+        expect.stringContaining('https://jira.corp.com/rest/api/2/search'),
+        expect.objectContaining({ method: 'GET' })
+      );
+    });
+
+    it('consulta work items no Azure DevOps quando repositório for Azure e token configurado', async () => {
+      const repoDir = makeRepo('repo-azure', 'main', 'https://dev.azure.com/minhaorg/meuproj/_git/meurepo');
+      configService.saveSettings({
+        azureDevOpsToken: 'meu-pat-azure'
+      });
+
+      mockHttpRequest.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            workItems: [{ id: 9988 }]
+          })
+      });
+
+      mockHttpRequest.mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          JSON.stringify({
+            value: [
+              {
+                id: 9988,
+                fields: {
+                  'System.Title': 'Implementar tela de login',
+                  'System.WorkItemType': 'User Story',
+                  'System.State': 'Active'
+                }
+              }
+            ]
+          })
+      });
+
+      const tasks = await gitService.fetchTasks(repoDir);
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0]).toEqual({
+        id: '9988',
+        title: 'Implementar tela de login',
+        provider: 'azure',
+        type: 'User Story',
+        status: 'Active',
+        url: 'https://dev.azure.com/minhaorg/meuproj/_workitems/edit/9988'
+      });
     });
   });
 });

@@ -69,6 +69,7 @@ import type {
   DeployStep,
   DeployProfileHistoryEntry,
   DeployProgressEvent,
+  OsgiResolutionDiagnosticSummary,
   TableColumnInfo,
   DockerContainerStats,
   ComposeServiceStatus,
@@ -222,8 +223,13 @@ export interface ElectronAPI {
   routine801InstallFeatures: (request: Routine801InstallRequest) => Promise<Routine801InstallResult>;
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
-  runDeployProfile: (profile: DeployProfile) => Promise<{ success: boolean; error?: string }>;
-  runDeployStep: (step: DeployStep, profileName?: string) => Promise<{ success: boolean; error?: string }>;
+  runDeployProfile: (
+    profile: DeployProfile
+  ) => Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }>;
+  runDeployStep: (
+    step: DeployStep,
+    profileName?: string
+  ) => Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }>;
   abortDeploy: () => Promise<{ success: boolean }>;
   getDeployProfileHistory: () => Promise<DeployProfileHistoryEntry[]>;
   clearDeployProfileHistory: () => Promise<{ success: boolean }>;
