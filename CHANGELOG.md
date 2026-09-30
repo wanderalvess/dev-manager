@@ -4,6 +4,28 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.23.0] - 2026-09-30
+### Alterado
+- **Componentização & Decomposição Modular do Frontend**:
+  - **Refatoração dos 4 Maiores Módulos Monolíticos**: Redução de mais de 82% do volume de código acumulado nos arquivos raiz das páginas e modais centrais (de 15.764 para 2.813 linhas totais), particionando e extraindo 44 novos componentes atômicos, focados e reutilizáveis:
+    - **Configurações (`SettingsPage.tsx`)**: De 3.428 para 1.183 linhas (-65%), desacoplando as 9 abas de configuração (`DirsTab`, `KarafTab`, `AzureTab`, `ServicesTab`, `PortsTab`, `AutomationTab`, `LogsTab`, `BackupTab`, `AiTab`), a barra de pesquisa rápida (`SettingsSearchBar`) e o checklist de setup inicial (`SetupChecklistCard`).
+    - **Contêineres Docker (`ContainersPage.tsx`)**: De 5.020 para 770 linhas (-85%), particionando 16 submódulos dedicados em `src/renderer/src/components/containers/` (cabeçalho, barra de topologia de rede, painel Docker Compose, cards de contêiner e 12 modais operacionais carregados sob demanda).
+    - **Gerenciador de Bundles OSGi (`KarafBundleManagerModal.tsx`)**: De 3.984 para 598 linhas (-85%), particionando a tabela, barra de escopos, cabeçalho e modais de histórico, snapshots, diagnóstico e features em `src/renderer/src/components/karaf/`.
+    - **Central de Ajuda (`HelpPage.tsx`)**: De 3.332 para 262 linhas (-92%), particionando o catálogo de dados estáticos (`helpData.tsx`), catálogo de perguntas frequentes, lista de atalhos globais, visão geral e aba sobre o sistema em `src/renderer/src/components/help/`.
+  - **Performance de Renderização & Hot Reload**: O carregamento de páginas e a renderização do React tornaram-se consideravelmente mais ágeis e eficientes através do isolamento de estado local por componente e renderização condicional de modais pesados apenas quando acionados.
+
+### Adicionado
+- **Suíte de Testes Automatizados para a Central de Ajuda (`helpData.test.ts`)**:
+  - Testes unitários puros co-localizados cobrindo a integridade dos dados, categorias, FAQs pesquisáveis, atalhos de teclado e URLs de download oficiais.
+- **Governança Arquitetural & Memória no `AGENTS.md`**:
+  - Formalização de regras estritas de tipagem do TypeScript/React 18 (`RefObject<T>` nativo), resolução de profundidade relativa de imports (`../../../../../shared/types`) e preenchimento de literais de contratos de dados em novos componentes.
+
+### Corrigido
+- **Resolução de Tipos e Contratos no TypeScript**:
+  - Corrigidos caminhos relativos de importação em componentes de 3º nível em `containers/` e `settings/tabs/`.
+  - Alinhada a tipagem de referências `useRef` para elementos HTML (`<pre>` e `<input>`) no React 18, eliminando incompatibilidades na prop nativa `ref`.
+  - Ajustados objetos literais em `validateSinglePath` para satisfazer o contrato completo exigido por `PathStatusInfo`.
+
 ## [1.22.0] - 2026-09-29
 ### Adicionado
 - **Visualizador de Diff de Arquivos & Ação "Abrir na IDE" (Hub Git & Azure DevOps)**:

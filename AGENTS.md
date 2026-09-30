@@ -69,6 +69,16 @@ compartilhar a mesma instância com credenciais distintas.
   pelas páginas/componentes em vez de chamar `electronAPI` direto.
 - **shared/types.ts** — fonte única de tipos compartilhados entre main/preload/renderer/
   server/mcp. Qualquer tipo usado em mais de uma camada vive aqui, não duplicado.
+  - **Atenção à profundidade de imports**: componentes em subpastas de 3º nível do renderer
+    (ex.: `src/renderer/src/components/{containers,settings,help,karaf}/{tabs,modals,cards,compose,topology}/`)
+    estão a 5 níveis de pasta de `src/shared/types.ts` e **devem** importar via `'../../../../../shared/types'`
+    (5 vezes `../`), nunca 4. Se o import falhar, o TypeScript assume `any`, quebrando o operador `keyof`
+    (vira `string | number | symbol`), destruindo a inferência em loops e gerando erros em cascata.
+  - **Tipagem de refs no React 18**: `useRef<T>(null)` retorna `React.RefObject<T>` (onde `current` já é
+    `T | null`). Props que recebem refs não devem ser tipadas como `React.RefObject<T | null>`, pois o JSX
+    do React rejeita a atribuição na prop nativa `ref`.
+  - **Literais de contratos estritos**: ao construir fallbacks para interfaces com campos obrigatórios
+    (ex.: `PathStatusInfo` exige `path: string`), sempre fornecer propriedades válidas (`path: value || ''`).
 
 ## Convenção de teste: extrair lógica pura antes de cobrir com teste
 
