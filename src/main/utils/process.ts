@@ -155,6 +155,15 @@ export function runCapturedProcess(
     // (sem isso o filho herda o grupo deste processo Node e o kill não acha nada pra matar).
     const proc = spawn(resolvedCommand, args, finalOptions);
     if (onSpawn) onSpawn(proc);
+
+    // Fecha stdin imediatamente para processos batch em background, evitando
+    // que ferramentas CLI (como client.bat ou JLine) fiquem presas aguardando input do console
+    try {
+      proc.stdin?.end();
+    } catch {
+      // Ignora falha caso stdin não esteja acessível
+    }
+
     let stdout = '';
     let stderr = '';
     let timedOut = false;

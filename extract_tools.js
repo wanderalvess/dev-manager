@@ -4,7 +4,7 @@ const path = require('path');
 const content = fs.readFileSync(path.join(__dirname, 'src', 'mcp', 'index.ts'), 'utf-8');
 
 const tools = [];
-const regex = /server\.tool\(\s*['"]([^'"]+)['"],\s*['"]([^'"]+)['"]/g;
+const regex = /server\.registerTool\(\s*['"]([^'"]+)['"],\s*\{[^}]*description:\s*['"]([^'"]+)['"]/gs;
 let match;
 while ((match = regex.exec(content)) !== null) {
   tools.push({ name: match[1], desc: match[2] });
@@ -15,7 +15,7 @@ if (!fs.existsSync(docsDir)) {
   fs.mkdirSync(docsDir, { recursive: true });
 }
 
-const outPath = path.join(docsDir, 'MCP_TOOLS.md');
+const outPath = path.join(docsDir, 'MCP_TOOLS_GENERATED.md');
 let outContent = '# Ferramentas MCP (Model Context Protocol)\n\n';
 outContent += 'Esta documentação lista todas as ferramentas (tools) disponibilizadas pelo servidor MCP embutido no DevManager.\n\n';
 outContent += `Total de ferramentas: ${tools.length}\n\n`;

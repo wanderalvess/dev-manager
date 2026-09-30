@@ -6,10 +6,12 @@ import {
   KarafService,
   parseClauseList,
   parseManifestHeaders,
-  parseCapabilitiesWiredBundles
+  parseCapabilitiesWiredBundles,
+  filterBenignStderr
 } from './KarafService';
 import { ConfigService } from './ConfigService';
 import * as processUtils from '../utils/process';
+import * as networkUtils from '../utils/network';
 
 describe('KarafService', () => {
   let tmpDir: string;
@@ -569,9 +571,141 @@ client.bat "feature:install -r custom-feature/2.0.0"
 
       expect(karafService.getResolvedJavaEnv().JAVA_TOOL_OPTIONS).toContain('-Dotel.exporter.otlp.endpoint=http://127.0.0.1:4418');
     });
+
+    it('não anexa o agente OpenTelemetry e remove resíduos de javaagent/debug quando isClient for true', () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'opentelemetry-javaagent.jar'), 'mock-agent');
+
+      vi.spyOn(configService, 'getSettings').mockReturnValue({
+        ...configService.getSettings(),
+        karafPath: tmpDir
+      });
+
+      const env = karafService.getResolvedJavaEnv(undefined, true);
+      expect(env.JAVA_TOOL_OPTIONS).not.toContain('opentelemetry-javaagent.jar');
+      expect(env.JAVA_TOOL_OPTIONS).not.toContain('-Dotel.');
+      expect(env.JAVA_DEBUG_PORT).toBeUndefined();
+      expect(env.JAVA_DEBUG_OPTS).toBeUndefined();
+    });
+  });
+
+  describe('filterBenignStderr', () => {
+    it('remove linhas de ruído conhecidas da JVM, client.bat e OpenTelemetry', () => {
+      const noise = [
+        'Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8',
+        'client.bat: Ignoring predefined value for KARAF_HOME',
+        '[otel.javaagent 2026-09-25 10:48:32:649 -0300] [main] INFO io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 2.31.1'
+      ].join('\r\n');
+
+      expect(filterBenignStderr(noise)).toBe('');
+    });
+
+    it('preserva mensagens de erro reais e falhas de comando', () => {
+      const mixed = [
+        'Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8',
+        'client.bat: Ignoring predefined value for KARAF_HOME',
+        'Error executing command: No matching features for my-feat/1.0',
+        'Caused by: java.io.FileNotFoundException'
+      ].join('\r\n');
+
+      const cleaned = filterBenignStderr(mixed);
+      expect(cleaned).toContain('Error executing command: No matching features');
+      expect(cleaned).toContain('Caused by: java.io.FileNotFoundException');
+      expect(cleaned).not.toContain('Picked up JAVA_TOOL_OPTIONS');
+      expect(cleaned).not.toContain('client.bat: Ignoring predefined value');
+    });
+  });
+
+  describe('isKarafRunning', () => {
+    it('retorna true quando checkPortOpen resolve true', async () => {
+      vi.spyOn(networkUtils, 'checkPortOpen').mockResolvedValueOnce(true);
+      const running = await karafService.isKarafRunning(8101);
+      expect(running).toBe(true);
+    });
+
+    it('retorna false quando checkPortOpen resolve false', async () => {
+      vi.spyOn(networkUtils, 'checkPortOpen').mockResolvedValueOnce(false);
+      const running = await karafService.isKarafRunning(8101);
+      expect(running).toBe(false);
+    });
   });
 
   describe('executeKarafCommand', () => {
+    beforeEach(() => {
+      vi.spyOn(karafService, 'getKarafClientExecutable').mockReturnValue(path.join(tmpDir, 'bin', 'client.bat'));
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValue(true);
+    });
+
+    it('aborta execução com código 1 quando Karaf OSGi está offline', async () => {
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValueOnce(false);
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('bundle:list', (c) => chunks.push(c));
+
+      expect(res.code).toBe(1);
+      expect(res.stderr).toContain('Karaf OSGi offline');
+      expect(chunks.some((c) => c.includes('não está em execução'))).toBe(true);
+      expect(chunks.some((c) => c.includes('💡 [DICA]'))).toBe(true);
+    });
+
+    it('detecta falha quando client.bat retorna exit code 0 com "Failed to get the session."', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: [
+          'client.bat: Ignoring predefined value for KARAF_HOME',
+          'Failed to get the session.',
+          'Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8'
+        ].join('\r\n'),
+        stderr: ''
+      });
+
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('feature:repo-add mvn:com.br.com.pcsist/matcon/1.0/xml/features', (c) => chunks.push(c));
+
+      expect(res.code).toBe(1);
+      expect(res.stderr).toContain('Failed to get the session.');
+      expect(chunks.some((c) => c.includes('💡 [DICA] O cliente Karaf não conseguiu estabelecer sessão'))).toBe(true);
+    });
+
+    it('aplica timeout estendido de 300000ms para comandos pesados como feature:install e 60000ms para comandos normais', async () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'client.bat'), '@echo off', 'utf-8');
+
+      configService.saveSettings({ karafPath: tmpDir });
+
+      const runProcSpy = vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({
+        code: 0,
+        stdout: 'Done',
+        stderr: ''
+      });
+
+      await karafService.executeKarafCommand('feature:install -r winthor-integracao-matcon/1.39.23.45', () => {});
+      expect(runProcSpy).toHaveBeenLastCalledWith(
+        expect.any(String),
+        expect.any(Array),
+        expect.any(Object),
+        expect.any(Function),
+        300000
+      );
+
+      await karafService.executeKarafCommand('bundle:list', () => {});
+      expect(runProcSpy).toHaveBeenLastCalledWith(
+        expect.any(String),
+        expect.any(Array),
+        expect.any(Object),
+        expect.any(Function),
+        60000
+      );
+    });
+
     it('bloqueia comandos com caracteres perigosos (isSafeKarafCommand)', async () => {
       const chunks: string[] = [];
       const res = await karafService.executeKarafCommand('feature:list; rm -rf /', (c) => chunks.push(c));
@@ -890,6 +1024,148 @@ totvs-pdv-sync           │ 2.3.1          │          │ Started │ totvs-r
         expect.any(Function),
         undefined
       );
+    });
+  });
+
+  describe('Monitor de Memória JVM (JMX e info)', () => {
+    it('lança erro se o Karaf estiver offline ao buscar métricas de memória', async () => {
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValueOnce(false);
+      await expect(karafService.getJvmMemoryMetrics()).rejects.toThrow('Karaf OSGi offline');
+    });
+
+    it('obtém métricas de memória Heap e Non-Heap via JMX com sucesso', async () => {
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValueOnce(true);
+
+      vi.spyOn(karafService, 'executeKarafCommand')
+        .mockResolvedValueOnce({
+          code: 0,
+          stdout: 'init = 268435456\nused = 536870912\ncommitted = 1073741824\nmax = 2147483648\n',
+          stderr: ''
+        })
+        .mockResolvedValueOnce({
+          code: 0,
+          stdout: 'init = 2555904\nused = 67108864\ncommitted = 134217728\nmax = -1\n',
+          stderr: ''
+        })
+        .mockResolvedValueOnce({
+          code: 0,
+          stdout: 'Threads\n  Live threads 50\n  Peak live threads 60\nUptime 5 hours\n',
+          stderr: ''
+        });
+
+      const metrics = await karafService.getJvmMemoryMetrics();
+      expect(metrics.source).toBe('jmx');
+      expect(metrics.heapUsedMb).toBe(512);
+      expect(metrics.heapMaxMb).toBe(2048);
+      expect(metrics.nonHeapUsedMb).toBe(64);
+      expect(metrics.liveThreads).toBe(50);
+      expect(metrics.isNearOom).toBe(false);
+    });
+
+    it('faz fallback para "info" quando JMX não estiver disponível', async () => {
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValueOnce(true);
+
+      vi.spyOn(karafService, 'executeKarafCommand')
+        // JMX falha
+        .mockResolvedValueOnce({ code: 1, stdout: '', stderr: 'MBean not found' })
+        // Fallback info
+        .mockResolvedValueOnce({
+          code: 0,
+          stdout: `
+Memory
+  Current heap size           524,288 kbytes
+  Maximum heap size           1,048,576 kbytes
+  Committed heap size         1,048,576 kbytes
+Threads
+  Live threads                35
+Classes
+  Current classes loaded      8,000
+Uptime                        10 hours
+`,
+          stderr: ''
+        });
+
+      const metrics = await karafService.getJvmMemoryMetrics();
+      expect(metrics.source).toBe('info');
+      expect(metrics.heapUsedMb).toBe(512);
+      expect(metrics.heapMaxMb).toBe(1024);
+      expect(metrics.liveThreads).toBe(35);
+      expect(metrics.classesLoaded).toBe(8000);
+      expect(metrics.heapUsagePercent).toBe(50.0);
+    });
+
+    it('triggerGarbageCollection dispara jmx:run gc ou system:gc', async () => {
+      const execSpy = vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: 'Garbage collection completed',
+        stderr: ''
+      });
+
+      const res = await karafService.triggerGarbageCollection();
+      expect(res.success).toBe(true);
+      expect(execSpy).toHaveBeenCalledWith('jmx:run java.lang:type=Memory gc', expect.any(Function), undefined, 15000);
+    });
+  });
+
+  describe('Repositórios de Features Maven / Karaf', () => {
+    it('listFeatureRepositories lista repositórios registrados', async () => {
+      vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: `
+Repository | URL
+standard-4.2.16 | mvn:org.apache.karaf.features/standard/4.2.16/xml/features
+winthor-repo | mvn:br.com.totvs.winthor/features/1.0.0/xml/features
+`,
+        stderr: ''
+      });
+
+      const repos = await karafService.listFeatureRepositories();
+      expect(repos.length).toBe(2);
+      expect(repos[0].name).toBe('standard-4.2.16');
+      expect(repos[1].isWinthor).toBe(true);
+    });
+
+    it('addFeatureRepository executa feature:repo-add', async () => {
+      const execSpy = vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 0,
+        stdout: 'Adding feature repository',
+        stderr: ''
+      });
+
+      const res = await karafService.addFeatureRepository('mvn:com.my/repo/1.0/xml/features');
+      expect(res.success).toBe(true);
+      expect(execSpy).toHaveBeenCalledWith(
+        'feature:repo-add "mvn:com.my/repo/1.0/xml/features"',
+        expect.any(Function),
+        undefined,
+        120000
+      );
+    });
+
+    it('removeFeatureRepository e refreshFeatureRepository executam com sucesso', async () => {
+      const execSpy = vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValue({
+        code: 0,
+        stdout: 'OK',
+        stderr: ''
+      });
+
+      const remRes = await karafService.removeFeatureRepository('my-repo');
+      expect(remRes.success).toBe(true);
+      expect(execSpy).toHaveBeenCalledWith('feature:repo-remove "my-repo"', expect.any(Function), undefined);
+
+      const refRes = await karafService.refreshFeatureRepository('my-repo');
+      expect(refRes.success).toBe(true);
+      expect(execSpy).toHaveBeenCalledWith('feature:repo-refresh "my-repo"', expect.any(Function), undefined, 60000);
+    });
+  });
+
+  describe('Log Analyzer em KarafService', () => {
+    it('analisa erros e exceções críticas em texto de log', () => {
+      const log = '2026-09-29 [ERROR] ORA-00942: table or view does not exist\n[FATAL] java.lang.NullPointerException';
+      const summary = karafService.analyzeLogText(log);
+      expect(summary.totalErrors).toBe(2);
+      expect(summary.oraErrorsCount).toBe(1);
+      expect(summary.npeCount).toBe(1);
     });
   });
 });

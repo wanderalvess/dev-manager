@@ -9,7 +9,9 @@ import {
   ExplainPlanResult,
   OracleTracerFilter,
   OracleActiveSessionsResult,
-  OracleRecentStatementsResult
+  OracleRecentStatementsResult,
+  OracleCapturedBind,
+  OracleStatementBindsResult
 } from '../../shared/types';
 import { getListeningPid } from '../utils/network';
 import { isValidSqlIdentifier, isValidSqlTableName } from '../utils/security';
@@ -17,7 +19,10 @@ import {
   buildActiveSessionsQuery,
   buildRecentStatementsQuery,
   mapActiveSessionRow,
-  mapRecentStatementRow
+  mapRecentStatementRow,
+  buildBindCaptureQuery,
+  groupCapturedBindsBySqlId,
+  interpolateOracleSqlWithBinds
 } from '../utils/oracleTracerUtils';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -683,9 +688,31 @@ export class DatabaseService {
       };
     }
 
+    const sessions = res.rows.map(mapActiveSessionRow);
+
+    // Enriquecer com binds de v$sql_bind_capture para as sessões que possuem SQL_ID
+    const sqlIds = Array.from(new Set(sessions.map((s) => s.sqlId).filter((id): id is string => Boolean(id))));
+    if (sqlIds.length > 0) {
+      try {
+        const bindMap = await this.getOracleBindsForSqlIds(config, sqlIds.slice(0, 50));
+        for (const session of sessions) {
+          if (!session.sqlId) continue;
+          const sessionBinds = bindMap.get(session.sqlId);
+          if (sessionBinds && sessionBinds.length > 0) {
+            session.binds = sessionBinds;
+            if (session.sqlText) {
+              session.interpolatedSql = interpolateOracleSqlWithBinds(session.sqlText, sessionBinds);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[DatabaseService] Falha ao enriquecer sessões com binds:', err);
+      }
+    }
+
     return {
       success: true,
-      sessions: res.rows.map(mapActiveSessionRow),
+      sessions,
       executionTimeMs: Date.now() - startTime
     };
   }
@@ -720,11 +747,96 @@ export class DatabaseService {
       };
     }
 
+    const statements = res.rows.map(mapRecentStatementRow);
+
+    // Enriquecer com binds de v$sql_bind_capture para os SQL_IDs encontrados
+    const sqlIds = Array.from(new Set(statements.map((s) => s.sqlId).filter(Boolean)));
+    if (sqlIds.length > 0) {
+      try {
+        const bindMap = await this.getOracleBindsForSqlIds(config, sqlIds.slice(0, 50));
+        for (const stmt of statements) {
+          const stmtBinds = bindMap.get(stmt.sqlId);
+          if (stmtBinds && stmtBinds.length > 0) {
+            stmt.binds = stmtBinds;
+            stmt.interpolatedSql = interpolateOracleSqlWithBinds(stmt.sqlText, stmtBinds);
+          }
+        }
+      } catch (err) {
+        console.warn('[DatabaseService] Falha ao enriquecer statements com binds:', err);
+      }
+    }
+
     return {
       success: true,
-      statements: res.rows.map(mapRecentStatementRow),
+      statements,
       executionTimeMs: Date.now() - startTime
     };
+  }
+
+  /**
+   * Consulta os parâmetros de bind registrados na view v$sql_bind_capture para uma lista de SQL_IDs.
+   */
+  public async getOracleBindsForSqlIds(
+    config: DatabaseConnectionConfig,
+    sqlIds: string[]
+  ): Promise<Map<string, OracleCapturedBind[]>> {
+    if (config.type !== 'oracle' || !sqlIds || sqlIds.length === 0) {
+      return new Map();
+    }
+
+    try {
+      const { sql, binds } = buildBindCaptureQuery(sqlIds);
+      const res = await this.executeQuery(config, sql, 2000, binds);
+      if (!res.success || !res.rows) {
+        return new Map();
+      }
+      return groupCapturedBindsBySqlId(res.rows);
+    } catch (err) {
+      console.warn('[DatabaseService] Falha ao consultar v$sql_bind_capture:', err);
+      return new Map();
+    }
+  }
+
+  /**
+   * Consulta os parâmetros de bind (v$sql_bind_capture) para um SQL_ID específico e gera o SQL interpolado.
+   */
+  public async getOracleStatementBinds(
+    config: DatabaseConnectionConfig,
+    sqlId: string,
+    sqlText?: string
+  ): Promise<OracleStatementBindsResult> {
+    const startTime = Date.now();
+    if (config.type !== 'oracle') {
+      return {
+        success: false,
+        sqlId,
+        binds: [],
+        executionTimeMs: 0,
+        error: 'Statement Tracer disponível apenas para conexões Oracle.'
+      };
+    }
+
+    try {
+      const bindMap = await this.getOracleBindsForSqlIds(config, [sqlId]);
+      const binds = bindMap.get(sqlId) || [];
+      const interpolatedSql = sqlText && binds.length > 0 ? interpolateOracleSqlWithBinds(sqlText, binds) : undefined;
+
+      return {
+        success: true,
+        sqlId,
+        binds,
+        interpolatedSql,
+        executionTimeMs: Date.now() - startTime
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        sqlId,
+        binds: [],
+        executionTimeMs: Date.now() - startTime,
+        error: err?.message || 'Falha ao consultar parâmetros de bind no Oracle.'
+      };
+    }
   }
 
   // =========================================================================

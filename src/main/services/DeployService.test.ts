@@ -22,6 +22,51 @@ describe('DeployService', () => {
     windowsService = new WindowsService(configService, karafService);
     networkService = new NetworkService();
     deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
+    vi.spyOn(karafService, 'isKarafRunning').mockResolvedValue(true);
+  });
+
+  describe('Validação prévia de status do Karaf/OSGi', () => {
+    it('aborta imediatamente o perfil antes do passo 1 se contiver etapas Karaf e o Karaf estiver offline', async () => {
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValueOnce(false);
+      const mavenSpy = vi.spyOn(karafService, 'runMavenBuild');
+
+      const profile: DeployProfile = {
+        id: 'prof-matcon',
+        name: 'Deploy Matcon',
+        steps: [
+          { id: '1', name: 'Compilar Projeto', type: 'maven-build', enabled: true, projectPath: '/mock/proj' },
+          { id: '2', name: 'Registrar Repo', type: 'karaf-command', enabled: true, command: 'feature:repo-add mvn:test/1.0/xml/features' }
+        ]
+      };
+
+      const dummyChunk = vi.fn();
+      const result = await deployService.executeProfile(profile, dummyChunk);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Karaf/OSGi não está em execução');
+      expect(mavenSpy).not.toHaveBeenCalled();
+      expect(dummyChunk).toHaveBeenCalledWith(expect.stringContaining('Karaf OSGi offline'));
+    });
+
+    it('não aborta previamente se o perfil tiver uma etapa de inicialização do Karaf', async () => {
+      vi.spyOn(windowsService, 'getServiceStatus').mockResolvedValue('STOPPED');
+      vi.spyOn(windowsService, 'startService').mockResolvedValue(true);
+      vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValue({ code: 0, stdout: 'OK', stderr: '' });
+
+      const profile: DeployProfile = {
+        id: 'prof-pipeline',
+        name: 'Pipeline Completo',
+        steps: [
+          { id: '1', name: 'Iniciar Karaf', type: 'service-action', serviceAction: 'start', serviceName: 'karaf-service', enabled: true },
+          { id: '2', name: 'Instalar Feature', type: 'karaf-command', command: 'feature:install test', enabled: true }
+        ]
+      };
+
+      const dummyChunk = vi.fn();
+      const result = await deployService.executeProfile(profile, dummyChunk);
+
+      expect(windowsService.startService).toHaveBeenCalledWith('karaf-service');
+    });
   });
 
   it('retorna sucesso imediatamente para perfis sem etapas ativas', async () => {

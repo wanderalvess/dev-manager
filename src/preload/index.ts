@@ -14,7 +14,20 @@ import type {
   AutomationStep,
   ProfileExecutionResult,
   GitProjectInfo,
+  GitTaskItem,
+  CreateTaskBranchOptions,
   RoutineItem,
+  RoutineLaunchResult,
+  RoutineDownloadRequest,
+  RoutineDownloadResult,
+  RoutineBackupEntry,
+  RoutineRollbackResult,
+  ExecutableVersionInfo,
+  BatchRoutineDownloadRequest,
+  BatchRoutineItemProgress,
+  BatchRoutineDownloadResult,
+  CcwCatalogResponse,
+  KarafWtaStatusResult,
   PathStatusInfo,
   SelectFileOptions,
   SystemAppInfo,
@@ -45,6 +58,7 @@ import type {
   OracleTracerFilter,
   OracleActiveSessionsResult,
   OracleRecentStatementsResult,
+  OracleStatementBindsResult,
   OracleCaptureOptions,
   OracleCaptureState,
   SystemMetrics,
@@ -53,6 +67,7 @@ import type {
   DeployStep,
   DeployProfileHistoryEntry,
   DeployProgressEvent,
+  OsgiResolutionDiagnosticSummary,
   InstallBundleRequest,
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
@@ -80,7 +95,11 @@ import type {
   ApmReceiverStatus,
   ApmReceiverPortChangeResult,
   ObservabilityOverview,
-  ServiceMetricsSummary
+  ServiceMetricsSummary,
+  KarafFeatureInfo,
+  KarafFeatureRepoInfo,
+  KarafJvmMemoryInfo,
+  LogAnalysisSummary
 } from '../shared/types';
 
 const electronAPI = {
@@ -124,7 +143,9 @@ const electronAPI = {
   onEnvLog: (callback: (log: EnvironmentLog) => void) => {
     const subscription = (_: any, log: EnvironmentLog) => callback(log);
     ipcRenderer.on('env:log-event', subscription);
-    return () => ipcRenderer.removeListener('env:log-event', subscription);
+    return () => {
+      ipcRenderer.removeListener('env:log-event', subscription);
+    };
   },
 
   // Perfis de Automação & Workflows
@@ -145,7 +166,9 @@ const electronAPI = {
   onProfileStepProgress: (callback: (data: { stepIndex: number; totalSteps: number; step: AutomationStep }) => void) => {
     const subscription = (_: any, data: any) => callback(data);
     ipcRenderer.on('profile:step-progress', subscription);
-    return () => ipcRenderer.removeListener('profile:step-progress', subscription);
+    return () => {
+      ipcRenderer.removeListener('profile:step-progress', subscription);
+    };
   },
 
   // Karaf Deployer & Console Embutido
@@ -153,10 +176,13 @@ const electronAPI = {
   sendKarafInput: (input: string): Promise<boolean> => ipcRenderer.invoke('karaf:send-input', input),
   stopEmbeddedKaraf: (): Promise<boolean> => ipcRenderer.invoke('karaf:stop-embedded'),
   isEmbeddedKarafRunning: (): Promise<boolean> => ipcRenderer.invoke('karaf:is-embedded-running'),
+  isKarafRunning: (sshPort?: number): Promise<boolean> => ipcRenderer.invoke('karaf:is-running', sshPort),
   onKarafStdout: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('karaf:stdout', subscription);
-    return () => ipcRenderer.removeListener('karaf:stdout', subscription);
+    return () => {
+      ipcRenderer.removeListener('karaf:stdout', subscription);
+    };
   },
   getKarafPersistedLogs: (maxChars?: number): Promise<{ output: string }> =>
     ipcRenderer.invoke('karaf:get-persisted-logs', maxChars),
@@ -180,17 +206,23 @@ const electronAPI = {
   onKarafDeployResult: (callback: (result: { success: boolean; error?: string }) => void) => {
     const subscription = (_: any, result: { success: boolean; error?: string }) => callback(result);
     ipcRenderer.on('karaf:deploy-result', subscription);
-    return () => ipcRenderer.removeListener('karaf:deploy-result', subscription);
+    return () => {
+      ipcRenderer.removeListener('karaf:deploy-result', subscription);
+    };
   },
   onKarafBuildResult: (callback: (result: { code: number; stdout: string; stderr: string }) => void) => {
     const subscription = (_: any, result: { code: number; stdout: string; stderr: string }) => callback(result);
     ipcRenderer.on('karaf:build-result', subscription);
-    return () => ipcRenderer.removeListener('karaf:build-result', subscription);
+    return () => {
+      ipcRenderer.removeListener('karaf:build-result', subscription);
+    };
   },
   onDocsReindexComplete: (callback: (status: DocsIndexStatus) => void) => {
     const subscription = (_: any, status: DocsIndexStatus) => callback(status);
     ipcRenderer.on('docs:reindex-complete', subscription);
-    return () => ipcRenderer.removeListener('docs:reindex-complete', subscription);
+    return () => {
+      ipcRenderer.removeListener('docs:reindex-complete', subscription);
+    };
   },
   listKarafBundles: (credentials?: { user?: string; pass?: string; port?: number }) =>
     ipcRenderer.invoke('karaf:list-bundles', credentials),
@@ -236,10 +268,28 @@ const electronAPI = {
   installKarafFeature: (featureName: string, version?: string, credentials?: { user?: string; pass?: string; port?: number }) =>
     ipcRenderer.invoke('karaf:install-feature', featureName, version, credentials),
   parsePom: (projectPath: string) => ipcRenderer.invoke('karaf:parse-pom', projectPath),
+  getKarafJvmMemory: (credentials?: { user?: string; pass?: string; port?: number }): Promise<KarafJvmMemoryInfo> =>
+    ipcRenderer.invoke('karaf:get-jvm-memory', credentials),
+  triggerKarafGc: (credentials?: { user?: string; pass?: string; port?: number }): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('karaf:trigger-gc', credentials),
+  listKarafFeatureRepos: (credentials?: { user?: string; pass?: string; port?: number }): Promise<KarafFeatureRepoInfo[]> =>
+    ipcRenderer.invoke('karaf:list-feature-repos', credentials),
+  addKarafFeatureRepo: (url: string, credentials?: { user?: string; pass?: string; port?: number }): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('karaf:add-feature-repo', url, credentials),
+  removeKarafFeatureRepo: (nameOrUrl: string, credentials?: { user?: string; pass?: string; port?: number }): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('karaf:remove-feature-repo', nameOrUrl, credentials),
+  refreshKarafFeatureRepo: (nameOrUrl?: string, credentials?: { user?: string; pass?: string; port?: number }): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('karaf:refresh-feature-repo', nameOrUrl, credentials),
+  listAllKarafFeatures: (installedOnly?: boolean, credentials?: { user?: string; pass?: string; port?: number }): Promise<KarafFeatureInfo[]> =>
+    ipcRenderer.invoke('karaf:list-all-features', installedOnly, credentials),
+  analyzeKarafLog: (content: string | string[]): Promise<LogAnalysisSummary> =>
+    ipcRenderer.invoke('karaf:analyze-log', content),
   onKarafLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('karaf:log-chunk', subscription);
-    return () => ipcRenderer.removeListener('karaf:log-chunk', subscription);
+    return () => {
+      ipcRenderer.removeListener('karaf:log-chunk', subscription);
+    };
   },
 
   // Rotina 801 - Atualização e Instalação de Serviços Web Oficiais
@@ -253,9 +303,14 @@ const electronAPI = {
     ipcRenderer.invoke('routine801:install-features', request),
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
-  runDeployProfile: (profile: DeployProfile): Promise<{ success: boolean; error?: string }> =>
+  runDeployProfile: (
+    profile: DeployProfile
+  ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> =>
     ipcRenderer.invoke('deploy:run-profile', profile),
-  runDeployStep: (step: DeployStep, profileName?: string): Promise<{ success: boolean; error?: string }> =>
+  runDeployStep: (
+    step: DeployStep,
+    profileName?: string
+  ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> =>
     ipcRenderer.invoke('deploy:run-step', step, profileName),
   abortDeploy: (): Promise<{ success: boolean }> => ipcRenderer.invoke('deploy:abort'),
   getDeployProfileHistory: (): Promise<DeployProfileHistoryEntry[]> =>
@@ -265,12 +320,16 @@ const electronAPI = {
   onDeployLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('deploy:log-chunk', subscription);
-    return () => ipcRenderer.removeListener('deploy:log-chunk', subscription);
+    return () => {
+      ipcRenderer.removeListener('deploy:log-chunk', subscription);
+    };
   },
   onDeployStepProgress: (callback: (data: DeployProgressEvent) => void) => {
     const subscription = (_: any, data: DeployProgressEvent) => callback(data);
     ipcRenderer.on('deploy:step-progress', subscription);
-    return () => ipcRenderer.removeListener('deploy:step-progress', subscription);
+    return () => {
+      ipcRenderer.removeListener('deploy:step-progress', subscription);
+    };
   },
 
   // Git & Azure DevOps
@@ -281,8 +340,14 @@ const electronAPI = {
     ipcRenderer.invoke('git:build-pr-url', projectPath, targetBranch),
   execGitCommand: (projectPath: string, command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop'): Promise<{ success: boolean; output: string }> =>
     ipcRenderer.invoke('git:exec-command', projectPath, command),
-  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean) =>
-    ipcRenderer.invoke('git:checkout-branch', projectPath, branchName, createNew),
+  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean, baseBranch?: string) =>
+    ipcRenderer.invoke('git:checkout-branch', projectPath, branchName, createNew, baseBranch),
+  createTaskBranch: (projectPath: string, options: CreateTaskBranchOptions): Promise<{ success: boolean; output: string; branchName: string }> =>
+    ipcRenderer.invoke('git:create-task-branch', projectPath, options),
+  openFileInIde: (projectPath: string, relativePath: string): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('git:open-file-in-ide', projectPath, relativePath),
+  fetchTasks: (projectPath?: string, query?: string): Promise<GitTaskItem[]> =>
+    ipcRenderer.invoke('git:fetch-tasks', projectPath, query),
   commitAndPush: (projectPath: string, message: string) =>
     ipcRenderer.invoke('git:commit-and-push', projectPath, message),
   getCommitHistory: (projectPath: string, limit?: number) =>
@@ -296,9 +361,41 @@ const electronAPI = {
 
   // Catálogo de Rotinas
   listRoutines: (): Promise<RoutineItem[]> => ipcRenderer.invoke('routines:list'),
-  launchRoutine: (fullPath: string): Promise<boolean> => ipcRenderer.invoke('routines:launch', fullPath),
+  launchRoutine: (fullPath: string, forceDirect?: boolean): Promise<RoutineLaunchResult> =>
+    ipcRenderer.invoke('routines:launch', fullPath, forceDirect),
+  checkRoutineKarafStatus: (): Promise<KarafWtaStatusResult> => ipcRenderer.invoke('routines:check-karaf-status'),
   launchMappedProgram: (id: string): Promise<boolean> => ipcRenderer.invoke('routines:launch-mapped', id),
   toggleFavoriteRoutine: (id: string): Promise<AppSettings> => ipcRenderer.invoke('routines:toggle-favorite', id),
+  downloadCcwRoutine: (req: RoutineDownloadRequest): Promise<RoutineDownloadResult> =>
+    ipcRenderer.invoke('routines:download-ccw', req),
+  installLocalRoutineFile: (
+    filePath: string,
+    routineCodeOrName?: string,
+    targetModule?: string,
+    backupExisting?: boolean
+  ): Promise<RoutineDownloadResult> =>
+    ipcRenderer.invoke('routines:install-local', filePath, routineCodeOrName, targetModule, backupExisting),
+  getCcwCatalog: (authCookie?: string): Promise<CcwCatalogResponse> =>
+    ipcRenderer.invoke('routines:get-ccw-catalog', authCookie),
+  getCcwDownloadUrl: (routineName: string, winthorVersion?: string): Promise<string> =>
+    ipcRenderer.invoke('routines:get-ccw-download-url', routineName, winthorVersion),
+  listRoutineBackups: (routineIdOrName: string, moduleFolder?: string): Promise<RoutineBackupEntry[]> =>
+    ipcRenderer.invoke('routines:list-backups', routineIdOrName, moduleFolder),
+  restoreRoutineBackup: (backupFilePath: string, targetRoutinePath: string): Promise<RoutineRollbackResult> =>
+    ipcRenderer.invoke('routines:restore-backup', backupFilePath, targetRoutinePath),
+  deleteRoutineBackup: (backupFilePath: string): Promise<{ success: boolean; message?: string; error?: string }> =>
+    ipcRenderer.invoke('routines:delete-backup', backupFilePath),
+  getRoutineExecutableVersion: (filePath: string): Promise<ExecutableVersionInfo | null> =>
+    ipcRenderer.invoke('routines:get-version', filePath),
+  downloadRoutinesBatch: (request: BatchRoutineDownloadRequest): Promise<BatchRoutineDownloadResult> =>
+    ipcRenderer.invoke('routines:batch-download', request),
+  onRoutineBatchProgress: (callback: (progress: BatchRoutineItemProgress) => void) => {
+    const subscription = (_: any, data: BatchRoutineItemProgress) => callback(data);
+    ipcRenderer.on('routines:batch-progress', subscription);
+    return () => {
+      ipcRenderer.removeListener('routines:batch-progress', subscription);
+    };
+  },
 
   // Índice de Documentação (RAG local)
   reindexDocs: (): Promise<DocsIndexStatus> => ipcRenderer.invoke('docs:reindex'),
@@ -327,14 +424,18 @@ const electronAPI = {
   onDocsIndexProgress: (callback: (progress: DocsIndexProgress) => void) => {
     const subscription = (_: any, progress: DocsIndexProgress) => callback(progress);
     ipcRenderer.on('docs:index-progress', subscription);
-    return () => ipcRenderer.removeListener('docs:index-progress', subscription);
+    return () => {
+      ipcRenderer.removeListener('docs:index-progress', subscription);
+    };
   },
   syncDocs: (targetId?: string): Promise<DocSyncResult[]> =>
     ipcRenderer.invoke('docs:sync', targetId),
   onDocSyncProgress: (callback: (progress: DocSyncProgress) => void) => {
     const subscription = (_: any, progress: DocSyncProgress) => callback(progress);
     ipcRenderer.on('docs:sync-progress', subscription);
-    return () => ipcRenderer.removeListener('docs:sync-progress', subscription);
+    return () => {
+      ipcRenderer.removeListener('docs:sync-progress', subscription);
+    };
   },
 
   // Configurações
@@ -367,6 +468,8 @@ const electronAPI = {
     ipcRenderer.invoke('db:get-oracle-active-sessions', config, filter),
   getOracleRecentStatements: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleRecentStatementsResult> =>
     ipcRenderer.invoke('db:get-oracle-recent-statements', config, filter),
+  getOracleStatementBinds: (config: DatabaseConnectionConfig, sqlId: string, sqlText?: string): Promise<OracleStatementBindsResult> =>
+    ipcRenderer.invoke('db:get-oracle-statement-binds', config, sqlId, sqlText),
   startOracleCapture: (config: DatabaseConnectionConfig, options: OracleCaptureOptions): Promise<OracleCaptureState> =>
     ipcRenderer.invoke('db:start-oracle-capture', config, options),
   stopOracleCapture: (connectionId: string): Promise<OracleCaptureState> =>
@@ -399,7 +502,9 @@ const electronAPI = {
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
     const subscription = (_: any, data: { connectionName: string; result: BackupResult }) => callback(data);
     ipcRenderer.on('backup:schedule-result', subscription);
-    return () => ipcRenderer.removeListener('backup:schedule-result', subscription);
+    return () => {
+      ipcRenderer.removeListener('backup:schedule-result', subscription);
+    };
   },
 
   // Gerenciador de Containers (Docker / Podman / WSL)
@@ -455,7 +560,9 @@ const electronAPI = {
   ) => {
     const subscription = (_: any, data: any) => callback(data);
     ipcRenderer.on('docker:sequence-progress', subscription);
-    return () => ipcRenderer.removeListener('docker:sequence-progress', subscription);
+    return () => {
+      ipcRenderer.removeListener('docker:sequence-progress', subscription);
+    };
   },
 
   // Ferramentas de Manutenção Oracle (INFR-Docker)
@@ -517,7 +624,9 @@ const electronAPI = {
   onDockerComposeLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('docker:compose-log-chunk', subscription);
-    return () => ipcRenderer.removeListener('docker:compose-log-chunk', subscription);
+    return () => {
+      ipcRenderer.removeListener('docker:compose-log-chunk', subscription);
+    };
   },
 
   // Métodos genéricos de containers
@@ -565,7 +674,9 @@ const electronAPI = {
   onLogChunk: (callback: (event: LogChunkEvent) => void) => {
     const subscription = (_: any, event: LogChunkEvent) => callback(event);
     ipcRenderer.on('logs:chunk', subscription);
-    return () => ipcRenderer.removeListener('logs:chunk', subscription);
+    return () => {
+      ipcRenderer.removeListener('logs:chunk', subscription);
+    };
   },
 
   // Auto-update (electron-updater / GitHub Releases)
@@ -575,7 +686,9 @@ const electronAPI = {
   onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
     const subscription = (_: any, status: UpdateStatus) => callback(status);
     ipcRenderer.on('update:status', subscription);
-    return () => ipcRenderer.removeListener('update:status', subscription);
+    return () => {
+      ipcRenderer.removeListener('update:status', subscription);
+    };
   },
 
   // APM & Observabilidade (OpenTelemetry / SigNoz)
@@ -598,9 +711,12 @@ const electronAPI = {
   onApmNewTrace: (callback: (trace: TraceSummary) => void) => {
     const subscription = (_: any, trace: TraceSummary) => callback(trace);
     ipcRenderer.on('apm:new-trace', subscription);
-    return () => ipcRenderer.removeListener('apm:new-trace', subscription);
+    return () => {
+      ipcRenderer.removeListener('apm:new-trace', subscription);
+    };
   }
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 
+export type ElectronAPI = typeof electronAPI;

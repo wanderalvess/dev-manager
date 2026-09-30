@@ -376,6 +376,7 @@ export const App: React.FC = () => {
           <div className={`h-full w-full ${activeTab === 'routines' ? '' : 'hidden'}`}>
             <RoutinesPage
               onNavigateToSettings={() => setActiveTab('settings')}
+              onNavigateToEnv={() => setActiveTab('env')}
               settingsVersion={settingsVersion}
             />
           </div>

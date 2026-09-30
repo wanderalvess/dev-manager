@@ -14,13 +14,22 @@ import {
   KarafBundleDependent,
   KarafDeployHistoryEntry,
   KarafFeatureInfo,
+  KarafFeatureRepoInfo,
+  KarafJvmMemoryInfo,
+  LogAnalysisSummary,
   buildOtelJavaAgentProperties,
   getApmReceiverPort,
-  getApmServiceName
+  getApmServiceName,
+  OsgiResolutionDiagnosticSummary
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { execFileAsync, isSafeKarafCommand } from '../utils/security';
 import { runCapturedProcess } from '../utils/process';
+import { checkPortOpen } from '../utils/network';
+import { diagnoseKarafResolutionError } from '../utils/karafResolutionParser';
+import { parseJmxMemoryOutput, parseKarafInfoOutput, buildJvmMemoryMetrics } from '../utils/jvmMemoryUtils';
+import { parseFeatureRepoListOutput } from '../utils/karafFeaturesUtils';
+import { analyzeLogText } from '../utils/logAnalyzerUtils';
 
 const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall', 'refresh', 'resolve'] as const;
 type BundleAction = (typeof BUNDLE_ACTIONS)[number];
@@ -40,6 +49,26 @@ function parseBundleState(stateStr: string): KarafBundleInfo['state'] {
   if (/Starting/i.test(stateStr)) return 'Starting';
   if (/Stopping/i.test(stateStr)) return 'Stopping';
   return 'Unknown';
+}
+
+/**
+ * Remove ruídos benignos emitidos pela JVM ou scripts do Karaf para stderr
+ * (ex: aviso de KARAF_HOME, Picked up JAVA_TOOL_OPTIONS, inicialização do OpenTelemetry)
+ * para não poluir mensagens de feedback nem mascarar erros reais da automação.
+ */
+export function filterBenignStderr(rawStderr: string): string {
+  if (!rawStderr) return '';
+  return rawStderr
+    .split(/\r?\n/)
+    .filter((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return false;
+      if (/^Picked up (?:JAVA_TOOL_OPTIONS|_JAVA_OPTIONS):/i.test(trimmed)) return false;
+      if (/^client\.bat:\s*Ignoring predefined value for KARAF_HOME/i.test(trimmed)) return false;
+      if (/^\[otel\.javaagent\s+.*\]\s+\[.*\]\s+INFO\s+/i.test(trimmed)) return false;
+      return true;
+    })
+    .join('\r\n');
 }
 
 export class KarafService {
@@ -147,7 +176,7 @@ export class KarafService {
     return null;
   }
 
-  public getResolvedJavaEnv(customDebugPort?: number): NodeJS.ProcessEnv {
+  public getResolvedJavaEnv(customDebugPort?: number, isClient: boolean = false): NodeJS.ProcessEnv {
     const settings = this.configService.getSettings();
     const configuredJdk = settings.jdkPath && fs.existsSync(settings.jdkPath) ? settings.jdkPath : null;
     const chosenJdk = configuredJdk || process.env.JAVA_HOME;
@@ -237,20 +266,135 @@ export class KarafService {
 
     if (!childEnv.LANG) childEnv.LANG = 'pt_BR.UTF-8';
     if (!childEnv.LC_ALL) childEnv.LC_ALL = 'pt_BR.UTF-8';
+    if (isClient) {
+      // Para comandos CLI (client.bat / karaf-client), REMOVE qualquer agente OpenTelemetry ou depuração
+      // para evitar overhead brutal de inicialização da JVM, hooks de rede/shutdown do APM e poluição do stderr
+      if (childEnv.JAVA_TOOL_OPTIONS) {
+        childEnv.JAVA_TOOL_OPTIONS = childEnv.JAVA_TOOL_OPTIONS
+          .replace(/-javaagent:[^\s"]+/g, '')
+          .replace(/-javaagent:"[^"]+"/g, '')
+          .replace(/-Dotel\.[^\s]+/g, '')
+          .trim();
+        if (!childEnv.JAVA_TOOL_OPTIONS) {
+          delete childEnv.JAVA_TOOL_OPTIONS;
+        }
+      }
+      delete childEnv.JAVA_DEBUG_PORT;
+      delete childEnv.JAVA_DEBUG_OPTS;
+    } else {
+      // Se o agente OpenTelemetry estiver presente no Karaf, anexa-o automaticamente via JAVA_TOOL_OPTIONS
+      // para alimentar o Cockpit APM sem requerer alteração manual de scripts (apenas para o container Karaf)
+      if (settings.karafPath) {
+        const agentCandidates = [
+          path.join(settings.karafPath, 'bin', 'opentelemetry-javaagent.jar'),
+          path.join(settings.karafPath, 'opentelemetry-javaagent.jar')
+        ];
+        const agentJar = agentCandidates.find((c) => fs.existsSync(c));
+        if (agentJar && !childEnv.JAVA_TOOL_OPTIONS?.includes('opentelemetry-javaagent.jar')) {
+          childEnv.JAVA_TOOL_OPTIONS = (childEnv.JAVA_TOOL_OPTIONS ? childEnv.JAVA_TOOL_OPTIONS + ' ' : '') +
+            `-javaagent:"${agentJar}" ${buildOtelJavaAgentProperties(getApmReceiverPort(settings)).join(' ')}`;
+        }
+      }
 
-    // Injeta porta de debug configurada no Cockpit para o JDWP do Karaf / WinThor
-    const debugPort = customDebugPort || settings.karafDebugPort || 5005;
-    childEnv.JAVA_DEBUG_PORT = String(debugPort);
-    childEnv.JAVA_DEBUG_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${debugPort}`;
+      // Injeta porta de debug configurada no Cockpit para o JDWP do Karaf / WinThor
+      const debugPort = customDebugPort || settings.karafDebugPort || 5005;
+      childEnv.JAVA_DEBUG_PORT = String(debugPort);
+      childEnv.JAVA_DEBUG_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${debugPort}`;
+    }
+
+    if (!childEnv.LANG) childEnv.LANG = 'pt_BR.UTF-8';
+    if (!childEnv.LC_ALL) childEnv.LC_ALL = 'pt_BR.UTF-8';
 
     return childEnv;
+  }
+
+  /**
+   * Verifica se o contêiner Apache Karaf/OSGi está rodando e escutando na porta SSH (padrão 8101).
+   * Essencial antes de disparar deploys ou comandos via client.bat para evitar timeouts ou falsos positivos.
+   */
+  public async isKarafRunning(sshPort?: number): Promise<boolean> {
+    const settings = this.configService.getSettings();
+    const port = sshPort || getKarafSshPort(settings);
+    return await checkPortOpen(port, '127.0.0.1', 800);
+  }
+
+  /**
+   * Lista pastas diretas de projetos locais sob settings.projectsPath de forma leve.
+   */
+  private listLocalProjectsFast(): Array<{ name: string; path: string }> {
+    const settings = this.configService.getSettings();
+    if (!settings.projectsPath || !fs.existsSync(settings.projectsPath)) return [];
+    try {
+      return fs
+        .readdirSync(settings.projectsPath, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => ({ name: d.name, path: path.join(settings.projectsPath, d.name) }));
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Tenta localizar o conteúdo do pom.xml do projeto associado ao comando ou ao diretório informado.
+   */
+  private tryFindPomXml(projectPath?: string, command?: string): string | undefined {
+    if (projectPath) {
+      const directPom = path.join(projectPath, 'pom.xml');
+      if (fs.existsSync(directPom)) {
+        try {
+          return fs.readFileSync(directPom, 'utf-8');
+        } catch {
+          // segue busca alternativa
+        }
+      }
+    }
+
+    const settings = this.configService.getSettings();
+    if (!settings.projectsPath || !fs.existsSync(settings.projectsPath)) return undefined;
+
+    let targetName = '';
+    if (command) {
+      const mvnMatch = command.match(/mvn:[^/\s]+\/([^/\s]+)/);
+      if (mvnMatch) {
+        targetName = mvnMatch[1];
+      } else {
+        const featureMatch = command.match(/feature:(?:install|repo-add)\s+(?:-[a-zA-Z\s]+\s+)?([a-zA-Z0-9_.-]+)/);
+        if (featureMatch) {
+          targetName = featureMatch[1].split('/')[0];
+        }
+      }
+    }
+
+    if (!targetName) return undefined;
+
+    try {
+      const entries = fs.readdirSync(settings.projectsPath, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const lower = entry.name.toLowerCase();
+          const targetLower = targetName.toLowerCase().replace(/-parent|-service$/, '');
+          if (lower.includes(targetLower) || targetLower.includes(lower)) {
+            const pomFile = path.join(settings.projectsPath, entry.name, 'pom.xml');
+            if (fs.existsSync(pomFile)) {
+              return fs.readFileSync(pomFile, 'utf-8');
+            }
+          }
+        }
+      }
+    } catch {
+      // ignora falha de leitura
+    }
+
+    return undefined;
   }
 
   public async executeKarafCommand(
     command: string,
     onChunk: (chunk: string) => void,
-    credentials?: { user?: string; pass?: string; port?: number }
-  ): Promise<{ code: number; stdout: string; stderr: string }> {
+    credentials?: { user?: string; pass?: string; port?: number },
+    timeoutMs?: number,
+    context?: { projectPath?: string; pomXmlContent?: string }
+  ): Promise<{ code: number; stdout: string; stderr: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     if (!isSafeKarafCommand(command)) {
       const errMsg = `[ERRO DE SEGURANÇA] Comando Karaf rejeitado: contém caracteres de controle proibidos ou formato inválido.\r\n`;
       onChunk(errMsg);
@@ -263,26 +407,54 @@ export class KarafService {
     const pass = credentials?.pass || settings.karafPass || 'karaf';
     const sshPort = credentials?.port || getKarafSshPort(settings);
 
-    const scriptName = karafClient ? path.basename(karafClient) : 'client.bat';
-    const portDesc = sshPort && sshPort !== 8101 ? ` -a ${sshPort}` : '';
-    onChunk(`> ${scriptName} -u ${user} -p ****${portDesc} "${command}"\r\n`);
-
     if (!karafClient) {
       const errMsg = `[ERRO] Executável client do Karaf não encontrado em: ${path.join(settings.karafPath, 'bin')}\r\n`;
       onChunk(errMsg);
       return { code: 1, stdout: '', stderr: errMsg };
     }
 
+    // Valida se o contêiner OSGi está de fato em execução antes de acionar client.bat.
+    // client.bat frequentemente retorna exit code 0 com "Failed to get the session." quando
+    // o Karaf está offline, gerando falsos positivos na automação.
+    const isOnline = await this.isKarafRunning(sshPort);
+    if (!isOnline) {
+      const errMsg = `[ERRO] O contêiner Apache Karaf/OSGi não está em execução (porta SSH ${sshPort} inacessível).\r\n💡 [DICA] Inicie o Karaf pelo Cockpit (Console Karaf ou pipeline de ambiente) antes de executar comandos ou deploys.\r\n`;
+      onChunk(errMsg);
+      return { code: 1, stdout: '', stderr: `Karaf OSGi offline: porta SSH ${sshPort} fechada` };
+    }
+
+    const scriptName = path.basename(karafClient);
+    const portDesc = sshPort && sshPort !== 8101 ? ` -a ${sshPort}` : '';
+    onChunk(`> ${scriptName} -u ${user} -p ****${portDesc} "${command}"\r\n`);
+
     const clientArgs = sshPort && sshPort !== 8101
       ? ['-u', user, '-p', pass, '-a', String(sshPort), command]
       : ['-u', user, '-p', pass, command];
 
     const isWin = process.platform === 'win32';
-    const childEnv = this.getResolvedJavaEnv();
+    // isClient: true garante que o client.bat não carregue o agente OpenTelemetry APM nem depuração JDWP
+    const childEnv = this.getResolvedJavaEnv(undefined, true);
+
+    // Comandos de instalação/repositório baixam dependências via rede (Nexus/Maven) e resolvem OSGi,
+    // necessitando de timeout estendido para não abortar precocemente.
+    const isHeavyCommand = /^(?:feature:(?:install|repo-add)|bundle:(?:install|update))/i.test(command.trim());
+    const effectiveTimeoutMs = timeoutMs ?? (isHeavyCommand ? 300000 : 60000);
 
     const res = isWin
-      ? await runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk, 30000)
-      : await runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk, 30000);
+      ? await runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs)
+      : await runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs);
+
+    if (res.timedOut || (res.code !== 0 && res.stderr?.includes('Processo encerrado por timeout'))) {
+      const isHeavy = /^(?:feature:(?:install|repo-add)|bundle:(?:install|update))/i.test(command.trim());
+      if (isHeavy) {
+        onChunk(
+          `\r\n💡 [DICA DE TIMEOUT] O comando Karaf excedeu o tempo limite (${effectiveTimeoutMs / 1000}s).\r\n` +
+          `   Comandos como "feature:install" frequentemente entram em timeout quando o Karaf tenta baixar dependências ausentes\r\n` +
+          `   em repositórios remotos (Pax URL/Nexus) que demoram a responder ou exigem autenticação.\r\n` +
+          `   Verifique se as dependências do projeto foram instaladas previamente no Karaf ou estão disponíveis no Maven local (~/.m2/repository).\r\n`
+        );
+      }
+    }
 
     // Karaf client.bat no Windows ou SSH shell frequentemente retorna exit code 0 mesmo
     // quando o comando falha no contêiner OSGi (ex: "Error executing command: No matching features...").
@@ -290,26 +462,71 @@ export class KarafService {
     // eslint-disable-next-line no-control-regex -- ESC (0x1B) e o marcador real da sequencia de escape ANSI a remover
     const cleanStdout = (res.stdout || '').replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '').replace(/\[[0-9;]+m/g, '');
     // eslint-disable-next-line no-control-regex -- ESC (0x1B) e o marcador real da sequencia de escape ANSI a remover
-    const cleanStderr = (res.stderr || '').replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '').replace(/\[[0-9;]+m/g, '');
+    const rawCleanStderr = (res.stderr || '').replace(/[\u001b\x1b]\[[0-9;]*[a-zA-Z]/g, '').replace(/\[[0-9;]+m/g, '');
+    const cleanStderr = filterBenignStderr(rawCleanStderr);
     const cleanCombined = `${cleanStdout}\n${cleanStderr}`;
 
     const isLogDisplay = command.trim().startsWith('log:display');
-    const karafErrorMatch = !isLogDisplay
-      ? cleanCombined.match(/(?:Error executing command(?: on bundles)?|Command not found|Failed to get the session|Authentication failed):\s*([^\r\n]+)/i)
-      : (cleanCombined.trim().startsWith('Error executing command:') ? cleanCombined.match(/Error executing command:\s*([^\r\n]+)/i) : null);
+    const errorPattern = /(?:Error executing command(?: on bundles)?|Command not found|Failed to get the session|Authentication failed|Connection refused|ConnectException|Session is closed)/i;
+    let karafErrorMatch: RegExpMatchArray | null = null;
+
+    if (!isLogDisplay) {
+      const lines = cleanCombined.split(/\r?\n/);
+      for (const line of lines) {
+        if (errorPattern.test(line)) {
+          karafErrorMatch = [line.trim()] as RegExpMatchArray;
+          break;
+        }
+      }
+    } else if (cleanCombined.trim().startsWith('Error executing command:')) {
+      karafErrorMatch = cleanCombined.match(/Error executing command:\s*([^\r\n]+)/i);
+    }
 
     if (karafErrorMatch) {
       const errLine = karafErrorMatch[0].trim();
-      const finalStderr = res.stderr && res.stderr.trim().length > 0 ? `${res.stderr}\r\n${errLine}` : errLine;
+      const finalStderr = cleanStderr && cleanStderr.trim().length > 0 ? `${cleanStderr}\r\n${errLine}` : errLine;
+
+      let resolutionDiagSummary: OsgiResolutionDiagnosticSummary | undefined;
+      const isResolutionErr = /ResolutionException|Unable to resolve|missing requirement/i.test(cleanCombined);
+      if (isResolutionErr) {
+        const pomXmlContent = context?.pomXmlContent || this.tryFindPomXml(context?.projectPath, command);
+        const diag = diagnoseKarafResolutionError({
+          rawOutput: cleanCombined,
+          pomXmlContent,
+          deployProfiles: settings.deployProfiles,
+          projects: this.listLocalProjectsFast()
+        });
+
+        if (diag) {
+          onChunk(diag.formattedBanner);
+          resolutionDiagSummary = {
+            failingBundle: diag.rootCause.bundleName,
+            missingItem: diag.rootCause.missingItem,
+            requirementType: diag.rootCause.requirementType,
+            versionRangeDesc: diag.rootCause.versionRangeDesc,
+            matchedPomDependency: diag.matchedPomDependency,
+            matchedProfileName: diag.matchedProfileName,
+            matchedProfileId: diag.matchedProfileId,
+            matchedProjectName: diag.matchedProjectName,
+            matchedProjectPath: diag.matchedProjectPath,
+            suggestedKarafCommands: diag.suggestedKarafCommands,
+            versionMismatchWarning: diag.versionMismatchWarning,
+            formattedBanner: diag.formattedBanner
+          };
+        }
+      }
 
       if (/No matching features for/i.test(errLine)) {
         onChunk(`\r\n💡 [DICA] O Karaf não encontrou a feature no repositório. Verifique se o atributo name="..." no features.xml do projeto coincide com o nome informado no comando.\r\n`);
+      } else if (/Failed to get the session|Connection refused|ConnectException|Session is closed/i.test(errLine)) {
+        onChunk(`\r\n💡 [DICA] O cliente Karaf não conseguiu estabelecer sessão com o contêiner OSGi. Verifique se o Karaf está rodando e com a porta SSH ativa.\r\n`);
       }
 
       return {
         code: res.code !== 0 ? res.code : 1,
         stdout: res.stdout,
-        stderr: finalStderr
+        stderr: finalStderr,
+        resolutionDiagnostic: resolutionDiagSummary
       };
     }
 
@@ -352,13 +569,17 @@ export class KarafService {
     }
 
     // Feedback para qualquer outro comando que executou com sucesso sem produzir saída
-    if (res.code === 0 && !res.stdout.trim() && !res.stderr.trim()) {
+    if (res.code === 0 && !res.stdout.trim() && !cleanStderr.trim()) {
       const okMsg = `[ OK ] Comando "${command}" executado com sucesso no Karaf (sem saída no console).\r\n`;
       onChunk(okMsg);
       return { code: 0, stdout: okMsg, stderr: '' };
     }
 
-    return res;
+    return {
+      code: res.code,
+      stdout: res.stdout,
+      stderr: cleanStderr
+    };
   }
 
   /**
@@ -517,27 +738,47 @@ export class KarafService {
     const startedAt = new Date().toISOString();
     const t0 = Date.now();
 
+    const isRunning = await this.isKarafRunning(request.port);
+    if (!isRunning) {
+      const port = request.port || getKarafSshPort(this.configService.getSettings());
+      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} inacessível). Inicie o Karaf antes de realizar o deploy.`;
+      onChunk(`\r\n[ERRO] ${err}\r\n💡 [DICA] Inicie o Karaf pelo Console Karaf integrado ou pipeline de ambiente.\r\n`);
+      const result = { success: false, error: err };
+      this.recordDeployHistory(request, result, startedAt, Date.now() - t0, trigger, projectPath);
+      return result;
+    }
+
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`INICIANDO DEPLOY NO KARAF LOCAL\r\n`);
     onChunk(`==========================================\r\n`);
 
     onChunk(`\r\n[1/2] Adicionando repositório Maven...\r\n`);
-    const repoRes = await this.executeKarafCommand(request.repoUrl, onChunk, {
-      user: request.user,
-      pass: request.pass,
-      port: request.port
-    });
+    const repoRes = await this.executeKarafCommand(
+      request.repoUrl,
+      onChunk,
+      {
+        user: request.user,
+        pass: request.pass,
+        port: request.port
+      },
+      180000
+    );
     const repoCombined = `${repoRes.stdout}\n${repoRes.stderr || ''}`;
     if (repoRes.code !== 0 && !repoCombined.includes('already registered')) {
       onChunk(`\r\n[AVISO] O comando de repositório retornou código ${repoRes.code}, prosseguindo para instalação...\r\n`);
     }
 
     onChunk(`\r\n[2/2] Instalando Feature no contêiner OSGi...\r\n`);
-    const installRes = await this.executeKarafCommand(request.featureInstall, onChunk, {
-      user: request.user,
-      pass: request.pass,
-      port: request.port
-    });
+    const installRes = await this.executeKarafCommand(
+      request.featureInstall,
+      onChunk,
+      {
+        user: request.user,
+        pass: request.pass,
+        port: request.port
+      },
+      300000
+    );
 
     let result: { success: boolean; error?: string };
     if (installRes.code === 0) {
@@ -609,6 +850,20 @@ export class KarafService {
   ): Promise<{ success: boolean; error?: string }> {
     const startedAt = new Date().toISOString();
     const t0 = Date.now();
+
+    // Valida previamente se o Karaf está rodando para não gastar tempo compilando se o container estiver offline
+    const isRunning = await this.isKarafRunning(request.port);
+    if (!isRunning) {
+      const port = request.port || getKarafSshPort(this.configService.getSettings());
+      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} inacessível). Inicie o Karaf antes de compilar e fazer o deploy.`;
+      onChunk(`\r\n==========================================\r\n`);
+      onChunk(`❌ DEPLOY ABORTADO: Karaf OSGi offline (porta SSH ${port} fechada).\r\n`);
+      onChunk(`💡 [DICA] Inicie o Karaf pelo Cockpit antes de rodar o deploy.\r\n`);
+      onChunk(`==========================================\r\n`);
+      const result = { success: false, error: err };
+      this.recordDeployHistory(request, result, startedAt, Date.now() - t0, trigger, projectPath);
+      return result;
+    }
 
     const buildRes = await this.runMavenBuild(projectPath, skipTests, onChunk);
     if (buildRes.code !== 0) {
@@ -1313,6 +1568,256 @@ export class KarafService {
       success: res.code === 0,
       output: output || res.stdout || res.stderr
     };
+  }
+
+  /**
+   * Obtém métricas de consumo de memória Heap e Non-Heap da JVM do Karaf em tempo real.
+   * Tenta primeiramente via JMX MBeans (jmx:read java.lang:type=Memory ...) e, caso não
+   * disponível, faz fallback inteligente para o comando nativo "info" do Karaf.
+   */
+  public async getJvmMemoryMetrics(
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<KarafJvmMemoryInfo> {
+    const isOnline = await this.isKarafRunning(credentials?.port);
+    if (!isOnline) {
+      throw new Error('Karaf OSGi offline: porta SSH fechada');
+    }
+
+    const dummyChunk = () => {};
+
+    // 1. Tentar ler Heap e Non-Heap via JMX MBeans (feature management do Karaf)
+    try {
+      const heapJmxRes = await this.executeKarafCommand('jmx:read java.lang:type=Memory HeapMemoryUsage', dummyChunk, credentials, 15000);
+      const nonHeapJmxRes = await this.executeKarafCommand('jmx:read java.lang:type=Memory NonHeapMemoryUsage', dummyChunk, credentials, 15000);
+
+      const heapParsed = parseJmxMemoryOutput(heapJmxRes.stdout);
+      const nonHeapParsed = parseJmxMemoryOutput(nonHeapJmxRes.stdout);
+
+      if (heapParsed) {
+        // Tentar obter threads e uptime via info rápido
+        const infoRes = await this.executeKarafCommand('info', dummyChunk, credentials, 15000);
+        const infoParsed = parseKarafInfoOutput(infoRes.stdout);
+
+        return buildJvmMemoryMetrics({
+          heapUsedBytes: heapParsed.used,
+          heapCommittedBytes: heapParsed.committed,
+          heapMaxBytes: heapParsed.max,
+          nonHeapUsedBytes: nonHeapParsed?.used,
+          nonHeapCommittedBytes: nonHeapParsed?.committed,
+          nonHeapMaxBytes: nonHeapParsed?.max,
+          liveThreads: infoParsed.liveThreads,
+          peakThreads: infoParsed.peakThreads,
+          daemonThreads: infoParsed.daemonThreads,
+          classesLoaded: infoParsed.classesLoaded,
+          uptime: infoParsed.uptime,
+          source: 'jmx'
+        });
+      }
+    } catch {
+      // Segue para fallback com 'info'
+    }
+
+    // 2. Fallback: Comando "info" nativo do Karaf
+    const infoRes = await this.executeKarafCommand('info', dummyChunk, credentials, 20000);
+    const infoParsed = parseKarafInfoOutput(infoRes.stdout);
+
+    return buildJvmMemoryMetrics({
+      heapUsedBytes: infoParsed.heapUsedBytes,
+      heapCommittedBytes: infoParsed.heapCommittedBytes,
+      heapMaxBytes: infoParsed.heapMaxBytes,
+      liveThreads: infoParsed.liveThreads,
+      peakThreads: infoParsed.peakThreads,
+      daemonThreads: infoParsed.daemonThreads,
+      classesLoaded: infoParsed.classesLoaded,
+      uptime: infoParsed.uptime,
+      source: 'info'
+    });
+  }
+
+  /**
+   * Força a execução de Garbage Collection (GC) na JVM do Karaf para liberar memória Heap.
+   */
+  public async triggerGarbageCollection(
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<{ success: boolean; output: string }> {
+    const dummyChunk = () => {};
+    let res = await this.executeKarafCommand('jmx:run java.lang:type=Memory gc', dummyChunk, credentials, 15000);
+    if (res.code !== 0) {
+      res = await this.executeKarafCommand('system:gc', dummyChunk, credentials, 15000);
+    }
+    return {
+      success: res.code === 0,
+      output: res.stdout || res.stderr || 'Garbage Collection solicitada à JVM do Karaf.'
+    };
+  }
+
+  /**
+   * Executa "feature:repo-list" e retorna a lista de repositórios Maven/XML registrados.
+   */
+  public async listFeatureRepositories(
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<KarafFeatureRepoInfo[]> {
+    const dummyChunk = () => {};
+    const res = await this.executeKarafCommand('feature:repo-list', dummyChunk, credentials);
+    if (res.code !== 0 || !res.stdout) return [];
+    return parseFeatureRepoListOutput(res.stdout);
+  }
+
+  /**
+   * Registra um novo repositório de features via "feature:repo-add <url>".
+   */
+  public async addFeatureRepository(
+    url: string,
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanUrl = url.trim();
+    if (!cleanUrl || !isSafeKarafCommand(cleanUrl)) {
+      return { success: false, output: 'URL de repositório inválida ou com caracteres proibidos.' };
+    }
+
+    const command = `feature:repo-add "${cleanUrl}"`;
+    let output = '';
+    const res = await this.executeKarafCommand(
+      command,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      credentials,
+      120000
+    );
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
+  }
+
+  /**
+   * Remove um repositório de features via "feature:repo-remove <nameOrUrl>".
+   */
+  public async removeFeatureRepository(
+    nameOrUrl: string,
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanTarget = nameOrUrl.trim();
+    if (!cleanTarget || !isSafeKarafCommand(cleanTarget)) {
+      return { success: false, output: 'Nome ou URL de repositório inválido.' };
+    }
+
+    const command = `feature:repo-remove "${cleanTarget}"`;
+    let output = '';
+    const res = await this.executeKarafCommand(
+      command,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      credentials
+    );
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
+  }
+
+  /**
+   * Atualiza as features de um repositório via "feature:repo-refresh <nameOrUrl>".
+   */
+  public async refreshFeatureRepository(
+    nameOrUrl?: string,
+    credentials?: { user?: string; pass?: string; port?: number },
+    onChunk: (chunk: string) => void = () => {}
+  ): Promise<{ success: boolean; output: string }> {
+    const cleanTarget = (nameOrUrl || '').trim();
+    if (cleanTarget && !isSafeKarafCommand(cleanTarget)) {
+      return { success: false, output: 'Nome ou URL de repositório inválido.' };
+    }
+
+    const command = cleanTarget ? `feature:repo-refresh "${cleanTarget}"` : 'feature:repo-refresh';
+    let output = '';
+    const res = await this.executeKarafCommand(
+      command,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      credentials,
+      60000
+    );
+
+    return {
+      success: res.code === 0,
+      output: output || res.stdout || res.stderr
+    };
+  }
+
+  /**
+   * Lista todas as Features Karaf (instaladas e disponíveis em repositórios registrados).
+   */
+  public async listAllFeatures(
+    installedOnly: boolean = false,
+    credentials?: { user?: string; pass?: string; port?: number }
+  ): Promise<KarafFeatureInfo[]> {
+    const cmd = installedOnly ? 'feature:list -i' : 'feature:list';
+    const dummyChunk = () => {};
+    const res = await this.executeKarafCommand(cmd, dummyChunk, credentials);
+    if (res.code !== 0 || !res.stdout) return [];
+
+    const lines = res.stdout.split(/\r?\n/);
+    const features: KarafFeatureInfo[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (
+        !trimmed ||
+        trimmed.startsWith('===') ||
+        trimmed.startsWith('---') ||
+        trimmed.startsWith('───') ||
+        trimmed.includes('Name |') ||
+        trimmed.includes('Name │') ||
+        trimmed.toLowerCase().startsWith('name ')
+      ) {
+        continue;
+      }
+
+      if (trimmed.includes('|') || trimmed.includes('│')) {
+        const parts = trimmed.split(/[|│]/).map((p) => p.trim());
+        if (parts.length >= 4) {
+          const name = parts[0];
+          if (name.toLowerCase() === 'name') continue;
+
+          const version = parts[1] || '';
+          const required = parts[2]?.toLowerCase() === 'x' || parts[2]?.toLowerCase() === 'true';
+          const state = parts[3] || 'Uninstalled';
+          const repository = parts[4] || '';
+          const description = parts.slice(5).join(' ') || '';
+          const isWinthor = /winthor|totvs/i.test(name) || /winthor|totvs/i.test(repository);
+
+          features.push({
+            name,
+            version,
+            required,
+            state,
+            repository,
+            description,
+            isWinthor
+          });
+        }
+      }
+    }
+
+    return features;
+  }
+
+  /**
+   * Analisa texto de log com detecção contínua de exceções do ecossistema WinThor (ORA, NPE, OSGi).
+   */
+  public analyzeLogText(content: string | string[]): LogAnalysisSummary {
+    return analyzeLogText(content);
   }
 }
 

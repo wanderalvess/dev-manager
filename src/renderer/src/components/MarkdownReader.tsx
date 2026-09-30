@@ -151,8 +151,8 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
   };
 
   const parseInlineMarkdown = (str: string): React.ReactNode => {
-    // Regex para código inline, negrito, itálico, links e imagens
-    const tokenRegex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[([^\]]+)\]\(([^)]+)\))/g;
+    // Regex para código inline, negrito, itálico, links e imagens (sem grupos de captura internos para não duplicar no split)
+    const tokenRegex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[[^\]]+\]\([^)]+\))/g;
     const parts = str.split(tokenRegex);
 
     return parts.map((part, index) => {
@@ -170,21 +170,21 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
           <strong key={index} className="font-bold text-foreground">
-            {part.slice(2, -2)}
+            {parseInlineMarkdown(part.slice(2, -2))}
           </strong>
         );
       }
       if (part.startsWith('*') && part.endsWith('*')) {
         return (
           <em key={index} className="italic text-foreground/90">
-            {part.slice(1, -1)}
+            {parseInlineMarkdown(part.slice(1, -1))}
           </em>
         );
       }
       if (part.startsWith('~~') && part.endsWith('~~')) {
         return (
           <del key={index} className="line-through text-muted-foreground">
-            {part.slice(2, -2)}
+            {parseInlineMarkdown(part.slice(2, -2))}
           </del>
         );
       }
@@ -354,17 +354,30 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
           quoteLines.push(lines[i].trim().replace(/^>\s?/, ''));
           i++;
         }
+        const isPrompt = quoteLines.some((ql) => ql.trim().startsWith('"'));
         elements.push(
-          <blockquote
+          <div
             key={`quote-${i}`}
-            className="my-3 pl-4 border-l-4 border-primary/50 italic text-muted-foreground bg-muted/20 py-2 pr-3 rounded-r-xl"
+            className={`my-3 p-3.5 rounded-2xl border ${
+              isPrompt
+                ? 'bg-primary/5 dark:bg-primary/10 border-primary/30 text-foreground'
+                : 'bg-muted/30 border-border/80 text-muted-foreground italic'
+            } shadow-xs space-y-1.5`}
           >
-            {quoteLines.map((ql, qIdx) => (
-              <p key={qIdx} className="leading-relaxed">
-                {renderInline(ql)}
-              </p>
-            ))}
-          </blockquote>
+            {isPrompt && (
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary uppercase tracking-wider select-none mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span>Exemplo de Prompt para IA</span>
+              </div>
+            )}
+            <blockquote className="space-y-1 pl-1">
+              {quoteLines.map((ql, qIdx) => (
+                <p key={qIdx} className={`leading-relaxed text-[13px] ${isPrompt ? 'font-medium not-italic text-foreground/90' : ''}`}>
+                  {renderInline(ql)}
+                </p>
+              ))}
+            </blockquote>
+          </div>
         );
         continue;
       }
@@ -812,7 +825,13 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
             ) : (
               /* MODO FORMATADO HUMANO (RICH GFM RENDERER) */
               <article className={`max-w-4xl mx-auto ${fontSizeClass} select-text`}>
-                {renderMarkdownBlocks()}
+                {renderMarkdownBlocks() || (
+                  <div className="py-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+                    <BookOpen className="w-8 h-8 text-muted-foreground/50 mb-1" />
+                    <span className="font-semibold text-sm">Nenhum conteúdo para exibir</span>
+                    <span className="text-xs text-muted-foreground/80">O documento selecionado não possui texto ou seções formatadas.</span>
+                  </div>
+                )}
               </article>
             )}
           </main>

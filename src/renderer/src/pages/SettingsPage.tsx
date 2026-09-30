@@ -163,7 +163,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     mysqldumpPath: '',
     psqlPath: '',
     impdpPath: '',
-    mysqlPath: ''
+    mysqlPath: '',
+    ccwBaseUrl: 'https://centraldecontrole.pcinformatica.com.br',
+    ccwWinthorVersion: '30',
+    ccwAuthCookie: ''
   });
 
   const [pathStatuses, setPathStatuses] = useState<Record<string, PathStatusInfo>>({});
@@ -421,11 +424,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           psqlPath: st.psqlPath || '',
           impdpPath: st.impdpPath || '',
           mysqlPath: st.mysqlPath || '',
-          // O efeito que sincroniza launcherRows -> routineLauncherMap roda no mount (antes deste
-          // load resolver) e de novo assim que setLauncherRows for chamado logo abaixo, sempre
-          // reconstruindo o mapa a partir de st.routineLauncherMap. Se o snapshot "salvo" aqui não
-          // incluir esse mesmo valor, o badge "Não salvo" acende sozinho mesmo sem edição do
-          // usuário — o efeito reescreve settings.routineLauncherMap um instante depois deste load.
+          ccwBaseUrl: st.ccwBaseUrl || 'https://centraldecontrole.pcinformatica.com.br',
+          ccwWinthorVersion: st.ccwWinthorVersion || '30',
+          ccwAuthCookie: st.ccwAuthCookie || '',
           routineLauncherMap: st.routineLauncherMap || {}
         };
         setSettings(loaded);
@@ -1646,6 +1647,63 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   </div>
                 </div>
 
+                {/* Central de Controle WinThor (CCW) */}
+                <div className="bg-card border border-border/80 rounded-xl p-3.5 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                        <Download className="w-4 h-4 text-blue-500" /> Central de Controle WinThor (CCW)
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Download e atualização automática de rotinas e executáveis da nuvem direto para o ambiente local.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        URL Base da Central de Controle:
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.ccwBaseUrl || 'https://centraldecontrole.pcinformatica.com.br'}
+                        onChange={(e) => setSettings({ ...settings, ccwBaseUrl: e.target.value })}
+                        className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                        placeholder="https://centraldecontrole.pcinformatica.com.br"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">
+                        Versão WinThor Padrão (CCW):
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.ccwWinthorVersion || '30'}
+                        onChange={(e) => setSettings({ ...settings, ccwWinthorVersion: e.target.value })}
+                        className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                        placeholder="Ex: 30"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 pt-1 border-t border-border/40">
+                    <label className="block text-[11px] font-semibold text-foreground mb-1">
+                      Cookie de Sessão CCW (<code>suukie</code> - Opcional):
+                    </label>
+                    <input
+                      type="password"
+                      value={settings.ccwAuthCookie || ''}
+                      onChange={(e) => setSettings({ ...settings, ccwAuthCookie: e.target.value })}
+                      className="w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary"
+                      placeholder="Necessário apenas para listar a Árvore Completa da CCW"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Para download direto pelo número da rotina, a CCW não exige autenticação. O cookie é usado para carregar toda a árvore de módulos e rotinas.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Executável da IDE */}
                 <div className="space-y-1.5" id="field-intellijPath">
                   <div className="flex items-center justify-between">
@@ -1896,6 +1954,31 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   </div>
                   <p className="text-[10px] text-muted-foreground">
                     O Dev Manager realiza a varredura das pastas contidas neste diretório procurando por projetos Git com remote do Azure DevOps.
+                  </p>
+                </div>
+
+                {/* Token de Acesso Pessoal (PAT) do Azure DevOps */}
+                <div className="space-y-1.5 pt-2 border-t border-border/60">
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="font-bold text-foreground flex items-center gap-1.5"
+                      title="Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e criação de branches baseadas em tarefas."
+                    >
+                      <KeyRound className="w-3.5 h-3.5 text-blue-500" />
+                      Personal Access Token (PAT) do Azure DevOps:
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="password"
+                      value={settings.azureDevOpsToken || ''}
+                      onChange={(e) => setSettings({ ...settings, azureDevOpsToken: e.target.value })}
+                      className="flex-1 bg-card border border-border hover:border-blue-500/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-blue-500 transition-colors shadow-sm"
+                      placeholder="Cole seu Personal Access Token do Azure DevOps (leitura de Work Items)"
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Utilizado pelo Hub Git para consultar Work Items e sugerir branches padronizadas com título e slug automáticos.
                   </p>
                 </div>
               </div>

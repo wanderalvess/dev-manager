@@ -19,7 +19,13 @@ import {
   Layers,
   LayoutDashboard,
   Clock,
-  Filter
+  Filter,
+  Maximize2,
+  Minimize2,
+  Flame,
+  ArrowUpDown,
+  SlidersHorizontal,
+  Zap
 } from 'lucide-react';
 import { ApmDashboardView } from '../components/ApmDashboardView';
 import {
@@ -39,9 +45,13 @@ import { showToast } from '../components/ToastHost';
 import {
   FilterPreset,
   LatencyBracket,
+  TraceSortOrder,
+  SpanTierCategory,
   buildApmSetupSnippets,
+  categorizeSpan,
   computeLatencySpectrum,
   computeTimeBudget,
+  detectSlowSummary,
   filterTraces,
   findNextTraceId,
   formatSpanErrorForClipboard,
@@ -81,7 +91,11 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
   const [latencyBracket, setLatencyBracket] = useState<LatencyBracket>('ALL');
   const [selectedService, setSelectedService] = useState<string>('ALL');
   const [searchText, setSearchText] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<TraceSortOrder>('time');
   const [detailTab, setDetailTab] = useState<DetailTab>('waterfall');
+  const [isModalExpanded, setIsModalExpanded] = useState<boolean>(false);
+  const [waterfallTierFilter, setWaterfallTierFilter] = useState<SpanTierCategory | 'ALL'>('ALL');
+  const [isSlowPickerOpen, setIsSlowPickerOpen] = useState<boolean>(false);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
   const [portDraft, setPortDraft] = useState<string>('');
   const [isChangingPort, setIsChangingPort] = useState<boolean>(false);
@@ -97,6 +111,11 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
   // Espelho síncrono do trace aberto, lido por respostas assíncronas e pela assinatura em tempo real
   const selectedTraceIdRef = useRef<string | null>(null);
 
+  // Resumo de lentidão detectada no tráfego OTLP capturado
+  const slowSummary = useMemo(() => {
+    return detectSlowSummary(rawTraces);
+  }, [rawTraces]);
+
   // Carregar lista de traces e overview do backend
   const refreshData = useCallback(async () => {
     if (!api?.getApmOverview || !api?.getApmTraces) return;
@@ -108,8 +127,13 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
         serviceName,
         search: searchText.trim() || undefined,
         hasError: activePreset === 'ERRORS' ? true : undefined,
-        minDurationMs: activePreset === 'SLOW' ? 1000 : undefined,
-        hasDatabaseQuery: activePreset === 'DB' ? true : undefined
+        minDurationMs: activePreset === 'SLOW' ? 400 : undefined,
+        hasDatabaseQuery: activePreset === 'DB' || activePreset === 'SLOW_QUERIES' ? true : undefined,
+        slowOnly:
+          activePreset === 'SLOW' || activePreset === 'SLOW_QUERIES' || activePreset === 'SLOW_ENDPOINTS'
+            ? true
+            : undefined,
+        sortBy: sortOrder
       };
 
       // O overview (faixa de métricas e dashboard) segue só o serviço: com o filtro "Erros" ativo,
@@ -121,7 +145,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
     } catch (err) {
       console.warn('[ApmPage] Falha ao atualizar dados de telemetria:', err);
     }
-  }, [limit, selectedService, searchText, activePreset]);
+  }, [limit, selectedService, searchText, activePreset, sortOrder]);
 
   // Polling em background quando a gravação estiver ativa
   useEffect(() => {
@@ -222,9 +246,10 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
       searchText,
       preset: activePreset,
       latencyBracket,
-      selectedService
+      selectedService,
+      sortOrder
     });
-  }, [rawTraces, searchText, activePreset, latencyBracket, selectedService]);
+  }, [rawTraces, searchText, activePreset, latencyBracket, selectedService, sortOrder]);
 
   // Atalhos de teclado (Up/Down/j/k navegam traces, '/' foca busca, 'Esc' fecha drawer)
   useEffect(() => {
@@ -624,6 +649,11 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
             setSearchText(route);
             setViewMode('traces');
           }}
+          onFilterBySlowQuery={(queryOrTable) => {
+            setSearchText(queryOrTable);
+            setActivePreset('SLOW_QUERIES');
+            setViewMode('traces');
+          }}
           onSelectTrace={(traceId) => {
             openTrace(traceId);
             setViewMode('traces');
@@ -658,7 +688,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
           )}
         </div>
 
-        {/* Pílulas de Filtro Rápido */}
+        {/* Pílulas de Filtro Rápido e Detecção de Lentidão */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           <button
             type="button"
@@ -695,8 +725,35 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                 ? 'bg-amber-500/20 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-400 dark:border-amber-700 font-semibold shadow-xs'
                 : 'bg-card border-border text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400'
             }`}
+            title="Traces com duração superior a 400ms"
           >
-            Lentos (&gt;1s)
+            🐢 Lentos
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActivePreset((prev) => (prev === 'SLOW_QUERIES' ? 'ALL' : 'SLOW_QUERIES'))}
+            className={`h-6 px-2 rounded border text-[11px] font-medium cursor-pointer transition ${
+              activePreset === 'SLOW_QUERIES'
+                ? 'bg-amber-500/25 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border-amber-500 font-semibold shadow-xs'
+                : 'bg-card border-border text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400'
+            }`}
+            title="Traces contendo queries SQL com alta latência"
+          >
+            🗄️ Queries Lentas
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActivePreset((prev) => (prev === 'SLOW_ENDPOINTS' ? 'ALL' : 'SLOW_ENDPOINTS'))}
+            className={`h-6 px-2 rounded border text-[11px] font-medium cursor-pointer transition ${
+              activePreset === 'SLOW_ENDPOINTS'
+                ? 'bg-orange-500/25 text-orange-900 dark:bg-orange-950 dark:text-orange-200 border-orange-500 font-semibold shadow-xs'
+                : 'bg-card border-border text-muted-foreground hover:text-orange-600 dark:hover:text-orange-400'
+            }`}
+            title="Endpoints com maior latência observada"
+          >
+            🌐 Endpoints Lentos
           </button>
 
           <button
@@ -710,6 +767,134 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
           >
             Com SQL
           </button>
+
+          {/* Alternador de Ordenação (Recentes vs Mais Lentos) */}
+          <button
+            type="button"
+            onClick={() => setSortOrder((prev) => (prev === 'time' ? 'duration' : 'time'))}
+            title={
+              sortOrder === 'time'
+                ? 'Ordenando por horário mais recente. Clique para ordenar pelos mais lentos.'
+                : 'Ordenando por duração (mais lentos primeiro). Clique para ordenar por horário.'
+            }
+            className={`h-6 px-2 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition ${
+              sortOrder === 'duration'
+                ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-bold shadow-xs'
+                : 'bg-card border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <ArrowUpDown className="w-3 h-3 text-amber-500" />
+            <span>{sortOrder === 'duration' ? 'Mais Lentos' : 'Recentes'}</span>
+          </button>
+
+          {/* Menu Dropdown de Detecção de Lentidão */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsSlowPickerOpen((prev) => !prev)}
+              title="Detecção automática de gargalos e chamadas lentas"
+              className={`h-6 px-2 rounded border text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition ${
+                isSlowPickerOpen || activePreset === 'SLOW_QUERIES' || activePreset === 'SLOW_ENDPOINTS'
+                  ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-semibold'
+                  : 'bg-card border-border text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400'
+              }`}
+            >
+              <Flame className="w-3 h-3 text-amber-500" />
+              <span>Top Lentos</span>
+              {slowSummary.slowTracesCount > 0 && (
+                <span className="px-1 py-0.2 rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                  {slowSummary.slowTracesCount}
+                </span>
+              )}
+            </button>
+
+            {isSlowPickerOpen && (
+              <div className="absolute left-0 top-7 w-80 p-3 rounded-lg border border-border bg-card/95 backdrop-blur-md shadow-xl z-50 flex flex-col gap-2.5 font-sans text-xs animate-in fade-in-50 zoom-in-95">
+                <div className="flex items-center justify-between pb-1.5 border-b border-border">
+                  <span className="font-bold text-foreground flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Detecção OTLP de Lentidão</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsSlowPickerOpen(false)}
+                    className="text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5 text-center font-mono text-[10px]">
+                  <div className="p-1.5 rounded bg-muted/40 border border-border">
+                    <div className="text-muted-foreground">Lentos (&gt;400ms)</div>
+                    <div className="font-bold text-amber-600 dark:text-amber-400 text-xs">{slowSummary.slowTracesCount}</div>
+                  </div>
+                  <div className="p-1.5 rounded bg-muted/40 border border-border">
+                    <div className="text-muted-foreground">Críticos (&gt;1s)</div>
+                    <div className="font-bold text-rose-600 dark:text-rose-400 text-xs">{slowSummary.criticalTracesCount}</div>
+                  </div>
+                  <div className="p-1.5 rounded bg-muted/40 border border-border">
+                    <div className="text-muted-foreground">Com Queries</div>
+                    <div className="font-bold text-sky-600 dark:text-sky-400 text-xs">{slowSummary.slowDbTracesCount}</div>
+                  </div>
+                </div>
+
+                {slowSummary.topSlowEndpoints.length > 0 && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+                      Endpoints Mais Lentos (p95)
+                    </span>
+                    <div className="flex flex-col gap-1 max-h-36 overflow-y-auto no-scrollbar">
+                      {slowSummary.topSlowEndpoints.map((ep, idx) => (
+                        <button
+                          key={`${ep.method}-${ep.route}-${idx}`}
+                          type="button"
+                          onClick={() => {
+                            setSearchText(ep.route);
+                            setActivePreset('SLOW_ENDPOINTS');
+                            setIsSlowPickerOpen(false);
+                          }}
+                          className="w-full text-left p-1.5 rounded bg-muted/30 hover:bg-muted border border-border/60 flex items-center justify-between text-[11px] font-mono cursor-pointer transition"
+                        >
+                          <span className="truncate max-w-[180px] text-foreground">
+                            <strong className="text-primary">{ep.method}</strong> {ep.route}
+                          </span>
+                          <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0">
+                            {ep.maxDurationMs}ms
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-1.5 border-t border-border flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePreset('SLOW_QUERIES');
+                      setSortOrder('duration');
+                      setIsSlowPickerOpen(false);
+                    }}
+                    className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-medium cursor-pointer"
+                  >
+                    Filtrar Queries Lentas &rarr;
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePreset('SLOW');
+                      setSortOrder('duration');
+                      setIsSlowPickerOpen(false);
+                    }}
+                    className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+                  >
+                    Ver Todos os Lentos &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Espectro de Latência Interativo (Signature Element) */}
@@ -1036,13 +1221,17 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
           </div>
         </section>
 
-        {/* 4. Split Drawer (Slide-Over de Inspeção de Trace & Waterfall) */}
+        {/* 4. Split Drawer / Modal Expandido (Inspeção de Trace & Waterfall) */}
         {selectedTraceId && (
           <aside
             aria-label="Inspeção de Trace"
-            className="w-[44%] h-full flex flex-col bg-card/95 backdrop-blur-xs border-l border-border shadow-2xl z-20 overflow-hidden animate-in slide-in-from-right duration-200"
+            className={
+              isModalExpanded
+                ? 'fixed inset-3 z-50 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200'
+                : 'w-[44%] h-full flex flex-col bg-card/95 backdrop-blur-xs border-l border-border shadow-2xl z-20 overflow-hidden animate-in slide-in-from-right duration-200'
+            }
           >
-            {/* Header do Drawer */}
+            {/* Header do Drawer / Modal */}
             <div className="px-3.5 py-2.5 border-b border-border flex items-center justify-between gap-2 shrink-0 bg-muted/20">
               <div className="flex items-center gap-2 overflow-hidden">
                 <span
@@ -1058,6 +1247,15 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsModalExpanded((prev) => !prev)}
+                  title={isModalExpanded ? 'Restaurar para painel lateral' : 'Expandir para visualização completa'}
+                  className="h-6 w-6 rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition"
+                >
+                  {isModalExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -1106,7 +1304,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
               <span>{traceDetails?.spans.length || 0} spans</span>
             </div>
 
-            {/* Análise de Orçamento de Tempo (Time Budget Breakdown) */}
+            {/* Análise de Orçamento de Tempo (Divisão de Tempo: HTTP • Java • JDBC) */}
             {timeBudget && (
               <div className="px-3.5 py-2.5 border-b border-border bg-muted/20 flex flex-col gap-2 shrink-0">
                 <div className="flex items-center justify-between text-[11px] font-mono">
@@ -1115,55 +1313,80 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                     <span>Time Budget (Alocação de Tempo)</span>
                   </span>
                   <div className="flex items-center gap-2 text-[10px] tabular-nums">
-                    <span className="text-sky-700 dark:text-sky-400 font-semibold">Oracle DB: {timeBudget.dbPct}% ({timeBudget.dbMs}ms)</span>
+                    <span className="text-sky-600 dark:text-sky-400 font-semibold" title="Tempo em handlers e chamadas HTTP">
+                      🌐 HTTP: {timeBudget.httpPct}% ({timeBudget.httpMs}ms)
+                    </span>
                     <span>•</span>
-                    <span className="text-purple-700 dark:text-purple-400 font-semibold">App / OSGi: {timeBudget.appPct}%</span>
-                    {timeBudget.clientPct > 0 && (
-                      <>
-                        <span>•</span>
-                        <span className="text-amber-700 dark:text-amber-400 font-semibold">HTTP Ext: {timeBudget.clientPct}%</span>
-                      </>
-                    )}
+                    <span className="text-purple-600 dark:text-purple-400 font-semibold" title="Tempo em lógica Java / OSGi">
+                      ☕ Java: {timeBudget.javaPct}% ({timeBudget.javaMs}ms)
+                    </span>
+                    <span>•</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold" title="Tempo em consultas JDBC / Oracle">
+                      🗄️ JDBC: {timeBudget.jdbcPct}% ({timeBudget.jdbcMs}ms)
+                    </span>
                   </div>
                 </div>
 
-                {/* Barra Segmentada de Tempo */}
-                <div className="w-full h-2 rounded-full bg-muted/60 overflow-hidden flex shadow-inner">
-                  <div
-                    style={{ width: `${timeBudget.dbPct}%` }}
-                    className="bg-sky-500 h-full transition-all"
-                    title={`Queries Banco: ${timeBudget.dbMs}ms (${timeBudget.dbPct}%)`}
-                  />
-                  <div
-                    style={{ width: `${timeBudget.appPct}%` }}
-                    className="bg-purple-500 h-full transition-all"
-                    title={`Processamento Interno: ${timeBudget.appPct}%`}
-                  />
-                  {timeBudget.clientPct > 0 && (
+                {/* Barra Segmentada de Tempo Proporcional */}
+                <div className="w-full h-2.5 rounded-full bg-muted/60 overflow-hidden flex shadow-inner">
+                  {timeBudget.httpPct > 0 && (
                     <div
-                      style={{ width: `${timeBudget.clientPct}%` }}
+                      style={{ width: `${timeBudget.httpPct}%` }}
+                      className="bg-sky-500 h-full transition-all"
+                      title={`Requisição HTTP: ${timeBudget.httpMs}ms (${timeBudget.httpPct}%) — ${timeBudget.httpSpansCount} spans`}
+                    />
+                  )}
+                  {timeBudget.javaPct > 0 && (
+                    <div
+                      style={{ width: `${timeBudget.javaPct}%` }}
+                      className="bg-purple-500 h-full transition-all"
+                      title={`Processamento Java: ${timeBudget.javaMs}ms (${timeBudget.javaPct}%) — ${timeBudget.javaSpansCount} spans`}
+                    />
+                  )}
+                  {timeBudget.jdbcPct > 0 && (
+                    <div
+                      style={{ width: `${timeBudget.jdbcPct}%` }}
                       className="bg-amber-500 h-full transition-all"
-                      title={`Chamadas Externas: ${timeBudget.clientPct}%`}
+                      title={`Queries JDBC no Banco: ${timeBudget.jdbcMs}ms (${timeBudget.jdbcPct}%) — ${timeBudget.jdbcSpansCount} spans`}
                     />
                   )}
                 </div>
 
                 {/* Insight Automático de Gargalo */}
-                {timeBudget.hasDbBottleneck && (
-                  <div className="px-2.5 py-1.5 rounded bg-sky-500/10 border border-sky-500/30 text-[11px] font-mono text-sky-800 dark:bg-sky-950/30 dark:border-sky-800/40 dark:text-sky-300 flex items-center justify-between">
+                {timeBudget.hasDbBottleneck ? (
+                  <div className="px-2.5 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-800 dark:bg-amber-950/30 dark:border-amber-800/40 dark:text-amber-300 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
-                      <Database className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
-                      <span>Gargalo: <strong>{timeBudget.dbPct}%</strong> do tempo consumido no banco de dados</span>
+                      <Database className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>Gargalo no Banco: <strong>{timeBudget.jdbcPct}%</strong> ({timeBudget.jdbcMs}ms) consumidos em queries JDBC</span>
+                    </span>
+                    {hasSqlTab && (
+                      <button
+                        type="button"
+                        onClick={() => setDetailTab('sql')}
+                        className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 underline font-bold cursor-pointer"
+                      >
+                        Inspecionar SQL &rarr;
+                      </button>
+                    )}
+                  </div>
+                ) : timeBudget.hasJavaBottleneck ? (
+                  <div className="px-2.5 py-1.5 rounded bg-purple-500/10 border border-purple-500/30 text-[11px] font-mono text-purple-800 dark:bg-purple-950/30 dark:border-purple-800/40 dark:text-purple-300 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Code2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                      <span>Gargalo em Java: <strong>{timeBudget.javaPct}%</strong> ({timeBudget.javaMs}ms) em processamento interno / OSGi</span>
                     </span>
                     <button
                       type="button"
-                      onClick={() => setDetailTab('sql')}
-                      className="text-xs text-sky-700 dark:text-sky-400 hover:text-sky-900 dark:hover:text-sky-200 underline font-bold cursor-pointer"
+                      onClick={() => {
+                        setDetailTab('waterfall');
+                        setWaterfallTierFilter('java');
+                      }}
+                      className="text-xs text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-200 underline font-bold cursor-pointer"
                     >
-                      Inspecionar SQL &rarr;
+                      Filtrar Java &rarr;
                     </button>
                   </div>
-                )}
+                ) : null}
               </div>
             )}
 
@@ -1228,16 +1451,112 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
 
             {/* Conteúdo da Aba Selecionada */}
             <div className="flex-1 overflow-auto p-3">
-              {/* ABA 1: WATERFALL (Cascata Temporal com Régua Milimétrica e Árvore Conectada) */}
+              {/* ABA 1: WATERFALL (Cascata Temporal com Régua Visual e Conectores de Árvore) */}
               {visibleDetailTab === 'waterfall' && (
-                <div className="flex flex-col gap-2">
-                  {/* Régua Milimétrica no Topo */}
-                  <div className="px-2 py-1 bg-muted/40 rounded border border-border font-mono text-[10px] text-muted-foreground flex justify-between select-none tabular-nums">
-                    <span>0ms</span>
-                    <span>{Math.round((traceDetails?.summary.durationMs || 100) * 0.25)}ms</span>
-                    <span>{Math.round((traceDetails?.summary.durationMs || 100) * 0.5)}ms</span>
-                    <span>{Math.round((traceDetails?.summary.durationMs || 100) * 0.75)}ms</span>
-                    <span>{traceDetails?.summary.durationMs}ms</span>
+                <div className="flex flex-col gap-2.5">
+                  {/* Régua de Tempo Visual Dividindo HTTP, Java e JDBC */}
+                  <div className="p-2.5 bg-muted/40 rounded-lg border border-border flex flex-col gap-2 select-none">
+                    {/* Filtros por Camada (Tier Chips) */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1 text-[11px] font-mono">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mr-1">
+                          Camada:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setWaterfallTierFilter('ALL')}
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition ${
+                            waterfallTierFilter === 'ALL'
+                              ? 'bg-primary text-primary-foreground shadow-xs'
+                              : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          Todas ({traceDetails?.spans.length || 0})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setWaterfallTierFilter((prev) => (prev === 'http' ? 'ALL' : 'http'))}
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition flex items-center gap-1 ${
+                            waterfallTierFilter === 'http'
+                              ? 'bg-sky-500 text-white shadow-xs'
+                              : 'bg-sky-500/10 border border-sky-500/30 text-sky-700 dark:text-sky-400 hover:bg-sky-500/20'
+                          }`}
+                        >
+                          <span>🌐 HTTP ({timeBudget?.httpSpansCount ?? 0})</span>
+                          <span className="tabular-nums font-normal">{timeBudget?.httpMs}ms</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setWaterfallTierFilter((prev) => (prev === 'java' ? 'ALL' : 'java'))}
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition flex items-center gap-1 ${
+                            waterfallTierFilter === 'java'
+                              ? 'bg-purple-600 text-white shadow-xs'
+                              : 'bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400 hover:bg-purple-500/20'
+                          }`}
+                        >
+                          <span>☕ Java ({timeBudget?.javaSpansCount ?? 0})</span>
+                          <span className="tabular-nums font-normal">{timeBudget?.javaMs}ms</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setWaterfallTierFilter((prev) => (prev === 'jdbc' ? 'ALL' : 'jdbc'))}
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition flex items-center gap-1 ${
+                            waterfallTierFilter === 'jdbc'
+                              ? 'bg-amber-500 text-white shadow-xs'
+                              : 'bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20'
+                          }`}
+                        >
+                          <span>🗄️ JDBC ({timeBudget?.jdbcSpansCount ?? 0})</span>
+                          <span className="tabular-nums font-normal">{timeBudget?.jdbcMs}ms</span>
+                        </button>
+                      </div>
+
+                      {/* Legenda de Cores */}
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-sky-500 inline-block" /> HTTP</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-purple-500 inline-block" /> Java</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-amber-500 inline-block" /> JDBC</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-rose-500 inline-block" /> Erro</span>
+                      </div>
+                    </div>
+
+                    {/* Régua Milimétrica e Faixa de Cores de Tempo */}
+                    <div className="flex flex-col gap-1">
+                      <div className="w-full flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums px-0.5">
+                        <span>0ms</span>
+                        <span>{Math.round((traceDetails?.summary.durationMs || 100) * 0.25)}ms</span>
+                        <span>{Math.round((traceDetails?.summary.durationMs || 100) * 0.5)}ms</span>
+                        <span>{Math.round((traceDetails?.summary.durationMs || 100) * 0.75)}ms</span>
+                        <span className="font-bold text-foreground">{traceDetails?.summary.durationMs}ms</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-muted/70 overflow-hidden flex shadow-xs">
+                        {timeBudget && (
+                          <>
+                            {timeBudget.httpPct > 0 && (
+                              <div
+                                style={{ width: `${timeBudget.httpPct}%` }}
+                                className="bg-sky-500 h-full"
+                                title={`Requisição HTTP: ${timeBudget.httpMs}ms (${timeBudget.httpPct}%)`}
+                              />
+                            )}
+                            {timeBudget.javaPct > 0 && (
+                              <div
+                                style={{ width: `${timeBudget.javaPct}%` }}
+                                className="bg-purple-500 h-full"
+                                title={`Processamento Java: ${timeBudget.javaMs}ms (${timeBudget.javaPct}%)`}
+                              />
+                            )}
+                            {timeBudget.jdbcPct > 0 && (
+                              <div
+                                style={{ width: `${timeBudget.jdbcPct}%` }}
+                                className="bg-amber-500 h-full"
+                                title={`Queries JDBC: ${timeBudget.jdbcMs}ms (${timeBudget.jdbcPct}%)`}
+                              />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Lista de Spans Hierárquicos com Conectores de Árvore */}
@@ -1248,6 +1567,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
                         node={node}
                         selectedSpanId={selectedSpanId}
                         onSelectSpan={(spanId) => setSelectedSpanId(spanId)}
+                        tierFilter={waterfallTierFilter}
                       />
                     ))}
                   </div>
@@ -1694,45 +2014,48 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
   );
 };
 
-// Componente recursivo para renderização do nó de waterfall com guias visuais
+// Componente recursivo para renderização do nó de waterfall com guias visuais e classificação por camada
 interface WaterfallNodeProps {
   node: TraceSpanTreeNode;
   selectedSpanId: string | null;
   onSelectSpan: (spanId: string) => void;
+  tierFilter?: SpanTierCategory | 'ALL';
 }
 
-const WaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedSpanId, onSelectSpan }) => {
+const WaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedSpanId, onSelectSpan, tierFilter = 'ALL' }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const { span, depth, offsetPercent, widthPercent, children } = node;
   const isSelected = selectedSpanId === span.spanId;
+  const tier = categorizeSpan(span);
 
   const hasChildren = children && children.length > 0;
+  const isDimmed = tierFilter !== 'ALL' && tier.category !== tierFilter;
 
-  // Cor da barra de tempo do waterfall
+  // Cor da barra de tempo do waterfall baseada na camada semântica (HTTP / Java / JDBC)
   const getBarColor = () => {
     if (span.statusCode === 'ERROR' || (span.httpStatusCode && span.httpStatusCode >= 500)) {
       return 'bg-rose-500';
     }
-    if (span.dbStatement) {
-      return 'bg-sky-500';
+    if (tier.category === 'jdbc' || span.dbStatement) {
+      return 'bg-amber-500';
     }
-    if (span.kind === 'INTERNAL') {
-      return 'bg-purple-500/80';
+    if (tier.category === 'java') {
+      return 'bg-purple-500/85';
     }
-    return 'bg-emerald-500';
+    return 'bg-sky-500';
   };
 
   return (
-    <div className="flex flex-col">
+    <div className={`flex flex-col transition-opacity duration-150 ${isDimmed ? 'opacity-35 hover:opacity-100' : 'opacity-100'}`}>
       <div
         onClick={() => onSelectSpan(span.spanId)}
         className={`group py-1 px-2 rounded flex items-center justify-between text-xs font-mono transition cursor-pointer ${
           isSelected ? 'bg-primary/20 border border-primary/50' : 'hover:bg-muted/40'
         }`}
       >
-        {/* Identificação do Span (Indentada por depth com guia de árvore) */}
+        {/* Identificação do Span (Indentada por depth com guia de árvore e pílula de camada) */}
         <div
-          className="flex items-center gap-1.5 truncate max-w-[50%]"
+          className="flex items-center gap-1.5 truncate max-w-[54%]"
           style={{ paddingLeft: `${depth * 14}px` }}
         >
           {depth > 0 && (
@@ -1754,8 +2077,16 @@ const WaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedSpanId, onS
             <span className="w-4" />
           )}
 
+          {/* Pílula Semântica de Camada: [HTTP], [JAVA], [JDBC] */}
+          <span
+            className={`px-1 py-0.2 rounded border text-[9px] font-bold tracking-tight shrink-0 ${tier.badgeClass}`}
+            title={`Camada: ${tier.label}`}
+          >
+            {tier.label}
+          </span>
+
           {span.dbStatement ? (
-            <Database className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
+            <Database className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
           ) : (
             <span
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${
@@ -1767,17 +2098,28 @@ const WaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedSpanId, onS
           <span className="truncate text-foreground font-medium text-[11px]" title={span.name}>
             {span.name}
           </span>
+
+          {/* Tag de Alerta para Consulta/Span Lento (>= 300ms) */}
+          {tier.isSlow && (
+            <span
+              className="px-1 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-[9px] font-bold flex items-center gap-0.5 shrink-0"
+              title={`Span com duração elevada: ${span.durationMs}ms`}
+            >
+              <Zap className="w-2.5 h-2.5 text-amber-500" />
+              <span>Lenta</span>
+            </span>
+          )}
         </div>
 
-        {/* Régua e Barra Proporcional de Tempo */}
-        <div className="w-[48%] h-4 bg-muted/20 rounded relative flex items-center overflow-hidden">
+        {/* Régua e Barra Proporcional de Tempo com Indicador Milimétrico */}
+        <div className="w-[44%] h-4 bg-muted/20 rounded relative flex items-center overflow-hidden">
           <div
             style={{
               left: `${offsetPercent}%`,
               width: `${Math.max(2, widthPercent)}%`
             }}
             className={`h-2.5 rounded absolute transition-all ${getBarColor()}`}
-            title={`${span.name}: ${span.durationMs}ms (início: +${offsetPercent}%)`}
+            title={`${span.name}: ${span.durationMs}ms (início: +${offsetPercent}%) [${tier.label}]`}
           />
           <span className="absolute right-1 text-[10px] font-mono text-foreground/80 dark:text-muted-foreground tabular-nums">
             {span.durationMs}ms
@@ -1794,6 +2136,7 @@ const WaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedSpanId, onS
               node={child}
               selectedSpanId={selectedSpanId}
               onSelectSpan={onSelectSpan}
+              tierFilter={tierFilter}
             />
           ))}
         </div>

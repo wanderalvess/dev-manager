@@ -13,7 +13,20 @@ import type {
   AutomationStep,
   ProfileExecutionResult,
   GitProjectInfo,
+  GitTaskItem,
+  CreateTaskBranchOptions,
   RoutineItem,
+  RoutineLaunchResult,
+  RoutineDownloadRequest,
+  RoutineDownloadResult,
+  RoutineBackupEntry,
+  RoutineRollbackResult,
+  ExecutableVersionInfo,
+  BatchRoutineDownloadRequest,
+  BatchRoutineItemProgress,
+  BatchRoutineDownloadResult,
+  CcwCatalogResponse,
+  KarafWtaStatusResult,
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
@@ -45,6 +58,7 @@ import type {
   OracleTracerFilter,
   OracleActiveSessionsResult,
   OracleRecentStatementsResult,
+  OracleStatementBindsResult,
   OracleCaptureOptions,
   OracleCaptureState,
   KarafBundleInfo,
@@ -54,6 +68,9 @@ import type {
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
   KarafFeatureInfo,
+  KarafFeatureRepoInfo,
+  KarafJvmMemoryInfo,
+  LogAnalysisSummary,
   Routine801CatalogResponse,
   Routine801InstallRequest,
   Routine801InstallResult,
@@ -67,6 +84,7 @@ import type {
   DeployStep,
   DeployProfileHistoryEntry,
   DeployProgressEvent,
+  OsgiResolutionDiagnosticSummary,
   TableColumnInfo,
   DockerContainerStats,
   ComposeServiceStatus,
@@ -89,7 +107,8 @@ import type {
   ApmReceiverStatus,
   ApmReceiverPortChangeResult,
   ObservabilityOverview,
-  ServiceMetricsSummary
+  ServiceMetricsSummary,
+  UpdateStatus
 } from '../../../shared/types';
 
 const API_KEY_STORAGE = 'devManagerApiKey';
@@ -262,13 +281,21 @@ export function initApiBridge() {
     },
 
     getChangelog: async (): Promise<string | null> => {
-      const data = await apiFetch<{ content: string | null }>('/api/system/changelog');
-      return data.content;
+      try {
+        const data = await apiFetch<{ content: string | null }>('/api/system/changelog');
+        return data.content;
+      } catch {
+        return null;
+      }
     },
 
     getMcpDocs: async (): Promise<string> => {
-      const data = await apiFetch<{ content: string }>('/api/system/mcp-docs');
-      return data.content;
+      try {
+        const data = await apiFetch<{ content: string }>('/api/system/mcp-docs');
+        return data.content;
+      } catch {
+        return '';
+      }
     },
 
     // Gestor de Ambiente
@@ -434,6 +461,12 @@ export function initApiBridge() {
 
     isEmbeddedKarafRunning: async (): Promise<boolean> => {
       const data = await apiFetch<{ isRunning: boolean }>('/api/karaf/embedded/status');
+      return data.isRunning;
+    },
+
+    isKarafRunning: async (sshPort?: number): Promise<boolean> => {
+      const query = sshPort ? `?port=${sshPort}` : '';
+      const data = await apiFetch<{ isRunning: boolean }>(`/api/karaf/status${query}`);
       return data.isRunning;
     },
 
@@ -635,7 +668,83 @@ export function initApiBridge() {
     },
 
     parsePom: async (projectPath: string): Promise<PomInfo | null> => {
-      return apiFetch(`/api/karaf/parse-pom?path=${encodeURIComponent(projectPath)}`);
+      return apiFetch<PomInfo | null>(`/api/karaf/parse-pom?path=${encodeURIComponent(projectPath)}`);
+    },
+
+    getKarafJvmMemory: async (
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<KarafJvmMemoryInfo> => {
+      return apiFetch<KarafJvmMemoryInfo>('/api/karaf/jvm-memory', {
+        method: 'POST',
+        body: JSON.stringify(credentials || {})
+      });
+    },
+
+    triggerKarafGc: async (
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/gc', {
+        method: 'POST',
+        body: JSON.stringify(credentials || {})
+      });
+    },
+
+    listKarafFeatureRepos: async (
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<KarafFeatureRepoInfo[]> => {
+      return apiFetch('/api/karaf/feature-repos', {
+        method: 'POST',
+        body: JSON.stringify(credentials || {})
+      });
+    },
+
+    addKarafFeatureRepo: async (
+      url: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/feature-repos/add', {
+        method: 'POST',
+        body: JSON.stringify({ url, credentials })
+      });
+    },
+
+    removeKarafFeatureRepo: async (
+      nameOrUrl: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/feature-repos/remove', {
+        method: 'POST',
+        body: JSON.stringify({ nameOrUrl, credentials })
+      });
+    },
+
+    refreshKarafFeatureRepo: async (
+      nameOrUrl?: string,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<{ success: boolean; output: string }> => {
+      return apiFetch('/api/karaf/feature-repos/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ nameOrUrl, credentials })
+      });
+    },
+
+    listAllKarafFeatures: async (
+      installedOnly?: boolean,
+      credentials?: { user?: string; pass?: string; port?: number }
+    ): Promise<KarafFeatureInfo[]> => {
+      return apiFetch('/api/karaf/features-all', {
+        method: 'POST',
+        body: JSON.stringify({ installedOnly, credentials })
+      });
+    },
+
+    analyzeKarafLog: async (
+      content: string | string[]
+    ): Promise<LogAnalysisSummary> => {
+      return apiFetch('/api/karaf/analyze-log', {
+        method: 'POST',
+        body: JSON.stringify({ content })
+      });
     },
 
     onKarafLogChunk: (callback: (chunk: string) => void) => {
@@ -666,14 +775,19 @@ export function initApiBridge() {
     },
 
     // Perfis de Deploy (Karaf / Docker / Comando Genérico)
-    runDeployProfile: async (profile: DeployProfile): Promise<{ success: boolean; error?: string }> => {
+    runDeployProfile: async (
+      profile: DeployProfile
+    ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> => {
       return apiFetch('/api/deploy/run-profile', {
         method: 'POST',
         body: JSON.stringify(profile)
       });
     },
 
-    runDeployStep: async (step: DeployStep, profileName?: string): Promise<{ success: boolean; error?: string }> => {
+    runDeployStep: async (
+      step: DeployStep,
+      profileName?: string
+    ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> => {
       return apiFetch('/api/deploy/run-step', {
         method: 'POST',
         body: JSON.stringify({ step, profileName })
@@ -725,11 +839,44 @@ export function initApiBridge() {
       });
     },
 
-    checkoutBranch: async (projectPath: string, branchName: string, createNew?: boolean): Promise<GitCommandResult> => {
+    checkoutBranch: async (
+      projectPath: string,
+      branchName: string,
+      createNew?: boolean,
+      baseBranch?: string
+    ): Promise<GitCommandResult> => {
       return apiFetch('/api/git/checkout', {
         method: 'POST',
-        body: JSON.stringify({ projectPath, branchName, createNew })
+        body: JSON.stringify({ projectPath, branchName, createNew, baseBranch })
       });
+    },
+
+    createTaskBranch: async (
+      projectPath: string,
+      options: CreateTaskBranchOptions
+    ): Promise<{ success: boolean; output: string; branchName: string }> => {
+      return apiFetch('/api/git/create-task-branch', {
+        method: 'POST',
+        body: JSON.stringify({ projectPath, ...options })
+      });
+    },
+
+    openFileInIde: async (
+      projectPath: string,
+      relativePath: string
+    ): Promise<{ success: boolean; error?: string }> => {
+      return apiFetch('/api/git/open-file-in-ide', {
+        method: 'POST',
+        body: JSON.stringify({ projectPath, relativePath })
+      });
+    },
+
+    fetchTasks: async (projectPath?: string, query?: string): Promise<GitTaskItem[]> => {
+      const params = new URLSearchParams();
+      if (projectPath) params.set('path', projectPath);
+      if (query) params.set('query', query);
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      return apiFetch(`/api/git/tasks${queryStr}`);
     },
 
     commitAndPush: async (projectPath: string, message: string): Promise<GitCommandResult> => {
@@ -766,12 +913,15 @@ export function initApiBridge() {
       return apiFetch('/api/routines');
     },
 
-    launchRoutine: async (fullPath: string): Promise<boolean> => {
-      const data = await apiFetch<{ success: boolean }>('/api/routines/launch', {
+    launchRoutine: async (fullPath: string, forceDirect?: boolean): Promise<RoutineLaunchResult> => {
+      return apiFetch<RoutineLaunchResult>('/api/routines/launch', {
         method: 'POST',
-        body: JSON.stringify({ fullPath })
+        body: JSON.stringify({ fullPath, forceDirect })
       });
-      return data.success;
+    },
+
+    checkRoutineKarafStatus: async (): Promise<KarafWtaStatusResult> => {
+      return apiFetch<KarafWtaStatusResult>('/api/routines/karaf-status');
     },
 
     launchMappedProgram: async (id: string): Promise<boolean> => {
@@ -787,6 +937,73 @@ export function initApiBridge() {
         method: 'POST',
         body: JSON.stringify({ id })
       });
+    },
+
+    downloadCcwRoutine: async (req: RoutineDownloadRequest): Promise<RoutineDownloadResult> => {
+      return apiFetch('/api/routines/download-ccw', {
+        method: 'POST',
+        body: JSON.stringify(req)
+      });
+    },
+
+    installLocalRoutineFile: async (
+      filePath: string,
+      routineCodeOrName?: string,
+      targetModule?: string,
+      backupExisting?: boolean
+    ): Promise<RoutineDownloadResult> => {
+      return apiFetch('/api/routines/install-local', {
+        method: 'POST',
+        body: JSON.stringify({ filePath, routineCodeOrName, targetModule, backupExisting })
+      });
+    },
+
+    getCcwCatalog: async (authCookie?: string): Promise<CcwCatalogResponse> => {
+      const query = authCookie ? `?authCookie=${encodeURIComponent(authCookie)}` : '';
+      return apiFetch(`/api/routines/ccw-catalog${query}`);
+    },
+
+    getCcwDownloadUrl: async (routineName: string, winthorVersion?: string): Promise<string> => {
+      const params = new URLSearchParams({ routineName });
+      if (winthorVersion) params.set('winthorVersion', winthorVersion);
+      const data = await apiFetch<{ url: string }>(`/api/routines/ccw-download-url?${params.toString()}`);
+      return data.url;
+    },
+
+    listRoutineBackups: async (routineIdOrName: string, moduleFolder?: string): Promise<RoutineBackupEntry[]> => {
+      const params = new URLSearchParams({ routine: routineIdOrName });
+      if (moduleFolder) params.set('moduleFolder', moduleFolder);
+      return apiFetch(`/api/routines/backups?${params.toString()}`);
+    },
+
+    restoreRoutineBackup: async (backupFilePath: string, targetRoutinePath: string): Promise<RoutineRollbackResult> => {
+      return apiFetch('/api/routines/restore-backup', {
+        method: 'POST',
+        body: JSON.stringify({ backupFilePath, targetRoutinePath })
+      });
+    },
+
+    deleteRoutineBackup: async (backupFilePath: string): Promise<{ success: boolean; message?: string; error?: string }> => {
+      return apiFetch('/api/routines/backup', {
+        method: 'DELETE',
+        body: JSON.stringify({ backupFilePath })
+      });
+    },
+
+    getRoutineExecutableVersion: async (filePath: string): Promise<ExecutableVersionInfo | null> => {
+      const params = new URLSearchParams({ filePath });
+      return apiFetch(`/api/routines/version-info?${params.toString()}`);
+    },
+
+    downloadRoutinesBatch: async (request: BatchRoutineDownloadRequest): Promise<BatchRoutineDownloadResult> => {
+      return apiFetch('/api/routines/batch-download', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
+    },
+
+    onRoutineBatchProgress: (callback: (progress: BatchRoutineItemProgress) => void) => {
+      return wsManager.subscribe('routines:batch-progress', callback);
     },
 
     // Índice de Documentação (RAG local)
@@ -979,6 +1196,13 @@ export function initApiBridge() {
       return apiFetch('/api/db/oracle-recent-statements', {
         method: 'POST',
         body: JSON.stringify({ config, filter })
+      });
+    },
+
+    getOracleStatementBinds: async (config: DatabaseConnectionConfig, sqlId: string, sqlText?: string): Promise<OracleStatementBindsResult> => {
+      return apiFetch('/api/db/oracle-statement-binds', {
+        method: 'POST',
+        body: JSON.stringify({ config, sqlId, sqlText })
       });
     },
 
@@ -1742,7 +1966,13 @@ export function initApiBridge() {
     },
     onApmNewTrace: (callback: (trace: TraceSummary) => void) => {
       return wsManager.subscribe('apm:new-trace', callback);
-    }
+    },
+
+    // Auto-update (No modo Web/Docker operações de auto-update desktop são no-op)
+    checkForUpdate: async (): Promise<void> => {},
+    downloadUpdate: async (): Promise<void> => {},
+    installUpdate: async (): Promise<void> => {},
+    onUpdateStatus: (_callback: (status: UpdateStatus) => void): (() => void) => () => {}
   };
 }
 
@@ -1755,4 +1985,6 @@ export function initApiBridge() {
 export const api = new Proxy({} as typeof window.electronAPI, {
   get: (_target, prop) => (typeof window !== 'undefined' ? (window as any).electronAPI?.[prop] : undefined)
 });
+
+export const apiBridge = api;
 

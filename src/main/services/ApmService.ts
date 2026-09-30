@@ -593,8 +593,12 @@ export class ApmService {
       filter
     );
 
-    // Ordenação mais recente primeiro
-    summaries.sort((a, b) => b.startTimeUnixMs - a.startTimeUnixMs);
+    // Ordenação: por duração (mais lentos primeiro) ou por início (mais recente primeiro)
+    if (filter?.sortBy === 'duration') {
+      summaries.sort((a, b) => b.durationMs - a.durationMs);
+    } else {
+      summaries.sort((a, b) => b.startTimeUnixMs - a.startTimeUnixMs);
+    }
 
     const limit = filter?.limit && filter.limit > 0 ? filter.limit : 200;
     return summaries.slice(0, limit);

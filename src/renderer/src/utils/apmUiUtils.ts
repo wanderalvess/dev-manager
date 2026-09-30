@@ -7,8 +7,80 @@ import {
   DEFAULT_APM_SERVICE_NAME
 } from '../../../shared/types';
 
-export type FilterPreset = 'ALL' | 'ERRORS' | 'SLOW' | 'DB';
+export type FilterPreset = 'ALL' | 'ERRORS' | 'SLOW' | 'DB' | 'SLOW_QUERIES' | 'SLOW_ENDPOINTS';
 export type LatencyBracket = 'ALL' | 'FAST' | 'NORMAL' | 'SLOW' | 'CRITICAL';
+export type TraceSortOrder = 'time' | 'duration';
+export type SpanTierCategory = 'http' | 'java' | 'jdbc';
+
+export interface SpanTierInfo {
+  category: SpanTierCategory;
+  label: string;
+  fullLabel: string;
+  badgeClass: string;
+  barColor: string;
+  borderColor: string;
+  textColor: string;
+  bgLight: string;
+  isSlow: boolean;
+}
+
+/**
+ * Categoriza um span em uma das 3 camadas principais da régua de tempo visual:
+ * - Requisição HTTP (Entrada/Saída/Chamadas HTTP externas)
+ * - Processamento Java (JVM / OSGi / Handlers CXF / Lógica de negócio)
+ * - Queries JDBC (Banco de dados Oracle / PostgreSQL / MySQL)
+ */
+export function categorizeSpan(span: TraceSpan): SpanTierInfo {
+  const isSlow = (span.durationMs || 0) >= 300;
+
+  // 1. Queries JDBC no banco de dados
+  if (span.dbStatement || (span.dbSystem && span.kind === 'CLIENT')) {
+    return {
+      category: 'jdbc',
+      label: 'JDBC',
+      fullLabel: 'Queries JDBC (Banco)',
+      badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30',
+      barColor: 'bg-amber-500',
+      borderColor: 'border-amber-500/40',
+      textColor: 'text-amber-700 dark:text-amber-400',
+      bgLight: 'bg-amber-500/10',
+      isSlow
+    };
+  }
+
+  // 2. Processamento Java (spans internos, controllers, handlers, OSGi, serialização)
+  if (
+    span.kind === 'INTERNAL' ||
+    span.attributes['code.namespace'] ||
+    span.attributes['karaf.bundle.name'] ||
+    span.attributes['cxf.operation']
+  ) {
+    return {
+      category: 'java',
+      label: 'Java',
+      fullLabel: 'Processamento Java',
+      badgeClass: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30',
+      barColor: 'bg-purple-500',
+      borderColor: 'border-purple-500/40',
+      textColor: 'text-purple-700 dark:text-purple-400',
+      bgLight: 'bg-purple-500/10',
+      isSlow
+    };
+  }
+
+  // 3. Camada de Requisição HTTP (Server, Gateway, HTTP Clients externos)
+  return {
+    category: 'http',
+    label: 'HTTP',
+    fullLabel: 'Requisição HTTP',
+    badgeClass: 'bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/30',
+    barColor: 'bg-sky-500',
+    borderColor: 'border-sky-500/40',
+    textColor: 'text-sky-700 dark:text-sky-400',
+    bgLight: 'bg-sky-500/10',
+    isSlow
+  };
+}
 
 export interface LatencySpectrumData {
   fast: number; // < 100ms
@@ -28,8 +100,21 @@ export interface TimeBudgetData {
   clientHttpMs: number;
   clientPct: number;
   appPct: number;
+  // Métricas explícitas da régua visual Waterfall (HTTP / Java / JDBC)
+  httpMs: number;
+  httpPct: number;
+  javaMs: number;
+  javaPct: number;
+  jdbcMs: number;
+  jdbcPct: number;
+  httpSpansCount: number;
+  javaSpansCount: number;
+  jdbcSpansCount: number;
   hasDbBottleneck: boolean;
-  topBottleneck: 'db' | 'app' | 'ext' | 'none';
+  hasJavaBottleneck: boolean;
+  hasHttpBottleneck: boolean;
+  topBottleneck: 'db' | 'app' | 'ext' | 'none' | 'jdbc' | 'java' | 'http';
+  primaryBottleneck?: 'jdbc' | 'java' | 'http' | 'none';
 }
 
 /**
@@ -62,37 +147,78 @@ export function computeLatencySpectrum(traces: TraceSummary[]): LatencySpectrumD
 }
 
 /**
- * Converte a decomposição de tempo calculada no backend (banco, chamadas externas e processamento
- * interno da aplicação — OSGi / CXF / Spring) em percentuais, identificando o gargalo principal.
- * Os percentuais sempre somam 100: o backend já descontou sobreposições entre categorias.
+ * Converte a decomposição de tempo calculada no backend em percentuais e durações exatas
+ * para a régua de tempo visual do Waterfall: Requisição HTTP, Processamento Java e Queries JDBC no banco.
  */
 export function computeTimeBudget(traceDetails: TraceDetails | null): TimeBudgetData | null {
   if (!traceDetails?.spans || traceDetails.spans.length === 0 || !traceDetails.breakdown) return null;
   const { totalMs, dbMs: dbTime, externalMs: clientHttpTime } = traceDetails.breakdown;
-  const total = totalMs || 1;
+  const total = Math.max(1, totalMs || 1);
 
-  const dbPct = Math.min(100, Math.round((dbTime / total) * 100));
-  const clientPct = Math.min(100 - dbPct, Math.round((clientHttpTime / total) * 100));
-  const appPct = Math.max(0, 100 - dbPct - clientPct);
+  // Valores da régua semântica
+  const jdbcMs = traceDetails.breakdown.jdbcMs ?? dbTime;
+  const rawHttpMs = traceDetails.breakdown.httpMs ?? clientHttpTime;
+  const rawJavaMs = traceDetails.breakdown.javaMs ?? traceDetails.breakdown.appMs;
 
-  let topBottleneck: 'db' | 'app' | 'ext' | 'none' = 'none';
-  if (dbPct >= 50) {
+  const jdbcPct = Math.min(100, Math.round((jdbcMs / total) * 100));
+  const httpPct = Math.min(100 - jdbcPct, Math.round((rawHttpMs / total) * 100));
+  const javaPct = Math.max(0, 100 - jdbcPct - httpPct);
+
+  // Contagem de spans por tier
+  let httpSpansCount = 0;
+  let javaSpansCount = 0;
+  let jdbcSpansCount = 0;
+
+  for (const span of traceDetails.spans) {
+    const tier = categorizeSpan(span).category;
+    if (tier === 'jdbc') jdbcSpansCount++;
+    else if (tier === 'java') javaSpansCount++;
+    else httpSpansCount++;
+  }
+
+  const rawDbPct = Math.round((dbTime / total) * 100);
+  const rawClientPct = Math.round((clientHttpTime / total) * 100);
+  const rawAppPct = Math.max(0, 100 - rawDbPct - rawClientPct);
+
+  let topBottleneck: 'db' | 'app' | 'ext' | 'none' | 'jdbc' | 'java' | 'http' = 'none';
+  if (rawDbPct >= 50 || jdbcPct >= 50) {
     topBottleneck = 'db';
-  } else if (clientPct >= 50) {
-    topBottleneck = 'ext';
-  } else if (appPct >= 50) {
+  } else if (rawAppPct >= 50 || javaPct >= 50) {
     topBottleneck = 'app';
+  } else if (rawClientPct >= 50 || httpPct >= 50) {
+    topBottleneck = 'ext';
+  }
+
+  let primaryBottleneck: 'jdbc' | 'java' | 'http' | 'none' = 'none';
+  if (jdbcPct >= 50) {
+    primaryBottleneck = 'jdbc';
+  } else if (javaPct >= 50) {
+    primaryBottleneck = 'java';
+  } else if (httpPct >= 50) {
+    primaryBottleneck = 'http';
   }
 
   return {
     totalMs: total,
-    dbMs: dbTime,
-    dbPct,
-    clientHttpMs: clientHttpTime,
-    clientPct,
-    appPct,
-    hasDbBottleneck: dbPct >= 50,
-    topBottleneck
+    dbMs: jdbcMs,
+    dbPct: jdbcPct,
+    clientHttpMs: rawHttpMs,
+    clientPct: httpPct,
+    appPct: javaPct,
+    httpMs: rawHttpMs,
+    httpPct,
+    javaMs: rawJavaMs,
+    javaPct,
+    jdbcMs,
+    jdbcPct,
+    httpSpansCount,
+    javaSpansCount,
+    jdbcSpansCount,
+    hasDbBottleneck: jdbcPct >= 50,
+    hasJavaBottleneck: javaPct >= 50,
+    hasHttpBottleneck: httpPct >= 50,
+    topBottleneck,
+    primaryBottleneck
   };
 }
 
@@ -154,7 +280,56 @@ export function buildApmSetupSnippets(port: number, serviceName: string = DEFAUL
 }
 
 /**
- * Filtra lista de traces com suporte a busca textual, presets de estado e faixas de latência.
+ * Detecção de lentidão agregada no conjunto de traces (endpoints lentos, contagem de queries lentas).
+ */
+export interface DetectedSlowSummary {
+  slowTracesCount: number;
+  criticalTracesCount: number;
+  slowDbTracesCount: number;
+  topSlowEndpoints: Array<{ route: string; method: string; maxDurationMs: number; avgDurationMs: number; count: number }>;
+}
+
+export function detectSlowSummary(traces: TraceSummary[]): DetectedSlowSummary {
+  let slowTracesCount = 0;
+  let criticalTracesCount = 0;
+  let slowDbTracesCount = 0;
+
+  const endpointMap = new Map<string, { route: string; method: string; durations: number[] }>();
+
+  for (const t of traces) {
+    if (t.durationMs >= 1000) criticalTracesCount++;
+    if (t.durationMs >= 400) slowTracesCount++;
+    if (t.hasDatabaseQuery && t.durationMs >= 300) slowDbTracesCount++;
+
+    const key = `${t.httpMethod || 'HTTP'} ${t.httpRoute || t.rootSpanName}`;
+    let ep = endpointMap.get(key);
+    if (!ep) {
+      ep = { route: t.httpRoute || t.rootSpanName, method: t.httpMethod || 'HTTP', durations: [] };
+      endpointMap.set(key, ep);
+    }
+    ep.durations.push(t.durationMs);
+  }
+
+  const slowEndpoints = Array.from(endpointMap.values())
+    .map((ep) => {
+      const maxDurationMs = Math.max(...ep.durations);
+      const avgDurationMs = Math.round(ep.durations.reduce((a, b) => a + b, 0) / ep.durations.length);
+      return { route: ep.route, method: ep.method, maxDurationMs, avgDurationMs, count: ep.durations.length };
+    })
+    .filter((ep) => ep.maxDurationMs >= 350 || ep.avgDurationMs >= 250)
+    .sort((a, b) => b.maxDurationMs - a.maxDurationMs)
+    .slice(0, 10);
+
+  return {
+    slowTracesCount,
+    criticalTracesCount,
+    slowDbTracesCount,
+    topSlowEndpoints: slowEndpoints
+  };
+}
+
+/**
+ * Filtra lista de traces com suporte a busca textual, presets de estado, faixas de latência e ordenação.
  */
 export function filterTraces(
   traces: TraceSummary[],
@@ -163,12 +338,13 @@ export function filterTraces(
     preset?: FilterPreset;
     latencyBracket?: LatencyBracket;
     selectedService?: string;
+    sortOrder?: TraceSortOrder;
   }
 ): TraceSummary[] {
-  const { searchText, preset = 'ALL', latencyBracket = 'ALL', selectedService = 'ALL' } = options;
+  const { searchText, preset = 'ALL', latencyBracket = 'ALL', selectedService = 'ALL', sortOrder = 'time' } = options;
   const query = searchText?.trim().toLowerCase();
 
-  return traces.filter((trace) => {
+  const filtered = traces.filter((trace) => {
     // 1. Filtro por serviço
     if (selectedService !== 'ALL' && trace.serviceName !== selectedService) {
       return false;
@@ -176,8 +352,10 @@ export function filterTraces(
 
     // 2. Filtro por preset
     if (preset === 'ERRORS' && !trace.hasError) return false;
-    if (preset === 'SLOW' && trace.durationMs < 1000) return false;
+    if (preset === 'SLOW' && trace.durationMs < 400) return false;
     if (preset === 'DB' && !trace.hasDatabaseQuery) return false;
+    if (preset === 'SLOW_QUERIES' && (!trace.hasDatabaseQuery || trace.durationMs < 250)) return false;
+    if (preset === 'SLOW_ENDPOINTS' && trace.durationMs < 400) return false;
 
     // 3. Filtro por espectro de latência
     if (latencyBracket === 'FAST' && trace.durationMs >= 100) return false;
@@ -198,6 +376,12 @@ export function filterTraces(
 
     return true;
   });
+
+  if (sortOrder === 'duration') {
+    filtered.sort((a, b) => b.durationMs - a.durationMs);
+  }
+
+  return filtered;
 }
 
 /**

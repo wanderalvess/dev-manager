@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Dev Manager expõe **123 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Dev Manager expõe **145 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -40,6 +40,7 @@ Ferramentas de orquestração local (macros).
 ## 3. Servidor Apache Karaf e Bundles
 Domínio completo para interagir com o Karaf, inspecionar logs, diagnosticar conflitos OSGi e fazer deploys.
 
+*   **`karaf_is_running`**: Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101).
 *   **`karaf_start_embedded` / `karaf_stop_embedded` / `karaf_is_embedded_running`**: Inicia, encerra e verifica se a instância do Karaf embutida do Dev Manager está ativa.
 *   **`karaf_get_embedded_output` / `karaf_send_embedded_input`**: Lê a saída acumulada do console embutido desde a última leitura e envia uma linha de comando a ele.
 *   **`karaf_get_persisted_logs`**: Lê o final do log do console embutido gravado em disco, sem consumir o buffer (sobrevive a reinícios).
@@ -53,9 +54,20 @@ Domínio completo para interagir com o Karaf, inspecionar logs, diagnosticar con
 *   **`karaf_deploy` / `karaf_build_and_deploy` / `karaf_run_maven_build`**: Executa o maven local no seu repositório e injeta o bundle compilado dentro do Karaf.
 *   **`karaf_verify_bundle`**: Confirma após o deploy que a feature/bundle está instalada e ativa (`feature:list -i` + `bundle:list` filtrados pelo termo).
 *   **`karaf_get_deploy_history`**: Histórico persistido de deploys/builds (mais recente primeiro, até 200 entradas).
-*   **`karaf_get_log`**: Lê diretamente o arquivo `karaf.log` sem precisar abrir.
+*   **`karaf_get_log`**: Lê diretamente o log do Pax Logging do container Karaf via `log:display`.
+*   **`karaf_get_jvm_memory`**: Obtém telemetria em tempo real da JVM do Karaf: consumo de Heap e Non-Heap (usado, alocado, máximo), percentual, contagem de threads, classes carregadas e status de alerta de OutOfMemory (OOM).
+*   **`karaf_trigger_gc`**: Solicita a execução imediata do Garbage Collector na JVM do Apache Karaf via JMX ou comando nativo.
+*   **`karaf_list_feature_repos` / `karaf_add_feature_repo` / `karaf_remove_feature_repo` / `karaf_refresh_feature_repo`**: Gerencia repositórios Maven/XML de features do Karaf (`feature:repo-list`, `repo-add`, `repo-remove`, `repo-refresh`).
+*   **`karaf_list_all_features`**: Lista todas as features do Karaf (instaladas e disponíveis), versões e repositórios de origem.
+*   **`karaf_analyze_log`**: Analisa logs do Karaf ou textos informados, detectando e categorizando falhas críticas (`ORA-XXXXX`, `NullPointerException`, `BundleException`, `OutOfMemoryError`, `ClassNotFoundException`) com diagnósticos e comandos recomendados.
 
 **Exemplo de como pedir à IA:**
+> "Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."
+> "Verifique o consumo de memória Heap da JVM do Karaf e se há risco de OutOfMemoryError."
+> "Dispare o Garbage Collection na JVM do Karaf para liberar memória."
+> "Liste os repositórios de features registrados no Karaf e adicione o repositório da rotina WinThor."
+> "Analise os últimos 200 logs do Karaf procurando por erros ORA-XXXXX ou NullPointerException e me mostre os diagnósticos."
+> "Verifique se o Apache Karaf está em execução antes de iniciar o deploy."
 > "Faça o build Maven do projeto em c:\projetos\meu-servico e faça deploy no Karaf."
 > "Verifique se há conflitos de versão OSGi ou bundles em estado de erro no meu Karaf."
 
@@ -79,13 +91,17 @@ Ações automatizadas nos repositórios.
 
 *   **`git_list_projects` / `git_get_project_info`**: Lista projetos na pasta de trabalho e exibe branch atual, branches locais e do origin. Com `includeUncommittedCount`, `git_list_projects` também conta as alterações pendentes de cada repositório.
 *   **`git_get_status` / `git_get_diff` / `git_get_commit_history`** (somente leitura): Arquivos alterados, diff em relação ao HEAD (do repositório inteiro ou de um arquivo, com limite de tamanho) e últimos commits da branch atual.
-*   **`git_exec_command` / `git_checkout_branch`**: Permite fazer checkout de branches, pull, stash e status. Fetch e pull têm tempo limite de 3 minutos.
+*   **`git_exec_command` / `git_checkout_branch`**: Permite fazer checkout de branches (com suporte opcional a `baseBranch`), pull, stash e status. Fetch e pull têm tempo limite de 3 minutos.
+*   **`git_create_task_branch`**: Cria e alterna para uma nova branch padronizada vinculada a uma tarefa do Azure DevOps ou Jira (`prefix/id-slug-titulo`), validando nomes de branch e permitindo definir a branch base.
+*   **`git_list_tasks`**: Busca tarefas e work items no Jira (via API REST JQL) ou Azure DevOps (via Work Items / WIQL) para guiar a criação de branches.
 *   **`git_build_pr_url`**: Monta um link direto para criar um Pull Request no Azure/GitHub/GitLab da branch atual.
 
 **Exemplo de como pedir à IA:**
 > "Em qual branch estou no repositório de vendas? Dê um git pull e monte a URL de Pull Request."
 >
 > "Quais repositórios têm alterações não commitadas? Me mostre o diff do de vendas e resuma o que mudou."
+>
+> "Busque a tarefa SRE-1234 e crie uma branch feature/1234-ajustes-rotina-1400 a partir da develop."
 
 ---
 
@@ -109,6 +125,7 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 *   **`db_execute_query`**: Executa SELECTs de modo seguro no banco e retorna resultados tabulares.
 *   **`db_explain_plan` / `db_analyze_explain_plan`**: Roda Planos de Execução do banco e usa Inteligência Artificial Heurística para avisar sobre lentidão (ex: Full Table Scans, falta de índices, ou ordenações custosas).
 *   **`db_get_oracle_active_sessions` / `db_get_oracle_recent_statements`**: Statement Tracer do Oracle — lista sessões conectadas com a SQL atual/última de cada uma (`v$session`/`v$sql`) ou as instruções mais recentes no cursor cache, com filtro opcional por schema/texto. Útil para descobrir qual query um app ou rotina disparou, quando vários sistemas compartilham o mesmo banco.
+*   **`db_get_oracle_statement_binds`**: Captura os valores dos parâmetros (`bind variables`) passados na execução de um SQL no Oracle via `v$sql_bind_capture`, retornando tipo de dado, posição, nome e valor capturado, acompanhado do SQL executável interpolado (com os parâmetros substituídos no formato literal correto). Permite inspecionar parâmetros sem precisar habilitar `log:set trace root` no Karaf ou usar ferramentas externas como `OraTracer.exe`.
 *   **`db_start_oracle_capture` / `db_get_oracle_capture_state` / `db_stop_oracle_capture` / `db_clear_oracle_capture`**: Captura contínua do Statement Tracer — consulta `v$session`/`v$sql` em segundo plano (intervalo padrão de 3s, mínimo de 2s, parada automática após 30 minutos) e acumula as SQLs distintas e a linha do tempo de qual sessão passou a rodar qual SQL. A leitura devolve até 50 itens de cada lista por padrão (`limit`). É uma captura própria do servidor MCP: não enxerga a captura iniciada na tela do app, e vice-versa.
 
 **Exemplo de como pedir à IA:**
@@ -116,6 +133,7 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 > "Rode um Explain Plan na query 'SELECT * FROM PCPEDIDO' e analise se há problemas de performance."
 > "Quais sessões estão ativas no Oracle agora e o que cada uma está rodando?"
 > "Quais foram as últimas queries que rodaram no schema APP_KARAF?"
+> "Quais foram os parâmetros passados na query com SQL_ID '5g4b09m8d123k' no Oracle? Me mostre a SQL pronta para rodar."
 > "Liga a captura do Oracle no schema APP_KARAF; vou gravar um pedido no WinThor e depois te aviso para você me dizer quais SQLs rodaram."
 
 ---
@@ -146,8 +164,8 @@ Gestão de backup/restore agendado e leitura pontual de arquivos de log locais.
 Consulta os traces recebidos pelo receptor OTLP do app (porta 4318 por padrão, configurável na tela de APM). O buffer de traces vive na memória do processo que recebe os spans — o app desktop ou o servidor web (`npm run server`) —, então estas tools consultam esse processo por uma API local do receptor (somente loopback, protegida por token): o app precisa estar aberto.
 
 *   **`apm_get_overview`**: Vazão (RPS), taxa de erro, latências p50/p95/p99, % do tempo gasto em banco, top endpoints e queries mais lentas (filtros `serviceName` e `lastMinutes`).
-*   **`apm_get_traces`**: Busca traces por serviço, rota/traceId, apenas erros, apenas com SQL, latência mínima e janela de tempo.
-*   **`apm_get_trace_details`**: Spans na ordem do waterfall (profundidade e offset), SQL executado, exceções com stacktrace e a decomposição do tempo entre banco, chamadas externas e aplicação.
+*   **`apm_get_traces`**: Busca traces por serviço, rota/traceId, apenas erros, apenas com SQL, latência mínima, ordenação por duração ou horário (`sortBy: 'duration' | 'time'`) e filtro de chamadas lentas (`slowOnly`).
+*   **`apm_get_trace_details`**: Spans na ordem do waterfall (profundidade e offset), SQL executado, exceções com stacktrace e a decomposição analítica do tempo entre Requisição HTTP, Processamento Java e Queries JDBC no banco.
 *   **`apm_get_services` / `apm_get_receiver_status`**: Serviços monitorados com métricas agregadas; estado, porta, volume recebido e uso do buffer do receptor.
 
 **Exemplo de como pedir à IA:**
@@ -164,11 +182,30 @@ Catálogo e instalação das funcionalidades oficiais publicadas pela Rotina 801
 > "Liste as atualizações pendentes da Rotina 801 e instale as que estão liberadas."
 
 ## 12. Catálogo de Rotinas
-Rotinas (.EXE/.PC) descobertas no catálogo local e programas mapeados manualmente na UI.
+Rotinas (.EXE/.PC) descobertas no catálogo local, atualização direta da Central de Controle WinThor (CCW), gerenciamento de rollback (.bak), inspeção de versão PE e programas mapeados manualmente na UI.
 
-*   **`routines_list`**: Lista as rotinas descobertas no catálogo.
-*   **`routines_launch` / `routines_launch_mapped`**: Executa uma rotina pelo caminho completo do arquivo, ou um programa mapeado manualmente pelo id.
+*   **`routines_list` / `routines_check_karaf_status`**: Lista as rotinas descobertas no catálogo (com metadados de versão `fileVersion` extraídos) e checa se o servidor Apache Karaf / WTA está online e respondendo para autenticar rotinas via WinThor Start.
+*   **`routines_launch` / `routines_launch_mapped`**: Executa uma rotina pelo caminho completo do arquivo (suportando WinThor Start autenticado ou execução direta com `forceDirect`), ou um programa mapeado manualmente pelo id.
 *   **`routines_toggle_favorite`**: Marca ou desmarca uma rotina como favorita.
+*   **`routines_download_ccw_routine`**: Baixa uma rotina oficial diretamente da Central de Controle WinThor (CCW), descompacta caso venha em ZIP, cria backup `.bak` preventivo com timestamp se o arquivo já existir e grava na pasta do módulo em `Prod`.
+*   **`routines_install_local_file`**: Instala um executável ou pacote ZIP a partir de um arquivo local na máquina diretamente para o diretório de destino sob `Prod`, com criação preventiva de backup `.bak`.
+*   **`routines_get_ccw_catalog`**: Consulta a árvore completa oficial de módulos e rotinas disponibilizada pela Central de Controle do WinThor (requer cookie de sessão CCW).
+*   **`routines_get_ccw_download_link`**: Gera a URL direta oficial de download da CCW para uma rotina e versão específica do WinThor.
+*   **`routines_list_backups`**: Lista todos os arquivos de backup (`.bak`) existentes para uma rotina ou módulo funcional, com data/hora, tamanho e versão PE extraída do executável de backup.
+*   **`routines_restore_backup`**: Restaura uma versão anterior (.bak) para o executável ativo, criando preventivamente um backup de segurança (`_pre_rollback.bak`) antes da substituição.
+*   **`routines_delete_backup`**: Remove um arquivo de backup (`.bak`) de rotina do disco.
+*   **`routines_get_executable_version`**: Inspeciona os metadados do cabeçalho binário (PE Header) de um `.EXE` local para extrair as versões reais gravadas (`FileVersion` e `ProductVersion`).
+*   **`routines_batch_download`**: Orquestra o download e atualização em lote da Central de Controle (CCW) para todas as rotinas favoritas, um módulo funcional inteiro ou uma lista personalizada.
 
 **Exemplo de como pedir à IA:**
+> "Verifique se o Karaf está online e abra a rotina 132 pelo WinThor Start."
 > "Abra a rotina 316 do catálogo e marque ela como favorita."
+> "Baixe e atualize a rotina 132 versão 30 da Central de Controle do WinThor para a pasta Prod."
+> "Gere o link de download direto da rotina 530 na CCW para a versão 30."
+> "Instale o executável baixado D:\Downloads\PCSIS530.EXE no módulo MOD-005 com backup prévio."
+> "Liste os backups existentes da rotina 132 e me mostre a data e a versão de cada um."
+> "Faça o rollback da rotina 132 restaurando o backup PCSIS132.EXE.2026-09-29T10-00-00.bak."
+> "Qual é a versão real gravada no executável C:\Winthor\Prod\MOD-001\PCSIS132.EXE?"
+> "Atualize em lote todas as minhas rotinas favoritas da versão 30 da CCW."
+
+

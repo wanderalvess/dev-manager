@@ -180,6 +180,29 @@ export interface DeployProfile {
   steps: DeployStep[];
 }
 
+export interface OsgiResolutionDiagnosticSummary {
+  failingBundle: string;
+  missingItem: string;
+  requirementType: 'package' | 'bundle' | 'service' | 'identity' | 'generic';
+  versionRangeDesc?: string;
+  matchedPomDependency?: {
+    groupId: string;
+    artifactId: string;
+    version: string;
+  };
+  matchedProfileName?: string;
+  matchedProfileId?: string;
+  matchedProjectName?: string;
+  matchedProjectPath?: string;
+  suggestedKarafCommands?: {
+    repoAddCommand?: string;
+    installCommand?: string;
+    diagnosticCommand?: string;
+  };
+  versionMismatchWarning?: string;
+  formattedBanner?: string;
+}
+
 export interface DeployStepResult {
   stepId: string;
   stepName: string;
@@ -189,6 +212,7 @@ export interface DeployStepResult {
   durationMs: number;
   ignoredError?: boolean;
   error?: string;
+  resolutionDiagnostic?: OsgiResolutionDiagnosticSummary;
 }
 
 /** Entrada persistida do histórico de execuções de Perfis de Deploy (mais recente primeiro, limitado a 100). */
@@ -213,6 +237,7 @@ export interface DeployProgressEvent {
   error?: string;
   durationMs?: number;
   ignoredError?: boolean;
+  resolutionDiagnostic?: OsgiResolutionDiagnosticSummary;
 }
 
 export interface PomInfo {
@@ -282,6 +307,150 @@ export interface RoutineItem {
   fullPath: string;
   sizeMb: string;
   isFavorite: boolean;
+  fileVersion?: string;
+  productVersion?: string;
+}
+
+export interface ExecutableVersionInfo {
+  fileVersion?: string;
+  productVersion?: string;
+  companyName?: string;
+  fileDescription?: string;
+  legalCopyright?: string;
+  originalFilename?: string;
+  internalName?: string;
+  productName?: string;
+}
+
+export interface RoutineBackupEntry {
+  fileName: string;
+  fullPath: string;
+  routineName: string;
+  sizeBytes: number;
+  sizeFormatted: string;
+  createdAt: string;
+  timestampFormatted: string;
+  fileVersion?: string;
+  productVersion?: string;
+  isPreRollback?: boolean;
+  // Aliases / campos opcionais para componentes de UI
+  backupFilePath?: string;
+  backupPath?: string;
+  targetRoutinePath?: string;
+  targetPath?: string;
+  dateFormatted?: string;
+  version?: {
+    fileVersion?: string;
+    productVersion?: string;
+  };
+}
+
+export interface RoutineRollbackResult {
+  success: boolean;
+  message: string;
+  restoredFromBackup: string;
+  targetRoutinePath: string;
+  preRollbackBackupPath?: string;
+  restoredVersion?: string | { fileVersion?: string; productVersion?: string };
+  error?: string;
+}
+
+export type BatchRoutineTargetType = 'favorites' | 'module' | 'custom';
+
+export interface BatchRoutineDownloadRequest {
+  targetType: BatchRoutineTargetType;
+  module?: string;
+  moduleFolder?: string;
+  routineCodesOrNames?: string[];
+  routineCodes?: string[];
+  winthorVersion?: string;
+  backupExisting?: boolean;
+}
+
+export interface BatchRoutineItemProgress {
+  routine: string;
+  routineCode?: string;
+  routineCodeOrName?: string;
+  status: 'pending' | 'downloading' | 'completed' | 'failed' | 'skipped';
+  installedPath?: string;
+  backupPath?: string;
+  fileSizeBytes?: number;
+  fileVersion?: string;
+  error?: string;
+  message?: string;
+}
+
+export interface BatchRoutineDownloadResult {
+  success: boolean;
+  total: number;
+  totalRoutines?: number;
+  completed: number;
+  successfulDownloads?: number;
+  failed: number;
+  failedDownloads?: number;
+  skipped: number;
+  results: BatchRoutineItemProgress[];
+  durationMs: number;
+  message: string;
+}
+
+export interface RoutineLaunchResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  karafOffline?: boolean;
+  authFailed?: boolean;
+  winthorStartOffline?: boolean;
+  fallbackDirect?: boolean;
+}
+
+export interface RoutineDownloadRequest {
+  routineCodeOrName: string;
+  winthorVersion?: string;
+  targetModule?: string;
+  backupExisting?: boolean;
+  customDownloadUrl?: string;
+  authCookie?: string;
+}
+
+export interface RoutineDownloadResult {
+  success: boolean;
+  message: string;
+  error?: string;
+  routineName?: string;
+  routineCode?: string;
+  installedPath?: string;
+  backupPath?: string;
+  fileSizeBytes?: number;
+  extractedFiles?: string[];
+  winthorVersion?: string;
+}
+
+export interface CcwCatalogItem {
+  id: number;
+  rotina: string;
+  modulo: number;
+  moduloDesc: string;
+  versaoCorrente?: string;
+  versaoAnterior?: string;
+  versaoNova?: string;
+  dataPublicacao?: string;
+  downloadUrl?: string;
+}
+
+export interface CcwCatalogResponse {
+  success: boolean;
+  authenticated: boolean;
+  items: CcwCatalogItem[];
+  error?: string;
+  message?: string;
+}
+
+export interface KarafWtaStatusResult {
+  online: boolean;
+  wtaUrl: string;
+  isEmbedded?: boolean;
+  message: string;
 }
 
 export interface PathStatusInfo {
@@ -346,6 +515,12 @@ export interface AppSettings {
   wtaAuthToken?: string;
   /** Payload de sessão pré-configurado para o Winthor Start (contendo m, u, p, t, s) como fallback permanente */
   winthorStartDefaultPayload?: string;
+  /** URL base da Central de Controle WinThor (CCW) (padrão: https://centraldecontrole.pcinformatica.com.br) */
+  ccwBaseUrl?: string;
+  /** Versão major padrão do WinThor para download de rotinas na CCW (padrão: "30") */
+  ccwWinthorVersion?: string;
+  /** Cookie de sessão / autenticação da Central de Controle para consulta de catálogo (opcional, criptografado em repouso) */
+  ccwAuthCookie?: string;
   /** Mapa de extensão -> caminho de executável launcher, para formatos de rotina que não rodam sozinhos (ex: ".PC" -> caminho de um launcher configurado pelo usuário) */
   routineLauncherMap?: Record<string, string>;
   /** Programas mapeados manualmente pelo usuário para abrir com um clique */
@@ -403,6 +578,8 @@ export interface AppSettings {
   llmProviders?: LlmProviderConfig[];
   /** ID do provedor de LLM atualmente ativo */
   activeLlmProviderId?: string;
+  /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
+  azureDevOpsToken?: string;
 }
 
 export interface DocSyncTargetConfig {
@@ -1204,6 +1381,25 @@ export interface OracleTracerFilter {
   limit?: number;
 }
 
+/** Parâmetro / variável de bind capturado pelo Oracle (v$sql_bind_capture). */
+export interface OracleCapturedBind {
+  sqlId?: string;
+  name: string;
+  position: number;
+  datatype?: string | null;
+  value: string | null;
+  lastCaptured?: string | null;
+}
+
+export interface OracleStatementBindsResult {
+  success: boolean;
+  sqlId: string;
+  binds: OracleCapturedBind[];
+  interpolatedSql?: string;
+  executionTimeMs: number;
+  error?: string;
+}
+
 /** Uma sessão conectada ao Oracle e a instrução SQL atual/última que ela executou. */
 export interface OracleActiveSession {
   sid: number;
@@ -1218,6 +1414,8 @@ export interface OracleActiveSession {
   lastCallEt: number | null;
   sqlId: string | null;
   sqlText: string | null;
+  binds?: OracleCapturedBind[];
+  interpolatedSql?: string;
 }
 
 export interface OracleActiveSessionsResult {
@@ -1237,6 +1435,8 @@ export interface OracleRecentStatement {
   executions: number | null;
   firstLoadTime: string | null;
   lastActiveTime: string | null;
+  binds?: OracleCapturedBind[];
+  interpolatedSql?: string;
 }
 
 export interface OracleRecentStatementsResult {
@@ -1306,6 +1506,40 @@ export interface KarafFeatureInfo {
   repository: string;
   description?: string;
   isWinthor?: boolean;
+  installed?: boolean;
+}
+
+export interface KarafFeatureRepoInfo {
+  name: string;
+  url: string;
+  isWinthor?: boolean;
+  isWinThor?: boolean;
+}
+
+export interface KarafJvmMemoryInfo {
+  timestamp: number;
+  heapUsedBytes: number;
+  heapCommittedBytes: number;
+  heapMaxBytes: number;
+  heapUsedMb: number;
+  heapCommittedMb: number;
+  heapMaxMb: number;
+  heapUsagePercent: number;
+  nonHeapUsedBytes: number;
+  nonHeapCommittedBytes: number;
+  nonHeapMaxBytes: number;
+  nonHeapUsedMb: number;
+  nonHeapCommittedMb?: number;
+  nonHeapMaxMb?: number;
+  uptime?: string;
+  liveThreads?: number;
+  peakThreads?: number;
+  daemonThreads?: number;
+  classesLoaded?: number;
+  isNearOom: boolean;
+  alertLevel: 'NORMAL' | 'WARNING' | 'CRITICAL';
+  alertMessage?: string;
+  source: 'jmx' | 'info';
 }
 
 export interface KarafBundleDependent {
@@ -1512,6 +1746,24 @@ export interface GitDiffResult {
   error?: string;
 }
 
+export type GitTaskProvider = 'azure' | 'jira' | 'manual';
+
+export interface GitTaskItem {
+  id: string;
+  title: string;
+  provider: GitTaskProvider;
+  type?: string;
+  status?: string;
+  url?: string;
+}
+
+export interface CreateTaskBranchOptions {
+  taskId?: string;
+  title?: string;
+  prefix?: string;
+  baseBranch?: string;
+}
+
 // ==========================================
 // Observabilidade & Métricas do Sistema
 // ==========================================
@@ -1673,6 +1925,12 @@ export interface TraceTimeBreakdown {
   /** Chamadas CLIENT que não são banco (HTTP/RPC externos), descontado o banco feito dentro delas. */
   externalMs: number;
   appMs: number;
+  /** Tempo atribuído à camada de requisição HTTP (servidor de entrada + chamadas HTTP externas). */
+  httpMs?: number;
+  /** Tempo atribuído à execução e processamento Java na JVM/OSGi. */
+  javaMs?: number;
+  /** Tempo atribuído à execução de queries JDBC no banco de dados. */
+  jdbcMs?: number;
 }
 
 export interface TraceDetails {
@@ -1699,10 +1957,13 @@ export interface EndpointMetricsSummary {
   method: string;
   route: string;
   requestCount: number;
+  /** Alias para requestCount */
+  count?: number;
   errorCount: number;
   errorRate: number;
   avgDurationMs: number;
   p95DurationMs: number;
+  maxDurationMs?: number;
 }
 
 /**
@@ -1719,6 +1980,10 @@ export interface ApmFilter {
   limit?: number;
   startTimeMs?: number;
   endTimeMs?: number;
+  /** Ordenação dos traces: 'time' (mais recente primeiro, padrão) ou 'duration' (mais lentos primeiro). */
+  sortBy?: 'time' | 'duration';
+  /** Filtro automático para retornar apenas chamadas e queries detectadas como lentas. */
+  slowOnly?: boolean;
 }
 
 export interface ApmReceiverStatus {
@@ -1808,6 +2073,38 @@ export interface LogChunkEvent {
   lines: string[];
   truncatedOrRotated?: boolean;
   timestamp: string;
+}
+
+export type LogExceptionType =
+  | 'ORA'
+  | 'NPE'
+  | 'BUNDLE'
+  | 'OOM'
+  | 'CLASS_NOT_FOUND'
+  | 'LINK_COMM'
+  | 'GENERIC_EXCEPTION';
+
+export interface LogExceptionMatch {
+  id: string;
+  type: LogExceptionType;
+  title: string;
+  code?: string;
+  message: string;
+  lineIndex: number;
+  rawLine: string;
+  timestamp?: string;
+  suggestedCommands: string[];
+  explanation: string;
+}
+
+export interface LogAnalysisSummary {
+  totalErrors: number;
+  oraErrorsCount: number;
+  npeCount: number;
+  bundleErrorsCount: number;
+  oomCount: number;
+  otherErrorsCount: number;
+  matches: LogExceptionMatch[];
 }
 
 // ==========================================

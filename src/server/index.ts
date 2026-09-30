@@ -44,7 +44,9 @@ import {
   DocsIndexProgress,
   DocSyncProgress,
   DeployProfile,
-  ApmFilter
+  ApmFilter,
+  RoutineDownloadRequest,
+  BatchRoutineDownloadRequest
 } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 import { z } from 'zod';
@@ -64,9 +66,9 @@ dotenv.config();
 const repoRoot = path.resolve(__dirname, '../..');
 const appVersion = (() => {
   try {
-    return JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf-8')).version || '0.0.0';
+    return JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf-8')).version || '1.22.0';
   } catch {
-    return '0.0.0';
+    return '1.22.0';
   }
 })();
 
@@ -240,9 +242,17 @@ app.get('/api/system/info', async (_req, res) => {
 
 app.get('/api/system/changelog', (_req, res) => {
   try {
-    const changelogPath = path.join(repoRoot, 'CHANGELOG.md');
-    if (!fs.existsSync(changelogPath)) return res.json({ content: null });
-    res.json({ content: fs.readFileSync(changelogPath, 'utf-8') });
+    const candidates = [
+      path.join(repoRoot, 'CHANGELOG.md'),
+      path.join(process.cwd(), 'CHANGELOG.md'),
+      path.join(__dirname, '../../CHANGELOG.md')
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return res.json({ content: fs.readFileSync(p, 'utf-8') });
+      }
+    }
+    res.json({ content: null });
   } catch {
     res.json({ content: null });
   }
@@ -250,9 +260,17 @@ app.get('/api/system/changelog', (_req, res) => {
 
 app.get('/api/system/mcp-docs', (_req, res) => {
   try {
-    const docsPath = path.join(repoRoot, 'docs', 'MCP_TOOLS.md');
-    if (!fs.existsSync(docsPath)) return res.json({ content: '# Documentação não encontrada\nNão foi possível localizar o arquivo MCP_TOOLS.md.' });
-    res.json({ content: fs.readFileSync(docsPath, 'utf-8') });
+    const candidates = [
+      path.join(repoRoot, 'docs', 'MCP_TOOLS.md'),
+      path.join(process.cwd(), 'docs', 'MCP_TOOLS.md'),
+      path.join(__dirname, '../../docs/MCP_TOOLS.md')
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return res.json({ content: fs.readFileSync(p, 'utf-8') });
+      }
+    }
+    res.json({ content: '# Documentação não encontrada\nNão foi possível localizar o arquivo MCP_TOOLS.md.' });
   } catch (err: any) {
     res.json({ content: `# Erro ao ler documentação\n${err.message}` });
   }
@@ -390,6 +408,12 @@ app.post('/api/profile/kill-port', async (req, res) => {
 });
 
 // 3. Karaf Deployer & Console Embutido
+app.get('/api/karaf/status', async (req, res) => {
+  const port = req.query.port ? Number(req.query.port) : undefined;
+  const isRunning = await karafService.isKarafRunning(port);
+  res.json({ isRunning });
+});
+
 app.get('/api/karaf/embedded/status', (_req, res) => {
   res.json({ isRunning: karafService.isEmbeddedRunning() });
 });
@@ -554,13 +578,17 @@ app.get('/api/routines', (_req, res) => {
   res.json(routinesService.listRoutines());
 });
 
+app.get('/api/routines/karaf-status', async (_req, res) => {
+  res.json(await routinesService.checkKarafWtaStatus());
+});
+
 app.post('/api/routines/launch', async (req, res) => {
-  const { fullPath } = req.body;
+  const { fullPath, forceDirect } = req.body;
   if (!fullPath || typeof fullPath !== 'string' || !isSafeLocalPath(fullPath)) {
     return res.status(400).json({ success: false, error: 'Caminho inválido.' });
   }
-  const success = await routinesService.launchRoutine(fullPath);
-  res.json({ success });
+  const result = await routinesService.launchRoutine(fullPath, Boolean(forceDirect));
+  res.json(result);
 });
 
 app.post('/api/routines/launch-mapped', (req, res) => {
@@ -577,6 +605,90 @@ app.post('/api/routines/favorite', (req, res) => {
     return res.status(400).json({ error: 'ID inválido.' });
   }
   res.json(configService.toggleFavoriteRoutine(id));
+});
+
+app.post('/api/routines/download-ccw', async (req, res) => {
+  const downloadReq: RoutineDownloadRequest = req.body;
+  if (!downloadReq || !downloadReq.routineCodeOrName) {
+    return res.status(400).json({ success: false, error: 'Código ou nome de rotina obrigatório.' });
+  }
+  const result = await routinesService.downloadAndInstallRoutine(downloadReq);
+  res.json(result);
+});
+
+app.post('/api/routines/install-local', async (req, res) => {
+  const { filePath, routineCodeOrName, targetModule, backupExisting } = req.body;
+  if (!filePath || typeof filePath !== 'string' || !isSafeLocalPath(filePath)) {
+    return res.status(400).json({ success: false, error: 'Caminho de arquivo inválido.' });
+  }
+  const result = await routinesService.installRoutineFromFile(filePath, routineCodeOrName, targetModule, backupExisting !== false);
+  res.json(result);
+});
+
+app.get('/api/routines/ccw-catalog', async (req, res) => {
+  const authCookie = (req.query.authCookie as string) || undefined;
+  const result = await routinesService.getCcwCatalog(authCookie);
+  res.json(result);
+});
+
+app.get('/api/routines/ccw-download-url', (req, res) => {
+  const routineName = (req.query.routineName as string) || '';
+  const winthorVersion = (req.query.winthorVersion as string) || undefined;
+  if (!routineName) {
+    return res.status(400).json({ url: '' });
+  }
+  const url = routinesService.getCcwRoutineDownloadLink(routineName, winthorVersion);
+  res.json({ url });
+});
+
+app.get('/api/routines/backups', async (req, res) => {
+  const routine = (req.query.routine as string) || '';
+  const moduleFolder = (req.query.moduleFolder as string) || undefined;
+  if (!routine) {
+    return res.status(400).json({ error: 'Parâmetro routine é obrigatório.' });
+  }
+  res.json(await routinesService.listRoutineBackups(routine, moduleFolder));
+});
+
+app.post('/api/routines/restore-backup', async (req, res) => {
+  const { backupFilePath, targetRoutinePath } = req.body;
+  if (!backupFilePath || typeof backupFilePath !== 'string' || !isSafeLocalPath(backupFilePath)) {
+    return res.status(400).json({ success: false, message: 'Caminho de backup inválido.' });
+  }
+  if (!targetRoutinePath || typeof targetRoutinePath !== 'string' || !isSafeLocalPath(targetRoutinePath)) {
+    return res.status(400).json({ success: false, message: 'Caminho de destino da rotina inválido.' });
+  }
+  const result = await routinesService.restoreRoutineBackup(backupFilePath, targetRoutinePath);
+  res.json(result);
+});
+
+app.delete('/api/routines/backup', async (req, res) => {
+  const backupFilePath = (req.body?.backupFilePath || req.query?.backupFilePath) as string;
+  if (!backupFilePath || typeof backupFilePath !== 'string' || !isSafeLocalPath(backupFilePath)) {
+    return res.status(400).json({ success: false, error: 'Caminho de backup inválido.' });
+  }
+  const result = await routinesService.deleteRoutineBackup(backupFilePath);
+  res.json(result);
+});
+
+app.get('/api/routines/version-info', async (req, res) => {
+  const filePath = (req.query.filePath as string) || '';
+  if (!filePath || !isSafeLocalPath(filePath)) {
+    return res.status(400).json({ error: 'Caminho de arquivo inválido.' });
+  }
+  const info = await routinesService.getExecutableVersion(filePath);
+  res.json(info);
+});
+
+app.post('/api/routines/batch-download', async (req, res) => {
+  const batchReq: BatchRoutineDownloadRequest = req.body;
+  if (!batchReq || !batchReq.targetType) {
+    return res.status(400).json({ success: false, error: 'Tipo de alvo (targetType) obrigatório.' });
+  }
+  const result = await routinesService.downloadRoutinesBatch(batchReq, (progress) => {
+    broadcastWs('routines:batch-progress', progress);
+  });
+  res.json(result);
 });
 
 // 6. Documentação (RAG local)
@@ -850,6 +962,16 @@ app.post('/api/db/oracle-recent-statements', async (req, res) => {
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, statements: [], executionTimeMs: 0, error: err.message || 'Erro ao consultar SQL recente no Oracle' });
+  }
+});
+
+app.post('/api/db/oracle-statement-binds', async (req, res) => {
+  try {
+    const { config, sqlId, sqlText } = req.body;
+    const result = await databaseService.getOracleStatementBinds(config, sqlId, sqlText);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, sqlId: req.body?.sqlId || '', binds: [], executionTimeMs: 0, error: err.message || 'Erro ao consultar parâmetros de bind no Oracle' });
   }
 });
 
@@ -1456,6 +1578,89 @@ app.post('/api/karaf/bundles/update-version', async (req, res) => {
   res.json(result);
 });
 
+// Features Karaf & Repositórios Maven
+app.post('/api/karaf/features', async (req, res) => {
+  const features = await karafService.listInstalledFeatures(req.body);
+  res.json(features);
+});
+
+app.post('/api/karaf/features-all', async (req, res) => {
+  const { installedOnly, credentials } = req.body || {};
+  const features = await karafService.listAllFeatures(Boolean(installedOnly), credentials);
+  res.json(features);
+});
+
+app.post('/api/karaf/features/install', async (req, res) => {
+  const { featureName, version, credentials } = req.body || {};
+  const result = await karafService.installFeature(featureName, version, credentials, (chunk) => {
+    broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+app.post('/api/karaf/features/uninstall', async (req, res) => {
+  const { featureName, version, credentials } = req.body || {};
+  const result = await karafService.uninstallFeature(featureName, version, credentials, (chunk) => {
+    broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+app.post(['/api/karaf/feature-repos', '/api/karaf/feature-repos/list'], async (req, res) => {
+  const repos = await karafService.listFeatureRepositories(req.body);
+  res.json(repos);
+});
+
+app.post('/api/karaf/feature-repos/add', async (req, res) => {
+  const { url, credentials } = req.body || {};
+  const result = await karafService.addFeatureRepository(url, credentials, (chunk) => {
+    broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+app.post('/api/karaf/feature-repos/remove', async (req, res) => {
+  const { nameOrUrl, credentials } = req.body || {};
+  const result = await karafService.removeFeatureRepository(nameOrUrl, credentials, (chunk) => {
+    broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+app.post('/api/karaf/feature-repos/refresh', async (req, res) => {
+  const { nameOrUrl, credentials } = req.body || {};
+  const result = await karafService.refreshFeatureRepository(nameOrUrl, credentials, (chunk) => {
+    broadcastWs('karaf:log-chunk', chunk);
+  });
+  res.json(result);
+});
+
+// Monitor de Memória JVM (JMX / Karaf)
+app.all('/api/karaf/jvm-memory', async (req, res) => {
+  try {
+    const credentials = req.method === 'POST' ? req.body : undefined;
+    const metrics = await karafService.getJvmMemoryMetrics(credentials);
+    res.json(metrics);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Falha ao obter métricas de memória JVM' });
+  }
+});
+
+app.post('/api/karaf/gc', async (req, res) => {
+  try {
+    const result = await karafService.triggerGarbageCollection(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message || 'Falha ao disparar Garbage Collection' });
+  }
+});
+
+// Log Analyzer & Destaque de Exceções
+app.post('/api/karaf/analyze-log', (req, res) => {
+  const { content } = req.body || {};
+  res.json(karafService.analyzeLogText(content || ''));
+});
+
 // Rotina 801: Catálogo Oficial e Instalação de Serviços Web
 app.get('/api/routine801/instalacao', async (req, res) => {
   try {
@@ -1496,12 +1701,40 @@ app.post('/api/routine801/install', async (req, res) => {
 
 // 13. Operações Git Avançadas
 app.post('/api/git/checkout', async (req, res) => {
-  const { projectPath, branchName, createNew } = req.body;
+  const { projectPath, branchName, createNew, baseBranch } = req.body;
   if (!isSafeLocalPath(projectPath)) {
     return res.status(400).json({ success: false, output: 'Caminho de projeto inválido.' });
   }
-  const result = await gitAzureService.checkoutBranch(projectPath, branchName, createNew);
+  const result = await gitAzureService.checkoutBranch(projectPath, branchName, createNew, baseBranch);
   res.json(result);
+});
+
+app.post('/api/git/create-task-branch', async (req, res) => {
+  const { projectPath, taskId, title, prefix, baseBranch } = req.body;
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json({ success: false, output: 'Caminho de projeto inválido.', branchName: '' });
+  }
+  const result = await gitAzureService.createTaskBranch(projectPath, { taskId, title, prefix, baseBranch });
+  res.json(result);
+});
+
+app.post('/api/git/open-file-in-ide', async (req, res) => {
+  const { projectPath, relativePath } = req.body;
+  if (!isSafeLocalPath(projectPath) || !isSafeLocalPath(relativePath)) {
+    return res.status(400).json({ success: false, error: 'Caminho inválido.' });
+  }
+  const result = await gitAzureService.openFileInIde(projectPath, relativePath);
+  res.json(result);
+});
+
+app.get('/api/git/tasks', async (req, res) => {
+  const projectPath = req.query.path ? String(req.query.path) : undefined;
+  const query = req.query.query ? String(req.query.query) : undefined;
+  if (projectPath && !isSafeLocalPath(projectPath)) {
+    return res.status(400).json([]);
+  }
+  const tasks = await gitAzureService.fetchTasks(projectPath, query);
+  res.json(tasks);
 });
 
 app.post('/api/git/commit-push', async (req, res) => {
@@ -1638,7 +1871,9 @@ const apmFilterSchema = z.object({
   maxDurationMs: z.number().optional(),
   limit: z.number().int().positive().optional(),
   startTimeMs: z.number().optional(),
-  endTimeMs: z.number().optional()
+  endTimeMs: z.number().optional(),
+  sortBy: z.enum(['time', 'duration']).optional(),
+  slowOnly: z.boolean().optional()
 });
 
 // Consultas e Operações REST

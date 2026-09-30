@@ -12,7 +12,8 @@ import {
   Terminal,
   Copy,
   Check,
-  Zap
+  Zap,
+  Search
 } from 'lucide-react';
 import {
   ObservabilityOverview,
@@ -28,6 +29,7 @@ import { buildApmSetupSnippets, getMethodBadgeClass, splitSqlTokens } from '../u
 interface ApmDashboardViewProps {
   overview: ObservabilityOverview | null;
   onFilterByEndpoint?: (route: string) => void;
+  onFilterBySlowQuery?: (statement: string) => void;
   onSelectTrace?: (traceId: string) => void;
   onNavigateToDatabase?: () => void;
   onGenerateDemo?: () => void;
@@ -38,6 +40,7 @@ interface ApmDashboardViewProps {
 export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
   overview,
   onFilterByEndpoint,
+  onFilterBySlowQuery,
   onSelectTrace,
   onNavigateToDatabase,
   onGenerateDemo,
@@ -45,6 +48,7 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
 }) => {
   const { copy: copyToClipboard, copiedKey: copyFeedback } = useCopyToClipboard(2000);
   const [hoveredBucketIdx, setHoveredBucketIdx] = useState<number | null>(null);
+  const [endpointSortMode, setEndpointSortMode] = useState<'volume' | 'slow'>('volume');
 
   const timeSeries = useMemo<ApmTimeSeriesBucket[]>(() => {
     return overview?.timeSeries || [];
@@ -54,9 +58,13 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
     return overview?.slowQueries || [];
   }, [overview]);
 
-  const topEndpoints = useMemo<EndpointMetricsSummary[]>(() => {
-    return overview?.topEndpoints || [];
-  }, [overview]);
+  const displayedEndpoints = useMemo<EndpointMetricsSummary[]>(() => {
+    const list = [...(overview?.topEndpoints || [])];
+    if (endpointSortMode === 'slow') {
+      return list.sort((a, b) => b.p95DurationMs - a.p95DurationMs || b.avgDurationMs - a.avgDurationMs);
+    }
+    return list.sort((a, b) => b.requestCount - a.requestCount);
+  }, [overview, endpointSortMode]);
 
   // Cálculos de max para gráficos proporcionais
   const maxBucketRequests = useMemo(() => {
@@ -535,19 +543,43 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
             <div className="flex items-center gap-2">
               <Server className="w-4 h-4 text-sky-500" />
               <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-foreground">
-                Endpoints Mais Solicitados
+                Endpoints {endpointSortMode === 'slow' ? 'Mais Lentos (p95)' : 'Mais Solicitados'}
               </h4>
             </div>
-            <span className="text-[11px] text-muted-foreground font-mono">
-              Top {topEndpoints.length} rotas
-            </span>
+
+            {/* Alternador de Ordenação: Volume vs Lentidão */}
+            <div className="flex items-center p-0.5 rounded bg-muted/60 border border-border text-[10px] font-medium">
+              <button
+                type="button"
+                onClick={() => setEndpointSortMode('volume')}
+                className={`px-2 py-0.5 rounded transition cursor-pointer ${
+                  endpointSortMode === 'volume'
+                    ? 'bg-card text-foreground font-semibold shadow-2xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Volume
+              </button>
+              <button
+                type="button"
+                onClick={() => setEndpointSortMode('slow')}
+                className={`px-2 py-0.5 rounded transition cursor-pointer flex items-center gap-1 ${
+                  endpointSortMode === 'slow'
+                    ? 'bg-card text-amber-600 dark:text-amber-400 font-bold shadow-2xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <span>Mais Lentos</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              </button>
+            </div>
           </div>
 
-          {topEndpoints.length === 0 ? (
+          {displayedEndpoints.length === 0 ? (
             <p className="text-xs text-muted-foreground py-4 text-center">Nenhum endpoint registrado ainda.</p>
           ) : (
             <div className="divide-y divide-border/60 overflow-hidden">
-              {topEndpoints.slice(0, 5).map((ep, i) => (
+              {displayedEndpoints.slice(0, 5).map((ep, i) => (
                 <div
                   key={`${ep.serviceName}-${ep.method}-${ep.route}-${i}`}
                   className="py-2.5 flex items-center justify-between gap-3 group hover:bg-neutral-100/50 dark:hover:bg-neutral-900/50 -mx-2 px-2 rounded-lg transition-colors"
@@ -569,7 +601,18 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
                     <div className="text-right font-mono text-xs">
                       <div className="font-semibold text-foreground">{ep.requestCount} reqs</div>
                       <div className="text-[10px] text-muted-foreground">
-                        p95: <span className="text-indigo-600 dark:text-indigo-400 font-bold">{ep.p95DurationMs}ms</span>
+                        p95:{' '}
+                        <span
+                          className={`font-bold ${
+                            ep.p95DurationMs >= 1000
+                              ? 'text-rose-600 dark:text-rose-400'
+                              : ep.p95DurationMs >= 400
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-indigo-600 dark:text-indigo-400'
+                          }`}
+                        >
+                          {ep.p95DurationMs}ms
+                        </span>
                         {ep.errorRate > 0 && (
                           <span className="text-rose-600 dark:text-rose-400 ml-1.5 font-bold">
                             {ep.errorRate}% err
@@ -643,6 +686,20 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
 
                       {/* Botões de Ação */}
                       <div className="flex items-center gap-1.5 shrink-0">
+                        {(onFilterBySlowQuery || onFilterByEndpoint) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onFilterBySlowQuery) onFilterBySlowQuery(sq.statement);
+                              else if (onFilterByEndpoint) onFilterByEndpoint(sq.statement);
+                            }}
+                            title="Filtrar traces com esta query lenta no Traces Explorer"
+                            className="px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground border border-border text-[10px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <Search className="w-3 h-3 text-muted-foreground" />
+                            Filtrar
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => handleOpenInDbStudio(sq.statement)}

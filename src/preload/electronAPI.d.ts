@@ -14,6 +14,8 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   RoutineItem,
+  RoutineLaunchResult,
+  KarafWtaStatusResult,
   PomInfo,
   PathStatusInfo,
   SelectFileOptions,
@@ -67,6 +69,7 @@ import type {
   DeployStep,
   DeployProfileHistoryEntry,
   DeployProgressEvent,
+  OsgiResolutionDiagnosticSummary,
   TableColumnInfo,
   DockerContainerStats,
   ComposeServiceStatus,
@@ -135,6 +138,7 @@ export interface ElectronAPI {
   sendKarafInput: (input: string) => Promise<boolean>;
   stopEmbeddedKaraf: () => Promise<boolean>;
   isEmbeddedKarafRunning: () => Promise<boolean>;
+  isKarafRunning: (sshPort?: number) => Promise<boolean>;
   onKarafStdout: (callback: (chunk: string) => void) => () => void;
   getKarafPersistedLogs: (maxChars?: number) => Promise<{ output: string }>;
   clearKarafPersistedLogs: () => Promise<{ success: boolean }>;
@@ -219,8 +223,13 @@ export interface ElectronAPI {
   routine801InstallFeatures: (request: Routine801InstallRequest) => Promise<Routine801InstallResult>;
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
-  runDeployProfile: (profile: DeployProfile) => Promise<{ success: boolean; error?: string }>;
-  runDeployStep: (step: DeployStep, profileName?: string) => Promise<{ success: boolean; error?: string }>;
+  runDeployProfile: (
+    profile: DeployProfile
+  ) => Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }>;
+  runDeployStep: (
+    step: DeployStep,
+    profileName?: string
+  ) => Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }>;
   abortDeploy: () => Promise<{ success: boolean }>;
   getDeployProfileHistory: () => Promise<DeployProfileHistoryEntry[]>;
   clearDeployProfileHistory: () => Promise<{ success: boolean }>;
@@ -246,7 +255,8 @@ export interface ElectronAPI {
 
   // Catálogo de Rotinas
   listRoutines: () => Promise<RoutineItem[]>;
-  launchRoutine: (fullPath: string) => Promise<boolean>;
+  launchRoutine: (fullPath: string, forceDirect?: boolean) => Promise<RoutineLaunchResult>;
+  checkRoutineKarafStatus: () => Promise<KarafWtaStatusResult>;
   launchMappedProgram: (id: string) => Promise<boolean>;
   toggleFavoriteRoutine: (id: string) => Promise<AppSettings>;
 

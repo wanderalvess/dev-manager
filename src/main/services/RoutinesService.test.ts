@@ -5,7 +5,7 @@ import path from 'path';
 import { ConfigService } from './ConfigService';
 import { RoutinesService, extractRoutineCode } from './RoutinesService';
 
-const spawnMock = vi.fn((..._args: unknown[]) => ({ unref: vi.fn() }));
+const spawnMock = vi.fn((..._args: unknown[]) => ({ unref: vi.fn(), on: vi.fn() }));
 vi.mock('child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('child_process')>();
   return {
@@ -13,6 +13,22 @@ vi.mock('child_process', async (importOriginal) => {
     spawn: (...args: unknown[]) => spawnMock(...args)
   };
 });
+
+function expectProcessSpawned(targetPath: string, args: string[] = []) {
+  if (process.platform === 'win32') {
+    expect(spawnMock).toHaveBeenCalledWith(
+      expect.stringMatching(/cmd(?:\.exe)?$/i),
+      expect.arrayContaining(['/c', 'start', path.basename(targetPath)]),
+      expect.objectContaining({ detached: true })
+    );
+  } else {
+    expect(spawnMock).toHaveBeenCalledWith(
+      targetPath,
+      args,
+      expect.objectContaining({ detached: true })
+    );
+  }
+}
 
 describe('RoutinesService', () => {
   let configDir: string;
@@ -100,6 +116,8 @@ describe('RoutinesService', () => {
       expect(extractRoutineCode('132.EXE')).toBe('132');
       expect(extractRoutineCode('ROTINA529.exe')).toBe('529');
       expect(extractRoutineCode('ROT_1400.exe')).toBe('1400');
+      expect(extractRoutineCode('PC1406.EXE')).toBe('1406');
+      expect(extractRoutineCode('PCINF000.EXE')).toBe('000');
     });
 
     it('retorna null para programas e utilitários sem código numérico padrão', () => {
@@ -116,23 +134,21 @@ describe('RoutinesService', () => {
       fs.writeFileSync(outsideExe, 'x');
 
       const result = await service.launchRoutine(outsideExe);
-      expect(result).toBe(false);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('SECURITY_BLOCKED');
       expect(spawnMock).not.toHaveBeenCalled();
       fs.rmSync(outsideDir, { recursive: true, force: true });
     });
 
-    it('lança .EXE diretamente quando não há launcher configurado e winthorStart falha ou está desabilitado', async () => {
+    it('lança .EXE diretamente quando winthorStart está desabilitado', async () => {
       const exePath = path.join(appDir, 'ROTINA1.EXE');
       fs.writeFileSync(exePath, 'x');
       configService.saveSettings({ appPath: appDir, winthorStartEnabled: false });
 
       const result = await service.launchRoutine(exePath);
-      expect(result).toBe(true);
-      expect(spawnMock).toHaveBeenCalledWith(
-        path.normalize(exePath),
-        [],
-        expect.objectContaining({ detached: true })
-      );
+      expect(result.success).toBe(true);
+      expect(result.fallbackDirect).toBe(true);
+      expectProcessSpawned(exePath);
     });
 
     it('usa o launcher configurado para extensões mapeadas', async () => {
@@ -146,12 +162,8 @@ describe('RoutinesService', () => {
       });
 
       const result = await service.launchRoutine(pcFile);
-      expect(result).toBe(true);
-      expect(spawnMock).toHaveBeenCalledWith(
-        launcherPath,
-        [path.normalize(pcFile)],
-        expect.objectContaining({ detached: true })
-      );
+      expect(result.success).toBe(true);
+      expectProcessSpawned(launcherPath, [path.normalize(pcFile)]);
     });
 
     it('tenta abrir via Winthor Start se winthorStartEnabled for true e for rotina identificada', async () => {
@@ -159,34 +171,117 @@ describe('RoutinesService', () => {
       fs.writeFileSync(exePath, 'x');
       configService.saveSettings({ appPath: appDir, winthorStartEnabled: true });
 
-      const winthorStartSpy = vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue(true);
+      const winthorStartSpy = vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue({
+        success: true,
+        message: 'Rotina 132 iniciada com sucesso via WinThor Start.'
+      });
 
       const result = await service.launchRoutine(exePath);
-      expect(result).toBe(true);
+      expect(result.success).toBe(true);
       expect(winthorStartSpy).toHaveBeenCalledWith('132');
       expect(spawnMock).not.toHaveBeenCalled();
     });
 
-    it('faz fallback para spawn se Winthor Start falhar', async () => {
+    it('NÃO faz fallback silencioso para spawn se Winthor Start falhar por Karaf offline', async () => {
       const exePath = path.join(appDir, 'PCSIS132.EXE');
       fs.writeFileSync(exePath, 'x');
       configService.saveSettings({ appPath: appDir, winthorStartEnabled: true });
 
-      vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue(false);
+      vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue({
+        success: false,
+        karafOffline: true,
+        error: 'KARAF_OFFLINE',
+        message: 'O Apache Karaf (WTA) não está em execução em http://localhost:8889.'
+      });
 
       const result = await service.launchRoutine(exePath);
-      expect(result).toBe(true);
-      expect(spawnMock).toHaveBeenCalledWith(
-        path.normalize(exePath),
-        [],
-        expect.objectContaining({ detached: true })
-      );
+      expect(result.success).toBe(false);
+      expect(result.karafOffline).toBe(true);
+      expect(result.message).toContain('Apache Karaf');
+      expect(spawnMock).not.toHaveBeenCalled();
     });
 
-    it('retorna false quando o arquivo não existe', async () => {
+    it('NÃO faz fallback silencioso para spawn se Winthor Start der timeout', async () => {
+      const exePath = path.join(appDir, 'PCSIS132.EXE');
+      fs.writeFileSync(exePath, 'x');
+      configService.saveSettings({ appPath: appDir, winthorStartEnabled: true });
+
+      vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue({
+        success: false,
+        error: 'WINTHOR_START_TIMEOUT',
+        message: 'Tempo limite esgotado ao aguardar resposta do serviço WinThor Start na porta 9195.'
+      });
+
+      const result = await service.launchRoutine(exePath);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('WINTHOR_START_TIMEOUT');
+      expect(spawnMock).not.toHaveBeenCalled();
+    });
+
+    it('NÃO faz fallback silencioso para spawn se Winthor Start retornar erro funcional', async () => {
+      const exePath = path.join(appDir, 'PCSIS132.EXE');
+      fs.writeFileSync(exePath, 'x');
+      configService.saveSettings({ appPath: appDir, winthorStartEnabled: true });
+
+      vi.spyOn(service, 'launchViaWinthorStart').mockResolvedValue({
+        success: false,
+        error: 'WINTHOR_START_ERROR',
+        message: 'Usuário sem permissão para acessar a rotina 132.'
+      });
+
+      const result = await service.launchRoutine(exePath);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('WINTHOR_START_ERROR');
+      expect(spawnMock).not.toHaveBeenCalled();
+    });
+
+    it('permite abertura direta forçada (forceDirect = true) mesmo se Karaf estiver offline', async () => {
+      const exePath = path.join(appDir, 'PCSIS132.EXE');
+      fs.writeFileSync(exePath, 'x');
+      configService.saveSettings({ appPath: appDir, winthorStartEnabled: true });
+
+      const result = await service.launchRoutine(exePath, true);
+      expect(result.success).toBe(true);
+      expect(result.fallbackDirect).toBe(true);
+      expectProcessSpawned(exePath);
+    });
+
+    it('retorna erro quando o arquivo não existe', async () => {
       configService.saveSettings({ appPath: appDir });
       const result = await service.launchRoutine(path.join(appDir, 'nao-existe.exe'));
-      expect(result).toBe(false);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('FILE_NOT_FOUND');
+    });
+  });
+
+  describe('checkKarafWtaStatus', () => {
+    it('retorna online = false quando o fetch falha por conexão recusada', async () => {
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockRejectedValue(new Error('connect ECONNREFUSED 127.0.0.1:8889'));
+
+      try {
+        const status = await service.checkKarafWtaStatus();
+        expect(status.online).toBe(false);
+        expect(status.message).toContain('não está em execução');
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    it('retorna online = true quando o endpoint responde com status HTTP', async () => {
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockResolvedValue({
+        status: 200,
+        ok: true
+      } as Response);
+
+      try {
+        const status = await service.checkKarafWtaStatus();
+        expect(status.online).toBe(true);
+        expect(status.message).toContain('online');
+      } finally {
+        global.fetch = originalFetch;
+      }
     });
   });
 
@@ -200,11 +295,7 @@ describe('RoutinesService', () => {
 
       const result = service.launchMappedProgram('mp-1');
       expect(result).toBe(true);
-      expect(spawnMock).toHaveBeenCalledWith(
-        path.normalize(exePath),
-        [],
-        expect.objectContaining({ detached: true })
-      );
+      expectProcessSpawned(exePath);
     });
 
     it('rejeita id não salvo, mesmo que pareça válido', () => {

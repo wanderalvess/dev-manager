@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildApmSetupSnippets,
+  categorizeSpan,
   computeLatencySpectrum,
   computeTimeBudget,
+  detectSlowSummary,
   filterTraces,
   findNextTraceId,
   formatSpanErrorForClipboard,
@@ -68,6 +70,50 @@ describe('apmUiUtils', () => {
     });
   });
 
+  describe('categorizeSpan', () => {
+    it('classifica span com dbStatement ou dbSystem como jdbc', () => {
+      const span = makeSpan({
+        name: 'SELECT FROM PCPEDC',
+        kind: 'CLIENT',
+        dbStatement: 'SELECT * FROM PCPEDC',
+        dbSystem: 'oracle',
+        durationMs: 350
+      });
+      const res = categorizeSpan(span);
+      expect(res.category).toBe('jdbc');
+      expect(res.label).toBe('JDBC');
+      expect(res.isSlow).toBe(true);
+      expect(res.badgeClass).toContain('amber');
+    });
+
+    it('classifica span raiz HTTP ou SERVER como http', () => {
+      const span = makeSpan({
+        name: 'GET /winthor/api/v1/pedidos',
+        kind: 'SERVER',
+        httpMethod: 'GET',
+        durationMs: 40
+      });
+      const res = categorizeSpan(span);
+      expect(res.category).toBe('http');
+      expect(res.label).toBe('HTTP');
+      expect(res.isSlow).toBe(false);
+      expect(res.badgeClass).toContain('sky');
+    });
+
+    it('classifica span de processamento interno OSGi/Karaf como java', () => {
+      const span = makeSpan({
+        name: 'OrderProcessorService::process',
+        kind: 'INTERNAL',
+        durationMs: 120
+      });
+      const res = categorizeSpan(span);
+      expect(res.category).toBe('java');
+      expect(res.label).toBe('Java');
+      expect(res.isSlow).toBe(false);
+      expect(res.badgeClass).toContain('purple');
+    });
+  });
+
   describe('computeTimeBudget', () => {
     it('calcula percentual de banco de dados e aplicação com detecção de gargalo', () => {
       const details: TraceDetails = {
@@ -101,6 +147,9 @@ describe('apmUiUtils', () => {
       expect(budget?.dbPct).toBe(80);
       expect(budget?.hasDbBottleneck).toBe(true);
       expect(budget?.topBottleneck).toBe('db');
+      expect(budget?.primaryBottleneck).toBe('jdbc');
+      expect(budget?.jdbcPct).toBe(80);
+      expect(budget!.httpPct + budget!.javaPct + budget!.jdbcPct).toBe(100);
     });
 
     it('mantém a soma dos percentuais em 100 mesmo com arredondamento', () => {
@@ -111,6 +160,7 @@ describe('apmUiUtils', () => {
         breakdown: { totalMs: 3, dbMs: 1, externalMs: 1, appMs: 1 }
       });
       expect(budget!.dbPct + budget!.clientPct + budget!.appPct).toBe(100);
+      expect(budget!.httpPct + budget!.javaPct + budget!.jdbcPct).toBe(100);
     });
 
     it('retorna null se não houver detalhes ou spans', () => {
@@ -123,6 +173,25 @@ describe('apmUiUtils', () => {
           breakdown: { totalMs: 0, dbMs: 0, externalMs: 0, appMs: 0 }
         })
       ).toBeNull();
+    });
+  });
+
+  describe('detectSlowSummary', () => {
+    it('agrega contagens de traces lentos, críticos e queries lentas', () => {
+      const traces = [
+        makeTrace({ traceId: 't1', durationMs: 200, httpRoute: '/api/fast' }),
+        makeTrace({ traceId: 't2', durationMs: 450, httpRoute: '/api/pedidos', hasDatabaseQuery: true }),
+        makeTrace({ traceId: 't3', durationMs: 1500, httpRoute: '/api/pedidos', hasDatabaseQuery: true }),
+        makeTrace({ traceId: 't4', durationMs: 1200, httpRoute: '/api/relatorios', hasDatabaseQuery: false })
+      ];
+
+      const res = detectSlowSummary(traces);
+      expect(res.slowTracesCount).toBe(3); // >= 400ms
+      expect(res.criticalTracesCount).toBe(2); // >= 1000ms
+      expect(res.slowDbTracesCount).toBe(2);
+      expect(res.topSlowEndpoints.length).toBeGreaterThan(0);
+      expect(res.topSlowEndpoints[0].route).toBe('/api/pedidos');
+      expect(res.topSlowEndpoints[0].maxDurationMs).toBe(1500);
     });
   });
 
@@ -234,6 +303,20 @@ describe('apmUiUtils', () => {
       const res = filterTraces(traces, { selectedService: 'auth-service' });
       expect(res).toHaveLength(1);
       expect(res[0].traceId).toBe('tr-01');
+    });
+
+    it('ordena traces por duração decrescente quando sortOrder for duration', () => {
+      const res = filterTraces(traces, { sortOrder: 'duration' });
+      expect(res.map((t) => t.traceId)).toEqual(['tr-02', 'tr-04', 'tr-03', 'tr-01']);
+    });
+
+    it('filtra por preset SLOW_QUERIES e SLOW_ENDPOINTS', () => {
+      const slowQueries = filterTraces(traces, { preset: 'SLOW_QUERIES' });
+      expect(slowQueries).toHaveLength(1);
+      expect(slowQueries[0].traceId).toBe('tr-03');
+
+      const slowEndpoints = filterTraces(traces, { preset: 'SLOW_ENDPOINTS' });
+      expect(slowEndpoints.map((t) => t.traceId)).toEqual(['tr-02', 'tr-04']);
     });
   });
 
