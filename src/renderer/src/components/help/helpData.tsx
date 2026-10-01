@@ -512,6 +512,15 @@ export function getFaqList({
                 <strong className="text-foreground">Modos de Instalação:</strong> Você pode alternar no cabeçalho do catálogo entre o <strong className="text-foreground">Console Karaf</strong> (executa client.bat com streaming em tempo real dos comandos feature:repo-add e feature:install) e a <strong className="text-foreground">API WTA</strong> (dispara a instalação diretamente via endpoint REST da ferramenta servidor).
               </li>
               <li>
+                <strong className="text-foreground">Filtro por Família de Versão &amp; Seleção em Lote:</strong> Filtre instantaneamente as funcionalidades por linhas de versão (ex: <code className="font-mono text-primary">1.39.*</code>, <code className="font-mono text-primary">1.38.*</code>, <code className="font-mono text-primary">0.39.*</code>) e utilize o botão rápido <strong className="text-foreground">+ Selecionar N da vX.X.x</strong> para marcar todos os serviços e rotinas daquela release para instalação conjunta.
+              </li>
+              <li>
+                <strong className="text-foreground">Instalação Direta &amp; Override de Versão:</strong> Precisa instalar uma versão específica que não consta no catálogo ativo ou montar um ambiente com pacotes pontuais? Use o botão <strong className="text-foreground">+ Instalação Direta</strong> no cabeçalho ou informe a versão no campo <strong className="text-foreground">Versão Alvo (Override)</strong> na barra de lote / drawer de inspeção.
+              </li>
+              <li>
+                <strong className="text-foreground">Resolução de "No matching features":</strong> Esse erro ocorre no Karaf quando o comando <code className="font-mono text-primary">feature:install</code> é executado sem que o repositório Maven (<code className="font-mono text-primary">features.xml</code>) tenha sido registrado previamente via <code className="font-mono text-primary">feature:repo-add</code>. O Dev Manager agora infere automaticamente as coordenadas canônicas Maven do WinThor (<code className="font-mono text-primary">mvn:br.com.pcsist.winthor...</code>) e executa o <code className="font-mono text-primary">feature:repo-add</code> antes da instalação, além de oferecer o botão dedicado <strong className="text-foreground">Registrar Repositórios</strong> para pré-adicionar as features no Karaf.
+              </li>
+              <li>
                 <strong className="text-foreground">Download e Timeout Estendido:</strong> Instalar serviços ou rotinas completas baixa dezenas de dependências Maven do Nexus/Artifactory. O Dev Manager aplica timeouts dedicados de até 5 minutos para que downloads pesados nunca sejam cancelados prematuramente.
               </li>
               <li>
@@ -547,10 +556,10 @@ export function getFaqList({
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados na pasta release/:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.22.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.24.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.22.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.24.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
               <li>
                 <strong className="text-foreground">LEIA-ME.txt, instalar-extras.cmd e mcp\\:</strong> guia do usuário com os links dos downloads opcionais, script que instala o modelo do RAG e o Oracle Instant Client colocados na pasta, e o servidor MCP pronto para uso. Para regenerar só esses arquivos: <code className="font-mono text-primary">npm run release:folder</code>.
@@ -1048,7 +1057,7 @@ export function getFaqList({
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Karaf iniciado pelo Cockpit:</span>
             <p>
-              Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong> — desligado por padrão, para não poluir o log do Karaf quando ninguém está olhando a telemetria. Com a opção ligada, o agente é anexado e exporta para a porta configurada a cada start pelo Dev Manager. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto na mesma tela.
+              Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf e ative a opção <strong className="text-foreground">"Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf"</strong> em <strong className="text-foreground">Configurações → Apache Karaf</strong> ou em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong> — desligado por padrão, para não poluir o log do Karaf nem adicionar overhead quando você não estiver inspecionando traces. Com a opção ligada, o agente é anexado e exporta para a porta configurada a cada start pelo Dev Manager. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto na mesma tela.
             </p>
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Porta ocupada?</span>
             <p>
@@ -1177,7 +1186,7 @@ export function getFaqList({
               A chave é gerada na primeira execução e fica no arquivo <code className="font-mono text-primary">.secrets.key</code>, ao lado do <code className="font-mono text-primary">config.json</code>. <strong className="text-foreground">Copiar o config.json para outra máquina sem essa chave faz os segredos serem perdidos</strong>: será preciso digitá-los de novo.
             </p>
             <p>
-              A interface e a API nunca devolvem o valor salvo, só uma máscara. Se você trocar o host ou a URL de um destino, a credencial antiga não é reaproveitada: informe-a de novo.
+              Por segurança contra vazamentos, a interface e a API nunca devolvem as senhas em texto puro: os campos exibem a indicação <strong className="text-emerald-500">"Senha salva e protegida"</strong>. Ao editar uma conexão de banco ou o Karaf, <strong className="text-foreground">deixe o campo em branco para manter a senha atual</strong>, ou digite uma nova para alterá-la. Se você trocar o Host ou a Porta de uma conexão, digite a senha novamente por segurança para evitar redirecionamento de credenciais.
             </p>
           </div>
         </div>
@@ -1206,6 +1215,39 @@ export function getFaqList({
           </div>
         </div>
       )
+    },
+    {
+      id: 'whats-new-and-changelog',
+      question: 'Como consultar o que mudou na versão atual e navegar pelas versões anteriores (Changelog)?',
+      category: 'Sistema & Geral',
+      tags: ['versão', 'changelog', 'novidades', 'atualização', 'histórico', 'releases', 'notas'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Dev Manager traz um modal interativo de <strong className="text-foreground">Novidades da Versão</strong> que é exibido automaticamente após uma atualização e pode ser reaberto a qualquer momento.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como acessar e navegar:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.23.0'}</code>) no topo esquerdo do cockpit para abrir o modal.
+              </li>
+              <li>
+                <strong className="text-foreground">Navegação entre releases:</strong> No cabeçalho do modal, utilize os botões rápidos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&lt;</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&gt;</kbd> (ou os atalhos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + ←</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + →</kbd>) para folhear versão a versão.
+              </li>
+              <li>
+                <strong className="text-foreground">Seletor Dropdown:</strong> Clique no seletor com o nome da versão para buscar e pular diretamente para qualquer release anterior com data de lançamento.
+              </li>
+              <li>
+                <strong className="text-foreground">Histórico Completo:</strong> Alterne para a opção <em>"Ver Histórico Completo"</em> para rolar por todas as versões registradas do projeto.
+              </li>
+              <li>
+                <strong className="text-foreground">Aba Sobre:</strong> Na Central de Ajuda → Sobre &amp; Diagnóstico, o botão <em>"Ver Changelog"</em> também abre este mesmo leitor com todas as versões estruturadas.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
     }
   ];
 }
@@ -1223,13 +1265,14 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Alt + 9', desc: 'Acessar esta Central de Ajuda & Launchpad do Sistema', category: 'Navegação' },
     { key: 'Alt + 0', desc: 'Acessar "APM & Traces" (Dashboard e Traces Explorer OpenTelemetry)', category: 'Navegação' },
     { key: 'Ctrl + K', desc: 'Abrir o Quick Launcher (busca aproximada de ações, projetos e Configurações)', category: 'Navegação' },
+    { key: 'Alt + ← / →', desc: 'Navegar entre versões anterior e seguinte no modal de Novidades', category: 'Navegação' },
     { key: 'Ctrl + Enter', desc: 'Executar consulta SQL selecionada no Database Studio', category: 'Banco de Dados' },
     { key: 'Shift + F9', desc: `Depuração Remota JVM no IntelliJ IDEA (Porta :${debugPort})`, category: 'Desenvolvimento' },
     { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' }
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.22.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.23.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '10 Módulos' },

@@ -5,7 +5,6 @@
     "output": "release",
     "buildResources": "build"
   },
-  "electronDist": "node_modules/electron/dist",
   "electronDownload": {
     "strictSSL": false
   },
@@ -13,6 +12,8 @@
     "dist/**/*",
     "dist-electron/**/*",
     "node_modules/**/*",
+    "!node_modules/esbuild/**/*",
+    "!node_modules/@esbuild/**/*",
     "package.json",
     "CHANGELOG.md",
     "docs/**/*"

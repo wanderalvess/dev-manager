@@ -310,13 +310,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       database: () => onNavigate?.('database')
     };
     return computeSetupChecklistStatus(
-      { karafUser: settings.karafUser, karafPass: settings.karafPass, databaseConnections: settings.databaseConnections },
+      { karafUser: settings.karafUser, karafPass: settings.karafPass, hasKarafPass: settings.hasKarafPass, databaseConnections: settings.databaseConnections },
       pathStatuses
     ).map((item) => ({
       ...item,
       action: actionsById[item.id]
     }));
-  }, [pathStatuses, settings.karafUser, settings.karafPass, settings.databaseConnections, onNavigate]);
+  }, [pathStatuses, settings.karafUser, settings.karafPass, settings.hasKarafPass, settings.databaseConnections, onNavigate]);
   const pendingChecklistCount = setupChecklist.filter((item) => !item.done).length;
 
   // Validação de Caminhos

@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   extractBindVariables,
+  extractSqlVariables,
   castBindValue,
   substituteBindVariables
 } from './sqlBinds';
 
 describe('sqlBinds utils', () => {
-  it('extrai variáveis de bind com sucesso em query típica do WinThor', () => {
+  it('extrai variáveis de bind com sucesso em query típica do WinThor (:VAR)', () => {
     const sql = `
       SELECT E.EMBALAGEM
             ,NVL(E.UNIDADE,'UN') AS UNIDADE_MEDIDA
@@ -24,17 +25,56 @@ describe('sqlBinds utils', () => {
     expect(vars).toEqual(['CODPROD', 'CODFILIAL', 'CODAUXILIAR']);
   });
 
-  it('ignora variáveis dentro de strings e comentários', () => {
+  it('extrai variáveis de substituição do WinThor / SQL*Plus (&VAR e &&VAR)', () => {
     const sql = `
-      -- :COMENTARIO_LINHA não deve ser extraído
-      /* :COMENTARIO_BLOCO também não */
-      SELECT 'Texto com :LITERAL_STRING' AS TXT
-        FROM DUAL
-       WHERE COD = :VAR_REAL
+      SELECT *
+        FROM PCCLIENT C
+       WHERE C.CODCLI = &CODCLI
+         AND C.CODFILIAL = &&CODFILIAL
     `;
 
     const vars = extractBindVariables(sql);
-    expect(vars).toEqual(['VAR_REAL']);
+    expect(vars).toEqual(['CODCLI', 'CODFILIAL']);
+
+    const detailed = extractSqlVariables(sql);
+    expect(detailed).toEqual([
+      { name: 'CODCLI', prefix: '&', raw: '&CODCLI' },
+      { name: 'CODFILIAL', prefix: '&&', raw: '&&CODFILIAL' }
+    ]);
+  });
+
+  it('extrai variáveis com formato @VAR e ${VAR} / #{VAR}', () => {
+    const sql = `
+      SELECT *
+        FROM PCPRODUT
+       WHERE CODPROD = @CODPROD
+         AND CODFILIAL = \${CODFILIAL}
+         AND CODDEP = #{CODDEP}
+    `;
+
+    const vars = extractBindVariables(sql);
+    expect(vars).toEqual(['CODPROD', 'CODFILIAL', 'CODDEP']);
+
+    const detailed = extractSqlVariables(sql);
+    expect(detailed).toEqual([
+      { name: 'CODPROD', prefix: '@', raw: '@CODPROD' },
+      { name: 'CODFILIAL', prefix: '${}', raw: '${CODFILIAL}' },
+      { name: 'CODDEP', prefix: '#{}', raw: '#{CODDEP}' }
+    ]);
+  });
+
+  it('ignora variáveis dentro de strings e comentários', () => {
+    const sql = `
+      -- :COMENTARIO_LINHA e &COMENTARIO_LINHA não devem ser extraídos
+      /* :COMENTARIO_BLOCO e @BLOCO também não */
+      SELECT 'Texto com :LITERAL_STRING e &OUTRO' AS TXT
+        FROM DUAL
+       WHERE COD = :VAR_REAL
+         AND TIPO = &VAR_WINTHOR
+    `;
+
+    const vars = extractBindVariables(sql);
+    expect(vars).toEqual(['VAR_REAL', 'VAR_WINTHOR']);
   });
 
   it('ignora operador de atribuição := do PL/SQL e cast :: do PostgreSQL', () => {
@@ -53,30 +93,44 @@ describe('sqlBinds utils', () => {
     expect(castBindValue('123', 'number')).toBe(123);
     expect(castBindValue('123.45', 'auto')).toBe(123.45);
     expect(castBindValue('Texto', 'string')).toBe('Texto');
+    expect(castBindValue('1, 2, 3', 'list')).toBe('1, 2, 3');
     expect(castBindValue('', 'auto')).toBeNull();
     expect(castBindValue('NULL', 'auto')).toBeNull();
     expect(castBindValue('qualquer', 'null')).toBeNull();
   });
 
-  it('substitui variáveis de bind no SQL corretamente', () => {
-    const sql = 'SELECT * FROM TAB WHERE ID = :ID AND STATUS = :STATUS AND OBS = :OBS';
+  it('substitui variáveis de bind e de substituição (: e & e @ e ${}) no SQL corretamente', () => {
+    const sql = 'SELECT * FROM TAB WHERE ID = :ID AND FILIAL = &FILIAL AND USER_ID = @USER AND DEP = ${DEP}';
     const binds = {
       ID: { value: '42', type: 'number' },
-      STATUS: { value: "D'água", type: 'string' },
-      OBS: { value: '', type: 'auto' }
+      FILIAL: { value: '01', type: 'string' },
+      USER: { value: '99', type: 'auto' },
+      DEP: { value: 'TI', type: 'string' }
     };
 
     const substituted = substituteBindVariables(sql, binds);
-    expect(substituted).toBe("SELECT * FROM TAB WHERE ID = 42 AND STATUS = 'D''água' AND OBS = NULL");
+    expect(substituted).toBe("SELECT * FROM TAB WHERE ID = 42 AND FILIAL = '01' AND USER_ID = 99 AND DEP = 'TI'");
+  });
+
+  it('formata lista para cláusula IN corretamente com tipo list', () => {
+    const sql = 'SELECT * FROM TAB WHERE CODCLI IN (:CLIENTES) AND FILIAIS IN (&FILIAIS)';
+    const binds = {
+      CLIENTES: { value: '10, 20, 30', type: 'list' },
+      FILIAIS: { value: "'01', '02'", type: 'list' }
+    };
+
+    const substituted = substituteBindVariables(sql, binds);
+    expect(substituted).toBe("SELECT * FROM TAB WHERE CODCLI IN (10, 20, 30) AND FILIAIS IN ('01', '02')");
   });
 
   it('não substitui variáveis que estejam dentro de strings literais ou comentários', () => {
-    const sql = "SELECT 'Meu :ID não muda', -- :ID de comentário\n /* :ID bloco */ ID FROM TAB WHERE ID = :ID";
+    const sql = "SELECT 'Meu :ID não muda', -- :ID e &ID comentário\n /* :ID bloco */ ID FROM TAB WHERE ID = :ID AND COD = &COD";
     const binds = {
-      ID: { value: '99', type: 'number' }
+      ID: { value: '99', type: 'number' },
+      COD: { value: '55', type: 'number' }
     };
 
     const substituted = substituteBindVariables(sql, binds);
-    expect(substituted).toBe("SELECT 'Meu :ID não muda', -- :ID de comentário\n /* :ID bloco */ ID FROM TAB WHERE ID = 99");
+    expect(substituted).toBe("SELECT 'Meu :ID não muda', -- :ID e &ID comentário\n /* :ID bloco */ ID FROM TAB WHERE ID = 99 AND COD = 55");
   });
 });

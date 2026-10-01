@@ -30,6 +30,7 @@ interface HeaderProps {
   onRefreshAll: () => void;
   isRefreshing: boolean;
   onOpenQuickLauncher?: () => void;
+  onOpenWhatsNew?: () => void;
 }
 
 const ClockDisplay: React.FC = React.memo(() => {
@@ -61,7 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onRefreshAll,
   isRefreshing,
-  onOpenQuickLauncher
+  onOpenQuickLauncher,
+  onOpenWhatsNew
 }) => {
   const [networkIps, setNetworkIps] = useState<NetworkIpInfo | null>(null);
   const { copy: copyToClipboard, copiedKey: copiedIp } = useCopyToClipboard(1800);
@@ -261,9 +263,14 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="text-xs sm:text-sm font-extrabold tracking-tight text-foreground font-sans flex items-center gap-1">
               Dev <span className="text-primary font-bold">Manager</span>
             </h1>
-            <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
+            <button
+              type="button"
+              onClick={onOpenWhatsNew}
+              className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-mono font-bold border border-primary/30 hover:border-primary/50 transition cursor-pointer active:scale-95"
+              title="Clique para ver as novidades desta versão e versões anteriores"
+            >
               v{appVersion || '...'}
-            </span>
+            </button>
           </div>
           <p className="text-[10px] text-muted-foreground font-medium hidden 2xl:block leading-tight">
             Cockpit de Desenvolvimento & Automação

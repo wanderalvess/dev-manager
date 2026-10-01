@@ -127,6 +127,8 @@ describe('computeSetupChecklistStatus', () => {
   it('marca "karaf-creds" como feito somente quando usuário E senha estão preenchidos (não apenas espaços)', () => {
     expect(computeSetupChecklistStatus({ karafUser: 'admin', karafPass: '   ' }, {}).find((i) => i.id === 'karaf-creds')?.done).toBe(false);
     expect(computeSetupChecklistStatus({ karafUser: 'admin', karafPass: 'senha123' }, {}).find((i) => i.id === 'karaf-creds')?.done).toBe(true);
+    expect(computeSetupChecklistStatus({ karafUser: 'admin', karafPass: '', hasKarafPass: true }, {}).find((i) => i.id === 'karaf-creds')?.done).toBe(true);
+    expect(computeSetupChecklistStatus({ karafUser: '', karafPass: '', hasKarafPass: true }, {}).find((i) => i.id === 'karaf-creds')?.done).toBe(false);
   });
 
   it('marca "database" como feito quando há ao menos uma conexão configurada', () => {

@@ -133,6 +133,14 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Editor SQL para Queries Grandes:</strong> Split redimensionável por arrasto vertical, modo Maximizar (tela cheia para foco total em queries grandes), gutter com números de linha sincronizado, quebra automática (Word Wrap), zoom da fonte (A-/A+) e botão para Formatar SQL automaticamente.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Parâmetros e Variáveis Dinâmicas:</strong> Suporte completo a Bind Variables (<code className="font-mono text-primary">:VAR</code>), variáveis de substituição do WinThor / SQL*Plus (<code className="font-mono text-primary">&amp;VAR</code> e <code className="font-mono text-primary">&amp;&amp;VAR</code>), scripts (<code className="font-mono text-primary">@VAR</code>) e templates (<code className="font-mono text-primary">{'{VAR}'}</code>), com histórico no cache, suporte a listas <code className="font-mono text-primary">IN (...)</code>, adição manual e substituição inline no editor.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                 <span><strong>Statement Tracer &amp; Parâmetros (Binds):</strong> Rastreamento de queries Oracle (<code className="font-mono text-primary">v$session</code>/<code className="font-mono text-primary">v$sql</code>) com captura de valores de binds (<code className="font-mono text-primary">v$sql_bind_capture</code>), dispensando <code className="font-mono text-primary">log:set trace root</code> no Karaf e gerando SQL executável interpolado em 1 clique.</span>
               </li>
               <li className="flex items-start gap-2">
@@ -258,6 +266,10 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                 <span><strong>Gerenciador de Features Maven &amp; Repositórios:</strong> Interface interativa para listar repositórios (<code className="font-mono text-primary">feature:repo-list</code>), atualizar (<code className="font-mono text-primary">feature:repo-refresh</code>), cadastrar URLs Maven e instalar/desinstalar features OSGi do WinThor com 1 clique.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                <span><strong>Catálogo Oficial da Rotina 801:</strong> Instalação e atualização de serviços web e rotinas com filtro por famílias de versão (ex.: 1.39.x, 1.38.x, 0.39.x), seleção em lote de releases completas, assistente de Instalação Direta com override de versão para montagem de ambientes específicos e pré-registro automático de repositórios Maven (<code className="font-mono text-primary">feature:repo-add</code>) eliminando o erro "No matching features".</span>
               </li>
             </ul>
           </div>

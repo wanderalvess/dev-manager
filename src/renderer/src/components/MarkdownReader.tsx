@@ -30,6 +30,11 @@ interface MarkdownReaderProps {
   onClose: () => void;
   onOpenInEditor?: (filePath: string) => void;
   onOpenInFolder?: (filePath: string) => void;
+  headerCenter?: React.ReactNode;
+  headerLeftExtra?: React.ReactNode;
+  hideBadge?: boolean;
+  bannerExtra?: React.ReactNode;
+  footerExtra?: React.ReactNode;
 }
 
 interface HeadingItem {
@@ -47,7 +52,12 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
   isLoading = false,
   onClose,
   onOpenInEditor,
-  onOpenInFolder
+  onOpenInFolder,
+  headerCenter,
+  headerLeftExtra,
+  hideBadge = false,
+  bannerExtra,
+  footerExtra
 }) => {
   const [viewMode, setViewMode] = useState<'formatted' | 'raw'>('formatted');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
@@ -388,10 +398,15 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
         const level = headingMatch[1].length;
         const text = headingMatch[2].trim();
         const headingId = `heading-${i}-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+        const isFirst = elements.length === 0;
 
         if (level === 1) {
           elements.push(
-            <div key={`h1-${i}`} id={headingId} className="pt-6 pb-2 border-b border-border/80 my-4 scroll-mt-6">
+            <div
+              key={`h1-${i}`}
+              id={headingId}
+              className={`${isFirst ? 'pt-0 pb-1.5 mb-3 mt-0' : 'pt-5 pb-2 my-4'} border-b border-border/80 scroll-mt-6`}
+            >
               <div className="flex items-center gap-2 text-primary font-mono text-[11px] font-bold uppercase tracking-widest">
                 <Hash className="w-3.5 h-3.5" /> Seção Principal
               </div>
@@ -402,7 +417,11 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
           );
         } else if (level === 2) {
           elements.push(
-            <div key={`h2-${i}`} id={headingId} className="pt-5 pb-1 border-b border-border/40 my-3 scroll-mt-6">
+            <div
+              key={`h2-${i}`}
+              id={headingId}
+              className={`${isFirst ? 'pt-0 pb-1 mb-2.5 mt-0' : 'pt-4 pb-1 my-3'} border-b border-border/40 scroll-mt-6`}
+            >
               <h2 className="text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
                 <span className="w-1.5 h-5 bg-primary rounded-full inline-block shrink-0" />
                 {renderInline(text)}
@@ -411,14 +430,22 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
           );
         } else if (level === 3) {
           elements.push(
-            <h3 key={`h3-${i}`} id={headingId} className="text-base font-bold text-foreground mt-4 mb-1 scroll-mt-6 flex items-center gap-1.5">
+            <h3
+              key={`h3-${i}`}
+              id={headingId}
+              className={`text-base font-bold text-foreground ${isFirst ? 'mt-0' : 'mt-3.5'} mb-1 scroll-mt-6 flex items-center gap-1.5`}
+            >
               <ChevronRight className="w-4 h-4 text-primary shrink-0" />
               {renderInline(text)}
             </h3>
           );
         } else {
           elements.push(
-            <h4 key={`h4-${i}`} id={headingId} className="text-sm font-semibold text-foreground/90 mt-3 mb-1 scroll-mt-6 uppercase tracking-wider text-[12px]">
+            <h4
+              key={`h4-${i}`}
+              id={headingId}
+              className={`text-sm font-semibold text-foreground/90 ${isFirst ? 'mt-0' : 'mt-2.5'} mb-1 scroll-mt-6 uppercase tracking-wider text-[12px]`}
+            >
               {renderInline(text)}
             </h4>
           );
@@ -571,25 +598,34 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
         {/* ========================================================================= */}
         {/* 1. BARRA SUPERIOR DE CABEÇALHO & AÇÕES DO COCKPIT                        */}
         {/* ========================================================================= */}
-        <header className="px-5 py-3.5 border-b border-border/80 bg-muted/40 flex items-center justify-between gap-4 shrink-0">
+        <header className="px-5 py-2.5 border-b border-border/80 bg-muted/40 flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-2xl bg-primary/10 border border-primary/25 text-primary shrink-0 shadow-xs">
-              <BookOpen className="w-5 h-5" />
+            <div className="p-2 rounded-2xl bg-primary/10 border border-primary/25 text-primary shrink-0 shadow-xs">
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-sm md:text-base font-bold text-foreground truncate tracking-tight">
                   {title}
                 </h3>
-                <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-[10px] font-mono font-bold uppercase shrink-0">
-                  Markdown
-                </span>
+                {!hideBadge && (
+                  <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-[10px] font-mono font-bold uppercase shrink-0">
+                    Markdown
+                  </span>
+                )}
+                {headerLeftExtra}
               </div>
               <p className="text-[11px] text-muted-foreground font-mono truncate max-w-lg" title={filePath}>
                 {filePath}
               </p>
             </div>
           </div>
+
+          {headerCenter && (
+            <div className="hidden xl:flex items-center justify-center flex-1 px-2 min-w-0">
+              {headerCenter}
+            </div>
+          )}
 
           <div className="flex items-center gap-2 shrink-0">
             {/* Alternância de Modo Formatado / Raw */}
@@ -697,7 +733,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
         {/* ========================================================================= */}
         {/* 2. SUB-BARRA DE FERRAMENTAS: BUSCA, ZOOM E METADADOS                     */}
         {/* ========================================================================= */}
-        <div className="px-5 py-2.5 border-b border-border/60 bg-muted/20 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+        <div className="px-5 py-1.5 border-b border-border/60 bg-muted/20 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
           <div className="flex items-center gap-4">
             {/* Campo de Busca Rápida no Documento */}
             <div className="relative w-56 sm:w-72">
@@ -773,6 +809,13 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
           </div>
         </div>
 
+        {/* Banner Opcional de Informação Contextual */}
+        {bannerExtra && (
+          <div className="border-b border-border/60 bg-primary/5 shrink-0">
+            {bannerExtra}
+          </div>
+        )}
+
         {/* ========================================================================= */}
         {/* 3. ÁREA DE LEITURA (COM PAINEL DE TÓPICOS OPCIONAL)                      */}
         {/* ========================================================================= */}
@@ -811,7 +854,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
           )}
 
           {/* Área Principal de Conteúdo */}
-          <main ref={contentRef} className="flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
+          <main ref={contentRef} className="flex-1 overflow-y-auto p-4 sm:p-5 md:px-8 md:py-4 scroll-smooth">
             {isLoading ? (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -840,17 +883,20 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
         {/* ========================================================================= */}
         {/* 4. RODAPÉ INFORMATIVO COM BOTÃO DE FECHAR                                */}
         {/* ========================================================================= */}
-        <footer className="px-5 py-3 border-t border-border/80 bg-muted/30 flex items-center justify-between text-xs shrink-0">
+        <footer className="px-5 py-2.5 border-t border-border/80 bg-muted/30 flex items-center justify-between text-xs shrink-0">
           <div className="text-muted-foreground flex items-center gap-2 text-[11px]">
             <span className="font-bold text-foreground">Dica:</span> Pressione <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Esc</kbd> para fechar o leitor.
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-bold transition cursor-pointer active:scale-95 shadow-xs"
-          >
-            Concluir Leitura
-          </button>
+          <div className="flex items-center gap-2">
+            {footerExtra}
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-bold transition cursor-pointer active:scale-95 shadow-xs"
+            >
+              Concluir Leitura
+            </button>
+          </div>
         </footer>
       </div>
     </div>

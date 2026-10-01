@@ -45,7 +45,7 @@ export interface SetupChecklistItemStatus {
 
 /** Deriva o status (feito/pendente) de cada item do checklist de configuração inicial. */
 export function computeSetupChecklistStatus(
-  settings: Partial<Pick<AppSettings, 'karafUser' | 'karafPass' | 'databaseConnections'>>,
+  settings: Partial<Pick<AppSettings, 'karafUser' | 'karafPass' | 'hasKarafPass' | 'databaseConnections'>>,
   pathStatuses: Record<string, PathStatusInfo>
 ): SetupChecklistItemStatus[] {
   return [
@@ -62,7 +62,7 @@ export function computeSetupChecklistStatus(
     {
       id: 'karaf-creds',
       label: 'Credenciais do Karaf',
-      done: Boolean(settings.karafUser?.trim() && settings.karafPass?.trim())
+      done: Boolean(settings.karafUser?.trim() && (settings.karafPass?.trim() || settings.hasKarafPass))
     },
     {
       id: 'database',

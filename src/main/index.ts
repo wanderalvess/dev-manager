@@ -90,9 +90,9 @@ function createWindow() {
 
   const configService = new ConfigService();
   const karafService = new KarafService(configService);
-  const databaseService = new DatabaseService();
+  const databaseService = new DatabaseService(configService);
   const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
-  const backupService = new BackupService();
+  const backupService = new BackupService(configService);
   const backupSchedulerService = new BackupSchedulerService(configService, backupService);
   backupSchedulerService.onResult = (connectionName, result) => {
     mainWindow?.webContents.send('backup:schedule-result', { connectionName, result });

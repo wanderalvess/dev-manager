@@ -16,7 +16,9 @@ import {
   Info,
   Copy,
   Check,
-  Layers2
+  Layers2,
+  Plus,
+  Filter
 } from 'lucide-react';
 import {
   Routine801CatalogResponse,
@@ -26,7 +28,9 @@ import {
 import {
   filterRoutine801Features,
   findRepositoryForFeatureUi,
-  buildKarafInstallCommandsUi
+  buildKarafInstallCommandsUi,
+  extractVersionFamilies,
+  inferFeatureMavenUrl
 } from '../utils/routine801UiUtils';
 
 interface Routine801CatalogModalProps {
@@ -48,13 +52,23 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [versionFilter, setVersionFilter] = useState<string>('ALL');
 
   // Seleção múltipla para instalação em lote
   const [selectedFeatures, setSelectedFeatures] = useState<Record<string, Routine801Feature>>({});
+  const [batchVersionOverride, setBatchVersionOverride] = useState<string>('');
 
   // Inspector Drawer: artefato atualmente selecionado para inspeção técnica
   const [inspectedFeature, setInspectedFeature] = useState<Routine801Feature | null>(null);
+  const [inspectedCustomVersion, setInspectedCustomVersion] = useState<string>('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Instalação Direta de Versão Específica
+  const [isDirectInstallOpen, setIsDirectInstallOpen] = useState<boolean>(false);
+  const [directInstallNome, setDirectInstallNome] = useState<string>('winthor-atualizacao-dados');
+  const [directInstallVersao, setDirectInstallVersao] = useState<string>('1.38.0.0');
+  const [directInstallTipo, setDirectInstallTipo] = useState<'SERVICO' | 'ROTINA'>('SERVICO');
+  const [directInstallAction, setDirectInstallAction] = useState<'install' | 'repo_add_only'>('install');
 
   // Execução e Telemetria em Tempo Real
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
@@ -122,7 +136,9 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (inspectedFeature) {
+        if (isDirectInstallOpen) {
+          setIsDirectInstallOpen(false);
+        } else if (inspectedFeature) {
           setInspectedFeature(null);
         } else if (isConfigOpen) {
           setIsConfigOpen(false);
@@ -139,7 +155,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, inspectedFeature, isConfigOpen, isConsoleExpanded, onClose]);
+  }, [isOpen, isDirectInstallOpen, inspectedFeature, isConfigOpen, isConsoleExpanded, onClose]);
 
   // Scroll automático do console
   useEffect(() => {
@@ -240,10 +256,15 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
   const currentCatalog = activeTab === 'updates' ? updatesCatalog : installsCatalog;
   const currentList = currentCatalog.funcionalidades;
 
+  // Famílias ou linhas de versão detectadas dinamicamente no catálogo atual (ex: ['1.39', '1.38', '0.39'])
+  const versionFamilies = useMemo(() => {
+    return extractVersionFamilies(currentList);
+  }, [currentList]);
+
   // Lista filtrada
   const filteredList = useMemo(() => {
-    return filterRoutine801Features(currentList, searchQuery, typeFilter, statusFilter);
-  }, [currentList, searchQuery, typeFilter, statusFilter]);
+    return filterRoutine801Features(currentList, searchQuery, typeFilter, statusFilter, versionFilter);
+  }, [currentList, searchQuery, typeFilter, statusFilter, versionFilter]);
 
   // Controles de seleção em lote
   const handleToggleSelectAll = () => {
@@ -272,8 +293,17 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
     });
   };
 
-  // Executa instalação ou atualização (individual ou em lote)
-  const handleExecute = async (featuresToInstall: Routine801Feature[]) => {
+  const handleInspectFeature = (item: Routine801Feature) => {
+    setInspectedFeature(item);
+    setInspectedCustomVersion(item.versao || '');
+  };
+
+  // Executa instalação ou registro de repositórios (individual ou em lote)
+  const handleExecute = async (
+    featuresToInstall: Routine801Feature[],
+    action: 'install' | 'repo_add_only' = 'install',
+    versionOverride?: string
+  ) => {
     if (!featuresToInstall || featuresToInstall.length === 0) return;
 
     setIsExecuting(true);
@@ -287,6 +317,9 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
       if (window.electronAPI?.routine801InstallFeatures) {
         const res = await window.electronAPI.routine801InstallFeatures({
           funcionalidades: featuresToInstall,
+          repositorios: currentCatalog.repositorios,
+          action,
+          targetVersionOverride: versionOverride,
           executeVia,
           serverUrl: serverUrlInput
         });
@@ -306,16 +339,44 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
     }
   };
 
+  // Executa instalação direta a partir do modal/painel de versão personalizada
+  const handleDirectInstallExecute = async () => {
+    if (!directInstallNome.trim()) {
+      setErrorBanner('Informe o nome da feature para instalação.');
+      return;
+    }
+    const customFeature: Routine801Feature = {
+      nome: directInstallNome.trim(),
+      versao: directInstallVersao.trim(),
+      codigoRotina: 0,
+      codigoModulo: 0,
+      tipoProjeto: directInstallTipo,
+      descricao: `${directInstallNome.trim()} (Instalação Direta)`,
+      status: 'LIBERADO'
+    };
+    setIsDirectInstallOpen(false);
+    await handleExecute([customFeature], directInstallAction);
+  };
+
+  // Feature sob inspeção com versão customizada pelo usuário se editada
+  const inspectedEffectiveFeature = useMemo(() => {
+    if (!inspectedFeature) return null;
+    return {
+      ...inspectedFeature,
+      versao: (inspectedCustomVersion && inspectedCustomVersion.trim()) || inspectedFeature.versao
+    };
+  }, [inspectedFeature, inspectedCustomVersion]);
+
   // Informações técnicas do artefato selecionado no Inspector Drawer
   const inspectedRepo = useMemo(() => {
-    if (!inspectedFeature) return null;
-    return findRepositoryForFeatureUi(inspectedFeature, currentCatalog.repositorios);
-  }, [inspectedFeature, currentCatalog.repositorios]);
+    if (!inspectedEffectiveFeature) return null;
+    return findRepositoryForFeatureUi(inspectedEffectiveFeature, currentCatalog.repositorios);
+  }, [inspectedEffectiveFeature, currentCatalog.repositorios]);
 
   const inspectedCommands = useMemo(() => {
-    if (!inspectedFeature) return null;
-    return buildKarafInstallCommandsUi(inspectedFeature, inspectedRepo);
-  }, [inspectedFeature, inspectedRepo]);
+    if (!inspectedEffectiveFeature) return null;
+    return buildKarafInstallCommandsUi(inspectedEffectiveFeature, inspectedRepo, true);
+  }, [inspectedEffectiveFeature, inspectedRepo]);
 
   // Logs filtrados
   const displayedLogs = useMemo(() => {
@@ -397,6 +458,15 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
                 API WTA
               </button>
             </div>
+
+            <button
+              onClick={() => setIsDirectInstallOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
+              title="Instalar ou registrar versão específica diretamente no Karaf"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Instalação Direta</span>
+            </button>
 
             <button
               onClick={() => setIsConfigOpen(!isConfigOpen)}
@@ -594,6 +664,39 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
               <option value="SERVICO">Apenas Serviços</option>
             </select>
 
+            {/* Dropdown de Versão / Linha de Release */}
+            <select
+              value={versionFilter}
+              onChange={(e) => setVersionFilter(e.target.value)}
+              className="px-2.5 py-1 text-xs bg-background border border-input rounded-md text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              title="Filtrar por linha ou família de versão (ex: 1.39, 1.38, 0.39)"
+            >
+              <option value="ALL">Todas as Versões</option>
+              {versionFamilies.map((fam) => (
+                <option key={fam} value={fam}>
+                  Versão {fam}.x
+                </option>
+              ))}
+            </select>
+
+            {/* Ação rápida para selecionar todos da versão filtrada */}
+            {versionFilter !== 'ALL' && filteredList.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const next: Record<string, Routine801Feature> = { ...selectedFeatures };
+                  for (const item of filteredList) {
+                    next[`${item.nome}@${item.versao}`] = item;
+                  }
+                  setSelectedFeatures(next);
+                }}
+                className="px-2 py-0.5 text-[11px] font-mono rounded border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                title={`Selecionar todos os ${filteredList.length} artefato(s) da versão ${versionFilter}.x`}
+              >
+                + Selecionar {filteredList.length} da v{versionFilter}.x
+              </button>
+            )}
+
             {/* Segmented Controls de Canal (P / H) */}
             <div className="inline-flex p-0.5 rounded-md bg-muted/50 border border-border text-[11px] font-mono">
               <button
@@ -645,16 +748,17 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
                 <p className="text-xs text-muted-foreground mt-1 max-w-sm">
                   {isLoading
                     ? 'Sincronizando dados com o servidor da Rotina 801...'
-                    : searchQuery || typeFilter !== 'ALL' || statusFilter !== 'ALL'
-                      ? 'Nenhum artefato corresponde aos filtros atuais. Tente limpar os termos de busca.'
+                    : searchQuery || typeFilter !== 'ALL' || statusFilter !== 'ALL' || versionFilter !== 'ALL'
+                      ? 'Nenhum artefato corresponde aos filtros atuais. Tente limpar os filtros de busca ou versão.'
                       : 'Nenhum pacote pendente para este catálogo no servidor Karaf.'}
                 </p>
-                {(searchQuery || typeFilter !== 'ALL' || statusFilter !== 'ALL') && (
+                {(searchQuery || typeFilter !== 'ALL' || statusFilter !== 'ALL' || versionFilter !== 'ALL') && (
                   <button
                     onClick={() => {
                       setSearchQuery('');
                       setTypeFilter('ALL');
                       setStatusFilter('ALL');
+                      setVersionFilter('ALL');
                     }}
                     className="mt-3 px-3 py-1 text-xs rounded border border-border hover:bg-muted text-foreground transition-colors"
                   >
@@ -859,20 +963,47 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
                 </div>
 
                 {/* Bloco de Versão */}
-                <div className="p-2.5 rounded-md border border-border bg-muted/30 font-mono text-[11px]">
-                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider mb-1">
+                <div className="p-2.5 rounded-md border border-border bg-muted/30 font-mono text-[11px] space-y-2">
+                  <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
                     Versão do Artefato
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Versão Disponível:</span>
+                    <span className="text-muted-foreground">Catálogo WTA:</span>
                     <strong className="text-emerald-400">{inspectedFeature.versao}</strong>
                   </div>
                   {inspectedFeature.versaoAnterior && (
-                    <div className="flex items-center justify-between mt-1 text-muted-foreground">
+                    <div className="flex items-center justify-between text-muted-foreground">
                       <span>Versão Instalada:</span>
                       <span className="line-through">{inspectedFeature.versaoAnterior}</span>
                     </div>
                   )}
+
+                  {/* Input de Customização de Versão Alvo */}
+                  <div className="pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between mb-1">
+                      <label htmlFor="inspected-version-input" className="text-[10px] text-muted-foreground">
+                        Versão Alvo para Instalação / Registro:
+                      </label>
+                      {inspectedCustomVersion !== inspectedFeature.versao && (
+                        <button
+                          type="button"
+                          onClick={() => setInspectedCustomVersion(inspectedFeature.versao)}
+                          className="text-[10px] text-primary hover:underline"
+                        >
+                          Restaurar ({inspectedFeature.versao})
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      id="inspected-version-input"
+                      type="text"
+                      value={inspectedCustomVersion}
+                      onChange={(e) => setInspectedCustomVersion(e.target.value)}
+                      placeholder={inspectedFeature.versao}
+                      className="w-full px-2 py-1 bg-background border border-input rounded text-foreground font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                      title="Edite para forçar qualquer versão desejada (ex: 1.38.0.2)"
+                    />
+                  </div>
                 </div>
 
                 {/* Coordenadas Maven (GAV) */}
@@ -980,18 +1111,28 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
               </div>
 
               {/* Ação no Rodapé do Drawer */}
-              <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between gap-2">
+              <div className="p-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row items-center gap-2">
                 <button
                   onClick={() => setInspectedFeature(null)}
-                  className="px-3 py-1.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
+                  className="w-full sm:w-auto px-3 py-1.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
                 >
                   Fechar
                 </button>
 
                 <button
-                  onClick={() => handleExecute([inspectedFeature])}
+                  onClick={() => inspectedEffectiveFeature && handleExecute([inspectedEffectiveFeature], 'repo_add_only')}
                   disabled={isExecuting}
-                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded font-medium transition-colors ${
+                  className="w-full sm:w-auto flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded font-medium border border-border bg-card hover:bg-muted text-foreground transition-colors disabled:opacity-50"
+                  title="Apenas adiciona o repositório Maven no Karaf (feature:repo-add) sem instalar"
+                >
+                  <Server className="w-3.5 h-3.5 text-primary" />
+                  <span>Apenas Repositório</span>
+                </button>
+
+                <button
+                  onClick={() => inspectedEffectiveFeature && handleExecute([inspectedEffectiveFeature], 'install')}
+                  disabled={isExecuting}
+                  className={`w-full sm:w-auto flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded font-medium transition-colors ${
                     activeTab === 'updates'
                       ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
                       : 'bg-primary hover:opacity-90 text-primary-foreground'
@@ -1009,22 +1150,57 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
         {/* BARRA DE AÇÕES EM LOTE FLUTUANTE (QUANDO HÁ ITENS SELECIONADOS) */}
         {/* ========================================================================= */}
         {Object.keys(selectedFeatures).length > 0 && (
-          <div className="flex items-center justify-between px-5 py-2.5 bg-primary/10 border-t border-primary/30 text-xs shrink-0 animate-in slide-in-from-bottom-2 duration-150">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-2.5 bg-primary/10 border-t border-primary/30 text-xs shrink-0 animate-in slide-in-from-bottom-2 duration-150">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="font-semibold text-foreground">
                 {Object.keys(selectedFeatures).length} artefato(s) selecionado(s)
               </span>
               <button
                 onClick={() => setSelectedFeatures({})}
-                className="text-muted-foreground hover:text-foreground underline ml-2"
+                className="text-muted-foreground hover:text-foreground underline text-xs"
               >
                 Limpar seleção
               </button>
+
+              {/* Opção para forçar versão específica na seleção em lote */}
+              <div className="flex items-center gap-1.5 border-l border-border/80 pl-3">
+                <span className="text-muted-foreground text-[11px] whitespace-nowrap">Versão Alvo:</span>
+                <input
+                  type="text"
+                  value={batchVersionOverride}
+                  onChange={(e) => setBatchVersionOverride(e.target.value)}
+                  placeholder="Original ou ex: 1.38.0.0"
+                  className="px-2 py-0.5 text-xs bg-background border border-input rounded text-foreground font-mono placeholder:text-muted-foreground/60 w-36 focus:outline-none focus:ring-1 focus:ring-primary"
+                  title="Se informado, sobrescreve a versão de todos os itens selecionados ao executar"
+                />
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={() => handleExecute(Object.values(selectedFeatures))}
+                onClick={() =>
+                  handleExecute(
+                    Object.values(selectedFeatures),
+                    'repo_add_only',
+                    batchVersionOverride.trim() || undefined
+                  )
+                }
+                disabled={isExecuting}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-border bg-card hover:bg-muted text-foreground transition-colors disabled:opacity-50"
+                title="Apenas adiciona os repositórios Maven no Karaf (feature:repo-add) sem instalar"
+              >
+                <Server className="w-3.5 h-3.5 text-primary" />
+                <span>Registrar Repositórios ({Object.keys(selectedFeatures).length})</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleExecute(
+                    Object.values(selectedFeatures),
+                    'install',
+                    batchVersionOverride.trim() || undefined
+                  )
+                }
                 disabled={isExecuting}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm transition-colors ${
                   activeTab === 'updates'
@@ -1035,8 +1211,8 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
                 {activeTab === 'updates' ? <RotateCw className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
                 <span>
                   {activeTab === 'updates'
-                    ? `Atualizar ${Object.keys(selectedFeatures).length} Selecionado(s) no Karaf`
-                    : `Instalar ${Object.keys(selectedFeatures).length} Selecionado(s) no Karaf`}
+                    ? `Atualizar ${Object.keys(selectedFeatures).length} no Karaf`
+                    : `Instalar ${Object.keys(selectedFeatures).length} no Karaf`}
                 </span>
               </button>
             </div>
@@ -1171,6 +1347,160 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
             </button>
           </div>
         </div>
+
+        {/* ========================================================================= */}
+        {/* MODAL / PAINEL DE INSTALAÇÃO DIRETA DE VERSÃO ESPECÍFICA */}
+        {/* ========================================================================= */}
+        {isDirectInstallOpen && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-100">
+            <div className="bg-card text-card-foreground border border-border rounded-lg shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded bg-primary/10 border border-primary/20 text-primary">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-semibold">Instalação Direta de Pacote (Versão Específica)</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDirectInstallOpen(false)}
+                  className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4 text-xs">
+                <p className="text-muted-foreground leading-relaxed">
+                  Adicione e instale qualquer pacote ou versão específica no Apache Karaf local (ex: serviços da release <code className="text-primary font-mono font-bold">1.38.*</code>, <code className="text-primary font-mono font-bold">1.39.*</code> ou <code className="text-primary font-mono font-bold">0.39.*</code>), com resolução automática de repositório Maven.
+                </p>
+
+                {/* Nome da Feature */}
+                <div className="space-y-1.5">
+                  <label className="font-medium text-foreground block">
+                    Nome da Feature OSGi:
+                  </label>
+                  <input
+                    type="text"
+                    value={directInstallNome}
+                    onChange={(e) => setDirectInstallNome(e.target.value)}
+                    placeholder="ex: winthor-atualizacao-dados"
+                    className="w-full px-3 py-1.5 bg-background border border-input rounded font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    list="common-winthor-features"
+                  />
+                  <datalist id="common-winthor-features">
+                    <option value="winthor-atualizacao-dados" />
+                    <option value="winthor-ferramenta-servidor" />
+                    <option value="winthor-autocadastro-cliente-fidelidade" />
+                    <option value="winthor-central-notificacao" />
+                    <option value="winthor-expedicao-painel-operacao" />
+                    <option value="winthor-fin-1531" />
+                    <option value="winthor-fin-805" />
+                  </datalist>
+                </div>
+
+                {/* Versão e Tipo */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="font-medium text-foreground block">
+                      Versão Específica:
+                    </label>
+                    <input
+                      type="text"
+                      value={directInstallVersao}
+                      onChange={(e) => setDirectInstallVersao(e.target.value)}
+                      placeholder="ex: 1.38.0.2 ou 1.39.1.6"
+                      className="w-full px-3 py-1.5 bg-background border border-input rounded font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-medium text-foreground block">
+                      Tipo de Projeto:
+                    </label>
+                    <select
+                      value={directInstallTipo}
+                      onChange={(e) => setDirectInstallTipo(e.target.value as any)}
+                      className="w-full px-3 py-1.5 bg-background border border-input rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="SERVICO">SERVIÇO (br.com.pcsist.winthor.servico)</option>
+                      <option value="ROTINA">ROTINA (br.com.pcsist.winthor.rotina)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Ação */}
+                <div className="space-y-1.5">
+                  <label className="font-medium text-foreground block">
+                    Ação a Executar:
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDirectInstallAction('install')}
+                      className={`p-2.5 rounded border text-left transition-all cursor-pointer ${
+                        directInstallAction === 'install'
+                          ? 'border-primary bg-primary/10 text-primary font-medium'
+                          : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      <div className="font-semibold text-foreground">Registrar e Instalar</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        Executa repo-add e feature:install -r -u
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDirectInstallAction('repo_add_only')}
+                      className={`p-2.5 rounded border text-left transition-all cursor-pointer ${
+                        directInstallAction === 'repo_add_only'
+                          ? 'border-primary bg-primary/10 text-primary font-medium'
+                          : 'border-border bg-card text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      <div className="font-semibold text-foreground">Apenas Registrar Repo</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        Executa apenas feature:repo-add
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Preview dos comandos gerados */}
+                <div className="p-2.5 rounded border border-border bg-muted/30 font-mono text-[10px] space-y-1">
+                  <div className="text-muted-foreground uppercase text-[9px] tracking-wider">Preview dos Comandos Karaf:</div>
+                  <div className="text-primary truncate">
+                    $ feature:repo-add mvn:br.com.pcsist.winthor.{directInstallTipo === 'ROTINA' ? 'rotina' : 'servico'}/{directInstallNome.trim()}-features/{directInstallVersao.trim()}/xml/features
+                  </div>
+                  {directInstallAction === 'install' && (
+                    <div className="text-primary truncate">
+                      $ feature:install -r -u {directInstallNome.trim()}/{directInstallVersao.trim()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border bg-muted/20">
+                <button
+                  type="button"
+                  onClick={() => setIsDirectInstallOpen(false)}
+                  className="px-3 py-1.5 rounded border border-border hover:bg-muted text-foreground transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDirectInstallExecute}
+                  disabled={!directInstallNome.trim() || !directInstallVersao.trim()}
+                  className="px-4 py-1.5 rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                >
+                  Executar no Karaf
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

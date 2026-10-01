@@ -522,6 +522,20 @@ client.bat "feature:install -r custom-feature/2.0.0"
       expect(karafService.getResolvedJavaEnv().JAVA_TOOL_OPTIONS).not.toContain('opentelemetry-javaagent.jar');
     });
 
+    it('NÃO anexa o agente OpenTelemetry quando apmInstrumentationEnabled está explicitamente falso', () => {
+      const binDir = path.join(tmpDir, 'bin');
+      fs.mkdirSync(binDir, { recursive: true });
+      fs.writeFileSync(path.join(binDir, 'opentelemetry-javaagent.jar'), 'mock-agent');
+
+      vi.spyOn(configService, 'getSettings').mockReturnValue({
+        ...configService.getSettings(),
+        karafPath: tmpDir,
+        apmInstrumentationEnabled: false
+      });
+
+      expect(karafService.getResolvedJavaEnv().JAVA_TOOL_OPTIONS).not.toContain('opentelemetry-javaagent.jar');
+    });
+
     it('anexa o agente OpenTelemetry em JAVA_TOOL_OPTIONS quando apmInstrumentationEnabled está ligado', () => {
       const binDir = path.join(tmpDir, 'bin');
       fs.mkdirSync(binDir, { recursive: true });

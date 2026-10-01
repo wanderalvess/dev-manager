@@ -24,6 +24,7 @@ import {
   groupCapturedBindsBySqlId,
   interpolateOracleSqlWithBinds
 } from '../utils/oracleTracerUtils';
+import type { ConfigService } from './ConfigService';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,6 +84,31 @@ function sanitizeRows(rows: Record<string, any>[], columns: string[]): Record<st
 }
 
 export class DatabaseService {
+  constructor(private configService?: ConfigService) {}
+
+  /**
+   * Resolve a senha da conexão caso tenha vindo em branco/sanitizada, buscando nas
+   * configurações salvas em memória através do id da conexão ou da tupla (host, port, user, database).
+   */
+  public resolveConnectionConfig(config: DatabaseConnectionConfig): DatabaseConnectionConfig {
+    if (config.password || !this.configService) {
+      return config;
+    }
+    const settings = this.configService.getSettings();
+    const saved = settings.databaseConnections?.find(
+      (c) =>
+        (config.id && c.id === config.id) ||
+        (c.host === config.host &&
+          c.port === config.port &&
+          c.user === config.user &&
+          c.database === config.database)
+    );
+    if (saved?.password) {
+      return { ...config, password: saved.password };
+    }
+    return config;
+  }
+
   // Guarda a Promise da conexão (não o valor já resolvido) para que duas chamadas
   // concorrentes com a mesma cacheKey (ex: testConnection + listTables disparados
   // juntos pela UI) aguardem a MESMA conexão em vez de cada uma abrir a sua e uma
@@ -111,6 +137,7 @@ export class DatabaseService {
     fn: (conn: T) => Promise<R>,
     reuse = false
   ): Promise<R> {
+    config = this.resolveConnectionConfig(config);
     if (!reuse) {
       const conn = await getConn();
       try {
@@ -163,6 +190,7 @@ export class DatabaseService {
   public async testConnection(
     config: DatabaseConnectionConfig
   ): Promise<{ success: boolean; message: string; version?: string }> {
+    config = this.resolveConnectionConfig(config);
     try {
       if (!config.host || !config.port || !config.user) {
         return {
@@ -198,6 +226,7 @@ export class DatabaseService {
     maxRows = 200,
     binds?: Record<string, any>
   ): Promise<QueryResult> {
+    config = this.resolveConnectionConfig(config);
     maxRows = Number.isFinite(maxRows) && maxRows > 0 ? Math.floor(maxRows) : 200;
     const startTime = Date.now();
     const cleanSql = sql.trim().replace(/;+\s*$/, '');
@@ -385,9 +414,10 @@ export class DatabaseService {
   }
 
   /**
-   * Realiza interpolação segura de parâmetros de bind para bancos que não usam objeto nativo (ex: MySQL/PG).
+   * Realiza interpolação segura de parâmetros e variáveis (:VAR, &VAR, &&VAR, @VAR, ${VAR}, #{VAR})
+   * para bancos que não usam objeto nativo (ex: MySQL/PG) ou para variáveis de substituição no Oracle.
    */
-  private interpolateBinds(sql: string, binds?: Record<string, any>): string {
+  public interpolateBinds(sql: string, binds?: Record<string, any>): string {
     if (!binds || Object.keys(binds).length === 0) return sql;
 
     const literalsMap: Record<string, string> = {};
@@ -402,22 +432,36 @@ export class DatabaseService {
       } else if (rawVal instanceof Date) {
         replacement = `'${rawVal.toISOString()}'`;
       } else {
-        replacement = `'${String(rawVal).replace(/'/g, "''")}'`;
+        const str = String(rawVal);
+        if (str.toUpperCase() === 'NULL') {
+          replacement = 'NULL';
+        } else {
+          replacement = `'${str.replace(/'/g, "''")}'`;
+        }
       }
       literalsMap[key.toUpperCase()] = replacement;
     }
 
-    const tokenRegex = /(\/\*[\s\S]*?\*\/|--[^\r\n]*|'(?:''|[^'])*'|(?<!:):(?!=)[a-zA-Z_][a-zA-Z0-9_]*\b)/g;
+    const tokenRegex = /(\/\*[\s\S]*?\*\/|--[^\r\n]*|'(?:''|[^'])*'|(?<!:):(?!=)[a-zA-Z_][a-zA-Z0-9_]*\b|&&[a-zA-Z_][a-zA-Z0-9_]*\b|(?<!&)&(?!=)[a-zA-Z_][a-zA-Z0-9_]*\b|@[a-zA-Z_][a-zA-Z0-9_]*\b|\$\{[a-zA-Z_][a-zA-Z0-9_]*\}|#\{[a-zA-Z_][a-zA-Z0-9_]*\})/gi;
     return sql.replace(tokenRegex, (match) => {
       if (match.startsWith('/*') || match.startsWith('--') || match.startsWith("'")) {
         return match;
       }
-      if (match.startsWith(':')) {
-        const varName = match.slice(1).toUpperCase();
-        if (varName in literalsMap) {
-          return literalsMap[varName];
-        }
+
+      let varName = '';
+      if (match.startsWith('&&')) {
+        varName = match.slice(2);
+      } else if (match.startsWith('&') || match.startsWith(':') || match.startsWith('@')) {
+        varName = match.slice(1);
+      } else if ((match.startsWith('${') || match.startsWith('#{')) && match.endsWith('}')) {
+        varName = match.slice(2, -1);
       }
+
+      const upper = varName.toUpperCase().trim();
+      if (upper && upper in literalsMap) {
+        return literalsMap[upper];
+      }
+
       return match;
     });
   }
@@ -563,6 +607,7 @@ export class DatabaseService {
     config: DatabaseConnectionConfig,
     sql: string
   ): Promise<ExplainPlanResult> {
+    config = this.resolveConnectionConfig(config);
     const startTime = Date.now();
     const cleanSql = sql.trim().replace(/;+$/, '');
 
@@ -1168,7 +1213,18 @@ export class DatabaseService {
         const sqlWithoutComments = cleanSql.replace(/^(\s*(--[^\r\n]*|\/\*[\s\S]*?\*\/)\s*)+/i, '');
         const isSelect = /^(SELECT|WITH)\b/i.test(sqlWithoutComments);
 
-        const bindParams = binds && typeof binds === 'object' && Object.keys(binds).length > 0 ? binds : [];
+        let sqlToExecute = cleanSql;
+        let bindParams: any = [];
+
+        if (binds && typeof binds === 'object' && Object.keys(binds).length > 0) {
+          const hasSubstitutionVars = /(?<!&)&(?!=)[a-zA-Z_]|&&[a-zA-Z_]|@[a-zA-Z_]|\$\{[a-zA-Z_]|#\{[a-zA-Z_]/.test(cleanSql);
+          if (hasSubstitutionVars) {
+            sqlToExecute = this.interpolateBinds(cleanSql, binds);
+            bindParams = [];
+          } else {
+            bindParams = binds;
+          }
+        }
 
         const execOptions: any = {
           outFormat: oracledb.OUT_FORMAT_OBJECT,
@@ -1178,7 +1234,7 @@ export class DatabaseService {
         // callTimeout (ms) evita travamento de socket em consultas demoradas
         execOptions.callTimeout = 60000;
 
-        const result = await conn.execute(cleanSql, bindParams, execOptions);
+        const result = await conn.execute(sqlToExecute, bindParams, execOptions);
 
         const executionTimeMs = Date.now() - startTime;
 

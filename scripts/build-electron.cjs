@@ -107,12 +107,47 @@ async function ensureNsisResources() {
   }
 }
 
+// Pré-carregar binário do Electron local se necessário
+async function ensureElectronBinary() {
+  const electronDir = path.join(__dirname, '..', 'node_modules', 'electron');
+  const pathTxt = path.join(electronDir, 'path.txt');
+  if (fs.existsSync(pathTxt)) {
+    return;
+  }
+  const installJs = path.join(electronDir, 'install.js');
+  if (fs.existsSync(installJs)) {
+    console.log('[Build] Verificando/instalando binário do Electron local...');
+    try {
+      const { spawnSync } = require('child_process');
+      const res = spawnSync(process.execPath, [installJs], {
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          NODE_TLS_REJECT_UNAUTHORIZED: process.env.NODE_TLS_REJECT_UNAUTHORIZED || '0',
+          ELECTRON_MIRROR: process.env.ELECTRON_MIRROR || 'https://npmmirror.com/mirrors/electron/'
+        }
+      });
+      if (res.status === 0) {
+        console.log('[Build] Binário do Electron local instalado com sucesso.');
+      }
+    } catch (err) {
+      console.warn('[Build] Aviso ao preparar binário do Electron:', err.message);
+    }
+  }
+}
+
 async function start() {
   try {
     const { ensureIcons } = require('./generate-icons.cjs');
     ensureIcons();
   } catch (err) {
     console.warn('[Build] Aviso ao preparar ícones da aplicação:', err.message);
+  }
+
+  try {
+    await ensureElectronBinary();
+  } catch (err) {
+    console.warn('[Build] Aviso ao verificar binário do Electron:', err.message);
   }
 
   try {

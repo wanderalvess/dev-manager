@@ -236,7 +236,9 @@ describe('ConfigService', () => {
       const sanitized = service.sanitizeSecrets(rawSettings);
 
       expect(sanitized.karafPass).toBe('');
+      expect(sanitized.hasKarafPass).toBe(true);
       expect(sanitized.databaseConnections?.[0].password).toBe('');
+      expect(sanitized.databaseConnections?.[0].hasPassword).toBe(true);
       expect(sanitized.confluenceSources?.[0].authToken).toBe('');
       expect(sanitized.jiraSources?.[0].authToken).toBe('');
       expect(sanitized.llmProviders?.[0].apiKey).toBe('');

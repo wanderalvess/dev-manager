@@ -249,21 +249,6 @@ export class KarafService {
     // Garante que o processo Java/Karaf inicialize o console em UTF-8 para não corromper acentuação
     childEnv.JAVA_TOOL_OPTIONS = (childEnv.JAVA_TOOL_OPTIONS ? childEnv.JAVA_TOOL_OPTIONS + ' ' : '') + '-Dfile.encoding=UTF-8';
 
-    // Se o agente OpenTelemetry estiver presente no Karaf E a telemetria estiver habilitada nas
-    // configurações, anexa-o automaticamente via JAVA_TOOL_OPTIONS para alimentar o Cockpit APM
-    // sem requerer alteração manual de scripts. Desligado por padrão: o agente Java deixa o log
-    // do Karaf mais verboso mesmo sem nenhum consumidor olhando a tela APM.
-    if (settings.karafPath && settings.apmInstrumentationEnabled) {
-      const agentCandidates = [
-        path.join(settings.karafPath, 'bin', 'opentelemetry-javaagent.jar'),
-        path.join(settings.karafPath, 'opentelemetry-javaagent.jar')
-      ];
-      const agentJar = agentCandidates.find((c) => fs.existsSync(c));
-      if (agentJar && !childEnv.JAVA_TOOL_OPTIONS?.includes('opentelemetry-javaagent.jar')) {
-        childEnv.JAVA_TOOL_OPTIONS += ` -javaagent:"${agentJar}" ${buildOtelJavaAgentProperties(getApmReceiverPort(settings), getApmServiceName(settings)).join(' ')}`;
-      }
-    }
-
     if (!childEnv.LANG) childEnv.LANG = 'pt_BR.UTF-8';
     if (!childEnv.LC_ALL) childEnv.LC_ALL = 'pt_BR.UTF-8';
     if (isClient) {
@@ -282,9 +267,11 @@ export class KarafService {
       delete childEnv.JAVA_DEBUG_PORT;
       delete childEnv.JAVA_DEBUG_OPTS;
     } else {
-      // Se o agente OpenTelemetry estiver presente no Karaf, anexa-o automaticamente via JAVA_TOOL_OPTIONS
-      // para alimentar o Cockpit APM sem requerer alteração manual de scripts (apenas para o container Karaf)
-      if (settings.karafPath) {
+      // Se o agente OpenTelemetry estiver presente no Karaf E a telemetria estiver habilitada nas
+      // configurações, anexa-o automaticamente via JAVA_TOOL_OPTIONS para alimentar o Cockpit APM
+      // sem requerer alteração manual de scripts. Desligado por padrão: o agente Java deixa o log
+      // do Karaf mais verboso mesmo sem nenhum consumidor olhando a tela APM.
+      if (settings.karafPath && settings.apmInstrumentationEnabled) {
         const agentCandidates = [
           path.join(settings.karafPath, 'bin', 'opentelemetry-javaagent.jar'),
           path.join(settings.karafPath, 'opentelemetry-javaagent.jar')
@@ -292,7 +279,7 @@ export class KarafService {
         const agentJar = agentCandidates.find((c) => fs.existsSync(c));
         if (agentJar && !childEnv.JAVA_TOOL_OPTIONS?.includes('opentelemetry-javaagent.jar')) {
           childEnv.JAVA_TOOL_OPTIONS = (childEnv.JAVA_TOOL_OPTIONS ? childEnv.JAVA_TOOL_OPTIONS + ' ' : '') +
-            `-javaagent:"${agentJar}" ${buildOtelJavaAgentProperties(getApmReceiverPort(settings)).join(' ')}`;
+            `-javaagent:"${agentJar}" ${buildOtelJavaAgentProperties(getApmReceiverPort(settings), getApmServiceName(settings)).join(' ')}`;
         }
       }
 
@@ -301,8 +288,6 @@ export class KarafService {
       childEnv.JAVA_DEBUG_PORT = String(debugPort);
       childEnv.JAVA_DEBUG_OPTS = `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${debugPort}`;
     }
-
-    if (!childEnv.LANG) childEnv.LANG = 'pt_BR.UTF-8';
     if (!childEnv.LC_ALL) childEnv.LC_ALL = 'pt_BR.UTF-8';
 
     return childEnv;

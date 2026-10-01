@@ -28,6 +28,7 @@ import {
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import {
   extractBindVariables,
+  extractSqlVariables,
   castBindValue,
   substituteBindVariables,
   loadBindCache,
@@ -91,6 +92,42 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
   const [isBindModalOpen, setIsBindModalOpen] = useState<boolean>(false);
   const [bindInputs, setBindInputs] = useState<BindInputState[]>([]);
   const [pendingSqlToExecute, setPendingSqlToExecute] = useState<string | null>(null);
+
+  // Layout do DB Studio (Tamanho do Editor e Sidebar)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('devManager:sqlSidebarCollapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [isEditorMaximized, setIsEditorMaximized] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('devManager:sqlEditorMaximized') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('devManager:sqlSidebarCollapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleSetEditorMaximized: React.Dispatch<React.SetStateAction<boolean>> = (valOrFn) => {
+    setIsEditorMaximized((prev) => {
+      const next = typeof valOrFn === 'function' ? valOrFn(prev) : valOrFn;
+      try {
+        localStorage.setItem('devManager:sqlEditorMaximized', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Filtros, ordenação e seleção da tabela de resultados
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -288,6 +325,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
       database: (editingConn.database || '').trim(),
       user: editingConn.user.trim(),
       password: editingConn.password || '',
+      hasPassword: editingConn.password ? true : editingConn.hasPassword,
       oracleMode: editingConn.oracleMode || 'serviceName',
       oracleClientPath: editingConn.oracleClientPath?.trim() || undefined,
       oracleThickMode: editingConn.oracleThickMode,
@@ -355,12 +393,14 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
     if (!cleanSql) return;
 
     if (!overrideBinds) {
-      const detected = extractBindVariables(cleanSql);
-      if (detected.length > 0) {
+      const detailed = extractSqlVariables(cleanSql);
+      if (detailed.length > 0) {
         const cache = loadBindCache();
-        const initialInputs: BindInputState[] = detected.map((name) => ({
-          name,
-          value: cache[name] ?? '',
+        const initialInputs: BindInputState[] = detailed.map((item) => ({
+          name: item.name,
+          prefix: item.prefix,
+          raw: item.raw,
+          value: cache[item.name] ?? '',
           type: 'auto'
         }));
         setBindInputs(initialInputs);
@@ -443,20 +483,17 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
 
   const handleOpenBindModalManually = () => {
     const cleanSql = sql.trim().replace(/;+\s*$/, '');
-    if (!cleanSql) return;
-    const detected = extractBindVariables(cleanSql);
-    if (detected.length === 0) {
-      alert('Nenhuma variável de bind (:PARAMETRO) foi detectada no comando SQL atual.');
-      return;
-    }
+    const detailed = extractSqlVariables(cleanSql);
     const cache = loadBindCache();
-    const initialInputs: BindInputState[] = detected.map((name) => ({
-      name,
-      value: cache[name] ?? '',
+    const initialInputs: BindInputState[] = detailed.map((item) => ({
+      name: item.name,
+      prefix: item.prefix,
+      raw: item.raw,
+      value: cache[item.name] ?? '',
       type: 'auto'
     }));
     setBindInputs(initialInputs);
-    setPendingSqlToExecute(cleanSql);
+    setPendingSqlToExecute(cleanSql || sql);
     setIsBindModalOpen(true);
   };
 
@@ -476,7 +513,20 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
 
     saveBindCache(cacheToSave);
     setIsBindModalOpen(false);
-    handleExecuteSql(sqlToRun, bindsRecord);
+
+    // Se a consulta possui variáveis de substituição (&VAR, @VAR, ${VAR}),
+    // interpolamos com os literais formatados para evitar erros de sintaxe (ex: ORA-00911).
+    const hasSubstitutionVars = /(?<!&)&(?!=)[a-zA-Z_]|&&[a-zA-Z_]|@[a-zA-Z_]|\$\{[a-zA-Z_]|#\{[a-zA-Z_]/.test(sqlToRun);
+    if (hasSubstitutionVars) {
+      const bindsForSub: Record<string, { value: any; type: any }> = {};
+      for (const item of bindInputs) {
+        bindsForSub[item.name] = { value: item.value, type: item.type };
+      }
+      const interpolated = substituteBindVariables(sqlToRun, bindsForSub);
+      handleExecuteSql(interpolated, {});
+    } else {
+      handleExecuteSql(sqlToRun, bindsRecord);
+    }
   };
 
   const handleSubstituteBindsInline = () => {
@@ -852,6 +902,8 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
         onOpenTour={tour.open}
         activeConnection={activeConnection}
         getDbBadge={getDbBadge}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
       />
 
       {/* Área Principal: Editor SQL e Resultados */}
@@ -881,10 +933,16 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
           setTableColumns={setTableColumns}
           getDbBadge={getDbBadge}
           copyFeedback={copyFeedback}
+          isMaximized={isEditorMaximized}
+          setIsMaximized={handleSetEditorMaximized}
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={handleToggleSidebar}
         />
 
-        {/* Barra de Status e Tabs de Resultado */}
-        <div className="px-3 py-1.5 bg-card/60 border-b border-border/70 flex items-center justify-between shrink-0">
+        {!isEditorMaximized ? (
+          <>
+            {/* Barra de Status e Tabs de Resultado */}
+            <div className="px-3 py-1.5 bg-card/60 border-b border-border/70 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setActiveResultTab('grid')}
@@ -1137,6 +1195,25 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
             </div>
           )}
         </div>
+          </>
+        ) : (
+          <div className="p-2.5 bg-card/60 border-t border-border/70 flex items-center justify-between text-xs text-muted-foreground shrink-0 animate-fade-in font-sans">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="font-semibold text-foreground">Modo Maximizado / Foco Ativo</span>
+              <span className="text-[11px] text-muted-foreground">
+                (O editor SQL está ocupando toda a tela para você visualizar queries grandes)
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleSetEditorMaximized(false)}
+              className="px-3 py-1 bg-card hover:bg-muted border border-border rounded-lg text-primary hover:text-primary-foreground hover:bg-primary font-bold transition cursor-pointer text-xs shadow-xs"
+            >
+              Restaurar Painel de Resultados
+            </button>
+          </div>
+        )}
       </main>
       </div>
 

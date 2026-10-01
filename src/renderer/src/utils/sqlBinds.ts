@@ -1,11 +1,26 @@
 /**
- * Utilitários para manipulação e detecção de Bind Variables (:PARAMETROS) no SQL
+ * Utilitários para manipulação e detecção de Parâmetros e Variáveis no SQL
+ * Suporta:
+ *  - Bind Variables nativas (:PARAMETRO)
+ *  - Variáveis de substituição do SQL*Plus / WinThor (&PARAMETRO e &&PARAMETRO)
+ *  - Variáveis de scripts (@PARAMETRO)
+ *  - Placeholders de templates (${PARAMETRO} e #{PARAMETRO})
  */
+
+export type SqlVariablePrefix = ':' | '&' | '&&' | '@' | '${}' | '#{}';
+
+export interface SqlVariableInfo {
+  name: string;
+  prefix: SqlVariablePrefix;
+  raw: string;
+}
 
 export interface BindInputState {
   name: string;
   value: string;
-  type: 'auto' | 'string' | 'number' | 'date' | 'null';
+  type: 'auto' | 'string' | 'number' | 'date' | 'list' | 'null';
+  prefix?: SqlVariablePrefix;
+  raw?: string;
 }
 
 /**
@@ -19,41 +34,74 @@ export function stripCommentsAndLiterals(sql: string): string {
 }
 
 /**
- * Extrai os nomes das variáveis de bind do SQL (ex: :CODPROD, :CODFILIAL),
- * ignorando comentários, literais, operador de atribuição ':=' e casts '::'.
+ * Extrai informações detalhadas de todas as variáveis e parâmetros encontrados no SQL,
+ * identificando o prefixo utilizado (:PARAM, &PARAM, &&PARAM, @PARAM, ${PARAM}, #{PARAM}).
  */
-export function extractBindVariables(sql: string): string[] {
+export function extractSqlVariables(sql: string): SqlVariableInfo[] {
   if (!sql || !sql.trim()) return [];
 
-  const cleaned = stripCommentsAndLiterals(sql);
-
-  // Procura por :NOME_VARIAVEL
-  // (?<!:): não precedido por ':' (evita :: do postgres)
-  // :(?!=): não seguido por '=' (evita := do PL/SQL)
-  // ([a-zA-Z_][a-zA-Z0-9_]*): nome identificador padrão Oracle/SQL
-  const regex = /(?<!:):(?!=)([a-zA-Z_][a-zA-Z0-9_]*)\b/gi;
-  const matches = cleaned.match(regex);
-  if (!matches) return [];
+  // Regex que busca literais e comentários ou variáveis fora deles
+  const tokenRegex = /(\/\*[\s\S]*?\*\/|--[^\r\n]*|'(?:''|[^'])*'|(?<!:):(?!=)([a-zA-Z_][a-zA-Z0-9_]*)\b|&&([a-zA-Z_][a-zA-Z0-9_]*)\b|(?<!&)&(?!=)([a-zA-Z_][a-zA-Z0-9_]*)\b|@([a-zA-Z_][a-zA-Z0-9_]*)\b|\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}|#\{([a-zA-Z_][a-zA-Z0-9_]*)\})/gi;
 
   const seen = new Set<string>();
-  const result: string[] = [];
+  const results: SqlVariableInfo[] = [];
 
-  for (const m of matches) {
-    // Remove o ':' inicial e normaliza para uppercase
-    const varName = m.slice(1).toUpperCase();
-    if (!seen.has(varName)) {
-      seen.add(varName);
-      result.push(varName);
+  let match: RegExpExecArray | null;
+  while ((match = tokenRegex.exec(sql)) !== null) {
+    const full = match[0];
+    if (full.startsWith('/*') || full.startsWith('--') || full.startsWith("'")) {
+      continue;
+    }
+
+    let prefix: SqlVariablePrefix = ':';
+    let varName = '';
+
+    if (full.startsWith('&&')) {
+      prefix = '&&';
+      varName = full.slice(2);
+    } else if (full.startsWith('&')) {
+      prefix = '&';
+      varName = full.slice(1);
+    } else if (full.startsWith('@')) {
+      prefix = '@';
+      varName = full.slice(1);
+    } else if (full.startsWith('${') && full.endsWith('}')) {
+      prefix = '${}';
+      varName = full.slice(2, -1);
+    } else if (full.startsWith('#{') && full.endsWith('}')) {
+      prefix = '#{}';
+      varName = full.slice(2, -1);
+    } else if (full.startsWith(':')) {
+      prefix = ':';
+      varName = full.slice(1);
+    }
+
+    const normalized = varName.toUpperCase().trim();
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      results.push({
+        name: normalized,
+        prefix,
+        raw: full
+      });
     }
   }
 
-  return result;
+  return results;
+}
+
+/**
+ * Extrai os nomes únicos de todas as variáveis e parâmetros do SQL em caixa alta.
+ * Mantém retrocompatibilidade total com as chamadas existentes de extractBindVariables.
+ */
+export function extractBindVariables(sql: string): string[] {
+  return extractSqlVariables(sql).map((v) => v.name);
 }
 
 /**
  * Converte o valor digitado pelo usuário para o tipo primitivo JavaScript apropriado
  */
-export function castBindValue(val: string, type: 'auto' | 'string' | 'number' | 'date' | 'null'): any {
+export function castBindValue(val: string, type: 'auto' | 'string' | 'number' | 'date' | 'list' | 'null'): any {
   if (type === 'null') return null;
   if (val === null || val === undefined) return null;
 
@@ -72,6 +120,10 @@ export function castBindValue(val: string, type: 'auto' | 'string' | 'number' | 
     return trimmed;
   }
 
+  if (type === 'list') {
+    return trimmed;
+  }
+
   // Auto
   if (trimmed === '' || trimmed.toUpperCase() === 'NULL') {
     return null;
@@ -87,13 +139,61 @@ export function castBindValue(val: string, type: 'auto' | 'string' | 'number' | 
 }
 
 /**
- * Substitui as variáveis de bind diretamente no SQL por literais formatados.
- * Útil para o desenvolvedor que deseja ver/copiar a query resolvida inline no editor.
+ * Formata um valor para inserção literal segura no SQL
+ */
+function formatLiteral(val: any, type: 'auto' | 'string' | 'number' | 'date' | 'list' | 'null' = 'auto'): string {
+  if (val === null || val === undefined) {
+    return 'NULL';
+  }
+
+  if (type === 'list') {
+    const str = String(val).trim();
+    if (!str) return 'NULL';
+    // Se já estiver formatado com parênteses ou aspas, respeita
+    // Caso seja uma lista de itens separados por vírgula (ex: 1, 2, 3 ou 'A', 'B')
+    const items = str.split(',').map((it) => it.trim());
+    const formattedItems = items.map((it) => {
+      if (!it) return "''";
+      if (/^-?\d+(\.\d+)?$/.test(it)) return it; // número
+      if ((it.startsWith("'") && it.endsWith("'")) || (it.startsWith('"') && it.endsWith('"'))) {
+        return it; // já possui aspas
+      }
+      return `'${it.replace(/'/g, "''")}'`;
+    });
+    return formattedItems.join(', ');
+  }
+
+  const casted = typeof val === 'string' ? castBindValue(val, type) : val;
+
+  if (casted === null || casted === undefined) {
+    return 'NULL';
+  }
+  if (typeof casted === 'number') {
+    return String(casted);
+  }
+  if (typeof casted === 'boolean') {
+    return casted ? '1' : '0';
+  }
+
+  const str = String(casted);
+  if (type === 'auto' && str.toUpperCase() === 'NULL') {
+    return 'NULL';
+  }
+
+  return `'${str.replace(/'/g, "''")}'`;
+}
+
+/**
+ * Substitui as variáveis de bind e de substituição (:VAR, &VAR, &&VAR, @VAR, ${VAR}, #{VAR})
+ * diretamente no SQL por literais formatados.
+ * Preserva literais de string e comentários intactos.
  */
 export function substituteBindVariables(
   sql: string,
-  binds: Record<string, { value: any; type?: 'auto' | 'string' | 'number' | 'date' | 'null' } | any>
+  binds: Record<string, { value: any; type?: 'auto' | 'string' | 'number' | 'date' | 'list' | 'null' } | any>
 ): string {
+  if (!sql) return sql;
+
   const literalsMap: Record<string, string> = {};
 
   for (const [key, rawEntry] of Object.entries(binds)) {
@@ -107,35 +207,31 @@ export function substituteBindVariables(
       rawVal = rawEntry;
     }
 
-    const casted = typeof rawVal === 'string' ? castBindValue(rawVal, type) : rawVal;
-
-    let literal = 'NULL';
-    if (casted === null || casted === undefined) {
-      literal = 'NULL';
-    } else if (typeof casted === 'number') {
-      literal = String(casted);
-    } else if (typeof casted === 'boolean') {
-      literal = casted ? '1' : '0';
-    } else {
-      const str = String(casted).replace(/'/g, "''");
-      literal = `'${str}'`;
-    }
-    literalsMap[key.toUpperCase()] = literal;
+    literalsMap[key.toUpperCase()] = formatLiteral(rawVal, type);
   }
 
-  // Tokeniza preservando strings e comentários intactos, e substituindo apenas :VAR fora deles
-  const tokenRegex = /(\/\*[\s\S]*?\*\/|--[^\r\n]*|'(?:''|[^'])*'|(?<!:):(?!=)[a-zA-Z_][a-zA-Z0-9_]*\b)/g;
+  // Tokeniza preservando strings e comentários intactos, e capturando qualquer variável
+  const tokenRegex = /(\/\*[\s\S]*?\*\/|--[^\r\n]*|'(?:''|[^'])*'|(?<!:):(?!=)[a-zA-Z_][a-zA-Z0-9_]*\b|&&[a-zA-Z_][a-zA-Z0-9_]*\b|(?<!&)&(?!=)[a-zA-Z_][a-zA-Z0-9_]*\b|@[a-zA-Z_][a-zA-Z0-9_]*\b|\$\{[a-zA-Z_][a-zA-Z0-9_]*\}|#\{[a-zA-Z_][a-zA-Z0-9_]*\})/gi;
 
   return sql.replace(tokenRegex, (match) => {
     if (match.startsWith('/*') || match.startsWith('--') || match.startsWith("'")) {
       return match;
     }
-    if (match.startsWith(':')) {
-      const varName = match.slice(1).toUpperCase();
-      if (varName in literalsMap) {
-        return literalsMap[varName];
-      }
+
+    let varName = '';
+    if (match.startsWith('&&')) {
+      varName = match.slice(2);
+    } else if (match.startsWith('&') || match.startsWith(':') || match.startsWith('@')) {
+      varName = match.slice(1);
+    } else if ((match.startsWith('${') || match.startsWith('#{')) && match.endsWith('}')) {
+      varName = match.slice(2, -1);
     }
+
+    const upper = varName.toUpperCase().trim();
+    if (upper && upper in literalsMap) {
+      return literalsMap[upper];
+    }
+
     return match;
   });
 }

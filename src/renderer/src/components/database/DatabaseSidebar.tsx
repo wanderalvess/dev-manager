@@ -10,7 +10,9 @@ import {
   ChevronRight,
   ChevronDown,
   Key,
-  Sparkles
+  Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { DatabaseConnectionConfig, DatabaseType, TableColumnInfo } from '../../../../shared/types';
 
@@ -36,6 +38,8 @@ export interface DatabaseSidebarProps {
   onOpenTour: () => void;
   activeConnection: DatabaseConnectionConfig | null;
   getDbBadge: (type: DatabaseType) => React.ReactNode;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 // Schemas grandes chegam a milhares de tabelas; renderizar tudo de uma vez trava a
@@ -63,7 +67,9 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
   onInsertColumnName,
   onOpenTour,
   activeConnection,
-  getDbBadge
+  getDbBadge,
+  isCollapsed = false,
+  onToggleCollapse
 }) => {
   const [renderLimit, setRenderLimit] = useState(TABLES_RENDER_STEP);
 
@@ -82,8 +88,35 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
     }
   };
 
+  if (isCollapsed) {
+    return (
+      <aside
+        className="w-12 bg-card/60 border-r border-border/70 flex flex-col items-center py-3 shrink-0 gap-3 transition-all"
+        title="Barra lateral recolhida"
+      >
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-foreground transition cursor-pointer"
+          title="Expandir barra lateral (Conexões e Tabelas)"
+        >
+          <PanelLeftOpen className="w-4 h-4 text-primary" />
+        </button>
+        <div className="w-6 border-b border-border/60" />
+        <div className="flex flex-col items-center gap-2" title={activeConnection?.name || 'Conexões'}>
+          <Database className="w-4 h-4 text-muted-foreground" />
+          {activeConnection && (
+            <span className="text-[10px] font-mono text-muted-foreground [writing-mode:vertical-rl] rotate-180 truncate max-h-36 tracking-wider">
+              {activeConnection.name}
+            </span>
+          )}
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="w-72 bg-card/60 border-r border-border/70 flex flex-col shrink-0" data-tour="connections-sidebar">
+    <aside className="w-72 bg-card/60 border-r border-border/70 flex flex-col shrink-0 transition-all" data-tour="connections-sidebar">
       {/* Topo da Sidebar: Seletor de Conexão */}
       <div className="p-3 border-b border-border/70 flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -91,6 +124,16 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
           <span className="text-xs font-bold text-foreground tracking-wide uppercase">Conexões</span>
         </div>
         <div className="flex items-center gap-1.5">
+          {onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
+              title="Recolher barra lateral (mais espaço para queries)"
+            >
+              <PanelLeftClose className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={onOpenTour}

@@ -10,7 +10,7 @@ import { PAGE_TOURS_PREF_KEY } from './components/onboarding/usePageTour';
 import { TOUR_STEPS, TOUR_STORAGE_KEY } from './components/onboarding/tourSteps';
 import { WELCOME_STORAGE_KEY } from './components/onboarding/welcomeSteps';
 import { getMissingRequiredPaths } from './utils/environmentPageUtils';
-import { extractLatestChangelogSection, extractChangelogVersion } from './utils/changelogUtils';
+import changelogRaw from '../../../CHANGELOG.md?raw';
 import { ServiceStatus, GitProjectInfo } from '../../shared/types';
 
 // Code-split cada página: cada aba só baixa/parseia seu próprio bundle na primeira
@@ -27,8 +27,8 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ de
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const LogsPage = lazy(() => import('./pages/LogsPage').then((m) => ({ default: m.LogsPage })));
 const ApmPage = lazy(() => import('./pages/ApmPage').then((m) => ({ default: m.ApmPage })));
-// Só é montado quando há novidades de uma atualização de versão para mostrar — mantém fora do bundle inicial.
-const MarkdownReader = lazy(() => import('./components/MarkdownReader').then((m) => ({ default: m.MarkdownReader })));
+// Modal de novidades e histórico de versões do changelog
+const WhatsNewModal = lazy(() => import('./components/WhatsNewModal').then((m) => ({ default: m.WhatsNewModal })));
 
 const PageLoadingFallback: React.FC = () => (
   <div className="h-full w-full flex items-center justify-center">
@@ -76,7 +76,26 @@ export const App: React.FC = () => {
     }
   });
   const [isPageToursPromptOpen, setIsPageToursPromptOpen] = useState<boolean>(false);
-  const [whatsNewContent, setWhatsNewContent] = useState<string | null>(null);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState<boolean>(false);
+  const [changelogContent, setChangelogContent] = useState<string>('');
+  const [appVersion, setAppVersion] = useState<string>('');
+
+  const handleOpenWhatsNew = useCallback(async () => {
+    if (window.electronAPI?.getChangelog) {
+      try {
+        const content = await window.electronAPI.getChangelog();
+        if (content && !content.startsWith('Erro ao ler')) {
+          setChangelogContent(content);
+          setIsWhatsNewOpen(true);
+          return;
+        }
+      } catch {
+        // segue para o fallback estático
+      }
+    }
+    setChangelogContent(changelogRaw);
+    setIsWhatsNewOpen(true);
+  }, []);
 
   const handleFinishWelcome = useCallback(() => {
     setIsWelcomeOpen(false);
@@ -145,11 +164,27 @@ export const App: React.FC = () => {
         return;
       }
 
-      if (info.isAppUpdated && window.electronAPI?.getChangelog) {
-        window.electronAPI.getChangelog().then((changelog) => {
-          const section = extractLatestChangelogSection(changelog);
-          if (section) setWhatsNewContent(section);
-        }).catch(() => {});
+      if (info.appVersion) {
+        setAppVersion(info.appVersion);
+      }
+
+      if (info.isAppUpdated) {
+        if (window.electronAPI?.getChangelog) {
+          window.electronAPI.getChangelog().then((content) => {
+            if (content && !content.startsWith('Erro ao ler')) {
+              setChangelogContent(content);
+            } else {
+              setChangelogContent(changelogRaw);
+            }
+            setIsWhatsNewOpen(true);
+          }).catch(() => {
+            setChangelogContent(changelogRaw);
+            setIsWhatsNewOpen(true);
+          });
+        } else {
+          setChangelogContent(changelogRaw);
+          setIsWhatsNewOpen(true);
+        }
       }
     }).catch(() => {});
   }, []);
@@ -315,6 +350,7 @@ export const App: React.FC = () => {
         onRefreshAll={refreshAll}
         isRefreshing={isRefreshing}
         onOpenQuickLauncher={() => setIsQuickLauncherOpen(true)}
+        onOpenWhatsNew={handleOpenWhatsNew}
       />
 
       {/* Modal de Busca Rápida (Ctrl+K) */}
@@ -469,13 +505,13 @@ export const App: React.FC = () => {
         onSelectChoice={() => setIsPageToursPromptOpen(false)}
       />
 
-      {whatsNewContent && (
+      {isWhatsNewOpen && changelogContent && (
         <Suspense fallback={null}>
-          <MarkdownReader
-            title={`Novidades da versão ${extractChangelogVersion(whatsNewContent) || ''}`.trim()}
-            filePath="CHANGELOG.md"
-            content={whatsNewContent}
-            onClose={() => setWhatsNewContent(null)}
+          <WhatsNewModal
+            isOpen={isWhatsNewOpen}
+            onClose={() => setIsWhatsNewOpen(false)}
+            changelogContent={changelogContent}
+            currentAppVersion={appVersion}
           />
         </Suspense>
       )}

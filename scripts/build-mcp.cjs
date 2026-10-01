@@ -79,7 +79,18 @@ function writeCrlf(file, content) {
 }
 
 async function buildMcp(outDir = path.join(repoRoot, 'release', 'mcp')) {
-  const esbuild = require('esbuild');
+  let esbuild;
+  try {
+    esbuild = require('esbuild');
+  } catch {
+    try {
+      esbuild = require(require.resolve('esbuild', { paths: [repoRoot] }));
+    } catch (err) {
+      throw new Error(
+        `[MCP] O módulo 'esbuild' não foi encontrado. Certifique-se de que ele esteja instalado em 'dependencies' no package.json ou execute 'npm install'. Detalhes: ${err.message}`
+      );
+    }
+  }
   const version = readJson(path.join(repoRoot, 'package.json')).version;
 
   fs.rmSync(outDir, { recursive: true, force: true });

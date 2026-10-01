@@ -4,7 +4,9 @@ import {
   normalizeRoutine801Catalog,
   findRepositoryForFeature,
   filterRoutine801Features,
-  buildKarafInstallCommands
+  buildKarafInstallCommands,
+  inferFeatureMavenUrl,
+  extractVersionFamilies
 } from './routine801Utils';
 import { Routine801Feature, Routine801RepositoryUpdate } from '../../shared/types';
 
@@ -174,6 +176,53 @@ describe('routine801Utils', () => {
       expect(resHomologacao).toHaveLength(1);
       expect(resHomologacao[0].status).toBe('HOMOLOGACAO');
     });
+
+    it('deve filtrar por linha ou prefixo de versão', () => {
+      const res138 = filterRoutine801Features(list, '', 'ALL', 'ALL', '1.38');
+      expect(res138).toHaveLength(1);
+      expect(res138[0].nome).toBe('winthor-fin-1531');
+
+      const res139 = filterRoutine801Features(list, '', 'ALL', 'ALL', '1.39');
+      expect(res139).toHaveLength(1);
+      expect(res139[0].nome).toBe('winthor-fin-805');
+
+      const resInexistente = filterRoutine801Features(list, '', 'ALL', 'ALL', '0.39');
+      expect(resInexistente).toHaveLength(0);
+    });
+  });
+
+  describe('inferFeatureMavenUrl e extractVersionFamilies', () => {
+    it('deve inferir URL Maven padrão para servicos e rotinas', () => {
+      const urlServico = inferFeatureMavenUrl({
+        nome: 'winthor-atualizacao-dados',
+        versao: '1.39.1.6',
+        tipoProjeto: 'SERVICO'
+      });
+      expect(urlServico).toBe(
+        'mvn:br.com.pcsist.winthor.servico/winthor-atualizacao-dados-features/1.39.1.6/xml/features'
+      );
+
+      const urlRotina = inferFeatureMavenUrl({
+        nome: 'winthor-fin-1531',
+        versao: '1.38.0.2',
+        tipoProjeto: 'ROTINA'
+      });
+      expect(urlRotina).toBe(
+        'mvn:br.com.pcsist.winthor.rotina/winthor-fin-1531-features/1.38.0.2/xml/features'
+      );
+    });
+
+    it('deve extrair e ordenar famílias de versão decrescentemente', () => {
+      const feats: Routine801Feature[] = [
+        { nome: 'a', versao: '1.38.0.2', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO' },
+        { nome: 'b', versao: '1.39.1.6', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO' },
+        { nome: 'c', versao: '0.39.0.1', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO' },
+        { nome: 'd', versao: '1.39.0.0', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO' }
+      ];
+
+      const families = extractVersionFamilies(feats);
+      expect(families).toEqual(['1.39', '1.38', '0.39']);
+    });
   });
 
   describe('buildKarafInstallCommands', () => {
@@ -194,6 +243,24 @@ describe('routine801Utils', () => {
         'feature:repo-add mvn:br.com.pcsist.winthor.rotina/winthor-fin-1531-features/1.38.0.2/xml/features'
       );
       expect(cmds.installCommand).toBe('feature:install -r -u winthor-fin-1531/1.38.0.2');
+    });
+
+    it('deve auto-inferir repoCommand quando featureMavenUrl for omitido', () => {
+      const featSemUrl: Routine801Feature = {
+        nome: 'winthor-atualizacao-dados',
+        versao: '1.39.1.6',
+        codigoRotina: 0,
+        codigoModulo: 0,
+        tipoProjeto: 'SERVICO',
+        descricao: 'Atualização de Dados',
+        status: 'LIBERADO'
+      };
+
+      const cmds = buildKarafInstallCommands(featSemUrl);
+      expect(cmds.repoCommand).toBe(
+        'feature:repo-add mvn:br.com.pcsist.winthor.servico/winthor-atualizacao-dados-features/1.39.1.6/xml/features'
+      );
+      expect(cmds.installCommand).toBe('feature:install -r -u winthor-atualizacao-dados/1.39.1.6');
     });
   });
 });

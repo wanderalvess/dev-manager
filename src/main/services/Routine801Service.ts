@@ -11,7 +11,8 @@ import {
 } from '../../shared/types';
 import {
   buildKarafInstallCommands,
-  normalizeRoutine801Catalog
+  normalizeRoutine801Catalog,
+  findRepositoryForFeature
 } from '../utils/routine801Utils';
 
 export class Routine801Service {
@@ -258,19 +259,33 @@ export class Routine801Service {
     request: Routine801InstallRequest,
     onChunk: (chunk: string) => void = () => {}
   ): Promise<Routine801InstallResult> {
-    const { funcionalidades, executeVia = 'karaf_cli', serverUrl, credentials } = request;
+    const {
+      funcionalidades,
+      repositorios = [],
+      action = 'install',
+      executeVia = 'karaf_cli',
+      serverUrl,
+      credentials,
+      targetVersionOverride
+    } = request;
 
     if (!funcionalidades || funcionalidades.length === 0) {
       return {
         success: false,
-        output: 'Nenhuma funcionalidade selecionada para instalação.',
+        output: 'Nenhuma funcionalidade selecionada.',
         installedCount: 0,
         failedCount: 0
       };
     }
 
+    // Se o desenvolvedor definiu uma versão alvo específica (ex: forçar 1.38.0.0 ou 1.39.1.6)
+    const effectiveFeatures: Routine801Feature[] = funcionalidades.map((f) => ({
+      ...f,
+      versao: targetVersionOverride && targetVersionOverride.trim() ? targetVersionOverride.trim() : f.versao
+    }));
+
     // Validação de segurança dos nomes e versões antes de executar
-    for (const f of funcionalidades) {
+    for (const f of effectiveFeatures) {
       if (!isSafeKarafCommand(f.nome) || (f.versao && !isSafeKarafCommand(f.versao))) {
         const err = `Identificador de feature potencialmente inseguro detectado: "${f.nome}". Execução abortada.`;
         onChunk(`[ERRO] ${err}\r\n`);
@@ -278,15 +293,16 @@ export class Routine801Service {
           success: false,
           output: err,
           installedCount: 0,
-          failedCount: funcionalidades.length
+          failedCount: effectiveFeatures.length
         };
       }
     }
 
-    // Modo 1: Execução via API REST da Ferramenta Servidor
+    // Modo 1: Execução via API REST da Ferramenta Servidor (WTA)
     if (executeVia === 'api') {
       const baseUrl = this.getServerUrl(serverUrl);
-      onChunk(`[API] Enviando solicitação de instalação de ${funcionalidades.length} pacote(s) para ${baseUrl}...\r\n`);
+      const actionDesc = action === 'repo_add_only' ? 'registro de repositório' : 'instalação';
+      onChunk(`[API] Enviando solicitação de ${actionDesc} de ${effectiveFeatures.length} pacote(s) para ${baseUrl}...\r\n`);
 
       try {
         const apiPath = `${baseUrl}/winthor/ferramenta/servidor/v1/sistema/instala-com-dependencias`;
@@ -297,17 +313,17 @@ export class Routine801Service {
             Accept: 'application/json',
             ...this.getAuthHeaders()
           },
-          body: JSON.stringify(funcionalidades),
+          body: JSON.stringify(effectiveFeatures),
           timeout: 180000
         });
 
         const text = await res.text();
         if (res.ok) {
-          onChunk(`[API] Instalação concluída com sucesso no servidor!\r\n${text}\r\n`);
+          onChunk(`[API] Operação concluída com sucesso no servidor WTA!\r\n${text}\r\n`);
           return {
             success: true,
             output: text,
-            installedCount: funcionalidades.length,
+            installedCount: effectiveFeatures.length,
             failedCount: 0
           };
         } else {
@@ -317,7 +333,7 @@ export class Routine801Service {
             success: false,
             output: err,
             installedCount: 0,
-            failedCount: funcionalidades.length
+            failedCount: effectiveFeatures.length
           };
         }
       } catch (err: any) {
@@ -327,7 +343,7 @@ export class Routine801Service {
           success: false,
           output: msg,
           installedCount: 0,
-          failedCount: funcionalidades.length
+          failedCount: effectiveFeatures.length
         };
       }
     }
@@ -336,13 +352,13 @@ export class Routine801Service {
     const isRunning = await this.karafService.isKarafRunning(credentials?.port);
     if (!isRunning) {
       const port = credentials?.port || getKarafSshPort(this.configService.getSettings());
-      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} fechada). Inicie o Karaf antes de instalar features do catálogo.`;
+      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} fechada). Inicie o Karaf antes de executar ações no catálogo.`;
       onChunk(`[ERRO] ${err}\r\n`);
       return {
         success: false,
         output: err,
         installedCount: 0,
-        failedCount: funcionalidades.length
+        failedCount: effectiveFeatures.length
       };
     }
 
@@ -351,20 +367,71 @@ export class Routine801Service {
     let installedCount = 0;
     let failedCount = 0;
 
-    const total = funcionalidades.length;
-    onChunk(`\r\n=== Iniciando Instalação do Catálogo Oficial (${total} item(ns)) ===\r\n`);
+    const total = effectiveFeatures.length;
+    const headerTitle =
+      action === 'repo_add_only'
+        ? `=== Registrando Repositórios Maven no Karaf (${total} item(ns)) ===`
+        : `=== Iniciando Instalação do Catálogo Oficial (${total} item(ns)) ===`;
+    onChunk(`\r\n${headerTitle}\r\n`);
 
     for (let i = 0; i < total; i++) {
-      const feat = funcionalidades[i];
+      const feat = effectiveFeatures[i];
       const stepIdx = `[${i + 1}/${total}]`;
       onChunk(`\r\n${stepIdx} Preparando ${feat.nome} v${feat.versao} (${feat.tipoProjeto || 'SERVIÇO'})...\r\n`);
 
-      const cmds = buildKarafInstallCommands(feat);
+      // Tenta cruzar com os repositórios informados no catálogo para obter a URL canônica precisa
+      let matchedRepo = null;
+      if (repositorios && repositorios.length > 0) {
+        matchedRepo = findRepositoryForFeature(feat, repositorios);
+      }
+
+      // Auto-infere o repositório Maven do WinThor se não retornado explicitamente
+      const cmds = buildKarafInstallCommands(feat, matchedRepo, true);
 
       let stepSuccess = true;
       let stepError = '';
 
-      // 1. Adicionar repositório maven caso exista URL configurada (timeout 180s para download remoto)
+      // Ação Apenas Adicionar Repositório (feature:repo-add)
+      if (action === 'repo_add_only') {
+        if (!cmds.repoCommand) {
+          stepSuccess = false;
+          stepError = `Não foi possível determinar a URL Maven para o repositório de ${feat.nome}.`;
+          onChunk(`${stepIdx} ✖ Falha ao registrar repositório: ${stepError}\r\n`);
+          failedCount++;
+        } else {
+          onChunk(`${stepIdx} Registrando repositório Maven: ${cmds.repoCommand}\r\n`);
+          const repoRes = await this.karafService.executeKarafCommand(
+            cmds.repoCommand,
+            (chunk) => {
+              totalOutput += chunk;
+              onChunk(chunk);
+            },
+            credentials,
+            180000
+          );
+
+          if (repoRes.code === 0 || repoRes.stderr?.includes('already registered')) {
+            onChunk(`${stepIdx} ✔ Sucesso: Repositório Maven registrado no Karaf.\r\n`);
+            installedCount++;
+          } else {
+            stepSuccess = false;
+            stepError = repoRes.stderr || repoRes.stdout || 'Erro ao registrar repositório';
+            onChunk(`${stepIdx} ✖ Falha ao registrar repositório: ${stepError}\r\n`);
+            failedCount++;
+          }
+        }
+
+        details.push({
+          featureName: feat.nome,
+          version: feat.versao,
+          success: stepSuccess,
+          error: stepError || undefined
+        });
+        continue;
+      }
+
+      // Ação Padrão: Adicionar Repositório + Instalar Feature
+      // 1. Adicionar repositório maven caso configurado ou auto-inferido (timeout 180s)
       if (cmds.repoCommand) {
         onChunk(`${stepIdx} Registrando repositório: ${cmds.repoCommand}\r\n`);
         const repoRes = await this.karafService.executeKarafCommand(
@@ -382,7 +449,7 @@ export class Routine801Service {
         }
       }
 
-      // 2. Instalar a feature (feature:install -r -u) (timeout 300s para download de bundles e resolução OSGi)
+      // 2. Instalar a feature (feature:install -r -u) (timeout 300s para download e resolução OSGi)
       onChunk(`${stepIdx} Executando: ${cmds.installCommand}\r\n`);
       const installRes = await this.karafService.executeKarafCommand(
         cmds.installCommand,
@@ -395,12 +462,17 @@ export class Routine801Service {
       );
 
       if (installRes.code === 0) {
-        onChunk(`${stepIdx} ✔ Sucesso: ${feat.nome} instalado no container OSGi.\r\n`);
+        onChunk(`${stepIdx} ✔ Sucesso: ${feat.nome} v${feat.versao} instalado no container OSGi.\r\n`);
         installedCount++;
       } else {
         stepSuccess = false;
         stepError = installRes.stderr || installRes.stdout || 'Erro ao executar feature:install';
         onChunk(`${stepIdx} ✖ Falha ao instalar ${feat.nome}: ${stepError}\r\n`);
+        if (/No matching features for/i.test(stepError)) {
+          onChunk(
+            `\r\n💡 [DICA] O Karaf não encontrou a feature no repositório Maven. Verifique se o repositório Maven (Nexus TOTVS) está configurado em "etc/org.ops4j.pax.url.mvn.cfg" ou experimente executar pelo modo "API WTA" no cabeçalho do Catálogo.\r\n`
+          );
+        }
         failedCount++;
       }
 
@@ -412,7 +484,8 @@ export class Routine801Service {
       });
     }
 
-    onChunk(`\r\n=== Concluído: ${installedCount} instalado(s), ${failedCount} com falha ===\r\n`);
+    const summaryWord = action === 'repo_add_only' ? 'registrado(s)' : 'instalado(s)';
+    onChunk(`\r\n=== Concluído: ${installedCount} ${summaryWord}, ${failedCount} com falha ===\r\n`);
 
     return {
       success: failedCount === 0,

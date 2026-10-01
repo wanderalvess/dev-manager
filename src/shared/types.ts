@@ -473,6 +473,8 @@ export interface AppSettings {
   karafScript?: string;
   karafUser: string;
   karafPass: string;
+  /** Indicador se a senha do Karaf já está salva de forma segura (quando karafPass trafega sanitizado). */
+  hasKarafPass?: boolean;
   intellijPath: string;
   ideName?: string;
   projectsPath: string;
@@ -1026,6 +1028,8 @@ export interface DatabaseConnectionConfig {
   database: string;
   user: string;
   password?: string;
+  /** Indicador retornado pela API informando se a senha já está salva de forma segura (quando password trafega sanitizado). */
+  hasPassword?: boolean;
   /** Para Oracle: se a conexão deve usar Service Name (ex: 'XEPDB1') ou SID (padrão: serviceName) */
   oracleMode?: 'serviceName' | 'sid';
   /** Para Oracle: caminho do diretório do Oracle Instant Client (Thick mode, ex: 'C:\oracle\instantclient_19_25') */
@@ -1695,9 +1699,12 @@ export interface Routine801CatalogResponse {
 
 export interface Routine801InstallRequest {
   funcionalidades: Routine801Feature[];
+  repositorios?: Routine801RepositoryUpdate[];
+  action?: 'install' | 'repo_add_only';
   executeVia?: 'karaf_cli' | 'api';
   serverUrl?: string;
   credentials?: { user?: string; pass?: string; port?: number };
+  targetVersionOverride?: string;
 }
 
 export interface Routine801InstallResult {

@@ -4,7 +4,9 @@ import {
   CheckCircle2,
   AlertCircle,
   RotateCw,
-  ShieldCheck
+  ShieldCheck,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { DatabaseConnectionConfig, DatabaseType } from '../../../../shared/types';
 
@@ -31,6 +33,9 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
   onSaveConnection,
   defaultPorts
 }) => {
+  const [showPassword, setShowPassword] = React.useState(false);
+  const hasSavedPassword = Boolean(editingConn.hasPassword || (editingConn.id && !editingConn.password));
+
   if (!isOpen) return null;
 
   return (
@@ -212,14 +217,30 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               />
             </div>
             <div>
-              <label className="block font-medium text-foreground mb-1">Senha</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-medium text-foreground">Senha</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-muted-foreground hover:text-foreground text-[10px] flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  <span>{showPassword ? 'Ocultar' : 'Exibir'}</span>
+                </button>
+              </div>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={editingConn.password || ''}
                 onChange={(e) => setEditingConn({ ...editingConn, password: e.target.value })}
-                placeholder="••••••••"
+                placeholder={hasSavedPassword ? '(Senha salva e protegida)' : '••••••••'}
                 className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
               />
+              {hasSavedPassword && !editingConn.password && (
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>Senha salva. Deixe em branco para mantê-la ou digite para alterá-la.</span>
+                </p>
+              )}
             </div>
           </div>
 

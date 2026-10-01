@@ -90,6 +90,19 @@ describe('DatabaseService', () => {
     expect(res).toBe("SELECT 'Texto :CODPROD', -- :CODPROD comentário\n CODPROD FROM TAB WHERE CODPROD = 12345 AND CODFILIAL = '1' AND OBS = NULL");
   });
 
+  it('interpola variáveis de substituição do WinThor/Oracle (& e &&), @ e ${}', () => {
+    const sql = "SELECT 'Texto &CODCLI' FROM TAB WHERE CODCLI = &CODCLI AND CODFILIAL = &&CODFILIAL AND DEP = @DEP AND ID = ${ID}";
+    const binds = {
+      CODCLI: 999,
+      CODFILIAL: '01',
+      DEP: 'TI',
+      ID: 42
+    };
+
+    const res = (service as any).interpolateBinds(sql, binds);
+    expect(res).toBe("SELECT 'Texto &CODCLI' FROM TAB WHERE CODCLI = 999 AND CODFILIAL = '01' AND DEP = 'TI' AND ID = 42");
+  });
+
   it('Statement Tracer (sessões ativas) recusa conexões não-Oracle', async () => {
     const config: DatabaseConnectionConfig = {
       id: 'test',
@@ -336,6 +349,89 @@ describe('DatabaseService', () => {
       expect(blocked.error).toContain('WHERE vazia');
 
       spy.mockRestore();
+    });
+  });
+
+  describe('resolveConnectionConfig', () => {
+    const mockConfigService = {
+      getSettings: () => ({
+        databaseConnections: [
+          {
+            id: 'conn-1',
+            name: 'Oracle Local',
+            type: 'oracle' as const,
+            host: '127.0.0.1',
+            port: 1521,
+            database: 'XEPDB1',
+            user: 'system',
+            password: 'secret-password-123'
+          }
+        ]
+      })
+    } as any;
+
+    it('mantém a senha caso já venha preenchida na conexão', () => {
+      const svc = new DatabaseService(mockConfigService);
+      const conn: DatabaseConnectionConfig = {
+        id: 'conn-1',
+        name: 'Oracle Local',
+        type: 'oracle',
+        host: '127.0.0.1',
+        port: 1521,
+        database: 'XEPDB1',
+        user: 'system',
+        password: 'override-password'
+      };
+      const resolved = svc.resolveConnectionConfig(conn);
+      expect(resolved.password).toBe('override-password');
+    });
+
+    it('resolve a senha salva a partir do id da conexão quando a senha vier em branco', () => {
+      const svc = new DatabaseService(mockConfigService);
+      const conn: DatabaseConnectionConfig = {
+        id: 'conn-1',
+        name: 'Oracle Local',
+        type: 'oracle',
+        host: '127.0.0.1',
+        port: 1521,
+        database: 'XEPDB1',
+        user: 'system',
+        password: ''
+      };
+      const resolved = svc.resolveConnectionConfig(conn);
+      expect(resolved.password).toBe('secret-password-123');
+    });
+
+    it('resolve a senha salva pela tupla (host, port, user, database) se o id for temporário ou diferente', () => {
+      const svc = new DatabaseService(mockConfigService);
+      const conn: DatabaseConnectionConfig = {
+        id: 'temp',
+        name: 'Oracle Temp',
+        type: 'oracle',
+        host: '127.0.0.1',
+        port: 1521,
+        database: 'XEPDB1',
+        user: 'system',
+        password: ''
+      };
+      const resolved = svc.resolveConnectionConfig(conn);
+      expect(resolved.password).toBe('secret-password-123');
+    });
+
+    it('retorna a conexão intacta se configService não estiver configurado', () => {
+      const svc = new DatabaseService();
+      const conn: DatabaseConnectionConfig = {
+        id: 'conn-1',
+        name: 'Oracle Local',
+        type: 'oracle',
+        host: '127.0.0.1',
+        port: 1521,
+        database: 'XEPDB1',
+        user: 'system',
+        password: ''
+      };
+      const resolved = svc.resolveConnectionConfig(conn);
+      expect(resolved.password).toBe('');
     });
   });
 });

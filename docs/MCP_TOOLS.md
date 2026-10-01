@@ -122,7 +122,7 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 
 *   **`db_list_connections` / `db_test_connection`**: Lista conexões seguras e as testa.
 *   **`db_list_tables` / `db_get_table_columns`**: Inspeciona a estrutura dos bancos de dados.
-*   **`db_execute_query`**: Executa SELECTs de modo seguro no banco e retorna resultados tabulares.
+*   **`db_execute_query`**: Executa SELECTs de modo seguro no banco e retorna resultados tabulares, com suporte a parâmetros e variáveis de bind e substituição (`:VAR`, `&VAR`, `&&VAR`, `@VAR`, `${VAR}`).
 *   **`db_explain_plan` / `db_analyze_explain_plan`**: Roda Planos de Execução do banco e usa Inteligência Artificial Heurística para avisar sobre lentidão (ex: Full Table Scans, falta de índices, ou ordenações custosas).
 *   **`db_get_oracle_active_sessions` / `db_get_oracle_recent_statements`**: Statement Tracer do Oracle — lista sessões conectadas com a SQL atual/última de cada uma (`v$session`/`v$sql`) ou as instruções mais recentes no cursor cache, com filtro opcional por schema/texto. Útil para descobrir qual query um app ou rotina disparou, quando vários sistemas compartilham o mesmo banco.
 *   **`db_get_oracle_statement_binds`**: Captura os valores dos parâmetros (`bind variables`) passados na execução de um SQL no Oracle via `v$sql_bind_capture`, retornando tipo de dado, posição, nome e valor capturado, acompanhado do SQL executável interpolado (com os parâmetros substituídos no formato literal correto). Permite inspecionar parâmetros sem precisar habilitar `log:set trace root` no Karaf ou usar ferramentas externas como `OraTracer.exe`.
@@ -176,10 +176,12 @@ Catálogo e instalação das funcionalidades oficiais publicadas pela Rotina 801
 
 *   **`routine801_get_catalog`**: Lista instalações ou atualizações disponíveis de serviços web e rotinas oficiais do WinThor.
 *   **`routine801_check_health`**: Testa a conectividade com o serviço HTTP da Rotina 801 no Karaf.
-*   **`routine801_install_features`**: Instala funcionalidades selecionadas no Karaf com resolução de dependências (via `karaf_cli` ou `api`).
+*   **`routine801_install_features`**: Instala funcionalidades selecionadas no Karaf com resolução de dependências (via `karaf_cli` ou `api`), suportando auto-inferência de repositórios Maven canônicos, execução isolada de registro de repositório (`action: 'repo_add_only'`) e override pontual de versão (`targetVersionOverride`) para compor ambientes de teste específicos.
 
 **Exemplo de como pedir à IA:**
 > "Liste as atualizações pendentes da Rotina 801 e instale as que estão liberadas."
+> "Instale o serviço winthor-atualizacao-dados na versão 1.39.1.6 no Karaf pré-adicionando o repositório Maven."
+> "Apenas registre o repositório Maven da rotina 1531 no Karaf sem disparar a instalação imediata."
 
 ## 12. Catálogo de Rotinas
 Rotinas (.EXE/.PC) descobertas no catálogo local, atualização direta da Central de Controle WinThor (CCW), gerenciamento de rollback (.bak), inspeção de versão PE e programas mapeados manualmente na UI.

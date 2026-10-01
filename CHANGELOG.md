@@ -4,6 +4,52 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.24.0] - 2026-10-01
+### Adicionado
+- **Filtro por Famílias de Versão & Seleção em Lote no Catálogo da Rotina 801**:
+  - **Agrupamento Automático por Release Line**: Dropdown dinâmico no cabeçalho do catálogo que extrai e agrupa automaticamente todas as funcionalidades pelas suas famílias de versão (ex: `Versão 1.39.x`, `Versão 1.38.x`, `Versão 0.39.x`).
+  - **Seleção Rápida em 1 Clique**: Botão de conveniência `+ Selecionar N da vX.X.x` exibido junto ao filtro para marcar instantaneamente todos os serviços ou rotinas da release desejada para instalação combinada.
+- **Assistente de Instalação Direta & Montagem de Ambientes**:
+  - **Modal "+ Instalação Direta"**: Permite aos desenvolvedores especificar manualmente qualquer nome de feature (ex.: `winthor-atualizacao-dados`, `winthor-ferramenta-servidor`), o tipo do projeto (`SERVICO` ou `ROTINA`) e a versão desejada, mesmo que não conste na lista ativa retornada pela API do catálogo.
+  - **Campo de Versão Alvo (Override) em Lote**: Permite definir uma versão global na barra de ações em lote para aplicar a todos os itens selecionados de uma só vez.
+  - **Override Dinâmico no Drawer de Detalhes**: Ao inspecionar uma feature individual, o desenvolvedor pode alterar a versão e acompanhar em tempo real o recálculo das coordenadas Maven e dos comandos Karaf (`feature:repo-add` e `feature:install`).
+- **Pré-registro Isolado de Repositórios (`repo_add_only`) no Karaf e MCP**:
+  - Nova ação no instalador do Karaf, na interface visual (botão *Registrar Repositórios* na barra de lote e *Apenas Repositório* no drawer) e na tool MCP (`routine801_install_features` com `action: 'repo_add_only'`), permitindo cadastrar os repositórios Maven no Karaf previamente sem forçar a instalação imediata das features.
+- **Expansão de Ferramentas MCP & Testes da Rotina 801**:
+  - Parâmetros `action` (`install` | `repo_add_only`) e `targetVersionOverride` adicionados à ferramenta `routine801_install_features`.
+  - Cobertura de testes unitários em `routine801Utils.test.ts` e `Routine801Service.test.ts` para inferência Maven, famílias de versão, override de versão e execução isolada de repositório.
+- **Visualização Otimizada para Queries Grandes no DB Studio**:
+  - **Divisor Vertical Redimensionável (Splitter)**: O editor SQL agora pode ter sua altura ajustada livremente clicando e arrastando o divisor com o mouse (de 140px até 800px), com o tamanho preferido persistido automaticamente no navegador.
+  - **Modo Maximizar / Foco (Tela Cheia do Editor)**: Botão *Maximizar / Restaurar* na barra superior do editor que expande o editor para ocupar 100% da altura da tela, permitindo navegar e editar queries SQL complexas de centenas de linhas sem espremer o conteúdo. Duplo clique no divisor também alterna o modo maximizado.
+  - **Gutter com Números de Linha Sincronizado**: Coluna de números de linha à esquerda da área de código com alinhamento preciso, rolagem perfeitamente sincronizada com o texto e destaque visual da linha atual onde o cursor está posicionado.
+  - **Barra de Métricas e Status do Editor**: Indicador em tempo real exibindo a posição do cursor (`Ln X, Col Y`), total de linhas e contagem de caracteres da consulta.
+  - **Formatação Inteligente de SQL (Beautify / Indent)**: Botão *Formatar SQL* na barra de status que adiciona quebras de linha e indentação organizada em cláusulas principais (`SELECT`, `FROM`, `WHERE`, `AND`, `OR`, `JOIN`, `GROUP BY`, `ORDER BY`), preservando rigorosamente strings literais e comentários.
+  - **Quebra Automática de Linha (Word Wrap)**: Botão comutador *Wrap: ON / OFF* para alternar entre quebra automática de linha ou rolagem horizontal contínua.
+  - **Ajuste de Tamanho da Fonte (Zoom)**: Botões *A-* e *A+* para ajustar o tamanho da fonte do editor (de 10px a 18px), salvo nas preferências locais.
+  - **Recolhimento da Barra Lateral de Conexões e Tabelas**: Botão de toggle no topo da sidebar que permite recolher o painel lateral para uma barra compacta de 48px, liberando mais de 240px de largura horizontal para inspecionar queries largas com múltiplos joins e colunas.
+- **Suporte Abrangente a Parâmetros e Variáveis de Consulta**:
+  - **Múltiplos Formatos de Variáveis**: O sistema agora detecta, gerencia e interpola:
+    - Bind Variables nativas (<code className="font-mono">:VAR</code>);
+    - Variáveis de substituição do Oracle / SQL*Plus / WinThor (<code className="font-mono">&amp;VAR</code> e <code className="font-mono">&amp;&amp;VAR</code>);
+    - Variáveis de script e sessão (<code className="font-mono">@VAR</code>);
+    - Placeholders de templates dinâmicos (<code className="font-mono">${'{VAR}'}</code> e <code className="font-mono">#{'{VAR}'}</code>).
+  - **Eliminação de Erros de Sintaxe no Oracle (`ORA-00911: invalid character`)**: Consultas contendo variáveis de substituição (`&VAR`, `@VAR`, `${VAR}`) agora são interpoladas com segurança e convertidas em literais formatados antes do envio ao driver do Oracle, dispensando intervenções manuais.
+  - **Painel e Modal Enriquecido de Parâmetros**:
+    - Botão *Parâmetros* sempre acessível no cabeçalho do editor com badge dinâmico indicando o número de variáveis identificadas;
+    - Badges visuais identificando a origem do prefixo da variável (`: Bind`, `& SQL*Plus`, `@ Script`, `${} Template`);
+    - Suporte ao tipo **Lista IN** (`list`) para cláusulas como `WHERE CODCLI IN (:CLIENTES)`, formatando itens múltiplos separados por vírgula sem quebrar aspas;
+    - Opção para adicionar novas variáveis manualmente pelo modal (+ Adicionar Variável Manual);
+    - Opção de limpar valores em 1 clique e botão *Substituir no SQL (Inline)* para visualizar a query resolvida no editor antes de executar.
+- **Suíte de Testes para Formatação e Variáveis Expandida**:
+  - Criação de `sqlFormatUtils.test.ts` cobrindo formatação de SQL, preservação de literais/comentários e cálculo de métricas.
+  - Expansão de `sqlBinds.test.ts` e `DatabaseService.test.ts` cobrindo extração e interpolação de `:VAR`, `&VAR`, `&&VAR`, `@VAR`, `${VAR}` e listas `IN`.
+
+### Corrigido
+- **Resolução da Falha "No matching features" na Instalação via Karaf CLI**:
+  - O Dev Manager agora infere automaticamente a URL canônica padrão do WinThor no repositório Maven (`mvn:br.com.pcsist.winthor.<servico|rotina>/<nome>-features/<versao>/xml/features`) caso a API da Rotina 801 não retorne um repositório explícito.
+  - O comando `feature:repo-add` passa a ser executado preventivamente antes do `feature:install`, garantindo que o catálogo de features seja indexado na JVM do Apache Karaf e impedindo o erro `Error executing command: No matching features`.
+  - Detecção aprimorada de falhas no stdout do `client.bat`, alertando o desenvolvedor caso o Karaf rejeite o comando mesmo quando o script bat finalizar com código 0.
+
 ## [1.23.0] - 2026-09-30
 ### Alterado
 - **Componentização & Decomposição Modular do Frontend**:
@@ -25,6 +71,11 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - Corrigidos caminhos relativos de importação em componentes de 3º nível em `containers/` e `settings/tabs/`.
   - Alinhada a tipagem de referências `useRef` para elementos HTML (`<pre>` e `<input>`) no React 18, eliminando incompatibilidades na prop nativa `ref`.
   - Ajustados objetos literais em `validateSinglePath` para satisfazer o contrato completo exigido por `PathStatusInfo`.
+- **Preservação e Resolução de Senhas do Banco de Dados e Apache Karaf**:
+  - **Injeção de ConfigService no `DatabaseService` e `BackupService`**: Os serviços de banco de dados e backup agora resolvem automaticamente as senhas criptografadas salvas em `config.json` a partir do ID da conexão ou da tupla `(host, port, user, database)` quando a senha trafega sanitizada da UI (`password: ''`), solucionando o erro `ORA-01017: invalid username/password` e falhas de autenticação ao testar conexões, listar tabelas, executar queries, rodar Explain Plan e executar backups lógicos.
+  - **Indicadores de Senha Salva (`hasKarafPass` e `hasPassword`)**: Introduzidas flags booleanas retornadas na sanitização de segredos para indicar à interface se a credencial já está configurada e criptografada no sistema.
+  - **Checklist de Configuração Inicial**: Corrigido o cálculo de `karaf-creds` em `computeSetupChecklistStatus` para reconhecer `hasKarafPass`, marcando a etapa como concluída quando a senha do Karaf estiver salva.
+  - **Experiência Visual nos Modais (`ConnectionModal` e `KarafTab`)**: Exibição de badge informativo (`Senha salva e protegida. Deixe em branco para mantê-la ou digite para alterá-la`), placeholder especial e botão de alternância (Exibir/Ocultar com ícones Eye/EyeOff) para inspecionar a digitação de senhas.
 
 ## [1.22.0] - 2026-09-29
 ### Adicionado

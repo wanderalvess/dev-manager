@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.23.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.24.0';
   } catch {
-    return '1.23.0';
+    return '1.24.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -48,8 +48,8 @@ import type { AppSettings, BackupConfig, BackupWebhookConfig, DatabaseConnection
 // --- Composição dos serviços (mesma ordem usada em src/server/index.ts e src/main/index.ts) ---
 const configService = new ConfigService();
 const karafService = new KarafService(configService);
-const databaseService = new DatabaseService();
-const backupService = new BackupService();
+const databaseService = new DatabaseService(configService);
+const backupService = new BackupService(configService);
 const backupSchedulerService = new BackupSchedulerService(configService, backupService);
 const networkService = new NetworkService();
 const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
@@ -2552,7 +2552,7 @@ server.registerTool(
   'routine801_install_features',
   {
     title: 'Instalar features da Rotina 801',
-    description: 'Instala uma ou mais funcionalidades oficiais selecionadas no container Apache Karaf com resolução de dependências.',
+    description: 'Instala uma ou mais funcionalidades oficiais selecionadas no container Apache Karaf com resolução de dependências, ou apenas registra repositórios Maven.',
     inputSchema: {
       funcionalidades: z.array(
         z.object({
@@ -2566,11 +2566,13 @@ server.registerTool(
           featureMavenUrl: z.string().optional()
         })
       ),
+      action: z.enum(['install', 'repo_add_only']).optional().describe('Ação a executar: install (adicionar repo e instalar) ou repo_add_only (apenas feature:repo-add)'),
+      targetVersionOverride: z.string().optional().describe('Forçar uma versão específica para todos os pacotes selecionados (ex: "1.38.0.2")'),
       executeVia: z.enum(['karaf_cli', 'api']).optional().describe('Método de execução: karaf_cli (padrão) ou api'),
       serverUrl: z.string().optional()
     }
   },
-  async ({ funcionalidades, executeVia, serverUrl }) => {
+  async ({ funcionalidades, action, targetVersionOverride, executeVia, serverUrl }) => {
     try {
       const chunks: string[] = [];
       const result = await routine801Service.installFeatures(
@@ -2583,6 +2585,8 @@ server.registerTool(
             descricao: f.descricao || f.nome,
             status: f.status || 'LIBERADO'
           })),
+          action: action || 'install',
+          targetVersionOverride,
           executeVia: executeVia || 'karaf_cli',
           serverUrl
         },

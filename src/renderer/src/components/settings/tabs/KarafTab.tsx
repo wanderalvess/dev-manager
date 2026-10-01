@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyRound, Terminal, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, Terminal, Eye, EyeOff, Activity, ShieldCheck } from 'lucide-react';
 import { AppSettings } from '../../../../../shared/types';
 
 interface KarafTabProps {
@@ -54,7 +54,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[10px] text-muted-foreground hover:text-foreground font-normal flex items-center gap-1"
+                  className="text-[10px] text-muted-foreground hover:text-foreground font-normal flex items-center gap-1 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                   <span>{showPassword ? 'Ocultar' : 'Exibir'}</span>
@@ -65,11 +65,18 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 value={settings.karafPass}
                 onChange={(e) => setSettings({ ...settings, karafPass: e.target.value })}
                 className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
-                placeholder="karaf"
+                placeholder={settings.hasKarafPass ? '(Senha salva e protegida)' : 'karaf'}
               />
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Senha de acesso SSH (Padrão: <code>karaf</code>).
-              </p>
+              {settings.hasKarafPass && !settings.karafPass ? (
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>Senha salva e protegida. Deixe em branco para mantê-la ou digite para alterá-la.</span>
+                </p>
+              ) : (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Senha de acesso SSH (Padrão: <code>karaf</code>).
+                </p>
+              )}
             </div>
 
             <div className="pt-1">
@@ -99,6 +106,29 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 Porta JDWP para depuração remota via IntelliJ / IDE.
               </p>
             </div>
+          </div>
+
+          {/* Telemetria e APM (OpenTelemetry) */}
+          <div className="pt-2 border-t border-border/60" id="field-apmInstrumentation">
+            <label className="flex items-start gap-3 p-3.5 rounded-xl border border-border bg-card/60 hover:bg-card transition-colors cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!settings.apmInstrumentationEnabled}
+                onChange={(e) => setSettings({ ...settings, apmInstrumentationEnabled: e.target.checked })}
+                className="mt-0.5 w-4 h-4 rounded border-border text-primary accent-primary cursor-pointer shrink-0"
+              />
+              <div className="space-y-1">
+                <span className="font-semibold text-foreground text-xs flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-primary" /> Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf
+                </span>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Quando marcado, o Cockpit anexa automaticamente o agente <code className="font-mono text-foreground font-semibold">opentelemetry-javaagent.jar</code> (se presente na pasta <code className="font-mono text-foreground">{settings.karafPath ? `${settings.karafPath}\\bin` : 'bin'}</code>) para rastrear requisições HTTP, JDBC e erros na tela <strong>APM &amp; Traces</strong>.
+                </p>
+                <p className="text-[11px] text-muted-foreground/80">
+                  <strong className="text-foreground">Recomendação:</strong> Deixe desmarcado quando não precisar capturar traces. O agente OpenTelemetry adiciona tempo na inicialização da JVM e gera logs adicionais de telemetria.
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Box Informativo de Uso */}

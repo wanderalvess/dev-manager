@@ -184,6 +184,113 @@ describe('Routine801Service', () => {
       expect(result.failedCount).toBe(0);
       expect(logChunks.some((l) => l.includes('Sucesso'))).toBe(true);
     });
+
+    it('deve auto-inferir repositório Maven e executar feature:repo-add quando featureMavenUrl for omitida', async () => {
+      const logChunks: string[] = [];
+
+      const result = await routine801Service.installFeatures(
+        {
+          funcionalidades: [
+            {
+              nome: 'winthor-atualizacao-dados',
+              versao: '1.39.1.6',
+              codigoRotina: 0,
+              codigoModulo: 0,
+              tipoProjeto: 'SERVICO',
+              descricao: 'Atualização de Dados',
+              status: 'LIBERADO'
+            }
+          ],
+          executeVia: 'karaf_cli'
+        },
+        (chunk) => logChunks.push(chunk)
+      );
+
+      expect(karafService.executeKarafCommand).toHaveBeenCalledTimes(2);
+      expect(karafService.executeKarafCommand).toHaveBeenNthCalledWith(
+        1,
+        'feature:repo-add mvn:br.com.pcsist.winthor.servico/winthor-atualizacao-dados-features/1.39.1.6/xml/features',
+        expect.any(Function),
+        undefined,
+        180000
+      );
+      expect(karafService.executeKarafCommand).toHaveBeenNthCalledWith(
+        2,
+        'feature:install -r -u winthor-atualizacao-dados/1.39.1.6',
+        expect.any(Function),
+        undefined,
+        300000
+      );
+      expect(result.success).toBe(true);
+      expect(result.installedCount).toBe(1);
+    });
+
+    it('deve suportar action: repo_add_only executando apenas feature:repo-add sem instalar', async () => {
+      const logChunks: string[] = [];
+
+      const result = await routine801Service.installFeatures(
+        {
+          funcionalidades: [
+            {
+              nome: 'winthor-ferramenta-servidor',
+              versao: '1.37.0.1',
+              codigoRotina: 0,
+              codigoModulo: 0,
+              tipoProjeto: 'SERVICO',
+              descricao: 'Ferramenta Servidor',
+              status: 'LIBERADO'
+            }
+          ],
+          action: 'repo_add_only',
+          executeVia: 'karaf_cli'
+        },
+        (chunk) => logChunks.push(chunk)
+      );
+
+      // Deve executar apenas o repo-add
+      expect(karafService.executeKarafCommand).toHaveBeenCalledTimes(1);
+      expect(karafService.executeKarafCommand).toHaveBeenCalledWith(
+        'feature:repo-add mvn:br.com.pcsist.winthor.servico/winthor-ferramenta-servidor-features/1.37.0.1/xml/features',
+        expect.any(Function),
+        undefined,
+        180000
+      );
+      expect(result.success).toBe(true);
+      expect(result.installedCount).toBe(1);
+      expect(logChunks.some((l) => l.includes('Registrando Repositórios Maven'))).toBe(true);
+    });
+
+    it('deve aplicar targetVersionOverride para forçar versão específica', async () => {
+      const result = await routine801Service.installFeatures({
+        funcionalidades: [
+          {
+            nome: 'winthor-atualizacao-dados',
+            versao: '1.39.1.6',
+            codigoRotina: 0,
+            codigoModulo: 0,
+            tipoProjeto: 'SERVICO',
+            descricao: 'Atualização',
+            status: 'LIBERADO'
+          }
+        ],
+        targetVersionOverride: '1.38.0.0',
+        executeVia: 'karaf_cli'
+      });
+
+      expect(karafService.executeKarafCommand).toHaveBeenCalledWith(
+        'feature:repo-add mvn:br.com.pcsist.winthor.servico/winthor-atualizacao-dados-features/1.38.0.0/xml/features',
+        expect.any(Function),
+        undefined,
+        180000
+      );
+      expect(karafService.executeKarafCommand).toHaveBeenCalledWith(
+        'feature:install -r -u winthor-atualizacao-dados/1.38.0.0',
+        expect.any(Function),
+        undefined,
+        300000
+      );
+      expect(result.details?.[0].version).toBe('1.38.0.0');
+    });
   });
 
   describe('auth and tokens', () => {

@@ -7,6 +7,7 @@ import {
 import { SystemAppInfo, UpdateStatus, getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { MarkdownReader } from '../components/MarkdownReader';
+import { WhatsNewModal } from '../components/WhatsNewModal';
 import { getMissingRequiredPaths } from '../utils/environmentPageUtils';
 import mcpDocsRaw from '../../../../docs/MCP_TOOLS.md?raw';
 import changelogRaw from '../../../../CHANGELOG.md?raw';
@@ -210,7 +211,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
   }, [debugPort]);
 
   const categories = useMemo(() => {
-    return getHelpCategories(faqList.length, appInfo?.appVersion || '1.22.0');
+    return getHelpCategories(faqList.length, appInfo?.appVersion || '1.24.0');
   }, [faqList.length, appInfo?.appVersion]);
 
   const handleSearchChange = (val: string) => {
@@ -368,12 +369,11 @@ export const HelpPage: React.FC<HelpPageProps> = ({
       </div>
 
       {isChangelogOpen && (
-        <MarkdownReader
-          title="Changelog"
-          filePath="CHANGELOG.md"
-          content={changelogContent}
-          isLoading={isLoadingChangelog}
+        <WhatsNewModal
+          isOpen={isChangelogOpen}
           onClose={() => setIsChangelogOpen(false)}
+          changelogContent={changelogContent}
+          currentAppVersion={appInfo?.appVersion}
         />
       )}
 

@@ -20,6 +20,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-wtaAuthToken', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Cookie de Autenticação WTA (suukie)', keywords: 'wta cookie token suukie sessao autenticacao' },
   { id: 'field-karafUser', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Usuário Karaf (SSH)', keywords: 'karaf usuario ssh client.bat' },
   { id: 'field-karafPass', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Senha Karaf', keywords: 'karaf senha password ssh' },
+  { id: 'field-apmInstrumentation', tab: 'karaf', tabLabel: 'Apache Karaf', label: 'Telemetria APM (OpenTelemetry Java Agent)', keywords: 'telemetria apm opentelemetry otel javaagent traces karaf logs' },
   { id: 'field-azure', tab: 'azure', tabLabel: 'Azure DevOps & Git', label: 'Token / Organização Azure DevOps', keywords: 'azure devops git token pat organizacao pull request branch' },
   { id: 'field-services', tab: 'services', tabLabel: 'Serviços Windows & Processos', label: 'Serviços Windows Monitorados', keywords: 'servicos windows service monitorado parar iniciar' },
   { id: 'field-processes', tab: 'services', tabLabel: 'Serviços Windows & Processos', label: 'Processos Conflitantes (Kill)', keywords: 'processos kill matar finalizar conflitante' },

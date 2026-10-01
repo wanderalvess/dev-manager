@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { execFile, spawn } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
+import type { ConfigService } from './ConfigService';
 
 /** Margem mínima de espaço livre exigida na pasta de destino antes de iniciar um backup local. */
 const MIN_FREE_DISK_BYTES = 200 * 1024 * 1024;
@@ -193,6 +194,31 @@ export function maskSensitiveText(text: string, sensitive?: string): string {
 }
 
 export class BackupService {
+  constructor(private configService?: ConfigService) {}
+
+  /**
+   * Resolve a senha da conexão caso tenha vindo em branco/sanitizada, buscando nas
+   * configurações salvas em memória através do id da conexão ou da tupla (host, port, user, database).
+   */
+  public resolveConnectionConfig(config: DatabaseConnectionConfig): DatabaseConnectionConfig {
+    if (config.password || !this.configService) {
+      return config;
+    }
+    const settings = this.configService.getSettings();
+    const saved = settings.databaseConnections?.find(
+      (c) =>
+        (config.id && c.id === config.id) ||
+        (c.host === config.host &&
+          c.port === config.port &&
+          c.user === config.user &&
+          c.database === config.database)
+    );
+    if (saved?.password) {
+      return { ...config, password: saved.password };
+    }
+    return config;
+  }
+
   /** Conexões com backup ou restauração em andamento, para impedir execuções concorrentes na mesma conexão. */
   private busyConnections = new Set<string>();
 
@@ -205,6 +231,7 @@ export class BackupService {
     destinationFolder: string,
     options?: BackupOptions
   ): Promise<BackupResult> {
+    config = this.resolveConnectionConfig(config);
     if (!isSafeLocalPath(destinationFolder)) {
       return { success: false, message: 'Pasta de destino inválida.' };
     }
@@ -253,6 +280,7 @@ export class BackupService {
     customCommandTemplate: string,
     options?: BackupOptions
   ): Promise<BackupResult> {
+    config = this.resolveConnectionConfig(config);
     if (!isSafeLocalPath(destinationFolder)) {
       return { success: false, message: 'Pasta de destino inválida.' };
     }
@@ -404,6 +432,7 @@ export class BackupService {
     filePath: string,
     options?: BackupOptions
   ): Promise<BackupResult> {
+    scratchConfig = this.resolveConnectionConfig(scratchConfig);
     const result = await this.restoreBackup(scratchConfig, filePath, options);
     if (result.success) {
       result.checksumSha256 = await this.computeChecksum(filePath).catch(() => undefined);
@@ -431,6 +460,7 @@ export class BackupService {
     filePath: string,
     options?: BackupOptions
   ): Promise<BackupResult> {
+    config = this.resolveConnectionConfig(config);
     if (!isSafeLocalPath(filePath) || !fs.existsSync(filePath)) {
       return { success: false, message: 'Arquivo de backup não encontrado.' };
     }

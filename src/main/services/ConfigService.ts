@@ -556,7 +556,9 @@ export class ConfigService {
     }
     if (Array.isArray(merged.databaseConnections)) {
       merged.databaseConnections = merged.databaseConnections.map((newConn) => {
-        const existing = current.databaseConnections?.find((c) => c.id === newConn.id);
+        const existing = current.databaseConnections?.find(
+          (c) => c.id === newConn.id || (c.host === newConn.host && c.port === newConn.port && c.user === newConn.user && c.database === newConn.database)
+        );
         const destinationChanged = !!existing && (newConn.host !== existing.host || newConn.port !== existing.port);
         return { ...newConn, password: newConn.password || (destinationChanged ? '' : existing?.password || '') };
       });
@@ -663,11 +665,13 @@ export class ConfigService {
    */
   public sanitizeSecrets(settings: AppSettings): AppSettings {
     const sanitized: AppSettings = structuredClone(settings);
+    sanitized.hasKarafPass = Boolean(settings.karafPass && settings.karafPass.trim().length > 0);
     sanitized.karafPass = '';
     if (sanitized.databaseConnections) {
       sanitized.databaseConnections = sanitized.databaseConnections.map((conn) => ({
         ...conn,
-        password: ''
+        password: '',
+        hasPassword: Boolean(conn.password && conn.password.trim().length > 0)
       }));
     }
     if (sanitized.confluenceSources) {

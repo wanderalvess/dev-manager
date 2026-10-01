@@ -25,7 +25,7 @@ describe('helpData', () => {
   describe('getKeyboardShortcuts', () => {
     it('should generate shortcuts with the custom debugPort', () => {
       const shortcuts = getKeyboardShortcuts(5005);
-      expect(shortcuts.length).toBe(14);
+      expect(shortcuts.length).toBe(15);
 
       const debugShortcut = shortcuts.find((s) => s.key === 'Shift + F9');
       expect(debugShortcut).toBeDefined();
@@ -51,33 +51,34 @@ describe('helpData', () => {
       expect(keys).toContain('Alt + 9');
       expect(keys).toContain('Alt + 0');
       expect(keys).toContain('Ctrl + K');
+      expect(keys).toContain('Alt + ← / →');
     });
   });
 
   describe('getHelpCategories', () => {
     it('should return 5 main navigation categories with proper badges', () => {
-      const categories = getHelpCategories(32, '1.23.0');
+      const categories = getHelpCategories(33, '1.23.0');
       expect(categories.length).toBe(5);
 
       const ids = categories.map((c) => c.id);
       expect(ids).toEqual(['overview', 'modules', 'shortcuts', 'faq', 'about']);
 
       const faqCat = categories.find((c) => c.id === 'faq');
-      expect(faqCat?.badge).toBe('32');
+      expect(faqCat?.badge).toBe('33');
 
       const aboutCat = categories.find((c) => c.id === 'about');
       expect(aboutCat?.badge).toBe('v1.23.0');
     });
 
-    it('should use fallback version 1.22.0 when appVersion is not provided', () => {
+    it('should use fallback version 1.23.0 when appVersion is not provided', () => {
       const categories = getHelpCategories(10);
       const aboutCat = categories.find((c) => c.id === 'about');
-      expect(aboutCat?.badge).toBe('v1.22.0');
+      expect(aboutCat?.badge).toBe('v1.23.0');
     });
   });
 
   describe('getFaqList', () => {
-    it('should generate all 32 FAQ items with valid structure and tags', () => {
+    it('should generate all 33 FAQ items with valid structure and tags', () => {
       const copyFn = vi.fn();
       const openLinkFn = vi.fn();
       const openMcpFn = vi.fn();
@@ -93,10 +94,10 @@ describe('helpData', () => {
         copiedItem: null,
         handleOpenLink: openLinkFn,
         handleOpenMcpDocs: openMcpFn,
-        appInfo: { appVersion: '1.22.0' }
+        appInfo: { appVersion: '1.23.0' }
       });
 
-      expect(faqs.length).toBe(32);
+      expect(faqs.length).toBe(33);
 
       for (const faq of faqs) {
         expect(faq.id).toBeTruthy();

@@ -1,6 +1,6 @@
 {
   "name": "dev-manager",
-  "version": "1.23.0",
+  "version": "1.24.0",
   "type": "module",
   "description": "Cockpit e Painel de Automação para Desenvolvedores e Apache Karaf OSGi",
   "main": "dist-electron/main/index.js",
@@ -36,6 +36,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "electron-updater": "^6.8.9",
+    "esbuild": "^0.28.2",
     "express": "^4.21.2",
     "fastembed": "^2.1.0",
     "iconv-lite": "^0.7.3",
@@ -63,7 +64,6 @@
     "autoprefixer": "^10.4.18",
     "electron": "^44.1.1",
     "electron-builder": "^26.15.3",
-    "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.6",

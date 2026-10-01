@@ -12,7 +12,13 @@ import {
   X,
   FileCode,
   Edit2,
-  Trash2
+  Trash2,
+  Maximize2,
+  Minimize2,
+  AlignLeft,
+  WrapText,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -20,7 +26,8 @@ import {
   SqlSnippet,
   TableColumnInfo
 } from '../../../../shared/types';
-import { extractBindVariables } from '../../utils/sqlBinds';
+import { extractBindVariables, extractSqlVariables } from '../../utils/sqlBinds';
+import { formatSql, getSqlMetrics } from '../../utils/sqlFormatUtils';
 
 export const DEFAULT_SQL_SNIPPETS: SqlSnippet[] = [
   {
@@ -82,6 +89,10 @@ export interface SqlEditorAreaProps {
   setTableColumns: React.Dispatch<React.SetStateAction<Record<string, TableColumnInfo[]>>>;
   getDbBadge: (type: DatabaseType) => React.ReactNode;
   copyFeedback: string | null;
+  isMaximized?: boolean;
+  setIsMaximized?: React.Dispatch<React.SetStateAction<boolean>>;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
@@ -108,8 +119,51 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   setIsLoadingColumns,
   setTableColumns,
   getDbBadge,
-  copyFeedback
+  copyFeedback,
+  isMaximized,
+  setIsMaximized,
+  isSidebarCollapsed,
+  onToggleSidebar
 }) => {
+  const [localMaximized, setLocalMaximized] = useState<boolean>(false);
+  const isMaximizedActual = isMaximized !== undefined ? isMaximized : localMaximized;
+  const toggleMaximize = () => {
+    if (setIsMaximized) {
+      setIsMaximized((prev) => !prev);
+    } else {
+      setLocalMaximized((prev) => !prev);
+    }
+  };
+
+  const [editorHeight, setEditorHeight] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('devManager:sqlEditorHeight');
+      return saved ? Math.max(140, Math.min(800, Number(saved))) : 260;
+    } catch {
+      return 260;
+    }
+  });
+
+  const [wordWrap, setWordWrap] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('devManager:sqlWordWrap') !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  const [fontSize, setFontSize] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('devManager:sqlFontSize');
+      return saved ? Math.max(10, Math.min(18, Number(saved))) : 12;
+    } catch {
+      return 12;
+    }
+  });
+
+  const [cursorPos, setCursorPos] = useState<number>(0);
+  const lineNumbersRef = useRef<HTMLDivElement | null>(null);
+
   const [showSnippetsMenu, setShowSnippetsMenu] = useState<boolean>(false);
   const [savedQuerySearch, setSavedQuerySearch] = useState<string>('');
   const sqlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -120,6 +174,78 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
     wordStart: number;
     wordEnd: number;
   } | null>(null);
+
+  const metrics = useMemo(() => getSqlMetrics(sql, cursorPos), [sql, cursorPos]);
+  const linesArray = useMemo(() => {
+    const count = sql.split('\n').length;
+    return Array.from({ length: Math.max(1, count) }, (_, i) => i + 1);
+  }, [sql]);
+
+  const detectedVariables = useMemo(() => extractSqlVariables(sql), [sql]);
+
+  const handleEditorScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
+
+  const handleFormatSql = () => {
+    const formatted = formatSql(sql);
+    setSql(formatted);
+  };
+
+  const handleToggleWordWrap = () => {
+    setWordWrap((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('devManager:sqlWordWrap', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleZoomIn = () => {
+    setFontSize((prev) => {
+      const next = Math.min(18, prev + 1);
+      try {
+        localStorage.setItem('devManager:sqlFontSize', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleZoomOut = () => {
+    setFontSize((prev) => {
+      const next = Math.max(10, prev - 1);
+      try {
+        localStorage.setItem('devManager:sqlFontSize', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleSplitterMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = editorHeight;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientY - startY;
+      const newHeight = Math.max(140, Math.min(window.innerHeight - 200, startHeight + delta));
+      setEditorHeight(newHeight);
+      try {
+        localStorage.setItem('devManager:sqlEditorHeight', String(newHeight));
+      } catch {}
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
   // Extrai tabelas/aliases referenciados após FROM/JOIN para sugerir colunas com "alias.coluna"
   const referencedTables = useMemo(() => {
@@ -568,21 +694,57 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
             <span>Backup</span>
           </button>
 
-          {/* Botão de Parâmetros de Bind */}
-          {detectedBindsInEditor.length > 0 && (
-            <button
-              type="button"
-              onClick={onOpenBindModal}
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/40 text-violet-400 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer animate-fade-in"
-              title="Configurar valores dos parâmetros de bind (:PARAMETRO)"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-violet-400" />
-              <span>Parâmetros</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300">
-                {detectedBindsInEditor.length}
+          {/* Botão de Maximizar / Restaurar Editor */}
+          <button
+            type="button"
+            onClick={toggleMaximize}
+            className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer ${
+              isMaximizedActual
+                ? 'bg-primary/20 text-primary border border-primary/40'
+                : 'bg-card hover:bg-muted border border-border/70 text-foreground'
+            }`}
+            title={
+              isMaximizedActual
+                ? 'Restaurar layout padrão do editor'
+                : 'Maximizar editor (tela cheia para edição de queries grandes)'
+            }
+          >
+            {isMaximizedActual ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5" />
+                <span>Restaurar</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Maximizar</span>
+              </>
+            )}
+          </button>
+
+          {/* Botão de Parâmetros e Variáveis (sempre visível) */}
+          <button
+            type="button"
+            onClick={onOpenBindModal}
+            className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer ${
+              detectedVariables.length > 0
+                ? 'bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/40 text-violet-400'
+                : 'bg-card hover:bg-muted border border-border/70 text-foreground'
+            }`}
+            title={
+              detectedVariables.length > 0
+                ? `Configurar ${detectedVariables.length} variável(is) detectada(s) (:VAR, &VAR, @VAR, \${VAR})`
+                : 'Abrir painel de parâmetros e variáveis da consulta'
+            }
+          >
+            <SlidersHorizontal className={`w-3.5 h-3.5 ${detectedVariables.length > 0 ? 'text-violet-400' : 'text-muted-foreground'}`} />
+            <span>Parâmetros</span>
+            {detectedVariables.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-violet-500/25 text-violet-300">
+                {detectedVariables.length}
               </span>
-            </button>
-          )}
+            )}
+          </button>
 
           {/* Botão Explain Plan */}
           <button
@@ -634,47 +796,170 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
         </div>
       </div>
 
-      {/* Editor de Código SQL */}
-      <div className="h-44 border-b border-border/70 relative shrink-0" data-tour="sql-editor">
-        <textarea
-          ref={sqlTextareaRef}
-          value={sql}
-          onChange={handleSqlChange}
-          onKeyDown={handleKeyDown}
-          onClick={(e) => computeAutocomplete(sql, e.currentTarget.selectionStart)}
-          onBlur={() => setTimeout(() => setAutocomplete(null), 150)}
-          placeholder="Digite aqui seu comando SQL (SELECT, UPDATE, INSERT, DELETE, etc.)..."
-          className="w-full h-full p-3 bg-[#0B0F17] text-emerald-300 font-mono text-xs resize-none focus:outline-none [scrollbar-width:thin]"
-          spellCheck={false}
-        />
-        {autocomplete && (
-          <div className="absolute left-3 bottom-1 translate-y-full z-20 w-64 max-h-48 overflow-y-auto bg-[#131926] border border-border/70 rounded shadow-lg text-xs">
-            {autocomplete.suggestions.map((s, idx) => (
-              <button
-                key={`${s.type}-${s.label}-${idx}`}
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  applyAutocompleteSuggestion(s.label);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 text-left font-mono cursor-pointer ${
-                  idx === autocomplete.activeIndex ? 'bg-primary/20 text-primary' : 'text-emerald-200 hover:bg-white/5'
+      {/* Editor de Código SQL com Gutter de Linhas e Altura Ajustável */}
+      <div
+        className={`border-b border-border/70 relative flex overflow-hidden shrink-0 ${
+          isMaximizedActual ? 'flex-1 h-full min-h-[350px]' : ''
+        }`}
+        style={!isMaximizedActual ? { height: `${editorHeight}px` } : undefined}
+        data-tour="sql-editor"
+      >
+        {/* Coluna de Números de Linha */}
+        <div
+          ref={lineNumbersRef}
+          className="select-none overflow-hidden py-3 pl-2.5 pr-2 bg-[#080B11] border-r border-border/40 text-muted-foreground/40 font-mono text-right shrink-0"
+          style={{ fontSize: `${fontSize}px`, width: '44px', lineHeight: '1.5rem' }}
+          aria-hidden="true"
+        >
+          {linesArray.map((lineNum) => {
+            const isCurrentLine = lineNum === metrics.currentLine;
+            return (
+              <div
+                key={lineNum}
+                className={`transition-colors ${
+                  isCurrentLine ? 'text-primary font-bold bg-primary/15 rounded-xs' : ''
                 }`}
+                style={{ height: '1.5rem' }}
               >
-                <span className="truncate">{s.label}</span>
-                <span className="text-[9px] uppercase tracking-wide opacity-50 ml-2 shrink-0">
-                  {s.type === 'keyword' ? 'kw' : s.type === 'table' ? 'tab' : 'col'}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-        {copyFeedback && (
-          <div className="absolute right-3 bottom-3 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded shadow-md animate-fade-in">
-            {copyFeedback}
-          </div>
-        )}
+                {lineNum}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Textarea de Código */}
+        <div className="flex-1 relative h-full overflow-hidden bg-[#0B0F17]">
+          <textarea
+            ref={sqlTextareaRef}
+            value={sql}
+            onChange={handleSqlChange}
+            onKeyDown={handleKeyDown}
+            onKeyUp={(e) => setCursorPos(e.currentTarget.selectionStart)}
+            onSelect={(e) => setCursorPos(e.currentTarget.selectionStart)}
+            onScroll={handleEditorScroll}
+            onClick={(e) => {
+              setCursorPos(e.currentTarget.selectionStart);
+              computeAutocomplete(sql, e.currentTarget.selectionStart);
+            }}
+            onBlur={() => setTimeout(() => setAutocomplete(null), 150)}
+            placeholder="Digite aqui seu comando SQL (SELECT, UPDATE, INSERT, DELETE, etc.)..."
+            className={`w-full h-full p-3 bg-transparent text-emerald-300 font-mono resize-none focus:outline-none [scrollbar-width:thin] ${
+              wordWrap ? 'whitespace-pre-wrap' : 'whitespace-pre overflow-x-auto'
+            }`}
+            style={{ fontSize: `${fontSize}px`, lineHeight: '1.5rem' }}
+            spellCheck={false}
+          />
+          {autocomplete && (
+            <div className="absolute left-3 bottom-1 translate-y-full z-20 w-64 max-h-48 overflow-y-auto bg-[#131926] border border-border/70 rounded shadow-lg text-xs">
+              {autocomplete.suggestions.map((s, idx) => (
+                <button
+                  key={`${s.type}-${s.label}-${idx}`}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    applyAutocompleteSuggestion(s.label);
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 text-left font-mono cursor-pointer ${
+                    idx === autocomplete.activeIndex ? 'bg-primary/20 text-primary' : 'text-emerald-200 hover:bg-white/5'
+                  }`}
+                >
+                  <span className="truncate">{s.label}</span>
+                  <span className="text-[9px] uppercase tracking-wide opacity-50 ml-2 shrink-0">
+                    {s.type === 'keyword' ? 'kw' : s.type === 'table' ? 'tab' : 'col'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+          {copyFeedback && (
+            <div className="absolute right-3 bottom-3 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded shadow-md animate-fade-in">
+              {copyFeedback}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Barra de Status do Editor SQL */}
+      <div className="px-3 py-1 bg-[#090D14] border-b border-border/70 flex items-center justify-between text-[11px] text-muted-foreground select-none shrink-0 font-sans">
+        <div className="flex items-center space-x-3">
+          <span className="font-mono text-muted-foreground/80">
+            Ln <strong className="text-foreground">{metrics.currentLine}</strong>, Col{' '}
+            <strong className="text-foreground">{metrics.currentColumn}</strong>
+          </span>
+          <span className="text-border">|</span>
+          <span>
+            {metrics.lineCount} {metrics.lineCount === 1 ? 'linha' : 'linhas'}
+          </span>
+          <span className="text-border">|</span>
+          <span>{metrics.charCount} caracteres</span>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          {/* Botão Formatar SQL */}
+          <button
+            type="button"
+            onClick={handleFormatSql}
+            disabled={!sql.trim()}
+            className="flex items-center space-x-1 px-2 py-0.5 rounded hover:bg-muted/70 text-muted-foreground hover:text-foreground transition disabled:opacity-40 cursor-pointer"
+            title="Formatar SQL (adicionar quebras e indentação em cláusulas principais)"
+          >
+            <AlignLeft className="w-3 h-3 text-amber-500" />
+            <span>Formatar SQL</span>
+          </button>
+
+          <span className="text-border">|</span>
+
+          {/* Toggle Word Wrap */}
+          <button
+            type="button"
+            onClick={handleToggleWordWrap}
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded transition cursor-pointer ${
+              wordWrap
+                ? 'bg-primary/20 text-primary font-semibold'
+                : 'hover:bg-muted/70 text-muted-foreground hover:text-foreground'
+            }`}
+            title="Alternar quebra automática de linha"
+          >
+            <WrapText className="w-3 h-3" />
+            <span>Wrap: {wordWrap ? 'ON' : 'OFF'}</span>
+          </button>
+
+          <span className="text-border">|</span>
+
+          {/* Zoom da Fonte */}
+          <div className="flex items-center space-x-1 font-mono">
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              className="px-1.5 py-0.5 rounded hover:bg-muted/70 text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Diminuir fonte do editor"
+            >
+              A-
+            </button>
+            <span className="text-[10px] text-muted-foreground px-1">{fontSize}px</span>
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              className="px-1.5 py-0.5 rounded hover:bg-muted/70 text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Aumentar fonte do editor"
+            >
+              A+
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Divisor Arrastável (Splitter Vertical) */}
+      {!isMaximizedActual && (
+        <div
+          onMouseDown={handleSplitterMouseDown}
+          onDoubleClick={toggleMaximize}
+          className="h-2 bg-card hover:bg-primary/30 active:bg-primary/50 transition cursor-row-resize flex items-center justify-center shrink-0 border-b border-border/70 group"
+          title="Clique e arraste para redimensionar a altura do editor | Duplo clique para maximizar"
+        >
+          <div className="w-10 h-1 rounded-full bg-border group-hover:bg-primary transition" />
+        </div>
+      )}
     </div>
   );
 };
