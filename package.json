@@ -21,6 +21,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
+    "check:file-size": "tsx scripts/check-changed-file-sizes.ts",
     "server": "tsx src/server/index.ts",
     "start": "tsx src/server/index.ts",
     "mcp": "tsx src/mcp/index.ts",
