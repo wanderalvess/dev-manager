@@ -2,13 +2,12 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { inferUnstagedRenameSources } from './file-rename-matcher';
 
 export const MAX_SOURCE_LINES = 300;
 
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.css']);
 const GIT_BUFFER_LIMIT = 32 * 1024 * 1024;
-const MIN_RENAME_SIMILARITY = 0.8;
-const MIN_RENAME_SIMILARITY_MARGIN = 0.1;
 
 export interface ChangedFileSize {
   path: string;
@@ -102,81 +101,12 @@ function getUnstagedRenameSources(root: string, baseCommit: string,
   const remainingDestinations = untrackedPaths
     .filter((filePath) => !usedDestinations.has(filePath))
     .sort();
-  const sourceContents = new Map(
-    remainingSources.map((filePath) => [
-      filePath,
-      getBaseFileContent(root, baseCommit, filePath) ?? '',
-    ]),
+  return inferUnstagedRenameSources(
+    remainingSources,
+    remainingDestinations,
+    (filePath) => getBaseFileContent(root, baseCommit, filePath) ?? '',
+    (filePath) => readFileSync(resolve(root, filePath), 'utf8'),
   );
-  const destinationContents = new Map(
-    remainingDestinations.map((filePath) => [
-      filePath,
-      readFileSync(resolve(root, filePath), 'utf8'),
-    ]),
-  );
-  const similarities = new Map<string, Map<string, number>>();
-  for (const destination of remainingDestinations) {
-    const destinationScores = new Map<string, number>();
-    for (const source of remainingSources) {
-      destinationScores.set(
-        source,
-        getLineContentSimilarity(sourceContents.get(source) ?? '', destinationContents.get(destination) ?? ''),
-      );
-    }
-    similarities.set(destination, destinationScores);
-  }
-  const destinationCandidates = new Map<string, string>();
-  for (const [destination, scores] of similarities) {
-    const best = getClearBestMatch(scores);
-    if (best && best.score >= MIN_RENAME_SIMILARITY) {
-      destinationCandidates.set(destination, best.path);
-    }
-  }
-  const destinationsBySource = new Map<string, string[]>();
-  for (const [destination, source] of destinationCandidates) {
-    destinationsBySource.set(source, [...(destinationsBySource.get(source) ?? []), destination]);
-  }
-  for (const [source, matchingDestinations] of destinationsBySource) {
-    const sourceScores = new Map(
-      remainingDestinations
-        .map((destination) => [destination, similarities.get(destination)?.get(source) ?? 0]),
-    );
-    const best = getClearBestMatch(sourceScores);
-    if (matchingDestinations.length !== 1 || best?.path !== matchingDestinations[0]) continue;
-    sources.set(matchingDestinations[0], source);
-  }
-  return sources;
-}
-
-function getClearBestMatch(scores: Map<string, number>): { path: string; score: number } | null {
-  const ranked = [...scores]
-    .map(([path, score]) => ({ path, score }))
-    .sort((left, right) => right.score - left.score);
-  const [best, second] = ranked;
-  if (!best || (second && best.score - second.score < MIN_RENAME_SIMILARITY_MARGIN)) return null;
-  return best;
-}
-
-function getLineContentSimilarity(original: string, changed: string): number {
-  const getLines = (content: string): string[] => (content.length === 0
-    ? []
-    : content.split(/\r\n|\n|\r/).slice(0, /[\r\n]$/.test(content) ? -1 : undefined));
-  const originalLines = getLines(original);
-  const changedLines = getLines(changed);
-  const total = Math.max(originalLines.length, changedLines.length);
-  if (total === 0) return 0;
-  const originalCounts = new Map<string, number>();
-  for (const line of originalLines) {
-    originalCounts.set(line, (originalCounts.get(line) ?? 0) + 1);
-  }
-  let matchingLines = 0;
-  for (const line of changedLines) {
-    const count = originalCounts.get(line) ?? 0;
-    if (count === 0) continue;
-    matchingLines++;
-    originalCounts.set(line, count - 1);
-  }
-  return matchingLines / total;
 }
 
 function getBaseFileContent(root: string, baseCommit: string, filePath: string): string | null {
