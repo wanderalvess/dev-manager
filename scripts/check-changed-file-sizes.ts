@@ -1,12 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { extname, resolve } from 'node:path';
+import { basename, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const MAX_SOURCE_LINES = 300;
 
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.css']);
 const GIT_BUFFER_LIMIT = 32 * 1024 * 1024;
+const MIN_RENAME_SIMILARITY = 0.8;
+const MIN_RENAME_SIMILARITY_MARGIN = 0.1;
 
 export interface ChangedFileSize {
   path: string;
@@ -71,6 +73,131 @@ function getRenameSources(root: string, baseCommit: string): Map<string, string>
   return sources;
 }
 
+function getUnstagedRenameSources(root: string, baseCommit: string,
+  knownRenameSources: Map<string, string>): Map<string, string> {
+  const deletedPaths = splitGitPaths(runGit(root, [
+    'diff',
+    '--name-only',
+    '--diff-filter=D',
+    '-z',
+    baseCommit,
+    '--',
+  ])).filter((filePath) => SOURCE_EXTENSIONS.has(extname(filePath).toLowerCase()));
+  const untrackedPaths = splitGitPaths(runGit(root, [
+    'ls-files',
+    '--others',
+    '--exclude-standard',
+    '-z',
+  ])).filter((filePath) => SOURCE_EXTENSIONS.has(extname(filePath).toLowerCase()));
+  const sources = new Map<string, string>();
+  const usedSources = new Set(knownRenameSources.values());
+  const usedDestinations = new Set(knownRenameSources.keys());
+  const deletedByBasename = new Map<string, string[]>();
+  const untrackedByBasename = new Map<string, string[]>();
+  for (const filePath of deletedPaths) {
+    if (usedSources.has(filePath)) continue;
+    const name = basename(filePath);
+    deletedByBasename.set(name, [...(deletedByBasename.get(name) ?? []), filePath]);
+  }
+  for (const filePath of untrackedPaths) {
+    if (usedDestinations.has(filePath)) continue;
+    const name = basename(filePath);
+    untrackedByBasename.set(name, [...(untrackedByBasename.get(name) ?? []), filePath]);
+  }
+  for (const [name, matchingSources] of deletedByBasename) {
+    const matchingDestinations = untrackedByBasename.get(name) ?? [];
+    if (matchingSources.length !== 1 || matchingDestinations.length !== 1) continue;
+    const [source] = matchingSources;
+    const [destination] = matchingDestinations;
+    sources.set(destination, source);
+    usedSources.add(source);
+    usedDestinations.add(destination);
+  }
+  const remainingSources = deletedPaths
+    .filter((filePath) => !usedSources.has(filePath))
+    .sort();
+  const remainingDestinations = untrackedPaths
+    .filter((filePath) => !usedDestinations.has(filePath))
+    .sort();
+  const sourceContents = new Map(
+    remainingSources.map((filePath) => [
+      filePath,
+      getBaseFileContent(root, baseCommit, filePath) ?? '',
+    ]),
+  );
+  const destinationContents = new Map(
+    remainingDestinations.map((filePath) => [
+      filePath,
+      readFileSync(resolve(root, filePath), 'utf8'),
+    ]),
+  );
+  const similarities = new Map<string, Map<string, number>>();
+  for (const destination of remainingDestinations) {
+    const destinationScores = new Map<string, number>();
+    for (const source of remainingSources) {
+      if (basename(source) === basename(destination)) continue;
+      destinationScores.set(
+        source,
+        getLineContentSimilarity(sourceContents.get(source) ?? '', destinationContents.get(destination) ?? ''),
+      );
+    }
+    similarities.set(destination, destinationScores);
+  }
+  const destinationCandidates = new Map<string, string>();
+  for (const [destination, scores] of similarities) {
+    const best = getClearBestMatch(scores);
+    if (best && best.score >= MIN_RENAME_SIMILARITY) {
+      destinationCandidates.set(destination, best.path);
+    }
+  }
+  const destinationsBySource = new Map<string, string[]>();
+  for (const [destination, source] of destinationCandidates) {
+    destinationsBySource.set(source, [...(destinationsBySource.get(source) ?? []), destination]);
+  }
+  for (const [source, matchingDestinations] of destinationsBySource) {
+    const sourceScores = new Map(
+      remainingDestinations
+        .filter((destination) => basename(source) !== basename(destination))
+        .map((destination) => [destination, similarities.get(destination)?.get(source) ?? 0]),
+    );
+    const best = getClearBestMatch(sourceScores);
+    if (matchingDestinations.length !== 1 || best?.path !== matchingDestinations[0]) continue;
+    sources.set(matchingDestinations[0], source);
+  }
+  return sources;
+}
+
+function getClearBestMatch(scores: Map<string, number>): { path: string; score: number } | null {
+  const ranked = [...scores]
+    .map(([path, score]) => ({ path, score }))
+    .sort((left, right) => right.score - left.score);
+  const [best, second] = ranked;
+  if (!best || (second && best.score - second.score < MIN_RENAME_SIMILARITY_MARGIN)) return null;
+  return best;
+}
+
+function getLineContentSimilarity(original: string, changed: string): number {
+  const getLines = (content: string): string[] => (content.length === 0
+    ? []
+    : content.split(/\r\n|\n|\r/).slice(0, /[\r\n]$/.test(content) ? -1 : undefined));
+  const originalLines = getLines(original);
+  const changedLines = getLines(changed);
+  const total = Math.max(originalLines.length, changedLines.length);
+  if (total === 0) return 0;
+  const originalCounts = new Map<string, number>();
+  for (const line of originalLines) {
+    originalCounts.set(line, (originalCounts.get(line) ?? 0) + 1);
+  }
+  let matchingLines = 0;
+  for (const line of changedLines) {
+    const count = originalCounts.get(line) ?? 0;
+    if (count === 0) continue;
+    matchingLines++;
+    originalCounts.set(line, count - 1);
+  }
+  return matchingLines / total;
+}
+
 function getBaseFileContent(root: string, baseCommit: string, filePath: string): string | null {
   const treeEntries = runGit(root, [
     'ls-tree',
@@ -101,6 +228,9 @@ export function countSourceLines(source: string): number {
 export function auditChangedFiles(root: string, base: string): ChangedFileSize[] {
   const baseCommit = resolveBaseCommit(root, base);
   const renameSources = getRenameSources(root, baseCommit);
+  for (const [destination, source] of getUnstagedRenameSources(root, baseCommit, renameSources)) {
+    if (!renameSources.has(destination)) renameSources.set(destination, source);
+  }
   const results: ChangedFileSize[] = [];
 
   for (const filePath of getChangedPaths(root, baseCommit)) {

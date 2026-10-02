@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -41,6 +41,8 @@ beforeEach(() => {
   writeSource('src/kept.ts', 299);
   writeSource('src/legacy.ts', 320);
   writeSource('src/rename-source.ts', 320);
+  writeSource('src/ambiguous-one.ts', 320);
+  writeSource('src/ambiguous-two.ts', 320);
   writeSource('src/unchanged.ts', 301);
   writeSource('src/removed.ts', 4);
   git(['add', '.']);
@@ -95,6 +97,48 @@ describe('changed-file size checker', () => {
       '- EXISTENTE src/rename-destination.ts (base: 320 linhas; atual: 318 linhas)',
     );
     expect(warnings).not.toContain('- NOVO src/rename-destination.ts');
+  }, 30_000);
+
+  it('pairs an unstaged filesystem move with a different basename by line similarity', () => {
+    writeSource('src/legacy.ts', 320);
+    rmSync(join(repo, 'src', 'new.ts'));
+    const destination = 'src/refactored/legacy-check.ts';
+    const destinationPath = join(repo, destination);
+    mkdirSync(dirname(destinationPath), { recursive: true });
+    renameSync(join(repo, 'src', 'legacy.ts'), destinationPath);
+    const movedLines = readFileSync(destinationPath, 'utf8').split('\n');
+    writeFileSync(destinationPath, movedLines.slice(0, -2).join('\n'));
+
+    const results = auditChangedFiles(repo, base);
+    const movedFile = results.find((result) => result.path === destination);
+    const warnings = formatWarnings(results);
+
+    expect(movedFile).toEqual({
+      path: destination,
+      currentLines: 318,
+      baseLines: 320,
+    });
+    expect(warnings).toContain(
+      `- EXISTENTE ${destination} (base: 320 linhas; atual: 318 linhas)`,
+    );
+    expect(warnings).not.toContain(`- NOVO ${destination}`);
+  }, 30_000);
+
+  it('keeps a new file unpaired when deleted-source similarity is ambiguous', () => {
+    rmSync(join(repo, 'src', 'new.ts'));
+    rmSync(join(repo, 'src', 'ambiguous-one.ts'));
+    rmSync(join(repo, 'src', 'ambiguous-two.ts'));
+    const destination = 'src/refactored/ambiguous.ts';
+    writeSource(destination, 318);
+
+    const result = auditChangedFiles(repo, base).find((file) => file.path === destination);
+
+    expect(result).toEqual({
+      path: destination,
+      currentLines: 318,
+      baseLines: null,
+    });
+    expect(formatWarnings(result ? [result] : [])).toContain(`- NOVO ${destination}`);
   }, 30_000);
 
   it('runs the CLI successfully when changed files exceed the limit', () => {
