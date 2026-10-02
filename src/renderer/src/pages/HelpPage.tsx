@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Search,
   X,
@@ -54,7 +54,6 @@ export const HelpPage: React.FC<HelpPageProps> = ({
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [isChangelogOpen, setIsChangelogOpen] = useState(false);
   const [changelogContent, setChangelogContent] = useState('');
-  const [isLoadingChangelog, setIsLoadingChangelog] = useState(false);
 
   const [isMcpDocsOpen, setIsMcpDocsOpen] = useState(false);
   const [mcpDocsContent, setMcpDocsContent] = useState('');
@@ -95,7 +94,6 @@ export const HelpPage: React.FC<HelpPageProps> = ({
   const handleOpenChangelog = async () => {
     setIsChangelogOpen(true);
     setChangelogContent(changelogRaw);
-    setIsLoadingChangelog(false);
     try {
       const content = await window.electronAPI?.getChangelog?.();
       if (content && !content.startsWith('Erro ao ler')) {
@@ -106,7 +104,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
     }
   };
 
-  const handleOpenMcpDocs = async () => {
+  const handleOpenMcpDocs = useCallback(async () => {
     setIsMcpDocsOpen(true);
     setMcpDocsContent(mcpDocsRaw);
     setIsLoadingMcpDocs(false);
@@ -122,7 +120,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
     } catch {
       // Mantém a documentação embutida caso falhe a leitura dinâmica
     }
-  };
+  }, []);
 
   const toggleFaq = (id: string) => {
     setExpandedFaqs((prev) => ({

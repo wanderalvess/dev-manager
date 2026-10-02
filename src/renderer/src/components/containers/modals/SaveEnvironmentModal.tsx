@@ -3,13 +3,9 @@ import {
   FolderPlus,
   Pencil,
   Search,
-  CheckSquare,
-  Square,
   ArrowUp,
   ArrowDown,
   Clock,
-  Box,
-  Layers,
   Sparkles
 } from 'lucide-react';
 import type {
@@ -17,10 +13,6 @@ import type {
   ContainerEnvironmentSlot,
   DockerContainerInfo
 } from '../../../../../shared/types';
-import {
-  getGroupContainerNames,
-  buildEnvironmentSlotsFromList
-} from '../../../utils/dockerContainerUtils';
 
 export interface SaveEnvironmentModalProps {
   isOpen: boolean;

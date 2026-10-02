@@ -31,7 +31,7 @@ import {
 } from '../utils/qualityPageUtils';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { showToast } from '../components/ToastHost';
-import { AppSettings, QualitySourceConfig, TestExecutionResult } from '../../../shared/types';
+import { AppSettings, TestExecutionResult } from '../../../shared/types';
 import { QaRegressionRunner } from '../components/quality/QaRegressionRunner';
 import { QaRegressionTemplatesManager } from '../components/quality/QaRegressionTemplatesManager';
 import { AutomatedTestRunners } from '../components/quality/AutomatedTestRunners';

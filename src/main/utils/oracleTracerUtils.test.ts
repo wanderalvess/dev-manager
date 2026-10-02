@@ -5,7 +5,6 @@ import {
   mapActiveSessionRow,
   mapRecentStatementRow,
   buildBindCaptureQuery,
-  mapCapturedBindRow,
   groupCapturedBindsBySqlId,
   formatBindValueLiteral,
   interpolateOracleSqlWithBinds

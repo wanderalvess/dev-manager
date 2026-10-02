@@ -18,7 +18,6 @@ import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { CONTAINERS_TOUR_STEPS, CONTAINERS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/containersTour';
 import {
-  buildEnvironmentSlots,
   computeStackTopology,
   filterContainers,
   getGroupContainerNames
@@ -1296,7 +1295,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
             loadAvailableDumps();
           }}
           onOpenWtaTools={(c) => setWtaModalContainer(c)}
-          onOpenWshTools={(c, tab) => {
+          onOpenWshTools={(c, _tab) => {
             setWshModalContainer(c || containers[0] || null);
             loadWshPrereqs();
           }}

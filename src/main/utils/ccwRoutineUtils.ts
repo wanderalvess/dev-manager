@@ -146,7 +146,6 @@ export function extractZipBuffer(buffer: Buffer): ExtractedZipEntry[] {
 
     const compressionMethod = buffer.readUInt16LE(curr + 10);
     const compressedSize = buffer.readUInt32LE(curr + 20);
-    const uncompressedSize = buffer.readUInt32LE(curr + 24);
     const fileNameLength = buffer.readUInt16LE(curr + 28);
     const extraFieldLength = buffer.readUInt16LE(curr + 30);
     const commentLength = buffer.readUInt16LE(curr + 32);

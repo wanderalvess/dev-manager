@@ -262,7 +262,6 @@ export function correlateWithPomDependencies(
   if (dependencies.length === 0) return null;
 
   const missingLower = missingItem.toLowerCase();
-  const missingParts = missingLower.split('.').filter((p) => p.length >= 3);
 
   let bestMatch: PomDependency | null = null;
   let bestScore = 0;

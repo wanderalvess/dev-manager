@@ -24,7 +24,6 @@ import {
   RoutineDownloadResult,
   CcwCatalogItem,
   RoutineBackupEntry,
-  RoutineRollbackResult,
   BatchRoutineItemProgress,
   BatchRoutineDownloadResult
 } from '../../../shared/types';
@@ -83,7 +82,6 @@ export const CcwRoutineModal: React.FC<CcwRoutineModalProps> = ({
   const [confirmingRestorePath, setConfirmingRestorePath] = useState<string | null>(null);
   const [confirmingDeletePath, setConfirmingDeletePath] = useState<string | null>(null);
   const [rollbackSuccessMsg, setRollbackSuccessMsg] = useState<string | null>(null);
-  const [copiedEstimatedUrl, setCopiedEstimatedUrl] = useState<boolean>(false);
 
   // Aba 5: Atualização em Lote (Batch)
   const [batchTargetType, setBatchTargetType] = useState<'favorites' | 'module' | 'custom'>('favorites');
@@ -97,7 +95,7 @@ export const CcwRoutineModal: React.FC<CcwRoutineModalProps> = ({
   const [batchError, setBatchError] = useState<string | null>(null);
 
   const fetchBackups = useCallback(async (routineNameOrCode: string) => {
-    if (!routineNameOrCode.trim() || !Boolean(window.electronAPI?.listRoutineBackups)) {
+    if (!routineNameOrCode.trim() || !window.electronAPI?.listRoutineBackups) {
       setBackups([]);
       return;
     }
@@ -117,7 +115,7 @@ export const CcwRoutineModal: React.FC<CcwRoutineModalProps> = ({
   }, []);
 
   const handleRestoreBackup = async (entry: RoutineBackupEntry) => {
-    if (!Boolean(window.electronAPI?.restoreRoutineBackup)) return;
+    if (!window.electronAPI?.restoreRoutineBackup) return;
     const backupPath = entry.backupFilePath || entry.fullPath;
     const targetPath = entry.targetRoutinePath;
     if (!backupPath || !targetPath) return;
@@ -153,7 +151,7 @@ export const CcwRoutineModal: React.FC<CcwRoutineModalProps> = ({
   };
 
   const handleDeleteBackup = async (entry: RoutineBackupEntry) => {
-    if (!Boolean(window.electronAPI?.deleteRoutineBackup)) return;
+    if (!window.electronAPI?.deleteRoutineBackup) return;
     const backupPath = entry.backupFilePath || entry.fullPath;
     if (!backupPath) return;
 
@@ -180,7 +178,7 @@ export const CcwRoutineModal: React.FC<CcwRoutineModalProps> = ({
   };
 
   const handleStartBatchDownload = async () => {
-    if (!Boolean(window.electronAPI?.downloadRoutinesBatch)) return;
+    if (!window.electronAPI?.downloadRoutinesBatch) return;
 
     setIsBatchRunning(true);
     setBatchSummary(null);
@@ -219,7 +217,7 @@ export const CcwRoutineModal: React.FC<CcwRoutineModalProps> = ({
 
   // Listener de eventos de progresso do batch
   useEffect(() => {
-    if (!Boolean(window.electronAPI?.onRoutineBatchProgress)) return;
+    if (!window.electronAPI?.onRoutineBatchProgress) return;
     const unsubscribe = window.electronAPI.onRoutineBatchProgress((progress) => {
       setBatchProgressList((prev) => {
         const targetCode = (progress.routineCodeOrName || progress.routine || progress.routineCode || '').toUpperCase();

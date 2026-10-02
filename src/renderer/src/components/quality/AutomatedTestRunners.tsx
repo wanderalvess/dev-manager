@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Play,
   Square,
@@ -13,16 +13,12 @@ import {
   FolderOpen,
   Layers,
   Sparkles,
-  ExternalLink,
-  Clock,
   RotateCcw,
   Sliders,
   History,
   FileCode2,
   Globe,
-  Send,
-  Zap,
-  Check
+  Send
 } from 'lucide-react';
 import {
   AppSettings,
@@ -60,10 +56,10 @@ const TYPE_BADGES: Record<TestRunnerType, { label: string; badgeClass: string }>
 };
 
 export const AutomatedTestRunners: React.FC<AutomatedTestRunnersProps> = ({
-  settings,
+  settings: _settings,
   validationItems,
   onSyncWithValidationMatrix,
-  onNavigate
+  onNavigate: _onNavigate
 }) => {
   const [runners, setRunners] = useState<TestRunnerConfig[]>([]);
   const [history, setHistory] = useState<TestExecutionResult[]>([]);

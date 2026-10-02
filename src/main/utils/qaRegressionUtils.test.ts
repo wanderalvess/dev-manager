@@ -3,7 +3,6 @@ import {
   normalizeAssertionExpression,
   cleanJsonPathExpression,
   extractJsonPath,
-  formatDateValue,
   areValuesEquivalent,
   evaluateSingleAssertion,
   extractBindsFromSql,

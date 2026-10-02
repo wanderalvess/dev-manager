@@ -17,8 +17,7 @@ import {
   Copy,
   Check,
   Layers2,
-  Plus,
-  Filter
+  Plus
 } from 'lucide-react';
 import {
   Routine801CatalogResponse,
@@ -29,8 +28,7 @@ import {
   filterRoutine801Features,
   findRepositoryForFeatureUi,
   buildKarafInstallCommandsUi,
-  extractVersionFamilies,
-  inferFeatureMavenUrl
+  extractVersionFamilies
 } from '../utils/routine801UiUtils';
 
 interface Routine801CatalogModalProps {
@@ -116,6 +114,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Listener de streaming de logs do console Karaf
@@ -797,7 +796,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
                     return (
                       <tr
                         key={key}
-                        onClick={() => setInspectedFeature(item)}
+                        onClick={() => handleInspectFeature(item)}
                         className={`cursor-pointer transition-colors ${
                           isInspected
                             ? 'bg-primary/10 border-l-2 border-primary'
@@ -882,7 +881,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
                         <td className="py-2 pr-4 pl-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={() => setInspectedFeature(item)}
+                              onClick={() => handleInspectFeature(item)}
                               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                               title="Inspecionar metadados Maven e dependências"
                             >

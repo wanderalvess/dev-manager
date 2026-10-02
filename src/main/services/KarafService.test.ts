@@ -920,7 +920,6 @@ client.bat "feature:install -r custom-feature/2.0.0"
 
   describe('getResolvedJavaEnv e correção de caracteres VT100/setas no console', () => {
     it('remove a variável TERM no Windows para impedir que JLine instancie UnixTerminal', () => {
-      const originalPlatform = process.platform;
       try {
         // Simular ambiente com TERM preexistente
         process.env.TERM = 'xterm-256color';

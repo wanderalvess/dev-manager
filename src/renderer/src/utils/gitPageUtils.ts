@@ -174,7 +174,8 @@ export function validateBranchName(name: string): { valid: boolean; error?: stri
   if (trimmed.endsWith('.lock')) {
     return { valid: false, error: 'O nome da branch não pode terminar com ".lock".' };
   }
-  if (/[\x00-\x20\x7F~^:?*\[\\@]/.test(trimmed) || trimmed.includes('@{')) {
+  // eslint-disable-next-line no-control-regex
+  if (/[\x00-\x20\x7F~^:?*[\\@]/.test(trimmed) || trimmed.includes('@{')) {
     return { valid: false, error: 'O nome da branch contém caracteres proibidos pelo Git (~, ^, :, ?, *, [, \\, @{).' };
   }
   return { valid: true };

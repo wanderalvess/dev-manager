@@ -6,21 +6,17 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  FolderOpen,
   Terminal,
   Database,
   ExternalLink,
-  Layers,
   Sparkles,
   FileCode2,
   Search,
   Check,
   Copy,
   Sliders,
-  Send,
   Zap,
   ShieldCheck,
-  Tag,
   Settings
 } from 'lucide-react';
 import {

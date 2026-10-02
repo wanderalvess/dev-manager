@@ -1,11 +1,10 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   History,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   Check,
-  Calendar,
   Sparkles,
   Layers,
   Search,
@@ -83,17 +82,17 @@ export const WhatsNewModal: React.FC<WhatsNewModalProps> = ({
   const hasOlderVersion = !isAllVersions && currentIndex >= 0 && currentIndex < parsedVersions.length - 1;
   const hasNewerVersion = !isAllVersions && currentIndex > 0;
 
-  const goToOlderVersion = () => {
+  const goToOlderVersion = useCallback(() => {
     if (hasOlderVersion) {
       setSelectedVersion(parsedVersions[currentIndex + 1].version);
     }
-  };
+  }, [hasOlderVersion, parsedVersions, currentIndex]);
 
-  const goToNewerVersion = () => {
+  const goToNewerVersion = useCallback(() => {
     if (hasNewerVersion) {
       setSelectedVersion(parsedVersions[currentIndex - 1].version);
     }
-  };
+  }, [hasNewerVersion, parsedVersions, currentIndex]);
 
   // Suporte a atalhos de teclado de navegação entre releases
   useEffect(() => {
@@ -109,7 +108,7 @@ export const WhatsNewModal: React.FC<WhatsNewModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, hasOlderVersion, hasNewerVersion, currentIndex, parsedVersions]);
+  }, [isOpen, goToOlderVersion, goToNewerVersion]);
 
   // Lista de versões filtradas para o dropdown
   const filteredVersions = useMemo(() => {

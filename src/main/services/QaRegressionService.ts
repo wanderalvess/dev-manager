@@ -5,7 +5,6 @@ import {
   QaAssertionResult,
   QaExecutionRequest,
   QaExecutionResult,
-  QaRegressionStep,
   QaRegressionTemplate,
   QaStepExecutionResult
 } from '../../shared/types';

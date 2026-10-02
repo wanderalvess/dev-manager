@@ -3,8 +3,7 @@ import {
   QaAssertionResult,
   QaAssertionStatus,
   QaExecutionResult,
-  QaRegressionAssertion,
-  QaRegressionStep
+  QaRegressionAssertion
 } from '../../shared/types';
 
 /**

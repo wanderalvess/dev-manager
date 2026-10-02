@@ -7,9 +7,7 @@ import {
   X,
   Copy,
   Check,
-  Package,
-  Layers,
-  ArrowRight
+  Package
 } from 'lucide-react';
 import { OsgiResolutionDiagnosticSummary } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';

@@ -27,8 +27,6 @@ import {
   Copy,
   FileCode,
   Code2,
-  KeyRound,
-  Layers,
   Link,
   HelpCircle
 } from 'lucide-react';
@@ -41,7 +39,6 @@ import {
   buildTargetBranchOptions,
   fileStatusBadge,
   limitDiffLines,
-  slugifyTaskTitle,
   parseTaskInput,
   generateTaskBranchName,
   validateBranchName
@@ -78,7 +75,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
   // Sincroniza configurações globais (ex: branch alvo padrão configurado nas configurações)
   useEffect(() => {
-    if (Boolean(window.electronAPI?.getSettings)) {
+    if (window.electronAPI?.getSettings) {
       window.electronAPI.getSettings().then((st) => {
         setPreferredTarget(st.targetPrBranch || '');
         if (st.targetPrBranch) {
@@ -142,7 +139,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const isCountingRef = useRef(false);
 
   const refreshUncommittedCounts = useCallback(async () => {
-    if (isCountingRef.current || !Boolean(window.electronAPI?.getGitUncommittedCounts)) return;
+    if (isCountingRef.current || !window.electronAPI?.getGitUncommittedCounts) return;
     isCountingRef.current = true;
     try {
       setUncommittedCounts((await window.electronAPI.getGitUncommittedCounts()) || {});
@@ -158,7 +155,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   }, [settingsVersion, refreshUncommittedCounts]);
 
   const refreshSelectedProject = useCallback(async (projectPath: string) => {
-    if (!projectPath || !Boolean(window.electronAPI?.getProjectInfo)) return;
+    if (!projectPath || !window.electronAPI?.getProjectInfo) return;
     try {
       const info = await window.electronAPI.getProjectInfo(projectPath);
       if (info) {
@@ -179,7 +176,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const [ideFeedback, setIdeFeedback] = useState<string | null>(null);
 
   const refreshPendingChanges = useCallback(async (projectPath: string) => {
-    if (!projectPath || !Boolean(window.electronAPI?.getGitStatusDetails)) return;
+    if (!projectPath || !window.electronAPI?.getGitStatusDetails) return;
     setIsLoadingPendingChanges(true);
     try {
       const files = await window.electronAPI.getGitStatusDetails(projectPath);
@@ -192,7 +189,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   }, []);
 
   const handleOpenFileInIde = async (filePath: string) => {
-    if (!currentProject || !Boolean(window.electronAPI?.openFileInIde)) return;
+    if (!currentProject || !window.electronAPI?.openFileInIde) return;
     try {
       const res = await window.electronAPI.openFileInIde(currentProject.path, filePath);
       if (!res.success) {
@@ -231,7 +228,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   };
 
   const handleSearchTasks = async (query?: string) => {
-    if (!currentProject || !Boolean(window.electronAPI?.fetchTasks)) return;
+    if (!currentProject || !window.electronAPI?.fetchTasks) return;
     setIsLoadingTasks(true);
     try {
       const tasks = await window.electronAPI.fetchTasks(currentProject.path, query);

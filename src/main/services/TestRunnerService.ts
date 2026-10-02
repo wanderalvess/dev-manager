@@ -353,7 +353,6 @@ export class TestRunnerService {
       this.saveHistoryEntry(executionResult);
       return executionResult;
     } catch (err: any) {
-      const durationMs = Date.now() - startTime;
       const errMsg = `[ERRO FATAL] Falha ao disparar processo de teste: ${err?.message || err}\r\n`;
       onChunk(errMsg);
       return this.createAndSaveFailedResult(runner, executionId, startTime, 1, accumulatedOutput + errMsg, err?.message);

@@ -5,7 +5,6 @@ import {
   parseOsgiResolutionError,
   extractPomDependencies,
   correlateWithPomDependencies,
-  formatOsgiResolutionDiagnostic,
   diagnoseKarafResolutionError
 } from './karafResolutionParser';
 

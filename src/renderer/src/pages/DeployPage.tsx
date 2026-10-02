@@ -25,7 +25,6 @@ import {
   Info,
   Trash2,
   Terminal,
-  X,
   Activity,
   Boxes
 } from 'lucide-react';

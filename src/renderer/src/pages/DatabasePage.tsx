@@ -27,7 +27,6 @@ import {
 } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import {
-  extractBindVariables,
   extractSqlVariables,
   castBindValue,
   substituteBindVariables,
@@ -114,7 +113,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
       const next = !prev;
       try {
         localStorage.setItem('devManager:sqlSidebarCollapsed', String(next));
-      } catch {}
+      } catch {
+        /* ignore storage error */
+      }
       return next;
     });
   };
@@ -124,7 +125,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
       const next = typeof valOrFn === 'function' ? valOrFn(prev) : valOrFn;
       try {
         localStorage.setItem('devManager:sqlEditorMaximized', String(next));
-      } catch {}
+      } catch {
+        /* ignore storage error */
+      }
       return next;
     });
   };

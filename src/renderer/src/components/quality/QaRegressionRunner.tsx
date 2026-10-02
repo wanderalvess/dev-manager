@@ -24,10 +24,8 @@ import {
 } from 'lucide-react';
 import {
   AppSettings,
-  DatabaseConnectionConfig,
   QaExecutionResult,
-  QaRegressionTemplate,
-  QaStepExecutionResult
+  QaRegressionTemplate
 } from '../../../../shared/types';
 import { api } from '../../services/apiBridge';
 import { showToast } from '../ToastHost';
@@ -127,8 +125,8 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
       }
       setVariables(strMap);
 
-      if (selectedTemplate.sampleJson && !rawJson) {
-        setRawJson(selectedTemplate.sampleJson);
+      if (selectedTemplate.sampleJson) {
+        setRawJson((prev) => prev || selectedTemplate.sampleJson || '');
       }
     }
   }, [selectedTemplate]);

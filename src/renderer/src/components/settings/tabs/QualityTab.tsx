@@ -46,7 +46,7 @@ export const QualityTab: React.FC<QualityTabProps> = ({
   handleApplyQualityTemplate,
   handleSaveQualitySource,
   handleDeleteQualitySource,
-  handleToggleQualitySource,
+  handleToggleQualitySource: _handleToggleQualitySource,
   handleSetActiveQualitySource,
   handleTestQualityConnection,
   testingQualityId,

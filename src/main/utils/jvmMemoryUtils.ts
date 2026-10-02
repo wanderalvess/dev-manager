@@ -157,7 +157,7 @@ export function buildJvmMemoryMetrics(params: {
   // Non-Heap (Metaspace / CodeCache)
   let nonHeapUsedBytes = params.nonHeapUsedBytes || 0;
   let nonHeapCommittedBytes = params.nonHeapCommittedBytes || nonHeapUsedBytes;
-  let nonHeapMaxBytes = params.nonHeapMaxBytes || -1;
+  const nonHeapMaxBytes = params.nonHeapMaxBytes || -1;
 
   // Fallback de estimativa caso o comando seja info puro e não traga Non-Heap explicitamente:
   // Baseia-se no número de classes carregadas (~5.5 KB por classe no Metaspace)

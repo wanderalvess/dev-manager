@@ -18,6 +18,7 @@ const listeners = new Set<Listener>();
  * página que originou o evento). Usado para notificar resultados de tarefas em
  * segundo plano, como backups agendados.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function showToast(message: string, variant: ToastVariant = 'success'): void {
   const toast: ToastItem = { id: `toast_${Date.now()}_${Math.random().toString(36).slice(2)}`, message, variant };
   listeners.forEach((listener) => listener(toast));

@@ -1,4 +1,4 @@
-import { LogExceptionMatch, LogAnalysisSummary, LogExceptionType } from '../../../shared/types';
+import { LogExceptionMatch, LogAnalysisSummary } from '../../../shared/types';
 
 /**
  * Catálogo de diagnósticos para erros conhecidos de banco Oracle (ORA-XXXXX).

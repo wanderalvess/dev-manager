@@ -16,9 +16,7 @@ import {
   Maximize2,
   Minimize2,
   AlignLeft,
-  WrapText,
-  PanelLeftClose,
-  PanelLeftOpen
+  WrapText
 } from 'lucide-react';
 import {
   DatabaseConnectionConfig,
@@ -26,9 +24,10 @@ import {
   SqlSnippet,
   TableColumnInfo
 } from '../../../../shared/types';
-import { extractBindVariables, extractSqlVariables } from '../../utils/sqlBinds';
+import { extractSqlVariables } from '../../utils/sqlBinds';
 import { formatSql, getSqlMetrics } from '../../utils/sqlFormatUtils';
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const DEFAULT_SQL_SNIPPETS: SqlSnippet[] = [
   {
     id: 'oracle-active-sessions',
@@ -122,8 +121,8 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   copyFeedback,
   isMaximized,
   setIsMaximized,
-  isSidebarCollapsed,
-  onToggleSidebar
+  isSidebarCollapsed: _isSidebarCollapsed,
+  onToggleSidebar: _onToggleSidebar
 }) => {
   const [localMaximized, setLocalMaximized] = useState<boolean>(false);
   const isMaximizedActual = isMaximized !== undefined ? isMaximized : localMaximized;
@@ -199,7 +198,9 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
       const next = !prev;
       try {
         localStorage.setItem('devManager:sqlWordWrap', String(next));
-      } catch {}
+      } catch {
+        /* ignore storage error */
+      }
       return next;
     });
   };
@@ -209,7 +210,9 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
       const next = Math.min(18, prev + 1);
       try {
         localStorage.setItem('devManager:sqlFontSize', String(next));
-      } catch {}
+      } catch {
+        /* ignore storage error */
+      }
       return next;
     });
   };
@@ -219,7 +222,9 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
       const next = Math.max(10, prev - 1);
       try {
         localStorage.setItem('devManager:sqlFontSize', String(next));
-      } catch {}
+      } catch {
+        /* ignore storage error */
+      }
       return next;
     });
   };
@@ -235,7 +240,9 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
       setEditorHeight(newHeight);
       try {
         localStorage.setItem('devManager:sqlEditorHeight', String(newHeight));
-      } catch {}
+      } catch {
+        /* ignore storage error */
+      }
     };
 
     const onMouseUp = () => {
@@ -421,10 +428,6 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
         s.sql.toLowerCase().includes(term)
     );
   }, [customSnippets, savedQuerySearch]);
-
-  const detectedBindsInEditor = useMemo(() => {
-    return extractBindVariables(sql);
-  }, [sql]);
 
   return (
     <div className="flex flex-col shrink-0">

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QaRegressionService } from './QaRegressionService';
 import { ConfigService } from './ConfigService';
 import { DatabaseService } from './DatabaseService';
-import { QaRegressionTemplate, DatabaseConnectionConfig, QueryResult } from '../../shared/types';
+import { QaRegressionTemplate, QueryResult } from '../../shared/types';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -35,7 +35,7 @@ describe('QaRegressionService', () => {
 
     mockDatabaseService = {
       resolveConnectionConfig: vi.fn((c) => c),
-      interpolateBinds: vi.fn((sql, binds) => sql),
+      interpolateBinds: vi.fn((sql, _binds) => sql),
       executeQuery: vi.fn()
     };
 

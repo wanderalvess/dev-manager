@@ -8,12 +8,9 @@ import {
   Save,
   ArrowLeft,
   Layers,
-  Code2,
   Table,
   Upload,
-  Download,
-  Check,
-  AlertCircle
+  Download
 } from 'lucide-react';
 import {
   QaRegressionAssertion,

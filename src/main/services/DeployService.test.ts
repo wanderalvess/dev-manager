@@ -66,6 +66,7 @@ describe('DeployService', () => {
       const result = await deployService.executeProfile(profile, dummyChunk);
 
       expect(windowsService.startService).toHaveBeenCalledWith('karaf-service');
+      expect(result.success).toBe(true);
     });
   });
 

@@ -3,8 +3,6 @@ import {
   X,
   Plus,
   Trash2,
-  ArrowUp,
-  ArrowDown,
   ChevronUp,
   ChevronDown,
   FolderOpen,

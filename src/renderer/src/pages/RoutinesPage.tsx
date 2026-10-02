@@ -14,12 +14,10 @@ import {
   AppWindow,
   Sparkles,
   AlertTriangle,
-  Activity,
   Server,
   Terminal,
   DownloadCloud,
-  RotateCcw,
-  History
+  RotateCcw
 } from 'lucide-react';
 import { RoutineItem, MappedProgram, AppSettings, KarafWtaStatusResult } from '../../../shared/types';
 import { CcwRoutineModal } from '../components/CcwRoutineModal';
