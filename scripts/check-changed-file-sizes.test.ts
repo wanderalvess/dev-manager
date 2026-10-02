@@ -40,6 +40,7 @@ beforeEach(() => {
 
   writeSource('src/kept.ts', 299);
   writeSource('src/legacy.ts', 320);
+  writeSource('src/rename-source.ts', 320);
   writeSource('src/unchanged.ts', 301);
   writeSource('src/removed.ts', 4);
   git(['add', '.']);
@@ -75,6 +76,26 @@ describe('changed-file size checker', () => {
     expect(formatWarnings(results)).toContain('src/new.ts');
     expect(formatWarnings(results)).toContain('src/legacy.ts');
   });
+
+  it('uses the base content of a renamed file to classify its warning as legacy', () => {
+    git(['mv', 'src/rename-source.ts', 'src/rename-destination.ts']);
+    writeSource('src/rename-destination.ts', 318);
+    git(['add', '-A']);
+
+    const results = auditChangedFiles(repo, base);
+    const renamedFile = results.find((result) => result.path === 'src/rename-destination.ts');
+    const warnings = formatWarnings(results);
+
+    expect(renamedFile).toEqual({
+      path: 'src/rename-destination.ts',
+      currentLines: 318,
+      baseLines: 320,
+    });
+    expect(warnings).toContain(
+      '- EXISTENTE src/rename-destination.ts (base: 320 linhas; atual: 318 linhas)',
+    );
+    expect(warnings).not.toContain('- NOVO src/rename-destination.ts');
+  }, 30_000);
 
   it('runs the CLI successfully when changed files exceed the limit', () => {
     const result = spawnSync(process.execPath, [tsxCli, checkerPath, '--base', base], {

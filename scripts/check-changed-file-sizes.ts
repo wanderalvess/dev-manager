@@ -45,6 +45,32 @@ function getChangedPaths(root: string, baseCommit: string): string[] {
     .sort();
 }
 
+function getRenameSources(root: string, baseCommit: string): Map<string, string> {
+  const changes = runGit(root, [
+    'diff',
+    '--name-status',
+    '--find-renames',
+    '-z',
+    baseCommit,
+    '--',
+  ]);
+  const entries = splitGitPaths(changes);
+  const sources = new Map<string, string>();
+
+  for (let index = 0; index < entries.length;) {
+    const status = entries[index++];
+    if (status.startsWith('R')) {
+      const source = entries[index++];
+      const destination = entries[index++];
+      if (source && destination) sources.set(destination, source);
+    } else {
+      index++;
+    }
+  }
+
+  return sources;
+}
+
 function getBaseFileContent(root: string, baseCommit: string, filePath: string): string | null {
   const treeEntries = runGit(root, [
     'ls-tree',
@@ -74,6 +100,7 @@ export function countSourceLines(source: string): number {
 
 export function auditChangedFiles(root: string, base: string): ChangedFileSize[] {
   const baseCommit = resolveBaseCommit(root, base);
+  const renameSources = getRenameSources(root, baseCommit);
   const results: ChangedFileSize[] = [];
 
   for (const filePath of getChangedPaths(root, baseCommit)) {
@@ -85,7 +112,8 @@ export function auditChangedFiles(root: string, base: string): ChangedFileSize[]
       throw error;
     }
 
-    const baseContent = getBaseFileContent(root, baseCommit, filePath);
+    const basePath = renameSources.get(filePath) ?? filePath;
+    const baseContent = getBaseFileContent(root, baseCommit, basePath);
     results.push({
       path: filePath,
       currentLines: countSourceLines(currentContent),
