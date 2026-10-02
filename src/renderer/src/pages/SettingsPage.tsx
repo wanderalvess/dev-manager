@@ -18,7 +18,8 @@ import {
   Bot,
   Sparkles,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  CheckCheck
 } from 'lucide-react';
 import {
   AppSettings,
@@ -31,7 +32,9 @@ import {
   EnvironmentProfile,
   LlmProviderConfig,
   LlmProviderType,
-  LlmTestResult
+  LlmTestResult,
+  QualitySourceConfig,
+  QualitySourceTemplate
 } from '../../../shared/types';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
@@ -59,6 +62,7 @@ import { AutomationTab } from '../components/settings/tabs/AutomationTab';
 import { LogsTab } from '../components/settings/tabs/LogsTab';
 import { BackupTab } from '../components/settings/tabs/BackupTab';
 import { AiTab } from '../components/settings/tabs/AiTab';
+import { QualityTab } from '../components/settings/tabs/QualityTab';
 
 interface SettingsPageProps {
   onSettingsSaved?: () => void;
@@ -290,6 +294,115 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     }
   };
 
+  // Qualidade & Testes (Zephyr / Jira / Azure Test Plans)
+  const [editingQualitySource, setEditingQualitySource] = useState<Partial<QualitySourceConfig> | null>(null);
+  const [showQualityToken, setShowQualityToken] = useState<boolean>(false);
+  const [testingQualityId, setTestingQualityId] = useState<string | null>(null);
+  const [qualityTestResults, setQualityTestResults] = useState<Record<string, { success: boolean; message: string }>>({});
+
+  const handleApplyQualityTemplate = (template: QualitySourceTemplate) => {
+    setEditingQualitySource({
+      id: editingQualitySource?.id || `quality-${Date.now()}`,
+      name: template.name,
+      type: template.type,
+      baseUrl: template.baseUrl,
+      projectKey: template.defaultProjectKey,
+      jqlFilter: template.defaultJqlFilter,
+      enabled: true
+    });
+  };
+
+  const handleSaveQualitySource = () => {
+    if (!editingQualitySource) return;
+    const name = editingQualitySource.name?.trim() || 'Nova Fonte de Teste';
+    const baseUrl = editingQualitySource.baseUrl?.trim() || '';
+    const id = editingQualitySource.id || `quality-${Date.now()}`;
+
+    const newSource: QualitySourceConfig = {
+      id,
+      name,
+      type: editingQualitySource.type || 'zephyr-scale',
+      baseUrl,
+      projectKey: editingQualitySource.projectKey?.trim() || undefined,
+      testPlanKey: editingQualitySource.testPlanKey?.trim() || undefined,
+      userEmail: editingQualitySource.userEmail?.trim() || undefined,
+      apiToken: editingQualitySource.apiToken?.trim() || '',
+      hasApiToken: editingQualitySource.hasApiToken,
+      jqlFilter: editingQualitySource.jqlFilter?.trim() || undefined,
+      enabled: editingQualitySource.enabled ?? true,
+      isDefault: editingQualitySource.isDefault ?? false
+    };
+
+    setSettings((prev) => {
+      const existing = prev.qualitySources || [];
+      const index = existing.findIndex((s) => s.id === id);
+      let updated: QualitySourceConfig[];
+      if (index >= 0) {
+        updated = [...existing];
+        updated[index] = newSource;
+      } else {
+        updated = [...existing, newSource];
+      }
+      const activeId = prev.activeQualitySourceId || id;
+      return {
+        ...prev,
+        qualitySources: updated,
+        activeQualitySourceId: activeId
+      };
+    });
+
+    setEditingQualitySource(null);
+  };
+
+  const handleDeleteQualitySource = (id: string) => {
+    setSettings((prev) => {
+      const updated = (prev.qualitySources || []).filter((s) => s.id !== id);
+      const nextActive = prev.activeQualitySourceId === id ? updated[0]?.id : prev.activeQualitySourceId;
+      return {
+        ...prev,
+        qualitySources: updated,
+        activeQualitySourceId: nextActive
+      };
+    });
+  };
+
+  const handleToggleQualitySource = (id: string, enabled: boolean) => {
+    setSettings((prev) => ({
+      ...prev,
+      qualitySources: (prev.qualitySources || []).map((s) => (s.id === id ? { ...s, enabled } : s))
+    }));
+  };
+
+  const handleSetActiveQualitySource = (id: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      activeQualitySourceId: id
+    }));
+  };
+
+  const handleTestQualityConnection = (source: QualitySourceConfig) => {
+    setTestingQualityId(source.id);
+    setTimeout(() => {
+      if (!source.baseUrl || !source.baseUrl.startsWith('http')) {
+        setQualityTestResults((prev) => ({
+          ...prev,
+          [source.id]: { success: false, message: 'URL Base inválida. Deve iniciar com http:// ou https://' }
+        }));
+      } else if (!source.apiToken && !source.hasApiToken) {
+        setQualityTestResults((prev) => ({
+          ...prev,
+          [source.id]: { success: false, message: 'Token de autenticação não configurado.' }
+        }));
+      } else {
+        setQualityTestResults((prev) => ({
+          ...prev,
+          [source.id]: { success: true, message: `Conexão configurada para ${source.type} (${source.projectKey || 'Projeto Geral'})!` }
+        }));
+      }
+      setTestingQualityId(null);
+    }, 600);
+  };
+
   useEffect(() => {
     const map: Record<string, string> = {};
     for (const row of launcherRows) {
@@ -324,7 +437,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     const checkPath = window.electronAPI?.checkPath;
     if (!checkPath) return;
 
-    const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'jdkPath', 'appPath', 'intellijPath'];
+    const keys: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'jdkPath', 'appPath', 'intellijPath', 'tautProjectPath'];
     const entries = await Promise.all(
       keys.map(async (key) => {
         const val = st[key];
@@ -1049,6 +1162,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             {(settings.llmProviders || []).length}
           </span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('quality')}
+          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+            activeTab === 'quality'
+              ? 'bg-primary text-primary-foreground border-primary shadow-md'
+              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+          }`}
+        >
+          <CheckCheck className="w-4 h-4 text-emerald-400" />
+          <span>Qualidade &amp; QA</span>
+          <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
+            {(settings.qualitySources || []).length}
+          </span>
+        </button>
       </div>
 
       {/* Área rolável: apenas o conteúdo da aba ativa rola, cabeçalho e abas ficam fixos */}
@@ -1167,6 +1295,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             handleToggleLlmProvider={handleToggleLlmProvider}
             handleSetActiveLlmProvider={handleSetActiveLlmProvider}
             handleTestLlmConnection={handleTestLlmConnection}
+          />
+        )}
+
+        {activeTab === 'quality' && (
+          <QualityTab
+            settings={settings}
+            setSettings={setSettings}
+            editingQualitySource={editingQualitySource}
+            setEditingQualitySource={setEditingQualitySource}
+            showQualityToken={showQualityToken}
+            setShowQualityToken={setShowQualityToken}
+            handleApplyQualityTemplate={handleApplyQualityTemplate}
+            handleSaveQualitySource={handleSaveQualitySource}
+            handleDeleteQualitySource={handleDeleteQualitySource}
+            handleToggleQualitySource={handleToggleQualitySource}
+            handleSetActiveQualitySource={handleSetActiveQualitySource}
+            handleTestQualityConnection={handleTestQualityConnection}
+            testingQualityId={testingQualityId}
+            testResults={qualityTestResults}
           />
         )}
       </div>

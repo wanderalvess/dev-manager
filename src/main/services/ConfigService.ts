@@ -413,6 +413,9 @@ export class ConfigService {
     });
     if (settings.ccwAuthCookie) settings.ccwAuthCookie = decryptSecret(settings.ccwAuthCookie, dir)!;
     if (settings.azureDevOpsToken) settings.azureDevOpsToken = decryptSecret(settings.azureDevOpsToken, dir)!;
+    settings.qualitySources?.forEach((qs) => {
+      if (qs.apiToken) qs.apiToken = decryptSecret(qs.apiToken, dir)!;
+    });
   }
 
   /**
@@ -443,6 +446,9 @@ export class ConfigService {
     );
     if (clone.ccwAuthCookie) clone.ccwAuthCookie = encryptSecret(clone.ccwAuthCookie, dir)!;
     if (clone.azureDevOpsToken) clone.azureDevOpsToken = encryptSecret(clone.azureDevOpsToken, dir)!;
+    clone.qualitySources = clone.qualitySources?.map((qs) =>
+      qs.apiToken ? { ...qs, apiToken: encryptSecret(qs.apiToken, dir)! } : qs
+    );
     return clone;
   }
 
@@ -504,7 +510,9 @@ export class ConfigService {
           activeLogSourceId,
           llmProviders: Array.isArray(parsed.llmProviders) ? parsed.llmProviders : [],
           activeLlmProviderId: typeof parsed.activeLlmProviderId === 'string' ? parsed.activeLlmProviderId : (Array.isArray(parsed.llmProviders) ? parsed.llmProviders[0]?.id : undefined),
-          azureDevOpsToken: typeof parsed.azureDevOpsToken === 'string' ? parsed.azureDevOpsToken : undefined
+          azureDevOpsToken: typeof parsed.azureDevOpsToken === 'string' ? parsed.azureDevOpsToken : undefined,
+          qualitySources: Array.isArray(parsed.qualitySources) ? parsed.qualitySources : [],
+          activeQualitySourceId: typeof parsed.activeQualitySourceId === 'string' ? parsed.activeQualitySourceId : (Array.isArray(parsed.qualitySources) ? parsed.qualitySources[0]?.id : undefined)
         };
         this.decryptSecretsInPlace(result);
         this.cachedSettings = { data: result, mtimeMs: stat.mtimeMs };
@@ -604,6 +612,13 @@ export class ConfigService {
     }
     if (!merged.azureDevOpsToken && current.azureDevOpsToken) {
       merged.azureDevOpsToken = current.azureDevOpsToken;
+    }
+    if (Array.isArray(merged.qualitySources)) {
+      merged.qualitySources = merged.qualitySources.map((s) => {
+        const existing = current.qualitySources?.find((e) => e.id === s.id);
+        const destinationChanged = !!existing && !!s.baseUrl && s.baseUrl !== existing.baseUrl;
+        return { ...s, apiToken: s.apiToken || (destinationChanged ? '' : existing?.apiToken || '') };
+      });
     }
 
     return merged;
@@ -709,6 +724,13 @@ export class ConfigService {
     }
     if (sanitized.azureDevOpsToken) {
       sanitized.azureDevOpsToken = '';
+    }
+    if (sanitized.qualitySources) {
+      sanitized.qualitySources = sanitized.qualitySources.map((qs) => ({
+        ...qs,
+        apiToken: '',
+        hasApiToken: Boolean(qs.apiToken && qs.apiToken.trim().length > 0)
+      }));
     }
     return sanitized;
   }
@@ -831,6 +853,21 @@ export class ConfigService {
       if (typeof parsed.karafUser === 'string') merged.karafUser = parsed.karafUser;
       if (typeof parsed.karafPass === 'string' && parsed.karafPass) merged.karafPass = parsed.karafPass;
       if (typeof parsed.azureDevOpsToken === 'string' && parsed.azureDevOpsToken) merged.azureDevOpsToken = parsed.azureDevOpsToken;
+
+      if (Array.isArray(parsed.qualitySources)) {
+        merged.qualitySources = parsed.qualitySources.map((newSrc: any) => {
+          const existing = current.qualitySources?.find((s) => s.id === newSrc.id);
+          const baseUrlChanged = !!existing && !!newSrc.baseUrl && newSrc.baseUrl !== existing.baseUrl;
+          return {
+            ...newSrc,
+            apiToken: newSrc.apiToken || (baseUrlChanged ? '' : existing?.apiToken || '')
+          };
+        });
+      }
+
+      if (typeof parsed.activeQualitySourceId === 'string') {
+        merged.activeQualitySourceId = parsed.activeQualitySourceId;
+      }
 
       const warnings = [
         ...this.collectCommandStepWarnings(merged.automationProfiles, 'Perfil de automação'),

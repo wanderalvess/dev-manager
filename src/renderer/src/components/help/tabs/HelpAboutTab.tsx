@@ -52,7 +52,7 @@ export const HelpAboutTab: React.FC<HelpAboutTabProps> = ({
               <h3 className="text-sm sm:text-base font-extrabold text-foreground flex items-center gap-2">
                 Dev <span className="text-primary font-bold">Manager</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
-                  v{appInfo?.appVersion || '1.23.0'}
+                  v{appInfo?.appVersion || '1.28.0'}
                 </span>
               </h3>
               <p className="text-[11px] text-muted-foreground">

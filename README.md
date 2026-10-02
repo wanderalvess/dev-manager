@@ -663,8 +663,9 @@ dev-manager/
 | `Alt + 8` | Navega para a aba **Logs em Tempo Real** |
 | `Alt + 9` | Navega para a aba **Ajuda & Diagnóstico** |
 | `Alt + 0` | Navega para a aba **APM & Traces** |
+| `Alt + Q` | Navega para a aba **Central de Qualidade (QA Studio)** |
 
-**Configurações** não tem atalho `Alt`: abra pelo ícone de engrenagem no cabeçalho ou pelo `Ctrl + K`.
+**Ajuda** e **Configurações** contam com botões dedicados de acesso rápido no canto direito do cabeçalho (ou via `Ctrl + K`).
 
 ---
 

@@ -16,7 +16,8 @@ import {
   Database,
   FileSearch,
   GitBranch,
-  Activity
+  Activity,
+  CheckCheck
 } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { GitProjectInfo, RoutineItem } from '../../../shared/types';
@@ -206,6 +207,18 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         icon: Activity,
         onSelect: () => {
           onNavigate('apm');
+          onClose();
+        }
+      },
+      {
+        id: 'act-quality',
+        category: 'action',
+        title: 'Central de Qualidade (QA Studio)',
+        subtitle: 'Validador regressivo Oracle, asserções de banco e matriz de homologação',
+        badge: 'Alt+Q',
+        icon: CheckCheck,
+        onSelect: () => {
+          onNavigate('quality');
           onClose();
         }
       },

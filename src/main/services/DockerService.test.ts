@@ -137,4 +137,41 @@ describe('DockerService', () => {
       'PATH=/usr/bin'
     ]);
   });
+
+  it('para múltiplos containers em sequência reportando progresso', async () => {
+    const service = new DockerService();
+    const stoppedCalls: string[] = [];
+    service.stopContainer = async (id: string) => {
+      stoppedCalls.push(id);
+      return true;
+    };
+
+    const progressSteps: any[] = [];
+    const res = await service.stopContainerSequence(['c1', 'c2', 'c3'], (step) => {
+      progressSteps.push(step);
+    });
+
+    expect(res.success).toBe(true);
+    expect(res.stopped).toEqual(['c1', 'c2', 'c3']);
+    expect(stoppedCalls).toEqual(['c1', 'c2', 'c3']);
+    expect(progressSteps).toHaveLength(3);
+    expect(progressSteps[0]).toEqual({ currentName: 'c1', index: 1, total: 3 });
+    expect(progressSteps[2]).toEqual({ currentName: 'c3', index: 3, total: 3 });
+  });
+
+  it('interrompe stopContainerSequence se um container falhar', async () => {
+    const service = new DockerService();
+    service.stopContainer = async (id: string) => {
+      if (id === 'bad-container') {
+        throw new Error('Falha ao parar bad-container');
+      }
+      return true;
+    };
+
+    const res = await service.stopContainerSequence(['ok-1', 'bad-container', 'ok-2']);
+    expect(res.success).toBe(false);
+    expect(res.stopped).toEqual(['ok-1']);
+    expect(res.failed).toBe('bad-container');
+    expect(res.error).toContain('bad-container');
+  });
 });

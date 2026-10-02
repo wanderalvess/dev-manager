@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Dev Manager expõe **145 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Dev Manager expõe **161 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -210,4 +210,50 @@ Rotinas (.EXE/.PC) descobertas no catálogo local, atualização direta da Centr
 > "Qual é a versão real gravada no executável C:\Winthor\Prod\MOD-001\PCSIS132.EXE?"
 > "Atualize em lote todas as minhas rotinas favoritas da versão 30 da CCW."
 
+---
 
+## 13. Qualidade & Validador Regressivo (QA Suite)
+Automação de homologação regressiva para equipes de QA e desenvolvedores: executa sequências de consultas SQL contra o banco Oracle, extrai valores e valida conformidade de colunas contra dados de payloads JSON (PDV/APIs) ou regras estritas.
+
+*   **`qa_list_templates`**: Lista todos os cenários/templates de regressivo disponíveis na pasta dedicada (ex.: Venda PDV Completa, Cancelamento, Kits e Cestas).
+*   **`qa_get_template`**: Consulta a definição detalhada de um template por ID, com todas as suas queries SQL e asserções configuradas.
+*   **`qa_run_regression_suite`**: Executa a esteira de asserções de um template contra o banco de dados Oracle, resolvendo binds (`:codFilial`, `:numCupom`) e avaliando cada coluna contra JSONPath (`$.vlTotal`), valores literais, preenchimento (`<S>`), nulidade (`<N>`) ou zero (`<0>`). Retorna o relatório analítico e gera evidência formatada em Markdown para colar diretamente no Jira.
+
+**Exemplo de como pedir à IA:**
+> "Liste os cenários de teste regressivo de QA cadastrados."
+> "Execute o teste regressivo 'wsh-venda-pdv-completa' para a filial 1 e cupom 4387 com este payload de venda do PDV e gere o relatório para a issue DDWMISSI-T966."
+> "Valide se a venda 10047 gravou corretamente os cabeçalhos PCNFSAID, PCPEDC e a movimentação fiscal PCMOV."
+
+---
+
+## 14. Test Runners & Automação de Testes (Maven, Playwright, Cypress, Newman)
+Executa suítes completas de testes automatizados unitários, de integração, E2E ou de contratos de API REST com captura e streaming de logs em tempo real, cálculo de métricas e vínculo com a Matriz de Validação da Central de Qualidade.
+
+*   **`test_runner_list`**: Lista todos os executores/suítes de testes automatizados configurados no Dev Manager.
+*   **`test_runner_execute`**: Dispara a execução de um runner por ID ou configuração inline (suporta Maven `mvn test`/`verify`, Playwright `npx playwright test`, Cypress `npx cypress run`, Newman `npx newman run` ou scripts personalizados). Retorna métricas detalhadas (testes passados, falhas, pulados, duração, código de saída e resumo).
+*   **`test_runner_history`**: Obtém o histórico persistido das últimas execuções de testes automatizados com seus status e resultados analíticos.
+
+**Exemplo de como pedir à IA:**
+> "Liste os runners de testes automatizados configurados."
+> "Execute a suíte de testes unitários do Maven no projeto de faturamento e me avise se todos os testes passaram."
+> "Rode os testes E2E do Playwright e me mostre o histórico das últimas execuções."
+
+---
+
+## 15. TAUT-Mississauga & Automação Cypress (QA Hub)
+Integração nativa com o projeto de testes automatizados de APIs REST e integrações WinThor (**TAUT-Mississauga**). Permite que assistentes de IA disparem suítes de teste Cypress por tags (@cypress/grep), auditem a cobertura do Zephyr Scale (`COVERAGE.md`), listem specs por módulo, sincronizem credenciais de banco e processem arquivos CSV para intake de automação com IA.
+
+*   **`taut_get_status`**: Inspeciona a integridade da pasta do TAUT-Mississauga, validando versão do Cypress, configuração do `cypress.config.ts` e variáveis do `.env` (Oracle e WTA).
+*   **`taut_run_tests`**: Executa testes Cypress no TAUT com filtros flexíveis de tags (`tags: "critico,winthor-pedido-venda,-develop"`), specs (`spec: "cypress/e2e/api/Pedido/**/*"`) e modo de API (`v39` ou `legacy`), coletando extrato da execução e métricas de aprovação/falhas.
+*   **`taut_get_coverage`**: Analisa a paridade entre os cenários desenhados nos CSVs da pasta `/Insumo/` (chaves `DDWMISSI-TXXXX`) e os testes implementados em `cypress/e2e/api/`, reportando percentual de cobertura e lista de testes pendentes.
+*   **`taut_list_specs`**: Varre todos os arquivos `.cy.ts` do projeto TAUT, retornando quantidade de testes, tags de módulo e chaves do Zephyr associadas a cada spec.
+*   **`taut_sync_env`**: Gera ou atualiza o arquivo `.env` do TAUT-Mississauga utilizando a conexão Oracle ativa no Dev Manager (`ORACLE_USER`, `ORACLE_PASSWORD`, `ORACLE_CONNECT_STRING`) e parâmetros do WTA.
+*   **`taut_process_csv_intake`**: Atua como o Orquestrador de Intake (Subagente 0) do TAUT: lê um arquivo CSV do Zephyr, valida os 11 pontos do checklist de arquitetura e gera o bloco estruturado e plano de implementação das 4 camadas.
+
+**Exemplo de como pedir à IA:**
+> "Verifique o status do projeto TAUT-Mississauga e confira se o .env está configurado com o Oracle."
+> "Sincronize o .env do TAUT com a minha conexão Oracle ativa no Dev Manager."
+> "Execute os testes críticos de Pedido do TAUT com a tag 'critico,winthor-pedido-venda'."
+> "Qual é a cobertura atual de testes do Zephyr no TAUT e quais cenários ainda estão pendentes?"
+> "Liste todas as specs de teste do TAUT relacionadas a Tributação e ICMS."
+> "Processe o CSV Insumo/pedido.csv e gere o plano de implementação de automação para mim."

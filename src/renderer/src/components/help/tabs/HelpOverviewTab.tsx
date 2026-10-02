@@ -21,7 +21,9 @@ import {
   Activity,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  CheckCheck,
+  HelpCircle
 } from 'lucide-react';
 import { SystemAppInfo } from '../../../../../shared/types';
 import { HelpCategory } from '../helpData';
@@ -545,7 +547,28 @@ export const HelpOverviewTab: React.FC<HelpOverviewTabProps> = ({
             </kbd>
           </div>
 
-          {/* 10. Configurações */}
+          {/* 10. Qualidade & Homologação */}
+          <div
+            onClick={() => onNavigate?.('quality')}
+            className="p-3.5 rounded-xl bg-card/60 border border-border hover:border-emerald-500/50 transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-xs"
+          >
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <CheckCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="text-xs font-bold text-foreground group-hover:text-emerald-400 transition-colors truncate">
+                  Qualidade (QA &amp; PO)
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground line-clamp-2">
+                Matriz de validação, critérios de aceite e prontidão de releases.
+              </p>
+            </div>
+            <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shrink-0">
+              Alt+Q
+            </kbd>
+          </div>
+
+          {/* 11. Configurações */}
           <div
             onClick={() => onNavigate?.('settings')}
             className="p-3.5 rounded-xl bg-card/60 border border-border hover:border-primary/50 transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-xs"
@@ -561,6 +584,27 @@ export const HelpOverviewTab: React.FC<HelpOverviewTabProps> = ({
                 Pastas do workspace, portas monitoradas, Karaf e IDEs.
               </p>
             </div>
+          </div>
+
+          {/* 12. Central de Ajuda */}
+          <div
+            onClick={() => onNavigate?.('help')}
+            className="p-3.5 rounded-xl bg-card/60 border border-border hover:border-primary/50 transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-xs"
+          >
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                  Central de Ajuda
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground line-clamp-2">
+                Tutoriais, documentação dos módulos, FAQ e atalhos globais.
+              </p>
+            </div>
+            <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shrink-0">
+              Alt+9
+            </kbd>
           </div>
         </div>
       </div>

@@ -556,10 +556,10 @@ export function getFaqList({
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados na pasta release/:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.24.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.25.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.24.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.25.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
               <li>
                 <strong className="text-foreground">LEIA-ME.txt, instalar-extras.cmd e mcp\\:</strong> guia do usuário com os links dos downloads opcionais, script que instala o modelo do RAG e o Oracle Instant Client colocados na pasta, e o servidor MCP pronto para uso. Para regenerar só esses arquivos: <code className="font-mono text-primary">npm run release:folder</code>.
@@ -1230,7 +1230,7 @@ export function getFaqList({
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como acessar e navegar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.23.0'}</code>) no topo esquerdo do cockpit para abrir o modal.
+                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.25.0'}</code>) no topo esquerdo do cockpit para abrir o modal.
               </li>
               <li>
                 <strong className="text-foreground">Navegação entre releases:</strong> No cabeçalho do modal, utilize os botões rápidos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&lt;</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&gt;</kbd> (ou os atalhos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + ←</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + →</kbd>) para folhear versão a versão.
@@ -1243,6 +1243,168 @@ export function getFaqList({
               </li>
               <li>
                 <strong className="text-foreground">Aba Sobre:</strong> Na Central de Ajuda → Sobre &amp; Diagnóstico, o botão <em>"Ver Changelog"</em> também abre este mesmo leitor com todas as versões estruturadas.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'quality-hub-qa-po',
+      question: 'O que é o módulo de Qualidade & Homologação (QA Hub) e como ele auxilia QAs e Product Owners?',
+      category: 'Qualidade & Homologação',
+      tags: ['qa', 'qualidade', 'testes', 'po', 'homologação', 'cenários', 'prontidão', 'checklist', 'bugs'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O módulo <strong className="text-foreground">Qualidade &amp; Homologação (QA Hub)</strong> marca a expansão do Dev Manager além do desenvolvimento puro, fornecendo um cockpit dedicado para analistas de qualidade (QA) e donos de produto (PO).
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Principais recursos da 1ª etapa:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Matriz de Validação &amp; Homologação:</strong> Checklist interativo para registrar status de testes por rotina Delphi, serviço Karaf, APIs ou fluxos E2E com persistência local.
+              </li>
+              <li>
+                <strong className="text-foreground">Painel de Prontidão (PO):</strong> Semáforo executivo com pontuação de prontidão da release (Readiness Score) e taxa de sucesso dos testes para embasar decisões de entrega.
+              </li>
+              <li>
+                <strong className="text-foreground">Exportação de Relatório Markdown:</strong> Crie com um clique um relatório executivo formatado para compartilhar em chats (Teams, Slack) ou tarefas (Azure DevOps, Jira).
+              </li>
+              <li>
+                <strong className="text-foreground">Integração com Ferramentas Técnicas:</strong> Atalhos diretos para inspecionar logs em tempo real, executar rotinas locais e consultar massa de dados no banco durante o teste.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'how-to-configure-quality-sources',
+      question: 'Como configurar as origens de dados de qualidade (Zephyr Scale, Zephyr Squad, Jira e Azure DevOps)?',
+      category: 'Qualidade & Homologação',
+      tags: ['zephyr', 'jira', 'azure test plans', 'configuração', 'token', 'qa', 'testes', 'homologação', 'api'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            As fontes externas de casos de teste, planos de homologação e defeitos são configuradas na aba <strong className="text-foreground">Qualidade &amp; QA</strong> das Configurações do Cockpit.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como configurar e conectar:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Onde acessar:</strong> Abra as <em>Configurações</em> e clique na aba <em>Qualidade &amp; QA</em> (ou utilize o atalho de busca <kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Ctrl+K</kbd> e digite <em>"Zephyr"</em>).
+              </li>
+              <li>
+                <strong className="text-foreground">Templates em 1 Clique:</strong> Utilize os cards pré-configurados para <em>Zephyr Scale (Cloud)</em>, <em>Zephyr Squad / Jira Server</em>, <em>Jira Software</em> ou <em>Azure DevOps Test Plans</em>.
+              </li>
+              <li>
+                <strong className="text-foreground">Chaves e Credenciais:</strong> Informe a URL da instância, a chave do projeto (ex.: <code className="font-mono text-primary font-bold">WIN</code>), o usuário/e-mail e o token de autenticação (Zephyr API Token, Atlassian API Token ou Azure PAT).
+              </li>
+              <li>
+                <strong className="text-foreground">Segurança dos Segredos:</strong> Todos os tokens de QA são gravados no disco criptografados com <strong className="text-foreground">AES-256-GCM</strong> e nunca são expostos em texto plano na interface.
+              </li>
+              <li>
+                <strong className="text-foreground">Teste de Conectividade:</strong> Clique no botão <em>"Testar"</em> no card da fonte para verificar a validade dos parâmetros antes de salvar.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'docker-container-groups-and-batch',
+      question: 'Como criar grupos de containers para subir vários de uma vez e usar ações em lote?',
+      category: 'Containers & Docker',
+      tags: ['containers', 'docker', 'grupos', 'lote', 'batch', 'subir', 'iniciar', 'parar', 'sequência', 'delay'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O gerenciador de <strong className="text-foreground">Containers (Docker)</strong> permite agrupar múltiplos containers em conjuntos nomeados (ex.: <em>"Stack Backend"</em>, <em>"Bancos de Dados"</em>, <em>"Serviços de Mensageria"</em>) para inicialização ou parada sequencial com apenas um clique:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como criar e gerenciar grupos:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Painel Superior de Grupos:</strong> No topo da tela de Containers, visualize todos os grupos cadastrados com o status em tempo real (ex.: <code className="font-mono text-emerald-500 font-bold">3/3 rodando</code> ou <code className="font-mono text-amber-500 font-bold">1/3</code>). Clique em <strong className="text-emerald-500">Subir Grupo</strong> para iniciar todos os containers do conjunto ou em <strong className="text-foreground">Parar</strong> para interrompê-los.
+              </li>
+              <li>
+                <strong className="text-foreground">Criação Rápida por Seleção em Lote:</strong> Marque a caixa de seleção (checkbox) nos cards dos containers desejados. Na barra flutuante que surge no rodapé, clique em <strong className="text-foreground">"Criar Grupo (N)"</strong> para abrir o modal com os containers já pré-selecionados.
+              </li>
+              <li>
+                <strong className="text-foreground">Configuração com Delays e Ordem:</strong> No modal do grupo, você pode buscar e selecionar livremente qualquer container do Docker/WSL, reordenar a sequência de subida e definir um tempo de espera (warm-up) opcional em segundos entre eles (útil quando um serviço depende de outro já ativo, como Kafka ou Oracle).
+              </li>
+              <li>
+                <strong className="text-foreground">Ações em Lote Instantâneas:</strong> Com múltiplos containers selecionados, a barra de lote permite também <strong className="text-emerald-500">Subir Selecionados</strong>, <strong className="text-rose-500">Parar Selecionados</strong> ou <strong className="text-amber-500">Reiniciar Selecionados</strong> sem precisar criar um grupo fixo.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'qa-regression-suite-runner',
+      question: 'Como funciona o Validador Regressivo (QA Studio) para checagem de dados e asserções no Oracle?',
+      category: 'Qualidade & Homologação',
+      tags: ['qa', 'regressivo', 'oracle', 'asserções', 'json', 'pdv', 'jira', 'validação', 'mississauga', 'winthor', 'tabelas'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O <strong className="text-foreground">Validador Regressivo (QA Studio)</strong> automatiza a conferência de dados gravados nas tabelas do WinThor após transações via PDV ou APIs de integração:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Fluxo de Trabalho:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Seleção do Cenário &amp; Banco:</strong> Selecione a conexão Oracle desejada e o cenário de homologação (ex.: <em>Venda PDV — Integração WSH Mississauga</em>, <em>Cancelamento de Venda</em>, <em>Kits e Cestas</em>).
+              </li>
+              <li>
+                <strong className="text-foreground">Entrada de Dados (JSON / Binds):</strong> Cole o payload JSON da API ou PDV e clique em <strong className="text-emerald-500">"Mapear Binds"</strong> para auto-preencher parâmetros como <code className="font-mono text-primary font-bold">:codFilial</code> e <code className="font-mono text-primary font-bold">:numCupom</code>.
+              </li>
+              <li>
+                <strong className="text-foreground">Execução Automatizada:</strong> O sistema executa cada query SQL na ordem, repassa variáveis extraídas entre passos (ex.: <code className="font-mono text-primary font-bold">NUMTRANSVENDA</code>) e compara os resultados com o esperado.
+              </li>
+              <li>
+                <strong className="text-foreground">Regras de Asserção:</strong> Suporta validações por JSONPath (<code className="font-mono text-primary font-bold">$.vlTotal</code>), valores literais, <code className="font-mono text-primary font-bold">&lt;S&gt;</code> (preenchido), <code className="font-mono text-primary font-bold">&lt;N&gt;</code> (vazio/nulo) e <code className="font-mono text-primary font-bold">&lt;0&gt;</code> (zero).
+              </li>
+              <li>
+                <strong className="text-foreground">Exportação em 1 Clique para Jira:</strong> Informe o código da issue (ex.: <code className="font-mono text-primary font-bold">DDWMISSI-T966</code>) e clique em <strong className="text-foreground">"Copiar Markdown (Jira)"</strong> para gerar a tabela de evidências pronta para o ticket.
+              </li>
+              <li>
+                <strong className="text-foreground">Pasta Dedicada de Templates:</strong> Novos templates podem ser criados, editados, duplicados, importados ou exportados em JSON diretamente na pasta dedicada (<code className="font-mono text-foreground font-bold">qa-templates/</code>).
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'taut-cypress-automation',
+      question: 'Como funciona a integração com o projeto TAUT-Mississauga (Cypress) para testes de API?',
+      category: 'Qualidade & Homologação',
+      tags: ['taut', 'mississauga', 'cypress', 'qa', 'tags', 'esteira', 'critico', 'zephyr', 'coverage', 'intake', 'csv'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O <strong className="text-foreground">Dev Manager</strong> integra nativamente com o projeto <code className="font-mono text-primary font-bold">TAUT-Mississauga</code> na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Recursos Integrados:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Sincronização de .env:</strong> Botão de 1 clique que atualiza as variáveis <code className="font-mono text-primary">ORACLE_USER</code>, <code className="font-mono text-primary">ORACLE_PASSWORD</code> e <code className="font-mono text-primary">ORACLE_CONNECT_STRING</code> do TAUT com base na conexão Oracle ativa no Dev Manager.
+              </li>
+              <li>
+                <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-emerald-400">esteira</code>, <code className="font-mono text-rose-400">critico</code>, <code className="font-mono text-blue-400">regressao</code>, <code className="font-mono text-amber-400">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
+              </li>
+              <li>
+                <strong className="text-foreground">Auditoria de Cobertura Zephyr Scale:</strong> Cruza os cenários dos arquivos CSV da pasta <code className="font-mono text-foreground font-bold">Insumo/</code> com os testes implementados em <code className="font-mono text-foreground font-bold">cypress/e2e/api/</code>, calculando o percentual e apontando testes pendentes.
+              </li>
+              <li>
+                <strong className="text-foreground">Orquestrador de Intake CSV (IA):</strong> Lê o CSV do Zephyr, valida as 11 regras arquiteturais do projeto TAUT e gera o bloco estruturado e o plano de implementação pronto para copiar ou passar para a IA.
+              </li>
+              <li>
+                <strong className="text-foreground">Tools MCP:</strong> As ferramentas <code className="font-mono text-primary">taut_*</code> permitem que assistentes de IA disparem os testes, auditem cobertura e criem novos specs sem sair do chat.
               </li>
             </ul>
           </div>
@@ -1264,6 +1426,7 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Alt + 8', desc: 'Acessar "Logs em Tempo Real" (tail -f de logs de aplicações)', category: 'Navegação' },
     { key: 'Alt + 9', desc: 'Acessar esta Central de Ajuda & Launchpad do Sistema', category: 'Navegação' },
     { key: 'Alt + 0', desc: 'Acessar "APM & Traces" (Dashboard e Traces Explorer OpenTelemetry)', category: 'Navegação' },
+    { key: 'Alt + Q', desc: 'Acessar "Qualidade & Homologação" (QA Hub e Matriz de Validação)', category: 'Navegação' },
     { key: 'Ctrl + K', desc: 'Abrir o Quick Launcher (busca aproximada de ações, projetos e Configurações)', category: 'Navegação' },
     { key: 'Alt + ← / →', desc: 'Navegar entre versões anterior e seguinte no modal de Novidades', category: 'Navegação' },
     { key: 'Ctrl + Enter', desc: 'Executar consulta SQL selecionada no Database Studio', category: 'Banco de Dados' },
@@ -1272,10 +1435,10 @@ export function getKeyboardShortcuts(debugPort: number) {
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.23.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.26.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
-    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '10 Módulos' },
+    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '11 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqCount}` },
     { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appVersion}` }

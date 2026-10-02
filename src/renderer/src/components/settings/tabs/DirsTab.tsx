@@ -11,7 +11,8 @@ import {
   Download,
   Code2,
   Eye,
-  EyeOff
+  EyeOff,
+  TestTube
 } from 'lucide-react';
 import {
   AppSettings,
@@ -642,6 +643,45 @@ export const DirsTab: React.FC<DirsTabProps> = ({
                   placeholder={`Padrão automático: "${detectIdeInfo(settings.intellijPath).name}"`}
                 />
               </div>
+            </div>
+
+            {/* Diretório do Projeto de Testes Automatizados (Cypress / E2E) */}
+            <div className="md:col-span-2 space-y-1.5 pt-2 border-t border-border/50" id="field-tautProjectPath">
+              <div className="flex items-center justify-between">
+                <label
+                  className="font-bold text-foreground flex items-center gap-1.5"
+                  title="Caminho do repositório de testes automatizados (Cypress / TAUT). Se deixado em branco, o Dev Manager tenta autodetectar automaticamente dentro da pasta de Projetos."
+                >
+                  <TestTube className="w-3.5 h-3.5 text-emerald-400" />
+                  Diretório do Projeto de Testes Automatizados (Cypress):
+                </label>
+                {renderPathStatusBadge('tautProjectPath')}
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={settings.tautProjectPath || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSettings({ ...settings, tautProjectPath: val });
+                    validateSinglePath('tautProjectPath', val);
+                  }}
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  placeholder="Ex: C:\Projetos\TAUT-Mississauga ou C:\Projetos\testes-cypress (Vazio: autodetecta na pasta de projetos)"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleBrowseDirectory('tautProjectPath')}
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+                  title="Selecionar pasta do projeto de testes"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Procurar...</span>
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Utilizado pelo módulo <strong>Automação de Testes</strong> na Central de Qualidade e pelas ferramentas MCP da IA. Se não preenchido, o Dev Manager procura automaticamente uma pasta de testes (<code>TAUT-Mississauga</code>, <code>taut</code> ou <code>cypress</code>) no Diretório Base dos Repositórios Git ou pastas irmãs.
+              </p>
             </div>
           </div>
         </div>

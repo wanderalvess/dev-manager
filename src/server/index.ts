@@ -35,6 +35,9 @@ import {
   OTLP_TRACE_INGEST_PATHS,
   getApmReceiverHandlePath
 } from '../main/services/ApmService';
+import { QaRegressionService } from '../main/services/QaRegressionService';
+import { TestRunnerService } from '../main/services/TestRunnerService';
+import { TautAutomationService } from '../main/services/TautAutomationService';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -150,6 +153,9 @@ const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
 const routine801Service = new Routine801Service(configService, karafService);
 const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
+const qaRegressionService = new QaRegressionService(configService, databaseService);
+const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
+const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
 apmService.onNewTrace = (summary) => {
   broadcastWs('apm:new-trace', summary);
 };
@@ -1278,13 +1284,24 @@ app.post(['/api/wsl/target-distro', '/api/docker/target-distro'], async (req, re
   res.json(status);
 });
 
-app.post('/api/docker/start-sequence', async (req, res) => {
+app.post(['/api/docker/start-sequence', '/api/containers/start-sequence'], async (req, res) => {
   const { containers } = req.body || {};
   if (!Array.isArray(containers)) {
     return res.status(400).json({ success: false, error: 'containers deve ser um array' });
   }
   const result = await dockerService.startContainerSequence(containers, (step) => {
     broadcastWs('docker:sequence-progress', step);
+  });
+  res.json(result);
+});
+
+app.post(['/api/docker/stop-sequence', '/api/containers/stop-sequence'], async (req, res) => {
+  const { containers } = req.body || {};
+  if (!Array.isArray(containers)) {
+    return res.status(400).json({ success: false, error: 'containers deve ser um array' });
+  }
+  const result = await dockerService.stopContainerSequence(containers, (step) => {
+    broadcastWs('docker:stop-sequence-progress', step);
   });
   res.json(result);
 });
@@ -1923,6 +1940,174 @@ app.post('/api/apm/receiver-port', async (req, res) => {
     return res.status(400).json({ error: 'Informe a porta do receptor como número inteiro.', details: parsed.error.issues });
   }
   res.json(await apmService.changeReceiverPort(parsed.data.port));
+});
+
+// --- Validador Regressivo & Asserções de Qualidade (QA Studio) ---
+app.get('/api/qa/templates', async (_req, res) => {
+  try {
+    const list = await qaRegressionService.listTemplates();
+    res.json(list);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/qa/templates/:id', async (req, res) => {
+  try {
+    const tmpl = await qaRegressionService.getTemplate(req.params.id);
+    if (!tmpl) return res.status(404).json({ error: 'Template não encontrado.' });
+    res.json(tmpl);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/qa/templates', async (req, res) => {
+  try {
+    const saved = await qaRegressionService.saveTemplate(req.body);
+    res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/qa/templates/:id', async (req, res) => {
+  try {
+    const success = await qaRegressionService.deleteTemplate(req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/qa/execute', async (req, res) => {
+  try {
+    const result = await qaRegressionService.executeSuite(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/qa/templates-dir', (_req, res) => {
+  res.json({ path: qaRegressionService.getTemplatesDir() });
+});
+
+// --- Runner de Testes Automatizados ---
+app.get('/api/test-runner/list', (_req, res) => {
+  res.json(testRunnerService.getRunners());
+});
+
+app.post('/api/test-runner/save', (req, res) => {
+  try {
+    const saved = testRunnerService.saveRunner(req.body);
+    res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/test-runner/:id', (req, res) => {
+  testRunnerService.deleteRunner(req.params.id);
+  res.json({ success: true });
+});
+
+app.post('/api/test-runner/execute', async (req, res) => {
+  try {
+    const target = req.body;
+    const runnerId = target.id;
+    const result = await testRunnerService.executeRunner(target, (chunk) => {
+      broadcastWs('test-runner:chunk', { runnerId, chunk });
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/test-runner/abort', (_req, res) => {
+  const success = testRunnerService.abortExecution();
+  res.json({ success });
+});
+
+app.get('/api/test-runner/history', (_req, res) => {
+  res.json(testRunnerService.getHistory());
+});
+
+app.post('/api/test-runner/clear-history', (_req, res) => {
+  testRunnerService.clearHistory();
+  res.json({ success: true });
+});
+
+// --- Rotas TAUT-Mississauga (Cypress / QA Hub) ---
+app.get('/api/taut/status', async (req, res) => {
+  try {
+    const status = await tautAutomationService.getProjectStatus(req.query.path as string);
+    res.json(status);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/taut/path', (req, res) => {
+  try {
+    tautAutomationService.saveProjectPath(req.body.path);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/taut/coverage', async (req, res) => {
+  try {
+    const report = await tautAutomationService.getCoverage(req.query.path as string);
+    res.json(report);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/taut/specs', async (req, res) => {
+  try {
+    const specs = await tautAutomationService.listSpecs(req.query.path as string);
+    res.json(specs);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/taut/sync-env', async (req, res) => {
+  try {
+    const result = await tautAutomationService.syncEnvFromDevManager(req.body.customPath, req.body.connectionId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/taut/intake', async (req, res) => {
+  try {
+    const result = await tautAutomationService.processCsvIntake(req.body.csvFile, req.body.projectPath);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/taut/run', async (req, res) => {
+  try {
+    const result = await tautAutomationService.runTests(req.body, (chunk) => {
+      broadcastWs('taut:chunk', { chunk });
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/taut/abort', (_req, res) => {
+  const success = tautAutomationService.abortExecution();
+  res.json({ success });
 });
 
 // Servir Frontend SPA estático se compilado

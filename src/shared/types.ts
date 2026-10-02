@@ -582,6 +582,18 @@ export interface AppSettings {
   activeLlmProviderId?: string;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
   azureDevOpsToken?: string;
+  /** Fontes externas de qualidade e testes (Zephyr Scale, Zephyr Squad, Jira, Azure Test Plans) */
+  qualitySources?: QualitySourceConfig[];
+  /** ID da fonte de qualidade ativa */
+  activeQualitySourceId?: string;
+  /** Caminho customizado para os templates de regressivo QA (opcional) */
+  qaTemplatesDir?: string;
+  /** Caminho local do projeto de automação TAUT-Mississauga (ex: C:\Users\wanderson.alves\projetosTOTVS\TAUT-Mississauga) */
+  tautProjectPath?: string;
+  /** Suítes e runners de testes automatizados configurados (Maven, Playwright, Cypress, Newman) */
+  testRunners?: TestRunnerConfig[];
+  /** Histórico das últimas execuções de testes automatizados (limitado a 100) */
+  testExecutionHistory?: TestExecutionResult[];
 }
 
 export interface DocSyncTargetConfig {
@@ -2249,5 +2261,360 @@ export const DEFAULT_LLM_PROVIDER_TEMPLATES: Omit<LlmProviderConfig, 'id'>[] = [
     enabled: true
   }
 ];
+
+// ==========================================
+// Módulo de Qualidade & Testes (QA / Zephyr / Jira / Azure Test Plans)
+// ==========================================
+
+export type QualitySourceType =
+  | 'zephyr-scale'
+  | 'zephyr-squad'
+  | 'jira'
+  | 'azure-test-plans'
+  | 'custom-webhook';
+
+export interface QualitySourceConfig {
+  id: string;
+  name: string;
+  type: QualitySourceType;
+  /** URL base (ex: https://api.zephyrscale.smartbear.com/v2, https://empresa.atlassian.net, https://dev.azure.com/empresa) */
+  baseUrl: string;
+  /** Chave do projeto no Jira/Zephyr/Azure (ex: WIN, DIST, CORE) */
+  projectKey?: string;
+  /** Identificador do plano de teste, ciclo ou test suite (ex: WIN-P12, Test Cycle 1) */
+  testPlanKey?: string;
+  /** E-mail / Usuário de autenticação (para Basic Auth em Jira Cloud / Zephyr) */
+  userEmail?: string;
+  /** Token de API, Zephyr Token ou PAT (criptografado em repouso com AES-256-GCM) */
+  apiToken?: string;
+  /** Indicador retornado pela API informando se o token já está salvo com segurança */
+  hasApiToken?: boolean;
+  /** JQL customizado para filtrar testes ou bugs associados */
+  jqlFilter?: string;
+  /** Se a fonte está ativa */
+  enabled: boolean;
+  /** Se é a fonte primária/padrão */
+  isDefault?: boolean;
+}
+
+export interface QualitySourceTemplate {
+  name: string;
+  type: QualitySourceType;
+  baseUrl: string;
+  description: string;
+  defaultProjectKey?: string;
+  defaultJqlFilter?: string;
+}
+
+export const DEFAULT_QUALITY_SOURCE_TEMPLATES: QualitySourceTemplate[] = [
+  {
+    name: 'Zephyr Scale (Cloud)',
+    type: 'zephyr-scale',
+    baseUrl: 'https://api.zephyrscale.smartbear.com/v2',
+    description: 'API oficial v2 do Zephyr Scale para Jira Cloud (Test Cases, Test Cycles e Executions).'
+  },
+  {
+    name: 'Zephyr Squad / Jira Server',
+    type: 'zephyr-squad',
+    baseUrl: 'https://jira.empresa.com.br',
+    description: 'Integração Zephyr Squad para instâncias Jira Server / Data Center.'
+  },
+  {
+    name: 'Jira Software (Bugs & Cenários)',
+    type: 'jira',
+    baseUrl: 'https://empresa.atlassian.net',
+    description: 'Consulta direta de Issues de tipo Teste, Bug ou Histórias com critérios de aceite via REST API do Jira.',
+    defaultJqlFilter: 'issuetype in (Test, Bug) AND project = "WIN" ORDER BY updated DESC'
+  },
+  {
+    name: 'Azure DevOps Test Plans',
+    type: 'azure-test-plans',
+    baseUrl: 'https://dev.azure.com/empresa',
+    description: 'Test Plans, Test Suites e Test Points da organização Azure DevOps.'
+  }
+];
+
+// ==========================================
+// Módulo de Asserções & Validador Regressivo (QA Regression Suite)
+// ==========================================
+
+export type QaAssertionExpectedType =
+  | 'jsonPath'     // Extrai via JSONPath do rawJson (ex: $.vlTotal, $.produtos[0].qt)
+  | 'literal'      // Valor fixo informado (ex: 4387, "S", "CODST Gravado")
+  | 'notNull'      // Valida se não é null/vazio/inexistente (<S>)
+  | 'null'         // Valida se é null/vazio/não preenchido (<N>)
+  | 'zero'         // Valida se é numérico 0 (<0>)
+  | 'regex';       // Valida via Expressão Regular
+
+export interface QaRegressionAssertion {
+  id: string;
+  column: string;
+  expectedType: QaAssertionExpectedType;
+  expectedValue?: string;
+  description?: string;
+  /** Índice da linha do resultado da query a validar (padrão: 0). Se for -1, valida em todas as linhas retornadas. */
+  rowIndex?: number;
+}
+
+export interface QaRegressionVariableExtract {
+  variableName: string;
+  column: string;
+  rowIndex?: number;
+}
+
+export interface QaRegressionStep {
+  id: string;
+  title: string;
+  tableName?: string;
+  description?: string;
+  enabled: boolean;
+  query: string;
+  assertions: QaRegressionAssertion[];
+  extractVariables?: QaRegressionVariableExtract[];
+}
+
+export interface QaRegressionTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  author?: string;
+  version?: string;
+  createdAt: string;
+  updatedAt: string;
+  defaultVariables?: Record<string, any>;
+  sampleJson?: string;
+  steps: QaRegressionStep[];
+}
+
+export interface QaExecutionRequest {
+  connectionId?: string;
+  connectionConfig?: DatabaseConnectionConfig;
+  templateId?: string;
+  template?: QaRegressionTemplate;
+  rawJson?: string;
+  variables?: Record<string, any>;
+  selectedStepIds?: string[];
+}
+
+export type QaAssertionStatus = 'passed' | 'failed' | 'warning' | 'skipped';
+
+export interface QaAssertionResult {
+  assertionId: string;
+  column: string;
+  expectedType: QaAssertionExpectedType;
+  expectedValue?: any;
+  expectedDisplay: string;
+  actualValue?: any;
+  actualDisplay: string;
+  status: QaAssertionStatus;
+  message?: string;
+  rowIndex?: number;
+}
+
+export interface QaStepExecutionResult {
+  stepId: string;
+  stepTitle: string;
+  tableName?: string;
+  query: string;
+  interpolatedQuery?: string;
+  rowCount: number;
+  executionTimeMs: number;
+  success: boolean;
+  error?: string;
+  assertions: QaAssertionResult[];
+  rows?: Record<string, any>[];
+}
+
+export interface QaExecutionResult {
+  templateId: string;
+  templateName: string;
+  timestamp: string;
+  durationMs: number;
+  totalAssertions: number;
+  passedAssertions: number;
+  failedAssertions: number;
+  warningAssertions: number;
+  success: boolean;
+  extractedVariables: Record<string, any>;
+  stepResults: QaStepExecutionResult[];
+}
+
+// ==========================================
+// Runner de Testes Automatizados (Maven, Playwright, Cypress, Newman)
+// ==========================================
+
+export type TestRunnerType = 'maven' | 'playwright' | 'cypress' | 'newman' | 'custom';
+
+export interface TestRunnerConfig {
+  id: string;
+  name: string;
+  type: TestRunnerType;
+  /** Diretório de trabalho do teste (suporta placeholders {PROJECTS_PATH}, {KARAF_PATH}) */
+  workingDir?: string;
+  /** Comando executável customizado quando o tipo for 'custom' (ex: pytest, dotnet test, cargo test) */
+  customCommand?: string;
+  /** Argumentos ou comando customizado (ex: "test", "verify -Dtest=FaturamentoTest", "test --grep @smoke") */
+  commandArgs?: string;
+  /** Variáveis de ambiente complementares */
+  envVars?: Record<string, string>;
+  /** Limite de execução em segundos (padrão: 300) */
+  timeoutSeconds?: number;
+  /** IDs dos cenários de teste vinculados na Matriz de Validação para sincronização automática */
+  linkedValidationItemIds?: string[];
+  /** Descrição ou finalidade da suíte de teste */
+  description?: string;
+  createdAt?: string;
+}
+
+export interface TestExecutionResult {
+  id: string;
+  runnerId: string;
+  runnerName: string;
+  type: TestRunnerType;
+  status: 'passed' | 'failed' | 'aborted';
+  exitCode: number;
+  totalTests: number;
+  passedCount: number;
+  failedCount: number;
+  skippedCount: number;
+  durationMs: number;
+  output: string;
+  executedAt: string;
+  linkedValidationItemIds?: string[];
+  summaryMessage?: string;
+}
+
+export interface TestRunnerPreset {
+  name: string;
+  type: TestRunnerType;
+  description: string;
+  defaultCommandArgs: string;
+  suggestedWorkingDirPlaceholder: string;
+}
+
+export const DEFAULT_TEST_RUNNER_PRESETS: TestRunnerPreset[] = [
+  {
+    name: 'Maven Unit/Integration Tests',
+    type: 'maven',
+    description: 'Executa testes unitários e de integração JUnit / Mockito via Maven (mvn test)',
+    defaultCommandArgs: 'test',
+    suggestedWorkingDirPlaceholder: '{PROJECTS_PATH}/seu-projeto'
+  },
+  {
+    name: 'Maven Verify (com Fail-Safe)',
+    type: 'maven',
+    description: 'Executa suíte completa de testes de integração e empacotamento com verify',
+    defaultCommandArgs: 'verify',
+    suggestedWorkingDirPlaceholder: '{PROJECTS_PATH}/seu-projeto'
+  },
+  {
+    name: 'Playwright E2E Tests',
+    type: 'playwright',
+    description: 'Executa suíte de automação web End-to-End no navegador via Playwright',
+    defaultCommandArgs: 'test',
+    suggestedWorkingDirPlaceholder: '{PROJECTS_PATH}/seu-portal-web'
+  },
+  {
+    name: 'Cypress E2E Tests',
+    type: 'cypress',
+    description: 'Executa testes E2E headless via Cypress em portais web locais',
+    defaultCommandArgs: 'run',
+    suggestedWorkingDirPlaceholder: '{PROJECTS_PATH}/seu-portal-web'
+  },
+  {
+    name: 'Newman API Collection (Postman CLI)',
+    type: 'newman',
+    description: 'Executa coleção de requisições e asserções de API REST via Newman',
+    defaultCommandArgs: 'run ./tests/collection.json',
+    suggestedWorkingDirPlaceholder: '{PROJECTS_PATH}/api-gateway'
+  }
+];
+
+// --- Tipos da Integração TAUT-Mississauga (Cypress / QA Hub) ---
+
+export interface TautProjectStatus {
+  exists: boolean;
+  projectPath: string;
+  hasPackageJson: boolean;
+  hasCypressConfig: boolean;
+  hasEnv: boolean;
+  cypressVersion?: string;
+  envVariables?: {
+    hasOracleUser: boolean;
+    hasOraclePassword: boolean;
+    hasOracleConnectString: boolean;
+    hasBaseUrl: boolean;
+    oracleConnectString?: string;
+    baseUrl?: string;
+    apiUrlMode?: string;
+    reporterZephyr?: boolean;
+    cycleKey?: string;
+  };
+}
+
+export interface TautCoverageItem {
+  key: string;
+  status: 'automated' | 'pending';
+  filePath?: string;
+}
+
+export interface TautCoverageReport {
+  totalScenarios: number;
+  automatedCount: number;
+  pendingCount: number;
+  coveragePercentage: number;
+  items: TautCoverageItem[];
+  generatedAt: string;
+}
+
+export interface TautSpecSummary {
+  module: string;
+  specFile: string;
+  relativePath: string;
+  testCount: number;
+  testIds: string[];
+  tags: string[];
+}
+
+export interface TautRunOptions {
+  tags?: string;
+  spec?: string;
+  apiUrlMode?: 'v39' | 'legacy';
+  openInteractive?: boolean;
+  projectPath?: string;
+}
+
+export interface TautCsvIntakeScenario {
+  key: string;
+  name: string;
+  testData: string;
+  expectedResult: string;
+  type: 'contrato' | 'positivo' | 'negativo';
+  priority?: string;
+}
+
+export interface TautCsvIntakeResult {
+  csvFile: string;
+  module: string;
+  endpoint: string;
+  method: string;
+  wtaService: string;
+  scenariosCount: number;
+  scenarios: TautCsvIntakeScenario[];
+  intakeBlock: string;
+  implementationPlan: string;
+  recommendedModel: string;
+  checklistWarnings: string[];
+  checklistBlockers: string[];
+}
+
+export interface TautEnvSyncResult {
+  success: boolean;
+  envPath: string;
+  updatedKeys: string[];
+  message: string;
+}
+
 
 

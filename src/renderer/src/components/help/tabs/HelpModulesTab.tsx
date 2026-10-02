@@ -14,7 +14,8 @@ import {
   ArrowRight,
   BookOpen,
   Copy,
-  Check
+  Check,
+  CheckCheck
 } from 'lucide-react';
 
 interface HelpModulesTabProps {
@@ -193,7 +194,11 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
-                <span><strong>Operações em 1 Clique:</strong> Iniciar, pausar, reiniciar e remover containers sem decorar comandos CLI.</span>
+                <span><strong>Grupos de Containers:</strong> Organize containers em grupos personalizados (ex: Bancos, APIs, Mensageria), configure ordem e tempos de warm-up/delay e suba ou pare todos de uma vez com 1 clique.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
+                <span><strong>Ações em Lote e Seleção Múltipla:</strong> Marque múltiplos containers via checkboxes para subir, parar ou reiniciar em lote, ou salvar a seleção em um novo grupo permanente.</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
@@ -546,7 +551,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
                 <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
                   9. Servidor MCP (Automação por IA)
                 </h3>
-                <span className="text-[10px] text-muted-foreground font-mono">145 Tools via stdio · IntelliJ · VS Code · Claude</span>
+                <span className="text-[10px] text-muted-foreground font-mono">161 Tools via stdio · IntelliJ · VS Code · Claude</span>
               </div>
             </div>
           </div>
@@ -568,12 +573,16 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
                 <span><strong>Git, Tarefas &amp; Rotinas:</strong> Criação de branch padronizada vinculada a tarefas Azure DevOps/Jira, rollback de rotinas .bak e download CCW.</span>
               </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                <span><strong>QA &amp; TAUT Cypress:</strong> Disparo de testes por tags, cálculo de cobertura Zephyr e geração de intake CSV via tools MCP (taut_*).</span>
+              </li>
             </ul>
 
             <div className="p-2.5 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-inner">
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Exemplo de Prompt no IntelliJ / VS Code Copilot:</span>
               <p className="font-mono text-[11px] text-foreground bg-muted/80 p-2 rounded-lg border border-border/50">
-                "Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."
+                "Execute os testes críticos de Pedido do TAUT-Mississauga e analise a cobertura de testes do Zephyr."
               </p>
             </div>
 
@@ -582,7 +591,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
               className="w-full mt-2 py-2 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Ver Catálogo Completo das 145 Ferramentas MCP</span>
+              <span>Ver Catálogo Completo das 161 Ferramentas MCP</span>
             </button>
           </div>
         </div>
@@ -649,6 +658,70 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
             className="mt-3 w-full py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>Abrir Módulo de Logs</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* 11. Qualidade & Homologação (QA Hub) */}
+      <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3.5 shadow-md flex flex-col justify-between">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <CheckCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
+                  11. Central de Qualidade (QA &amp; PO)
+                </h3>
+                <span className="text-[10px] text-muted-foreground font-mono">Matriz de Testes · Critérios de Aceite · Prontidão</span>
+              </div>
+            </div>
+            <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold">
+              Alt+Q
+            </kbd>
+          </div>
+
+          <div className="text-xs text-muted-foreground space-y-2.5 leading-relaxed">
+            <p>
+              Hub de apoio e orquestração para testes de software, homologação de rotinas e acompanhamento de releases:
+            </p>
+            <ul className="space-y-1.5 pl-1">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Automação TAUT-Mississauga (Cypress):</strong> Painel integrado de testes de API e integração com seletor de tags (@cypress/grep), execução headless ou interativa (cy:open), streaming de console, sincronização de .env com o Oracle ativo, auditoria de cobertura Zephyr Scale (COVERAGE.md) e processamento automatizado de CSVs de intake.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Test Runners &amp; Automação:</strong> Disparo e streaming em tempo real de testes unitários e de integração (Maven / JUnit / Mockito), testes web E2E (Playwright / Cypress) e coleções de API REST (Newman / Postman) com sincronização automática na Matriz de Validação.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Validador Regressivo Oracle (QA Studio):</strong> Execução automatizada de esteiras de queries e asserções de integridade no banco, comparando colunas do WinThor contra payloads JSON da API/PDV com exportação para o Jira.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Matriz de Validação:</strong> Acompanhamento ágil de testes funcionais, serviços e APIs com persistência local.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Painel de Prontidão (PO):</strong> Indicadores de prontidão da release e semáforo de entrega para tomadores de decisão.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Exportação Markdown:</strong> Cópia de relatórios de homologação em 1 clique para Teams, Jira e Azure DevOps.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {onNavigate && (
+          <button
+            onClick={() => onNavigate('quality')}
+            className="mt-3 w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>Abrir Central de Qualidade</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}

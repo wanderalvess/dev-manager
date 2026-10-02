@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildEnvironmentSlots,
+  buildEnvironmentSlotsFromList,
+  computeGroupStatus,
   computeStackTopology,
   extractOraclePort,
   extractWtaPort,
   filterContainers,
   flattenPortBindings,
+  getGroupContainerNames,
   getOracleTnsConfig,
   parsePortLinks
 } from './dockerContainerUtils';
-import type { DockerContainerInfo } from '../../../shared/types';
+import type { ContainerEnvironment, DockerContainerInfo } from '../../../shared/types';
 
 function makeContainer(overrides: Partial<DockerContainerInfo> = {}): DockerContainerInfo {
   return {
@@ -231,5 +234,92 @@ describe('buildEnvironmentSlots', () => {
     const containers = [makeContainer({ names: '/meu-wsh', state: 'running' })];
     const slots = buildEnvironmentSlots('current', containers);
     expect(slots).toContainEqual({ id: '3', name: 'meu-wsh' });
+  });
+});
+
+describe('getGroupContainerNames', () => {
+  it('extrai nomes de strings e objetos de slot limpando a barra inicial', () => {
+    const env: ContainerEnvironment = {
+      id: 'g1',
+      name: 'Stack Financeira',
+      containers: ['/oracle-winthor', { id: 's2', name: 'api-financeiro', delay: 10 }]
+    };
+    expect(getGroupContainerNames(env)).toEqual(['oracle-winthor', 'api-financeiro']);
+  });
+
+  it('retorna lista vazia se grupo for inválido ou sem containers', () => {
+    expect(getGroupContainerNames({ id: 'g2', name: 'Vazio', containers: [] })).toEqual([]);
+    expect(getGroupContainerNames(null as any)).toEqual([]);
+  });
+});
+
+describe('computeGroupStatus', () => {
+  it('calcula corretamente containers rodando e parados do grupo', () => {
+    const env: ContainerEnvironment = {
+      id: 'g1',
+      name: 'Backend Core',
+      containers: ['redis-core', 'postgres-core', 'api-gateway']
+    };
+    const containers: DockerContainerInfo[] = [
+      makeContainer({ names: '/redis-core', state: 'running' }),
+      makeContainer({ names: '/postgres-core', state: 'exited' }),
+      makeContainer({ names: '/outro-container', state: 'running' })
+    ];
+
+    const status = computeGroupStatus(env, containers);
+    expect(status.total).toBe(3);
+    expect(status.running).toBe(1);
+    expect(status.stopped).toBe(2);
+    expect(status.isAllRunning).toBe(false);
+    expect(status.isNoneRunning).toBe(false);
+  });
+
+  it('identifica quando todos os containers do grupo estão rodando', () => {
+    const env: ContainerEnvironment = {
+      id: 'g1',
+      name: 'Microservices',
+      containers: ['auth-service', 'billing-service']
+    };
+    const containers: DockerContainerInfo[] = [
+      makeContainer({ names: '/auth-service', state: 'running' }),
+      makeContainer({ names: '/billing-service', state: 'running' })
+    ];
+
+    const status = computeGroupStatus(env, containers);
+    expect(status.total).toBe(2);
+    expect(status.running).toBe(2);
+    expect(status.stopped).toBe(0);
+    expect(status.isAllRunning).toBe(true);
+    expect(status.isNoneRunning).toBe(false);
+  });
+
+  it('identifica quando nenhum container do grupo está rodando', () => {
+    const env: ContainerEnvironment = {
+      id: 'g1',
+      name: 'Dev Stack',
+      containers: ['api-service']
+    };
+    const status = computeGroupStatus(env, []);
+    expect(status.total).toBe(1);
+    expect(status.running).toBe(0);
+    expect(status.stopped).toBe(1);
+    expect(status.isAllRunning).toBe(false);
+    expect(status.isNoneRunning).toBe(true);
+  });
+});
+
+describe('buildEnvironmentSlotsFromList', () => {
+  it('cria slots indexados com nomes limpos e delays preservados', () => {
+    const input = [
+      { name: '/db-container', delay: 30 },
+      { name: 'app-service', delay: 0 },
+      { name: 'worker-service' }
+    ];
+    const slots = buildEnvironmentSlotsFromList(input);
+    expect(slots).toEqual([
+      { id: '1', name: 'db-container', delay: 30 },
+      { id: '2', name: 'app-service' },
+      { id: '3', name: 'worker-service' }
+    ]);
   });
 });

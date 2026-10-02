@@ -43,6 +43,8 @@ export interface ContainerCardProps {
   onTogglePause: (container: DockerContainerInfo) => void;
   onOpenTerminal: (container: DockerContainerInfo) => void;
   onOpenLogs: (container: DockerContainerInfo) => void;
+  isSelected?: boolean;
+  onToggleSelect?: (containerId: string) => void;
 }
 
 export const ContainerCard: React.FC<ContainerCardProps> = ({
@@ -61,7 +63,9 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
   onContainerAction,
   onTogglePause,
   onOpenTerminal,
-  onOpenLogs
+  onOpenLogs,
+  isSelected,
+  onToggleSelect
 }) => {
   const isRunning = container.state === 'running';
   const cleanName = container.names.replace(/^\//, '');
@@ -76,16 +80,18 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
   return (
     <div
       key={container.id}
-      className={`relative overflow-hidden rounded-xl border transition-all duration-200 bg-card ${
-        isRunning
+      className={`relative overflow-hidden rounded-xl border transition-all duration-200 ${
+        isSelected
+          ? 'border-primary ring-2 ring-primary/40 bg-primary/[0.04] shadow-md'
+          : isRunning
           ? isOracle
-            ? 'border-orange-500/35 shadow-[0_2px_14px_rgba(234,88,12,0.06)]'
+            ? 'border-orange-500/35 bg-card shadow-[0_2px_14px_rgba(234,88,12,0.06)]'
             : isWta
-            ? 'border-cyan-500/35 shadow-[0_2px_14px_rgba(6,182,212,0.06)]'
+            ? 'border-cyan-500/35 bg-card shadow-[0_2px_14px_rgba(6,182,212,0.06)]'
             : isWsh
-            ? 'border-violet-500/35 shadow-[0_2px_14px_rgba(139,92,246,0.06)]'
-            : 'border-border/80 shadow-sm hover:border-primary/40'
-          : 'border-border/60 opacity-80 hover:opacity-100'
+            ? 'border-violet-500/35 bg-card shadow-[0_2px_14px_rgba(139,92,246,0.06)]'
+            : 'border-border/80 bg-card shadow-sm hover:border-primary/40'
+          : 'border-border/60 bg-card opacity-80 hover:opacity-100'
       }`}
     >
       {/* Trilho Lateral Indicador de LED */}
@@ -100,9 +106,20 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
       />
 
       <div className="p-3.5 pl-4.5 flex flex-col gap-2.5">
-        {/* Linha 1: Cabeçalho do Rack com Runtime Tag, Nome e Portas */}
+        {/* Linha 1: Cabeçalho do Rack com Checkbox, Runtime Tag, Nome e Portas */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
+            {/* Checkbox de Seleção em Lote */}
+            {onToggleSelect && (
+              <input
+                type="checkbox"
+                checked={!!isSelected}
+                onChange={() => onToggleSelect(container.id)}
+                title={isSelected ? 'Desmarcar container' : 'Selecionar container para ações em lote'}
+                className="w-4 h-4 rounded text-primary border-border/80 focus:ring-primary focus:ring-1 cursor-pointer mr-0.5 accent-primary shrink-0"
+              />
+            )}
+
             {/* Tag Temática de Runtime */}
             {isOracle ? (
               <span className="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 text-[10px] font-mono font-bold flex items-center gap-1.5">

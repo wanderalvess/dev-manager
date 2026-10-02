@@ -1,4 +1,4 @@
-export type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai';
+export type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality';
 
 export interface SettingsSearchEntry {
   id: string;
@@ -15,6 +15,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-jdkPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório do JDK', keywords: 'jdk java path diretorio' },
   { id: 'field-intellijPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Executável do IntelliJ / IDE', keywords: 'intellij ide editor idea' },
   { id: 'field-projectsPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório de Projetos', keywords: 'projetos path diretorio workspace' },
+  { id: 'field-tautProjectPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório do Projeto de Testes Automatizados (Cypress)', keywords: 'testes cypress automacao e2e taut mississauga qa path diretorio pasta zephyr' },
   { id: 'field-wtaLogin', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Usuário WTA (Login Automático)', keywords: 'wta login usuario winthor' },
   { id: 'field-wtaPassword', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Senha / Hash WTA', keywords: 'wta senha password hash winthor' },
   { id: 'field-wtaAuthToken', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Cookie de Autenticação WTA (suukie)', keywords: 'wta cookie token suukie sessao autenticacao' },
@@ -28,5 +29,6 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-automation', tab: 'automation', tabLabel: 'Automação Padrão', label: 'Automação Padrão do Pipeline de Ambiente', keywords: 'automacao pipeline padrao debug embedded launch' },
   { id: 'field-logs', tab: 'logs', tabLabel: 'Logs em Tempo Real', label: 'Fontes de Logs em Tempo Real', keywords: 'logs tail arquivo fonte tempo real' },
   { id: 'field-backup', tab: 'backup', tabLabel: 'Backup de Bancos', label: 'Backup e Restore de Bancos de Dados', keywords: 'backup restore banco dados expdp impdp pg_dump agendamento webhook' },
-  { id: 'field-ai', tab: 'ai', tabLabel: 'IA & Provedores LLM', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' }
+  { id: 'field-ai', tab: 'ai', tabLabel: 'IA & Provedores LLM', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' },
+  { id: 'field-quality', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Integrações de Testes (Zephyr, Jira, Azure)', keywords: 'qualidade qa zephyr scale squad jira test plans testes homologacao cenarios token api' }
 ];

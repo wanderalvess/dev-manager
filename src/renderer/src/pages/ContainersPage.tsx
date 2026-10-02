@@ -20,7 +20,8 @@ import { CONTAINERS_TOUR_STEPS, CONTAINERS_TOUR_STORAGE_KEY } from '../component
 import {
   buildEnvironmentSlots,
   computeStackTopology,
-  filterContainers
+  filterContainers,
+  getGroupContainerNames
 } from '../utils/dockerContainerUtils';
 
 // Subcomponentes modulares de Containers
@@ -28,6 +29,8 @@ import { ContainersHeader } from '../components/containers/ContainersHeader';
 import { ContainerTopologyBus } from '../components/containers/topology/ContainerTopologyBus';
 import { DockerComposePanel } from '../components/containers/compose/DockerComposePanel';
 import { ContainerCard } from '../components/containers/cards/ContainerCard';
+import { ContainerGroupsBar } from '../components/containers/groups/ContainerGroupsBar';
+import { ContainerBatchBar } from '../components/containers/batch/ContainerBatchBar';
 
 // Modais
 import { ContainerLogsModal } from '../components/containers/modals/ContainerLogsModal';
@@ -68,6 +71,14 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   const [selectedEnvId, setSelectedEnvId] = useState<string>('');
   const [isCreatingEnv, setIsCreatingEnv] = useState<boolean>(false);
   const [envToDelete, setEnvToDelete] = useState<ContainerEnvironment | null>(null);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [editingEnv, setEditingEnv] = useState<ContainerEnvironment | null>(null);
+  const [preselectedForGroup, setPreselectedForGroup] = useState<string[]>([]);
+
+  // Seleção Múltipla para Ações em Lote
+  const [selectedContainerIds, setSelectedContainerIds] = useState<Set<string>>(new Set());
+  const [isExecutingBatch, setIsExecutingBatch] = useState<boolean>(false);
+  const [batchActionType, setBatchActionType] = useState<'start' | 'stop' | 'restart' | null>(null);
 
   // Sequência de Startup WinThor / Ambiente
   const [sequenceProgress, setSequenceProgress] = useState<{
@@ -517,6 +528,20 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
     return () => unsub?.();
   }, []);
 
+  useEffect(() => {
+    const unsub = (window.electronAPI as any)?.onContainerStopSequenceProgress?.((step: any) => {
+      setSequenceProgress((prev) => ({
+        ...prev,
+        running: true,
+        currentName: step.currentName,
+        index: step.index,
+        total: step.total,
+        waitingSeconds: undefined
+      }));
+    });
+    return () => unsub?.();
+  }, []);
+
   const handleSelectDistro = async (newDistro: string) => {
     setIsSwitchingDistro(true);
     setSelectedDistro(newDistro);
@@ -563,7 +588,7 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
     }
 
     if (slots.length === 0) {
-      handleShowError('Ambiente Inválido', `O ambiente "${env.name}" não possui containers configurados.`);
+      handleShowError('Grupo Inválido', `O grupo "${env.name}" não possui containers configurados.`);
       return;
     }
 
@@ -571,11 +596,12 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
       await handleSelectDistro(env.wslDistro);
     }
 
+    setActiveGroupId(env.id);
     setSequenceProgress({ running: true, index: 1, total: slots.length, currentName: slots[0].name });
     try {
       const res = await window.electronAPI.startContainerSequence(slots);
       if (!res.success) {
-        handleShowError(`Falha no ambiente "${env.name}"`, res.error || 'Erro desconhecido ao subir containers', {
+        handleShowError(`Falha no grupo "${env.name}"`, res.error || 'Erro desconhecido ao subir containers', {
           distroName: env.wslDistro || selectedDistro,
           containerName: res.failed,
           retryAction: () => handleStartEnvironment(env)
@@ -583,39 +609,177 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
       }
       await loadDockerData();
     } catch (err: any) {
-      handleShowError(`Erro ao iniciar ambiente "${env.name}"`, err, {
+      handleShowError(`Erro ao iniciar grupo "${env.name}"`, err, {
         distroName: env.wslDistro || selectedDistro,
         retryAction: () => handleStartEnvironment(env)
       });
     } finally {
+      setActiveGroupId(null);
       setSequenceProgress({ running: false });
     }
   };
 
-  const handleSaveCurrentAsEnvironment = async (data: {
-    name: string;
-    color: string;
-    presetType: 'current' | 'doc' | 'infr';
-  }) => {
-    if (!data.name.trim() || !window.electronAPI?.saveContainerEnvironment) return;
+  const handleStopEnvironment = async (env: ContainerEnvironment) => {
+    const names = getGroupContainerNames(env);
+    if (names.length === 0) {
+      handleShowError('Grupo Vazio', `O grupo "${env.name}" não possui containers.`);
+      return;
+    }
 
-    const slots = buildEnvironmentSlots(data.presetType, containers);
-
-    const newEnv: ContainerEnvironment = {
-      id: String(Date.now()),
-      name: data.name.trim(),
-      color: data.color,
-      wslDistro: selectedDistro || undefined,
-      containers: slots
-    };
-
+    setActiveGroupId(env.id);
+    setSequenceProgress({ running: true, index: 1, total: names.length, currentName: names[0] });
     try {
-      await window.electronAPI.saveContainerEnvironment(newEnv);
+      if ((window.electronAPI as any)?.stopContainerSequence) {
+        const res = await (window.electronAPI as any).stopContainerSequence(names);
+        if (!res.success) {
+          handleShowError(`Falha ao parar grupo "${env.name}"`, res.error || 'Erro ao parar containers');
+        }
+      } else {
+        for (const name of names) {
+          await window.electronAPI?.stopDockerContainer(name);
+        }
+      }
+      await loadDockerData();
+    } catch (err: any) {
+      handleShowError(`Erro ao parar grupo "${env.name}"`, err);
+    } finally {
+      setActiveGroupId(null);
+      setSequenceProgress({ running: false });
+    }
+  };
+
+  const handleSaveEnvironment = async (env: ContainerEnvironment) => {
+    if (!env || !env.name.trim() || !window.electronAPI?.saveContainerEnvironment) return;
+    try {
+      await window.electronAPI.saveContainerEnvironment(env);
       setIsCreatingEnv(false);
+      setEditingEnv(null);
+      setPreselectedForGroup([]);
       await loadEnvironments();
     } catch (err: any) {
-      setErrorMessage(`Falha ao salvar ambiente: ${err?.message || err}`);
+      setErrorMessage(`Falha ao salvar grupo: ${err?.message || err}`);
     }
+  };
+
+  // Filtro de Containers
+  const filteredContainers = useMemo(() => filterContainers(containers, filter), [containers, filter]);
+
+  // Funções de Seleção e Ações em Lote
+  const handleToggleSelectContainer = useCallback((containerId: string) => {
+    setSelectedContainerIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(containerId)) {
+        next.delete(containerId);
+      } else {
+        next.add(containerId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleSelectAll = useCallback(() => {
+    setSelectedContainerIds((prev) => {
+      if (filteredContainers.length === 0) return new Set();
+      const allSelected = filteredContainers.every((c) => prev.has(c.id));
+      if (allSelected) {
+        return new Set();
+      }
+      return new Set(filteredContainers.map((c) => c.id));
+    });
+  }, [filteredContainers]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedContainerIds(new Set());
+  }, []);
+
+  const handleBatchStart = async () => {
+    const targetContainers = containers.filter((c) => selectedContainerIds.has(c.id));
+    if (targetContainers.length === 0) return;
+
+    setIsExecutingBatch(true);
+    setBatchActionType('start');
+    const slots = targetContainers.map((c) => ({
+      name: c.names.replace(/^\//, '').trim()
+    }));
+
+    setSequenceProgress({ running: true, index: 1, total: slots.length, currentName: slots[0].name });
+    try {
+      if (window.electronAPI?.startContainerSequence) {
+        const res = await window.electronAPI.startContainerSequence(slots);
+        if (!res.success) {
+          handleShowError('Falha ao subir containers selecionados', res.error || 'Erro ao iniciar containers');
+        }
+      } else {
+        for (const slot of slots) {
+          await window.electronAPI?.startDockerContainer(slot.name);
+        }
+      }
+      await loadDockerData();
+    } catch (err: any) {
+      handleShowError('Erro ao iniciar containers selecionados', err);
+    } finally {
+      setIsExecutingBatch(false);
+      setBatchActionType(null);
+      setSequenceProgress({ running: false });
+    }
+  };
+
+  const handleBatchStop = async () => {
+    const targetContainers = containers.filter((c) => selectedContainerIds.has(c.id));
+    if (targetContainers.length === 0) return;
+
+    setIsExecutingBatch(true);
+    setBatchActionType('stop');
+    const names = targetContainers.map((c) => c.names.replace(/^\//, '').trim());
+
+    setSequenceProgress({ running: true, index: 1, total: names.length, currentName: names[0] });
+    try {
+      if ((window.electronAPI as any)?.stopContainerSequence) {
+        const res = await (window.electronAPI as any).stopContainerSequence(names);
+        if (!res.success) {
+          handleShowError('Falha ao parar containers selecionados', res.error || 'Erro ao parar containers');
+        }
+      } else {
+        for (const name of names) {
+          await window.electronAPI?.stopDockerContainer(name);
+        }
+      }
+      await loadDockerData();
+    } catch (err: any) {
+      handleShowError('Erro ao parar containers selecionados', err);
+    } finally {
+      setIsExecutingBatch(false);
+      setBatchActionType(null);
+      setSequenceProgress({ running: false });
+    }
+  };
+
+  const handleBatchRestart = async () => {
+    const targetContainers = containers.filter((c) => selectedContainerIds.has(c.id));
+    if (targetContainers.length === 0) return;
+
+    setIsExecutingBatch(true);
+    setBatchActionType('restart');
+    try {
+      for (const c of targetContainers) {
+        await window.electronAPI?.restartDockerContainer(c.id);
+      }
+      await loadDockerData();
+    } catch (err: any) {
+      handleShowError('Erro ao reiniciar containers selecionados', err);
+    } finally {
+      setIsExecutingBatch(false);
+      setBatchActionType(null);
+    }
+  };
+
+  const handleCreateGroupFromSelection = () => {
+    const selectedNames = containers
+      .filter((c) => selectedContainerIds.has(c.id))
+      .map((c) => c.names.replace(/^\//, '').trim());
+    setPreselectedForGroup(selectedNames);
+    setEditingEnv(null);
+    setIsCreatingEnv(true);
   };
 
   const handleDeleteEnvironment = async (id: string) => {
@@ -996,9 +1160,6 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
 
   const handleCopyLogs = () => copyLogsToClipboard(logs, 'Logs copiados!');
 
-  // Filtro
-  const filteredContainers = useMemo(() => filterContainers(containers, filter), [containers, filter]);
-
   // Estatísticas
   const runningCount = useMemo(() => containers.filter((c) => c.state === 'running').length, [containers]);
   const stoppedCount = useMemo(() => containers.filter((c) => c.state !== 'running').length, [containers]);
@@ -1081,7 +1242,11 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
         }}
         sequenceProgress={sequenceProgress}
         containersCount={containers.length}
-        onOpenSaveEnvModal={() => setIsCreatingEnv(true)}
+        onOpenSaveEnvModal={() => {
+          setEditingEnv(null);
+          setPreselectedForGroup([]);
+          setIsCreatingEnv(true);
+        }}
         onOpenSnapshotsModal={() => {
           setIsSnapshotsModalOpen(true);
           loadSnapshots();
@@ -1109,157 +1274,201 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
         wslIpFeedback={wslIpFeedback}
       />
 
-      {/* Barramento de Topologia do Ambiente WinThor */}
-      <ContainerTopologyBus
-        showTopologyBus={showTopologyBus}
-        onClose={() => {
-          setShowTopologyBus(false);
-          try {
-            localStorage.setItem('winthor_show_topology_bus', 'false');
-          } catch {
-            // localStorage indisponível
-          }
-        }}
-        stackTopology={stackTopology}
-        selectedDistro={selectedDistro}
-        daemonStatus={daemonStatus}
-        onOpenWslTerminal={() => handleOpenWslTerminal()}
-        onOpenOracleTools={(c) => {
-          setOracleModalContainer(c);
-          loadAvailableDumps();
-        }}
-        onOpenWtaTools={(c) => setWtaModalContainer(c)}
-        onOpenWshTools={(c, tab) => {
-          setWshModalContainer(c || containers[0] || null);
-          loadWshPrereqs();
-        }}
-        copyFeedback={copyFeedback}
-        onCopyText={(text, key) => copyLogsToClipboard(text, key)}
-        containers={containers}
-      />
+      {/* Área Principal com Rolagem Fluida Unificada */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-3 pb-8">
+        {/* Barramento de Topologia do Ambiente WinThor */}
+        <ContainerTopologyBus
+          showTopologyBus={showTopologyBus}
+          onClose={() => {
+            setShowTopologyBus(false);
+            try {
+              localStorage.setItem('winthor_show_topology_bus', 'false');
+            } catch {
+              // localStorage indisponível
+            }
+          }}
+          stackTopology={stackTopology}
+          selectedDistro={selectedDistro}
+          daemonStatus={daemonStatus}
+          onOpenWslTerminal={() => handleOpenWslTerminal()}
+          onOpenOracleTools={(c) => {
+            setOracleModalContainer(c);
+            loadAvailableDumps();
+          }}
+          onOpenWtaTools={(c) => setWtaModalContainer(c)}
+          onOpenWshTools={(c, tab) => {
+            setWshModalContainer(c || containers[0] || null);
+            loadWshPrereqs();
+          }}
+          copyFeedback={copyFeedback}
+          onCopyText={(text, key) => copyLogsToClipboard(text, key)}
+          containers={containers}
+        />
 
-      {/* Docker Compose */}
-      <DockerComposePanel
-        composeFilePath={composeFilePath}
-        setComposeFilePath={setComposeFilePath}
-        composeProfile={composeProfile}
-        setComposeProfile={setComposeProfile}
-        composeBuild={composeBuild}
-        setComposeBuild={setComposeBuild}
-        composeVolumes={composeVolumes}
-        setComposeVolumes={setComposeVolumes}
-        isComposeRunning={isComposeRunning}
-        isComposeRestarting={isComposeRestarting}
-        isLoadingComposeStatus={isLoadingComposeStatus}
-        composeServices={composeServices}
-        composeOutput={composeOutput}
-        recentComposeFiles={recentComposeFiles}
-        onSelectComposeFile={handleSelectComposeFile}
-        onComposeUp={handleComposeUp}
-        onComposeDown={handleComposeDown}
-        onComposeRestart={handleComposeRestart}
-        onComposeLogs={handleComposeLogs}
-        onComposeStatus={handleComposeStatus}
-        isComposeExpanded={isComposeExpanded}
-        setIsComposeExpanded={setIsComposeExpanded}
-        composeOutputRef={composeOutputRef}
-      />
+        {/* Docker Compose */}
+        <DockerComposePanel
+          composeFilePath={composeFilePath}
+          setComposeFilePath={setComposeFilePath}
+          composeProfile={composeProfile}
+          setComposeProfile={setComposeProfile}
+          composeBuild={composeBuild}
+          setComposeBuild={setComposeBuild}
+          composeVolumes={composeVolumes}
+          setComposeVolumes={setComposeVolumes}
+          isComposeRunning={isComposeRunning}
+          isComposeRestarting={isComposeRestarting}
+          isLoadingComposeStatus={isLoadingComposeStatus}
+          composeServices={composeServices}
+          composeOutput={composeOutput}
+          recentComposeFiles={recentComposeFiles}
+          onSelectComposeFile={handleSelectComposeFile}
+          onComposeUp={handleComposeUp}
+          onComposeDown={handleComposeDown}
+          onComposeRestart={handleComposeRestart}
+          onComposeLogs={handleComposeLogs}
+          onComposeStatus={handleComposeStatus}
+          isComposeExpanded={isComposeExpanded}
+          setIsComposeExpanded={setIsComposeExpanded}
+          composeOutputRef={composeOutputRef}
+        />
 
-      {/* Barra de Status & Ações Rápidas em Lote */}
-      <div className="mx-4 mt-3 flex items-center justify-between text-xs text-muted-foreground shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <strong className="text-foreground font-semibold">{runningCount}</strong> rodando
-          </span>
-          <span className="flex items-center gap-1.5 font-medium">
-            <span className="w-2 h-2 rounded-full bg-zinc-500" />
-            <strong className="text-foreground font-semibold">{stoppedCount}</strong> parados
-          </span>
-          <span className="text-[11px] text-muted-foreground/80">
-            Total: <strong className="text-foreground font-semibold">{containers.length}</strong>
-          </span>
+        {/* Painel de Grupos de Containers */}
+        <ContainerGroupsBar
+          environments={environments}
+          containers={containers}
+          sequenceProgress={sequenceProgress}
+          activeGroupId={activeGroupId}
+          onStartGroup={handleStartEnvironment}
+          onStopGroup={handleStopEnvironment}
+          onEditGroup={(env) => {
+            setEditingEnv(env);
+            setIsCreatingEnv(true);
+          }}
+          onDeleteGroup={(env) => setEnvToDelete(env)}
+          onCreateGroup={() => {
+            setEditingEnv(null);
+            setPreselectedForGroup([]);
+            setIsCreatingEnv(true);
+          }}
+        />
+
+        {/* Barra de Status & Ações Rápidas em Lote */}
+        <div className="mx-4 mt-2 flex items-center justify-between text-xs text-muted-foreground shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <strong className="text-foreground font-semibold">{runningCount}</strong> rodando
+            </span>
+            <span className="flex items-center gap-1.5 font-medium">
+              <span className="w-2 h-2 rounded-full bg-zinc-500" />
+              <strong className="text-foreground font-semibold">{stoppedCount}</strong> parados
+            </span>
+            <span className="text-[11px] text-muted-foreground/80">
+              Total: <strong className="text-foreground font-semibold">{containers.length}</strong>
+            </span>
+          </div>
+
+          {stoppedCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowPruneConfirm(true)}
+              disabled={isPruning}
+              title="Remover todos os containers parados (docker container prune)"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-card hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 border border-border/80 hover:border-rose-500/30 rounded-lg text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-98"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Limpar Parados ({stoppedCount})</span>
+            </button>
+          )}
         </div>
 
-        {stoppedCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowPruneConfirm(true)}
-            disabled={isPruning}
-            title="Remover todos os containers parados (docker container prune)"
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-card hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 border border-border/80 hover:border-rose-500/30 rounded-lg text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-98"
-          >
-            <Trash2 className="w-3 h-3" />
-            <span>Limpar Parados ({stoppedCount})</span>
-          </button>
+        {/* Barra de Ações em Lote quando há containers selecionados (Sticky no topo durante a rolagem) */}
+        {selectedContainerIds.size > 0 && (
+          <div className="sticky top-2 z-20">
+            <ContainerBatchBar
+              selectedCount={selectedContainerIds.size}
+              totalFilteredCount={filteredContainers.length}
+              isAllSelected={selectedContainerIds.size > 0 && selectedContainerIds.size === filteredContainers.length}
+              onToggleSelectAll={handleToggleSelectAll}
+              onClearSelection={handleClearSelection}
+              onBatchStart={handleBatchStart}
+              onBatchStop={handleBatchStop}
+              onBatchRestart={handleBatchRestart}
+              onCreateGroupFromSelection={handleCreateGroupFromSelection}
+              isExecutingBatch={isExecutingBatch}
+              batchActionType={batchActionType}
+            />
+          </div>
         )}
-      </div>
 
-      {/* Lista de Containers */}
-      <div className="flex-1 min-h-0 overflow-auto p-4">
-        {filteredContainers.length === 0 ? (
-          <div className="h-full min-h-[260px] flex flex-col items-center justify-center text-center p-6 bg-card/30 border border-dashed border-border/80 rounded-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground mb-3">
-              <Box className="w-6 h-6 stroke-[1.5]" />
-            </div>
-            <p className="text-sm font-bold text-foreground">Nenhum container localizado</p>
-            <p className="text-xs text-muted-foreground max-w-md mt-1.5 leading-relaxed">
-              {containers.length === 0
-                ? 'Certifique-se de que a distro WSL selecionada possui o Docker Engine em execução ou inicie seus containers do WinThor.'
-                : 'Nenhum container corresponde ao critério de busca informado.'}
-            </p>
-            {containers.length === 0 && selectedDistro && (
-              <div className="mt-4 flex items-center gap-2">
-                <button
-                  onClick={loadDockerData}
-                  className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
-                >
-                  Recarregar status da distro
-                </button>
+        {/* Lista de Containers */}
+        <div className="px-4">
+          {filteredContainers.length === 0 ? (
+            <div className="min-h-[260px] flex flex-col items-center justify-center text-center p-6 bg-card/30 border border-dashed border-border/80 rounded-2xl">
+              <div className="w-12 h-12 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground mb-3">
+                <Box className="w-6 h-6 stroke-[1.5]" />
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3" data-tour="container-list">
-            {filteredContainers.map((container) => {
-              const cleanName = container.names.replace(/^\//, '');
-              const stats =
-                containerStats[container.id] ||
-                containerStats[cleanName] ||
-                Object.values(containerStats).find(
-                  (s) => s.id.startsWith(container.id.slice(0, 10)) || s.name === cleanName
-                );
+              <p className="text-sm font-bold text-foreground">Nenhum container localizado</p>
+              <p className="text-xs text-muted-foreground max-w-md mt-1.5 leading-relaxed">
+                {containers.length === 0
+                  ? 'Certifique-se de que a distro WSL selecionada possui o Docker Engine em execução ou inicie seus containers do WinThor.'
+                  : 'Nenhum container corresponde ao critério de busca informado.'}
+              </p>
+              {containers.length === 0 && selectedDistro && (
+                <div className="mt-4 flex items-center gap-2">
+                  <button
+                    onClick={loadDockerData}
+                    className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
+                  >
+                    Recarregar status da distro
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3" data-tour="container-list">
+              {filteredContainers.map((container) => {
+                const cleanName = container.names.replace(/^\//, '');
+                const stats =
+                  containerStats[container.id] ||
+                  containerStats[cleanName] ||
+                  Object.values(containerStats).find(
+                    (s) => s.id.startsWith(container.id.slice(0, 10)) || s.name === cleanName
+                  );
 
-              return (
-                <ContainerCard
-                  key={container.id}
-                  container={container}
-                  stats={stats}
-                  isLoadingAction={actionLoading[container.id]}
-                  isOpeningTerminal={isOpeningTerminal[container.id]}
-                  isLoadingInspect={isLoadingInspect}
-                  copyFeedback={copyFeedback}
-                  getStateBadge={getStateBadge}
-                  onCopyText={(text, key) => copyLogsToClipboard(text, key)}
-                  onOpenOracleTools={(c) => {
-                    setOracleModalContainer(c);
-                    loadAvailableDumps();
-                  }}
-                  onOpenWtaTools={(c) => setWtaModalContainer(c)}
-                  onOpenWshTools={(c) => {
-                    setWshModalContainer(c);
-                    loadWshPrereqs();
-                  }}
-                  onInspectContainer={handleInspectContainer}
-                  onContainerAction={handleContainerAction}
-                  onTogglePause={handleTogglePause}
-                  onOpenTerminal={handleOpenTerminal}
-                  onOpenLogs={handleOpenLogs}
-                />
-              );
-            })}
-          </div>
-        )}
+                return (
+                  <ContainerCard
+                    key={container.id}
+                    container={container}
+                    stats={stats}
+                    isLoadingAction={actionLoading[container.id]}
+                    isOpeningTerminal={isOpeningTerminal[container.id]}
+                    isLoadingInspect={isLoadingInspect}
+                    copyFeedback={copyFeedback}
+                    getStateBadge={getStateBadge}
+                    onCopyText={(text, key) => copyLogsToClipboard(text, key)}
+                    onOpenOracleTools={(c) => {
+                      setOracleModalContainer(c);
+                      loadAvailableDumps();
+                    }}
+                    onOpenWtaTools={(c) => setWtaModalContainer(c)}
+                    onOpenWshTools={(c) => {
+                      setWshModalContainer(c);
+                      loadWshPrereqs();
+                    }}
+                    onInspectContainer={handleInspectContainer}
+                    onContainerAction={handleContainerAction}
+                    onTogglePause={handleTogglePause}
+                    onOpenTerminal={handleOpenTerminal}
+                    onOpenLogs={handleOpenLogs}
+                    isSelected={selectedContainerIds.has(container.id)}
+                    onToggleSelect={handleToggleSelectContainer}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modais Extraídos */}
@@ -1282,8 +1491,14 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
         isOpen={isCreatingEnv}
         containers={containers}
         selectedDistro={selectedDistro}
-        onClose={() => setIsCreatingEnv(false)}
-        onSave={handleSaveCurrentAsEnvironment}
+        editingEnvironment={editingEnv}
+        preselectedContainerNames={preselectedForGroup}
+        onClose={() => {
+          setIsCreatingEnv(false);
+          setEditingEnv(null);
+          setPreselectedForGroup([]);
+        }}
+        onSave={handleSaveEnvironment}
       />
 
       <ContainerRemoveConfirmModal

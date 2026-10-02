@@ -4,8 +4,134 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.28.0] - 2026-10-01
+### Adicionado
+- **Integração & Cockpit de Automação TAUT (Cypress E2E + Oracle + Zephyr Scale)**:
+  - **Novo Painel "Automação TAUT" na Central de Qualidade (`QualityPage`)**: Cockpit visual dedicado para conectar o projeto de testes automatizados da equipe de qualidade (`TAUT-Mississauga`) com resolução automática de caminho e monitoramento do ambiente.
+  - **Sincronização de Ambiente em 1 Clique (`syncEnvFromDevManager`)**:
+    - Sincronização automática das credenciais da conexão Oracle ativa no Dev Manager (`USER_BD`, `PASS_BD`, `TNS_NAME`, `INSTANT_CLIENT`) diretamente para o arquivo `.env` do TAUT;
+    - Parametrização dinâmica das URLs da API do WinThor Anywhere (`URL_API_WINTHOR`, `URL_API_AUTH`, `URL_API_PARAMETRO`), permitindo alternância instantânea entre as versões `v39` e legado.
+  - **Disparador Inteligente por Tags Cypress (`@cypress/grep`)**:
+    - Execução headless com filtragem por tags com seleção rápida de chips: Meta-tags (`@esteira`, `@critico`, `@regressao`, `@contrato`, `-@develop`) e Módulos de Negócio (`@winthor-pedido-venda`, `@winthor-tributacao`, `@winthor-financeiro`, `@winthor-fiscal`, `@winthor-logistica`, `@winthor-wms`);
+    - Suporte a abertura interativa da interface gráfica do Cypress com 1 clique (`cy:open`);
+    - Terminal streaming integrado com saída em tempo real e botão de abortar/cancelar seguro com encerramento de árvore de processos (`killProcessTree`).
+  - **Relatório e Rastreabilidade Zephyr Scale (`COVERAGE.md`)**:
+    - Mapeamento e vinculação de cenários de teste documentados em planilhas CSV (`Insumo/*.csv`) com specs Cypress (`cypress/e2e/**/*.cy.ts`) através dos identificadores de teste Zephyr (`DDWMISSI-T\d+`);
+    - Painel visual com cards de métricas (Total de Cenários, Automatizados, Pendentes e Taxa de Automação), busca textual por ID, descrição ou arquivo, e filtros rápidos por status.
+  - **Catálogo de Specs & Suítes Cypress**:
+    - Listagem e agrupamento automático de arquivos `.cy.ts` por submódulo, contadores de testes e lista de tags declaradas nos blocos `it`/`describe`.
+  - **Orquestrador de Intake CSV com IA (Subagente 0)**:
+    - Leitor automático de arquivos CSV de insumo na pasta `Insumo/`;
+    - Extrator inteligente de cenários e gerador de prompt estruturado e plano de implementação para acelerar a criação de novas specs Cypress com assistentes de IA seguindo o padrão do TAUT Mississauga.
+  - **Novas Ferramentas no Servidor MCP (Total: 161 Ferramentas)**:
+    - `taut_get_status`: Inspeciona o diretório do projeto TAUT, versão do Cypress, variáveis do `.env` e status do banco Oracle;
+    - `taut_run_tests`: Dispara execução de testes Cypress (headless ou interativo) com suporte a tags do `@cypress/grep` e specs específicos;
+    - `taut_get_coverage`: Analisa a cobertura de testes do Zephyr Scale cruzando arquivos de insumo CSV com specs implementadas;
+    - `taut_list_specs`: Cataloga todos os arquivos de especificação `.cy.ts` com tags e contadores de testes;
+    - `taut_sync_env`: Sincroniza credenciais do Oracle ativo e URLs de API do Dev Manager para o `.env` do TAUT;
+    - `taut_process_csv_intake`: Lê planilhas de insumo CSV e monta prompt/plano de implementação formatado para assistentes de IA.
+  - **Sincronização nos Três Transportes**:
+    - **Electron IPC**: Handlers `taut:get-status`, `taut:save-path`, `taut:get-coverage`, `taut:list-specs`, `taut:sync-env`, `taut:process-intake`, `taut:run-tests`, `taut:abort-tests`;
+    - **Servidor Express / REST & WebSocket**: Endpoints `/api/taut/*` e canal de streaming em tempo real `taut:chunk`;
+    - **Documentação e Central de Ajuda**: Atualizada a contagem total para 161 tools MCP em `docs/MCP_TOOLS.md` e na Central de Ajuda (`HelpModulesTab`, `helpData`).
+
+## [1.27.0] - 2026-10-01
+### Adicionado
+- **Runner de Testes Automatizados & Cockpit de Automação (Central de Qualidade)**:
+  - **Aba "Test Runners" na Central de Qualidade (`QualityPage`)**: Nova visão com gerenciamento visual e execução de suítes de testes automatizados com terminal interativo e streaming de stdout/stderr via WebSocket/IPC.
+  - **Suporte Multi-Framework / Multi-Linguagem**:
+    - **Backend Java / Apache Karaf**: Execução de `mvn test` e `mvn verify` (JUnit / Mockito), com resolução de executáveis Maven (`mvnw.cmd` e `mvn`), detecção de `JAVA_HOME` e parsing nativo de relatórios Surefire/Failsafe;
+    - **Testes Web End-to-End**: Integração com **Playwright** (`npx playwright test`) e **Cypress** (`npx cypress run`), com extração automática de contadores de specs e testes passados, com falha ou ignorados;
+    - **Contratos e Testes de API REST**: Integração com **Newman / Postman CLI** (`npx newman run`), com parsing da tabela de asserções do Postman;
+    - **Scripts Customizados**: Suporte a qualquer comando/script arbitrário definido pelo desenvolvedor ou QA.
+  - **Presets Prontos de Início Rápido**:
+    - Botões para adicionar com 1 clique runners pré-configurados para Maven Unit/Integration, Maven Verify com Fail-Safe, Playwright E2E, Cypress E2E e Newman API Collections.
+  - **Sincronização com a Matriz de Validação**:
+    - Vínculo direto de suítes de teste a um ou múltiplos cenários da Matriz de Validação;
+    - Botão *Sincronizar com Matriz* que atualiza instantaneamente o status dos cenários vinculados (para *Aprovado* ou *Falhas/Bugs*) e carimba a evidência com a data, hora e contadores da execução, refletindo automaticamente no Score de Prontidão da release do PO.
+  - **Histórico Persistido & Controle de Processos**:
+    - Armazenamento em disco das últimas 100 execuções analíticas com filtros e visualização de saída;
+    - Cancelamento seguro e imediato via botão *Abortar*, com encerramento em árvore de processos (`killProcessTree` / `taskkill /F /T`).
+  - **Sincronização Completa nos Três Transportes**:
+    - **Electron IPC**: Handlers `test-runner:list`, `test-runner:save`, `test-runner:delete`, `test-runner:execute`, `test-runner:abort`, `test-runner:get-history` e `test-runner:clear-history`;
+    - **Servidor Express / REST**: Endpoints `/api/test-runner/list`, `/api/test-runner/save`, `/api/test-runner/execute`, `/api/test-runner/abort`, `/api/test-runner/history` e transmissão de chunks em tempo real via canal WS `test-runner:chunk`;
+    - **Servidor MCP**: Novas ferramentas para assistentes de IA (`test_runner_list`, `test_runner_execute`, `test_runner_history`), totalizando **155 ferramentas**.
+
+## [1.26.0] - 2026-10-01
+### Adicionado
+- **Validador Regressivo & Asserções de Banco (QA Studio / Oracle QA)**:
+  - **Módulo Dedicado na Central de Qualidade (`QualityPage`)**: Nova aba *Validador Regressivo* com cockpit integrado para equipes de QA e desenvolvedores executarem baterias automatizadas de consultas SQL e validações de integridade no banco Oracle em 1 clique.
+  - **Esteira de Asserções Fim-a-Fim do WinThor**:
+    - Validação encadeada de todo o ciclo de vida de dados: Mensageria (`PCFILAMENSAGEMHISTORICO`), Documentos Eletrônicos (`PCDOCELETRONICO`), Cabeçalhos Fiscais e Venda (`PCNFSAID`, `PCPEDCECF`, `PCPEDC`), Dados do Consumidor (`PCVENDACONSUM`), Movimentação e Estoque (`PCMOV`, `PCPEDIECF`, `PCPEDI`), Contas a Receber / TEF (`PCPREST`, `PCPRESTECF`), Consistência de RCA / Operador x Matrícula (`PCEMPR`), Decomposição de Kits / Cestas (`PCPEDICESTA` + `PCEMBALAGEM`) e Fluxos de Cancelamento/Estorno (`PCNFCAN`, `PCNFCANITEM`).
+  - **Mapeamento Inteligente por JSONPath & Regras Estritas**:
+    - Suporte a extração de dados diretamente do payload JSON da API ou PDV colado na tela (`$.vlTotal`, `$.produtos[*].qt`, `$.consumidorFinal.cgcEnt`);
+    - Botão *Mapear Binds* (varinha mágica) que varre o JSON e auto-preenche variáveis `:codFilial`, `:numCupom`, `:chaveNfe`, `:numPed`, etc.;
+    - Avaliação de regras estritas: `<S>` (espera preenchido/not null), `<N>` (espera vazio/nulo), `<0>` (espera zero), valores literais e expressões regulares;
+    - Encadeamento dinâmico de variáveis: passos anteriores podem extrair dados (ex.: `NUMTRANSVENDA`, `NUMPED`) e alimentar automaticamente os passos seguintes.
+  - **Gerenciador de Cenários & Pasta Dedicada de Templates**:
+    - Templates salvos em pasta dedicada (`qa-templates/`) no diretório de dados do app (ou customizável em configurações);
+    - Templates padrão canônicos pré-carregados: *Venda PDV — Integração WSH Mississauga (Fim-a-Fim)*, *Cancelamento de Venda PDV* e *Venda com Kit / Cesta*;
+    - Criação, edição, duplicação e exclusão visual de cenários, com editor de query SQL e regras de asserção por coluna;
+    - Importação e exportação de templates em arquivos `.json` para fácil compartilhamento entre o time de QA.
+  - **Exportação de Evidências em 1 Clique para Jira & Confluence**:
+    - Botão *Copiar Markdown (Jira)*: Gera relatório completo com métricas de asserção, tabelas comparativas (Esperado vs Retornado no Banco), status visual (Aprovado / Divergência) e queries SQL executadas, já com o código da issue do Jira informado (ex.: `DDWMISSI-T966`);
+    - Botão *Jira Table*: Gera tabela em formatação Confluence/Jira markup clássico com cores semânticas.
+  - **Sincronização nos Três Transportes**:
+    - **Electron IPC**: Handlers `qa:list-templates`, `qa:get-template`, `qa:save-template`, `qa:delete-template`, `qa:execute-suite` e `qa:get-templates-dir`;
+    - **Servidor Express / REST (Headless & Docker)**: Endpoints `/api/qa/templates`, `/api/qa/templates/:id`, `/api/qa/execute` e `/api/qa/templates-dir`;
+    - **Servidor MCP**: 3 novas ferramentas para assistentes de IA (`qa_list_templates`, `qa_get_template` e `qa_run_regression_suite`), elevando o catálogo total do cockpit para **152 ferramentas**.
+### Alterado
+- **Reorganização dos Menus do Header & Central de Ajuda**:
+  - **Botão Dedicado da Central de Ajuda na Barra de Ações**: A Central de Ajuda (`HelpCircle`, `Alt+9`) foi movida de dentro do dropdown de desenvolvimento para um botão de acesso rápido na barra superior direita (ao lado de Configurações, Status, Tema e Atualizar), com destaque visual ativo e integração ao tour de boas-vindas (`data-tour="help"`).
+  - **Estruturação dos 4 Pilares Temáticos de Navegação**:
+    - **Infraestrutura**: *Ambiente Dev*, *Containers*, *Deploy*, *Logs em Tempo Real* e *APM & Traces*;
+    - **Dados & Rotinas**: *Banco de Dados* e *Catálogo de Rotinas*;
+    - **Desenvolvimento & DevOps**: *Git & DevOps* (`Alt+5`) e *Documentação Semântica (RAG)* (`Alt+7`);
+    - **Qualidade & Homologação**: Mantido como pilar estratégico independente (`nav-qa`), abrigando a *Central de Qualidade (QA Studio)* (`Alt+Q`) e preparado para a expansão das próximas telas e suítes de teste;
+    - No seletor compacto para telas menores (< md), adicionada a seção *Sistema & Suporte* com navegação direta para a Central de Ajuda e Configurações.
+
+## [1.25.0] - 2026-10-01
+### Adicionado
+- **Grupos de Containers Personalizados & Inicialização em 1 Clique (Containers & Docker)**:
+  - **Painel Superior de Grupos (`ContainerGroupsBar`)**: Nova barra fixa no topo da tela de Containers exibindo cartões para cada grupo salvo (ex.: *Stack Backend*, *Bancos de Dados*, *Mensageria*), com contadores de status em tempo real (ex.: <code className="font-mono text-emerald-500 font-bold">X/Y rodando</code>), semáforo visual de execução (*Rodando*, *Parcial*, *Parado*), botões de ação rápida (*Subir Grupo* com streaming de progresso e *Parar* conjunto), edição e exclusão.
+  - **Modal Inteligente de Grupos (`SaveEnvironmentModal`)**: Assistente remodelado para criação e edição de grupos, permitindo buscar e selecionar livremente qualquer container detectado no Docker local ou distribuições WSL via checkboxes, reordenar a sequência de subida e definir um tempo de espera opcional (*Delay/Warm-up* em segundos) entre a subida de cada container (ideal para bancos de dados ou message brokers que exigem estabilização antes dos serviços dependentes).
+- **Seleção Múltipla & Barra Flutuante de Ações em Lote**:
+  - **Seleção por Checkbox nos Cards**: Cada cartão de container (`ContainerCard`) agora conta com caixa de seleção dedicada e destaque visual ao ser selecionado, além de atalho no cabeçalho para *Selecionar Todos* ou *Limpar Seleção*.
+  - **Barra de Ações em Lote (`ContainerBatchBar`)**: Barra flutuante contextual no rodapé da página exibindo a quantidade de containers marcados e botões de comando em lote em 1 clique:
+    - **Subir Selecionados**: Inicia todos os containers selecionados de uma vez;
+    - **Parar Selecionados**: Interrompe com segurança todos os containers marcados;
+    - **Reiniciar Selecionados**: Executa reinicialização sequencial rápida do lote;
+    - **Criar Grupo (N)**: Transforma a seleção atual instantaneamente em um novo grupo persistido, já abrindo o modal com os slots preenchidos.
+- **Parada Coordenada & Sincronização nos Três Transportes (Electron, Express e MCP)**:
+  - **`DockerService.stopContainerSequence`**: Novo método central de negócio no serviço de Docker com notificações de progresso em tempo real (`onProgress`) e tratamento de erros;
+  - **Transporte IPC (Desktop)**: Handlers registrados `docker:stop-sequence` e aliases `container:start-sequence` e `container:stop-sequence`, com interfaces tipadas no `preload` e no `apiBridge`;
+  - **Transporte REST / Express (Headless)**: Novos endpoints `POST /api/docker/stop-sequence` e `POST /api/containers/stop-sequence`;
+  - **Servidor MCP**: Novas ferramentas disponibilizadas para agentes e LLMs: `docker_stop_sequence`, `container_stop_sequence`, `docker_start_sequence` e `container_start_sequence`.
+- **Documentação e Central de Ajuda**:
+  - Card de Containers no Guia dos Módulos (`HelpModulesTab.tsx`) atualizado com Grupos de Containers e Ações em Lote;
+  - Nova pergunta no FAQ da Central de Ajuda (`HelpPage.tsx`) com passo a passo sobre a criação de grupos, warm-up e controle em lote;
+  - Catálogo de Ferramentas MCP (`docs/MCP_TOOLS.md`) atualizado para o total de 149 ferramentas.
+
 ## [1.24.0] - 2026-10-01
 ### Adicionado
+- **Expansão do Dev Manager para QA & Donos de Produto (1ª Etapa - Módulo de Qualidade)**:
+  - **4º Grupo Temático no Header ("Qualidade & Homologação")**: Novo menu superior ao lado de Infraestrutura, Dados e Desenvolvimento, com acesso rápido às ferramentas de qualidade e atalho global dedicado <kbd className="font-mono text-primary font-bold">Alt+Q</kbd>.
+  - **Central de Qualidade (QA Hub)**: Nova página dedicada (`QualityPage`) concebida especificamente para apoiar analistas de qualidade (QA) e Product Owners (PO) no ciclo de homologação:
+    - **Matriz de Validação & Homologação**: Tabela interativa para acompanhamento ágil de cenários de teste vinculados a rotinas Delphi, serviços Karaf, APIs e fluxos E2E, com alteração rápida de status (*Pendente*, *Em Teste*, *Aprovado*, *Falha/Bug*, *Bloqueado*), inclusão de novos cenários e persistência em `localStorage`.
+    - **Painel de Prontidão da Release (PO)**: Semáforo executivo com cálculo automático de prontidão (*Readiness Score* de 0 a 100%) e taxa de sucesso dos testes para orientar a decisão de subida para produção.
+    - **Exportação de Relatórios de Homologação em Markdown**: Botão *Exportar Relatório* que gera um resumo executivo com métricas e tabela de validação pronto para colar no Teams, Slack, Azure DevOps ou Jira.
+    - **Apoio Direto ao Teste**: Atalhos em 1 clique para inspecionar logs em tempo real na tela de Logs, consultar massa de dados no Database Studio e disparar rotinas locais para teste.
+    - **Roadmap & Futuras Demandas**: Painel documentando a evolução contínua planejada para QA e POs (automação de testes E2E com runners, central de evidências assistida e geração de massa de dados com IA).
+  - **Configurações de Origens de Dados de Qualidade (Zephyr, Jira, Azure DevOps)**:
+    - **Nova Aba "Qualidade & QA" em Configurações**: Gerenciamento centralizado de provedores de testes com templates pré-configurados para *Zephyr Scale (Cloud v2)*, *Zephyr Squad / Jira Server*, *Jira Software (Bugs & Histórias)* e *Azure DevOps Test Plans*;
+    - **Criptografia em Repouso de Segredos**: Todos os tokens de API, Zephyr Tokens e PATs são persistidos no `config.json` criptografados com **AES-256-GCM** via `ConfigService` e `secretsCrypto`, protegendo credenciais em repouso e impedindo vazamentos em texto plano;
+    - **Validação & Teste de Conectividade**: Botão de teste direto no card da fonte para verificar parâmetros e status operacional antes de salvar;
+    - **Vinculação com o QA Hub**: O cabeçalho da Central de Qualidade identifica a fonte de teste ativa em tempo real com indicador visual pulsante e atalho direto para alternar ou cadastrar novas integrações.
+  - **Integração Global ao Cockpit**:
+    - **Busca Rápida (Ctrl+K)**: Novo comando *Central de Qualidade (QA Hub)* cadastrado no Quick Launcher;
+    - **Busca nas Configurações**: Novos termos indexados (*zephyr, scale, squad, jira, test plans, homologacao, token*);
+    - **Tour Guiado de Boas-Vindas**: Novo passo `nav-qa` no tour de navegação;
+    - **Central de Ajuda**: Módulo 11 documentado no Guia dos Módulos, card na Visão Geral, atalho `Alt + Q` na tabela de atalhos e perguntas dedicadas no FAQ sobre o QA Hub e configuração de integrações.
 - **Filtro por Famílias de Versão & Seleção em Lote no Catálogo da Rotina 801**:
   - **Agrupamento Automático por Release Line**: Dropdown dinâmico no cabeçalho do catálogo que extrai e agrupa automaticamente todas as funcionalidades pelas suas famílias de versão (ex: `Versão 1.39.x`, `Versão 1.38.x`, `Versão 0.39.x`).
   - **Seleção Rápida em 1 Clique**: Botão de conveniência `+ Selecionar N da vX.X.x` exibido junto ao filtro para marcar instantaneamente todos os serviços ou rotinas da release desejada para instalação combinada.

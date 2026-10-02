@@ -99,7 +99,18 @@ import type {
   KarafFeatureInfo,
   KarafFeatureRepoInfo,
   KarafJvmMemoryInfo,
-  LogAnalysisSummary
+  LogAnalysisSummary,
+  QaRegressionTemplate,
+  QaExecutionRequest,
+  QaExecutionResult,
+  TestRunnerConfig,
+  TestExecutionResult,
+  TautProjectStatus,
+  TautCoverageReport,
+  TautSpecSummary,
+  TautRunOptions,
+  TautCsvIntakeResult,
+  TautEnvSyncResult
 } from '../shared/types';
 
 const electronAPI = {
@@ -564,6 +575,19 @@ const electronAPI = {
       ipcRenderer.removeListener('docker:sequence-progress', subscription);
     };
   },
+  stopContainerSequence: (
+    containers: string[]
+  ): Promise<{ success: boolean; stopped: string[]; failed?: string; error?: string }> =>
+    ipcRenderer.invoke('docker:stop-sequence', containers),
+  onContainerStopSequenceProgress: (
+    callback: (step: { currentName: string; index: number; total: number }) => void
+  ) => {
+    const subscription = (_: any, data: any) => callback(data);
+    ipcRenderer.on('docker:stop-sequence-progress', subscription);
+    return () => {
+      ipcRenderer.removeListener('docker:stop-sequence-progress', subscription);
+    };
+  },
 
   // Ferramentas de Manutenção Oracle (INFR-Docker)
   execOracleHealth: (
@@ -713,6 +737,68 @@ const electronAPI = {
     ipcRenderer.on('apm:new-trace', subscription);
     return () => {
       ipcRenderer.removeListener('apm:new-trace', subscription);
+    };
+  },
+
+  // QA Studio & Validador Regressivo
+  qaListTemplates: (): Promise<QaRegressionTemplate[]> =>
+    ipcRenderer.invoke('qa:list-templates'),
+  qaGetTemplate: (id: string): Promise<QaRegressionTemplate | null> =>
+    ipcRenderer.invoke('qa:get-template', id),
+  qaSaveTemplate: (template: QaRegressionTemplate): Promise<QaRegressionTemplate> =>
+    ipcRenderer.invoke('qa:save-template', template),
+  qaDeleteTemplate: (id: string): Promise<boolean> =>
+    ipcRenderer.invoke('qa:delete-template', id),
+  qaExecuteSuite: (request: QaExecutionRequest): Promise<QaExecutionResult> =>
+    ipcRenderer.invoke('qa:execute-suite', request),
+  qaGetTemplatesDir: (): Promise<string> =>
+    ipcRenderer.invoke('qa:get-templates-dir'),
+
+  // Automated Test Runners (Maven, Playwright, Cypress, Newman)
+  testRunnerList: (): Promise<TestRunnerConfig[]> =>
+    ipcRenderer.invoke('test-runner:list'),
+  testRunnerSave: (runner: Partial<TestRunnerConfig>): Promise<TestRunnerConfig> =>
+    ipcRenderer.invoke('test-runner:save', runner),
+  testRunnerDelete: (id: string): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('test-runner:delete', id),
+  testRunnerExecute: (target: string | TestRunnerConfig): Promise<TestExecutionResult> =>
+    ipcRenderer.invoke('test-runner:execute', target),
+  testRunnerAbort: (): Promise<boolean> =>
+    ipcRenderer.invoke('test-runner:abort'),
+  testRunnerGetHistory: (): Promise<TestExecutionResult[]> =>
+    ipcRenderer.invoke('test-runner:get-history'),
+  testRunnerClearHistory: (): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('test-runner:clear-history'),
+  onTestRunnerChunk: (callback: (data: { runnerId: string; chunk: string }) => void) => {
+    const subscription = (_: any, data: { runnerId: string; chunk: string }) => callback(data);
+    ipcRenderer.on('test-runner:chunk', subscription);
+    return () => {
+      ipcRenderer.removeListener('test-runner:chunk', subscription);
+    };
+  },
+
+  // TAUT-Mississauga Cypress Integration (QA Hub)
+  tautGetStatus: (customPath?: string): Promise<TautProjectStatus> =>
+    ipcRenderer.invoke('taut:get-status', customPath),
+  tautSavePath: (targetPath: string): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('taut:save-path', targetPath),
+  tautGetCoverage: (customPath?: string): Promise<TautCoverageReport> =>
+    ipcRenderer.invoke('taut:get-coverage', customPath),
+  tautListSpecs: (customPath?: string): Promise<TautSpecSummary[]> =>
+    ipcRenderer.invoke('taut:list-specs', customPath),
+  tautSyncEnv: (customPath?: string, connectionId?: string): Promise<TautEnvSyncResult> =>
+    ipcRenderer.invoke('taut:sync-env', customPath, connectionId),
+  tautProcessIntake: (csvFile: string, projectPath?: string): Promise<TautCsvIntakeResult> =>
+    ipcRenderer.invoke('taut:process-intake', csvFile, projectPath),
+  tautRunTests: (options: TautRunOptions): Promise<TestExecutionResult> =>
+    ipcRenderer.invoke('taut:run-tests', options),
+  tautAbortTests: (): Promise<boolean> =>
+    ipcRenderer.invoke('taut:abort-tests'),
+  onTautChunk: (callback: (data: { chunk: string }) => void) => {
+    const subscription = (_: any, data: { chunk: string }) => callback(data);
+    ipcRenderer.on('taut:chunk', subscription);
+    return () => {
+      ipcRenderer.removeListener('taut:chunk', subscription);
     };
   }
 };

@@ -213,7 +213,7 @@ export const ContainersHeader: React.FC<ContainersHeaderProps> = ({
             {environments.length > 0 && (
               <div className="flex items-center px-2 py-0.5 text-xs">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1.5">
-                  Ambiente
+                  Grupo
                 </span>
                 <select
                   value={selectedEnvId}
@@ -243,7 +243,7 @@ export const ContainersHeader: React.FC<ContainersHeaderProps> = ({
                       if (found) onDeleteEnvironmentClick(found);
                     }}
                     disabled={sequenceProgress.running}
-                    title="Excluir ambiente salvo"
+                    title="Excluir grupo salvo"
                     className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer disabled:opacity-50"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -270,15 +270,15 @@ export const ContainersHeader: React.FC<ContainersHeaderProps> = ({
               <span>Subir WinThor</span>
             </button>
 
-            {/* Salvar como Ambiente */}
+            {/* Criar / Salvar Grupo */}
             <button
               onClick={onOpenSaveEnvModal}
               disabled={containersCount === 0}
-              title="Salvar containers atuais como ambiente"
+              title="Criar novo grupo de containers ou salvar seleção"
               className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/80 text-foreground rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer active:scale-98"
             >
               <FolderPlus className="w-3.5 h-3.5 text-primary" />
-              <span className="hidden lg:inline">Salvar Ambiente</span>
+              <span className="hidden lg:inline">Novo Grupo</span>
             </button>
 
             {/* Snapshots WSL */}

@@ -22,10 +22,13 @@ import { DeployService } from '../services/DeployService';
 import { LogWatcherService } from '../services/LogWatcherService';
 import { KarafLogPersistenceService } from '../services/KarafLogPersistenceService';
 import { AutoUpdateService } from '../services/AutoUpdateService';
-import { notifyUser } from '../services/NotificationService';
 import { LlmService } from '../services/LlmService';
 import { Routine801Service } from '../services/Routine801Service';
 import { ApmService } from '../services/ApmService';
+import { QaRegressionService } from '../services/QaRegressionService';
+import { TestRunnerService } from '../services/TestRunnerService';
+import { TautAutomationService } from '../services/TautAutomationService';
+import { notifyUser } from '../services/NotificationService';
 import {
   Routine801InstallRequest,
   AppSettings,
@@ -38,6 +41,9 @@ import {
   TrackedProcessConfig,
   AutomationProfile,
   AutomationStep,
+  QaRegressionTemplate,
+  QaExecutionRequest,
+  TestRunnerConfig,
   DocsIndexProgress,
   DatabaseConnectionConfig,
   OracleTracerFilter,
@@ -81,7 +87,10 @@ export function registerIpcHandlers(
   llmService: LlmService = new LlmService(configService, docsIndexService),
   routine801Service: Routine801Service = new Routine801Service(configService, karafService),
   apmService: ApmService = new ApmService(),
-  oracleTracerCaptureService: OracleTracerCaptureService = new OracleTracerCaptureService(databaseService)
+  oracleTracerCaptureService: OracleTracerCaptureService = new OracleTracerCaptureService(databaseService),
+  qaRegressionService: QaRegressionService = new QaRegressionService(configService, databaseService),
+  testRunnerService: TestRunnerService = new TestRunnerService(configService, windowsService, karafService),
+  tautAutomationService: TautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService)
 ) {
   // Distingue instalação nova (nunca existiu marcador) de atualização de versão (marcador existia,
   // versão mudou). Onboarding completo (Welcome + Tour) só deve resetar em instalação nova — numa
@@ -1076,6 +1085,40 @@ export function registerIpcHandlers(
       });
     }
   );
+  ipcMain.handle(
+    'container:start-sequence',
+    async (_, containers: { name: string; delay?: number }[]) => {
+      if (!Array.isArray(containers)) {
+        throw new Error('containers deve ser um array.');
+      }
+      return await dockerService.startContainerSequence(containers, (step) => {
+        mainWindow.webContents.send('docker:sequence-progress', step);
+      });
+    }
+  );
+
+  ipcMain.handle(
+    'docker:stop-sequence',
+    async (_, containers: string[]) => {
+      if (!Array.isArray(containers)) {
+        throw new Error('containers deve ser um array.');
+      }
+      return await dockerService.stopContainerSequence(containers, (step) => {
+        mainWindow.webContents.send('docker:stop-sequence-progress', step);
+      });
+    }
+  );
+  ipcMain.handle(
+    'container:stop-sequence',
+    async (_, containers: string[]) => {
+      if (!Array.isArray(containers)) {
+        throw new Error('containers deve ser um array.');
+      }
+      return await dockerService.stopContainerSequence(containers, (step) => {
+        mainWindow.webContents.send('docker:stop-sequence-progress', step);
+      });
+    }
+  );
 
   // --- Ferramentas de Manutenção Oracle (INFR-Docker) ---
   ipcMain.handle(
@@ -1386,4 +1429,104 @@ export function registerIpcHandlers(
   ipcMain.handle('apm:change-receiver-port', async (_, port: number) => {
     return apmService.changeReceiverPort(port);
   });
+
+  // --- Validador Regressivo & Asserções de Qualidade (QA Studio) ---
+  ipcMain.handle('qa:list-templates', async () => {
+    return qaRegressionService.listTemplates();
+  });
+
+  ipcMain.handle('qa:get-template', async (_, id: string) => {
+    return qaRegressionService.getTemplate(id);
+  });
+
+  ipcMain.handle('qa:save-template', async (_, template: QaRegressionTemplate) => {
+    return qaRegressionService.saveTemplate(template);
+  });
+
+  ipcMain.handle('qa:delete-template', async (_, id: string) => {
+    return qaRegressionService.deleteTemplate(id);
+  });
+
+  ipcMain.handle('qa:execute-suite', async (_, request: QaExecutionRequest) => {
+    return qaRegressionService.executeSuite(request);
+  });
+
+  ipcMain.handle('qa:get-templates-dir', async () => {
+    return qaRegressionService.getTemplatesDir();
+  });
+
+  // --- Runner de Testes Automatizados (Maven, Playwright, Cypress, Newman) ---
+  ipcMain.handle('test-runner:list', async () => {
+    return testRunnerService.getRunners();
+  });
+
+  ipcMain.handle('test-runner:save', async (_, runner: Partial<TestRunnerConfig>) => {
+    return testRunnerService.saveRunner(runner);
+  });
+
+  ipcMain.handle('test-runner:delete', async (_, id: string) => {
+    testRunnerService.deleteRunner(id);
+    return { success: true };
+  });
+
+  ipcMain.handle('test-runner:execute', async (_, target: string | TestRunnerConfig) => {
+    const runnerId = typeof target === 'string' ? target : target.id;
+    return await testRunnerService.executeRunner(target, (chunk) => {
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('test-runner:chunk', { runnerId, chunk });
+      }
+    });
+  });
+
+  ipcMain.handle('test-runner:abort', async () => {
+    return testRunnerService.abortExecution();
+  });
+
+  ipcMain.handle('test-runner:get-history', async () => {
+    return testRunnerService.getHistory();
+  });
+
+  ipcMain.handle('test-runner:clear-history', async () => {
+    testRunnerService.clearHistory();
+    return { success: true };
+  });
+
+  // --- Automação de Testes TAUT-Mississauga (Cypress / QA Hub) ---
+  ipcMain.handle('taut:get-status', async (_, customPath?: string) => {
+    return tautAutomationService.getProjectStatus(customPath);
+  });
+
+  ipcMain.handle('taut:save-path', async (_, targetPath: string) => {
+    tautAutomationService.saveProjectPath(targetPath);
+    return { success: true };
+  });
+
+  ipcMain.handle('taut:get-coverage', async (_, customPath?: string) => {
+    return tautAutomationService.getCoverage(customPath);
+  });
+
+  ipcMain.handle('taut:list-specs', async (_, customPath?: string) => {
+    return tautAutomationService.listSpecs(customPath);
+  });
+
+  ipcMain.handle('taut:sync-env', async (_, customPath?: string, connectionId?: string) => {
+    return tautAutomationService.syncEnvFromDevManager(customPath, connectionId);
+  });
+
+  ipcMain.handle('taut:process-intake', async (_, csvFile: string, projectPath?: string) => {
+    return tautAutomationService.processCsvIntake(csvFile, projectPath);
+  });
+
+  ipcMain.handle('taut:run-tests', async (_, options: any) => {
+    return tautAutomationService.runTests(options, (chunk) => {
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('taut:chunk', { chunk });
+      }
+    });
+  });
+
+  ipcMain.handle('taut:abort-tests', async () => {
+    return tautAutomationService.abortExecution();
+  });
 }
+

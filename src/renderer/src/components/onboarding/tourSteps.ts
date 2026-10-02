@@ -25,8 +25,13 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     target: 'nav-dev',
-    title: 'Desenvolvimento & Suporte',
-    desc: 'Gerencie repositórios Git e Pull Requests do Azure DevOps, pesquise na documentação semântica (RAG) e consulte a Central de Ajuda.'
+    title: 'Desenvolvimento & DevOps',
+    desc: 'Gerencie repositórios Git, branches e Pull Requests do Azure DevOps, e pesquise na documentação semântica (RAG).'
+  },
+  {
+    target: 'nav-qa',
+    title: 'Qualidade & Homologação',
+    desc: 'Espaço dedicado para QA e homologação: validador regressivo Oracle, asserções de banco, matriz de testes e prontidão de release.'
   },
   {
     target: 'search',
@@ -37,6 +42,11 @@ export const TOUR_STEPS: TourStep[] = [
     target: 'status',
     title: 'Diagnósticos & Rede',
     desc: 'Veja seu IP local, IP do WSL e uso de CPU/RAM da máquina sem sair do cockpit.'
+  },
+  {
+    target: 'help',
+    title: 'Central de Ajuda',
+    desc: 'Acesse documentação detalhada, tutoriais de cada módulo, FAQ e atalhos de teclado.'
   },
   {
     target: 'settings',

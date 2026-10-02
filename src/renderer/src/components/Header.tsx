@@ -17,7 +17,8 @@ import {
   Cpu,
   ChevronDown,
   Copy,
-  ScrollText
+  ScrollText,
+  CheckCheck
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { AppLogo } from './AppLogo';
@@ -215,7 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
     },
     {
       id: 'dev',
-      title: 'Desenvolvimento & Suporte',
+      title: 'Desenvolvimento & DevOps',
       shortTitle: 'Desenvolvimento',
       icon: GitPullRequest,
       items: [
@@ -234,14 +235,22 @@ export const Header: React.FC<HeaderProps> = ({
           icon: FileSearch,
           description: 'Busca semântica RAG na documentação dos projetos',
           shortcut: 'Alt+7'
-        },
+        }
+      ]
+    },
+    {
+      id: 'qa',
+      title: 'Qualidade & Homologação',
+      shortTitle: 'Qualidade',
+      icon: CheckCheck,
+      items: [
         {
-          id: 'help',
-          label: 'Central de Ajuda',
-          shortLabel: 'Ajuda',
-          icon: HelpCircle,
-          description: 'Diagnósticos do sistema, tutoriais e suporte',
-          shortcut: 'Alt+9'
+          id: 'quality',
+          label: 'Central de Qualidade (QA)',
+          shortLabel: 'QA Hub',
+          icon: CheckCheck,
+          description: 'Validador regressivo Oracle, asserções de banco e homologação',
+          shortcut: 'Alt+Q'
         }
       ]
     }
@@ -250,7 +259,7 @@ export const Header: React.FC<HeaderProps> = ({
   // Identifica o item e grupo atualmente ativos
   const activeGroup = navThemeGroups.find((g) => g.items.some((item) => item.id === activeTab));
   const activeItem = activeGroup?.items.find((item) => item.id === activeTab);
-  const ActiveIcon = activeItem?.icon || Terminal;
+  const ActiveIcon = activeItem?.icon || (activeTab === 'help' ? HelpCircle : activeTab === 'settings' ? Settings : Terminal);
 
   return (
     <header className="bg-card/95 border-b border-border/80 px-3 sm:px-4 py-2 flex items-center justify-between shadow-md relative z-30 backdrop-blur-md transition-colors duration-300 gap-2 sm:gap-3 lg:gap-4 shrink-0 h-14">
@@ -389,7 +398,14 @@ export const Header: React.FC<HeaderProps> = ({
             className="h-9 flex items-center space-x-2 px-3 rounded-lg text-xs font-semibold bg-card border border-primary/40 text-foreground shadow-xs cursor-pointer whitespace-nowrap"
           >
             <ActiveIcon className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>{activeItem?.label || 'Módulos'}</span>
+            <span>
+              {activeItem?.label ||
+                (activeTab === 'help'
+                  ? 'Central de Ajuda'
+                  : activeTab === 'settings'
+                    ? 'Configurações'
+                    : 'Módulos')}
+            </span>
             <ChevronDown
               className={`w-3 h-3 text-muted-foreground transition-transform duration-200 shrink-0 ${
                 openMenu === 'compact' ? 'rotate-180 text-primary' : ''
@@ -437,6 +453,50 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
               ))}
+
+              <div className="space-y-1 pt-1 border-t border-border/50">
+                <div className="px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <HelpCircle className="w-3 h-3 text-primary" />
+                  <span>Sistema &amp; Suporte</span>
+                </div>
+                <div className="space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('help');
+                      setOpenMenu(null);
+                    }}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                      activeTab === 'help'
+                        ? 'bg-primary text-primary-foreground font-semibold'
+                        : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span className="text-xs truncate">Central de Ajuda</span>
+                    </div>
+                    <span className="text-[9px] font-mono opacity-80 shrink-0 ml-2">Alt+9</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('settings');
+                      setOpenMenu(null);
+                    }}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                      activeTab === 'settings'
+                        ? 'bg-primary text-primary-foreground font-semibold'
+                        : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <Settings className="w-3.5 h-3.5 shrink-0" />
+                      <span className="text-xs truncate">Configurações</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -633,6 +693,21 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Seletor de Temas (h-9) */}
         <ThemeToggle />
 
+        {/* Central de Ajuda & Diagnósticos (h-9 w-9) */}
+        <button
+          type="button"
+          data-tour="help"
+          onClick={() => setActiveTab('help')}
+          className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 ${
+            activeTab === 'help'
+              ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+              : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
+          }`}
+          title="Central de Ajuda, FAQ e Diagnósticos (Alt+9)"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+
         {/* Configurações (h-9 w-9) */}
         <button
           type="button"
@@ -643,7 +718,7 @@ export const Header: React.FC<HeaderProps> = ({
               ? 'bg-primary text-primary-foreground border-primary shadow-xs'
               : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
           }`}
-          title="Configurações do Sistema e Portas (Alt+8)"
+          title="Configurações do Sistema e Portas"
         >
           <Settings className="w-4 h-4" />
         </button>

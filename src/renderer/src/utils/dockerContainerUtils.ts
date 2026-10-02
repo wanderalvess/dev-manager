@@ -4,6 +4,7 @@
  * Ambiente. Extraída para ser testável sem precisar renderizar o componente.
  */
 import type {
+  ContainerEnvironment,
   ContainerEnvironmentSlot,
   DockerContainerInfo,
   DockerContainerPortBinding
@@ -189,4 +190,67 @@ export function buildEnvironmentSlots(
     { id: '2', name: wtaContainer ? wtaContainer.names.replace(/^\//, '') : 'wta-local', delay: 10 },
     ...(wshContainer ? [{ id: '3', name: wshContainer.names.replace(/^\//, '') }] : [])
   ];
+}
+
+/** Extrai os nomes limpos de todos os containers de um grupo/ambiente. */
+export function getGroupContainerNames(group: ContainerEnvironment): string[] {
+  if (!group || !Array.isArray(group.containers)) return [];
+  return group.containers
+    .map((item) => {
+      if (typeof item === 'string') return item.replace(/^\//, '').trim();
+      if (item && typeof item === 'object' && item.name) return item.name.replace(/^\//, '').trim();
+      return '';
+    })
+    .filter((n): n is string => Boolean(n && n.length > 0));
+}
+
+export interface GroupStatusSummary {
+  total: number;
+  running: number;
+  stopped: number;
+  isAllRunning: boolean;
+  isNoneRunning: boolean;
+}
+
+/** Calcula o status em tempo real dos containers pertencentes a um grupo. */
+export function computeGroupStatus(
+  group: ContainerEnvironment,
+  containers: DockerContainerInfo[]
+): GroupStatusSummary {
+  const names = getGroupContainerNames(group);
+  if (names.length === 0) {
+    return { total: 0, running: 0, stopped: 0, isAllRunning: false, isNoneRunning: true };
+  }
+
+  let running = 0;
+  for (const name of names) {
+    const found = containers.find((c) => {
+      const cName = c.names.replace(/^\//, '').trim();
+      return cName.toLowerCase() === name.toLowerCase();
+    });
+    if (found && found.state === 'running') {
+      running++;
+    }
+  }
+
+  const total = names.length;
+  const stopped = total - running;
+  return {
+    total,
+    running,
+    stopped,
+    isAllRunning: total > 0 && running === total,
+    isNoneRunning: running === 0
+  };
+}
+
+/** Converte lista ordenada de containers e delays em slots prontos para ContainerEnvironment. */
+export function buildEnvironmentSlotsFromList(
+  items: { name: string; delay?: number }[]
+): ContainerEnvironmentSlot[] {
+  return items.map((item, idx) => ({
+    id: String(idx + 1),
+    name: item.name.replace(/^\//, '').trim(),
+    ...(item.delay && item.delay > 0 ? { delay: item.delay } : {})
+  }));
 }

@@ -27,6 +27,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ de
 const HelpPage = lazy(() => import('./pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const LogsPage = lazy(() => import('./pages/LogsPage').then((m) => ({ default: m.LogsPage })));
 const ApmPage = lazy(() => import('./pages/ApmPage').then((m) => ({ default: m.ApmPage })));
+const QualityPage = lazy(() => import('./pages/QualityPage').then((m) => ({ default: m.QualityPage })));
 // Modal de novidades e histórico de versões do changelog
 const WhatsNewModal = lazy(() => import('./components/WhatsNewModal').then((m) => ({ default: m.WhatsNewModal })));
 
@@ -295,6 +296,7 @@ export const App: React.FC = () => {
         else if (e.key === '8') setActiveTab('logs');
         else if (e.key === '9') setActiveTab('help');
         else if (e.key === '0') setActiveTab('apm');
+        else if (e.key.toLowerCase() === 'q') setActiveTab('quality');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -440,6 +442,15 @@ export const App: React.FC = () => {
               isActive={activeTab === 'apm'}
               onNavigateToSettings={() => setActiveTab('settings')}
               onNavigateToDatabase={() => setActiveTab('database')}
+            />
+          </div>
+        )}
+        {visitedTabs.has('quality') && (
+          <div className={`h-full w-full ${activeTab === 'quality' ? '' : 'hidden'}`}>
+            <QualityPage
+              isActive={activeTab === 'quality'}
+              onNavigate={(tab) => setActiveTab(tab)}
+              settingsVersion={settingsVersion}
             />
           </div>
         )}

@@ -157,6 +157,16 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
   typecheck sozinho não cobre). Não inclui `build:electron` (empacotamento do instalador),
   que é pesado e específico de plataforma — isso continua só local/release.
 
+## Limite de Linhas e Componentização Estrita (Máximo 300 Linhas)
+
+**Regra mandatória do projeto: nenhum arquivo de código deve ultrapassar 300 linhas.**
+
+Ao criar arquivos novos ou refatorar componentes e serviços existentes:
+- **Teto rígido de 300 linhas por arquivo**: caso um arquivo comece a crescer e se aproximar de ~250–300 linhas, ele **deve** ser imediatamente decomposto em subcomponentes ou submódulos menores para garantir legibilidade, manutenibilidade e agilidade na revisão de código.
+- **Páginas e Telas**: Devem atuar prioritariamente como orquestradoras leves de alto nível (composição de layout e coordenação de fluxo), delegando abas, barras de ferramentas, tabelas, listas e painéis para subcomponentes dedicados em pastas específicas (ex: `src/renderer/src/components/{modulo}/`).
+- **Modais e Drawers**: Nunca declarar modais complexos inline no mesmo arquivo da página consumidora. Cada modal deve residir em seu próprio arquivo isolado (`modals/`) e ser importado sob demanda.
+- **Extração de Lógica Pura**: Regras de negócio, cálculos analíticos, mapeamentos de dados, parsers e formatações devem ser extraídos para arquivos auxiliares em `utils/` ou `hooks/`, liberando o JSX dos componentes visuais e permitindo cobertura por testes unitários puros.
+
 ## Convenções de código e idioma
 
 - Identificadores (variáveis, funções, classes) em **inglês**.
@@ -224,4 +234,19 @@ Checklist automático a cada ciclo de versão / release:
 5. **Tags Git e Commits**:
    - Manter a tag correspondente (`vX.Y.Z`) criada no commit que introduz a versão, garantindo
      que não existam versões no CHANGELOG sem tag no Git ou tags órfãs sem seção no changelog.
+
+## Proibição de Caminhos Hardcoded & Nomes Genéricos
+
+- **Nunca chumbar caminhos absolutos ou específicos de usuário no código**: Caminhos de diretórios, pastas de projetos ou executáveis informados pelo usuário no chat (ex: `C:\Users\...\`) são de seu ambiente pessoal.
+  - Devem ser expostos como campos editáveis na tela de **Configurações** (`AppSettings`) com busca no Windows Explorer.
+  - Para detecção automática, busque subdiretórios genéricos conhecidos dentro do diretório de projetos configurado (`settings.projectsPath`) ou pastas irmãs (`../`).
+  - Nunca crie fallbacks que dependam de diretórios de usuário específicos (`C:\Users\<nome>\...`).
+- **Nomenclatura Genérica na UI**: Rótulos de campos, títulos e mensagens devem ser genéricos e autoexplicativos (ex: *"Diretório do Projeto de Testes Automatizados (Cypress)"* em vez de nomes específicos de uma única máquina/repositório privado), com placeholders e tooltips instrutivos.
+
+## Consistência de Design e Design System
+
+- **Manter sempre o design visual do sistema**:
+  - Respeitar a identidade visual dark/cockpit do Dev Manager (paleta Tailwind, classes `cockpit-panel`, `bg-card`, `border-border`, tokens semânticos `primary`, `foreground`, `muted-foreground`).
+  - Não introduzir elementos ou componentes com estilos desconexos ("AI slop", botões fora do padrão, fontes não mono onde se espera mono, ou quebras de alinhamento).
+  - Manter consistência nos ícones (`lucide-react`), densidade de dados, estados de loading, tooltips e feedback sonoro/visual (toasts).
 

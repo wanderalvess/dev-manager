@@ -871,6 +871,35 @@ export class DockerService {
   }
 
   /**
+   * Para uma sequência ou lote de containers ordenadamente.
+   */
+  public async stopContainerSequence(
+    containers: string[],
+    onProgress?: (step: { currentName: string; index: number; total: number }) => void
+  ): Promise<{ success: boolean; stopped: string[]; failed?: string; error?: string }> {
+    const stopped: string[] = [];
+
+    for (let i = 0; i < containers.length; i++) {
+      const name = containers[i];
+      onProgress?.({ currentName: name, index: i + 1, total: containers.length });
+
+      try {
+        await this.stopContainer(name);
+        stopped.push(name);
+      } catch (err: any) {
+        return {
+          success: false,
+          stopped,
+          failed: name,
+          error: err?.message || 'Falha ao parar container'
+        };
+      }
+    }
+
+    return { success: true, stopped };
+  }
+
+  /**
    * Builda uma imagem de container a partir de um diretório de contexto, com saída em streaming.
    */
   public async buildImage(

@@ -108,7 +108,18 @@ import type {
   ApmReceiverPortChangeResult,
   ObservabilityOverview,
   ServiceMetricsSummary,
-  UpdateStatus
+  UpdateStatus,
+  QaRegressionTemplate,
+  QaExecutionRequest,
+  QaExecutionResult,
+  TestRunnerConfig,
+  TestExecutionResult,
+  TautProjectStatus,
+  TautCoverageReport,
+  TautSpecSummary,
+  TautRunOptions,
+  TautCsvIntakeResult,
+  TautEnvSyncResult
 } from '../../../shared/types';
 
 const API_KEY_STORAGE = 'devManagerApiKey';
@@ -1705,6 +1716,15 @@ export function initApiBridge() {
     onContainerSequenceProgress: (callback: (step: any) => void) => {
       return wsManager.subscribe('docker:sequence-progress', callback);
     },
+    stopContainerSequence: async (containers: string[]) => {
+      return apiFetch('/api/docker/stop-sequence', {
+        method: 'POST',
+        body: JSON.stringify({ containers })
+      });
+    },
+    onContainerStopSequenceProgress: (callback: (step: any) => void) => {
+      return wsManager.subscribe('docker:stop-sequence-progress', callback);
+    },
 
     // Ferramentas Especializadas Oracle (INFR-Docker)
     execOracleHealth: async (
@@ -1972,7 +1992,127 @@ export function initApiBridge() {
     checkForUpdate: async (): Promise<void> => {},
     downloadUpdate: async (): Promise<void> => {},
     installUpdate: async (): Promise<void> => {},
-    onUpdateStatus: (_callback: (status: UpdateStatus) => void): (() => void) => () => {}
+    onUpdateStatus: (_callback: (status: UpdateStatus) => void): (() => void) => () => {},
+
+    // QA Studio & Validador Regressivo
+    qaListTemplates: async (): Promise<QaRegressionTemplate[]> => {
+      return apiFetch<QaRegressionTemplate[]>('/api/qa/templates');
+    },
+    qaGetTemplate: async (id: string): Promise<QaRegressionTemplate | null> => {
+      try {
+        return await apiFetch<QaRegressionTemplate>(`/api/qa/templates/${id}`);
+      } catch {
+        return null;
+      }
+    },
+    qaSaveTemplate: async (template: QaRegressionTemplate): Promise<QaRegressionTemplate> => {
+      return apiFetch<QaRegressionTemplate>('/api/qa/templates', {
+        method: 'POST',
+        body: JSON.stringify(template)
+      });
+    },
+    qaDeleteTemplate: async (id: string): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>(`/api/qa/templates/${id}`, {
+        method: 'DELETE'
+      });
+      return !!res?.success;
+    },
+    qaExecuteSuite: async (request: QaExecutionRequest): Promise<QaExecutionResult> => {
+      return apiFetch<QaExecutionResult>('/api/qa/execute', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
+    },
+    qaGetTemplatesDir: async (): Promise<string> => {
+      const res = await apiFetch<{ path: string }>('/api/qa/templates-dir');
+      return res.path || '';
+    },
+
+    // Automated Test Runners
+    testRunnerList: async (): Promise<TestRunnerConfig[]> => {
+      return apiFetch<TestRunnerConfig[]>('/api/test-runner/list');
+    },
+    testRunnerSave: async (runner: Partial<TestRunnerConfig>): Promise<TestRunnerConfig> => {
+      return apiFetch<TestRunnerConfig>('/api/test-runner/save', {
+        method: 'POST',
+        body: JSON.stringify(runner)
+      });
+    },
+    testRunnerDelete: async (id: string): Promise<{ success: boolean }> => {
+      return apiFetch<{ success: boolean }>(`/api/test-runner/${id}`, {
+        method: 'DELETE'
+      });
+    },
+    testRunnerExecute: async (target: string | TestRunnerConfig): Promise<TestExecutionResult> => {
+      return apiFetch<TestExecutionResult>('/api/test-runner/execute', {
+        method: 'POST',
+        body: JSON.stringify(typeof target === 'string' ? { id: target } : target)
+      });
+    },
+    testRunnerAbort: async (): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>('/api/test-runner/abort', {
+        method: 'POST'
+      });
+      return !!res?.success;
+    },
+    testRunnerGetHistory: async (): Promise<TestExecutionResult[]> => {
+      return apiFetch<TestExecutionResult[]>('/api/test-runner/history');
+    },
+    testRunnerClearHistory: async (): Promise<{ success: boolean }> => {
+      return apiFetch<{ success: boolean }>('/api/test-runner/clear-history', {
+        method: 'POST'
+      });
+    },
+    onTestRunnerChunk: (callback: (data: { runnerId: string; chunk: string }) => void) => {
+      return wsManager.subscribe('test-runner:chunk', callback);
+    },
+
+    // TAUT-Mississauga Cypress Integration (QA Hub)
+    tautGetStatus: async (customPath?: string): Promise<TautProjectStatus> => {
+      const q = customPath ? `?path=${encodeURIComponent(customPath)}` : '';
+      return apiFetch<TautProjectStatus>(`/api/taut/status${q}`);
+    },
+    tautSavePath: async (targetPath: string): Promise<{ success: boolean }> => {
+      return apiFetch<{ success: boolean }>('/api/taut/path', {
+        method: 'POST',
+        body: JSON.stringify({ path: targetPath })
+      });
+    },
+    tautGetCoverage: async (customPath?: string): Promise<TautCoverageReport> => {
+      const q = customPath ? `?path=${encodeURIComponent(customPath)}` : '';
+      return apiFetch<TautCoverageReport>(`/api/taut/coverage${q}`);
+    },
+    tautListSpecs: async (customPath?: string): Promise<TautSpecSummary[]> => {
+      const q = customPath ? `?path=${encodeURIComponent(customPath)}` : '';
+      return apiFetch<TautSpecSummary[]>(`/api/taut/specs${q}`);
+    },
+    tautSyncEnv: async (customPath?: string, connectionId?: string): Promise<TautEnvSyncResult> => {
+      return apiFetch<TautEnvSyncResult>('/api/taut/sync-env', {
+        method: 'POST',
+        body: JSON.stringify({ customPath, connectionId })
+      });
+    },
+    tautProcessIntake: async (csvFile: string, projectPath?: string): Promise<TautCsvIntakeResult> => {
+      return apiFetch<TautCsvIntakeResult>('/api/taut/intake', {
+        method: 'POST',
+        body: JSON.stringify({ csvFile, projectPath })
+      });
+    },
+    tautRunTests: async (options: TautRunOptions): Promise<TestExecutionResult> => {
+      return apiFetch<TestExecutionResult>('/api/taut/run', {
+        method: 'POST',
+        body: JSON.stringify(options)
+      });
+    },
+    tautAbortTests: async (): Promise<boolean> => {
+      const res = await apiFetch<{ success: boolean }>('/api/taut/abort', {
+        method: 'POST'
+      });
+      return !!res?.success;
+    },
+    onTautChunk: (callback: (data: { chunk: string }) => void) => {
+      return wsManager.subscribe('taut:chunk', callback);
+    }
   };
 }
 
