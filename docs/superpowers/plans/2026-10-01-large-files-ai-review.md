@@ -41,6 +41,14 @@ Every new or edited source file in this work should stay at or below 300 lines.
 If a proposed component crosses that limit, split it along its own UI
 responsibility rather than raising the limit.
 
+### Atomicity note
+
+Tasks 3–6 are one atomic APM refactor and must be implemented, reviewed, and
+committed together. Intermediate edits to `ApmPage.tsx` would leave a modified
+source file above the repository's hard 300-line cap, so do not commit or hand
+off between these tasks. Keep the numbered sections as an execution sequence
+inside the single implementation task.
+
 ## Task 1: Implement the changed-file size checker
 
 **Files:**
@@ -316,10 +324,13 @@ Run:
 npm test -- scripts/check-changed-file-sizes.test.ts src/renderer/src/utils/apmUiUtils.test.ts
 ```
 
-Expected: both the checker integration tests and the existing APM pure-utility
-tests pass. Add tests to `apmUiUtils.test.ts` only if a pure calculation or
-formatter moved or changed; do not add a UI testing dependency for a
-behavior-preserving extraction.
+Expected: the checker integration tests pass. The APM utility suite currently
+has a pre-existing failure: `apmUiUtils.test.ts` expects the `SLOW` preset to
+mean over 1000ms, while unchanged `apmUiUtils.ts` filters from 400ms. Confirm
+that this failure is present in the base revision and do not change that
+unrelated behavior or assertion as part of the extraction. Add tests to
+`apmUiUtils.test.ts` only if a pure calculation or formatter moved or changed;
+do not add a UI testing dependency for a behavior-preserving extraction.
 
 - [ ] **Step 2: Run typecheck and production build**
 
