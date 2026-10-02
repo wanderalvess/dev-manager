@@ -32,6 +32,12 @@ function splitGitPaths(output: string): string[] {
   return output.split('\0').filter(Boolean);
 }
 
+export function mergeChangedPaths(trackedPaths: string[], untrackedPaths: string[]): string[] {
+  return [...new Set([...trackedPaths, ...untrackedPaths])]
+    .filter((filePath) => SOURCE_EXTENSIONS.has(extname(filePath).toLowerCase()))
+    .sort();
+}
+
 function getChangedPaths(root: string, baseCommit: string): string[] {
   const tracked = runGit(root, [
     'diff',
@@ -42,9 +48,7 @@ function getChangedPaths(root: string, baseCommit: string): string[] {
     '--',
   ]);
   const untracked = runGit(root, ['ls-files', '--others', '--exclude-standard', '-z']);
-  return [...new Set([...splitGitPaths(tracked), ...splitGitPaths(untracked)])]
-    .filter((filePath) => SOURCE_EXTENSIONS.has(extname(filePath).toLowerCase()))
-    .sort();
+  return mergeChangedPaths(splitGitPaths(tracked), splitGitPaths(untracked));
 }
 
 function getRenameSources(root: string, baseCommit: string): Map<string, string> {
