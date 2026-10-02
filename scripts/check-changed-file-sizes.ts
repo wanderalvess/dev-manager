@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { basename, extname, resolve } from 'node:path';
+import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const MAX_SOURCE_LINES = 300;
@@ -92,27 +92,6 @@ function getUnstagedRenameSources(root: string, baseCommit: string,
   const sources = new Map<string, string>();
   const usedSources = new Set(knownRenameSources.values());
   const usedDestinations = new Set(knownRenameSources.keys());
-  const deletedByBasename = new Map<string, string[]>();
-  const untrackedByBasename = new Map<string, string[]>();
-  for (const filePath of deletedPaths) {
-    if (usedSources.has(filePath)) continue;
-    const name = basename(filePath);
-    deletedByBasename.set(name, [...(deletedByBasename.get(name) ?? []), filePath]);
-  }
-  for (const filePath of untrackedPaths) {
-    if (usedDestinations.has(filePath)) continue;
-    const name = basename(filePath);
-    untrackedByBasename.set(name, [...(untrackedByBasename.get(name) ?? []), filePath]);
-  }
-  for (const [name, matchingSources] of deletedByBasename) {
-    const matchingDestinations = untrackedByBasename.get(name) ?? [];
-    if (matchingSources.length !== 1 || matchingDestinations.length !== 1) continue;
-    const [source] = matchingSources;
-    const [destination] = matchingDestinations;
-    sources.set(destination, source);
-    usedSources.add(source);
-    usedDestinations.add(destination);
-  }
   const remainingSources = deletedPaths
     .filter((filePath) => !usedSources.has(filePath))
     .sort();
@@ -135,7 +114,6 @@ function getUnstagedRenameSources(root: string, baseCommit: string,
   for (const destination of remainingDestinations) {
     const destinationScores = new Map<string, number>();
     for (const source of remainingSources) {
-      if (basename(source) === basename(destination)) continue;
       destinationScores.set(
         source,
         getLineContentSimilarity(sourceContents.get(source) ?? '', destinationContents.get(destination) ?? ''),
@@ -157,7 +135,6 @@ function getUnstagedRenameSources(root: string, baseCommit: string,
   for (const [source, matchingDestinations] of destinationsBySource) {
     const sourceScores = new Map(
       remainingDestinations
-        .filter((destination) => basename(source) !== basename(destination))
         .map((destination) => [destination, similarities.get(destination)?.get(source) ?? 0]),
     );
     const best = getClearBestMatch(sourceScores);

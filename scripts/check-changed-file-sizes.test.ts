@@ -124,6 +124,37 @@ describe('changed-file size checker', () => {
     expect(warnings).not.toContain(`- NOVO ${destination}`);
   }, 30_000);
 
+  it('keeps an unrelated same-basename file new instead of pairing it as an unstaged rename', () => {
+    git(['add', '-A']);
+    git(['commit', '-m', 'fixture current changes']);
+
+    const source = 'src/original/same.ts';
+    const sourcePath = join(repo, source);
+    mkdirSync(dirname(sourcePath), { recursive: true });
+    writeFileSync(sourcePath, 'original one\noriginal two\n');
+    git(['add', source]);
+    git(['commit', '-m', 'add tracked source']);
+    base = git(['rev-parse', 'HEAD']);
+
+    rmSync(join(repo, source));
+    const destination = 'src/replacement/same.ts';
+    const destinationPath = join(repo, destination);
+    mkdirSync(dirname(destinationPath), { recursive: true });
+    writeFileSync(
+      destinationPath,
+      Array.from({ length: 301 }, (_, index) => `unrelated line ${index + 1}`).join('\n'),
+    );
+
+    const result = auditChangedFiles(repo, base).find((file) => file.path === destination);
+
+    expect(result).toEqual({
+      path: destination,
+      currentLines: 301,
+      baseLines: null,
+    });
+    expect(formatWarnings(result ? [result] : [])).toContain(`- NOVO ${destination}`);
+  }, 30_000);
+
   it('keeps a new file unpaired when deleted-source similarity is ambiguous', () => {
     rmSync(join(repo, 'src', 'new.ts'));
     rmSync(join(repo, 'src', 'ambiguous-one.ts'));
