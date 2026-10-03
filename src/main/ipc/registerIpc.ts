@@ -26,6 +26,7 @@ import { LlmService } from '../services/LlmService';
 import { Routine801Service } from '../services/Routine801Service';
 import { ApmService } from '../services/ApmService';
 import { QaRegressionService } from '../services/QaRegressionService';
+import { QaPayloadService } from '../services/QaPayloadService';
 import { TestRunnerService } from '../services/TestRunnerService';
 import { TautAutomationService } from '../services/TautAutomationService';
 import { notifyUser } from '../services/NotificationService';
@@ -43,6 +44,8 @@ import {
   AutomationStep,
   QaRegressionTemplate,
   QaExecutionRequest,
+  QaCoreSearchFilter,
+  QaApiFetchRequest,
   TestRunnerConfig,
   DocsIndexProgress,
   DatabaseConnectionConfig,
@@ -90,7 +93,8 @@ export function registerIpcHandlers(
   oracleTracerCaptureService: OracleTracerCaptureService = new OracleTracerCaptureService(databaseService),
   qaRegressionService: QaRegressionService = new QaRegressionService(configService, databaseService),
   testRunnerService: TestRunnerService = new TestRunnerService(configService, windowsService, karafService),
-  tautAutomationService: TautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService)
+  tautAutomationService: TautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService),
+  qaPayloadService: QaPayloadService = new QaPayloadService(configService, databaseService)
 ) {
   // Distingue instalação nova (nunca existiu marcador) de atualização de versão (marcador existia,
   // versão mudou). Onboarding completo (Welcome + Tour) só deve resetar em instalação nova — numa
@@ -899,6 +903,10 @@ export function registerIpcHandlers(
   });
 
   // --- Banco de Dados (Oracle, MySQL, Postgres) ---
+  ipcMain.handle('db:parse-tnsnames', async (_, filePath?: string) => {
+    return await databaseService.parseTnsNames(filePath);
+  });
+
   ipcMain.handle('db:test-connection', async (_, config: DatabaseConnectionConfig) => {
     return await databaseService.testConnection(config);
   });
@@ -1453,6 +1461,14 @@ export function registerIpcHandlers(
 
   ipcMain.handle('qa:get-templates-dir', async () => {
     return qaRegressionService.getTemplatesDir();
+  });
+
+  ipcMain.handle('qa:search-core-payloads', async (_, filter: QaCoreSearchFilter, connectionId?: string) => {
+    return qaPayloadService.searchPayloads(filter, connectionId);
+  });
+
+  ipcMain.handle('qa:fetch-api-payload', async (_, request: QaApiFetchRequest) => {
+    return qaPayloadService.fetchPayloadFromApi(request);
   });
 
   // --- Runner de Testes Automatizados (Maven, Playwright, Cypress, Newman) ---

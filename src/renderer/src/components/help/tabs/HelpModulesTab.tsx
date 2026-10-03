@@ -148,6 +148,10 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                 <span><strong>Grade de dados editável:</strong> ao abrir uma tabela pela barra lateral (SELECT * simples), a grade de resultados vira uma planilha — botão <em>Nova linha</em>, duplo-clique numa célula para editar e botão direito para excluir a linha, sem precisar escrever INSERT/UPDATE/DELETE na mão.</span>
               </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span><strong>Integração com tnsnames.ora:</strong> Configure o caminho do arquivo de rede Oracle nas Configurações para buscar conexões TNS e preencher automaticamente os parâmetros no modal de Nova Conexão do DB Studio com 1 clique (Host, Porta, Service Name ou SID).</span>
+              </li>
             </ul>
           </div>
         </div>
@@ -551,7 +555,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
                 <h3 className="text-xs sm:text-sm font-extrabold text-foreground">
                   9. Servidor MCP (Automação por IA)
                 </h3>
-                <span className="text-[10px] text-muted-foreground font-mono">161 Tools via stdio · IntelliJ · VS Code · Claude</span>
+                <span className="text-[10px] text-muted-foreground font-mono">165 Tools via stdio · IntelliJ · VS Code · Claude</span>
               </div>
             </div>
           </div>
@@ -591,7 +595,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
               className="w-full mt-2 py-2 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Ver Catálogo Completo das 161 Ferramentas MCP</span>
+              <span>Ver Catálogo Completo das 165 Ferramentas MCP</span>
             </button>
           </div>
         </div>
@@ -698,7 +702,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                <span><strong>Validador Regressivo Oracle (QA Studio):</strong> Execução automatizada de esteiras de queries e asserções de integridade no banco, comparando colunas do WinThor contra payloads JSON da API/PDV com exportação para o Jira.</span>
+                <span><strong>Validador Regressivo Oracle (QA Studio):</strong> Execução automatizada de esteiras de queries e asserções de integridade no banco (com templates prontos para Venda PDV, Pré-Venda Balcão TV7/TV8, Sangria/Suprimento de Caixa, Inutilização de NFC-e, Kits/Cestas e Cancelamento), com obtenção direta de payloads JSON via banco Oracle (<code className="font-mono text-primary">PCINTEGRACAOCORE</code> / <code className="font-mono text-primary">DADOSTRANSFORMADOS</code>) ou por requisições HTTP a <code className="font-mono text-primary">APIs REST externas</code> (com Bearer tokens e JSONPath), preenchimento automático de binds, exportação/importação de templates (.json) e geração de evidências para o Jira.</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />

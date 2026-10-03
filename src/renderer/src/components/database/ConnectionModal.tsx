@@ -4,11 +4,12 @@ import {
   CheckCircle2,
   AlertCircle,
   RotateCw,
-  ShieldCheck,
-  Eye,
-  EyeOff
+  ShieldCheck
 } from 'lucide-react';
-import { DatabaseConnectionConfig, DatabaseType } from '../../../../shared/types';
+import { DatabaseConnectionConfig, DatabaseType, OracleTnsEntry } from '../../../../shared/types';
+import { OracleTnsSelector } from './OracleTnsSelector';
+import { OracleThickClientSection } from './OracleThickClientSection';
+import { ConnectionCredentialsSection } from './ConnectionCredentialsSection';
 
 export interface ConnectionModalProps {
   isOpen: boolean;
@@ -33,15 +34,25 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
   onSaveConnection,
   defaultPorts
 }) => {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const hasSavedPassword = Boolean(editingConn.hasPassword || (editingConn.id && !editingConn.password));
+
+  const handleSelectTnsEntry = (entry: OracleTnsEntry) => {
+    setEditingConn((prev) => ({
+      ...prev,
+      name: prev.name && prev.name !== 'Oracle Local' ? prev.name : entry.alias,
+      host: entry.host || 'localhost',
+      port: entry.port || 1521,
+      database: entry.serviceName || entry.sid || '',
+      oracleMode: entry.oracleMode,
+      tnsAlias: entry.alias
+    }));
+  };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col">
-        <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
+      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
           <div className="flex items-center space-x-2">
             <Database className="w-4 h-4 text-primary" />
             <h3 className="text-sm font-bold text-foreground">
@@ -57,7 +68,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={onSaveConnection} className="p-4 space-y-3 text-xs">
+        <form onSubmit={onSaveConnection} className="p-4 space-y-3 text-xs overflow-y-auto flex-1">
           {/* Tipo de Banco */}
           <div>
             <label className="block font-bold text-foreground mb-1">Tipo de Banco</label>
@@ -98,6 +109,14 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
             />
           </div>
 
+          {/* Seletor TNS (Oracle) */}
+          {editingConn.type === 'oracle' && (
+            <OracleTnsSelector
+              onSelectEntry={handleSelectTnsEntry}
+              selectedAlias={editingConn.tnsAlias}
+            />
+          )}
+
           {/* Host e Porta */}
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-2">
@@ -107,7 +126,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                 required
                 value={editingConn.host || ''}
                 onChange={(e) => setEditingConn({ ...editingConn, host: e.target.value })}
-                placeholder="localhost ou IP do WSL"
+                placeholder="localhost ou IP do servidor"
                 className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
               />
             </div>
@@ -148,7 +167,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                     name="oracleMode"
                     checked={editingConn.oracleMode !== 'sid'}
                     onChange={() => setEditingConn({ ...editingConn, oracleMode: 'serviceName' })}
-                    className="text-primary focus:ring-0"
+                    className="text-primary focus:ring-0 cursor-pointer"
                   />
                   <span>Service Name (Padrão)</span>
                 </label>
@@ -158,91 +177,25 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                     name="oracleMode"
                     checked={editingConn.oracleMode === 'sid'}
                     onChange={() => setEditingConn({ ...editingConn, oracleMode: 'sid' })}
-                    className="text-primary focus:ring-0"
+                    className="text-primary focus:ring-0 cursor-pointer"
                   />
                   <span>SID</span>
                 </label>
               </div>
 
-              {/* Oracle: Modo Thick / Suporte a Oracle 11g */}
-              <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 space-y-2 text-xs">
-                <label className="flex items-center space-x-2 cursor-pointer font-medium text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(editingConn.oracleThickMode || editingConn.oracleClientPath)}
-                    onChange={(e) =>
-                      setEditingConn({
-                        ...editingConn,
-                        oracleThickMode: e.target.checked
-                      })
-                    }
-                    className="rounded border-border text-primary focus:ring-0"
-                  />
-                  <span>Modo Thick / Suporte a Oracle 11g (Instant Client)</span>
-                </label>
-                <p className="text-[11px] text-muted-foreground leading-relaxed pl-5">
-                  Obrigatório para Oracle 11g e anteriores para evitar o erro <span className="font-mono text-foreground font-semibold">NJS-138</span>. Requer bibliotecas nativas de 64 bits da Oracle.
-                </p>
-                {(editingConn.oracleThickMode || editingConn.oracleClientPath) && (
-                  <div className="pl-5 pt-1 space-y-1">
-                    <label className="block text-[11px] font-medium text-foreground">
-                      Diretório do Oracle Instant Client (opcional se estiver no PATH):
-                    </label>
-                    <input
-                      type="text"
-                      value={editingConn.oracleClientPath || ''}
-                      onChange={(e) =>
-                        setEditingConn({ ...editingConn, oracleClientPath: e.target.value })
-                      }
-                      placeholder="Ex: C:\oracle\instantclient_19_25"
-                      className="w-full bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
-                    />
-                  </div>
-                )}
-              </div>
+              {/* Modo Thick / Suporte a Oracle 11g */}
+              <OracleThickClientSection
+                editingConn={editingConn}
+                setEditingConn={setEditingConn}
+              />
             </>
           )}
 
           {/* Usuário e Senha */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block font-medium text-foreground mb-1">Usuário</label>
-              <input
-                type="text"
-                required
-                value={editingConn.user || ''}
-                onChange={(e) => setEditingConn({ ...editingConn, user: e.target.value })}
-                placeholder="Ex: system, postgres, root"
-                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block font-medium text-foreground">Senha</label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-muted-foreground hover:text-foreground text-[10px] flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  <span>{showPassword ? 'Ocultar' : 'Exibir'}</span>
-                </button>
-              </div>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={editingConn.password || ''}
-                onChange={(e) => setEditingConn({ ...editingConn, password: e.target.value })}
-                placeholder={hasSavedPassword ? '(Senha salva e protegida)' : '••••••••'}
-                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
-              />
-              {hasSavedPassword && !editingConn.password && (
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                  <span>Senha salva. Deixe em branco para mantê-la ou digite para alterá-la.</span>
-                </p>
-              )}
-            </div>
-          </div>
+          <ConnectionCredentialsSection
+            editingConn={editingConn}
+            setEditingConn={setEditingConn}
+          />
 
           {/* Feedback de Teste de Conexão */}
           {testResult && (

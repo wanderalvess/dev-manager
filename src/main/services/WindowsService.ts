@@ -33,6 +33,7 @@ import { NetworkService } from './NetworkService';
 import { execFileAsync, isValidIdentifier } from '../utils/security';
 import { checkPortOpen } from '../utils/network';
 import { launchProcessSafely } from '../utils/routineLaunchUtils';
+import { isWslKaraf, launchWslServerDebug, killWslKarafProcesses } from '../utils/karafWslUtils';
 
 export const TRACKED_SERVICES = DEFAULT_TRACKED_SERVICES;
 
@@ -384,6 +385,12 @@ export class WindowsService {
   }
 
   public launchServerDebug(launchMode?: 'wt' | 'cmd', customDebugPort?: number): boolean {
+    const settings = this.configService.getSettings();
+    if (isWslKaraf(settings)) {
+      const hasWt = this.commandAvailabilityCache.get('wt.exe') ?? false;
+      return launchWslServerDebug(settings, hasWt, launchMode, customDebugPort);
+    }
+
     const exe = this.karafService.getKarafServerExecutable();
     if (exe && fs.existsSync(exe)) {
       const karafBin = path.dirname(exe);
@@ -617,6 +624,13 @@ export class WindowsService {
             } else {
               pushLog('info', `Processo ${proc.displayName || proc.name}: Não está ativo.`);
             }
+          }
+        }
+
+        if (isWslKaraf(settings)) {
+          const killedWsl = await killWslKarafProcesses(settings.karafWslDistro!);
+          if (killedWsl) {
+            pushLog('success', `Karaf na distro WSL (${settings.karafWslDistro}): Processos finalizados.`);
           }
         }
 

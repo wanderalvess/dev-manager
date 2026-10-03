@@ -4,6 +4,70 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.31.0] - 2026-10-02
+### Adicionado
+- **Importação e Seleção de Conexões Oracle via `tnsnames.ora`**:
+  - **Configuração de Caminho de Rede em Configurações > Banco de Dados**: Novo campo com botão de seleção de arquivo (`.ora`) no Windows Explorer para definir o caminho do arquivo `tnsnames.ora` (ex.: `C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora`);
+  - **Configuração Automática de `TNS_ADMIN`**: Ao iniciar conexões ou inicializar o Oracle Thick Client, o Dev Manager detecta automaticamente o diretório do `tnsnames.ora` e ajusta as variáveis de ambiente necessárias e o `configDir` do driver Oracle;
+  - **Seletor Visual de Conexões no DB Studio**: No modal de criação/edição de conexões Oracle (`ConnectionModal`), agora há um seletor visual (`OracleTnsSelector`) que lê o arquivo configurado, exibe todos os aliases cadastrados e preenche instantaneamente o nome, host, porta, base de dados (SID ou Service Name) e modo de conexão com 1 clique;
+  - **Fallback Manual no Modal**: Caso o caminho não esteja definido nas configurações globais, o usuário pode selecionar um arquivo `.ora` pontual diretamente dentro do próprio modal de conexão;
+  - **Parser Puro de TNS**: Novo utilitário (`tnsnamesParser.ts`) com suporte a comentários, múltiplos aliases na mesma definição, `SERVICE_NAME`, `SID` e protocolo `TCP`;
+  - **Nova Ferramenta MCP (`db_list_tns_entries`)**: Total do catálogo expandido para **166 ferramentas**, permitindo que assistentes de IA inspecionem aliases e parâmetros de rede de arquivos `tnsnames.ora`;
+  - **Sincronização nos Três Transportes**: Handlers IPC `db:parse-tnsnames`, rotas REST `POST /api/db/tnsnames/parse` e `GET /api/db/tnsnames`, e tool MCP correspondente.
+
+## [1.30.0] - 2026-10-02
+### Adicionado
+- **Suporte Nativo a Apache Karaf no WSL 2 (Linux Virtualizado)**:
+  - **Seletor de Ambiente em Configurações > Apache Karaf**: Nova seção dedicada (`KarafWslSection`) permitindo alternar entre o modo padrão *Local (Windows Nativo)* e *WSL 2 (Linux Virtualizado)* sem nenhum impacto ou quebra no ambiente Windows existente;
+  - **Detecção Automática de Distribuições WSL**: Listagem automática das distribuições instaladas (Ubuntu, Debian, etc.) com status de execução em tempo real e seleção rápida via dropdown;
+  - **Resolução Híbrida de Caminhos Linux e Windows UNC**: O Dev Manager agora aceita tanto caminhos do Linux (ex: `/home/usuario/karaf`) quanto caminhos UNC de rede do Windows (`\\wsl.localhost\Ubuntu\home\usuario\karaf`), mapeando-os de forma bidirecional transparente;
+  - **Execução Transparente de Comandos OSGi**: Comandos de deploy (`bundle:list`, `feature:install`, diagnósticos OSGi e verificações JMX) passam a ser executados diretamente via `wsl.exe -d <distro> -- <path>/bin/client` quando configurado em modo WSL;
+  - **Inicialização em Debug e Encerramento Limpo**: Inicialização do servidor Karaf em modo Debug (via terminal externo ou console integrado) invocando o container Linux no WSL, com liberação limpa de processos via `pkill -f karaf` no reset de ambiente;
+  - **Fallback de Rede Inteligente**: Checagem de disponibilidade do Karaf via porta SSH (`8101`) com teste em `127.0.0.1` e fallback automático para o IP virtual da distro WSL caso o localhost forwarding não esteja ativo;
+  - **Documentação e Central de Ajuda**: Novo tópico de FAQ completo adicionado na Central de Ajuda (Alt+9) com orientações passo a passo e dicas de rede espelhada (`networkingMode=mirrored` no `.wslconfig`).
+
+## [1.29.0] - 2026-10-02
+### Adicionado
+- **Obtenção Flexível de Payloads de Integração no Validador Regressivo (Banco Oracle & API REST Externa)**:
+  - **Consulta Direta no Banco Oracle (`PCINTEGRACAOCORE`)**: Novo modal interativo (`QaFetchPayloadModal` / `QaOraclePayloadTab`) com botão *"Obter Payload"* na aba de dados, permitindo localizar instantaneamente os payloads originais de transações recepcionadas pelo PDVSync e WSH gravados na tabela `PCINTEGRACAOCORE` (coluna `DADOSTRANSFORMADOS`);
+  - **5 Modos Especializados de Filtro no Banco**:
+    - *CPF/CNPJ do Consumidor (`cgcEnt`)*: Localiza transações diretamente pelo documento do cliente gravado no JSON (ex.: `68886626088`);
+    - *Cupom e Filial*: Busca combinada por número do cupom fiscal e código de filial da venda;
+    - *Chave NFC-e / NF-e*: Filtro por chave SEFAZ de 44 dígitos (`chaveNfce` / `chaveNfe`);
+    - *ID Externo ou Interno*: Busca por identificador de integração (ex.: `pdvsync-vendamensagem-...`);
+    - *Últimas Transações*: Listagem dos registros mais recentes recebidos na fila de integração;
+  - **Busca Direta via API REST Externa (`QaApiPayloadTab`)**: Nova aba permitindo disparar requisições HTTP (`GET` ou `POST`) diretamente para endpoints de serviços de mensageria, gateways ou microsserviços externos. Suporte a cabeçalhos customizados (tokens, Bearer, API Keys), corpo em JSON e extração flexível via JSONPath (ex.: `data.pedido`);
+  - **Persistência de Preferências**: Armazenamento automático da última URL de API e headers configurados para agilizar testes subsequentes;
+  - **Auto-Mapeamento de Binds em 1 Clique**: Ao carregar o payload para o teste regressivo, o Dev Manager formata o JSON e extrai automaticamente os parâmetros de bind (`:codFilial`, `:numCupom`, `:chaveNfe`, `:vlTotal`, etc.) para execução imediata das asserções;
+  - **Novas Ferramentas MCP (`qa_fetch_incoming_payload` e `qa_fetch_api_payload`)**: Total do catálogo expandido para **165 ferramentas**, permitindo que assistentes de IA localizem payloads no banco ou consultem APIs externas diretamente;
+  - **Sincronização nos Três Transportes**: Handlers IPC `qa:search-core-payloads` e `qa:fetch-api-payload`, rotas REST `POST /api/qa/payloads/search` e `POST /api/qa/payloads/fetch-api`, e tools MCP correspondentes.
+
+## [1.28.2] - 2026-10-02
+### Adicionado
+- **Novos Templates Oficiais de Homologação no Validador Regressivo Oracle (`QaRegressionRunner`)**:
+  - **Pré-Venda Balcão Omni (TV7 e TV8 — Entrega / Encomenda / Retira)**: Bateria automatizada cobrindo validação de cabeçalho (`PCPEDC` com `NUMPEDHUBE` e `NUMPEDENTFUT`), itens do TV7 (`PCPEDI` com validação de `TIPOENTREGA` 'RI'/'RP'/'EN'/'EF', status `NUMCAR Gravado` e status de desconto `PERCOM`), itens futuros do TV8, validação cadastral e de cidade do cliente (`PCCLIENT`/`PCCIDADE`) e validação da mensageria no PDVSync (`PCINTEGRACAOCORE` garantindo status de sucesso `RECEBIDO`/`RESGATADA` e alertando falhas em `DISPONIVEL`);
+  - **Movimentação de Caixa — Sangria e Suprimento (PDV / ECF)**: Validação das operações financeiras de frente de caixa com verificação da fila de mensageria (`PCFILAMENSAGEMHISTORICO` com tipo `SANG`/`SUPR`), vales de caixa de ECF (`PCVALECXECF` com tipo 'A' para sangria e 'U' para suprimento) e réplica para a tesouraria/retaguarda (`PCVALECX`);
+  - **Inutilização de Numeração NFC-e (SEFAZ)**: Validação do registro de inutilização fiscal na `PCINUTILIZACAONFCE` com verificação de protocolo SEFAZ autorizado (`PREENCHIDO_INUTILIZACAO = 'S'`), faixas inicial e final e justificativa;
+  - **Enriquecimento da Venda PDV Fim-a-Fim**: Inclusão de novos passos no template de Venda (`wsh-venda-pdv-completa`) para conferência de baixa real no estoque (`PCLOGESTOQUE`), custos do produto (`PCMOV` com custos financeiro, contábil, reposição e real), itens ajustados por embalagem (`PCPEDI` com `QTUNIT`) e cálculo de troco / pagamentos digitais e TEF (`PCPRESTECF` com `CODBANDEIRA_AJUSTADO` e `NSU_AJUSTADO`);
+  - **Inicialização Automática de Novos Templates Padrão**: Ajustado o `QaRegressionService.ensureDefaultTemplates` para inicializar automaticamente quaisquer novos templates padrão sem sobrescrever templates customizados ou duplicar arquivos já existentes.
+
+### Alterado
+- **Modularização de Templates (Regra de 300 Linhas)**: Subdivisão do catálogo de templates padrão em submódulos dedicados em `src/main/utils/qaTemplates/` (`templateVendaPdv.ts`, `templateCancelamento.ts`, `templateKitCesta.ts`, `templatePreVendaTv7Tv8.ts`, `templateMovimentacaoCaixa.ts`, `templateInutilizacaoNfce.ts`), mantendo todos os arquivos com menos de 250 linhas.
+
+## [1.28.1] - 2026-10-02
+### Adicionado
+- **Exportação & Guia Prático de Templates no Validador Regressivo (`QualityPage` / `QaRegressionRunner`)**:
+  - **Exportação Direta do Template Selecionado**: Botão *"Exportar Template"* adicionado na barra superior do Validador Regressivo, permitindo baixar o cenário ativo em arquivo `.json` identado (`{template-id}.json`) com 1 clique;
+  - **Exportação no Editor de Templates**: Opção *"Exportar JSON"* adicionada na barra de ações de edição de templates (`QaRegressionTemplatesManager`), permitindo salvar o template em disco local antes ou depois de persistir no banco;
+  - **Exportação em Lote (Backup Completo)**: Novo botão *"Exportar Todos"* na listagem geral do Gerenciador de Templates, gerando um bundle JSON com todos os cenários cadastrados para compartilhamento entre o time de QA e versionamento;
+  - **Guia Didático Interativo ("Como Usar")**: Novo modal (`QaRegressionTemplatesHelpModal`) acessível tanto no Validador Regressivo quanto no Gerenciador de Templates, com 4 abas didáticas:
+    - *Fluxo Passo a Passo*: Conceito dos templates e ciclo de 6 etapas desde a escolha do banco até a evidência no Jira;
+    - *Tipos de Asserção*: Tabela explicativa detalhada de `JSONPath`, `Literal`, `<S>` (preenchido), `<N>` (nulo), `<0>` (zero) e `Regex` com sintaxes e exemplos de uso;
+    - *Exportação & Compartilhamento*: Instruções de exportação individual, em lote e importação JSON;
+    - *Exemplo de JSON*: Código canônico de template com botão de 1 clique para copiar (`Copiar JSON`);
+  - **FAQ Detalhado na Central de Ajuda**: Novo tópico na Central de Ajuda (Alt+9) cobrindo criação, configuração de binds nomeados e exportação de templates;
+  - **Utilitário Dedicado (`qaTemplateExportUtils`)**: Módulo puro de serialização, sanitização e download de templates com cobertura de testes unitários automatizados (`qaTemplateExportUtils.test.ts`).
+
 ## [1.28.0] - 2026-10-01
 ### Adicionado
 - **Integração & Cockpit de Automação TAUT (Cypress E2E + Oracle + Zephyr Scale)**:

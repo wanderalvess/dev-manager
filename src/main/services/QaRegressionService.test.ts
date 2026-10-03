@@ -46,7 +46,13 @@ describe('QaRegressionService', () => {
     const list = await service.listTemplates();
     expect(list.length).toBeGreaterThan(0);
     const hasPdv = list.some((t) => t.id === 'wsh-venda-pdv-completa');
+    const hasPreVenda = list.some((t) => t.id === 'wsh-prevenda-tv7-tv8');
+    const hasCaixa = list.some((t) => t.id === 'wsh-movimentacao-caixa');
+    const hasInut = list.some((t) => t.id === 'wsh-inutilizacao-nfce');
     expect(hasPdv).toBe(true);
+    expect(hasPreVenda).toBe(true);
+    expect(hasCaixa).toBe(true);
+    expect(hasInut).toBe(true);
   });
 
   it('deve salvar e recuperar um template customizado', async () => {
@@ -203,4 +209,49 @@ describe('QaRegressionService', () => {
     expect(res.success).toBe(true);
     expect(res.extractedVariables.numTransVenda).toBe(9999);
   });
+
+  it('deve executar suite com template inline e auto-popular binds a partir de payload JSON', async () => {
+    mockDatabaseService.executeQuery.mockResolvedValueOnce({
+      success: true,
+      columns: ['CODFILIAL', 'NUMCUPOM', 'VLTOTAL'],
+      rows: [{ CODFILIAL: '1', NUMCUPOM: 4387, VLTOTAL: 100.5 }],
+      rowCount: 1,
+      executionTimeMs: 10,
+      isQuery: true
+    });
+
+    const inlineTmpl: QaRegressionTemplate = {
+      id: 'inline-test',
+      name: 'Template Inline Ad-hoc',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      steps: [
+        {
+          id: 'step-inline-1',
+          title: 'Validação Direta',
+          enabled: true,
+          query: 'SELECT * FROM PCNFSAID WHERE CODFILIAL = :codFilial AND NUMNOTA = :numCupom',
+          assertions: [
+            {
+              id: 'a1',
+              column: 'VLTOTAL',
+              expectedType: 'jsonPath',
+              expectedValue: '$.vlTotal'
+            }
+          ]
+        }
+      ]
+    };
+
+    const payload = JSON.stringify({ codFilial: '1', numCupom: 4387, vlTotal: 100.5 });
+    const res = await service.executeSuite({
+      template: inlineTmpl,
+      rawJson: payload
+    });
+
+    expect(res.success).toBe(true);
+    expect(res.passedAssertions).toBe(1);
+    expect(res.templateName).toBe('Template Inline Ad-hoc');
+  });
 });
+

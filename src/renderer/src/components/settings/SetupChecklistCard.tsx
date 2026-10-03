@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ListChecks, CheckCircle2, AlertTriangle } from 'lucide-react';
 import type { SetupChecklistItemStatus } from '../../utils/settingsListEditors';
 
 interface SetupChecklistCardProps {
@@ -17,7 +17,7 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({
     <div className="px-4 py-3 rounded-xl bg-card border border-border/80 shadow-sm shrink-0 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-primary" />
+          <ListChecks className="w-3.5 h-3.5 text-primary" />
           Checklist de Configuração Inicial
         </span>
         <span className="text-[10px] text-muted-foreground font-mono">

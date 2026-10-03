@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Dev Manager expõe **161 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Dev Manager expõe **166 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -127,6 +127,7 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 *   **`db_get_oracle_active_sessions` / `db_get_oracle_recent_statements`**: Statement Tracer do Oracle — lista sessões conectadas com a SQL atual/última de cada uma (`v$session`/`v$sql`) ou as instruções mais recentes no cursor cache, com filtro opcional por schema/texto. Útil para descobrir qual query um app ou rotina disparou, quando vários sistemas compartilham o mesmo banco.
 *   **`db_get_oracle_statement_binds`**: Captura os valores dos parâmetros (`bind variables`) passados na execução de um SQL no Oracle via `v$sql_bind_capture`, retornando tipo de dado, posição, nome e valor capturado, acompanhado do SQL executável interpolado (com os parâmetros substituídos no formato literal correto). Permite inspecionar parâmetros sem precisar habilitar `log:set trace root` no Karaf ou usar ferramentas externas como `OraTracer.exe`.
 *   **`db_start_oracle_capture` / `db_get_oracle_capture_state` / `db_stop_oracle_capture` / `db_clear_oracle_capture`**: Captura contínua do Statement Tracer — consulta `v$session`/`v$sql` em segundo plano (intervalo padrão de 3s, mínimo de 2s, parada automática após 30 minutos) e acumula as SQLs distintas e a linha do tempo de qual sessão passou a rodar qual SQL. A leitura devolve até 50 itens de cada lista por padrão (`limit`). É uma captura própria do servidor MCP: não enxerga a captura iniciada na tela do app, e vice-versa.
+*   **`db_list_tns_entries`**: Lê e analisa o arquivo de rede `tnsnames.ora` configurado no Dev Manager (ou informado pontualmente via `filePath`), extraindo aliases, host, porta, SID, SERVICE_NAME e protocolo configurados para conexão ao Oracle.
 
 **Exemplo de como pedir à IA:**
 > "Mostre as colunas da tabela PCEMPR."
@@ -135,6 +136,7 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 > "Quais foram as últimas queries que rodaram no schema APP_KARAF?"
 > "Quais foram os parâmetros passados na query com SQL_ID '5g4b09m8d123k' no Oracle? Me mostre a SQL pronta para rodar."
 > "Liga a captura do Oracle no schema APP_KARAF; vou gravar um pedido no WinThor e depois te aviso para você me dizer quais SQLs rodaram."
+> "Leia o arquivo tnsnames.ora configurado e liste os aliases de banco disponíveis com seus hosts e serviços."
 
 ---
 
@@ -217,12 +219,21 @@ Automação de homologação regressiva para equipes de QA e desenvolvedores: ex
 
 *   **`qa_list_templates`**: Lista todos os cenários/templates de regressivo disponíveis na pasta dedicada (ex.: Venda PDV Completa, Cancelamento, Kits e Cestas).
 *   **`qa_get_template`**: Consulta a definição detalhada de um template por ID, com todas as suas queries SQL e asserções configuradas.
-*   **`qa_run_regression_suite`**: Executa a esteira de asserções de um template contra o banco de dados Oracle, resolvendo binds (`:codFilial`, `:numCupom`) e avaliando cada coluna contra JSONPath (`$.vlTotal`), valores literais, preenchimento (`<S>`), nulidade (`<N>`) ou zero (`<0>`). Retorna o relatório analítico e gera evidência formatada em Markdown para colar diretamente no Jira.
+*   **`qa_save_template`**: Cria ou atualiza um template de teste regressivo no catálogo local do Dev Manager, persistindo título, queries SQL, binds, variáveis e regras de asserção contra colunas.
+*   **`qa_delete_template`**: Remove um template de teste regressivo do catálogo local pelo ID.
+*   **`qa_fetch_incoming_payload`**: Localiza e recupera o payload JSON original de uma transação gravado na tabela `PCINTEGRACAOCORE` (coluna `DADOSTRANSFORMADOS`) do Oracle. Permite buscar por CPF/CNPJ do consumidor (`cgcEnt`), número de cupom fiscal/venda, chave de 44 dígitos da NFC-e/NF-e, ID externo ou listar transações recentes.
+*   **`qa_fetch_api_payload`**: Dispara uma requisição HTTP (GET ou POST) a um serviço de mensageria, API gateway ou endpoint externo e extrai o payload JSON de entrada para alimentar o validador regressivo. Suporta cabeçalhos customizados (tokens, Bearer) e JSONPath para navegar até o objeto desejado (ex: `"data.pedido"`).
+*   **`qa_run_regression_suite`**: Executa a esteira de asserções de um template contra o banco de dados Oracle, resolvendo binds (`:codFilial`, `:numCupom`) e avaliando cada coluna contra JSONPath (`$.vlTotal`), valores literais, preenchimento (`<S>`), nulidade (`<N>`) ou zero (`<0>`). Suporta execução por `templateId` ou template *inline* ad-hoc, e leitura de payload JSON tanto por string direta (`rawJson`) quanto por arquivo em disco (`jsonFilePath`). Retorna o relatório analítico e gera evidência formatada em Markdown para colar diretamente no Jira.
 
 **Exemplo de como pedir à IA:**
+> "Consulte a API 'http://localhost:8080/api/v1/pedidos/12345' e use o payload retornado para rodar o teste regressivo de venda."
+> "Busque o payload JSON gravado na PCINTEGRACAOCORE para o cliente com CPF 68886626088 e execute o teste regressivo de venda."
+> "Consulte a última transação da PCINTEGRACAOCORE pelo cupom 271454 da filial 1 e me mostre o JSON transformado."
 > "Liste os cenários de teste regressivo de QA cadastrados."
-> "Execute o teste regressivo 'wsh-venda-pdv-completa' para a filial 1 e cupom 4387 com este payload de venda do PDV e gere o relatório para a issue DDWMISSI-T966."
+> "Crie um template de teste regressivo chamado 'Validação de Devolução WSH' com query na PCDEVCONSUM e asserção de que CODCLI é igual ao do JSON."
+> "Execute o teste regressivo 'wsh-venda-pdv-completa' para a filial 1 usando o payload do arquivo 'C:\Testes\cupom_4387.json' e gere o relatório para a issue DDWMISSI-T966."
 > "Valide se a venda 10047 gravou corretamente os cabeçalhos PCNFSAID, PCPEDC e a movimentação fiscal PCMOV."
+> "Exclua o template de teste temporário 'temp-homolog-123'."
 
 ---
 

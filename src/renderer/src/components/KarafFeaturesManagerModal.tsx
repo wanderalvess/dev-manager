@@ -84,7 +84,7 @@ export const KarafFeaturesManagerModal: React.FC<KarafFeaturesManagerModalProps>
 
   // Ações de Feature
   const handleToggleInstallFeature = async (feat: KarafFeatureInfo) => {
-    const isInstalled = feat.installed;
+    const isInstalled = feat.installed ?? (feat.state?.toLowerCase() === 'started' || feat.state?.toLowerCase() === 'installed');
     const actionKey = `feat_${feat.name}`;
     setActionInProgress(actionKey);
     setFeedback(null);
@@ -457,7 +457,7 @@ export const KarafFeaturesManagerModal: React.FC<KarafFeaturesManagerModalProps>
               ) : (
                 <div className="divide-y divide-border/60 border border-border rounded-lg overflow-hidden bg-background">
                   {filteredFeatures.map((feat) => {
-                    const isInstalled = feat.installed;
+                    const isInstalled = feat.installed ?? (feat.state?.toLowerCase() === 'started' || feat.state?.toLowerCase() === 'installed');
                     const isBusy = actionInProgress === `feat_${feat.name}`;
 
                     return (
@@ -624,7 +624,7 @@ export const KarafFeaturesManagerModal: React.FC<KarafFeaturesManagerModalProps>
             <span>
               INSTALADAS:{' '}
               <strong className="text-emerald-400">
-                {features.filter((f) => f.installed).length}
+                {features.filter((f) => f.installed ?? (f.state?.toLowerCase() === 'started' || f.state?.toLowerCase() === 'installed')).length}
               </strong>
             </span>
             <span>

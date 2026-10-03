@@ -39,6 +39,7 @@ import type {
   DocSyncProgress,
   DocSyncResult,
   DatabaseConnectionConfig,
+  ParseTnsNamesResult,
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
@@ -112,6 +113,10 @@ import type {
   QaRegressionTemplate,
   QaExecutionRequest,
   QaExecutionResult,
+  QaCoreSearchFilter,
+  QaCoreSearchResult,
+  QaApiFetchRequest,
+  QaApiFetchResult,
   TestRunnerConfig,
   TestExecutionResult,
   TautProjectStatus,
@@ -1140,6 +1145,13 @@ export function initApiBridge() {
     },
 
     // Banco de Dados (Oracle, MySQL, Postgres)
+    parseTnsNames: async (filePath?: string): Promise<ParseTnsNamesResult> => {
+      return apiFetch('/api/db/tnsnames/parse', {
+        method: 'POST',
+        body: JSON.stringify({ filePath })
+      });
+    },
+
     testDbConnection: async (config: DatabaseConnectionConfig): Promise<{ success: boolean; message: string; version?: string }> => {
       return apiFetch('/api/db/test', {
         method: 'POST',
@@ -2026,6 +2038,27 @@ export function initApiBridge() {
     qaGetTemplatesDir: async (): Promise<string> => {
       const res = await apiFetch<{ path: string }>('/api/qa/templates-dir');
       return res.path || '';
+    },
+    qaSearchCorePayloads: async (
+      filter: QaCoreSearchFilter,
+      connectionId?: string
+    ): Promise<QaCoreSearchResult> => {
+      if (window.electronAPI?.qaSearchCorePayloads) {
+        return window.electronAPI.qaSearchCorePayloads(filter, connectionId);
+      }
+      return apiFetch<QaCoreSearchResult>('/api/qa/payloads/search', {
+        method: 'POST',
+        body: JSON.stringify({ filter, connectionId })
+      });
+    },
+    qaFetchApiPayload: async (request: QaApiFetchRequest): Promise<QaApiFetchResult> => {
+      if (window.electronAPI?.qaFetchApiPayload) {
+        return window.electronAPI.qaFetchApiPayload(request);
+      }
+      return apiFetch<QaApiFetchResult>('/api/qa/payloads/fetch-api', {
+        method: 'POST',
+        body: JSON.stringify(request)
+      });
     },
 
     // Automated Test Runners

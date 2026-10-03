@@ -200,6 +200,36 @@ export function getFaqList({
       )
     },
     {
+      id: 'karaf-wsl-integration',
+      question: 'Como utilizar o Apache Karaf rodando dentro de uma distribuição WSL 2 (Linux)?',
+      category: 'Karaf OSGi',
+      tags: ['wsl', 'wsl2', 'karaf', 'linux', 'ubuntu', 'debian', 'distro', 'mirrored', 'ssh'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Dev Manager suporta nativamente tanto o Karaf instalado no Windows quanto virtualizado dentro do WSL 2:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Configuração Passo a Passo:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                <strong className="text-foreground">Ativar Ambiente WSL:</strong> Em <strong className="text-foreground">Configurações &gt; Apache Karaf</strong>, marque a opção <em>"WSL 2 (Linux Virtualizado)"</em> e selecione sua distro (ex: Ubuntu ou Debian).
+              </li>
+              <li>
+                <strong className="text-foreground">Diretório do Karaf:</strong> Informe o caminho Linux (ex: <code className="font-mono text-primary">/home/usuario/karaf</code>) ou o caminho UNC Windows (<code className="font-mono text-primary">\\wsl.localhost\Ubuntu\home\usuario\karaf</code>). O Dev Manager resolve ambos automaticamente.
+              </li>
+              <li>
+                <strong className="text-foreground">Rede Espelhada (Recomendado):</strong> Para máxima estabilidade nas portas SSH (<code className="font-mono text-primary">8101</code>) e Debug (<code className="font-mono text-primary">5005</code>), configure seu <code className="font-mono text-foreground">%USERPROFILE%\.wslconfig</code> com <code className="font-mono text-primary">[wsl2] networkingMode=mirrored</code>.
+              </li>
+              <li>
+                <strong className="text-foreground">Execução Transparente:</strong> Os comandos OSGi, deploys, start debug e leitura de logs são roteados automaticamente via <code className="font-mono text-primary">wsl.exe</code> sem necessidade de scripts manuais.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'karaf-features-repos',
       question: 'Como gerenciar repositórios Maven e features OSGi na tela de Deploy?',
       category: 'Karaf OSGi',
@@ -641,7 +671,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">145 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
+            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">163 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
@@ -651,6 +681,7 @@ export function getFaqList({
                 <li><strong className="text-foreground">Diagnóstico OSGi:</strong> Identifica bundles parados, com falha de fiação (wiring) ou dependências ausentes (<code className="font-mono text-primary">ResolutionException</code>).</li>
                 <li><strong className="text-foreground">Ambiente Windows:</strong> Checa portas TCP ocupadas, finaliza processos conflitantes e inicia/para serviços.</li>
                 <li><strong className="text-foreground">Banco de Dados:</strong> Executa consultas no Oracle/Postgres/MySQL e rastreia queries lentas com captura de binds.</li>
+                <li><strong className="text-foreground">Qualidade &amp; Regressivo QA:</strong> Cria e gerencia templates (<code className="font-mono text-primary">qa_save_template</code>, <code className="font-mono text-primary">qa_delete_template</code>), roda validações regressivas por arquivo de payload (<code className="font-mono text-primary">qa_run_regression_suite</code>) e dispara suítes Cypress/TAUT.</li>
                 <li><strong className="text-foreground">Documentação RAG:</strong> Pesquisa semanticamente em manuais, arquivos Markdown e contratos de API locais.</li>
                 <li><strong className="text-foreground">Git &amp; Tarefas:</strong> Cria branches padronizadas a partir de work items do Azure DevOps/Jira e inspeciona diffs de arquivos.</li>
               </ul>
@@ -659,7 +690,7 @@ export function getFaqList({
                 className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-2 w-fit cursor-pointer"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Ver Catálogo Completo das 145 Ferramentas e Prompts</span>
+                <span>Ver Catálogo Completo das 163 Ferramentas e Prompts</span>
               </button>
             </div>
             
@@ -1379,6 +1410,48 @@ export function getFaqList({
       )
     },
     {
+      id: 'qa-regression-templates-guide',
+      question: 'Como criar, configurar e exportar templates de teste no Validador Regressivo Oracle?',
+      category: 'Qualidade & Homologação',
+      tags: ['qa', 'qualidade', 'regressivo', 'templates', 'oracle', 'asserções', 'exportar', 'importar', 'json', 'binds'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Os <strong className="text-foreground">Templates de Regressivo</strong> são especificações declarativas em formato <code className="font-mono text-primary font-bold">.json</code> que automatizam a conferência de dados gravados nas tabelas do WinThor após rotinas, operações de PDV ou integrações via API:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Estrutura &amp; Uso Prático:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Parâmetros de Bind no SQL:</strong> Escreva queries com parâmetros nomeados (ex.: <code className="font-mono text-primary font-bold">SELECT * FROM PCNFSAID WHERE CODFILIAL = :codFilial AND NUMNOTA = :numCupom</code>). Os valores são preenchidos manualmente ou extraídos do JSON da API com 1 clique no botão <strong className="text-emerald-500">"Mapear Binds"</strong>.
+              </li>
+              <li>
+                <strong className="text-foreground">Tipos de Asserção Disponíveis:</strong>
+                <ul className="list-circle pl-4 mt-1 space-y-1">
+                  <li><strong className="text-foreground">JSONPath (jsonPath):</strong> Compara a coluna com um campo do payload JSON (ex.: <code className="font-mono text-primary font-bold">$.vlTotal</code>).</li>
+                  <li><strong className="text-foreground">Literal (literal):</strong> Compara contra um valor fixo esperado (ex.: <code className="font-mono text-primary font-bold">"1"</code>, <code className="font-mono text-primary font-bold">"S"</code>).</li>
+                  <li><strong className="text-foreground">Preenchido (&lt;S&gt;):</strong> Garante que a coluna não é nula/vazia (chaves, sequences, datas).</li>
+                  <li><strong className="text-foreground">Vazio / Nulo (&lt;N&gt;):</strong> Garante que a coluna não foi preenchida indevidamente.</li>
+                  <li><strong className="text-foreground">Zero (&lt;0&gt;):</strong> Valida se o campo numérico gravado é exatamente 0.</li>
+                  <li><strong className="text-foreground">Regex (regex):</strong> Valida máscaras e formatos (ex.: chave NFe com 44 dígitos).</li>
+                </ul>
+              </li>
+              <li>
+                <strong className="text-foreground">Exportação Individual e em Lote:</strong>
+                Na tela do Validador clique em <strong className="text-foreground">"Exportar Template"</strong> para baixar o arquivo <code className="font-mono text-primary font-bold">.json</code> pronto para versionar no Git ou compartilhar. No Gerenciador use <strong className="text-foreground">"Exportar Todos"</strong> para backup completo em lote.
+              </li>
+              <li>
+                <strong className="text-foreground">Importação Fácil:</strong> Use o botão <strong className="text-foreground">"Importar JSON"</strong> no Gerenciador de Templates para carregar novos cenários compartilhados pela equipe.
+              </li>
+              <li>
+                <strong className="text-foreground">Guia Completo na Interface:</strong> Clique no botão <strong className="text-foreground">"Como Usar"</strong> com ícone de ajuda no topo do Validador ou Gerenciador para abrir o modal interativo com fluxo visual e exemplo de JSON pronto para copiar.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'taut-cypress-automation',
       question: 'Como funciona a integração com o projeto TAUT-Mississauga (Cypress) para testes de API?',
       category: 'Qualidade & Homologação',
@@ -1410,6 +1483,36 @@ export function getFaqList({
           </div>
         </div>
       )
+    },
+    {
+      id: 'oracle-tnsnames-integration',
+      question: 'Como utilizar o arquivo tnsnames.ora para buscar e preencher conexões Oracle?',
+      category: 'Banco de Dados & Backups',
+      tags: ['tnsnames', 'tns', 'oracle', 'tnsnames.ora', 'tns_admin', 'conexao', 'sid', 'service name', 'database'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O Dev Manager permite importar aliases e configurações de rede diretamente de um arquivo <strong className="text-foreground font-mono">tnsnames.ora</strong> para acelerar a criação de conexões Oracle:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como configurar e usar:</span>
+            <ol className="list-decimal pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Configurações do App:</strong> Em <strong>Configurações &gt; Backup &amp; Banco de Dados</strong>, preencha o campo <em>"Arquivo de Configuração (tnsnames.ora)"</em> com o caminho do arquivo (ex.: <code className="font-mono text-primary font-semibold">C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora</code>).
+              </li>
+              <li>
+                <strong className="text-foreground">Modal Nova Conexão:</strong> No DB Studio (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Alt+2</kbd>), clique em <strong>+ Nova Conexão</strong> e selecione o tipo <strong>Oracle</strong>.
+              </li>
+              <li>
+                <strong className="text-foreground">Seletor TNS Integrado:</strong> O painel <em>"Buscar no tnsnames.ora"</em> lista todas as entradas encontradas no arquivo com Host, Porta e Service Name/SID. Basta selecionar um alias no dropdown para preencher o formulário na hora.
+              </li>
+              <li>
+                <strong className="text-foreground">TNS_ADMIN Automático:</strong> O Dev Manager também injeta a pasta do arquivo como variável de ambiente <code className="font-mono text-primary font-semibold">TNS_ADMIN</code> e configura o diretório de rede do Oracle Thick Client (<code className="font-mono text-primary">configDir</code>), garantindo compatibilidade total com os drivers da Oracle.
+              </li>
+            </ol>
+          </div>
+        </div>
+      )
     }
   ];
 }
@@ -1435,7 +1538,7 @@ export function getKeyboardShortcuts(debugPort: number) {
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.26.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.28.1'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '11 Módulos' },

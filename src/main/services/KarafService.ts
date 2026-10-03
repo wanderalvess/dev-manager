@@ -30,6 +30,14 @@ import { diagnoseKarafResolutionError } from '../utils/karafResolutionParser';
 import { parseJmxMemoryOutput, parseKarafInfoOutput, buildJvmMemoryMetrics } from '../utils/jvmMemoryUtils';
 import { parseFeatureRepoListOutput } from '../utils/karafFeaturesUtils';
 import { analyzeLogText } from '../utils/logAnalyzerUtils';
+import {
+  isWslKaraf,
+  resolveKarafWslClient,
+  resolveKarafWslServer,
+  resolveKarafWslLogPath,
+  buildWslClientArgs,
+  killWslKarafProcesses
+} from '../utils/karafWslUtils';
 
 const BUNDLE_ACTIONS = ['start', 'stop', 'restart', 'uninstall', 'refresh', 'resolve'] as const;
 type BundleAction = (typeof BUNDLE_ACTIONS)[number];
@@ -130,6 +138,10 @@ export class KarafService {
   public getKarafClientExecutable(): string | null {
     const settings = this.configService.getSettings();
     if (!settings.karafPath) return null;
+    if (isWslKaraf(settings)) {
+      const wslClient = resolveKarafWslClient(settings);
+      if (wslClient) return wslClient.linuxClientPath;
+    }
     const candidates = [
       path.join(settings.karafPath, 'bin', 'client.bat'),
       path.join(settings.karafPath, 'bin', 'client.sh'),
@@ -145,6 +157,10 @@ export class KarafService {
   public getKarafServerExecutable(): string | null {
     const settings = this.configService.getSettings();
     if (!settings.karafPath) return null;
+    if (isWslKaraf(settings)) {
+      const wslServer = resolveKarafWslServer(settings);
+      if (wslServer) return `${wslServer.linuxServerDir}/${wslServer.scriptName}`;
+    }
 
     // Se o desenvolvedor informou um script customizado nas configurações:
     if (settings.karafScript && settings.karafScript.trim()) {
@@ -300,7 +316,22 @@ export class KarafService {
   public async isKarafRunning(sshPort?: number): Promise<boolean> {
     const settings = this.configService.getSettings();
     const port = sshPort || getKarafSshPort(settings);
-    return await checkPortOpen(port, '127.0.0.1', 800);
+    const isOpenLocal = await checkPortOpen(port, '127.0.0.1', 800);
+    if (isOpenLocal) return true;
+
+    if (isWslKaraf(settings)) {
+      try {
+        const { wslService } = await import('./WslService');
+        const distroIp = await wslService.getDistroIp(settings.karafWslDistro);
+        if (distroIp) {
+          return await checkPortOpen(port, distroIp, 800);
+        }
+      } catch {
+        // Fallback silencioso
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -425,9 +456,18 @@ export class KarafService {
     const isHeavyCommand = /^(?:feature:(?:install|repo-add)|bundle:(?:install|update))/i.test(command.trim());
     const effectiveTimeoutMs = timeoutMs ?? (isHeavyCommand ? 300000 : 60000);
 
-    const res = isWin
-      ? await runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs)
-      : await runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs);
+    const isWsl = isWslKaraf(settings);
+    const res = isWsl
+      ? await (() => {
+          const wslClient = resolveKarafWslClient(settings);
+          const targetDistro = wslClient?.distro || settings.karafWslDistro!;
+          const targetClient = wslClient?.linuxClientPath || karafClient;
+          const wslCmd = buildWslClientArgs(targetDistro, targetClient, clientArgs);
+          return runCapturedProcess(wslCmd.command, wslCmd.args, { env: childEnv }, onChunk, effectiveTimeoutMs);
+        })()
+      : isWin
+        ? await runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs)
+        : await runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs);
 
     if (res.timedOut || (res.code !== 0 && res.stderr?.includes('Processo encerrado por timeout'))) {
       const isHeavy = /^(?:feature:(?:install|repo-add)|bundle:(?:install|update))/i.test(command.trim());
@@ -517,7 +557,9 @@ export class KarafService {
 
     // Fallback inteligente para comandos de log caso a saída via SSH esteja vazia
     if (command.startsWith('log:display') && res.code === 0 && !res.stdout.trim() && settings.karafPath) {
+      const wslLog = isWslKaraf(settings) ? resolveKarafWslLogPath(settings) : null;
       const candidates = [
+        ...(wslLog ? [wslLog] : []),
         path.join(settings.karafPath, 'data', 'log', 'winthor.log'),
         path.join(settings.karafPath, 'data', 'log', 'karaf.log')
       ];
@@ -623,6 +665,39 @@ export class KarafService {
     }
 
     const settings = this.configService.getSettings();
+
+    if (isWslKaraf(settings)) {
+      const wslServer = resolveKarafWslServer(settings);
+      if (!wslServer) {
+        onLog(`[ERRO] Script de inicialização do Karaf no WSL não encontrado.\r\n`);
+        return false;
+      }
+      const { distro, linuxServerDir, scriptName } = wslServer;
+      onLog(`[OK] Inicializando Karaf OSGi (WSL - ${distro}) em modo Debug (Console Embutido)...\r\n`);
+      const debugPort = settings.karafDebugPort || 5005;
+      const bashCmd = `export JAVA_DEBUG_PORT=${debugPort} && cd "${linuxServerDir}" && ./${scriptName} debug`;
+      try {
+        this.embeddedKarafProcess = spawn('wsl.exe', ['-d', distro, '--', 'bash', '-c', bashCmd], {
+          detached: true
+        });
+        this.embeddedKarafProcess.stdout?.on('data', (data) => onLog(data.toString()));
+        this.embeddedKarafProcess.stderr?.on('data', (data) => onLog(data.toString()));
+        this.embeddedKarafProcess.on('close', (code) => {
+          onLog(`\r\n[AVISO] Sessão do Karaf Debug (WSL) encerrada (Código: ${code}).\r\n`);
+          this.embeddedKarafProcess = null;
+        });
+        this.embeddedKarafProcess.on('error', (err) => {
+          onLog(`\r\n[ERRO] Falha no processo do Karaf no WSL: ${err.message}\r\n`);
+          this.embeddedKarafProcess = null;
+        });
+        return true;
+      } catch (err: any) {
+        onLog(`[ERRO FATAL] Não foi possível iniciar o Karaf no WSL: ${err?.message || err}\r\n`);
+        this.embeddedKarafProcess = null;
+        return false;
+      }
+    }
+
     const karafBin = path.join(settings.karafPath, 'bin');
     const exeFile = this.getKarafServerExecutable();
 
@@ -692,6 +767,11 @@ export class KarafService {
 
   public async stopEmbeddedKaraf(): Promise<boolean> {
     if (!this.embeddedKarafProcess) return true;
+
+    const settings = this.configService.getSettings();
+    if (isWslKaraf(settings)) {
+      await killWslKarafProcesses(settings.karafWslDistro!);
+    }
 
     try {
       if (this.embeddedKarafProcess.pid) {
@@ -1010,7 +1090,8 @@ export class KarafService {
             state,
             repository,
             description,
-            isWinthor
+            isWinthor,
+            installed: true
           });
         }
       }
@@ -1782,6 +1863,8 @@ export class KarafService {
           const description = parts.slice(5).join(' ') || '';
           const isWinthor = /winthor|totvs/i.test(name) || /winthor|totvs/i.test(repository);
 
+          const isInstalled = state.toLowerCase() === 'started' || state.toLowerCase() === 'installed';
+
           features.push({
             name,
             version,
@@ -1789,7 +1872,8 @@ export class KarafService {
             state,
             repository,
             description,
-            isWinthor
+            isWinthor,
+            installed: isInstalled
           });
         }
       }

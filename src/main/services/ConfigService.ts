@@ -295,6 +295,8 @@ export function getDynamicDefaultConfig(): AppSettings {
   return {
     appPath,
     karafPath: detectDefaultKarafPath(),
+    karafEnvironment: 'local',
+    karafWslDistro: '',
     jdkPath: detectDefaultJdkPath(),
     karafScript: '',
     karafUser: process.env.KARAF_USER || 'karaf',
@@ -640,17 +642,29 @@ export class ConfigService {
       return { path: targetPath, exists: false, isDirectory: false, isFile: false, message: 'Caminho não informado' };
     }
     try {
-      const exists = fs.existsSync(targetPath);
+      let resolvedPath = targetPath;
+      if (targetPath.startsWith('/') && !fs.existsSync(targetPath)) {
+        const settings = this.getSettings();
+        if (settings.karafWslDistro) {
+          const unc = `\\\\wsl.localhost\\${settings.karafWslDistro}${targetPath.replace(/\//g, '\\')}`;
+          const uncAlt = `\\\\wsl$\\${settings.karafWslDistro}${targetPath.replace(/\//g, '\\')}`;
+          if (fs.existsSync(unc)) resolvedPath = unc;
+          else if (fs.existsSync(uncAlt)) resolvedPath = uncAlt;
+        }
+      }
+      const exists = fs.existsSync(resolvedPath);
       if (!exists) {
         return { path: targetPath, exists: false, isDirectory: false, isFile: false, message: 'Caminho não encontrado no disco' };
       }
-      const stat = fs.statSync(targetPath);
+      const stat = fs.statSync(resolvedPath);
       return {
         path: targetPath,
         exists: true,
         isDirectory: stat.isDirectory(),
         isFile: stat.isFile(),
-        message: stat.isDirectory() ? 'Diretório acessível' : 'Arquivo acessível'
+        message: stat.isDirectory()
+          ? (resolvedPath !== targetPath ? 'Diretório acessível no WSL' : 'Diretório acessível')
+          : (resolvedPath !== targetPath ? 'Arquivo acessível no WSL' : 'Arquivo acessível')
       };
     } catch (err: any) {
       return {

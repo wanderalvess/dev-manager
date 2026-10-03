@@ -1,6 +1,7 @@
 import React from 'react';
 import { KeyRound, Terminal, Eye, EyeOff, Activity, ShieldCheck } from 'lucide-react';
 import { AppSettings } from '../../../../../shared/types';
+import { KarafWslSection } from './KarafWslSection';
 
 interface KarafTabProps {
   settings: AppSettings;
@@ -18,11 +19,13 @@ export const KarafTab: React.FC<KarafTabProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
+        <KarafWslSection settings={settings} setSettings={setSettings} />
+
         <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
-              <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <KeyRound className="w-4 h-4 text-amber-500" /> Credenciais & Autenticação do Apache Karaf
+              <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <KeyRound className="w-3.5 h-3.5 text-amber-500" /> Credenciais &amp; Autenticação do Apache Karaf
               </h3>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Utilizado para autenticação no <code className="font-mono text-amber-500">client.bat</code> (OSGi) e comandos SSH remotos.

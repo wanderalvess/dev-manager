@@ -11,10 +11,12 @@ import {
   OracleActiveSessionsResult,
   OracleRecentStatementsResult,
   OracleCapturedBind,
-  OracleStatementBindsResult
+  OracleStatementBindsResult,
+  ParseTnsNamesResult
 } from '../../shared/types';
 import { getListeningPid } from '../utils/network';
 import { isValidSqlIdentifier, isValidSqlTableName } from '../utils/security';
+import { parseTnsNamesFile } from '../utils/tnsnamesParser';
 import {
   buildActiveSessionsQuery,
   buildRecentStatementsQuery,
@@ -1085,7 +1087,7 @@ export class DatabaseService {
   private initOracleThickClient(oracledb: any, libDir?: string): void {
     if (DatabaseService.oracleClientInitialized) return;
     try {
-      const options: { libDir?: string; binaryDir?: string } = {};
+      const options: { libDir?: string; binaryDir?: string; configDir?: string } = {};
       const trimmed = libDir?.trim();
       if (trimmed) {
         options.libDir = trimmed;
@@ -1093,6 +1095,10 @@ export class DatabaseService {
       const binaryDir = this.getOracleBinaryDir();
       if (binaryDir) {
         options.binaryDir = binaryDir;
+      }
+      const tnsPath = this.configService?.getSettings().oracleTnsnamesPath?.trim();
+      if (tnsPath && fs.existsSync(tnsPath)) {
+        options.configDir = path.dirname(tnsPath);
       }
       oracledb.initOracleClient(options);
       DatabaseService.oracleClientInitialized = true;
@@ -1132,6 +1138,12 @@ export class DatabaseService {
       }
     } catch {
       // Ignora caso a versão não suporte
+    }
+
+    // Configura TNS_ADMIN caso o tnsnames.ora esteja configurado
+    const tnsPath = this.configService?.getSettings().oracleTnsnamesPath?.trim();
+    if (tnsPath && fs.existsSync(tnsPath) && !process.env.TNS_ADMIN) {
+      process.env.TNS_ADMIN = path.dirname(tnsPath);
     }
 
     // Se o usuário solicitou Thick Mode ou informou o caminho do Instant Client, inicializa antes de conectar
@@ -1323,5 +1335,29 @@ export class DatabaseService {
       return 'Serviço/Banco Oracle não encontrado pelo Listener (ORA-12514). Verifique o Service Name / SID.';
     }
     return msg;
+  }
+
+  /**
+   * Lê e faz o parsing das entradas de conexão do arquivo tnsnames.ora do Oracle.
+   * Se nenhum caminho for informado, utiliza o caminho configurado em AppSettings.oracleTnsnamesPath
+   * ou busca no diretório TNS_ADMIN do ambiente.
+   */
+  public async parseTnsNames(filePath?: string): Promise<ParseTnsNamesResult> {
+    const targetPath = filePath?.trim() || this.configService?.getSettings().oracleTnsnamesPath?.trim();
+    if (!targetPath) {
+      const tnsAdmin = process.env.TNS_ADMIN;
+      if (tnsAdmin) {
+        const candidate = path.join(tnsAdmin, 'tnsnames.ora');
+        if (fs.existsSync(candidate)) {
+          return parseTnsNamesFile(candidate);
+        }
+      }
+      return {
+        success: false,
+        entries: [],
+        error: 'Nenhum caminho de tnsnames.ora configurado. Defina o arquivo nas Configurações do sistema.'
+      };
+    }
+    return parseTnsNamesFile(targetPath);
   }
 }

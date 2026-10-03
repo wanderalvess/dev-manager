@@ -16,7 +16,7 @@ import {
   ScrollText,
   HardDriveDownload,
   Bot,
-  Sparkles,
+  HelpCircle,
   RotateCcw,
   AlertTriangle,
   CheckCheck
@@ -101,6 +101,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   const [settings, setSettings] = useState<AppSettings>({
     appPath: '',
     karafPath: '',
+    karafEnvironment: 'local',
+    karafWslDistro: '',
     jdkPath: '',
     karafScript: '',
     karafUser: 'karaf',
@@ -130,6 +132,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     psqlPath: '',
     impdpPath: '',
     mysqlPath: '',
+    oracleTnsnamesPath: '',
     ccwBaseUrl: 'https://centraldecontrole.pcinformatica.com.br',
     ccwWinthorVersion: '30',
     ccwAuthCookie: ''
@@ -510,6 +513,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           psqlPath: st.psqlPath || '',
           impdpPath: st.impdpPath || '',
           mysqlPath: st.mysqlPath || '',
+          oracleTnsnamesPath: st.oracleTnsnamesPath || '',
           ccwBaseUrl: st.ccwBaseUrl || 'https://centraldecontrole.pcinformatica.com.br',
           ccwWinthorVersion: st.ccwWinthorVersion || '30',
           ccwAuthCookie: st.ccwAuthCookie || '',
@@ -560,11 +564,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     if (window.electronAPI && window.electronAPI.selectFile) {
       const current = (settings[field] as string) || '';
       const isScript = field === 'karafScript';
+      const isOra = field === 'oracleTnsnamesPath';
       const selected = await window.electronAPI.selectFile({
         defaultPath: current,
         filters: isScript
           ? [
               { name: 'Scripts de Execução (*.bat;*.cmd)', extensions: ['bat', 'cmd'] },
+              { name: 'Todos os arquivos (*.*)', extensions: ['*'] }
+            ]
+          : isOra
+          ? [
+              { name: 'Configuração Oracle (*.ora)', extensions: ['ora'] },
               { name: 'Todos os arquivos (*.*)', extensions: ['*'] }
             ]
           : [
@@ -881,24 +891,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   return (
     <div className="h-full w-full flex flex-col p-4 md:p-5 space-y-4 overflow-hidden">
       {/* Cabeçalho da Página de Configurações */}
-      <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-wrap items-center justify-between gap-3">
+      <div className="cockpit-panel rounded-xl p-4 shadow-sm border border-border flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
-            <Settings className="w-5 h-5" />
+          <div className="p-2 rounded-lg bg-muted border border-border/80 text-muted-foreground shrink-0">
+            <Settings className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-              Configurações do Ambiente & Diretórios
-              <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
-                Perfil Local
-              </span>
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              Configurações do Ambiente &amp; Diretórios
               <button
                 type="button"
                 onClick={tour.open}
-                className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
+                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                 title="Rever o tour guiado desta página"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <HelpCircle className="w-3.5 h-3.5" />
               </button>
             </h2>
             <p className="text-[11px] text-muted-foreground">
@@ -921,10 +928,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-2.5 bg-card hover:bg-muted text-foreground border border-border hover:border-primary/50 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm"
+            className="px-3 py-2 bg-card hover:bg-muted text-foreground border border-border hover:border-border rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5"
             title="Importar configurações de um arquivo JSON compartilhado pela equipe"
           >
-            <Upload className="w-3.5 h-3.5 text-blue-500" />
+            <Upload className="w-3.5 h-3.5 text-muted-foreground" />
             <span>Importar</span>
           </button>
 
@@ -933,10 +940,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             <button
               type="button"
               onClick={() => setExportMenuOpen((prev) => !prev)}
-              className="px-3 py-2.5 bg-card hover:bg-muted text-foreground border border-border hover:border-primary/50 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm"
+              className="px-3 py-2 bg-card hover:bg-muted text-foreground border border-border hover:border-border rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5"
               title="Exportar configurações para compartilhar com o time ou criar backup"
             >
-              <Download className="w-3.5 h-3.5 text-emerald-500" />
+              <Download className="w-3.5 h-3.5 text-muted-foreground" />
               <span>Exportar</span>
               <ChevronDown className="w-3 h-3 text-muted-foreground" />
             </button>
@@ -944,11 +951,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             {exportMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setExportMenuOpen(false)} />
-                <div className="absolute right-0 mt-2 w-72 origin-top-right rounded-xl bg-card border border-border shadow-2xl p-1.5 z-50 flex flex-col space-y-1">
+                <div className="absolute right-0 mt-2 w-72 origin-top-right rounded-lg bg-card border border-border shadow-xl p-1.5 z-50 flex flex-col space-y-1">
                   <button
                     type="button"
                     onClick={() => handleExportSettings(true)}
-                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors hover:bg-muted text-left"
+                    className="w-full px-3 py-2 rounded-md text-xs font-semibold flex items-center gap-2.5 transition-colors hover:bg-muted text-left"
                   >
                     <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
                     <div>
@@ -959,7 +966,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                   <button
                     type="button"
                     onClick={() => handleExportSettings(false)}
-                    className="w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-colors hover:bg-muted text-left"
+                    className="w-full px-3 py-2 rounded-md text-xs font-semibold flex items-center gap-2.5 transition-colors hover:bg-muted text-left"
                   >
                     <Download className="w-4 h-4 text-amber-500 shrink-0" />
                     <div>
@@ -978,19 +985,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             type="button"
             onClick={handleAutoDetect}
             disabled={isDetecting}
-            className="px-3.5 py-2.5 bg-card hover:bg-muted text-foreground border border-border hover:border-primary/50 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 disabled:opacity-50 shadow-sm"
+            className="px-3 py-2 bg-card hover:bg-muted text-foreground border border-border hover:border-border rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5 disabled:opacity-50"
           >
-            <RotateCcw className={`w-3.5 h-3.5 text-primary ${isDetecting ? 'animate-spin' : ''}`} />
+            <RotateCcw className={`w-3.5 h-3.5 text-muted-foreground ${isDetecting ? 'animate-spin' : ''}`} />
             <span>{isDetecting ? 'Detectando...' : 'Auto-Detectar'}</span>
           </button>
 
           <div className="relative flex items-center">
             {hasUnsavedChanges && !isSaving && (
               <span
-                className="mr-2 flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-lg"
+                className="mr-2 flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md"
                 title="Existem alterações que ainda não foram salvas"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 Não salvo
               </span>
             )}
@@ -998,12 +1005,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
               data-tour="save-settings-button"
               onClick={() => handleSave()}
               disabled={isSaving}
-              className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs rounded-xl shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] flex items-center space-x-2 border border-primary/40"
+              className="px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs rounded-lg shadow-sm transition-colors flex items-center space-x-2"
             >
               {savedSuccess ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-white" />
-                  <span>Salvo com Sucesso!</span>
+                  <span>Salvo!</span>
                 </>
               ) : (
                 <>
@@ -1041,69 +1048,69 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       />
 
       {/* Abas de Navegação Interna das Configurações */}
-      <div className="flex items-center space-x-2 border-b border-border pb-2 text-xs flex-wrap gap-y-2" data-tour="tabs-nav-dirs">
+      <div className="flex items-center border-b border-border pb-0 text-xs flex-wrap gap-x-0.5 gap-y-1" data-tour="tabs-nav-dirs">
         <button
           onClick={() => setActiveTab('dirs')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'dirs'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Folder className="w-4 h-4" />
+          <Folder className="w-3.5 h-3.5" />
           <span>Diretórios & IDE</span>
         </button>
 
         <button
           onClick={() => setActiveTab('karaf')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'karaf'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <KeyRound className="w-4 h-4 text-amber-500" />
-          <span>Credenciais Karaf</span>
+          <KeyRound className="w-3.5 h-3.5" />
+          <span>Karaf</span>
         </button>
 
         <button
           onClick={() => setActiveTab('azure')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'azure'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <GitBranch className="w-4 h-4 text-blue-500" />
-          <span>Azure DevOps & Git</span>
+          <GitBranch className="w-3.5 h-3.5" />
+          <span>Azure &amp; Git</span>
         </button>
 
         <button
           onClick={() => setActiveTab('services')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'services'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Server className="w-4 h-4" />
-          <span>Serviços Windows & Processos</span>
-          <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
+          <Server className="w-3.5 h-3.5" />
+          <span>Serviços &amp; Processos</span>
+          <span className="text-[10px] font-mono text-muted-foreground ml-1">
             {(settings.trackedServices || []).length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('ports')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'ports'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Radio className="w-4 h-4" />
-          <span>Portas de Rede Monitoradas</span>
-          <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
+          <Radio className="w-3.5 h-3.5" />
+          <span>Portas</span>
+          <span className="text-[10px] font-mono text-muted-foreground ml-1">
             {(settings.monitoredPorts || []).length}
           </span>
         </button>
@@ -1111,69 +1118,69 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         <button
           data-tour="automation-defaults"
           onClick={() => setActiveTab('automation')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'automation'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Zap className="w-4 h-4" />
-          <span>Automação Padrão</span>
+          <Zap className="w-3.5 h-3.5" />
+          <span>Automação</span>
         </button>
 
         <button
           onClick={() => setActiveTab('logs')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'logs'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <ScrollText className="w-4 h-4 text-emerald-500" />
-          <span>Logs em Tempo Real</span>
-          <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
+          <ScrollText className="w-3.5 h-3.5" />
+          <span>Logs</span>
+          <span className="text-[10px] font-mono text-muted-foreground ml-1">
             {(settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('backup')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'backup'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <HardDriveDownload className="w-4 h-4 text-sky-500" />
-          <span>Backup de Bancos</span>
+          <HardDriveDownload className="w-3.5 h-3.5" />
+          <span>Backup</span>
         </button>
 
         <button
           onClick={() => setActiveTab('ai')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'ai'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Bot className="w-4 h-4 text-primary" />
-          <span>IA & LLM (BYOK)</span>
-          <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
+          <Bot className="w-3.5 h-3.5" />
+          <span>IA &amp; LLM</span>
+          <span className="text-[10px] font-mono text-muted-foreground ml-1">
             {(settings.llmProviders || []).length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('quality')}
-          className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl font-bold transition-all border ${
+          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
             activeTab === 'quality'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md'
-              : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <CheckCheck className="w-4 h-4 text-emerald-400" />
+          <CheckCheck className="w-3.5 h-3.5" />
           <span>Qualidade &amp; QA</span>
-          <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-mono">
+          <span className="text-[10px] font-mono text-muted-foreground ml-1">
             {(settings.qualitySources || []).length}
           </span>
         </button>

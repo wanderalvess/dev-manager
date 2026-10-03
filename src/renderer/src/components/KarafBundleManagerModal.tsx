@@ -216,7 +216,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     }
   }, [isOpen, fetchBundles]);
 
-  // Atalho '/' para focar a busca
+  // Atalhos: '/' para focar a busca e 'Escape' para fechar o modal
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -227,11 +227,44 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       ) {
         e.preventDefault();
         searchRef.current?.focus();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        const hasOpenSubmodal = Boolean(
+          uninstallTarget ||
+          reinstallTarget ||
+          detailsTarget ||
+          isInstallModalOpen ||
+          isFeaturesModalOpen ||
+          isRoutine801ModalOpen ||
+          isSnapshotModalOpen ||
+          isDeployHistoryModalOpen ||
+          isLogModalOpen ||
+          inlineDiagBundle
+        );
+        if (!hasOpenSubmodal) {
+          e.preventDefault();
+          onClose();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [
+    isOpen,
+    onClose,
+    uninstallTarget,
+    reinstallTarget,
+    detailsTarget,
+    isInstallModalOpen,
+    isFeaturesModalOpen,
+    isRoutine801ModalOpen,
+    isSnapshotModalOpen,
+    isDeployHistoryModalOpen,
+    isLogModalOpen,
+    inlineDiagBundle
+  ]);
 
   // Contadores
   const stats = useMemo(() => computeBundleStats(bundles), [bundles]);

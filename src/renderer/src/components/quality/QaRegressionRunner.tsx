@@ -20,7 +20,9 @@ import {
   Terminal,
   Plus,
   Trash2,
-  Table
+  Table,
+  Download,
+  HelpCircle
 } from 'lucide-react';
 import {
   AppSettings,
@@ -36,6 +38,9 @@ import {
   buildJiraEvidenceClipboardText,
   generateMarkdownEvidence
 } from '../../utils/qaRegressionRendererUtils';
+import { exportTemplateAsJsonFile } from '../../utils/qaTemplateExportUtils';
+import { QaRegressionTemplatesHelpModal } from './modals/QaRegressionTemplatesHelpModal';
+import { QaFetchPayloadModal } from './modals/QaFetchPayloadModal';
 
 interface QaRegressionRunnerProps {
   settings: AppSettings | null;
@@ -64,6 +69,8 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [stepSqlModal, setStepSqlModal] = useState<{ title: string; sql: string } | null>(null);
   const [rowsModal, setRowsModal] = useState<{ title: string; rows: any[] } | null>(null);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+  const [isFetchPayloadModalOpen, setIsFetchPayloadModalOpen] = useState<boolean>(false);
 
   // Filtros de resultados
   const [resultFilter, setResultFilter] = useState<'all' | 'failed' | 'passed'>('all');
@@ -157,6 +164,25 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
       showToast('Este template não possui JSON de exemplo configurado.', 'info');
     }
   };
+
+  const handleSelectIncomingPayload = (json: string) => {
+    setRawJson(json);
+    const detected = autoExtractVariablesFromJson(json);
+    const keysCount = Object.keys(detected).length;
+    if (keysCount > 0) {
+      setVariables((prev) => ({ ...prev, ...detected }));
+      showToast(`${keysCount} variáveis mapeadas automaticamente do JSON!`, 'success');
+    }
+  };
+
+  const handleExportCurrentTemplate = useCallback(() => {
+    if (!selectedTemplate) {
+      showToast('Selecione um cenário de teste para exportar.', 'info');
+      return;
+    }
+    exportTemplateAsJsonFile(selectedTemplate);
+    showToast(`Template "${selectedTemplate.name}" exportado com sucesso!`, 'success');
+  }, [selectedTemplate]);
 
   // Executa o teste
   const handleRunSuite = async () => {
@@ -306,6 +332,17 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
               ))}
             </select>
 
+            <button
+              type="button"
+              onClick={handleExportCurrentTemplate}
+              disabled={!selectedTemplate}
+              className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+              title="Exportar template selecionado para arquivo JSON"
+            >
+              <Download className="w-3.5 h-3.5 text-primary" />
+              <span>Exportar Template</span>
+            </button>
+
             {onOpenTemplatesManager && (
               <button
                 type="button"
@@ -317,6 +354,16 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
                 <span>Gerenciar Templates</span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={() => setIsHelpModalOpen(true)}
+              className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Guia Prático: Como usar, configurar asserções e exportar templates"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-primary" />
+              <span>Como Usar</span>
+            </button>
           </div>
 
           {/* Botão de Execução Principal */}
@@ -391,6 +438,16 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
                   Payload JSON da API ou PDV:
                 </span>
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsFetchPayloadModalOpen(true)}
+                    className="text-[11px] text-primary font-semibold hover:text-primary/80 flex items-center gap-1 cursor-pointer transition-colors px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
+                    title="Obter payload JSON gravado no banco (PCINTEGRACAOCORE) ou via API REST externa"
+                  >
+                    <Database className="w-3 h-3 text-primary" />
+                    <span>Obter Payload</span>
+                  </button>
+                  <span className="text-border">|</span>
                   <button
                     type="button"
                     onClick={handleLoadSampleJson}
@@ -972,6 +1029,22 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal Guia de Ajuda de Templates */}
+      <QaRegressionTemplatesHelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
+
+      {/* Modal para Obter Payload do Banco PCINTEGRACAOCORE */}
+      <QaFetchPayloadModal
+        isOpen={isFetchPayloadModalOpen}
+        onClose={() => setIsFetchPayloadModalOpen(false)}
+        onSelectPayload={handleSelectIncomingPayload}
+        connectionId={selectedConnectionId}
+        defaultFilial={variables.codFilial || '1'}
+        defaultCupom={variables.numCupom || ''}
+      />
     </div>
   );
 };

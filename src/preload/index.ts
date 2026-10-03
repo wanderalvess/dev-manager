@@ -103,6 +103,10 @@ import type {
   QaRegressionTemplate,
   QaExecutionRequest,
   QaExecutionResult,
+  QaCoreSearchFilter,
+  QaCoreSearchResult,
+  QaApiFetchRequest,
+  QaApiFetchResult,
   TestRunnerConfig,
   TestExecutionResult,
   TautProjectStatus,
@@ -110,7 +114,8 @@ import type {
   TautSpecSummary,
   TautRunOptions,
   TautCsvIntakeResult,
-  TautEnvSyncResult
+  TautEnvSyncResult,
+  ParseTnsNamesResult
 } from '../shared/types';
 
 const electronAPI = {
@@ -459,6 +464,8 @@ const electronAPI = {
     ipcRenderer.invoke('settings:import', jsonString),
 
   // Banco de Dados (Oracle, MySQL, Postgres)
+  parseTnsNames: (filePath?: string): Promise<ParseTnsNamesResult> =>
+    ipcRenderer.invoke('db:parse-tnsnames', filePath),
   testDbConnection: (config: DatabaseConnectionConfig): Promise<{ success: boolean; message: string; version?: string }> =>
     ipcRenderer.invoke('db:test-connection', config),
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<QueryResult> =>
@@ -753,6 +760,10 @@ const electronAPI = {
     ipcRenderer.invoke('qa:execute-suite', request),
   qaGetTemplatesDir: (): Promise<string> =>
     ipcRenderer.invoke('qa:get-templates-dir'),
+  qaSearchCorePayloads: (filter: QaCoreSearchFilter, connectionId?: string): Promise<QaCoreSearchResult> =>
+    ipcRenderer.invoke('qa:search-core-payloads', filter, connectionId),
+  qaFetchApiPayload: (request: QaApiFetchRequest): Promise<QaApiFetchResult> =>
+    ipcRenderer.invoke('qa:fetch-api-payload', request),
 
   // Automated Test Runners (Maven, Playwright, Cypress, Newman)
   testRunnerList: (): Promise<TestRunnerConfig[]> =>

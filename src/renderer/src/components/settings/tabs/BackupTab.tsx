@@ -3,7 +3,8 @@ import {
   HardDriveDownload,
   Database,
   FolderOpen,
-  RotateCcw
+  RotateCcw,
+  Network
 } from 'lucide-react';
 import { AppSettings } from '../../../../../shared/types';
 
@@ -188,6 +189,45 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Configuração de Rede Oracle & tnsnames.ora */}
+        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border" id="field-oracleTnsnames">
+          <div className="flex items-center justify-between pb-1 border-b border-border/60">
+            <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+              <Network className="w-4 h-4 text-orange-500" /> Rede Oracle & tnsnames.ora
+            </h3>
+            <span className="text-[10px] text-muted-foreground font-mono">Busca de conexões & TNS_ADMIN</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Caminho do arquivo <span className="font-mono text-foreground font-semibold">tnsnames.ora</span> utilizado pelo DB Studio para importar e preencher automaticamente os dados de conexão do Oracle (Host, Porta, Service Name e SID).
+          </p>
+
+          <div className="space-y-1.5 text-xs">
+            <label className="font-bold text-foreground flex items-center gap-1.5">
+              <Database className="w-3.5 h-3.5 text-orange-500" /> Arquivo de Configuração (tnsnames.ora)
+            </label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={settings.oracleTnsnamesPath || ''}
+                onChange={(e) => setSettings({ ...settings, oracleTnsnamesPath: e.target.value })}
+                className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                placeholder="Ex: C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora"
+              />
+              <button
+                type="button"
+                onClick={() => handleBrowseFile('oracleTnsnamesPath')}
+                className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm cursor-pointer"
+                title="Selecionar arquivo tnsnames.ora"
+              >
+                <FolderOpen className="w-3.5 h-3.5 text-orange-500" />
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Também define automaticamente o diretório <span className="font-mono text-foreground font-semibold">TNS_ADMIN</span> para resoluções nativas do driver Oracle.
+            </p>
           </div>
         </div>
       </div>

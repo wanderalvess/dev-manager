@@ -19,6 +19,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-wtaLogin', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Usuário WTA (Login Automático)', keywords: 'wta login usuario winthor' },
   { id: 'field-wtaPassword', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Senha / Hash WTA', keywords: 'wta senha password hash winthor' },
   { id: 'field-wtaAuthToken', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Cookie de Autenticação WTA (suukie)', keywords: 'wta cookie token suukie sessao autenticacao' },
+  { id: 'field-karafWsl', tab: 'karaf', tabLabel: 'Apache Karaf', label: 'Ambiente de Execução do Karaf (Local / WSL)', keywords: 'karaf wsl linux ubuntu debian ambiente execucao' },
   { id: 'field-karafUser', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Usuário Karaf (SSH)', keywords: 'karaf usuario ssh client.bat' },
   { id: 'field-karafPass', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Senha Karaf', keywords: 'karaf senha password ssh' },
   { id: 'field-apmInstrumentation', tab: 'karaf', tabLabel: 'Apache Karaf', label: 'Telemetria APM (OpenTelemetry Java Agent)', keywords: 'telemetria apm opentelemetry otel javaagent traces karaf logs' },
@@ -29,6 +30,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-automation', tab: 'automation', tabLabel: 'Automação Padrão', label: 'Automação Padrão do Pipeline de Ambiente', keywords: 'automacao pipeline padrao debug embedded launch' },
   { id: 'field-logs', tab: 'logs', tabLabel: 'Logs em Tempo Real', label: 'Fontes de Logs em Tempo Real', keywords: 'logs tail arquivo fonte tempo real' },
   { id: 'field-backup', tab: 'backup', tabLabel: 'Backup de Bancos', label: 'Backup e Restore de Bancos de Dados', keywords: 'backup restore banco dados expdp impdp pg_dump agendamento webhook' },
+  { id: 'field-oracleTnsnames', tab: 'backup', tabLabel: 'Backup & Oracle', label: 'Arquivo tnsnames.ora (Oracle)', keywords: 'tnsnames tnsnames.ora tns oracle rede listener conexao banco' },
   { id: 'field-ai', tab: 'ai', tabLabel: 'IA & Provedores LLM', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' },
   { id: 'field-quality', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Integrações de Testes (Zephyr, Jira, Azure)', keywords: 'qualidade qa zephyr scale squad jira test plans testes homologacao cenarios token api' }
 ];

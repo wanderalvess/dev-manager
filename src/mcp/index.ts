@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.28.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.31.0';
   } catch {
-    return '1.28.0';
+    return '1.31.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -40,6 +40,7 @@ import { OracleTracerCaptureService } from '../main/services/OracleTracerCapture
 import { getApmReceiverHandlePath } from '../main/services/ApmService';
 import { ApmReceiverClient } from '../main/services/ApmReceiverClient';
 import { QaRegressionService } from '../main/services/QaRegressionService';
+import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
@@ -68,6 +69,7 @@ const llmService = new LlmService(configService, docsIndexService);
 const routine801Service = new Routine801Service(configService, karafService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
 const qaRegressionService = new QaRegressionService(configService, databaseService);
+const qaPayloadService = new QaPayloadService(configService, databaseService);
 const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
 const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
 // Os traces vivem na memória do processo dono da porta OTLP (app desktop ou servidor web): este
@@ -169,7 +171,7 @@ const KarafDeployRequestSchema = z.object({
   port: z.number().int().optional()
 });
 
-const SETTINGS_PATH_KEYS = ['appPath', 'karafPath', 'intellijPath', 'projectsPath'] as const;
+const SETTINGS_PATH_KEYS = ['appPath', 'karafPath', 'intellijPath', 'projectsPath', 'oracleTnsnamesPath'] as const;
 
 const DatabaseTypeSchema = z.enum(['oracle', 'mysql', 'postgres']);
 
@@ -185,6 +187,7 @@ const DatabaseConnectionConfigSchema = z.object({
   oracleMode: z.enum(['serviceName', 'sid']).optional(),
   oracleClientPath: z.string().optional(),
   oracleThickMode: z.boolean().optional(),
+  tnsAlias: z.string().optional(),
   ssl: z.boolean().optional(),
   isDefault: z.boolean().optional()
 });
@@ -1963,6 +1966,25 @@ server.registerTool(
 );
 
 server.registerTool(
+  'db_list_tns_entries',
+  {
+    title: 'Listar conexões do tnsnames.ora',
+    description:
+      'Lê e extrai os aliases e configurações de conexão (Host, Porta, Service Name, SID) do arquivo tnsnames.ora do Oracle configurado no Dev Manager ou de um arquivo específico.',
+    inputSchema: {
+      filePath: z.string().optional().describe('Caminho do arquivo tnsnames.ora (opcional se já configurado em oracleTnsnamesPath).')
+    }
+  },
+  async ({ filePath }) => {
+    const result = await databaseService.parseTnsNames(filePath);
+    if (!result.success) {
+      return fail(result.error || 'Falha ao processar arquivo tnsnames.ora.');
+    }
+    return ok(result);
+  }
+);
+
+server.registerTool(
   'db_test_connection',
   {
     title: 'Testar conexão de banco',
@@ -2849,26 +2871,177 @@ server.registerTool(
   }
 );
 
+const QaAssertionExpectedTypeSchema = z
+  .enum(['jsonPath', 'literal', 'notNull', 'null', 'zero', 'regex'])
+  .describe('Tipo de asserção: jsonPath ($.foo), literal (valor fixo), notNull (<S>), null (<N>), zero (<0>), regex');
+
+const QaAssertionInputSchema = z.object({
+  id: z.string().optional().describe('ID opcional da asserção'),
+  column: z.string().describe('Nome da coluna do resultado SQL a validar (ex: "CODFILIAL", "VLTOTAL")'),
+  expectedType: QaAssertionExpectedTypeSchema,
+  expectedValue: z.string().optional().describe('Valor esperado (obrigatório se literal, regex ou jsonPath)'),
+  description: z.string().optional().describe('Descrição explicativa da regra validada'),
+  rowIndex: z.number().int().optional().describe('Linha a validar (0 para a primeira, -1 para todas as linhas)')
+});
+
+const QaVariableExtractInputSchema = z.object({
+  variableName: z.string().describe('Nome da variável a salvar para os próximos passos (ex: "numCupom")'),
+  column: z.string().describe('Nome da coluna SQL de onde extrair o valor'),
+  rowIndex: z.number().int().optional().describe('Linha da qual extrair o valor (padrão: 0)')
+});
+
+const QaStepInputSchema = z.object({
+  id: z.string().optional().describe('ID opcional do passo'),
+  title: z.string().describe('Título legível do passo (ex: "Validação de Registro de Saída PCNFSAID")'),
+  tableName: z.string().optional().describe('Nome principal da tabela WinThor consultada (ex: "PCNFSAID")'),
+  description: z.string().optional().describe('Descrição do propósito deste passo'),
+  enabled: z.boolean().optional().default(true).describe('Se o passo está ativo para execução'),
+  query: z.string().describe('Consulta SQL (suporta binds como :codFilial, :numCupom)'),
+  assertions: z.array(QaAssertionInputSchema).describe('Lista de asserções a serem testadas contra as colunas retornadas'),
+  extractVariables: z.array(QaVariableExtractInputSchema).optional().describe('Variáveis extraídas desta query para os próximos passos')
+});
+
+const QaTemplateInputSchema = z.object({
+  id: z.string().optional().describe('ID único do template (slug em minúsculas, ex: "wsh-validacao-devolucao"). Se omitido, é gerado automaticamente.'),
+  name: z.string().describe('Nome claro do template de validação (ex: "Validação de Devolução de Cupom Fiscal")'),
+  description: z.string().optional().describe('Descrição do fluxo testado e regras de negócio'),
+  category: z.string().optional().describe('Categoria do teste (ex: "Vendas", "Fiscal", "Estoque", "Geral")'),
+  author: z.string().optional().describe('Autor ou time responsável (ex: "QA", "IA", nome do analista)'),
+  version: z.string().optional().describe('Versão do template (ex: "1.0.0")'),
+  defaultVariables: z.record(z.string(), z.any()).optional().describe('Valores padrão para binds de SQL (ex: { codFilial: "1", numCupom: "4387" })'),
+  sampleJson: z.string().optional().describe('Payload JSON de exemplo para referência dos testes'),
+  steps: z.array(QaStepInputSchema).describe('Lista de passos com queries SQL e asserções')
+});
+
+server.registerTool(
+  'qa_save_template',
+  {
+    title: 'Criar ou atualizar template de teste regressivo (QA)',
+    description:
+      'Cria ou atualiza um template de teste regressivo no catálogo local do Dev Manager, persistindo queries SQL, variáveis e regras de asserção.',
+    inputSchema: {
+      id: z.string().optional().describe('ID único do template (slug em minúsculas, ex: "wsh-validacao-devolucao"). Se omitido, é gerado automaticamente.'),
+      name: z.string().describe('Nome claro do template de validação (ex: "Validação de Devolução de Cupom Fiscal")'),
+      description: z.string().optional().describe('Descrição do fluxo testado e regras de negócio'),
+      category: z.string().optional().describe('Categoria do teste (ex: "Vendas", "Fiscal", "Estoque", "Geral")'),
+      author: z.string().optional().describe('Autor ou time responsável (ex: "QA", "IA", nome do analista)'),
+      version: z.string().optional().describe('Versão do template (ex: "1.0.0")'),
+      defaultVariables: z.record(z.string(), z.any()).optional().describe('Valores padrão para binds de SQL (ex: { codFilial: "1", numCupom: "4387" })'),
+      sampleJson: z.string().optional().describe('Payload JSON de exemplo para referência dos testes'),
+      steps: z.array(QaStepInputSchema).describe('Lista de passos com queries SQL e asserções')
+    }
+  },
+  async (args) => {
+    try {
+      const templateId = args.id || `template-${Date.now()}`;
+      const now = new Date().toISOString();
+      const saved = await qaRegressionService.saveTemplate({
+        id: templateId,
+        name: args.name,
+        description: args.description,
+        category: args.category || 'Geral',
+        author: args.author || 'IA',
+        version: args.version || '1.0.0',
+        createdAt: now,
+        updatedAt: now,
+        defaultVariables: args.defaultVariables,
+        sampleJson: args.sampleJson,
+        steps: args.steps.map((step, idx) => ({
+          id: step.id || `step-${idx + 1}-${Date.now()}`,
+          title: step.title,
+          tableName: step.tableName,
+          description: step.description,
+          enabled: step.enabled !== false,
+          query: step.query,
+          assertions: step.assertions.map((ass, aIdx) => ({
+            id: ass.id || `ass-${aIdx + 1}-${Date.now()}`,
+            column: ass.column,
+            expectedType: ass.expectedType,
+            expectedValue: ass.expectedValue,
+            description: ass.description,
+            rowIndex: ass.rowIndex
+          })),
+          extractVariables: step.extractVariables
+        }))
+      });
+      return ok({
+        success: true,
+        message: `Template "${saved.name}" (${saved.id}) salvo com sucesso no catálogo.`,
+        template: saved
+      });
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao salvar template de teste regressivo.');
+    }
+  }
+);
+
+server.registerTool(
+  'qa_delete_template',
+  {
+    title: 'Excluir template de teste regressivo (QA)',
+    description: 'Remove um template de teste regressivo do catálogo local a partir do seu ID.',
+    inputSchema: {
+      templateId: z.string().describe('ID do template a ser removido (ex: "wsh-venda-pdv-completa")')
+    }
+  },
+  async ({ templateId }) => {
+    try {
+      const deleted = await qaRegressionService.deleteTemplate(templateId);
+      if (!deleted) {
+        return fail(`Template com ID "${templateId}" não foi encontrado para exclusão.`);
+      }
+      return ok({
+        success: true,
+        message: `Template "${templateId}" excluído com sucesso.`
+      });
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao excluir template.');
+    }
+  }
+);
+
 server.registerTool(
   'qa_run_regression_suite',
   {
     title: 'Executar bateria de testes regressivos (QA Suite)',
     description:
-      'Executa a esteira de consultas SQL e asserções no banco Oracle contra valores de payload JSON ou literais, validando a integridade das tabelas do WinThor. Retorna o relatório analítico e evidência em Markdown.',
+      'Executa a esteira de consultas SQL e asserções no banco Oracle contra valores de payload JSON ou literais, validando a integridade das tabelas do WinThor. Suporta templateId ou template inline, e leitura de payload via rawJson ou jsonFilePath.',
     inputSchema: {
-      templateId: z.string().describe('ID do template de regressivo a executar (ex: "wsh-venda-pdv-completa")'),
+      templateId: z.string().optional().describe('ID do template de regressivo cadastrado a executar (ex: "wsh-venda-pdv-completa")'),
+      template: QaTemplateInputSchema.optional().describe('Definição de template inline para execução ad-hoc sem persistir no catálogo'),
       connectionId: z.string().optional().describe('ID da conexão de banco Oracle configurada no Dev Manager. Se omitido, usa a primeira ativa.'),
-      rawJson: z.string().optional().describe('Payload JSON da API/PDV para mapeamento de variáveis via JSONPath ($.foo)'),
+      rawJson: z.string().optional().describe('Payload JSON da API/PDV em texto para mapeamento de variáveis via JSONPath ($.foo)'),
+      jsonFilePath: z.string().optional().describe('Caminho absoluto ou relativo do arquivo JSON local contendo o payload/dados de teste'),
       variables: z.record(z.string(), z.any()).optional().describe('Variáveis manuais para bind (ex: { codFilial: "1", numCupom: "4387" })'),
       issueKey: z.string().optional().describe('Chave da issue/tarefa no Jira (ex: "DDWMISSI-T966") para carimbar na evidência')
     }
   },
   async (args) => {
     try {
+      if (!args.templateId && !args.template) {
+        return fail('É necessário informar "templateId" (ID de template existente) ou "template" (definição inline).');
+      }
+
+      let payloadJson = args.rawJson;
+      if (args.jsonFilePath) {
+        if (!isSafeLocalPath(args.jsonFilePath)) {
+          return fail(`Caminho de arquivo local não seguro ou inválido: "${args.jsonFilePath}".`);
+        }
+        if (!fs.existsSync(args.jsonFilePath)) {
+          return fail(`Arquivo de dados/payload não encontrado no caminho: "${args.jsonFilePath}".`);
+        }
+        try {
+          payloadJson = fs.readFileSync(args.jsonFilePath, 'utf-8');
+        } catch (readErr: any) {
+          return fail(`Falha ao ler arquivo de payload "${args.jsonFilePath}": ${readErr?.message || readErr}`);
+        }
+      }
+
       const result = await qaRegressionService.executeSuite({
         templateId: args.templateId,
+        template: args.template as any,
         connectionId: args.connectionId,
-        rawJson: args.rawJson,
+        rawJson: payloadJson,
         variables: args.variables
       });
 
@@ -2899,6 +3072,107 @@ server.registerTool(
       });
     } catch (err: any) {
       return fail(err?.message || 'Falha ao executar suite de validação regressiva.');
+    }
+  }
+);
+
+server.registerTool(
+  'qa_fetch_incoming_payload',
+  {
+    title: 'Obter payload JSON da integração (PCINTEGRACAOCORE)',
+    description:
+      'Localiza e recupera o payload JSON original gravado na tabela PCINTEGRACAOCORE (coluna DADOSTRANSFORMADOS) do banco Oracle. Permite buscar por CPF/CNPJ do consumidor (cgcEnt), número de cupom/venda, chave NFC-e/NF-e, ID externo ou listar transações recentes.',
+    inputSchema: {
+      mode: z.enum(['cupom', 'cgcEnt', 'chave', 'idExterno', 'recent']).describe('Modo de busca do payload'),
+      cgcEnt: z.string().optional().describe('CPF ou CNPJ do consumidor gravado em consumidorFinal.cgcEnt (ex: "68886626088")'),
+      numCupom: z.string().optional().describe('Número do cupom fiscal / venda (ex: "271454")'),
+      codFilial: z.string().optional().describe('Código da filial da venda (ex: "1")'),
+      chaveNfe: z.string().optional().describe('Chave de 44 dígitos da NFC-e ou NF-e'),
+      idExterno: z.string().optional().describe('ID externo ou interno da transação (ex: "pdvsync-vendamensagem-...")'),
+      connectionId: z.string().optional().describe('ID da conexão Oracle. Se omitido, utiliza a primeira conexão ativa.'),
+      limit: z.number().optional().describe('Limite máximo de registros a retornar (padrão: 10)')
+    }
+  },
+  async (args) => {
+    try {
+      const result = await qaPayloadService.searchPayloads(
+        {
+          mode: args.mode,
+          cgcEnt: args.cgcEnt,
+          numCupom: args.numCupom,
+          codFilial: args.codFilial,
+          chaveNfe: args.chaveNfe,
+          idExterno: args.idExterno,
+          limit: args.limit
+        },
+        args.connectionId
+      );
+
+      if (!result.success) {
+        return fail(result.error || 'Falha ao buscar payloads na tabela PCINTEGRACAOCORE.');
+      }
+
+      return ok({
+        totalFound: result.totalFound,
+        items: result.items.map((item) => ({
+          id: item.id,
+          numCupom: item.numCupom,
+          codFilial: item.codFilial,
+          cgcEnt: item.cgcEnt,
+          cliente: item.cliente,
+          pdvOrigem: item.pdvOrigem,
+          chaveNfe: item.chaveNfe,
+          vlTotal: item.vlTotal,
+          data: item.data,
+          rawJsonExcerpt: item.rawJson.slice(0, 1000),
+          rawJson: item.rawJson
+        }))
+      });
+    } catch (err: any) {
+      return fail(err?.message || 'Falha ao executar busca de payload.');
+    }
+  }
+);
+
+server.registerTool(
+  'qa_fetch_api_payload',
+  {
+    title: 'Obter payload JSON via API REST externa',
+    description:
+      'Dispara uma requisição HTTP (GET ou POST) a um serviço de mensageria, API gateway ou endpoint externo e extrai o payload JSON de entrada para alimentar o validador regressivo. Suporta cabeçalhos customizados (tokens, Bearer) e JSONPath para navegar até o objeto desejado (ex: "data.pedido").',
+    inputSchema: {
+      url: z.string().describe('URL completa do endpoint HTTP/HTTPS (ex: "http://localhost:8080/api/v1/pedidos/12345")'),
+      method: z.enum(['GET', 'POST']).optional().describe('Método HTTP da requisição (padrão: GET)'),
+      headers: z.record(z.string(), z.string()).optional().describe('Cabeçalhos HTTP (ex: { "Authorization": "Bearer ...", "x-api-key": "..." })'),
+      body: z.string().optional().describe('Corpo da requisição em formato string/JSON (apenas para método POST)'),
+      jsonPath: z.string().optional().describe('Caminho no JSON para extrair um objeto interno (ex: "data.payload", "response.items[0]")'),
+      timeoutMs: z.number().optional().describe('Tempo limite da requisição em milissegundos (padrão: 15000)')
+    }
+  },
+  async (args) => {
+    try {
+      const result = await qaPayloadService.fetchPayloadFromApi({
+        url: args.url,
+        method: args.method,
+        headers: args.headers,
+        body: args.body,
+        jsonPath: args.jsonPath,
+        timeoutMs: args.timeoutMs
+      });
+
+      if (!result.success) {
+        return fail(result.error || 'Falha ao buscar payload na API externa.');
+      }
+
+      return ok({
+        statusCode: result.statusCode,
+        durationMs: result.durationMs,
+        data: result.data,
+        extractedJson: result.extractedJson,
+        rawJson: result.rawJson
+      });
+    } catch (err: any) {
+      return fail(err?.message || 'Erro inesperado ao consultar API externa.');
     }
   }
 );

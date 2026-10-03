@@ -469,6 +469,10 @@ export interface SelectFileOptions {
 export interface AppSettings {
   appPath?: string;
   karafPath: string;
+  /** Ambiente de execução do Apache Karaf ('local' | 'wsl'). Padrão: 'local' */
+  karafEnvironment?: 'local' | 'wsl';
+  /** Nome da distribuição WSL onde o Karaf está instalado (ex: 'Ubuntu', 'Debian'). Usado quando karafEnvironment === 'wsl' */
+  karafWslDistro?: string;
   jdkPath?: string;
   karafScript?: string;
   karafUser: string;
@@ -525,6 +529,8 @@ export interface AppSettings {
   ccwAuthCookie?: string;
   /** Mapa de extensão -> caminho de executável launcher, para formatos de rotina que não rodam sozinhos (ex: ".PC" -> caminho de um launcher configurado pelo usuário) */
   routineLauncherMap?: Record<string, string>;
+  /** Caminho do arquivo tnsnames.ora de configuração de rede do Oracle (ex: C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora) */
+  oracleTnsnamesPath?: string;
   /** Programas mapeados manualmente pelo usuário para abrir com um clique */
   mappedPrograms?: MappedProgram[];
   /** Caminho do executável pg_dump, quando não estiver no PATH do sistema */
@@ -1031,6 +1037,24 @@ export function getWebUrl(
 
 export type DatabaseType = 'oracle' | 'mysql' | 'postgres';
 
+export interface OracleTnsEntry {
+  alias: string;
+  host?: string;
+  port?: number;
+  serviceName?: string;
+  sid?: string;
+  oracleMode: 'serviceName' | 'sid';
+  protocol?: string;
+  server?: string;
+}
+
+export interface ParseTnsNamesResult {
+  success: boolean;
+  filePath?: string;
+  entries: OracleTnsEntry[];
+  error?: string;
+}
+
 export interface DatabaseConnectionConfig {
   id: string;
   name: string;
@@ -1048,6 +1072,8 @@ export interface DatabaseConnectionConfig {
   oracleClientPath?: string;
   /** Para Oracle: força uso do Thick Mode com Oracle Instant Client (necessário para Oracle 11g e anteriores) */
   oracleThickMode?: boolean;
+  /** Para Oracle: alias TNS de onde a conexão foi carregada a partir do tnsnames.ora (opcional) */
+  tnsAlias?: string;
   /** Flag para SSL/TLS (PostgreSQL e MySQL) */
   ssl?: boolean;
   isDefault?: boolean;
@@ -2439,6 +2465,62 @@ export interface QaExecutionResult {
   extractedVariables: Record<string, any>;
   stepResults: QaStepExecutionResult[];
 }
+
+// --- Busca e Obtenção de Payload de Integração (PCINTEGRACAOCORE / QA Studio) ---
+
+export type QaCoreSearchMode = 'cupom' | 'cgcEnt' | 'chave' | 'idExterno' | 'recent';
+
+export interface QaCoreSearchFilter {
+  mode: QaCoreSearchMode;
+  numCupom?: string;
+  codFilial?: string;
+  cgcEnt?: string;
+  chaveNfe?: string;
+  idExterno?: string;
+  limit?: number;
+}
+
+export interface QaCorePayloadItem {
+  id?: string | number;
+  numCupom?: string;
+  codFilial?: string;
+  cgcEnt?: string;
+  cliente?: string;
+  pdvOrigem?: string;
+  chaveNfe?: string;
+  vlTotal?: string | number;
+  data?: string;
+  rawJson: string;
+}
+
+export interface QaCoreSearchResult {
+  success: boolean;
+  totalFound: number;
+  items: QaCorePayloadItem[];
+  error?: string;
+}
+
+// --- Obtenção de Payload de Integração via API REST Externa (QA Studio) ---
+
+export interface QaApiFetchRequest {
+  url: string;
+  method?: 'GET' | 'POST';
+  headers?: Record<string, string>;
+  body?: string;
+  jsonPath?: string;
+  timeoutMs?: number;
+}
+
+export interface QaApiFetchResult {
+  success: boolean;
+  statusCode?: number;
+  data?: any;
+  rawJson?: string;
+  extractedJson?: string;
+  durationMs?: number;
+  error?: string;
+}
+
 
 // ==========================================
 // Runner de Testes Automatizados (Maven, Playwright, Cypress, Newman)

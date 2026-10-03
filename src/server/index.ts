@@ -36,6 +36,7 @@ import {
   getApmReceiverHandlePath
 } from '../main/services/ApmService';
 import { QaRegressionService } from '../main/services/QaRegressionService';
+import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import {
@@ -154,6 +155,7 @@ const llmService = new LlmService(configService, docsIndexService);
 const routine801Service = new Routine801Service(configService, karafService);
 const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
 const qaRegressionService = new QaRegressionService(configService, databaseService);
+const qaPayloadService = new QaPayloadService(configService, databaseService);
 const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
 const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
 apmService.onNewTrace = (summary) => {
@@ -847,7 +849,7 @@ app.post('/api/settings', (req, res) => {
   // ConfigService.saveSettings — assim os três transportes (IPC/REST/MCP) se comportam
   // igual e um novo campo de segredo não precisa ser listado em 3 arquivos.
 
-  const pathKeys: (keyof AppSettings)[] = ['appPath', 'karafPath', 'intellijPath', 'projectsPath'];
+  const pathKeys: (keyof AppSettings)[] = ['appPath', 'karafPath', 'intellijPath', 'projectsPath', 'oracleTnsnamesPath'];
   for (const key of pathKeys) {
     if (candidate[key] && typeof candidate[key] === 'string') {
       if (!isSafeLocalPath(candidate[key])) {
@@ -883,6 +885,23 @@ app.post('/api/shell/open', (req, res) => {
 });
 
 // 8. Banco de Dados (Oracle, MySQL, Postgres)
+app.post('/api/db/tnsnames/parse', async (req, res) => {
+  try {
+    const { filePath } = req.body || {};
+    res.json(await databaseService.parseTnsNames(filePath));
+  } catch (err: any) {
+    res.status(500).json({ success: false, entries: [], error: err?.message || 'Erro ao processar tnsnames.ora' });
+  }
+});
+
+app.get('/api/db/tnsnames', async (_req, res) => {
+  try {
+    res.json(await databaseService.parseTnsNames());
+  } catch (err: any) {
+    res.status(500).json({ success: false, entries: [], error: err?.message || 'Erro ao processar tnsnames.ora' });
+  }
+});
+
 app.post('/api/db/test', async (req, res) => {
   try {
     const result = await databaseService.testConnection(req.body);
@@ -1991,6 +2010,25 @@ app.post('/api/qa/execute', async (req, res) => {
 
 app.get('/api/qa/templates-dir', (_req, res) => {
   res.json({ path: qaRegressionService.getTemplatesDir() });
+});
+
+app.post('/api/qa/payloads/search', async (req, res) => {
+  try {
+    const { filter, connectionId } = req.body || {};
+    const result = await qaPayloadService.searchPayloads(filter, connectionId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, totalFound: 0, items: [], error: err.message });
+  }
+});
+
+app.post('/api/qa/payloads/fetch-api', async (req, res) => {
+  try {
+    const result = await qaPayloadService.fetchPayloadFromApi(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // --- Runner de Testes Automatizados ---

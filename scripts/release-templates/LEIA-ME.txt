@@ -152,8 +152,40 @@ Dentro do app: Central de Ajuda (Alt+9).
   %APPDATA%\dev-manager
     config.json       configurações (senhas e tokens criptografados)
     .secrets.key      chave de criptografia - não compartilhe
-    models\           modelo do RAG
+    models\           modelo do RAG (busca semântica)
     docs-index.json   índice da documentação
+    qa-templates\     templates de testes regressivos e homologação (.json)
 
   Para levar suas configurações para outra máquina, use o botão "Exportar"
   em Configurações em vez de copiar esses arquivos.
+
+
+-------------------------------------------------------------------------------
+6. TEMPLATES DE TESTES REGRESSIVOS (QA STUDIO)
+-------------------------------------------------------------------------------
+
+  O Validador Regressivo (atalho Alt+Q no app) executa esteiras automatizadas
+  de queries SQL e asserções no banco Oracle contra valores de payloads JSON
+  ou regras de negócio de colunas.
+
+  Caminho dos templates no Windows:
+    %APPDATA%\dev-manager\qa-templates\
+
+  Cenários padrão pré-configurados:
+  - wsh-venda-pdv-completa.json     Venda PDV (Fila, PCNFSAID, PCPEDC, PCMOV, PCPREST)
+  - wsh-cancelamento-venda.json     Devolução e Cancelamento de Venda
+  - wsh-venda-kits-cestas.json      Venda de Produtos com Kits e Cestas
+  - wsh-prevenda-balcao-tv7.json    Pré-Venda Balcão (TV7 e TV8)
+  - wsh-movimentacao-caixa.json     Movimentação de Caixa (Sangria e Suprimento)
+  - wsh-inutilizacao-nfce.json      Inutilização de Numeração NFC-e
+
+  Como gerenciar os templates:
+  1) Novos cenários: você pode criar ou colar arquivos .json diretamente na
+     pasta "%APPDATA%\dev-manager\qa-templates\", ou usar o botão "Importar JSON"
+     no Gerenciador de Templates dentro do app.
+  2) Exportar ou compartilhar: use o botão "Exportar Template" (cenário atual)
+     ou "Exportar Todos" (backup em lote) para versionar no Git da sua equipe.
+  3) Pasta personalizada: se a sua equipe mantiver uma pasta compartilhada na
+     rede ou um repositório Git clonado, você pode alterar o diretório em:
+       Configurações > Qualidade & QA (campo qaTemplatesDir).
+

@@ -46,11 +46,10 @@ export class QaRegressionService {
   public ensureDefaultTemplates(): void {
     try {
       const dir = this.getTemplatesDir();
-      const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
-      if (files.length === 0) {
-        const defaults = getDefaultQaTemplates();
-        for (const tmpl of defaults) {
-          const filePath = path.join(dir, `${tmpl.id}.json`);
+      const defaults = getDefaultQaTemplates();
+      for (const tmpl of defaults) {
+        const filePath = path.join(dir, `${tmpl.id}.json`);
+        if (!fs.existsSync(filePath)) {
           fs.writeFileSync(filePath, JSON.stringify(tmpl, null, 2), 'utf-8');
         }
       }

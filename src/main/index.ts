@@ -22,6 +22,7 @@ import { LlmService } from './services/LlmService';
 import { Routine801Service } from './services/Routine801Service';
 import { ApmService, getApmReceiverHandlePath } from './services/ApmService';
 import { QaRegressionService } from './services/QaRegressionService';
+import { QaPayloadService } from './services/QaPayloadService';
 import { TestRunnerService } from './services/TestRunnerService';
 import { TautAutomationService } from './services/TautAutomationService';
 import { registerIpcHandlers } from './ipc/registerIpc';
@@ -133,6 +134,7 @@ function createWindow() {
   const routine801Service = new Routine801Service(configService, karafService);
   const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
   const qaRegressionService = new QaRegressionService(configService, databaseService);
+  const qaPayloadService = new QaPayloadService(configService, databaseService);
   const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
   const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
   apmService.onNewTrace = (summary) => {
@@ -165,7 +167,8 @@ function createWindow() {
     oracleTracerCaptureService,
     qaRegressionService,
     testRunnerService,
-    tautAutomationService
+    tautAutomationService,
+    qaPayloadService
   );
 
   backupSchedulerService.rescheduleAll();

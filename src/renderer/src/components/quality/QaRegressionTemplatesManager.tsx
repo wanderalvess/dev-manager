@@ -10,7 +10,8 @@ import {
   Layers,
   Table,
   Upload,
-  Download
+  Download,
+  HelpCircle
 } from 'lucide-react';
 import {
   QaRegressionAssertion,
@@ -20,6 +21,11 @@ import {
 import { api } from '../../services/apiBridge';
 import { showToast } from '../ToastHost';
 import { extractBindsFromSql } from '../../utils/qaRegressionRendererUtils';
+import {
+  exportTemplateAsJsonFile,
+  exportTemplatesBundleAsJsonFile
+} from '../../utils/qaTemplateExportUtils';
+import { QaRegressionTemplatesHelpModal } from './modals/QaRegressionTemplatesHelpModal';
 
 interface QaRegressionTemplatesManagerProps {
   onBack: () => void;
@@ -34,6 +40,7 @@ export const QaRegressionTemplatesManager: React.FC<QaRegressionTemplatesManager
   const [templatesDir, setTemplatesDir] = useState<string>('');
   const [editingTemplate, setEditingTemplate] = useState<QaRegressionTemplate | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
 
   const loadTemplates = useCallback(async () => {
     try {
@@ -137,14 +144,17 @@ export const QaRegressionTemplatesManager: React.FC<QaRegressionTemplatesManager
   };
 
   const handleExportTemplateJson = (tmpl: QaRegressionTemplate) => {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(tmpl, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `${tmpl.id}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-    showToast('Download do template iniciado!', 'success');
+    exportTemplateAsJsonFile(tmpl);
+    showToast(`Template "${tmpl.name}" exportado com sucesso!`, 'success');
+  };
+
+  const handleExportAllTemplates = () => {
+    if (templates.length === 0) {
+      showToast('Nenhum template disponível para exportação.', 'info');
+      return;
+    }
+    exportTemplatesBundleAsJsonFile(templates);
+    showToast(`${templates.length} templates exportados com sucesso em lote!`, 'success');
   };
 
   const handleImportTemplateJson = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,6 +269,18 @@ export const QaRegressionTemplatesManager: React.FC<QaRegressionTemplatesManager
         </div>
 
         <div className="flex items-center gap-2">
+          {templates.length > 0 && !editingTemplate && (
+            <button
+              type="button"
+              onClick={handleExportAllTemplates}
+              className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Exportar todos os templates em lote (arquivo JSON único para backup)"
+            >
+              <Download className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Exportar Todos</span>
+            </button>
+          )}
+
           <label className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Upload className="w-3.5 h-3.5 text-muted-foreground" />
             <span>Importar JSON</span>
@@ -272,6 +294,16 @@ export const QaRegressionTemplatesManager: React.FC<QaRegressionTemplatesManager
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Novo Template</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsHelpModalOpen(true)}
+            className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Guia Prático: Como usar, configurar asserções e exportar templates"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-primary" />
+            <span>Como Usar</span>
           </button>
         </div>
       </div>
@@ -299,6 +331,15 @@ export const QaRegressionTemplatesManager: React.FC<QaRegressionTemplatesManager
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleExportTemplateJson(editingTemplate)}
+                className="px-3 py-1.5 rounded-md bg-background hover:bg-muted text-foreground border border-border text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+                title="Exportar este template para arquivo JSON"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Exportar JSON</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setEditingTemplate(null)}
@@ -657,6 +698,12 @@ export const QaRegressionTemplatesManager: React.FC<QaRegressionTemplatesManager
           </div>
         </div>
       )}
+
+      {/* Modal Guia de Ajuda de Templates */}
+      <QaRegressionTemplatesHelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
     </div>
   );
 };

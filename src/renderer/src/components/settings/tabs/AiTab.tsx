@@ -72,7 +72,7 @@ export const AiTab: React.FC<AiTabProps> = ({
                   );
                   return active ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 font-mono text-[10px] font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       ONLINE · {active.name} ({active.model})
                     </span>
                   ) : (
@@ -164,16 +164,9 @@ export const AiTab: React.FC<AiTabProps> = ({
             </div>
 
             {(settings.llmProviders || []).length === 0 ? (
-              <div className="p-8 text-center bg-card/50 rounded-2xl border border-dashed border-border/80 space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-muted/50 border border-border flex items-center justify-center mx-auto text-muted-foreground">
-                  <Bot className="w-6 h-6" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">Nenhum motor de IA configurado</p>
-                  <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                    Selecione um preset acima ou clique em <strong>Novo Motor de IA</strong> para cadastrar sua chave de API (OpenAI, Gemini, Claude, Ollama local, etc.).
-                  </p>
-                </div>
+              <div className="py-6 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg">
+                Nenhum motor configurado. Selecione um preset acima ou clique em{' '}
+                <strong className="text-foreground">Novo Motor de IA</strong>.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -185,10 +178,10 @@ export const AiTab: React.FC<AiTabProps> = ({
                   return (
                     <div
                       key={provider.id}
-                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3.5 ${
+                      className={`p-4 rounded-xl border transition-all flex flex-col justify-between space-y-3.5 ${
                         isActive
-                          ? 'border-primary/60 bg-gradient-to-br from-primary/5 via-card to-card shadow-md ring-1 ring-primary/20'
-                          : 'border-border bg-card hover:border-border/80 shadow-2xs'
+                          ? 'border-primary/60 bg-card shadow-sm ring-1 ring-primary/20'
+                          : 'border-border bg-card hover:border-border/80'
                       } ${!provider.enabled ? 'opacity-55' : ''}`}
                     >
                       <div className="space-y-2.5">
@@ -216,7 +209,7 @@ export const AiTab: React.FC<AiTabProps> = ({
                           <div className="flex items-center gap-1.5 shrink-0">
                             {isActive ? (
                               <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                 ATIVO
                               </span>
                             ) : (
