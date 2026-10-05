@@ -1399,7 +1399,7 @@ export function getFaqList({
                 <strong className="text-foreground">Regras de Asserção:</strong> Suporta validações por JSONPath (<code className="font-mono text-primary font-bold">$.vlTotal</code>), valores literais, <code className="font-mono text-primary font-bold">&lt;S&gt;</code> (preenchido), <code className="font-mono text-primary font-bold">&lt;N&gt;</code> (vazio/nulo) e <code className="font-mono text-primary font-bold">&lt;0&gt;</code> (zero).
               </li>
               <li>
-                <strong className="text-foreground">Exportação em 1 Clique para Jira:</strong> Informe o código da issue (ex.: <code className="font-mono text-primary font-bold">DDWMISSI-T966</code>) e clique em <strong className="text-foreground">"Copiar Markdown (Jira)"</strong> para gerar a tabela de evidências pronta para o ticket.
+                <strong className="text-foreground">Exportação em 1 Clique para Jira:</strong> Informe o código da issue (ex.: <code className="font-mono text-primary font-bold">PROJ-123</code>; campo opcional) e clique em <strong className="text-foreground">"Copiar Markdown (Jira)"</strong> para gerar a tabela de evidências pronta para o ticket.
               </li>
               <li>
                 <strong className="text-foreground">Pasta Dedicada de Templates:</strong> Novos templates podem ser criados, editados, duplicados, importados ou exportados em JSON diretamente na pasta dedicada (<code className="font-mono text-foreground font-bold">qa-templates/</code>).
@@ -1453,13 +1453,13 @@ export function getFaqList({
     },
     {
       id: 'taut-cypress-automation',
-      question: 'Como funciona a integração com o projeto TAUT-Mississauga (Cypress) para testes de API?',
+      question: 'Como funciona a integração com o projeto TAUT (Cypress) para testes de API?',
       category: 'Qualidade & Homologação',
-      tags: ['taut', 'mississauga', 'cypress', 'qa', 'tags', 'esteira', 'critico', 'zephyr', 'coverage', 'intake', 'csv'],
+      tags: ['taut', 'cypress', 'prefixo', 'chave', 'qa', 'tags', 'esteira', 'critico', 'zephyr', 'coverage', 'intake', 'csv'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O <strong className="text-foreground">Dev Manager</strong> integra nativamente com o projeto <code className="font-mono text-primary font-bold">TAUT-Mississauga</code> na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
+            O <strong className="text-foreground">Dev Manager</strong> integra com o seu projeto de testes Cypress (pasta definida em <strong className="text-foreground">Configurações &gt; Diretórios &amp; IDE</strong> ou detectada automaticamente: <code className="font-mono text-primary font-bold">taut*</code>, <code className="font-mono text-primary font-bold">cypress-tests</code>, <code className="font-mono text-primary font-bold">cypress</code> ou <code className="font-mono text-primary font-bold">e2e-tests</code>) na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Recursos Integrados:</span>
@@ -1471,10 +1471,10 @@ export function getFaqList({
                 <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-emerald-400">esteira</code>, <code className="font-mono text-rose-400">critico</code>, <code className="font-mono text-blue-400">regressao</code>, <code className="font-mono text-amber-400">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
               </li>
               <li>
-                <strong className="text-foreground">Auditoria de Cobertura Zephyr Scale:</strong> Cruza os cenários dos arquivos CSV da pasta <code className="font-mono text-foreground font-bold">Insumo/</code> com os testes implementados em <code className="font-mono text-foreground font-bold">cypress/e2e/api/</code>, calculando o percentual e apontando testes pendentes.
+                <strong className="text-foreground">Auditoria de Cobertura Zephyr Scale:</strong> Cruza os cenários dos arquivos CSV da pasta <code className="font-mono text-foreground font-bold">Insumo/</code> com os testes implementados em <code className="font-mono text-foreground font-bold">cypress/e2e/api/</code>, calculando o percentual e apontando testes pendentes. Sem nenhum CSV em <code className="font-mono text-foreground font-bold">Insumo/</code> a porcentagem não é calculada (não há universo de cenários para comparar). As chaves reconhecidas seguem o padrão <code className="font-mono text-foreground font-bold">ABC-T123</code>; para restringir a um projeto, preencha o <strong className="text-foreground">Prefixo das chaves de cenário Zephyr</strong> (ex.: <code className="font-mono text-foreground font-bold">PROJ-T</code>) em Configurações &gt; Diretórios &amp; IDE.
               </li>
               <li>
-                <strong className="text-foreground">Orquestrador de Intake CSV (IA):</strong> Lê o CSV do Zephyr, valida as 11 regras arquiteturais do projeto TAUT e gera o bloco estruturado e o plano de implementação pronto para copiar ou passar para a IA.
+                <strong className="text-foreground">Orquestrador de Intake CSV (IA):</strong> Lê o CSV do Zephyr, valida a chave do cenário, o endpoint, a coluna Serviço e a existência de cenários de contrato e negativo, e gera o bloco estruturado e o plano de implementação pronto para copiar ou passar para a IA.
               </li>
               <li>
                 <strong className="text-foreground">Tools MCP:</strong> As ferramentas <code className="font-mono text-primary">taut_*</code> permitem que assistentes de IA disparem os testes, auditem cobertura e criem novos specs sem sair do chat.

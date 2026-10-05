@@ -102,7 +102,9 @@ export function useSqlEditorAutocomplete({
         );
         return;
       }
-      if (e.key === 'Enter' || e.key === 'Tab') {
+      // Ctrl/Cmd+Enter executa a query mesmo com a lista aberta; só Enter/Tab puros aceitam a sugestão
+      const acceptsSuggestion = (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) || e.key === 'Tab';
+      if (acceptsSuggestion) {
         e.preventDefault();
         applyAutocompleteSuggestion(autocomplete.suggestions[autocomplete.activeIndex].label);
         return;

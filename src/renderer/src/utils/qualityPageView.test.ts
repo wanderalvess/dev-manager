@@ -21,6 +21,7 @@ describe('qualityPageView', () => {
 
   it('calcula veredito de prontidão por faixas', () => {
     expect(getReadinessVerdict(80).title).toContain('Pronta');
+    expect(getReadinessVerdict(85, 1).title).toContain('Atenção');
     expect(getReadinessVerdict(50).title).toContain('Atenção');
     expect(getReadinessVerdict(49).title).toContain('Bloqueado');
   });

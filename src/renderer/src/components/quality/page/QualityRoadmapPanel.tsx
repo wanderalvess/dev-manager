@@ -11,8 +11,8 @@ export const QualityRoadmapPanel: React.FC = () => (
           Evolução do Módulo de Qualidade para QA e Product Owners
         </h4>
         <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-          Esta é a primeira etapa da expansão do Dev Manager para atender o time de Qualidade e Gestão de Produto.
-          Os recursos abaixo estão mapeados e preparados para receber suas novas demandas e refinamentos.
+          Lista fixa do que já está disponível no módulo e do que ainda não foi implementado.
+          Ainda não há cadastro de demandas nesta tela.
         </p>
       </div>
     </div>
@@ -30,12 +30,14 @@ export const QualityRoadmapPanel: React.FC = () => (
               </span>
               <span
                 className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded ${
-                  item.status === 'in_progress'
-                    ? 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20'
-                    : 'bg-muted text-muted-foreground'
+                  item.status === 'ready'
+                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                    : item.status === 'in_progress'
+                      ? 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20'
+                      : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {item.status === 'in_progress' ? 'Em Construção' : 'Mapeado'}
+                {item.status === 'ready' ? 'Disponível' : item.status === 'in_progress' ? 'Em Construção' : 'Ainda não implementado'}
               </span>
             </div>
 
@@ -45,7 +47,6 @@ export const QualityRoadmapPanel: React.FC = () => (
 
           <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Foco: <strong className="text-foreground">{item.targetRole}</strong></span>
-            <span className="text-primary font-semibold">Próxima Etapa</span>
           </div>
         </div>
       ))}

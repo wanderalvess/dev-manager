@@ -16,6 +16,10 @@ import { ConfigService } from './ConfigService';
 import { DatabaseService } from './DatabaseService';
 import { TestRunnerService } from './TestRunnerService';
 import { isSafeLocalPath } from '../utils/security';
+import { buildAnchoredTautKeyRegex, buildTautKeyRegex, describeTautKeyPattern } from '../utils/tautKeyUtils';
+
+// Nomes genéricos de pasta de testes; além deles, qualquer pasta que comece com "taut" é aceita
+const TEST_FOLDER_CANDIDATES = ['taut', 'cypress-tests', 'cypress', 'e2e-tests'];
 
 export class TautAutomationService {
   constructor(
@@ -25,7 +29,7 @@ export class TautAutomationService {
   ) {}
 
   /**
-   * Resolve o caminho do projeto TAUT-Mississauga testando caminhos configurados,
+   * Resolve o caminho do projeto de testes Cypress (TAUT) testando caminhos configurados,
    * padrões de ambiente e diretórios irmãos.
    */
   public resolveProjectPath(customPath?: string): string {
@@ -41,8 +45,17 @@ export class TautAutomationService {
     }
 
     // 2. Autodetecção dentro do Diretório Base dos Repositórios Git (projectsPath)
-    const testFolderCandidates = ['TAUT-Mississauga', 'taut-mississauga', 'taut', 'cypress-tests', 'cypress', 'e2e-tests'];
+    const testFolderCandidates = [...TEST_FOLDER_CANDIDATES];
     if (settings.projectsPath && fs.existsSync(settings.projectsPath)) {
+      try {
+        const tautDirs = fs
+          .readdirSync(settings.projectsPath, { withFileTypes: true })
+          .filter((e) => e.isDirectory() && e.name.toLowerCase().startsWith('taut') && !testFolderCandidates.includes(e.name))
+          .map((e) => e.name);
+        testFolderCandidates.unshift(...tautDirs);
+      } catch {
+        // pasta ilegível: segue só com os nomes genéricos
+      }
       for (const candidate of testFolderCandidates) {
         const candidateInProjects = path.join(settings.projectsPath, candidate);
         if (fs.existsSync(candidateInProjects) && fs.existsSync(path.join(candidateInProjects, 'cypress.config.ts'))) {
@@ -72,14 +85,14 @@ export class TautAutomationService {
 
     // 5. Fallback para detecção no diretório de projetos configurado ou vazio
     if (settings.projectsPath && settings.projectsPath.trim()) {
-      return path.join(settings.projectsPath.trim(), 'TAUT-Mississauga');
+      return path.join(settings.projectsPath.trim(), 'taut');
     }
 
     return '';
   }
 
   /**
-   * Salva o caminho do projeto TAUT-Mississauga nas configurações do Dev Manager.
+   * Salva o caminho do projeto TAUT nas configurações do Dev Manager.
    */
   public saveProjectPath(targetPath: string): void {
     if (!targetPath || !targetPath.trim()) {
@@ -90,7 +103,7 @@ export class TautAutomationService {
   }
 
   /**
-   * Retorna o status de integridade do projeto TAUT-Mississauga, incluindo
+   * Retorna o status de integridade do projeto TAUT, incluindo
    * existência de package.json, cypress.config.ts, .env e variáveis configuradas.
    */
   public async getProjectStatus(customPath?: string): Promise<TautProjectStatus> {
@@ -174,6 +187,8 @@ export class TautAutomationService {
     const insumoDir = path.join(projectPath, 'Insumo');
     const testsDir = path.join(projectPath, 'cypress', 'e2e');
 
+    const keyPrefix = this.configService.getSettings().tautKeyPrefix;
+    const anchoredKeyRegex = buildAnchoredTautKeyRegex(keyPrefix);
     const zephyrIds = new Set<string>();
 
     // 1. Extrai IDs do Zephyr dos CSVs em Insumo/
@@ -183,7 +198,7 @@ export class TautAutomationService {
         try {
           const content = fs.readFileSync(path.join(insumoDir, file), 'utf-8');
           content.split(/\r?\n/).forEach((line) => {
-            const match = line.trim().match(/^DDWMISSI-T\d+/);
+            const match = line.trim().match(anchoredKeyRegex);
             if (match) {
               zephyrIds.add(match[0]);
             }
@@ -206,7 +221,7 @@ export class TautAutomationService {
           } else if (entry.name.endsWith('.cy.ts')) {
             try {
               const content = fs.readFileSync(fullPath, 'utf-8');
-              const matches = content.match(/DDWMISSI-T\d+/g);
+              const matches = content.match(buildTautKeyRegex(keyPrefix, 'g'));
               if (matches) {
                 const relPath = path.relative(projectPath, fullPath).replace(/\\/g, '/');
                 matches.forEach((id) => {
@@ -241,14 +256,17 @@ export class TautAutomationService {
     });
 
     const totalScenarios = targetIds.length;
+    // Sem CSV de insumo não há universo de cenários: medir os testes contra eles mesmos daria 100% trivial
+    const baselineMissing = zephyrIds.size === 0;
     const coveragePercentage =
-      totalScenarios > 0 ? Number(((automatedCount / totalScenarios) * 100).toFixed(2)) : 0;
+      totalScenarios > 0 && !baselineMissing ? Number(((automatedCount / totalScenarios) * 100).toFixed(2)) : 0;
 
     return {
       totalScenarios,
       automatedCount,
       pendingCount,
       coveragePercentage,
+      baselineMissing,
       items,
       generatedAt: new Date().toISOString()
     };
@@ -283,7 +301,7 @@ export class TautAutomationService {
             const testCount = testMatches.length;
 
             // Extrai IDs Zephyr
-            const zephyrMatches = Array.from(new Set(content.match(/DDWMISSI-T\d+/g) || []));
+            const zephyrMatches = Array.from(new Set(content.match(buildTautKeyRegex(this.configService.getSettings().tautKeyPrefix, 'g')) || []));
 
             // Extrai tags do array tags: ['...']
             const tagsSet = new Set<string>();
@@ -317,7 +335,7 @@ export class TautAutomationService {
   }
 
   /**
-   * Sincroniza o arquivo .env do TAUT-Mississauga utilizando a conexão Oracle ativa
+   * Sincroniza o arquivo .env do projeto TAUT utilizando a conexão Oracle ativa
    * e as credenciais/URLs configuradas no WinThor Dev Manager.
    */
   public async syncEnvFromDevManager(
@@ -326,7 +344,7 @@ export class TautAutomationService {
   ): Promise<TautEnvSyncResult> {
     const projectPath = this.resolveProjectPath(customPath);
     if (!fs.existsSync(projectPath)) {
-      throw new Error(`Diretório do projeto TAUT-Mississauga não encontrado: "${projectPath}"`);
+      throw new Error(`Diretório do projeto TAUT não encontrado: "${projectPath}"`);
     }
 
     const settings = this.configService.getSettings();
@@ -359,8 +377,10 @@ export class TautAutomationService {
       ORACLE_PASSWORD: resolved.password || '',
       ORACLE_CONNECT_STRING: connectString,
       CYPRESS_BASE_URL: settings.wtaUrl || 'http://localhost:8889',
-      CYPRESS_API_USUARIO: settings.wtaLogin || 'PCADMIN',
-      CYPRESS_API_SENHA: settings.wtaPassword || 'C4CA4238A0B923820DCC509A6F75849B'
+      // Sem login configurado, não grava credencial padrão no .env do projeto
+      ...(settings.wtaLogin && settings.wtaPassword
+        ? { CYPRESS_API_USUARIO: settings.wtaLogin, CYPRESS_API_SENHA: settings.wtaPassword }
+        : {})
     };
 
     const updatedKeys: string[] = [];
@@ -399,7 +419,7 @@ export class TautAutomationService {
       success: true,
       envPath,
       updatedKeys,
-      message: `.env do TAUT-Mississauga atualizado com sucesso (${updatedKeys.length} chaves sincronizadas com a conexão "${resolved.name}").`
+      message: `.env do projeto TAUT atualizado com sucesso (${updatedKeys.length} chaves sincronizadas com a conexão "${resolved.name}").`
     };
   }
 
@@ -474,6 +494,8 @@ export class TautAutomationService {
     const idxPriority = colIndex('Priority');
     const idxFolder = colIndex('Folder');
 
+    const keyPrefix = this.configService.getSettings().tautKeyPrefix;
+    const intakeKeyRegex = buildAnchoredTautKeyRegex(keyPrefix);
     const blockers: string[] = [];
     const warnings: string[] = [];
     const scenarios: TautCsvIntakeScenario[] = [];
@@ -498,8 +520,8 @@ export class TautAutomationService {
       const priority = idxPriority >= 0 ? row[idxPriority] : '';
       const folder = idxFolder >= 0 ? row[idxFolder] : '';
 
-      if (!key || !/^DDWMISSI-T\d+/.test(key)) {
-        blockers.push(`Linha ${i + 1}: Chave "${key || 'Vazia'}" inválida. Deve seguir o padrão DDWMISSI-TXXXX.`);
+      if (!key || !intakeKeyRegex.test(key)) {
+        blockers.push(`Linha ${i + 1}: Chave "${key || 'Vazia'}" inválida. Deve seguir o padrão ${describeTautKeyPattern(keyPrefix)}.`);
       }
 
       if (endpoint && !commonEndpoint) commonEndpoint = endpoint;
@@ -608,7 +630,7 @@ export class TautAutomationService {
   }
 
   /**
-   * Dispara a execução da suíte de testes Cypress no projeto TAUT-Mississauga
+   * Dispara a execução da suíte de testes Cypress no projeto TAUT
    * com streaming de logs em tempo real, suporte a tags (@cypress/grep) e modos de API.
    */
   public async runTests(
@@ -618,7 +640,7 @@ export class TautAutomationService {
     const projectPath = this.resolveProjectPath(options.projectPath);
 
     if (!fs.existsSync(projectPath)) {
-      throw new Error(`Diretório do projeto TAUT-Mississauga não encontrado: "${projectPath}"`);
+      throw new Error(`Diretório do projeto TAUT não encontrado: "${projectPath}"`);
     }
 
     const apiUrlMode = options.apiUrlMode || 'v39';

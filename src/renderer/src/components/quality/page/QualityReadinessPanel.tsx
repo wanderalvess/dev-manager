@@ -11,7 +11,7 @@ interface QualityReadinessPanelProps {
 }
 
 export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ metrics }) => {
-  const verdict = getReadinessVerdict(metrics.readinessScore);
+  const verdict = getReadinessVerdict(metrics.readinessScore, metrics.failed + metrics.blocked + metrics.pending);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

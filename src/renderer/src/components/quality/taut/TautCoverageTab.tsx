@@ -77,7 +77,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
               type="text"
               value={coverageSearch}
               onChange={(e) => setCoverageSearch(e.target.value)}
-              placeholder="Filtrar por ID (DDWMISSI-TXXXX) ou arquivo..."
+              placeholder="Filtrar por ID (ex.: PROJ-T123) ou arquivo..."
               className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>

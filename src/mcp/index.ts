@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.31.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.31.1';
   } catch {
-    return '1.31.0';
+    return '1.31.1';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -1934,7 +1934,7 @@ server.registerTool(
         return fail(`Caminho inválido ou remoto não permitido para o campo ${key}.`);
       }
     }
-    return ok(configService.saveSettings(settings as Partial<AppSettings>));
+    return ok(configService.sanitizeSecrets(configService.saveSettings(settings as Partial<AppSettings>)));
   }
 );
 
@@ -2440,7 +2440,11 @@ server.registerTool(
     const updated = [merged, ...existing.filter((b) => b.connectionId !== config.connectionId)];
     configService.saveSettings({ backupConfigs: updated });
 
-    return ok({ success: true, message: 'Agendamento salvo com sucesso.' });
+    return ok({
+      success: true,
+      message:
+        'Configuração gravada. O cron só é (re)agendado pelo app desktop/servidor, que é o dono do agendador: reinicie-o ou salve a configuração pela tela de Backup para ativar.'
+    });
   }
 );
 
@@ -3013,7 +3017,7 @@ server.registerTool(
       rawJson: z.string().optional().describe('Payload JSON da API/PDV em texto para mapeamento de variáveis via JSONPath ($.foo)'),
       jsonFilePath: z.string().optional().describe('Caminho absoluto ou relativo do arquivo JSON local contendo o payload/dados de teste'),
       variables: z.record(z.string(), z.any()).optional().describe('Variáveis manuais para bind (ex: { codFilial: "1", numCupom: "4387" })'),
-      issueKey: z.string().optional().describe('Chave da issue/tarefa no Jira (ex: "DDWMISSI-T966") para carimbar na evidência')
+      issueKey: z.string().optional().describe('Chave da issue/tarefa no Jira (ex: "PROJ-123") para carimbar na evidência')
     }
   },
   async (args) => {
@@ -3257,15 +3261,15 @@ server.registerTool(
   }
 );
 
-// --- Ferramentas MCP: TAUT-Mississauga (Cypress / QA Hub) ---
+// --- Ferramentas MCP: TAUT (Cypress) (Cypress / QA Hub) ---
 server.registerTool(
   'taut_get_status',
   {
-    title: 'Obter status do projeto TAUT-Mississauga',
+    title: 'Obter status do projeto TAUT (Cypress)',
     description:
-      'Retorna o status de integridade do projeto de testes Cypress TAUT-Mississauga, incluindo existência do diretório, versão do Cypress, status do arquivo .env e credenciais configuradas.',
+      'Retorna o status de integridade do projeto de testes Cypress TAUT (Cypress), incluindo existência do diretório, versão do Cypress, status do arquivo .env e credenciais configuradas.',
     inputSchema: {
-      customPath: z.string().optional().describe('Caminho customizado do projeto TAUT-Mississauga (se omitido, usa a auto-detecção ou configuração salva).')
+      customPath: z.string().optional().describe('Caminho customizado do projeto TAUT (Cypress) (se omitido, usa a auto-detecção ou configuração salva).')
     }
   },
   async (args) => {
@@ -3273,7 +3277,7 @@ server.registerTool(
       const status = await tautAutomationService.getProjectStatus(args.customPath);
       return ok(status);
     } catch (err: any) {
-      return fail(err?.message || 'Falha ao obter status do projeto TAUT-Mississauga.');
+      return fail(err?.message || 'Falha ao obter status do projeto TAUT (Cypress).');
     }
   }
 );
@@ -3281,14 +3285,14 @@ server.registerTool(
 server.registerTool(
   'taut_run_tests',
   {
-    title: 'Executar testes Cypress no TAUT-Mississauga',
+    title: 'Executar testes Cypress no TAUT (Cypress)',
     description:
-      'Dispara a execução de testes automatizados Cypress no projeto TAUT-Mississauga, com suporte a filtros de tags (@cypress/grep), especificação de arquivos spec e modo de API (v39/legacy). Retorna sumário de aprovados/falhas e extrato de saída.',
+      'Dispara a execução de testes automatizados Cypress no projeto TAUT (Cypress), com suporte a filtros de tags (@cypress/grep), especificação de arquivos spec e modo de API (v39/legacy). Retorna sumário de aprovados/falhas e extrato de saída.',
     inputSchema: {
       tags: z.string().optional().describe('Tags para filtragem com grepTags (ex: "critico", "winthor-pedido-venda", "esteira", "regressao", "-develop")'),
       spec: z.string().optional().describe('Caminho ou padrão glob dos testes spec (ex: "cypress/e2e/api/Pedido/**/*")'),
       apiUrlMode: z.enum(['v39', 'legacy']).optional().describe('Modo de URL da API (padrão: "v39")'),
-      projectPath: z.string().optional().describe('Caminho opcional do projeto TAUT-Mississauga')
+      projectPath: z.string().optional().describe('Caminho opcional do projeto TAUT (Cypress)')
     }
   },
   async (args) => {
@@ -3311,7 +3315,7 @@ server.registerTool(
         outputExcerpt: result.output.slice(-2500)
       });
     } catch (err: any) {
-      return fail(err?.message || 'Falha ao executar testes Cypress do TAUT-Mississauga.');
+      return fail(err?.message || 'Falha ao executar testes Cypress do TAUT (Cypress).');
     }
   }
 );
@@ -3319,11 +3323,11 @@ server.registerTool(
 server.registerTool(
   'taut_get_coverage',
   {
-    title: 'Consultar cobertura de testes Zephyr do TAUT-Mississauga',
+    title: 'Consultar cobertura de testes Zephyr do TAUT (Cypress)',
     description:
       'Cruza os cenários mapeados nos arquivos CSV da pasta Insumo/ com os testes implementados em cypress/e2e/api, calculando o percentual de cobertura e listando cenários pendentes e automatizados.',
     inputSchema: {
-      customPath: z.string().optional().describe('Caminho opcional do projeto TAUT-Mississauga')
+      customPath: z.string().optional().describe('Caminho opcional do projeto TAUT (Cypress)')
     }
   },
   async (args) => {
@@ -3347,11 +3351,11 @@ server.registerTool(
 server.registerTool(
   'taut_list_specs',
   {
-    title: 'Listar specs e arquivos de teste do TAUT-Mississauga',
+    title: 'Listar specs e arquivos de teste do TAUT (Cypress)',
     description:
       'Varre a pasta cypress/e2e/ do projeto TAUT e lista todos os arquivos .cy.ts, agrupados por módulo (Pedido, Venda, Tributação, etc.), com contagem de testes, tags associadas e chaves do Zephyr.',
     inputSchema: {
-      customPath: z.string().optional().describe('Caminho opcional do projeto TAUT-Mississauga')
+      customPath: z.string().optional().describe('Caminho opcional do projeto TAUT (Cypress)')
     }
   },
   async (args) => {
@@ -3370,11 +3374,11 @@ server.registerTool(
 server.registerTool(
   'taut_sync_env',
   {
-    title: 'Sincronizar .env do TAUT-Mississauga com o Dev Manager',
+    title: 'Sincronizar .env do TAUT (Cypress) com o Dev Manager',
     description:
-      'Gera ou atualiza automaticamente o arquivo .env do TAUT-Mississauga utilizando os dados da conexão Oracle ativa no Dev Manager (ORACLE_USER, ORACLE_PASSWORD, ORACLE_CONNECT_STRING) e URLs do WTA.',
+      'Gera ou atualiza automaticamente o arquivo .env do TAUT (Cypress) utilizando os dados da conexão Oracle ativa no Dev Manager (ORACLE_USER, ORACLE_PASSWORD, ORACLE_CONNECT_STRING) e URLs do WTA.',
     inputSchema: {
-      customPath: z.string().optional().describe('Caminho opcional do projeto TAUT-Mississauga'),
+      customPath: z.string().optional().describe('Caminho opcional do projeto TAUT (Cypress)'),
       connectionId: z.string().optional().describe('ID da conexão Oracle salva no Dev Manager. Se omitido, usa a primeira conexão Oracle ativa.')
     }
   },
@@ -3396,7 +3400,7 @@ server.registerTool(
       'Lê um arquivo CSV de cenários exportado do Zephyr Scale na pasta Insumo/, valida as 11 regras arquiteturais do Orquestrador de Intake (Agents.md) e gera o bloco estruturado de intake e o plano de implementação pronto.',
     inputSchema: {
       csvFile: z.string().describe('Nome ou caminho do arquivo CSV (ex: "Insumo/pedido.csv" ou "pedido")'),
-      projectPath: z.string().optional().describe('Caminho opcional do projeto TAUT-Mississauga')
+      projectPath: z.string().optional().describe('Caminho opcional do projeto TAUT (Cypress)')
     }
   },
   async (args) => {

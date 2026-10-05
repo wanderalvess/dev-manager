@@ -8,7 +8,7 @@ import {
 
 export const QUALITY_STORAGE_KEY_VALIDATION = 'devManager:quality:validationItemsV1';
 export const QUALITY_STORAGE_KEY_RELEASE = 'devManager:quality:releaseVersion';
-export const QUALITY_DEFAULT_RELEASE = 'v1.24.0';
+export const QUALITY_DEFAULT_RELEASE = '';
 
 export type QualityTabMode = 'taut' | 'matrix' | 'runners' | 'regression' | 'readiness' | 'roadmap';
 
@@ -23,8 +23,9 @@ export function readStoredReleaseVersion(): string {
 export function readStoredValidationItems(): QualityValidationItem[] {
   try {
     const raw = localStorage.getItem(QUALITY_STORAGE_KEY_VALIDATION);
-    if (raw) {
-      return JSON.parse(raw);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(parsed) && parsed.every((i) => i && typeof i.id === 'string' && typeof i.title === 'string')) {
+      return parsed;
     }
   } catch {
     // fallback
@@ -60,17 +61,18 @@ export function getCategoryLabel(category: ValidationCategory): string {
   }
 }
 
-export function getReadinessVerdict(score: number): {
+// openIssues = falhas + bloqueios + pendências: com qualquer um deles a release nunca é dada como pronta
+export function getReadinessVerdict(score: number, openIssues = 0): {
   ringClass: string;
   title: string;
 } {
-  if (score >= 80) {
+  if (score >= 80 && openIssues === 0) {
     return {
       ringClass: 'border-emerald-500 bg-emerald-500/10 text-emerald-500',
       title: 'Release Pronta para Produção 🚀'
     };
   }
-  if (score >= 50) {
+  if (score >= 50 || (score >= 80 && openIssues > 0)) {
     return {
       ringClass: 'border-amber-500 bg-amber-500/10 text-amber-500',
       title: 'Atenção: Testes em Andamento ⚠️'

@@ -23,7 +23,7 @@ export function useQaRunnerExecution({
   rawJson,
   variables
 }: RunnerExecutionInputs) {
-  const [issueKey, setIssueKey] = useState<string>('DDWMISSI-T966');
+  const [issueKey, setIssueKey] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [executionResult, setExecutionResult] = useState<QaExecutionResult | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
@@ -60,10 +60,11 @@ export function useQaRunnerExecution({
         if (result.success) {
           showToast(`Suite concluída! Todas as ${result.totalAssertions} asserções passaram.`, 'success');
         } else {
-          showToast(
-            `Validação concluída com divergências: ${result.failedAssertions} asserção(ões) falharam.`,
-            'error'
-          );
+          const detail =
+            result.totalAssertions === 0
+              ? 'a suíte não tem asserções.'
+              : `${result.failedAssertions} falharam e ${result.warningAssertions || 0} não puderam ser verificadas.`;
+          showToast(`Validação sem sucesso: ${detail}`, 'error');
         }
       }
     } catch (err: any) {

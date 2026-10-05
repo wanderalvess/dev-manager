@@ -16,9 +16,7 @@ export function useInfrBootstrap(data: DockerDataState) {
     if (!window.electronAPI?.checkInfrDockerScripts) return;
     setIsLoadingInfrScripts(true);
     try {
-      const scripts = await window.electronAPI.checkInfrDockerScripts(
-        customPath || 'C:\\Users\\wanderson.alves\\projetosTOTV\\INFR-Docker'
-      );
+      const scripts = await window.electronAPI.checkInfrDockerScripts(customPath || undefined);
       setInfrScripts(scripts || []);
     } catch {
       setInfrScripts([]);

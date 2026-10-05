@@ -713,17 +713,17 @@ export class WslService {
     if (cfg.snapshotsDir && fs.existsSync(cfg.snapshotsDir)) {
       return cfg.snapshotsDir;
     }
-    const candidates = [
-      'C:\\Users\\wanderson.alves\\projetosTOTV',
-      'C:\\Docker',
-      'C:\\WSL',
-      'D:\\WSL',
-      'D:\\Docker'
-    ];
+    const candidates = [...this.genericProjectRoots(), 'C:\\Docker', 'C:\\WSL', 'D:\\WSL', 'D:\\Docker'];
     for (const cand of candidates) {
       if (fs.existsSync(cand)) return cand;
     }
-    return 'C:\\Users\\wanderson.alves\\projetosTOTV';
+    return candidates[0];
+  }
+
+  /** Pastas de projetos comuns derivadas do perfil do usuário atual (nunca um usuário fixo). */
+  private genericProjectRoots(): string[] {
+    const home = os.homedir();
+    return [path.join(home, 'Projetos'), path.join(home, 'projetos'), path.join(home, 'projects')];
   }
 
   /**
@@ -756,11 +756,7 @@ export class WslService {
     if (fs.existsSync(defaultDir)) {
       searchDirs.add(path.resolve(defaultDir));
     }
-    const knownCandidates = [
-      'C:\\Users\\wanderson.alves\\projetosTOTV',
-      'C:\\Docker',
-      'C:\\WSL'
-    ];
+    const knownCandidates = [...this.genericProjectRoots(), 'C:\\Docker', 'C:\\WSL'];
     for (const cand of knownCandidates) {
       if (fs.existsSync(cand)) searchDirs.add(path.resolve(cand));
     }
@@ -950,7 +946,7 @@ export class WslService {
   public async checkInfrDockerScripts(customBasePath?: string): Promise<InfrDockerScriptStatus[]> {
     const candidates = [
       customBasePath,
-      'C:\\Users\\wanderson.alves\\projetosTOTV\\INFR-Docker',
+      ...this.genericProjectRoots().map((root) => path.join(root, 'INFR-Docker')),
       'C:\\projetos\\INFR-Docker',
       'D:\\projetos\\INFR-Docker'
     ].filter(Boolean) as string[];
@@ -1039,7 +1035,8 @@ export class WslService {
       return { success: false, output: 'Nome de distribuição WSL inválido.' };
     }
 
-    const basePath = options.infrPath || 'C:\\Users\\wanderson.alves\\projetosTOTV\\INFR-Docker';
+    const infrCandidates = this.genericProjectRoots().map((root) => path.join(root, 'INFR-Docker'));
+    const basePath = options.infrPath || infrCandidates.find((c) => fs.existsSync(c)) || infrCandidates[0];
     if (!isSafeLocalPath(basePath) || !/^[a-zA-Z0-9_\-.:\\/ ]+$/.test(basePath)) {
       return { success: false, output: 'Caminho de instalação (infrPath) inválido.' };
     }

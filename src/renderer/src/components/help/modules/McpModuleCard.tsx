@@ -43,7 +43,7 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
     <div className="p-2.5 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-inner">
       <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Exemplo de Prompt no IntelliJ / VS Code Copilot:</span>
       <p className="font-mono text-[11px] text-foreground bg-muted/80 p-2 rounded-lg border border-border/50">
-        "Execute os testes críticos de Pedido do TAUT-Mississauga e analise a cobertura de testes do Zephyr."
+        "Execute os testes críticos de Pedido do projeto TAUT e analise a cobertura de testes do Zephyr."
       </p>
     </div>
 

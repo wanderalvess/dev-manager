@@ -399,7 +399,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       } else {
         setQualityTestResults((prev) => ({
           ...prev,
-          [source.id]: { success: true, message: `Conexão configurada para ${source.type} (${source.projectKey || 'Projeto Geral'})!` }
+          [source.id]: {
+            success: true,
+            message: `Parâmetros preenchidos para ${source.type} (${source.projectKey || 'Projeto Geral'}). Validação apenas local: nenhuma requisição foi feita e a sincronização com esta fonte ainda não está implementada.`
+          }
         }));
       }
       setTestingQualityId(null);
@@ -516,8 +519,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           oracleTnsnamesPath: st.oracleTnsnamesPath || '',
           ccwBaseUrl: st.ccwBaseUrl || 'https://centraldecontrole.pcinformatica.com.br',
           ccwWinthorVersion: st.ccwWinthorVersion || '30',
-          ccwAuthCookie: st.ccwAuthCookie || '',
-          routineLauncherMap: st.routineLauncherMap || {}
+          ccwAuthCookie: st.ccwAuthCookie || '',              routineLauncherMap: st.routineLauncherMap || {}
         };
         setSettings(loaded);
         setSavedSnapshot(JSON.stringify(loaded));

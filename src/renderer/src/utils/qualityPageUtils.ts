@@ -54,7 +54,7 @@ export const ROADMAP_PLANNED_ITEMS: QualityRoadmapItem[] = [
     title: 'Dashboard de Indicadores & Prontidão',
     description: 'Painel executivo com métricas de cobertura de testes, taxa de aprovação e semáforo de liberação de versão para POs.',
     targetRole: 'PO',
-    status: 'in_progress',
+    status: 'ready',
     tag: 'Fase 1'
   },
   {
@@ -62,7 +62,7 @@ export const ROADMAP_PLANNED_ITEMS: QualityRoadmapItem[] = [
     title: 'Matriz de Validação & Homologação',
     description: 'Checklist interativo de cenários de teste vinculados às rotinas Delphi (.exe/.pc) e serviços Karaf com filtros ágeis.',
     targetRole: 'QA',
-    status: 'in_progress',
+    status: 'ready',
     tag: 'Fase 1'
   },
   {
@@ -78,7 +78,7 @@ export const ROADMAP_PLANNED_ITEMS: QualityRoadmapItem[] = [
     title: 'Automação & Execução de Testes E2E',
     description: 'Disparo de runners de testes automatizados (Cypress, Playwright e scripts de smoke test) diretamente do cockpit.',
     targetRole: 'Ambos',
-    status: 'planned',
+    status: 'ready',
     tag: 'Fase 2'
   },
   {
@@ -91,16 +91,15 @@ export const ROADMAP_PLANNED_ITEMS: QualityRoadmapItem[] = [
   }
 ];
 
+// Cenários-modelo: todos nascem "pendente", pois nenhum foi verificado de fato.
 export function getDefaultValidationItems(): QualityValidationItem[] {
   return [
     {
       id: 'val-1',
       title: 'Validar Conexão com Banco de Homologação',
       category: 'service',
-      status: 'passed',
+      status: 'pending',
       targetName: 'Oracle / MySQL',
-      testedVersion: '1.0',
-      testerName: 'QA Team',
       notes: 'Conexão ativa e tabelas acessíveis.',
       updatedAt: new Date().toISOString()
     },
@@ -108,10 +107,8 @@ export function getDefaultValidationItems(): QualityValidationItem[] {
       id: 'val-2',
       title: 'Subida e Carregamento de Bundles Karaf',
       category: 'service',
-      status: 'in_progress',
+      status: 'pending',
       targetName: 'Apache Karaf (SSH:8101)',
-      testedVersion: 'Snapshot',
-      testerName: 'QA Team',
       notes: 'Verificar se todos os bundles essenciais atingiram o estado Active.',
       updatedAt: new Date().toISOString()
     },
@@ -121,7 +118,6 @@ export function getDefaultValidationItems(): QualityValidationItem[] {
       category: 'routine',
       status: 'pending',
       targetName: 'Rotina de Faturamento',
-      testedVersion: 'WinThor 30.x',
       notes: 'Validar emissão, cálculo de impostos e gravação dos dados.',
       updatedAt: new Date().toISOString()
     },
@@ -131,7 +127,6 @@ export function getDefaultValidationItems(): QualityValidationItem[] {
       category: 'api',
       status: 'pending',
       targetName: 'WinThor Gateway API',
-      testedVersion: 'v2',
       notes: 'Verificar respostas HTTP 200 e payloads conforme documentação OpenAPI.',
       updatedAt: new Date().toISOString()
     }

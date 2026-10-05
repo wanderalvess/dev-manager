@@ -199,17 +199,33 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               labelTitle="Caminho do repositório de testes automatizados (Cypress / TAUT). Se deixado em branco, o Dev Manager tenta autodetectar automaticamente dentro da pasta de Projetos."
               statusBadge={renderPathStatusBadge('tautProjectPath')}
               inputValue={settings.tautProjectPath || ''}
-              placeholder="Ex: C:\Projetos\TAUT-Mississauga ou C:\Projetos\testes-cypress (Vazio: autodetecta na pasta de projetos)"
+              placeholder="Ex: C:\Projetos\taut ou C:\Projetos\testes-cypress (Vazio: autodetecta na pasta de projetos)"
               onChange={(val) => setPathField('tautProjectPath', val)}
               onBrowse={() => handleBrowseDirectory('tautProjectPath')}
               browseIcon={<FolderOpen className="w-3.5 h-3.5 text-emerald-400" />}
               browseTitle="Selecionar pasta do projeto de testes"
               hint={
                 <p className="text-[10px] text-muted-foreground">
-                  Utilizado pelo módulo <strong>Automação de Testes</strong> na Central de Qualidade e pelas ferramentas MCP da IA. Se não preenchido, o Dev Manager procura automaticamente uma pasta de testes (<code>TAUT-Mississauga</code>, <code>taut</code> ou <code>cypress</code>) no Diretório Base dos Repositórios Git ou pastas irmãs.
+                  Utilizado pelo módulo <strong>Automação de Testes</strong> na Central de Qualidade e pelas ferramentas MCP da IA. Se não preenchido, o Dev Manager procura automaticamente uma pasta de testes (<code>taut*</code>, <code>cypress-tests</code>, <code>cypress</code> ou <code>e2e-tests</code>) no Diretório Base dos Repositórios Git ou pastas irmãs.
                 </p>
               }
             />
+
+            <div id="field-tautKeyPrefix" className="md:col-span-2 space-y-1.5">
+              <label
+                className="text-xs font-semibold text-foreground"
+                title="Prefixo das chaves de cenário do Zephyr no seu projeto (ex.: PROJ-T para PROJ-T123). Vazio aceita qualquer chave no formato ABC-T123."
+              >
+                Prefixo das chaves de cenário Zephyr (TAUT):
+              </label>
+              <input
+                type="text"
+                value={settings.tautKeyPrefix || ''}
+                onChange={(e) => setField('tautKeyPrefix', e.target.value)}
+                placeholder="Ex: PROJ-T (Vazio: aceita qualquer chave no formato ABC-T123)"
+                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
           </div>
         </div>
       </div>

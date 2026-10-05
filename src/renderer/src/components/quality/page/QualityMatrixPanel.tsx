@@ -39,7 +39,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
         <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
           <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
           <span>
-            Conecte suas fontes de teste reais (<strong className="text-foreground">Zephyr Scale, Zephyr Squad, Jira ou Azure Test Plans</strong>) para sincronizar planos e cenários de homologação automaticamente.
+            A matriz é preenchida manualmente e fica salva só neste navegador. A sincronização com fontes de teste (<strong className="text-foreground">Zephyr Scale, Zephyr Squad, Jira ou Azure Test Plans</strong>) ainda não está implementada.
           </span>
         </div>
         {onNavigate && (
@@ -48,7 +48,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
             onClick={() => onNavigate('settings')}
             className="px-3 py-1.5 rounded-md bg-background hover:bg-muted text-foreground border border-border text-xs font-medium shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
           >
-            Configurar Integrações
+            Ver Configurações
           </button>
         )}
       </div>

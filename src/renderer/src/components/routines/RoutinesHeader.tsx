@@ -86,7 +86,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
               </span>
             </div>
             <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
-              Pasta configurada: <span className="text-foreground">{appPath || 'C:\\Winthor\\Prod'}</span> | Busca instantânea, favoritos e rollback (.bak).
+              Pasta configurada: <span className="text-foreground">{appPath || 'não configurada'}</span> | Busca instantânea, favoritos e rollback (.bak).
             </p>
           </div>
         </div>

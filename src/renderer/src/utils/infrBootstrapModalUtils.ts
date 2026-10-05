@@ -1,6 +1,7 @@
 export type InfrBootstrapTab = 'oracle' | 'wta' | 'wsh' | 'scripts';
 
-export const INFR_DEFAULT_CUSTOM_PATH = 'C:\\Users\\wanderson.alves\\projetosTOTV\\INFR-Docker';
+// Vazio = o backend detecta a pasta INFR-Docker a partir do diretório de projetos configurado
+export const INFR_DEFAULT_CUSTOM_PATH = '';
 export const INFR_DEFAULT_ORACLE_CONTAINER = 'oracle-winthor';
 export const INFR_DEFAULT_ORACLE_PORT = 1521;
 export const INFR_DEFAULT_WTA_CONTAINER = 'linux-winthor';

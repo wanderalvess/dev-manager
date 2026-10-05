@@ -4,6 +4,32 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.31.1] - 2026-10-05
+### Adicionado
+- **Prefixo das chaves de cenário Zephyr (TAUT)** em Configurações > Diretórios & IDE (`tautKeyPrefix`): restringe a cobertura e o Intake CSV às chaves de um projeto (ex.: `PROJ-T`). Vazio aceita qualquer chave no formato `ABC-T123`.
+- Detecção automática do projeto TAUT por qualquer pasta `taut*` (além de `cypress-tests`, `cypress` e `e2e-tests`) no diretório de projetos.
+
+### Alterado
+- **Qualidade — Matriz de Validação**: os 4 cenários-modelo iniciais agora nascem como *pendentes* (antes, um vinha "Aprovado" sem verificação) e a Release padrão ficou vazia (era `v1.24.0`). Dados inválidos no `localStorage` não quebram mais a tela.
+- **Qualidade — Roadmap**: status refletem o que já existe (*Disponível*) e o que *ainda não foi implementado*.
+- **Qualidade — Prontidão**: com falha, bloqueio ou pendência, o veredito nunca é "Release Pronta".
+- **Qualidade — Fontes (Zephyr/Jira/Azure)**: o botão *Testar* agora informa que a validação é só local e que a sincronização ainda não está implementada.
+- **TAUT**: sem CSV em `Insumo/` a porcentagem de cobertura não é calculada (`baselineMissing`), em vez de dar 100% trivial. O nome "TAUT-Mississauga" e o prefixo `DDWMISSI-T` deixaram de ser fixos no código, na UI, na Ajuda e nas tools MCP.
+- **Validador Regressivo**: suíte só é aprovada se houver asserções e todas puderem ser verificadas; JSON de payload inválido gera erro (antes era ignorado) e a issue de exemplo deixou de ser pré-preenchida.
+- **Test Runners**: o comando respeita aspas (ex.: `node -e "..."`) e um diretório de trabalho inexistente falha com mensagem, em vez de rodar na pasta do próprio app.
+- **Perfil de deploy de exemplo** vem com as etapas desabilitadas (as coordenadas Maven são fictícias).
+- **WSL/INFR e Rotinas**: removidos caminhos pessoais fixos; a detecção usa a pasta do usuário atual e o header de Rotinas mostra "não configurada" quando não há diretório.
+- A tool MCP `db_save_backup_config` agora explica que o cron só é reagendado pelo app desktop/servidor.
+
+### Corrigido
+- **DB Studio**: Ctrl+Enter executa a query mesmo com a lista de sugestões aberta (antes aceitava a sugestão e substituía o texto digitado).
+- `saveSettings` deixou de responder sucesso quando a gravação do `config.json` falha.
+- O erro do botão *Simular Tráfego* (APM) deixou de ser engolido.
+
+### Segurança
+- A tool MCP `settings_save` devolvia as configurações sem sanitizar (senhas e tokens em texto puro); agora responde com os segredos ofuscados, como `settings_get`.
+- O sincronismo de `.env` do TAUT não grava mais credencial padrão da API quando o login do WTA não está configurado.
+
 ## [1.31.0] - 2026-10-02
 ### Adicionado
 - **Importação e Seleção de Conexões Oracle via `tnsnames.ora`**:
