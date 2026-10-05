@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface DirsPathFieldProps {
   fieldId?: string;
@@ -32,17 +32,19 @@ export const DirsPathField: React.FC<DirsPathFieldProps> = ({
   browseIcon,
   browseTitle,
   hint
-}) => (
+}) => {
+  const inputId = useId();
+  return (
   <div className={wrapperClassName} id={fieldId}>
     <div className="flex items-center justify-between">
-      <label className="font-bold text-foreground flex items-center gap-1.5" title={labelTitle}>
+      <label htmlFor={inputId} className="font-bold text-foreground flex items-center gap-1.5" title={labelTitle}>
         {labelIcon}
         {labelText}
       </label>
       {statusBadge}
     </div>
     <div className="flex items-center space-x-2">
-      <input
+      <input id={inputId}
         type="text"
         data-tour={inputTourId}
         value={inputValue}
@@ -62,4 +64,5 @@ export const DirsPathField: React.FC<DirsPathFieldProps> = ({
     </div>
     {hint}
   </div>
-);
+  );
+};

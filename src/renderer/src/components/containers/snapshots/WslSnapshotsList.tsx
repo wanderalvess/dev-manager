@@ -20,7 +20,7 @@ export const WslSnapshotsList: React.FC<WslSnapshotsListProps> = ({
       <span className="text-xs font-bold text-foreground">
         Snapshots .tar Disponíveis ({snapshotsList.length})
       </span>
-      <span className="text-[10px] text-muted-foreground">
+      <span className="text-2xs text-muted-foreground">
         Arquivos .tar encontrados nos diretórios do sistema
       </span>
     </div>
@@ -51,11 +51,11 @@ export const WslSnapshotsList: React.FC<WslSnapshotsListProps> = ({
                 <span className="font-bold text-xs font-mono text-foreground truncate" title={snap.name}>
                   {snap.name}
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground shrink-0">
+                <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground shrink-0">
                   {snap.formattedSize}
                 </span>
               </div>
-              <div className="text-[10px] text-muted-foreground font-mono truncate" title={snap.path}>
+              <div className="text-2xs text-muted-foreground font-mono truncate" title={snap.path}>
                 {snap.path}
               </div>
             </div>

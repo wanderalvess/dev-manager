@@ -66,7 +66,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <span>{smartError.title}</span>
               {smartError.distroName && (
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted border border-border text-muted-foreground font-normal">
+                <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted border border-border text-muted-foreground font-normal">
                   WSL: {smartError.distroName}
                 </span>
               )}
@@ -84,7 +84,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                   <button
                     type="button"
                     onClick={() => copyInstallCmd('sudo apt update && sudo apt install -y docker.io', 'install-box')}
-                    className="ml-2 px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded border border-amber-500/30 text-[10px] font-sans font-semibold flex items-center gap-1 cursor-pointer transition"
+                    className="ml-2 px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded border border-amber-500/30 text-2xs font-sans font-semibold flex items-center gap-1 cursor-pointer transition"
                   >
                     {installCmdFeedback === 'install-box' ? (
                       <>
@@ -115,7 +115,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
 
         {/* Detalhes Técnicos do Erro */}
         <div className="space-y-1.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Detalhes técnicos:</span>
+          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Detalhes técnicos:</span>
           <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-[11px] font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed [scrollbar-width:thin]">
             {smartError.message}
           </pre>

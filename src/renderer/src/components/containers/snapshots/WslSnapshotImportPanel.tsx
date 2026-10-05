@@ -74,7 +74,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
     </div>
 
     <div className="pt-1 flex items-center justify-between">
-      <span className="text-[10px] text-muted-foreground">
+      <span className="text-2xs text-muted-foreground">
         Executa <code className="text-foreground font-mono">wsl --shutdown</code> e em seguida <code className="text-foreground font-mono">wsl --import</code>
       </span>
 

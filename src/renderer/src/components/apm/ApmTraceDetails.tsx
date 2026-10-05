@@ -46,7 +46,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
   >
     <div className="px-3.5 py-2.5 border-b border-border flex items-center justify-between gap-2 shrink-0 bg-muted/20">
       <div className="flex items-center gap-2 overflow-hidden">
-        <span className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${getMethodBadgeClass(details?.summary.httpMethod)}`}>
+        <span className={`px-1.5 py-0.5 rounded border text-2xs font-bold ${getMethodBadgeClass(details?.summary.httpMethod)}`}>
           {details?.summary.httpMethod || 'HTTP'}
         </span>
         <span className="font-mono text-xs font-bold text-foreground truncate">
@@ -66,7 +66,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
           type="button"
           onClick={() => details?.summary.traceId && copyToClipboard(details.summary.traceId, 'traceId')}
           title="Copiar Trace ID"
-          className="h-6 px-2 rounded border border-border bg-card hover:bg-muted text-[10px] font-mono text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+          className="h-6 px-2 rounded border border-border bg-card hover:bg-muted text-2xs font-mono text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
         >
           {copyFeedback === 'traceId' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
           <span>ID</span>

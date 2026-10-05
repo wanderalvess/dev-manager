@@ -45,16 +45,16 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                   <span className="text-xs font-bold text-foreground font-mono truncate">{feat.name}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground px-1.5 py-0.2 bg-muted/80 rounded border border-border/70">
+                  <span className="text-2xs font-mono text-muted-foreground px-1.5 py-0.2 bg-muted/80 rounded border border-border/70">
                     {feat.version || 'latest'}
                   </span>
                   {feat.name.toLowerCase().includes('winthor') && (
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
+                    <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
                       WinThor
                     </span>
                   )}
                   <span
-                    className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded uppercase ${
+                    className={`text-2xs font-mono font-bold px-1.5 py-0.2 rounded uppercase ${
                       isInstalled
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                         : 'text-muted-foreground/80 border border-border/40'
@@ -65,7 +65,7 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
                 </div>
 
                 {feat.repository && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate font-mono">
+                  <p className="text-2xs text-muted-foreground mt-0.5 truncate font-mono">
                     repo: <span className="text-foreground/70">{feat.repository}</span>
                   </p>
                 )}

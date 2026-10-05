@@ -78,6 +78,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
             <div className="flex items-center bg-card border border-border rounded-lg px-2.5 py-1.5 shadow-inner">
               <span className="text-primary font-mono text-xs select-none mr-1 font-bold">:</span>
               <input
+                aria-label={portCfg.label ? `Porta do serviço ${portCfg.label}` : `Porta monitorada ${index + 1}`}
                 type="number"
                 value={portCfg.port || ''}
                 onChange={(e) => onUpdatePort(index, 'port', e.target.value)}
@@ -90,6 +91,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
           {/* Descrição da Porta */}
           <div className="flex-1">
             <input
+              aria-label={portCfg.port ? `Descrição da porta ${portCfg.port}` : `Descrição da porta monitorada ${index + 1}`}
               type="text"
               value={portCfg.label}
               onChange={(e) => onUpdatePort(index, 'label', e.target.value)}

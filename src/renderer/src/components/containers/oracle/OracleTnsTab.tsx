@@ -45,12 +45,12 @@ export const OracleTnsTab: React.FC<OracleTnsTabProps> = ({ ports, copiedKey, on
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-[11px] text-muted-foreground">
         <div className="p-2.5 bg-muted/40 rounded-lg border border-border/50">
           <span className="font-semibold text-foreground block mb-0.5">Localização típica no Windows:</span>
-          <code className="font-mono text-[10px] break-all text-foreground/80">C:\oracle\product\...\network\admin\tnsnames.ora</code>
+          <code className="font-mono text-2xs break-all text-foreground/80">C:\oracle\product\...\network\admin\tnsnames.ora</code>
         </div>
         <div className="p-2.5 bg-muted/40 rounded-lg border border-border/50">
           <span className="font-semibold text-foreground block mb-0.5">Credenciais Padrão (INFR-Docker):</span>
-          <div className="font-mono text-[10px] text-foreground/80">DBA: <span className="text-foreground font-bold">system</span> / Senha: <span className="text-foreground font-bold">pcinfo</span></div>
-          <div className="font-mono text-[10px] text-foreground/80">SYSDBA: <span className="text-foreground font-bold">sys</span> / Senha: <span className="text-foreground font-bold">pcinfo</span></div>
+          <div className="font-mono text-2xs text-foreground/80">DBA: <span className="text-foreground font-bold">system</span> / Senha: <span className="text-foreground font-bold">pcinfo</span></div>
+          <div className="font-mono text-2xs text-foreground/80">SYSDBA: <span className="text-foreground font-bold">sys</span> / Senha: <span className="text-foreground font-bold">pcinfo</span></div>
         </div>
       </div>
     </div>

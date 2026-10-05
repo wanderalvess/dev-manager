@@ -31,7 +31,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
       <div className="sm:col-span-2 space-y-1">
-        <label className="text-[10px] font-bold text-foreground">Nome</label>
+        <label className="text-2xs font-bold text-foreground">Nome</label>
         <input
           type="text"
           required
@@ -42,7 +42,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
         />
       </div>
       <div className="space-y-1">
-        <label className="text-[10px] font-bold text-foreground">Método</label>
+        <label className="text-2xs font-bold text-foreground">Método</label>
         <select
           value={editingWebhook.method || 'POST'}
           onChange={(e) => onChange({ ...editingWebhook, method: e.target.value as 'POST' | 'PUT' })}
@@ -55,7 +55,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
     </div>
 
     <div className="space-y-1">
-      <label className="text-[10px] font-bold text-foreground">URL do Webhook</label>
+      <label className="text-2xs font-bold text-foreground">URL do Webhook</label>
       <input
         type="url"
         required
@@ -67,7 +67,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
     </div>
 
     <div className="space-y-1">
-      <label className="text-[10px] font-bold text-foreground">Plataforma</label>
+      <label className="text-2xs font-bold text-foreground">Plataforma</label>
       <select
         value={editingWebhook.platform || 'generic'}
         onChange={(e) =>
@@ -87,7 +87,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
       <div className="space-y-1">
-        <label className="text-[10px] font-bold text-foreground">Cabeçalho de Autenticação</label>
+        <label className="text-2xs font-bold text-foreground">Cabeçalho de Autenticação</label>
         <input
           type="text"
           placeholder="Authorization (opcional)"
@@ -97,7 +97,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
         />
       </div>
       <div className="space-y-1">
-        <label className="text-[10px] font-bold text-foreground">Valor do Token / Chave</label>
+        <label className="text-2xs font-bold text-foreground">Valor do Token / Chave</label>
         <input
           type="password"
           placeholder="Bearer ... (opcional)"

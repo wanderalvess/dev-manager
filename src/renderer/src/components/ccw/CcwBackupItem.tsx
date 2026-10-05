@@ -48,29 +48,29 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
             {entry.fileName}
           </span>
           {entry.isPreRollback && (
-            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1 uppercase tracking-wider">
+            <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1 uppercase tracking-wider">
               <span>Pré-Rollback</span>
             </span>
           )}
           {entry.version?.fileVersion && (
             <span
-              className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-2xs"
+              className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-2xs"
               title={`Versão do Executável (PE Header): FileVersion ${entry.version.fileVersion}${entry.version.productVersion ? ` / ProductVersion ${entry.version.productVersion}` : ''}`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>v{entry.version.fileVersion}</span>
             </span>
           )}
-          <span className="text-[10px] font-mono text-muted-foreground">
+          <span className="text-2xs font-mono text-muted-foreground">
             {entry.sizeFormatted}
           </span>
         </div>
         <div className="text-[11px] text-muted-foreground flex items-center gap-3">
-          <span className="flex items-center gap-1 font-mono text-[10px]">
+          <span className="flex items-center gap-1 font-mono text-2xs">
             <Clock className="w-3 h-3 text-muted-foreground/70" />
             {entry.dateFormatted}
           </span>
-          <span className="truncate text-[10px] font-mono opacity-80" title={entry.targetRoutinePath || ''}>
+          <span className="truncate text-2xs font-mono opacity-80" title={entry.targetRoutinePath || ''}>
             Destino: {entry.targetRoutinePath ? getPathBaseName(entry.targetRoutinePath) : 'N/A'}
           </span>
         </div>

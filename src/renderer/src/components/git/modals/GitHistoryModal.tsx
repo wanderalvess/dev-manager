@@ -71,13 +71,13 @@ export const GitHistoryModal: React.FC<GitHistoryModalProps> = ({
                     type="button"
                     onClick={() => onCopyHash(c.hash)}
                     title="Clique para copiar hash do commit"
-                    className="font-mono font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-1.5 py-0.5 rounded text-[10px] transition cursor-pointer"
+                    className="font-mono font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-1.5 py-0.5 rounded text-2xs transition cursor-pointer"
                   >
                     {copiedHash === c.hash ? 'Copiado!' : c.hash}
                   </button>
                   <span className="font-bold text-foreground truncate max-w-[280px] sm:max-w-md">{c.author}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground font-mono">{c.date}</span>
+                <span className="text-2xs text-muted-foreground font-mono">{c.date}</span>
               </div>
               <p className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">{c.message}</p>
             </div>

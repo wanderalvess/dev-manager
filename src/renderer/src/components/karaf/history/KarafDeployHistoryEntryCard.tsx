@@ -65,13 +65,13 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               </span>
 
               {entry.version && (
-                <span className="text-[10px] font-mono text-sky-400 bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.5 rounded font-semibold">
+                <span className="text-2xs font-mono text-sky-400 bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.5 rounded font-semibold">
                   v{entry.version}
                 </span>
               )}
 
               {/* Trigger Tag */}
-              <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 border ${
+              <span className={`text-2xs uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 border ${
                 entry.trigger === 'mcp'
                   ? 'bg-purple-500/10 text-purple-300 border-purple-500/30'
                   : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
@@ -90,7 +90,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               </span>
 
               {/* Status Tag */}
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+              <span className={`text-2xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
                 entry.success
                   ? 'bg-emerald-500/15 text-emerald-400'
                   : 'bg-rose-500/15 text-rose-400'
@@ -109,7 +109,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               <button
                 type="button"
                 onClick={() => onCopy(mvnCoords)}
-                className="p-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] flex items-center gap-1 border border-slate-700 transition cursor-pointer"
+                className="p-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-2xs flex items-center gap-1 border border-slate-700 transition cursor-pointer"
                 title="Copiar coordenadas Maven"
               >
                 {isCopied ? (
@@ -130,7 +130,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
                 <button
                   type="button"
                   onClick={() => onUseInInstaller(mvnCoords, entry.version)}
-                  className="p-1 px-1.5 rounded bg-slate-800/60 hover:bg-slate-800 text-sky-400 hover:text-sky-300 text-[10px] flex items-center gap-1 border border-slate-700/60 transition cursor-pointer"
+                  className="p-1 px-1.5 rounded bg-slate-800/60 hover:bg-slate-800 text-sky-400 hover:text-sky-300 text-2xs flex items-center gap-1 border border-slate-700/60 transition cursor-pointer"
                   title="Reutilizar coordenadas para novo deploy"
                 >
                   <UploadCloud className="w-3 h-3" />
@@ -160,7 +160,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
             )}
 
             {/* Metadados */}
-            <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-mono">
+            <div className="flex items-center gap-3 mt-2 text-2xs text-slate-500 font-mono">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3 text-slate-400" />
                 {new Date(entry.startedAt).toLocaleString('pt-BR')}

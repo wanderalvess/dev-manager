@@ -28,7 +28,7 @@ export const HistoryList: React.FC<HistoryListProps> = ({ history, canSync, onVi
             <div className="flex items-center gap-2">
               <StatusIcon status={item.status} />
               <span className="font-bold text-zinc-200">{item.runnerName}</span>
-              <span className="text-[10px] text-zinc-500 font-mono">
+              <span className="text-2xs text-zinc-500 font-mono">
                 {new Date(item.executedAt).toLocaleTimeString()}
               </span>
             </div>

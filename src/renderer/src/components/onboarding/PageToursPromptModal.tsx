@@ -38,7 +38,7 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
         <div className="flex items-center space-x-3">
           <AppLogo size="md" />
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+            <span className="text-2xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
               Tour Geral Concluído 🎉
             </span>
             <h2 className="text-sm sm:text-base font-bold text-foreground mt-1 leading-tight">

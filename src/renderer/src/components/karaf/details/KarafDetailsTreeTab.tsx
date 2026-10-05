@@ -17,7 +17,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
           <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
           Bundles Dependentes (Consumidores)
         </span>
-        <span className="text-[10px] font-mono text-muted-foreground">
+        <span className="text-2xs font-mono text-muted-foreground">
           {bundleDetails.dependentBundles.length} dependente(s)
         </span>
       </div>
@@ -35,7 +35,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
               <div className="font-semibold text-foreground truncate">
                 <span className="text-primary font-mono font-bold">[{dep.id}]</span> {dep.name}
               </div>
-              <div className="text-[10px] text-muted-foreground truncate font-mono">
+              <div className="text-2xs text-muted-foreground truncate font-mono">
                 Fiação: {dep.reason}
               </div>
             </div>
@@ -53,16 +53,16 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
         <div>
           <div className="text-xs font-bold text-foreground flex items-center gap-2">
             <span>[{target.id}] {target.name}</span>
-            <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-mono font-bold">
+            <span className="px-2 py-0.5 text-2xs rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-mono font-bold">
               {target.state}
             </span>
           </div>
-          <div className="text-[10px] text-muted-foreground font-mono">
+          <div className="text-2xs text-muted-foreground font-mono">
             Versão: {target.version} · {target.symbolicName || 'Sem Symbolic-Name'}
           </div>
         </div>
       </div>
-      <div className="text-right text-[10px] text-muted-foreground font-mono">
+      <div className="text-right text-2xs text-muted-foreground font-mono">
         <div>Exports: {bundleDetails.exportedPackages.length}</div>
         <div>Imports: {bundleDetails.importedPackages.length}</div>
       </div>
@@ -75,7 +75,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
           <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
           Pacotes Requeridos (Importados)
         </span>
-        <span className="text-[10px] font-mono text-muted-foreground">
+        <span className="text-2xs font-mono text-muted-foreground">
           {bundleDetails.importedPackages.length} pacote(s)
         </span>
       </div>

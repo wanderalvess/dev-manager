@@ -46,10 +46,10 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
                       <span className="font-bold text-foreground font-mono">[{dep.id}] </span>
                       <span className="text-foreground">{dep.name}</span>
                       {dep.version && (
-                        <span className="text-muted-foreground text-[10px] ml-1.5">({dep.version})</span>
+                        <span className="text-muted-foreground text-2xs ml-1.5">({dep.version})</span>
                       )}
                     </div>
-                    <span className="text-[10px] font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">
+                    <span className="text-2xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">
                       {dep.reason}
                     </span>
                   </div>
@@ -94,7 +94,7 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
             {Object.entries(bundleDetails.rawHeaders || {}).map(([key, value]) => (
               <div key={key} className="p-2 rounded-lg bg-muted/20 border border-border/50">
                 <span className="font-bold text-primary block">{key}:</span>
-                <span className="text-foreground text-[10px] break-all">{value}</span>
+                <span className="text-foreground text-2xs break-all">{value}</span>
               </div>
             ))}
           </div>

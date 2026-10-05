@@ -18,7 +18,7 @@ export const SaveEnvironmentSummary: React.FC<SaveEnvironmentSummaryProps> = ({ 
         {slots.map((slot, idx) => (
           <span
             key={slot.name}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-background border border-border/80 text-[10px] font-mono shadow-2xs"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-background border border-border/80 text-2xs font-mono shadow-2xs"
           >
             <strong className="text-primary font-bold">#{idx + 1}</strong>
             <span className="text-foreground">{slot.name}</span>

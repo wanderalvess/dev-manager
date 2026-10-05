@@ -30,20 +30,20 @@ export const StatementInspector: React.FC<{
             SQL_ID: {item.sqlId || '-'}
           </span>
           {item.username && (
-            <span className="text-[10px] px-2 py-0.5 rounded bg-muted/80 text-foreground border border-border/60 font-semibold">
+            <span className="text-2xs px-2 py-0.5 rounded bg-muted/80 text-foreground border border-border/60 font-semibold">
               Schema: {item.username}
             </span>
           )}
           {item.program && (
             <span
-              className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold truncate max-w-[220px]"
+              className="text-2xs px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold truncate max-w-[220px]"
               title={item.program}
             >
               {item.program}
             </span>
           )}
           {item.timestamp && (
-            <span className="text-[10px] text-muted-foreground font-mono">
+            <span className="text-2xs text-muted-foreground font-mono">
               {new Date(item.timestamp).toLocaleTimeString('pt-BR')}
             </span>
           )}
@@ -67,7 +67,7 @@ export const StatementInspector: React.FC<{
               <Sliders className="w-3.5 h-3.5 text-sky-400" />
               <span>Parâmetros de Execução (V$SQL_BIND_CAPTURE)</span>
             </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">
+            <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">
               {binds.length} {binds.length === 1 ? 'parâmetro' : 'parâmetros'}
             </span>
           </div>
@@ -94,7 +94,7 @@ export const StatementInspector: React.FC<{
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             <span>{interpolatedSql ? 'SQL Montado com Parâmetros Aplicados' : 'Instrução SQL'}</span>
             {interpolatedSql && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span className="text-2xs px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 Pronto para Executar
               </span>
             )}
@@ -145,7 +145,7 @@ export const StatementInspector: React.FC<{
           <summary className="cursor-pointer hover:text-foreground font-semibold py-1">
             Ver SQL Original com Placeholders (:1, :param, ?)
           </summary>
-          <div className="mt-1 bg-card/60 border border-border/70 rounded-lg p-2 font-mono text-[10px] text-muted-foreground whitespace-pre-wrap max-h-28 overflow-y-auto">
+          <div className="mt-1 bg-card/60 border border-border/70 rounded-lg p-2 font-mono text-2xs text-muted-foreground whitespace-pre-wrap max-h-28 overflow-y-auto">
             {item.sqlText}
           </div>
         </details>

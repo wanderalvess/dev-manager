@@ -46,7 +46,7 @@ export const Routine801Footer: React.FC<Routine801FooterProps> = ({
       >
         <Terminal className="w-3 h-3 text-primary" />
         <span>Terminal Karaf</span>
-        <span className="px-1 py-0.2 rounded text-[9px] bg-muted text-muted-foreground">
+        <span className="px-1 py-0.2 rounded text-2xs bg-muted text-muted-foreground">
           {consoleLogCount}
         </span>
         {isConsoleExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}

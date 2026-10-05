@@ -59,7 +59,7 @@ export const CcwBatchProgress: React.FC<CcwBatchProgressProps> = ({ progressList
             </div>
 
             <span
-              className={`text-[10px] font-mono truncate max-w-xs ${
+              className={`text-2xs font-mono truncate max-w-xs ${
                 prog.status === 'completed'
                   ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
                   : prog.status === 'failed'

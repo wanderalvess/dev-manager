@@ -24,7 +24,7 @@ export const TautSpecsTab: React.FC<TautSpecsTabProps> = ({ specs }) => (
           className="p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/40 transition space-y-2"
         >
           <div className="flex items-center justify-between">
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary font-mono">
+            <span className="px-2 py-0.5 rounded text-2xs font-bold bg-primary/10 text-primary font-mono">
               {spec.module}
             </span>
             <span className="text-xs font-mono font-bold text-foreground">
@@ -36,7 +36,7 @@ export const TautSpecsTab: React.FC<TautSpecsTabProps> = ({ specs }) => (
             {spec.specFile}
           </div>
 
-          <div className="text-[10px] text-muted-foreground font-mono truncate">
+          <div className="text-2xs text-muted-foreground font-mono truncate">
             {spec.relativePath}
           </div>
 
@@ -46,7 +46,7 @@ export const TautSpecsTab: React.FC<TautSpecsTabProps> = ({ specs }) => (
               {spec.tags.map((t) => (
                 <span
                   key={t}
-                  className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-muted text-muted-foreground border border-border/60"
+                  className="px-1.5 py-0.5 rounded text-2xs font-mono bg-muted text-muted-foreground border border-border/60"
                 >
                   {t}
                 </span>

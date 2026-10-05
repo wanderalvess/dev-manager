@@ -61,11 +61,11 @@ export const SessionsTimeline: React.FC<{
                 <td className="px-2.5 py-2 whitespace-nowrap font-medium text-foreground">{ev.username || '-'}</td>
                 <td className="px-2.5 py-2">
                   <div className="font-medium text-foreground truncate max-w-[160px]">{ev.program || '-'}</div>
-                  <div className="text-muted-foreground text-[10px] truncate max-w-[160px]">{ev.machine || '-'}</div>
+                  <div className="text-muted-foreground text-2xs truncate max-w-[160px]">{ev.machine || '-'}</div>
                 </td>
                 <td className="px-2.5 py-2">
                   <div className="truncate max-w-[140px]">{ev.module || '-'}</div>
-                  <div className="text-muted-foreground text-[10px] truncate max-w-[140px]">{ev.action || '-'}</div>
+                  <div className="text-muted-foreground text-2xs truncate max-w-[140px]">{ev.action || '-'}</div>
                 </td>
                 <td className="px-2.5 py-2 whitespace-nowrap">
                   <BindsCountBadge count={bindsCount} />

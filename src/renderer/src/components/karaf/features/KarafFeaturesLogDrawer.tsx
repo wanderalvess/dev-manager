@@ -22,7 +22,7 @@ export const KarafFeaturesLogDrawer: React.FC<KarafFeaturesLogDrawerProps> = ({
 
   return (
     <div className="border-t border-border bg-slate-950 text-slate-200 shrink-0 flex flex-col max-h-48 overflow-hidden animate-in fade-in duration-150">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/60 text-[10px] font-mono">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/60 text-2xs font-mono">
         <div className="flex items-center space-x-2 text-indigo-400">
           <Terminal className="w-3.5 h-3.5" />
           <span className="font-bold tracking-wider uppercase">Log de Execução Karaf SSH</span>

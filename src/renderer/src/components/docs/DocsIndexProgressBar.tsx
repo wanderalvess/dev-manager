@@ -32,7 +32,7 @@ export const DocsIndexProgressBar: React.FC<DocsIndexProgressBarProps> = ({ prog
       </div>
     )}
     {progress.currentFile && (
-      <p className="text-[10px] text-muted-foreground font-mono truncate">{progress.currentFile}</p>
+      <p className="text-2xs text-muted-foreground font-mono truncate">{progress.currentFile}</p>
     )}
   </div>
 );

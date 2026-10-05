@@ -60,7 +60,7 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
             <div>
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 Histórico de Execuções de Deploy
-                <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                   {totalRuns} {totalRuns === 1 ? 'registro' : 'registros'}
                 </span>
               </h2>
@@ -152,7 +152,7 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-xs text-foreground truncate">{entry.profileName}</span>
                           <span
-                            className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold uppercase tracking-wider ${
+                            className={`text-2xs px-1.5 py-0.2 rounded-full font-mono font-bold uppercase tracking-wider ${
                               entry.success
                                 ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
                                 : entry.aborted
@@ -193,7 +193,7 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                       )}
 
                       <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                        <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground block mb-1">
                           Detalhamento das Etapas:
                         </span>
                         {(entry.stepResults || []).map((step, sIdx) => (
@@ -210,15 +210,15 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                                 <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                               )}
                               <span className="font-semibold text-foreground truncate">{step.stepName}</span>
-                              <span className="text-[10px] text-muted-foreground font-mono">({step.stepType})</span>
+                              <span className="text-2xs text-muted-foreground font-mono">({step.stepType})</span>
                               {step.ignoredError && (
-                                <span className="text-[9px] bg-amber-500/15 text-amber-500 px-1 rounded font-mono">
+                                <span className="text-2xs bg-amber-500/15 text-amber-500 px-1 rounded font-mono">
                                   tolerado
                                 </span>
                               )}
                             </div>
 
-                            <span className="text-[10px] font-mono text-muted-foreground shrink-0 ml-2">
+                            <span className="text-2xs font-mono text-muted-foreground shrink-0 ml-2">
                               {(step.durationMs / 1000).toFixed(1)}s
                             </span>
                           </div>

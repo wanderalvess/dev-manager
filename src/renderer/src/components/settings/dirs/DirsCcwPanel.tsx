@@ -17,7 +17,7 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
         <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
           <Download className="w-4 h-4 text-blue-500" /> Central de Controle WinThor (CCW)
         </span>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Download e atualização automática de rotinas e executáveis da nuvem direto para o ambiente local.
         </p>
       </div>
@@ -25,10 +25,10 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
       <div>
-        <label className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-ccw-panel-1" className="block text-[11px] font-semibold text-foreground mb-1">
           URL Base da Central de Controle:
         </label>
-        <input
+        <input id="dirs-ccw-panel-1"
           type="text"
           value={settings.ccwBaseUrl || 'https://centraldecontrole.pcinformatica.com.br'}
           onChange={(e) => setField('ccwBaseUrl', e.target.value)}
@@ -37,10 +37,10 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
         />
       </div>
       <div>
-        <label className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-ccw-panel-2" className="block text-[11px] font-semibold text-foreground mb-1">
           Versão WinThor Padrão (CCW):
         </label>
-        <input
+        <input id="dirs-ccw-panel-2"
           type="text"
           value={settings.ccwWinthorVersion || '30'}
           onChange={(e) => setField('ccwWinthorVersion', e.target.value)}
@@ -51,17 +51,17 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
     </div>
 
     <div>
-      <label className="block text-[11px] font-semibold text-foreground mb-1">
+      <label htmlFor="dirs-ccw-panel-3" className="block text-[11px] font-semibold text-foreground mb-1">
         Cookie de Autenticação CCW (<code>auth_token</code> ou similar, opcional):
       </label>
-      <input
+      <input id="dirs-ccw-panel-3"
         type="password"
         value={settings.ccwAuthCookie || ''}
         onChange={(e) => setField('ccwAuthCookie', e.target.value)}
         className={INPUT_CLASS}
         placeholder="Cole o cookie da sessão web se necessário para rotinas restritas"
       />
-      <p className="text-[10px] text-muted-foreground mt-0.5">
+      <p className="text-2xs text-muted-foreground mt-0.5">
         Para download direto pelo número da rotina, a CCW não exige autenticação. O cookie é usado para carregar toda a árvore de módulos e rotinas.
       </p>
     </div>

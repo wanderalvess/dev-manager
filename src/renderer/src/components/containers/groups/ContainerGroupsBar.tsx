@@ -55,7 +55,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xs font-bold text-foreground">Grupos de Containers</h3>
-              <span className="text-[10px] px-2 py-0.2 rounded-full font-semibold bg-muted text-muted-foreground border border-border/60">
+              <span className="text-2xs px-2 py-0.2 rounded-full font-semibold bg-muted text-muted-foreground border border-border/60">
                 {environments.length} {environments.length === 1 ? 'grupo' : 'grupos'}
               </span>
             </div>
@@ -135,7 +135,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                               {env.name}
                             </h4>
                             {env.wslDistro && (
-                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono font-medium">
+                              <span className="text-2xs px-1.5 py-0.2 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono font-medium">
                                 {env.wslDistro}
                               </span>
                             )}
@@ -144,7 +144,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                           {/* Status dos Containers */}
                           <div className="flex items-center gap-2 mt-1">
                             <span
-                              className={`text-[10px] font-semibold flex items-center gap-1 px-2 py-0.5 rounded-full border ${
+                              className={`text-2xs font-semibold flex items-center gap-1 px-2 py-0.5 rounded-full border ${
                                 status.isAllRunning
                                   ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
                                   : status.running > 0
@@ -166,7 +166,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                               </span>
                             </span>
 
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-2xs text-muted-foreground">
                               {containerNames.length} {containerNames.length === 1 ? 'container' : 'containers'}
                             </span>
                           </div>
@@ -204,7 +204,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                           return (
                             <span
                               key={name}
-                              className={`text-[9px] font-mono px-1.5 py-0.5 rounded border max-w-[120px] truncate ${
+                              className={`text-2xs font-mono px-1.5 py-0.5 rounded border max-w-[120px] truncate ${
                                 isCrunning
                                   ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
                                   : 'bg-muted/60 text-muted-foreground border-border/50'
@@ -216,7 +216,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                           );
                         })}
                         {containerNames.length > 4 && (
-                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
+                          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
                             +{containerNames.length - 4}
                           </span>
                         )}

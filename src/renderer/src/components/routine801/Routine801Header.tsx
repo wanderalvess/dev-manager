@@ -38,7 +38,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           <h2 className="text-sm font-semibold tracking-tight">
             Catálogo Oficial WinThor — Rotina 801
           </h2>
-          <span className="px-1.5 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 rounded">
+          <span className="px-1.5 py-0.5 text-2xs font-mono font-medium uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 rounded">
             WTA Serviços
           </span>
           {connectionHealth && (
@@ -52,7 +52,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
                   connectionHealth.ok ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
                 }`}
               />
-              <span className="text-muted-foreground text-[10px]">{serverUrlInput}</span>
+              <span className="text-muted-foreground text-2xs">{serverUrlInput}</span>
             </button>
           )}
         </div>

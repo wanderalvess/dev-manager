@@ -28,7 +28,7 @@ export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps>
         Parâmetros da Feature Karaf
       </span>
       {installedFeatures.length > 0 && (
-        <span className="text-[10px] text-muted-foreground font-mono">
+        <span className="text-2xs text-muted-foreground font-mono">
           {installedFeatures.length} features instaladas detectadas
         </span>
       )}
@@ -36,7 +36,7 @@ export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps>
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
       <div className="sm:col-span-2">
-        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Nome da Feature
         </label>
         <input
@@ -57,7 +57,7 @@ export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps>
       </div>
 
       <div>
-        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Versão (Opcional)
         </label>
         <input
@@ -70,7 +70,7 @@ export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps>
       </div>
     </div>
 
-    <div className="text-[10px] font-mono text-muted-foreground bg-muted/40 p-2 rounded-lg border border-border/50">
+    <div className="text-2xs font-mono text-muted-foreground bg-muted/40 p-2 rounded-lg border border-border/50">
       Comando Karaf que será executado:
       <div className="text-rose-400 font-bold mt-0.5">
         {buildFeatureUninstallPreview(featureName, featureVersion)}

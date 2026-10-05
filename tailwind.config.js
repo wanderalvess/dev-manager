@@ -56,6 +56,10 @@ export default {
           600: '#bf360c'
         }
       },
+      // Piso tipográfico da UI: nada abaixo de 11px (badges, rótulos e dicas de atalho).
+      fontSize: {
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }]
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

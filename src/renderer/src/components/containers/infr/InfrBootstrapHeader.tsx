@@ -10,7 +10,7 @@ export const InfrBootstrapHeader: React.FC<{ onClose: () => void }> = ({ onClose
       <div>
         <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
           <span>Assistente de Bootstrap INFR-Docker</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-orange-500/10 text-orange-500 border border-orange-500/20">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded bg-orange-500/10 text-orange-500 border border-orange-500/20">
             Scripts Oficiais
           </span>
         </h3>

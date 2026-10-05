@@ -37,14 +37,14 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
       <div className="space-y-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-bold text-foreground">{source.name}</span>
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${badge.color}`}>{badge.label}</span>
+          <span className={`px-2 py-0.5 rounded text-2xs font-bold border ${badge.color}`}>{badge.label}</span>
           {source.projectKey && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground border border-border">
+            <span className="px-1.5 py-0.5 rounded text-2xs font-mono bg-muted text-muted-foreground border border-border">
               Projeto: {source.projectKey}
             </span>
           )}
           {isCurrentActive && (
-            <span className="text-[10px] font-bold text-emerald-500 font-mono flex items-center gap-1">
+            <span className="text-2xs font-bold text-emerald-500 font-mono flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> Padrão / Ativa
             </span>
           )}

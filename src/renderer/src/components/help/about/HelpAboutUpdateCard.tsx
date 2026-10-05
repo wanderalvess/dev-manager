@@ -15,7 +15,7 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
   handleCheckForUpdates
 }) => (
   <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
-    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+    <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
       Versão do Aplicativo:
     </span>
     <div className="flex items-center justify-between gap-2">
@@ -28,14 +28,14 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
       {updateStatus?.status === 'downloaded' ? (
         <button
           onClick={() => window.electronAPI?.installUpdate?.()}
-          className="flex items-center gap-1 px-2 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+          className="flex items-center gap-1 px-2 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-2xs font-bold transition cursor-pointer"
         >
           <Download className="w-3 h-3" /> Instalar e Reiniciar
         </button>
       ) : updateStatus?.status === 'available' ? (
         <button
           onClick={() => window.electronAPI?.downloadUpdate?.()}
-          className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold transition cursor-pointer"
+          className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-lg text-2xs font-bold transition cursor-pointer"
         >
           <Download className="w-3 h-3" /> Baixar
         </button>
@@ -43,7 +43,7 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
         <button
           onClick={handleCheckForUpdates}
           disabled={updateStatus?.status === 'checking' || updateStatus?.status === 'downloading'}
-          className="flex items-center gap-1 px-2.5 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-1 px-2.5 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-2xs font-bold transition disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw className={`w-3 h-3 ${updateStatus?.status === 'checking' ? 'animate-spin' : ''}`} />
           Verificar
@@ -59,10 +59,10 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
       </div>
     )}
     {updateStatus?.status === 'not-available' && (
-      <p className="text-[10px] text-muted-foreground">Você já está na versão mais recente.</p>
+      <p className="text-2xs text-muted-foreground">Você já está na versão mais recente.</p>
     )}
     {updateStatus?.status === 'error' && (
-      <p className="text-[10px] text-rose-500 truncate" title={updateStatus.message}>
+      <p className="text-2xs text-rose-500 truncate" title={updateStatus.message}>
         Falha ao verificar: {updateStatus.message}
       </p>
     )}

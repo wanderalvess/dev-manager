@@ -63,7 +63,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
 
         {/* Presets rápidos de Features WinThor */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider mr-1">
+          <span className="text-2xs font-mono text-muted-foreground uppercase tracking-wider mr-1">
             Atalhos:
           </span>
           {COMMON_PRESETS.map((preset) => (
@@ -71,7 +71,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
               key={preset}
               type="button"
               onClick={() => handleSelectPreset(preset)}
-              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-background hover:bg-muted border border-border/80 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+              className="text-2xs font-mono px-2 py-0.5 rounded-md bg-background hover:bg-muted border border-border/80 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
             >
               + {preset}
             </button>
@@ -81,7 +81,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
         {/* Campos de Input */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <div className="sm:col-span-2">
-            <label className="text-[10px] font-mono uppercase font-semibold text-muted-foreground block mb-1">
+            <label className="text-2xs font-mono uppercase font-semibold text-muted-foreground block mb-1">
               Nome da Feature <span className="text-rose-600 dark:text-rose-400">*</span>
             </label>
             <input
@@ -95,7 +95,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
           </div>
 
           <div>
-            <label className="text-[10px] font-mono uppercase font-semibold text-muted-foreground block mb-1">
+            <label className="text-2xs font-mono uppercase font-semibold text-muted-foreground block mb-1">
               Versão (Opcional)
             </label>
             <input

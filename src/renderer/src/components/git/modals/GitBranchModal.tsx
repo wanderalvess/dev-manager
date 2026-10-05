@@ -81,7 +81,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
           {/* Lista de Branches Existentes (locais + só no origin, que o checkout passa a rastrear) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <label className="font-bold text-muted-foreground uppercase text-[10px] tracking-wider block">
+              <label className="font-bold text-muted-foreground uppercase text-2xs tracking-wider block">
                 Branches Disponíveis ({total}):
               </label>
               <div className="relative">
@@ -116,16 +116,16 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                   >
                     <span className="truncate">{name}</span>
                     {isCurrent ? (
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-1.5 py-0.5 rounded font-sans">Ativa</span>
+                      <span className="text-2xs bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-1.5 py-0.5 rounded font-sans">Ativa</span>
                     ) : remote ? (
                       <span
-                        className="text-[10px] text-sky-600 dark:text-sky-400 font-sans shrink-0"
+                        className="text-2xs text-sky-600 dark:text-sky-400 font-sans shrink-0"
                         title="Existe só no origin; o checkout cria a branch local rastreando origin"
                       >
                         origin · Checkout
                       </span>
                     ) : (
-                      <span className="text-[10px] text-muted-foreground font-sans">Checkout</span>
+                      <span className="text-2xs text-muted-foreground font-sans">Checkout</span>
                     )}
                   </button>
                 );

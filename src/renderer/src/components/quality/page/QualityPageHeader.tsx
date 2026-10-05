@@ -31,7 +31,7 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
               Central de Qualidade &amp; Homologação
             </h2>
             {activeQualitySource ? (
-              <span className="px-2 py-0.2 rounded text-[10px] font-mono font-medium bg-muted text-foreground border border-border flex items-center gap-1.5">
+              <span className="px-2 py-0.2 rounded text-2xs font-mono font-medium bg-muted text-foreground border border-border flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 Fonte: {activeQualitySource.name} ({activeQualitySource.type})
               </span>
@@ -39,7 +39,7 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigate?.('settings')}
-                className="px-2 py-0.2 rounded text-[10px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 transition-colors cursor-pointer flex items-center gap-1"
+                className="px-2 py-0.2 rounded text-2xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 transition-colors cursor-pointer flex items-center gap-1"
                 title="Configurar conexões com Zephyr Scale, Jira ou Azure DevOps"
               >
                 <AlertTriangle className="w-3 h-3" />

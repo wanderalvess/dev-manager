@@ -17,7 +17,7 @@ export const KarafDeployHistoryBlueprint: React.FC<KarafDeployHistoryBlueprintPr
   <div className="h-full min-h-[360px] flex flex-col items-center justify-center p-6 text-center">
     <div className="w-full max-w-lg p-6 rounded-xl bg-slate-900/90 border border-slate-800 shadow-md relative">
       {/* Pipeline OSGi Diagram */}
-      <div className="flex items-center justify-center gap-2 mb-5 font-mono text-[10px] text-slate-400">
+      <div className="flex items-center justify-center gap-2 mb-5 font-mono text-2xs text-slate-400">
         <div className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center gap-1.5 text-slate-200">
           <Package className="w-3 h-3 text-sky-400" />
           <span>Maven JAR</span>

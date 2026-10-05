@@ -46,7 +46,7 @@ export const DatabaseSidebarTableItem: React.FC<DatabaseSidebarTableItemProps> =
         <span className="truncate">{tbl}</span>
       </div>
       {cols && (
-        <span className="text-[9px] px-1 py-0.2 rounded bg-muted/60 text-muted-foreground shrink-0 font-mono">
+        <span className="text-2xs px-1 py-0.2 rounded bg-muted/60 text-muted-foreground shrink-0 font-mono">
           {cols.length}
         </span>
       )}

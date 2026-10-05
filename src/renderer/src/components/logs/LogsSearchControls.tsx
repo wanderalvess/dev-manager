@@ -47,7 +47,7 @@ export const LogsSearchControls: React.FC<LogsSearchControlsProps> = ({
       )}
     </div>
 
-    <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-[10px] font-mono">
+    <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-2xs font-mono">
       <button
         onClick={onToggleCaseSensitive}
         className={`px-1.5 py-0.5 rounded font-bold transition-colors ${

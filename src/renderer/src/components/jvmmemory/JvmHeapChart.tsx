@@ -58,7 +58,7 @@ export const JvmHeapChart: React.FC<JvmHeapChartProps> = ({ history, isNearOom, 
           x={chartWidth - paddingX - 4}
           y={warningY - 3}
           textAnchor="end"
-          className="text-[8px] fill-amber-500/70 font-mono tracking-tight"
+          className="text-2xs fill-amber-500/70 font-mono tracking-tight"
         >
           LIMIAR 85%
         </text>
@@ -104,9 +104,9 @@ export const JvmHeapChart: React.FC<JvmHeapChartProps> = ({ history, isNearOom, 
         })}
       </svg>
 
-      <div className="flex justify-between items-center text-[10px] text-muted-foreground px-1 pt-1 font-mono tabular-nums">
+      <div className="flex justify-between items-center text-2xs text-muted-foreground px-1 pt-1 font-mono tabular-nums">
         <span>{history[0]?.time}</span>
-        <span className="text-muted-foreground/70 uppercase tracking-widest text-[9px]">
+        <span className="text-muted-foreground/70 uppercase tracking-widest text-2xs">
           Janela Contínua ({history.length} amostras)
         </span>
         <span className="font-semibold text-foreground/90">{history[history.length - 1]?.time}</span>

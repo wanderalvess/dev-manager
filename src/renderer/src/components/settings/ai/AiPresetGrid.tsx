@@ -13,7 +13,7 @@ export const AiPresetGrid: React.FC<AiPresetGridProps> = ({ onApplyTemplate }) =
         <Cpu className="w-3.5 h-3.5 text-primary" />
         Presets de Conexão Rápida
       </span>
-      <span className="text-[10px] text-muted-foreground">
+      <span className="text-2xs text-muted-foreground">
         Clique em um preset para carregar o template no formulário
       </span>
     </div>
@@ -33,10 +33,10 @@ export const AiPresetGrid: React.FC<AiPresetGridProps> = ({ onApplyTemplate }) =
                 {tmpl.name}
               </span>
             </div>
-            <div className="flex items-center justify-between gap-1 text-[10px] font-mono text-muted-foreground">
+            <div className="flex items-center justify-between gap-1 text-2xs font-mono text-muted-foreground">
               <span className="truncate">{tmpl.model}</span>
               {isLocal && (
-                <span className="px-1 py-0.2 rounded bg-cyan-500/10 text-cyan-500 text-[9px] font-bold border border-cyan-500/20">
+                <span className="px-1 py-0.2 rounded bg-cyan-500/10 text-cyan-500 text-2xs font-bold border border-cyan-500/20">
                   LOCAL
                 </span>
               )}

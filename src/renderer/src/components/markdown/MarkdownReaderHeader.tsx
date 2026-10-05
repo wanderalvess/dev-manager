@@ -55,7 +55,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="text-sm md:text-base font-bold text-foreground truncate tracking-tight">{title}</h3>
           {!hideBadge && (
-            <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-[10px] font-mono font-bold uppercase shrink-0">
+            <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-2xs font-mono font-bold uppercase shrink-0">
               Markdown
             </span>
           )}
@@ -98,7 +98,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
         >
           <List className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Tópicos</span>
-          <span className="px-1.5 py-0.2 rounded-md bg-muted text-[10px] font-mono">{headingsCount}</span>
+          <span className="px-1.5 py-0.2 rounded-md bg-muted text-2xs font-mono">{headingsCount}</span>
         </button>
       )}
 

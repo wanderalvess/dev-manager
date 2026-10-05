@@ -23,7 +23,7 @@ const FONT_CLASSES: Record<LogFontSize, string> = {
 };
 
 const Badge: React.FC<{ className: string; label: string }> = ({ className, label }) => (
-  <span className={`text-[9px] font-mono tracking-wider px-1.5 py-0.2 rounded border uppercase shrink-0 mr-2 select-none ${className}`}>
+  <span className={`text-2xs font-mono tracking-wider px-1.5 py-0.2 rounded border uppercase shrink-0 mr-2 select-none ${className}`}>
     {label}
   </span>
 );
@@ -96,7 +96,7 @@ export const LogLine: React.FC<LogLineProps> = ({
         isStackTrace ? 'pl-8 border-l-2 border-slate-700/50' : ''
       }`}
     >
-      <span className="w-12 shrink-0 text-slate-600 select-none text-right pr-3 font-mono text-[10px] group-hover:text-slate-400">
+      <span className="w-12 shrink-0 text-slate-600 select-none text-right pr-3 font-mono text-2xs group-hover:text-slate-400">
         {index + 1}
       </span>
 
@@ -106,7 +106,7 @@ export const LogLine: React.FC<LogLineProps> = ({
           <button
             type="button"
             onClick={onOpenAnalyzer}
-            className="text-[9px] font-bold font-mono tracking-wider px-1.5 py-0.2 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 uppercase shrink-0 mr-2 cursor-pointer hover:bg-rose-500/40 select-none"
+            className="text-2xs font-bold font-mono tracking-wider px-1.5 py-0.2 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 uppercase shrink-0 mr-2 cursor-pointer hover:bg-rose-500/40 select-none"
             title={`${exceptionMatch.title} — clique para abrir diagnóstico e comandos recomendados`}
           >
             {exceptionMatch.code}

@@ -65,7 +65,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
             onSearchChange('');
             onModuleChange('TODOS');
           }}
-          className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center gap-1 cursor-pointer"
+          className="px-2 py-1 rounded-lg text-2xs font-mono font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors flex items-center gap-1 cursor-pointer"
           title="Limpar todos os filtros"
         >
           <X className="w-3 h-3" />

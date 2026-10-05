@@ -21,11 +21,11 @@ export const OracleOutputTerminal: React.FC<OracleOutputTerminalProps> = ({
         <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
         <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
-        <span className="text-[10px] font-mono text-muted-foreground ml-2">{title}</span>
+        <span className="text-2xs font-mono text-muted-foreground ml-2">{title}</span>
       </div>
       {success !== null && (
         <span
-          className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded border ${
+          className={`text-2xs font-bold font-mono px-2 py-0.5 rounded border ${
             success
               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
               : 'bg-rose-500/20 text-rose-400 border-rose-500/30'

@@ -44,7 +44,7 @@ export const DeployDiagFeatureTab: React.FC<DeployDiagFeatureTabProps> = ({
       <div className="p-2.5 bg-muted/20 border border-border/70 rounded-lg space-y-2 text-xs">
         <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           <span>Feature</span>
-          <span className="font-mono text-[10px] text-muted-foreground/70">feature:cmd</span>
+          <span className="font-mono text-2xs text-muted-foreground/70">feature:cmd</span>
         </div>
         <input
           type="text"

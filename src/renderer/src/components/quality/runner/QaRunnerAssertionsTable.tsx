@@ -47,7 +47,7 @@ export const QaRunnerAssertionsTable: React.FC<QaRunnerAssertionsTableProps> = (
               <td className="py-1.5 px-2 font-semibold text-foreground">{ass.actualDisplay}</td>
               <td className="py-1.5 px-2 text-center">
                 <span
-                  className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold uppercase inline-block border ${getAssertionBadgeClass(ass.status)}`}
+                  className={`px-1.5 py-0.2 rounded text-2xs font-mono font-bold uppercase inline-block border ${getAssertionBadgeClass(ass.status)}`}
                 >
                   {getAssertionBadgeLabel(ass.status)}
                 </span>

@@ -113,7 +113,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
     {/* Badges de Verificação Técnica do Projeto */}
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 pt-2 border-t border-border/60 text-xs">
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5">
-        <span className="text-[10px] text-muted-foreground">Framework E2E</span>
+        <span className="text-2xs text-muted-foreground">Framework E2E</span>
         <div className="font-semibold text-foreground flex items-center gap-1">
           <span className={`w-2 h-2 rounded-full ${projectStatus?.cypressVersion ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} />
           <span>{projectStatus?.cypressVersion ? `Cypress ${projectStatus.cypressVersion}` : 'Cypress não detectado'}</span>
@@ -121,7 +121,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       </div>
 
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5">
-        <span className="text-[10px] text-muted-foreground">Arquivo de Configuração</span>
+        <span className="text-2xs text-muted-foreground">Arquivo de Configuração</span>
         <div className="font-semibold text-foreground flex items-center gap-1">
           {projectStatus?.hasCypressConfig ? (
             <>
@@ -138,7 +138,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       </div>
 
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5">
-        <span className="text-[10px] text-muted-foreground">Banco Oracle (.env)</span>
+        <span className="text-2xs text-muted-foreground">Banco Oracle (.env)</span>
         <div className="font-semibold text-foreground truncate" title={projectStatus?.envVariables?.oracleConnectString || 'Não configurado'}>
           {projectStatus?.envVariables?.hasOracleConnectString ? (
             <span className="text-emerald-400 font-mono text-[11px]">
@@ -151,7 +151,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       </div>
 
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5">
-        <span className="text-[10px] text-muted-foreground">URL Base WTA (.env)</span>
+        <span className="text-2xs text-muted-foreground">URL Base WTA (.env)</span>
         <div className="font-semibold text-foreground truncate" title={projectStatus?.envVariables?.baseUrl || 'Não configurado'}>
           <span className="font-mono text-[11px] text-foreground">
             {projectStatus?.envVariables?.baseUrl || 'http://localhost:8889'}
@@ -160,7 +160,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       </div>
 
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5 col-span-2 sm:col-span-4 lg:col-span-1">
-        <span className="text-[10px] text-muted-foreground">Suítes Cadastradas</span>
+        <span className="text-2xs text-muted-foreground">Suítes Cadastradas</span>
         <div className="font-semibold text-foreground">
           {specs.length} specs ({countSpecTests(specs)} testes)
         </div>

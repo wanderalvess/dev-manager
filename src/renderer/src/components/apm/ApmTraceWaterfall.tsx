@@ -36,7 +36,7 @@ export const ApmTraceWaterfall: React.FC<ApmTraceWaterfallProps> = ({
         <div className="flex items-center justify-between border-b border-border/50 pb-2">
           <div className="flex items-center gap-2">
             <span className="font-bold text-foreground">{activeSpan.name}</span>
-            <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] text-muted-foreground">{activeSpan.kind}</span>
+            <span className="px-1.5 py-0.5 rounded bg-muted text-2xs text-muted-foreground">{activeSpan.kind}</span>
           </div>
           <span className={`font-semibold tabular-nums ${activeSpan.durationMs > 1000 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-emerald-700 dark:text-emerald-400'}`}>
             {activeSpan.durationMs}ms
@@ -49,7 +49,7 @@ export const ApmTraceWaterfall: React.FC<ApmTraceWaterfallProps> = ({
                 <Database className="w-3 h-3 text-sky-600 dark:text-sky-400" /> SQL ({activeSpan.dbSystem || 'oracle'})
               </span>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => copyToClipboard(activeSpan.dbStatement!, 'spanSql')} className="text-[10px] hover:text-foreground cursor-pointer flex items-center gap-1">
+                <button type="button" onClick={() => copyToClipboard(activeSpan.dbStatement!, 'spanSql')} className="text-2xs hover:text-foreground cursor-pointer flex items-center gap-1">
                   {copyFeedback === 'spanSql' ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   Copiar SQL
                 </button>
@@ -57,7 +57,7 @@ export const ApmTraceWaterfall: React.FC<ApmTraceWaterfallProps> = ({
                   <button
                     type="button"
                     onClick={() => { copyToClipboard(activeSpan.dbStatement!, 'toDb'); onNavigateToDatabase(); }}
-                    className="text-[10px] text-primary hover:underline cursor-pointer flex items-center gap-1 font-semibold"
+                    className="text-2xs text-primary hover:underline cursor-pointer flex items-center gap-1 font-semibold"
                   >
                     <ExternalLink className="w-3 h-3" /> DB Studio
                   </button>

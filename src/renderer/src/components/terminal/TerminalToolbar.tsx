@@ -59,13 +59,13 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
       </div>
       <div>
         <span className="text-xs font-bold text-white tracking-wide">{title}</span>
-        <span className="text-[10px] font-mono text-slate-400 ml-2">
+        <span className="text-2xs font-mono text-slate-400 ml-2">
           ({lineCount} {lineCount === 1 ? 'linha' : 'linhas'})
         </span>
       </div>
 
       {isRunning && (
-        <span className="flex items-center space-x-1.5 text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-semibold animate-pulse">
+        <span className="flex items-center space-x-1.5 text-2xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-semibold animate-pulse">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
           <span>Execução Ativa</span>
         </span>
@@ -90,7 +90,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
       <div className="hidden sm:flex items-center space-x-1 bg-[#080d17] p-0.5 rounded-lg border border-slate-700">
         <button
           onClick={() => onFilterTypeChange('all')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
+          className={`px-2 py-0.5 rounded text-2xs font-semibold transition-colors ${
             filterType === 'all'
               ? 'bg-primary text-primary-foreground font-bold shadow-sm'
               : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -100,7 +100,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
         </button>
         <button
           onClick={() => onFilterTypeChange('error')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
+          className={`px-2 py-0.5 rounded text-2xs font-semibold transition-colors ${
             filterType === 'error'
               ? 'bg-rose-600 text-white font-bold shadow-sm'
               : 'text-slate-300 hover:text-rose-300 hover:bg-rose-950/40'

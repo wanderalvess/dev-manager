@@ -109,7 +109,7 @@ export const SqlEditorSurface: React.FC<SqlEditorSurfaceProps> = ({
               }`}
             >
               <span className="truncate">{s.label}</span>
-              <span className="text-[9px] uppercase tracking-wide opacity-50 ml-2 shrink-0">
+              <span className="text-2xs uppercase tracking-wide opacity-50 ml-2 shrink-0">
                 {s.type === 'keyword' ? 'kw' : s.type === 'table' ? 'tab' : 'col'}
               </span>
             </button>
@@ -117,7 +117,7 @@ export const SqlEditorSurface: React.FC<SqlEditorSurfaceProps> = ({
         </div>
       )}
       {copyFeedback && (
-        <div className="absolute right-3 bottom-3 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded shadow-md animate-fade-in">
+        <div className="absolute right-3 bottom-3 bg-primary text-primary-foreground text-2xs font-bold px-2 py-1 rounded shadow-md animate-fade-in">
           {copyFeedback}
         </div>
       )}

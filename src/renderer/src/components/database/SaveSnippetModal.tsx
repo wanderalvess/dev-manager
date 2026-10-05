@@ -93,7 +93,7 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block font-bold text-foreground">Comando SQL *</label>
-              <span className="text-[10px] text-muted-foreground">Você pode ajustar a query livremente</span>
+              <span className="text-2xs text-muted-foreground">Você pode ajustar a query livremente</span>
             </div>
             <textarea
               required

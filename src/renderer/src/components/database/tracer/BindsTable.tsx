@@ -37,7 +37,7 @@ export const BindsTable: React.FC<{
               <tr key={bindKey} className="hover:bg-muted/30 transition-colors">
                 <td className="px-3 py-1.5 text-center font-bold text-muted-foreground">#{b.position}</td>
                 <td className="px-3 py-1.5 text-sky-400 font-bold">{b.name || `:${b.position}`}</td>
-                <td className="px-3 py-1.5 text-muted-foreground text-[10px]">{b.datatype || '-'}</td>
+                <td className="px-3 py-1.5 text-muted-foreground text-2xs">{b.datatype || '-'}</td>
                 <td className="px-3 py-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span
@@ -49,7 +49,7 @@ export const BindsTable: React.FC<{
                     {b.value && <CopySqlButton sql={b.value} keyId={`val-${bindKey}`} onCopy={onCopy} copiedKey={copiedKey} />}
                   </div>
                 </td>
-                <td className="px-3 py-1.5 text-muted-foreground text-[10px] whitespace-nowrap">
+                <td className="px-3 py-1.5 text-muted-foreground text-2xs whitespace-nowrap">
                   {b.lastCaptured ? new Date(b.lastCaptured).toLocaleTimeString('pt-BR') : '-'}
                 </td>
               </tr>

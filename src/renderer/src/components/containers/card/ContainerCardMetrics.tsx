@@ -17,7 +17,7 @@ export const ContainerCardMetrics: React.FC<ContainerCardMetricsProps> = ({ cont
       <span className="text-muted-foreground/60 select-none">IMG:</span>
       <span className="text-foreground/90 truncate">{container.image}</span>
       <span className="text-muted-foreground/40 hidden sm:inline">•</span>
-      <span className="text-muted-foreground/70 text-[10px] hidden sm:inline">{container.status}</span>
+      <span className="text-muted-foreground/70 text-2xs hidden sm:inline">{container.status}</span>
     </div>
 
     {isRunning && stats && (
@@ -43,7 +43,7 @@ export const ContainerCardMetrics: React.FC<ContainerCardMetricsProps> = ({ cont
         />
 
         {stats.netIO && stats.netIO !== '0B' && (
-          <span className="text-[10px] text-muted-foreground/80 hidden xl:inline">NET: {stats.netIO}</span>
+          <span className="text-2xs text-muted-foreground/80 hidden xl:inline">NET: {stats.netIO}</span>
         )}
       </div>
     )}

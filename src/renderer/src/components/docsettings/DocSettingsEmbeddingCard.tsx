@@ -16,12 +16,12 @@ export const DocSettingsEmbeddingCard: React.FC<DocSettingsEmbeddingCardProps> =
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-foreground">Motor de Vetorização Local (Embeddings)</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/25 font-bold">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/25 font-bold">
             FastEmbed AllMiniLML6V2 (384d)
           </span>
           {status && (
             <span
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-md border font-bold flex items-center gap-1 ${
+              className={`text-2xs font-mono px-2 py-0.5 rounded-md border font-bold flex items-center gap-1 ${
                 !status.isTextOnly
                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
                   : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'

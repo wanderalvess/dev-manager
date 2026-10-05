@@ -49,7 +49,7 @@ export const KarafBundleScopeBar: React.FC<KarafBundleScopeBarProps> = ({
               >
                 <span>{tab.label}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-semibold ${
+                  className={`text-2xs px-1.5 py-0.2 rounded font-mono font-semibold ${
                     isActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
                   }`}
                 >

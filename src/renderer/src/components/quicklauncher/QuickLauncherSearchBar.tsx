@@ -33,7 +33,7 @@ export const QuickLauncherSearchBar: React.FC<QuickLauncherSearchBarProps> = ({
         <X className="w-4 h-4" />
       </button>
     )}
-    <span className="text-[10px] bg-muted px-2 py-1 rounded border border-border/60 text-muted-foreground font-mono">
+    <span className="text-2xs bg-muted px-2 py-1 rounded border border-border/60 text-muted-foreground font-mono">
       ESC para fechar
     </span>
   </div>

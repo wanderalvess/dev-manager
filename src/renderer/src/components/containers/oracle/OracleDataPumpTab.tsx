@@ -18,7 +18,7 @@ interface OracleDataPumpTabProps {
 }
 
 const codclipcButtonClass = (active: boolean) =>
-  `text-[9px] px-1.5 py-0.2 rounded font-mono cursor-pointer transition ${
+  `text-2xs px-1.5 py-0.2 rounded font-mono cursor-pointer transition ${
     active
       ? 'bg-primary/20 text-primary border border-primary/40 font-bold'
       : 'bg-muted hover:bg-muted/80 text-muted-foreground'
@@ -66,7 +66,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
             type="button"
             onClick={onRefreshDumps}
             disabled={isLoadingDumps}
-            className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer transition"
+            className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer transition"
             title="Atualizar lista de dumps encontrados em /opt/dumps"
           >
             <RotateCw className={`w-2.5 h-2.5 ${isLoadingDumps ? 'animate-spin text-primary' : ''}`} />
@@ -100,7 +100,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           placeholder="ex: backup.dmp"
           className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
         />
-        <p className="text-[10px] text-muted-foreground mt-1">
+        <p className="text-2xs text-muted-foreground mt-1">
           Pasta WSL: <code className="font-mono text-foreground font-semibold">/opt/dumps</code> ↔ Container: <code className="font-mono text-foreground">/home/oracle/dumps</code>.
         </p>
       </div>

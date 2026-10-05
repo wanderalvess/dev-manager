@@ -27,7 +27,7 @@ export const DatabaseSidebarCollapsed: React.FC<DatabaseSidebarCollapsedProps> =
     <div className="flex flex-col items-center gap-2" title={activeConnection?.name || 'Conexões'}>
       <Database className="w-4 h-4 text-muted-foreground" />
       {activeConnection && (
-        <span className="text-[10px] font-mono text-muted-foreground [writing-mode:vertical-rl] rotate-180 truncate max-h-36 tracking-wider">
+        <span className="text-2xs font-mono text-muted-foreground [writing-mode:vertical-rl] rotate-180 truncate max-h-36 tracking-wider">
           {activeConnection.name}
         </span>
       )}

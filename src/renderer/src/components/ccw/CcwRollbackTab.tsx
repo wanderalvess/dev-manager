@@ -108,7 +108,7 @@ export const CcwRollbackTab: React.FC<CcwRollbackTabProps> = ({
           <span className="font-bold text-foreground font-mono">
             {backups.length} cópia(s) encontrada(s)
           </span>
-          <span className="text-[10px] font-mono text-muted-foreground">
+          <span className="text-2xs font-mono text-muted-foreground">
             Mais recente para mais antiga
           </span>
         </div>

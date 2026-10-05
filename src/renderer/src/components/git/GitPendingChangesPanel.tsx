@@ -27,7 +27,7 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
         <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
           Alterações Pendentes
         </span>
-        <span className="text-[10px] bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded font-mono font-medium">
+        <span className="text-2xs bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded font-mono font-medium">
           {files.length} {files.length === 1 ? 'arquivo' : 'arquivos'}
         </span>
         {ideFeedback && (
@@ -72,7 +72,7 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
           <Check className="w-4 h-4 text-emerald-500" />
           <span>Árvore de trabalho limpa. Nenhuma modificação pendente neste repositório.</span>
         </div>
-        <span className="text-[10px] font-mono opacity-60">git status limpo</span>
+        <span className="text-2xs font-mono opacity-60">git status limpo</span>
       </div>
     ) : (
       <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
@@ -89,14 +89,14 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
                 className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
                 title={`Clique para ver o diff de ${file.path}`}
               >
-                <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border shrink-0 ${badge.className}`}>
+                <span className={`px-1.5 py-0.2 rounded text-2xs font-mono font-bold border shrink-0 ${badge.className}`}>
                   {badge.label}
                 </span>
                 <span className="font-mono text-xs text-foreground truncate group-hover:text-primary transition-colors">
                   {file.path}
                 </span>
                 {file.originalPath && (
-                  <span className="text-[10px] text-muted-foreground font-mono truncate">
+                  <span className="text-2xs text-muted-foreground font-mono truncate">
                     (de {file.originalPath})
                   </span>
                 )}

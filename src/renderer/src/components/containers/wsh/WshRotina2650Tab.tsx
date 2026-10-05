@@ -31,7 +31,7 @@ export const WshRotina2650Tab: React.FC<WshRotina2650TabProps> = ({ copiedKey, o
             <span>{WSH_ROTINA_2650_URL}</span>
             <button
               onClick={() => onCopy(WSH_ROTINA_2650_URL, 'wsh-url')}
-              className="text-[10px] text-primary hover:underline cursor-pointer"
+              className="text-2xs text-primary hover:underline cursor-pointer"
             >
               {copiedKey === 'wsh-url' ? 'Copiado!' : 'Copiar'}
             </button>

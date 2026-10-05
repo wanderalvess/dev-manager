@@ -8,7 +8,7 @@ export const ApmSpanAttributes: React.FC<{ span: TraceSpan | null }> = ({ span }
         Span <strong className="text-foreground">{span?.name}</strong>
         {span && <span className="ml-1">({span.kind})</span>}
       </span>
-      <span className="shrink-0 text-[10px]">Selecione outro span no Waterfall</span>
+      <span className="shrink-0 text-2xs">Selecione outro span no Waterfall</span>
     </div>
     {span && Object.keys(span.attributes).length > 0 ? (
       <div className="border border-border rounded-lg overflow-hidden divide-y divide-border/50 bg-card">

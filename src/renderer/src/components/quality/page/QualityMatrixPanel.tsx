@@ -108,7 +108,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-xs">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
-          <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider font-bold">
+          <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase text-2xs tracking-wider font-bold">
             <tr>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Cenário / Teste</th>
@@ -149,7 +149,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                   </td>
 
                   <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border">
+                    <span className="px-2 py-0.5 rounded text-2xs font-medium bg-muted text-muted-foreground border border-border">
                       {getCategoryLabel(item.category)}
                     </span>
                   </td>

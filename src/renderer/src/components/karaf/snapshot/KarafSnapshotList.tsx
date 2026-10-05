@@ -45,7 +45,7 @@ export const KarafSnapshotList: React.FC<KarafSnapshotListProps> = ({
               <div className={`text-xs font-bold truncate ${isSelected ? 'text-purple-400' : 'text-foreground'}`}>
                 {snap.label}
               </div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-2xs text-muted-foreground">
                 {snap.createdAt} · {snap.bundleCount} bundles
               </div>
             </div>

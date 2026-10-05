@@ -47,7 +47,7 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
         <BookmarkPlus className="w-3.5 h-3.5 text-amber-500" />
         <span>Consultas Salvas</span>
         {customSnippets.length > 0 && (
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+          <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
             {customSnippets.length}
           </span>
         )}

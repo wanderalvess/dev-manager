@@ -88,9 +88,9 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
                   <div className="absolute bottom-full mb-3 z-30 px-3 py-2 rounded-lg bg-neutral-900 text-neutral-100 text-[11px] shadow-xl border border-neutral-800 whitespace-nowrap pointer-events-none">
                     <div className="font-semibold font-mono text-emerald-400 mb-1 flex items-center justify-between gap-3">
                       <span>Minuto {bucket.label}</span>
-                      <span className="text-neutral-400 text-[10px]">{total} requisições</span>
+                      <span className="text-neutral-400 text-2xs">{total} requisições</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] font-mono text-neutral-300">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-2xs font-mono text-neutral-300">
                       <span>🟢 Sucesso: {bucket.successCount}</span>
                       <span>🔴 Erros 5xx: {bucket.serverErrorCount}</span>
                       <span>🟡 Erros 4xx: {bucket.clientErrorCount}</span>
@@ -122,7 +122,7 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
                 </div>
 
                 {/* Rótulo da Hora a cada 2 buckets para não poluir */}
-                <span className="text-[10px] font-mono text-muted-foreground mt-2 truncate w-full text-center">
+                <span className="text-2xs font-mono text-muted-foreground mt-2 truncate w-full text-center">
                   {idx % 2 === 0 ? bucket.label : ''}
                 </span>
               </div>

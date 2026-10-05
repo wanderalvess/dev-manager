@@ -58,7 +58,7 @@ export const ProfileEditorStepList: React.FC<ProfileEditorStepListProps> = ({
               }`}
             >
               <div className="flex items-center gap-2 overflow-hidden">
-                <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
+                <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-2xs font-bold text-muted-foreground shrink-0">
                   {idx + 1}
                 </span>
                 <div className="truncate">
@@ -71,7 +71,7 @@ export const ProfileEditorStepList: React.FC<ProfileEditorStepListProps> = ({
                       />
                     )}
                   </p>
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-2xs text-muted-foreground truncate">
                     {describeStepSubtitle(step, globalDebugPort)}
                   </p>
                 </div>

@@ -50,7 +50,7 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
                 {getDbBadge(conn.type)}
                 <span className="truncate">{conn.name}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground truncate font-mono mt-0.5">
+              <span className="text-2xs text-muted-foreground truncate font-mono mt-0.5">
                 {conn.user}@{conn.host}:{conn.port}
               </span>
             </div>

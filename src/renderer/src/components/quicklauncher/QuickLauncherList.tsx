@@ -92,7 +92,7 @@ export const QuickLauncherList: React.FC<QuickLauncherListProps> = ({
 
             {item.badge && (
               <span
-                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border shrink-0 ${
+                className={`text-2xs font-mono font-bold px-2 py-0.5 rounded border shrink-0 ${
                   isSelected
                     ? 'bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30'
                     : 'bg-muted text-muted-foreground border-border/60'

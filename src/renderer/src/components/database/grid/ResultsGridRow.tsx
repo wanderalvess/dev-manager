@@ -48,7 +48,7 @@ export const ResultsGridRow: React.FC<ResultsGridRowProps> = ({
     style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}
     className={`transition-colors select-text cursor-pointer ${getRowClassName(isSelected, idx)}`}
   >
-    <td className="px-2 py-1.5 text-center text-muted-foreground text-[10px] border-r border-border/30 select-none">
+    <td className="px-2 py-1.5 text-center text-muted-foreground text-2xs border-r border-border/30 select-none">
       {idx + 1}
     </td>
     {columns.map((col) => {

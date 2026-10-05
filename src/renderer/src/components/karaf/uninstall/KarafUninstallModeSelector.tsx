@@ -25,11 +25,11 @@ export const KarafUninstallModeSelector: React.FC<KarafUninstallModeSelectorProp
             <Layers className="w-3.5 h-3.5 text-rose-500" />
             Desinstalação Permanente
           </span>
-          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400">
+          <span className="text-2xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400">
             Recomendado
           </span>
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Executa <code className="text-rose-400 font-mono">feature:uninstall -r</code>. Não volta ao reiniciar o Karaf.
         </p>
       </button>
@@ -40,11 +40,11 @@ export const KarafUninstallModeSelector: React.FC<KarafUninstallModeSelectorProp
             <Package className="w-3.5 h-3.5 text-amber-500" />
             Apenas Bundle (Memória)
           </span>
-          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+          <span className="text-2xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
             OSGi
           </span>
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Executa <code className="text-amber-400 font-mono">bundle:uninstall</code>. Pode retornar se Karaf reiniciar.
         </p>
       </button>

@@ -31,7 +31,7 @@ export const MappedProgramsPanel: React.FC<MappedProgramsPanelProps> = ({
           <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
             Programas Mapeados &amp; Atalhos Rápidos ({mappedPrograms.length})
           </h3>
-          <p className="text-[10px] text-muted-foreground font-mono">
+          <p className="text-2xs text-muted-foreground font-mono">
             Atalhos diretos para executáveis (.exe, .bat, .cmd) independente da pasta padrão.
           </p>
         </div>

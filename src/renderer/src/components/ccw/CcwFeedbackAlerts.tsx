@@ -26,7 +26,7 @@ export const CcwFeedbackAlerts: React.FC<CcwFeedbackAlertsProps> = ({ result, er
           </div>
         )}
         {result.extractedFiles && result.extractedFiles.length > 0 && (
-          <div className="text-[10px] text-muted-foreground pl-6">
+          <div className="text-2xs text-muted-foreground pl-6">
             Arquivos gravados ({result.extractedFiles.length}): {result.extractedFiles.join(', ')}
           </div>
         )}

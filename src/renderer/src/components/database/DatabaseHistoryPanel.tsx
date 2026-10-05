@@ -53,34 +53,34 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
                 <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
               )}
               <span className="font-bold text-foreground">{item.connectionName}</span>
-              <span className="text-[10px] text-muted-foreground font-mono">{item.timestamp}</span>
+              <span className="text-2xs text-muted-foreground font-mono">{item.timestamp}</span>
             </div>
             <div className="flex items-center space-x-1.5">
-              <span className="text-[10px] text-muted-foreground font-mono mr-1">{item.timeMs} ms</span>
+              <span className="text-2xs text-muted-foreground font-mono mr-1">{item.timeMs} ms</span>
               <button
                 onClick={() => onCopySql(item.sql, item.id)}
-                className="px-2 py-0.5 bg-muted hover:bg-muted/80 text-foreground rounded text-[10px] font-semibold transition cursor-pointer"
+                className="px-2 py-0.5 bg-muted hover:bg-muted/80 text-foreground rounded text-2xs font-semibold transition cursor-pointer"
                 title="Copiar SQL"
               >
                 {copyFeedback === item.id ? 'Copiado!' : 'Copiar'}
               </button>
               <button
                 onClick={() => onUseSql(item.sql)}
-                className="px-2 py-0.5 bg-primary/20 hover:bg-primary text-primary hover:text-primary-foreground rounded text-[10px] font-semibold transition cursor-pointer"
+                className="px-2 py-0.5 bg-primary/20 hover:bg-primary text-primary hover:text-primary-foreground rounded text-2xs font-semibold transition cursor-pointer"
                 title="Carregar no editor"
               >
                 Usar
               </button>
               <button
                 onClick={() => onRunSql(item.sql)}
-                className="px-2 py-0.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded text-[10px] font-semibold transition cursor-pointer"
+                className="px-2 py-0.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded text-2xs font-semibold transition cursor-pointer"
                 title="Executar imediatamente"
               >
                 Executar
               </button>
               <button
                 onClick={() => onSaveSnippet(item.sql)}
-                className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-600 dark:text-amber-400 hover:text-black rounded text-[10px] font-semibold transition flex items-center gap-1 cursor-pointer"
+                className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-600 dark:text-amber-400 hover:text-black rounded text-2xs font-semibold transition flex items-center gap-1 cursor-pointer"
                 title="Salvar esta consulta nas Minhas Consultas"
               >
                 <BookmarkPlus className="w-3 h-3" />
@@ -92,7 +92,7 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
             {item.sql}
           </pre>
           {item.error && (
-            <span className="text-[10px] text-red-400 font-mono truncate">{item.error}</span>
+            <span className="text-2xs text-red-400 font-mono truncate">{item.error}</span>
           )}
         </div>
       ))

@@ -15,11 +15,11 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
   <div className="p-2.5 bg-muted/40 rounded-lg border border-border flex flex-col gap-2 select-none">
     <div className="flex items-center justify-between gap-2 flex-wrap">
       <div className="flex items-center gap-1 text-[11px] font-mono">
-        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground mr-1">Camada:</span>
+        <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground mr-1">Camada:</span>
         <button
           type="button"
           onClick={() => onTierFilterChange('ALL')}
-          className={`px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition ${
+          className={`px-2 py-0.5 rounded text-2xs font-semibold cursor-pointer transition ${
             tierFilter === 'ALL' ? 'bg-primary text-primary-foreground shadow-xs' : 'bg-card border border-border text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -34,14 +34,14 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
             key={tier}
             type="button"
             onClick={() => onTierFilterChange((previous) => previous === tier ? 'ALL' : tier)}
-            className={`px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition flex items-center gap-1 ${tierFilter === tier ? active : inactive}`}
+            className={`px-2 py-0.5 rounded text-2xs font-semibold cursor-pointer transition flex items-center gap-1 ${tierFilter === tier ? active : inactive}`}
           >
             <span>{label} ({count ?? 0})</span>
             <span className="tabular-nums font-normal">{duration}ms</span>
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+      <div className="flex items-center gap-2 text-2xs font-mono text-muted-foreground">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-sky-500 inline-block" /> HTTP</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-purple-500 inline-block" /> Java</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-amber-500 inline-block" /> JDBC</span>
@@ -49,7 +49,7 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
       </div>
     </div>
     <div className="flex flex-col gap-1">
-      <div className="w-full flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums px-0.5">
+      <div className="w-full flex justify-between font-mono text-2xs text-muted-foreground tabular-nums px-0.5">
         <span>0ms</span>
         <span>{Math.round((details?.summary.durationMs || 100) * 0.25)}ms</span>
         <span>{Math.round((details?.summary.durationMs || 100) * 0.5)}ms</span>

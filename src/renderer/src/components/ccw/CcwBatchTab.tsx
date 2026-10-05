@@ -96,7 +96,7 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
           placeholder="30"
           className="w-full bg-background border border-border rounded-lg px-2.5 py-1 text-xs text-foreground font-mono"
         />
-        <span className="text-[10px] text-muted-foreground block font-mono">Padrão TOTVS: 30 (ou 31, 29)</span>
+        <span className="text-2xs text-muted-foreground block font-mono">Padrão TOTVS: 30 (ou 31, 29)</span>
       </div>
 
       <div className="flex items-center space-x-2 pt-4">

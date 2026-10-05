@@ -10,7 +10,7 @@ export const KarafUninstallBundleInfo: React.FC<KarafUninstallBundleInfoProps> =
   <div className="p-3 bg-muted/30 border border-border rounded-xl flex items-center justify-between">
     <div>
       <div className="text-xs font-bold text-foreground">{target.name}</div>
-      <div className="text-[10px] text-muted-foreground font-mono">
+      <div className="text-2xs text-muted-foreground font-mono">
         ID: {target.id} · Versão: {target.version}
       </div>
     </div>

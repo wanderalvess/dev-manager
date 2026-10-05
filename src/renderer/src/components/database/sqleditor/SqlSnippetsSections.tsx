@@ -27,7 +27,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
   <div className="max-h-80 overflow-y-auto space-y-2 pr-0.5">
     {/* Seção: Minhas Consultas Salvas */}
     <div>
-      <div className="text-[10px] font-bold text-amber-500 uppercase tracking-wider px-1 mb-1">
+      <div className="text-2xs font-bold text-amber-500 uppercase tracking-wider px-1 mb-1">
         Minhas Consultas ({filteredCustomSnippets.length})
       </div>
 
@@ -64,12 +64,12 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition truncate">
                       {s.title}
                     </span>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold shrink-0">
+                    <span className="text-2xs px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold shrink-0">
                       {s.category || 'Geral'}
                     </span>
                   </div>
                   {s.description && (
-                    <span className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5 block">
+                    <span className="text-2xs text-muted-foreground line-clamp-1 mt-0.5 block">
                       {s.description}
                     </span>
                   )}
@@ -114,7 +114,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                 </div>
               </div>
 
-              <pre className="text-[10px] font-mono text-emerald-400/80 bg-[#0B0F17] p-1.5 rounded truncate max-h-12 overflow-hidden border border-border/40 select-none">
+              <pre className="text-2xs font-mono text-emerald-400/80 bg-[#0B0F17] p-1.5 rounded truncate max-h-12 overflow-hidden border border-border/40 select-none">
                 {s.sql}
               </pre>
             </div>
@@ -125,7 +125,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
 
     {/* Seção: Modelos de Diagnóstico do Sistema */}
     <div className="pt-2 border-t border-border/50">
-      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
+      <div className="text-2xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
         Modelos de Diagnóstico
       </div>
       <div className="space-y-1">
@@ -138,12 +138,12 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
             <div className="min-w-0 flex-1 mr-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[11px] group-hover:text-primary truncate">{s.title}</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-mono shrink-0">
+                <span className="text-2xs px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-mono shrink-0">
                   {s.category.split('-')[0].trim()}
                 </span>
               </div>
               {s.description && (
-                <span className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5 block">
+                <span className="text-2xs text-muted-foreground line-clamp-1 mt-0.5 block">
                   {s.description}
                 </span>
               )}

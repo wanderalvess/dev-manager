@@ -72,7 +72,7 @@ export const KarafDeployHistoryToolbar: React.FC<KarafDeployHistoryToolbarProps>
               {chip.dotColor && <span className={`w-1.5 h-1.5 rounded-full ${chip.dotColor}`} />}
               {Icon && <Icon className="w-3 h-3 text-current" />}
               <span>{chip.label}</span>
-              <span className="text-[10px] font-mono opacity-70 ml-0.5">({chip.count})</span>
+              <span className="text-2xs font-mono opacity-70 ml-0.5">({chip.count})</span>
             </button>
           );
         })}

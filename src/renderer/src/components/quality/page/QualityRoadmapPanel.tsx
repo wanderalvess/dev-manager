@@ -25,11 +25,11 @@ export const QualityRoadmapPanel: React.FC = () => (
         >
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-muted border border-border text-foreground">
+              <span className="text-2xs font-mono font-semibold px-2 py-0.5 rounded bg-muted border border-border text-foreground">
                 {item.tag}
               </span>
               <span
-                className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded ${
+                className={`text-2xs font-mono font-semibold px-2 py-0.5 rounded ${
                   item.status === 'ready'
                     ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                     : item.status === 'in_progress'

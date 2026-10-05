@@ -58,7 +58,7 @@ export const ResultsGridColumnMenu: React.FC<ResultsGridColumnMenuProps> = ({
       </div>
 
       <div className="pt-1.5 border-t border-border space-y-1.5">
-        <label className="text-[10px] font-semibold text-muted-foreground block">
+        <label className="text-2xs font-semibold text-muted-foreground block">
           Filtrar por valor nesta coluna:
         </label>
         <div className="relative">
@@ -92,7 +92,7 @@ export const ResultsGridColumnMenu: React.FC<ResultsGridColumnMenuProps> = ({
             setColumnFilters((prev) => ({ ...prev, [col]: '[null]' }));
             onClose();
           }}
-          className="text-muted-foreground hover:text-foreground underline text-[10px] cursor-pointer"
+          className="text-muted-foreground hover:text-foreground underline text-2xs cursor-pointer"
         >
           Apenas [NULL]
         </button>
@@ -104,7 +104,7 @@ export const ResultsGridColumnMenu: React.FC<ResultsGridColumnMenuProps> = ({
               setColumnFilters((prev) => omitColumnFilter(prev, col));
               onClose();
             }}
-            className="text-rose-500 hover:text-rose-600 font-semibold text-[10px] cursor-pointer"
+            className="text-rose-500 hover:text-rose-600 font-semibold text-2xs cursor-pointer"
           >
             Limpar coluna
           </button>

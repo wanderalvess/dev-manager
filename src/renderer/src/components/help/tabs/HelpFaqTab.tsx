@@ -78,7 +78,7 @@ export const HelpFaqTab: React.FC<HelpFaqTabProps> = ({
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                      <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                         {faq.category}
                       </span>
                     </div>

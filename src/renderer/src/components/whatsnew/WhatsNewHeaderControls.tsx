@@ -66,7 +66,7 @@ export const WhatsNewHeaderControls: React.FC<WhatsNewHeaderControlsProps> = ({
         {isAllVersions ? 'Todas as Versões' : `v${selectedVersion}`}
       </span>
       {isLatestVersion && (
-        <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-sans font-bold">
+        <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-2xs font-sans font-bold">
           Atual
         </span>
       )}

@@ -11,7 +11,7 @@ interface MarkdownTocDrawerProps {
 export const MarkdownTocDrawer: React.FC<MarkdownTocDrawerProps> = ({ headings, onSelect, onClose }) => (
   <aside className="w-64 md:w-72 border-r border-border/80 bg-muted/40 flex flex-col shrink-0 animate-in slide-in-from-left-4 duration-200">
     <div className="p-3 border-b border-border/60 flex items-center justify-between">
-      <span className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+      <span className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider text-2xs">
         <List className="w-3.5 h-3.5 text-primary" />
         Sumário de Seções
       </span>

@@ -32,11 +32,11 @@ export const ModuleCardShell: React.FC<ModuleCardShellProps> = ({
           <div className={iconBoxClass}>{icon}</div>
           <div>
             <h3 className="text-xs sm:text-sm font-extrabold text-foreground">{title}</h3>
-            <span className="text-[10px] text-muted-foreground font-mono">{subtitle}</span>
+            <span className="text-2xs text-muted-foreground font-mono">{subtitle}</span>
           </div>
         </div>
         {shortcut && (
-          <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold">
+          <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold">
             {shortcut}
           </kbd>
         )}

@@ -26,7 +26,7 @@ export const WtaDevTab: React.FC<WtaDevTabProps> = ({ copiedKey, onCopy }) => (
         <span className="text-xs font-bold text-foreground">Variáveis do arquivo wta.env (Modelo Oficial)</span>
         <button
           onClick={() => onCopy(WTA_ENV_SAMPLE, 'wta-env-sample')}
-          className="text-[10px] px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground border border-border/80 font-medium transition cursor-pointer"
+          className="text-2xs px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground border border-border/80 font-medium transition cursor-pointer"
         >
           {copiedKey === 'wta-env-sample' ? 'Copiado!' : 'Copiar Modelo wta.env'}
         </button>

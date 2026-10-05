@@ -108,7 +108,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
             placeholder="Ex: {PROJECTS_PATH}/meu-projeto"
             className={monoInputClass}
           />
-          <span className="text-[10px] text-muted-foreground mt-0.5 block font-mono">
+          <span className="text-2xs text-muted-foreground mt-0.5 block font-mono">
             Variáveis: <code>{'{PROJECTS_PATH}'}</code>, <code>{'{KARAF_PATH}'}</code>
           </span>
         </div>

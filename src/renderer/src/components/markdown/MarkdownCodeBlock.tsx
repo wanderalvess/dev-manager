@@ -16,15 +16,15 @@ export const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({ language, 
         <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
         <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-        <span className="ml-2 px-2 py-0.5 rounded-md bg-slate-800 text-cyan-400 font-bold uppercase tracking-wider text-[10px]">
+        <span className="ml-2 px-2 py-0.5 rounded-md bg-slate-800 text-cyan-400 font-bold uppercase tracking-wider text-2xs">
           {language}
         </span>
-        <span className="text-slate-500 text-[10px]">{lineCount} linhas</span>
+        <span className="text-slate-500 text-2xs">{lineCount} linhas</span>
       </div>
       <button
         type="button"
         onClick={onCopy}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors text-[10px] font-bold cursor-pointer"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors text-2xs font-bold cursor-pointer"
         title="Copiar código"
       >
         {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-slate-400" />}

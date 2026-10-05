@@ -67,16 +67,16 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
                   />
                 </label>
                 <span className="font-bold text-xs text-foreground truncate">{w.name}</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
+                <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
                   {w.method || 'POST'}
                 </span>
                 <span
-                  className={`text-[9px] font-mono px-1.5 py-0.2 rounded border uppercase font-bold shrink-0 ${webhookPlatformBadgeClass(w.platform)}`}
+                  className={`text-2xs font-mono px-1.5 py-0.2 rounded border uppercase font-bold shrink-0 ${webhookPlatformBadgeClass(w.platform)}`}
                 >
                   {w.platform || 'generic'}
                 </span>
               </div>
-              <div className="font-mono text-[10px] text-muted-foreground truncate mt-1" title={w.endpointUrl}>
+              <div className="font-mono text-2xs text-muted-foreground truncate mt-1" title={w.endpointUrl}>
                 {w.endpointUrl}
               </div>
             </div>
@@ -114,7 +114,7 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
           </div>
           {webhookTestResults[w.id] && (
             <div
-              className={`text-[10px] px-2.5 py-1.5 rounded-lg border ${
+              className={`text-2xs px-2.5 py-1.5 rounded-lg border ${
                 webhookTestResults[w.id].success
                   ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
                   : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'

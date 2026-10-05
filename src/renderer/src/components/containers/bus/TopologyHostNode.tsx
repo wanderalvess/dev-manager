@@ -21,7 +21,7 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
           <Terminal className="w-3.5 h-3.5" />
         </div>
         <div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
+          <div className="text-2xs font-mono uppercase tracking-wider text-muted-foreground font-semibold">
             Host Runtime
           </div>
           <div className="text-xs font-bold text-foreground font-mono truncate max-w-[120px]">
@@ -37,7 +37,7 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
       />
     </div>
 
-    <div className="pt-1 flex items-center justify-between gap-1 text-[10px] font-mono">
+    <div className="pt-1 flex items-center justify-between gap-1 text-2xs font-mono">
       {daemonStatus?.wslIp ? (
         <span className="text-sky-700 dark:text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
           IP: {daemonStatus.wslIp}
@@ -48,7 +48,7 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
       <button
         type="button"
         onClick={onOpenWslTerminal}
-        className="text-[10px] text-muted-foreground hover:text-sky-600 dark:hover:text-sky-400 hover:underline cursor-pointer flex items-center gap-1"
+        className="text-2xs text-muted-foreground hover:text-sky-600 dark:hover:text-sky-400 hover:underline cursor-pointer flex items-center gap-1"
       >
         <Terminal className="w-2.5 h-2.5" /> Terminal
       </button>

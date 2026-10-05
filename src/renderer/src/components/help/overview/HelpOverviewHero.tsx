@@ -41,18 +41,18 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
     <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
       <div className="space-y-2.5 max-w-2xl">
         <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-          <span className="text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
+          <span className="text-2xs uppercase font-extrabold tracking-wider px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
             COCKPIT DO DESENVOLVEDOR
           </span>
           <span className="text-xs text-muted-foreground font-mono">
             Dev Manager • v{appInfo?.appVersion || '1.22.0'}
           </span>
           {appInfo?.isAdmin ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
+            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
               <ShieldCheck className="w-3 h-3" /> Modo Administrador
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
+            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
               <ShieldAlert className="w-3 h-3" /> Usuário Padrão
             </span>
           )}

@@ -63,7 +63,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
             <div>
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <span>Guia Prático: Como Usar Templates de Regressivo</span>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-400 font-semibold">
+                <span className="px-1.5 py-0.2 rounded text-2xs font-mono bg-emerald-500/20 text-emerald-400 font-semibold">
                   Oracle QA
                 </span>
               </h2>
@@ -182,14 +182,14 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                         {a.label}
                       </span>
-                      <code className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-primary border border-border">
+                      <code className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-primary border border-border">
                         tipo: {a.type}
                       </code>
                     </div>
                     <p className="text-muted-foreground text-[11px] leading-relaxed">
                       {a.description}
                     </p>
-                    <div className="pt-1 flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
+                    <div className="pt-1 flex items-center gap-2 font-mono text-2xs text-muted-foreground">
                       <span>Exemplo de valor esperado:</span>
                       <code className="px-1.5 py-0.2 rounded bg-background border border-border text-foreground font-semibold">
                         {a.example}

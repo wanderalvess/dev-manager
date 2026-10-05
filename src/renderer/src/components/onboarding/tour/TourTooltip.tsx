@@ -50,7 +50,7 @@ export const TourTooltip: React.FC<TourTooltipProps> = ({
       <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
 
       <div className="flex items-center justify-between pt-1">
-        <span className="text-[10px] font-mono text-muted-foreground">
+        <span className="text-2xs font-mono text-muted-foreground">
           {stepIndex + 1} de {totalSteps}
         </span>
         <div className="flex items-center gap-1.5">

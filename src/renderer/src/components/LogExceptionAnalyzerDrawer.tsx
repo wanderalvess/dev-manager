@@ -84,11 +84,11 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                 <h3 className="text-xs font-bold font-mono tracking-tight uppercase text-foreground">
                   Diagnóstico de Exceções & Logs
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.2 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold tabular-nums">
+                <span className="text-2xs font-mono px-2 py-0.2 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold tabular-nums">
                   {summary.totalErrors} DETECTADAS
                 </span>
               </div>
-              <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+              <p className="text-2xs text-muted-foreground font-mono mt-0.5">
                 Classificação automática de falhas WinThor, Oracle ORA, JVM e OSGi.
               </p>
             </div>
@@ -205,7 +205,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center space-x-2">
                       <span
-                        className={`text-[9px] font-bold font-mono px-1.5 py-0.2 rounded border uppercase ${badge.bg}`}
+                        className={`text-2xs font-bold font-mono px-1.5 py-0.2 rounded border uppercase ${badge.bg}`}
                       >
                         {badge.label}
                       </span>
@@ -218,7 +218,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                           onScrollToLine(err.lineIndex);
                           onClose();
                         }}
-                        className="text-[10px] text-primary hover:underline flex items-center space-x-0.5 cursor-pointer font-mono"
+                        className="text-2xs text-primary hover:underline flex items-center space-x-0.5 cursor-pointer font-mono"
                         title="Ir para esta linha no console de log"
                       >
                         <span>L:{err.lineIndex + 1}</span>
@@ -233,14 +233,14 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                   </div>
 
                   {/* Linha Bruta de Log */}
-                  <div className="p-2 bg-muted/30 rounded text-[10px] font-mono text-muted-foreground break-all border border-border/40 select-all">
+                  <div className="p-2 bg-muted/30 rounded text-2xs font-mono text-muted-foreground break-all border border-border/40 select-all">
                     {err.rawLine}
                   </div>
 
                   {/* Comandos Sugeridos */}
                   {err.suggestedCommands && err.suggestedCommands.length > 0 && (
                     <div className="pt-1.5 border-t border-border/40 space-y-1">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground font-mono flex items-center gap-1">
+                      <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground font-mono flex items-center gap-1">
                         <Terminal className="w-3 h-3 text-primary" /> Diagnóstico sugerido:
                       </span>
                       {err.suggestedCommands.map((cmd, cIdx) => {
@@ -248,7 +248,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                         return (
                           <div
                             key={cIdx}
-                            className="flex items-center justify-between p-1.5 bg-muted/20 border border-border/40 rounded text-[10px] font-mono group"
+                            className="flex items-center justify-between p-1.5 bg-muted/20 border border-border/40 rounded text-2xs font-mono group"
                           >
                             <span className="text-foreground/90 select-all truncate pr-2">
                               <span className="text-muted-foreground mr-1.5 select-none">$</span>

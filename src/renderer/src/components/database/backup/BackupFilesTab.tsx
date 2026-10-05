@@ -38,7 +38,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/40 border border-border/70 rounded-xl">
       <div className="flex items-center gap-2">
         <span className="font-bold text-foreground text-xs">Backups na Pasta</span>
-        <span className="text-[10px] font-mono text-muted-foreground truncate max-w-xs" title={backupFolder}>
+        <span className="text-2xs font-mono text-muted-foreground truncate max-w-xs" title={backupFolder}>
           ({backupFolder || 'nenhuma pasta definida'})
         </span>
       </div>
@@ -79,7 +79,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
       <div className={`p-3.5 rounded-xl border text-xs ${backupResultToneClass(drillResult.success)}`}>
         {drillResult.message}
         {drillResult.success && drillResult.checksumSha256 && (
-          <p className="text-[10px] font-mono opacity-80 mt-1 truncate">
+          <p className="text-2xs font-mono opacity-80 mt-1 truncate">
             SHA-256: {drillResult.checksumSha256}
           </p>
         )}
@@ -104,7 +104,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
                 <span className="font-mono text-xs font-semibold text-foreground truncate" title={f.filePath}>
                   {f.fileName}
                 </span>
-                <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
+                <span className="text-2xs font-mono uppercase px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
                   {f.fileName.split('.').pop()}
                 </span>
               </div>

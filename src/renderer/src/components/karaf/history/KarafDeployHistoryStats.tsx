@@ -14,7 +14,7 @@ export const KarafDeployHistoryStats: React.FC<KarafDeployHistoryStatsProps> = (
         <Layers className="w-3.5 h-3.5" />
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Total Deploys</div>
+        <div className="text-2xs uppercase tracking-wider text-slate-400 font-medium">Total Deploys</div>
         <div className="text-sm font-bold font-mono text-slate-100">{stats.total}</div>
       </div>
     </div>
@@ -25,7 +25,7 @@ export const KarafDeployHistoryStats: React.FC<KarafDeployHistoryStatsProps> = (
         <Activity className="w-3.5 h-3.5" />
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Taxa de Sucesso</div>
+        <div className="text-2xs uppercase tracking-wider text-slate-400 font-medium">Taxa de Sucesso</div>
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-bold font-mono text-slate-100">{stats.successRate}%</span>
           <span className={`w-2 h-2 rounded-full ${stats.failures === 0 ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]' : 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)]'}`} />
@@ -39,7 +39,7 @@ export const KarafDeployHistoryStats: React.FC<KarafDeployHistoryStatsProps> = (
         <Clock className="w-3.5 h-3.5" />
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Duração Média</div>
+        <div className="text-2xs uppercase tracking-wider text-slate-400 font-medium">Duração Média</div>
         <div className="text-sm font-bold font-mono text-slate-100">{stats.avgDuration}s</div>
       </div>
     </div>
@@ -50,7 +50,7 @@ export const KarafDeployHistoryStats: React.FC<KarafDeployHistoryStatsProps> = (
         <Cpu className="w-3.5 h-3.5" />
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Origem (MCP / UI)</div>
+        <div className="text-2xs uppercase tracking-wider text-slate-400 font-medium">Origem (MCP / UI)</div>
         <div className="text-xs font-bold font-mono text-slate-100">
           <span className="text-purple-400">{stats.mcpCount}</span> MCP · <span className="text-amber-400">{stats.uiCount}</span> UI
         </div>

@@ -43,7 +43,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <span className="text-xs font-bold text-foreground block">
           {title}
         </span>
-        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${badgeClass} font-bold`}>
+        <span className={`text-2xs font-mono px-1.5 py-0.5 rounded ${badgeClass} font-bold`}>
           {badge}
         </span>
       </div>

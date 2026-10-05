@@ -30,7 +30,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
             <FolderOpen className="w-3.5 h-3.5 text-primary" />
             <span>Pastas Locais Dedicadas</span>
           </h4>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
             {docFolders.length} {docFolders.length === 1 ? 'pasta' : 'pastas'}
           </span>
         </div>
@@ -84,11 +84,11 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-foreground truncate">{getFolderDisplayTitle(folder)}</span>
-                  <span className="text-[9px] font-mono uppercase font-bold px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground border border-border/60 shrink-0">
+                  <span className="text-2xs font-mono uppercase font-bold px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground border border-border/60 shrink-0">
                     Pasta Local
                   </span>
                 </div>
-                <p className="text-[10px] font-mono text-muted-foreground truncate mt-0.5" title={folder.path}>
+                <p className="text-2xs font-mono text-muted-foreground truncate mt-0.5" title={folder.path}>
                   {folder.path}
                 </p>
               </div>

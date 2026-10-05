@@ -33,7 +33,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             <Activity className="w-3.5 h-3.5 text-sky-500" />
             Vazão (Throughput)
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
             {overview.requestsPerSecond} req/s
           </span>
         </div>
@@ -56,7 +56,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             ))}
           </div>
 
-          <p className="text-[10px] text-muted-foreground mt-1.5 font-mono">
+          <p className="text-2xs text-muted-foreground mt-1.5 font-mono">
             Total acumulado: {overview.totalTraces} requisições
           </p>
         </div>
@@ -70,7 +70,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             Latência (p95)
           </span>
           <span
-            className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+            className={`text-2xs font-mono px-1.5 py-0.5 rounded border ${
               overview.p95LatencyMs < 200
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                 : overview.p95LatencyMs < 800
@@ -106,7 +106,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             />
           </div>
 
-          <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground mt-1.5">
+          <div className="flex items-center justify-between text-2xs font-mono text-muted-foreground mt-1.5">
             <span>p50: <strong className="text-foreground">{overview.p50LatencyMs}ms</strong></span>
             <span>•</span>
             <span>p99: <strong className="text-foreground">{overview.p99LatencyMs}ms</strong></span>
@@ -126,7 +126,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             Taxa de Falhas
           </span>
           <span
-            className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+            className={`text-2xs font-mono px-1.5 py-0.5 rounded border ${
               overview.errorRate === 0
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                 : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
@@ -156,7 +156,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             />
           </div>
 
-          <p className="text-[10px] text-muted-foreground mt-1.5 font-mono">
+          <p className="text-2xs text-muted-foreground mt-1.5 font-mono">
             {overview.errorRate > 0
               ? 'Erros HTTP 5xx ou exceções Java capturadas'
               : 'Nenhuma exceção não tratada no Karaf'}
@@ -171,7 +171,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             <Database className="w-3.5 h-3.5 text-amber-500" />
             Tempo em Banco (Oracle)
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold">
+          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold">
             Listener SQL
           </span>
         </div>
@@ -196,7 +196,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             />
           </div>
 
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5 font-mono">
+          <div className="flex items-center justify-between text-2xs text-muted-foreground mt-1.5 font-mono">
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Oracle ({overview.dbTimePercentage}%)
             </span>

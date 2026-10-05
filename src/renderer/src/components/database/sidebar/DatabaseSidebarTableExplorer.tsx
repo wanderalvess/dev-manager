@@ -49,7 +49,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
         <div className="flex items-center space-x-1.5">
           <Table className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-[11px] font-bold text-muted-foreground uppercase">Tabelas</span>
-          <span className="text-[10px] bg-muted px-1.5 py-0.2 rounded font-mono font-medium text-foreground">
+          <span className="text-2xs bg-muted px-1.5 py-0.2 rounded font-mono font-medium text-foreground">
             {tables.length}
           </span>
         </div>
@@ -113,7 +113,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
           <button
             type="button"
             onClick={showMoreTables}
-            className="w-full py-1.5 text-center text-[10px] text-muted-foreground hover:text-primary cursor-pointer transition"
+            className="w-full py-1.5 text-center text-2xs text-muted-foreground hover:text-primary cursor-pointer transition"
           >
             Mostrando {visibleTables.length} de {filteredTables.length} — carregar mais
           </button>

@@ -55,7 +55,7 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
             <button
               onClick={() => onCopy(md5Upper, 'md5-upper')}
               disabled={!md5Upper}
-              className="text-[10px] px-2 py-0.5 rounded bg-violet-600 hover:bg-violet-500 text-white font-semibold transition cursor-pointer disabled:opacity-50"
+              className="text-2xs px-2 py-0.5 rounded bg-violet-600 hover:bg-violet-500 text-white font-semibold transition cursor-pointer disabled:opacity-50"
             >
               {copiedKey === 'md5-upper' ? 'Copiado!' : 'Copiar'}
             </button>
@@ -63,7 +63,7 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
           <div className="font-mono text-xs text-foreground font-bold break-all select-all bg-background p-2 rounded-lg border border-border/60">
             {md5Upper || '—'}
           </div>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-2xs text-muted-foreground">
             Utilize para a variável <code className="text-foreground font-mono">DB_PASSWORD</code> no arquivo <code className="text-foreground font-mono">.env</code>.
           </p>
         </div>
@@ -77,7 +77,7 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
             <button
               onClick={() => onCopy(md5Lower, 'md5-lower')}
               disabled={!md5Lower}
-              className="text-[10px] px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground border border-border/80 font-medium transition cursor-pointer disabled:opacity-50"
+              className="text-2xs px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground border border-border/80 font-medium transition cursor-pointer disabled:opacity-50"
             >
               {copiedKey === 'md5-lower' ? 'Copiado!' : 'Copiar'}
             </button>
@@ -85,7 +85,7 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
           <div className="font-mono text-xs text-foreground break-all select-all bg-background p-2 rounded-lg border border-border/60">
             {md5Lower || '—'}
           </div>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-2xs text-muted-foreground">
             Padrão gerado por <code className="text-foreground font-mono">echo -n "{plainPass}" | md5sum</code>.
           </p>
         </div>

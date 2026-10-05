@@ -54,7 +54,7 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
 
       <div className="flex items-center space-x-2 text-muted-foreground shrink-0 px-3">
         <div className="h-[1px] w-8 bg-border" />
-        <span className="text-[10px] font-bold text-primary">PULL REQUEST</span>
+        <span className="text-2xs font-bold text-primary">PULL REQUEST</span>
         <ArrowRight className="w-3.5 h-3.5 text-primary" />
       </div>
 

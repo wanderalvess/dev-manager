@@ -14,7 +14,7 @@ export const HelpAboutConfigPath: React.FC<HelpAboutConfigPathProps> = ({
 }) => (
   <div className="mt-3 p-3.5 rounded-xl bg-muted/60 border border-border flex items-center justify-between gap-2 shadow-inner">
     <div className="min-w-0 flex-1">
-      <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+      <span className="text-2xs uppercase font-bold text-muted-foreground block">
         Arquivo de Configurações Persistidas do Dev Manager:
       </span>
       <span className="text-[11px] font-mono text-foreground truncate block">

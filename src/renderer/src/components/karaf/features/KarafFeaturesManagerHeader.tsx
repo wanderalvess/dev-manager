@@ -18,7 +18,7 @@ const tabClass = (active: boolean) =>
   }`;
 
 const COUNT_BADGE =
-  'px-1.5 py-0.2 rounded text-[10px] bg-muted/80 border border-border/60 font-mono tabular-nums';
+  'px-1.5 py-0.2 rounded text-2xs bg-muted/80 border border-border/60 font-mono tabular-nums';
 
 export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProps> = ({
   activeTab,
@@ -38,7 +38,7 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
             <h2 className="text-sm font-bold tracking-tight text-foreground uppercase">
               Features & Repositórios Maven
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border font-medium">
+            <span className="text-2xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border font-medium">
               KARAF OSGi :8101
             </span>
           </div>

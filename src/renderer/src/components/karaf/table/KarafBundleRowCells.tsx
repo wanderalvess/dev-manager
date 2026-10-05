@@ -25,7 +25,7 @@ export const KarafBundleStateCell: React.FC<KarafBundleStateCellProps> = ({ bund
         <button
           type="button"
           onClick={() => onOpenInlineDiag(bundle)}
-          className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
+          className="px-1.5 py-0.5 rounded text-2xs font-mono font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
           title="Ver diagnóstico do Karaf para este bundle (bundle:diag)"
         >
           Diag
@@ -46,7 +46,7 @@ export const KarafBundleNameCell: React.FC<KarafBundleNameCellProps> = ({ bundle
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-foreground font-bold text-xs">{bundle.name}</span>
         {isWorkspace && (
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-primary/15 text-primary border border-primary/30">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-2xs font-semibold bg-primary/15 text-primary border border-primary/30">
             <Sparkles className="w-2.5 h-2.5" /> Workspace
           </span>
         )}

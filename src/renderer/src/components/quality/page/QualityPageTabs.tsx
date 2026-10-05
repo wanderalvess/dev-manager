@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, FileSpreadsheet, Grid, ScrollText, ShieldCheck, Zap } from 'lucide-react';
+import { Database, FileSpreadsheet, Grid, ScrollText, ShieldCheck, Zap, Rocket, LucideIcon } from 'lucide-react';
 import type { QualityTabMode } from '../../../utils/qualityPageView';
 
 interface QualityPageTabsProps {
@@ -10,9 +10,45 @@ interface QualityPageTabsProps {
   onNavigate?: (tab: string) => void;
 }
 
+interface TabDef {
+  id: QualityTabMode;
+  label: string;
+  icon: LucideIcon;
+}
+
+interface TabGroup {
+  title: string;
+  tabs: TabDef[];
+}
+
+// Três grupos pelo ciclo de QA: automatizar, validar e entregar. Só abas com número útil exibem badge.
+const TAB_GROUPS: TabGroup[] = [
+  {
+    title: 'Automação',
+    tabs: [
+      { id: 'taut', label: 'TAUT (Cypress)', icon: Zap },
+      { id: 'runners', label: 'Test Runners', icon: Zap }
+    ]
+  },
+  {
+    title: 'Validação',
+    tabs: [
+      { id: 'matrix', label: 'Matriz', icon: FileSpreadsheet },
+      { id: 'regression', label: 'Validador Regressivo', icon: Database }
+    ]
+  },
+  {
+    title: 'Entrega',
+    tabs: [
+      { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck },
+      { id: 'roadmap', label: 'Roadmap & Demandas', icon: Rocket }
+    ]
+  }
+];
+
 const INACTIVE_CLASS = 'text-muted-foreground hover:text-foreground hover:bg-muted/60';
 const TAB_BASE =
-  'px-3 py-1.5 rounded-md text-xs font-semibold transition-colors flex items-center space-x-1.5 cursor-pointer';
+  'px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer';
 
 export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
   tabMode,
@@ -20,102 +56,72 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
   itemsCount,
   readinessScore,
   onNavigate
-}) => (
-  <div className="border-b border-border bg-card px-6 py-1.5 flex items-center justify-between shrink-0">
-    <div className="flex items-center space-x-1">
-      <button
-        type="button"
-        onClick={() => onTabChange('taut')}
-        className={`${TAB_BASE} ${
-          tabMode === 'taut' ? 'bg-primary text-primary-foreground shadow-xs' : INACTIVE_CLASS
-        }`}
-      >
-        <Zap className="w-3.5 h-3.5 text-emerald-400" />
-        <span>Automação TAUT (Cypress)</span>
-        <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-400 font-bold">
-          QA Hub
-        </span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onTabChange('matrix')}
-        className={`${TAB_BASE} ${
-          tabMode === 'matrix' ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS
-        }`}
-      >
-        <FileSpreadsheet className="w-3.5 h-3.5" />
-        <span>Matriz de Validação</span>
-        <span className="px-1.5 py-0.2 rounded text-[10px] bg-background/20 font-mono">
+}) => {
+  const renderBadge = (id: QualityTabMode, active: boolean): React.ReactNode => {
+    if (id === 'matrix') {
+      return (
+        <span className={`px-1.5 rounded text-2xs font-mono ${active ? 'bg-background/20' : 'bg-muted'}`}>
           {itemsCount}
         </span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onTabChange('runners')}
-        className={`${TAB_BASE} ${
-          tabMode === 'runners' ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS
-        }`}
-      >
-        <Zap className="w-3.5 h-3.5" />
-        <span>Test Runners</span>
-        <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-muted text-muted-foreground">
-          Automação
-        </span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onTabChange('regression')}
-        className={`${TAB_BASE} ${
-          tabMode === 'regression' ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS
-        }`}
-      >
-        <Database className="w-3.5 h-3.5" />
-        <span>Validador Regressivo</span>
-        <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold">
-          Oracle QA
-        </span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onTabChange('readiness')}
-        className={`${TAB_BASE} ${
-          tabMode === 'readiness' ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS
-        }`}
-      >
-        <ShieldCheck className="w-3.5 h-3.5" />
-        <span>Painel de Prontidão (PO)</span>
+      );
+    }
+    if (id === 'readiness') {
+      const healthy = readinessScore >= 80;
+      return (
         <span
-          className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
-            readinessScore >= 80
-              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold'
-              : 'bg-amber-500/15 text-amber-500 font-semibold'
+          className={`px-1.5 rounded text-2xs font-mono font-semibold ${
+            active
+              ? 'bg-background/20'
+              : healthy
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
           }`}
         >
           {readinessScore}%
         </span>
-      </button>
+      );
+    }
+    return null;
+  };
 
-      <button
-        type="button"
-        onClick={() => onTabChange('roadmap')}
-        className={`${TAB_BASE} ${
-          tabMode === 'roadmap' ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS
-        }`}
-      >
-        <Grid className="w-3.5 h-3.5" />
-        <span>Roadmap &amp; Demandas</span>
-      </button>
-    </div>
+  return (
+    <div className="border-b border-border bg-card px-6 py-1.5 flex items-center justify-between gap-4 shrink-0">
+      <div role="tablist" aria-label="Seções de Qualidade" className="flex items-end gap-3 overflow-x-auto">
+        {TAB_GROUPS.map((group, groupIndex) => (
+          <div key={group.title} className="flex items-end gap-3">
+            {groupIndex > 0 && <span aria-hidden="true" className="self-center h-6 w-px bg-border" />}
+            <div className="flex flex-col gap-0.5">
+              <span className="px-3 text-2xs uppercase tracking-wider font-bold text-muted-foreground/80">
+                {group.title}
+              </span>
+              <div className="flex items-center gap-1">
+                {group.tabs.map(({ id, label, icon: Icon }) => {
+                  const active = tabMode === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => onTabChange(id)}
+                      className={`${TAB_BASE} ${active ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS}`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{label}</span>
+                      {renderBadge(id, active)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-    {/* Atalhos para Ecossistema de Testes */}
-    <div className="hidden lg:flex items-center space-x-2 text-xs text-muted-foreground">
-      <span className="text-[11px] font-mono text-muted-foreground">Atalhos:</span>
+      {/* Atalhos para Ecossistema de Testes */}
       {onNavigate && (
-        <>
+        <div className="hidden xl:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+          <span className="text-[11px] font-mono">Atalhos:</span>
           <button
             type="button"
             onClick={() => onNavigate('routines')}
@@ -145,8 +151,8 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
             <ScrollText className="w-3 h-3 text-amber-500" />
             <span>Logs</span>
           </button>
-        </>
+        </div>
       )}
     </div>
-  </div>
-);
+  );
+};

@@ -83,7 +83,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
       <div className="space-y-1.5 pt-0.5">
         <label className="text-[11px] font-bold text-foreground flex items-center justify-between">
           <span>Modo de Sincronização</span>
-          <span className="text-[10px] text-muted-foreground font-normal">Define o destino dos dados</span>
+          <span className="text-2xs text-muted-foreground font-normal">Define o destino dos dados</span>
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <button
@@ -96,11 +96,11 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
                 <Layers className="w-3.5 h-3.5 text-primary" />
                 <span>Ambos</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.2 rounded-full font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <span className="text-2xs px-1.5 py-0.2 rounded-full font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                 Recomendado
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground leading-tight">
+            <p className="text-2xs text-muted-foreground leading-tight">
               Artigos completos na Base de Conhecimento vinculados aos Chunks para RAG.
             </p>
           </button>
@@ -114,7 +114,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
               <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
               <span>Artigos KB</span>
             </div>
-            <p className="text-[10px] text-muted-foreground leading-tight">
+            <p className="text-2xs text-muted-foreground leading-tight">
               Apenas documentos completos para leitura e catálogo no Espaço Ágil.
             </p>
           </button>
@@ -128,7 +128,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
               <Cpu className="w-3.5 h-3.5 text-cyan-500" />
               <span>Chunks RAG</span>
             </div>
-            <p className="text-[10px] text-muted-foreground leading-tight">
+            <p className="text-2xs text-muted-foreground leading-tight">
               Apenas trechos vetorizados para busca semântica do assistente neural.
             </p>
           </button>

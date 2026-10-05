@@ -16,12 +16,12 @@ export const AiTabHeader: React.FC<AiTabHeaderProps> = ({ activeProvider, onNewP
           Provedores de IA & Motores LLM (BYOK)
         </h3>
         {activeProvider ? (
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 font-mono text-[10px] font-bold flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 font-mono text-2xs font-bold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             ONLINE · {activeProvider.name} ({activeProvider.model})
           </span>
         ) : (
-          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-500 font-mono text-[10px] font-bold flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-500 font-mono text-2xs font-bold flex items-center gap-1.5">
             <AlertTriangle className="w-3 h-3" />
             NENHUM MOTOR ATIVO
           </span>

@@ -21,12 +21,12 @@
     --card-foreground: 28 35% 15%;
     --popover: 35 35% 98%;
     --popover-foreground: 28 35% 15%;
-    --primary: 24 95% 44%;
+    --primary: 24 95% 39%;
     --primary-foreground: 0 0% 100%;
     --secondary: 32 25% 88%;
     --secondary-foreground: 28 35% 15%;
     --muted: 32 20% 88%;
-    --muted-foreground: 28 15% 42%;
+    --muted-foreground: 28 15% 38%;
     --accent: 28 100% 92%;
     --accent-foreground: 24 95% 35%;
     --destructive: 0 84.2% 60.2%;
@@ -48,7 +48,7 @@
     --popover: 222.2 47% 11.2%;
     --popover-foreground: 210 40% 98%;
     --primary: 25 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 0 0% 5%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -73,7 +73,7 @@
     --popover: 0 0% 5.5%;
     --popover-foreground: 210 40% 98%;
     --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 0 0% 5%;
     --secondary: 217 35% 12%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 35% 12%;
@@ -145,12 +145,12 @@
     --card-foreground: 160 50% 10%;
     --popover: 155 30% 98%;
     --popover-foreground: 160 50% 10%;
-    --primary: 158 90% 32%;
+    --primary: 158 90% 27%;
     --primary-foreground: 0 0% 100%;
     --secondary: 155 25% 86%;
     --secondary-foreground: 160 50% 10%;
     --muted: 155 22% 86%;
-    --muted-foreground: 158 25% 36%;
+    --muted-foreground: 158 25% 33%;
     --border: 155 25% 74%;
     --input: 155 25% 74%;
     --accent: 155 80% 92%;
@@ -171,7 +171,7 @@
     --popover: 270 40% 7%;
     --popover-foreground: 270 40% 98%;
     --primary: 271 85% 65%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 0 0% 5%;
     --secondary: 270 30% 14%;
     --secondary-foreground: 270 40% 98%;
     --muted: 270 30% 14%;
@@ -220,7 +220,7 @@
     --popover: 205 40% 7%;
     --popover-foreground: 200 40% 98%;
     --primary: 199 89% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 0 0% 5%;
     --secondary: 205 30% 14%;
     --secondary-foreground: 200 40% 98%;
     --muted: 205 30% 14%;
@@ -248,7 +248,7 @@
     --secondary: 198 28% 86%;
     --secondary-foreground: 205 50% 11%;
     --muted: 198 25% 86%;
-    --muted-foreground: 202 25% 38%;
+    --muted-foreground: 202 25% 36%;
     --border: 198 28% 74%;
     --input: 198 28% 74%;
     --accent: 196 85% 92%;
@@ -460,4 +460,51 @@
 
 .animate-blob-b {
   animation: blob-float-b 11s ease-in-out infinite;
+}
+
+/*
+ * Tema claro: os tons -500 fixos nas telas (emerald, amber, cyan...) ficam abaixo de 4,5:1 sobre o fundo
+ * creme. Escurece só o texto no tema claro e preserva superfícies escuras (consoles, modais com fundo escuro).
+ */
+.light .text-emerald-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #047857;
+}
+.light .text-amber-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #b45309;
+}
+.light .text-cyan-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #0e7490;
+}
+.light .text-sky-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #0369a1;
+}
+.light .text-red-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #b91c1c;
+}
+.light .text-rose-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #be123c;
+}
+.light .text-orange-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #c2410c;
+}
+.light .text-blue-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #1d4ed8;
+}
+.light .text-emerald-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #047857;
+}
+.light .text-amber-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #b45309;
+}
+.light .text-cyan-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #0e7490;
+}
+.light .text-sky-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #0369a1;
+}
+.light .text-orange-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #c2410c;
+}
+.light .text-rose-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
+  color: #be123c;
 }

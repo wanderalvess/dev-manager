@@ -69,7 +69,7 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
                   <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
                 )}
                 <span className="text-foreground">{getBackupHistoryActionLabel(h.action)}</span>
-                <span className="text-[10px] font-mono px-2 py-0.2 rounded-md bg-muted border border-border/50 text-muted-foreground">
+                <span className="text-2xs font-mono px-2 py-0.2 rounded-md bg-muted border border-border/50 text-muted-foreground">
                   {h.trigger === 'scheduled' ? 'agendado' : 'manual'}
                 </span>
               </span>
@@ -83,7 +83,7 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
               {h.message}
             </p>
 
-            <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono text-muted-foreground/80 mt-2 border-t border-border/40 pt-1.5">
+            <div className="flex flex-wrap items-center gap-3 text-2xs font-mono text-muted-foreground/80 mt-2 border-t border-border/40 pt-1.5">
               {h.durationMs !== undefined && <span>Duração: {h.durationMs} ms</span>}
               {h.sizeBytes !== undefined && <span>Tamanho: {formatBytes(h.sizeBytes)}</span>}
               {h.checksumSha256 && (
@@ -94,7 +94,7 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
                   <button
                     type="button"
                     onClick={() => onCopyHash(h.checksumSha256!, `hist-hash-${h.id}`)}
-                    className="hover:text-foreground transition underline font-mono text-[9px] cursor-pointer"
+                    className="hover:text-foreground transition underline font-mono text-2xs cursor-pointer"
                     title="Copiar hash completo"
                   >
                     {copyFeedback === `hist-hash-${h.id}` ? '✓' : 'Copiar'}

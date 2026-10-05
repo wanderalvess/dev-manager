@@ -24,7 +24,7 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
       <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
         <Layers className="w-3.5 h-3.5 text-primary" /> Perfis de Ambiente
       </h3>
-      <span className="text-[10px] text-muted-foreground font-mono">Presets de paths/portas</span>
+      <span className="text-2xs text-muted-foreground font-mono">Presets de paths/portas</span>
     </div>
     <p className="text-[11px] text-muted-foreground -mt-1">
       Salve o estado atual dos diretórios e portas abaixo como um preset nomeado, e alterne entre eles com um clique — útil pra quem trabalha com múltiplos clientes/ambientes na mesma máquina.
@@ -44,18 +44,18 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="font-semibold text-foreground truncate">{profile.label}</span>
                 {isActive && (
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-primary/20 text-primary shrink-0">
+                  <span className="text-2xs font-mono px-1.5 py-0.2 rounded-full bg-primary/20 text-primary shrink-0">
                     Ativo
                   </span>
                 )}
-                <span className="font-mono text-[10px] text-muted-foreground truncate">{profile.projectsPath}</span>
+                <span className="font-mono text-2xs text-muted-foreground truncate">{profile.projectsPath}</span>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleActivateEnvironmentProfile(profile)}
                   disabled={isActive}
-                  className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+                  className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-2xs font-bold transition disabled:opacity-50 cursor-pointer"
                 >
                   Ativar
                 </button>
@@ -75,6 +75,7 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
 
     <div className="flex items-center gap-2" data-tour="environment-profiles">
       <input
+        aria-label="Rótulo do novo perfil de ambiente"
         type="text"
         value={newEnvironmentProfileLabel}
         onChange={(e) => setNewEnvironmentProfileLabel(e.target.value)}

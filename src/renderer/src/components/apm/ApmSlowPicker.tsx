@@ -29,7 +29,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
       <Flame className="w-3 h-3 text-amber-500" />
       <span>Top Lentos</span>
       {summary.slowTracesCount > 0 && (
-        <span className="px-1 py-0.2 rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+        <span className="px-1 py-0.2 rounded-full bg-amber-500/20 text-2xs font-bold text-amber-700 dark:text-amber-300">
           {summary.slowTracesCount}
         </span>
       )}
@@ -45,7 +45,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 text-center font-mono text-[10px]">
+        <div className="grid grid-cols-3 gap-1.5 text-center font-mono text-2xs">
           <div className="p-1.5 rounded bg-muted/40 border border-border">
             <div className="text-muted-foreground">Lentos (&gt;400ms)</div>
             <div className="font-bold text-amber-600 dark:text-amber-400 text-xs">{summary.slowTracesCount}</div>
@@ -61,7 +61,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
         </div>
         {summary.topSlowEndpoints.length > 0 && (
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Endpoints Mais Lentos (p95)</span>
+            <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground">Endpoints Mais Lentos (p95)</span>
             <div className="flex flex-col gap-1 max-h-36 overflow-y-auto no-scrollbar">
               {summary.topSlowEndpoints.map((endpoint, index) => (
                 <button

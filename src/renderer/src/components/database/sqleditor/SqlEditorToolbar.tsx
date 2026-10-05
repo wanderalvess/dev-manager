@@ -157,7 +157,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         <SlidersHorizontal className={`w-3.5 h-3.5 ${detectedVariables.length > 0 ? 'text-violet-400' : 'text-muted-foreground'}`} />
         <span>Parâmetros</span>
         {detectedVariables.length > 0 && (
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-violet-500/25 text-violet-300">
+          <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-violet-500/25 text-violet-300">
             {detectedVariables.length}
           </span>
         )}

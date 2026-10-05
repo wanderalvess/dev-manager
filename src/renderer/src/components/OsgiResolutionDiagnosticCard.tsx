@@ -52,7 +52,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               <span className="text-xs font-bold text-slate-100 tracking-tight">
                 Dependência OSGi Não Resolvida
               </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono font-semibold uppercase tracking-wider">
+              <span className="text-2xs px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono font-semibold uppercase tracking-wider">
                 {diagnostic.requirementType}
               </span>
             </div>
@@ -79,13 +79,13 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
           {/* Card 1: Requisito Ausente */}
           <div className="p-2.5 rounded-lg bg-[#080d17] border border-slate-800 flex flex-col justify-between space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+              <span className="text-2xs font-mono uppercase tracking-wider text-slate-400 font-bold">
                 Pacote / Requisito Faltante:
               </span>
               <button
                 type="button"
                 onClick={() => copy(diagnostic.missingItem, 'missing-item')}
-                className="text-[10px] text-slate-400 hover:text-slate-200 flex items-center gap-1 transition font-mono cursor-pointer"
+                className="text-2xs text-slate-400 hover:text-slate-200 flex items-center gap-1 transition font-mono cursor-pointer"
                 title="Copiar nome do pacote ausente"
               >
                 {isCopied ? (
@@ -108,7 +108,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
 
             {diagnostic.versionRangeDesc && (
               <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 pt-0.5">
-                <span className="text-slate-400 text-[10px] uppercase font-bold">Faixa Exigida:</span>
+                <span className="text-slate-400 text-2xs uppercase font-bold">Faixa Exigida:</span>
                 <span className="text-sky-300 font-semibold">{diagnostic.versionRangeDesc}</span>
               </div>
             )}
@@ -117,11 +117,11 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
           {/* Card 2: Origem POM.XML */}
           <div className="p-2.5 rounded-lg bg-[#080d17] border border-slate-800 flex flex-col justify-between space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+              <span className="text-2xs font-mono uppercase tracking-wider text-slate-400 font-bold">
                 Módulo Maven Declarado (pom.xml):
               </span>
               {diagnostic.matchedProfileName && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-mono font-semibold">
+                <span className="text-2xs px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-mono font-semibold">
                   Perfil Mapeado
                 </span>
               )}
@@ -133,7 +133,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                   <Package className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <span>{diagnostic.matchedPomDependency.artifactId}</span>
                 </div>
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <div className="flex items-center justify-between text-2xs font-mono text-slate-400">
                   <span className="truncate">{diagnostic.matchedPomDependency.groupId}</span>
                   <span className="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
                     v{diagnostic.matchedPomDependency.version}
@@ -147,7 +147,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
             )}
 
             {diagnostic.matchedProjectName && (
-              <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1 truncate pt-0.5">
+              <div className="text-2xs font-mono text-slate-400 flex items-center gap-1 truncate pt-0.5">
                 <span className="text-slate-400 uppercase font-bold">Projeto Local:</span>
                 <span className="text-slate-300 truncate">{diagnostic.matchedProjectName}</span>
               </div>
@@ -178,7 +178,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Executar Perfil "{diagnostic.matchedProfileName}"</span>
-                <span className="ml-1 text-[9px] font-mono bg-emerald-950/60 text-emerald-200 border border-emerald-400/40 px-1 py-0.2 rounded font-semibold uppercase tracking-wider">
+                <span className="ml-1 text-2xs font-mono bg-emerald-950/60 text-emerald-200 border border-emerald-400/40 px-1 py-0.2 rounded font-semibold uppercase tracking-wider">
                   Recomendado
                 </span>
               </button>
@@ -211,7 +211,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
             )}
           </div>
 
-          <span className="text-[10px] text-slate-400 font-mono hidden lg:inline">
+          <span className="text-2xs text-slate-400 font-mono hidden lg:inline">
             Clique em uma ação para remediar a falha
           </span>
         </div>

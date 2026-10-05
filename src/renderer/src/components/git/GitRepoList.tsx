@@ -56,14 +56,14 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
               <div className="flex items-center space-x-1.5">
                 {hasChanges && (
                   <span
-                    className="text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded font-mono font-bold"
+                    className="text-2xs bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded font-mono font-bold"
                     title={`${pendingCount} arquivo(s) modificado(s)`}
                   >
                     ● {pendingCount}
                   </span>
                 )}
                 {p.isAzure && (
-                  <span className="text-[9px] bg-primary/10 text-primary border border-primary/30 px-1.5 py-0.2 rounded font-mono font-bold">
+                  <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-1.5 py-0.2 rounded font-mono font-bold">
                     AZURE
                   </span>
                 )}

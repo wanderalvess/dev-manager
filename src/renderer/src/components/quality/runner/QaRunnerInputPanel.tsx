@@ -54,7 +54,7 @@ export const QaRunnerInputPanel: React.FC<QaRunnerInputPanelProps> = ({
         >
           <Filter className="w-3.5 h-3.5" />
           <span>Binds &amp; Variáveis</span>
-          <span className="font-mono text-[10px] bg-muted px-1.5 py-0.2 rounded text-muted-foreground">
+          <span className="font-mono text-2xs bg-muted px-1.5 py-0.2 rounded text-muted-foreground">
             {Object.keys(variables).length}
           </span>
         </button>

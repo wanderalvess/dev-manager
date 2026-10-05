@@ -46,14 +46,14 @@ export const GitTaskImportSection: React.FC<GitTaskImportSectionProps> = ({
         <span>{isLoadingTasks ? 'Buscando...' : 'Buscar'}</span>
       </button>
     </div>
-    <p className="text-[10px] text-muted-foreground leading-normal">
+    <p className="text-2xs text-muted-foreground leading-normal">
       Extrai automaticamente o código e o título a partir de URLs do Azure DevOps e Jira.
     </p>
 
     {/* Lista de tarefas retornadas da busca, se houver */}
     {tasks.length > 0 && (
       <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+        <span className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block">
           Tarefas encontradas ({tasks.length}):
         </span>
         <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
@@ -69,13 +69,13 @@ export const GitTaskImportSection: React.FC<GitTaskImportSectionProps> = ({
               }`}
             >
               <div className="flex items-center gap-2 truncate">
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-muted border border-border shrink-0">
+                <span className="px-1.5 py-0.2 rounded text-2xs font-mono font-bold bg-muted border border-border shrink-0">
                   {task.id}
                 </span>
                 <span className="truncate">{task.title}</span>
               </div>
               {task.type && (
-                <span className="text-[10px] text-muted-foreground font-mono shrink-0">{task.type}</span>
+                <span className="text-2xs text-muted-foreground font-mono shrink-0">{task.type}</span>
               )}
             </button>
           ))}

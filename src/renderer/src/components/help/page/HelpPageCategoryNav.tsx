@@ -31,7 +31,7 @@ export const HelpPageCategoryNav: React.FC<HelpPageCategoryNavProps> = ({
           <span>{cat.label}</span>
           {cat.badge && (
             <span
-              className={`text-[10px] px-1.5 py-0.2 rounded-md font-mono ${
+              className={`text-2xs px-1.5 py-0.2 rounded-md font-mono ${
                 isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
               }`}
             >

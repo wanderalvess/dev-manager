@@ -48,7 +48,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
             </h3>
           </div>
           <span
-            className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+            className={`text-2xs font-mono px-2 py-0.5 rounded border ${
               receiverState === 'listening'
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                 : receiverState === 'down'
@@ -98,13 +98,13 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
                 copyToClipboard(snippets.powershellCopy, 'ps-cmd');
                 showToast('Comando PowerShell copiado!', 'info');
               }}
-              className="px-2 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-[10px] text-neutral-300 flex items-center gap-1 cursor-pointer transition"
+              className="px-2 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-2xs text-neutral-300 flex items-center gap-1 cursor-pointer transition"
             >
               {copyFeedback === 'ps-cmd' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
               Copiar
             </button>
           </div>
-          <pre className="text-[10px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-20 no-scrollbar">
+          <pre className="text-2xs font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-20 no-scrollbar">
             Invoke-RestMethod -Uri "{snippets.tracesUrl}" -Method POST ...
           </pre>
         </div>

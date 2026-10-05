@@ -22,7 +22,7 @@ export const GitDiffFileList: React.FC<GitDiffFileListProps> = ({
       <button
         type="button"
         onClick={() => onSelectFile(null)}
-        className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer ${
+        className={`px-2 py-0.5 rounded text-2xs font-mono transition-colors cursor-pointer ${
           selectedFile === null
             ? 'bg-primary text-primary-foreground font-semibold'
             : 'bg-muted hover:bg-muted/80 text-foreground border border-border/60'
@@ -56,7 +56,7 @@ export const GitDiffFileList: React.FC<GitDiffFileListProps> = ({
                 onClick={() => onSelectFile(file.path)}
                 className="flex-1 flex items-center gap-1.5 min-w-0 text-left cursor-pointer"
               >
-                <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border shrink-0 ${badge.className}`}>
+                <span className={`px-1.5 py-0.2 rounded text-2xs font-bold border shrink-0 ${badge.className}`}>
                   {badge.label}
                 </span>
                 <span

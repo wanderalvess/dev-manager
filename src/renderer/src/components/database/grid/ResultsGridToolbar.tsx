@@ -57,7 +57,7 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
       {isEditable ? (
         <>
           <span
-            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
             title={`Editável: duplo-clique numa célula para editar, botão direito para excluir a linha. Tabela: ${editableTableName}`}
           >
             <Pencil className="w-3 h-3" />
@@ -76,14 +76,14 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
         </>
       ) : (
         <span
-          className="hidden sm:inline text-[10px] text-muted-foreground/70"
+          className="hidden sm:inline text-2xs text-muted-foreground/70"
           title="Edição inline só fica disponível para um SELECT * simples de uma única tabela (ex: clique numa tabela na barra lateral)."
         >
           Somente leitura
         </span>
       )}
       {isVirtual && (
-        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="Virtual scrolling ativo para rolagem a 60 FPS">
+        <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="Virtual scrolling ativo para rolagem a 60 FPS">
           Virtual 60 FPS
         </span>
       )}

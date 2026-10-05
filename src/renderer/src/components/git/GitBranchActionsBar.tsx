@@ -40,7 +40,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         <GitBranch className="w-4 h-4" />
       </div>
       <div>
-        <span className="text-[10px] uppercase font-bold text-muted-foreground block tracking-wider">
+        <span className="text-2xs uppercase font-bold text-muted-foreground block tracking-wider">
           Branch Atual
         </span>
         <div className="flex items-center gap-1.5 mt-0.5" data-tour="branch-atual">
@@ -49,7 +49,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
           </span>
           {project.detachedHead && (
             <span
-              className="text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold"
+              className="text-2xs bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold"
               title="O repositório está em um commit específico, fora de qualquer branch"
             >
               HEAD DESTACADO
@@ -59,7 +59,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
             type="button"
             data-tour="trocar-branch"
             onClick={onOpenBranchModal}
-            className="px-1.5 py-0.5 rounded bg-muted/60 hover:bg-muted border border-border text-[10px] font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
+            className="px-1.5 py-0.5 rounded bg-muted/60 hover:bg-muted border border-border text-2xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
             title="Alternar branch ou criar uma nova"
           >
             Trocar / Nova
@@ -67,7 +67,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
           <button
             type="button"
             onClick={onOpenTaskBranchModal}
-            className="px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 border border-primary/25 text-[10px] font-semibold text-primary transition-colors cursor-pointer flex items-center gap-1.5"
+            className="px-2 py-0.5 rounded-md bg-primary/10 hover:bg-primary/20 border border-primary/25 text-2xs font-semibold text-primary transition-colors cursor-pointer flex items-center gap-1.5"
             title="Criar branch vinculada a tarefa do Azure DevOps ou Jira"
           >
             <GitBranch className="w-3 h-3 text-primary" />

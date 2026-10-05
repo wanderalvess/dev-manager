@@ -34,7 +34,7 @@ export const TautSubTabs: React.FC<TautSubTabsProps> = ({
       <ShieldCheck className="w-3.5 h-3.5" />
       <span>Cobertura Zephyr Scale</span>
       {coverageReport && (
-        <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-primary-foreground/20">
+        <span className="ml-1 px-1.5 py-0.2 rounded text-2xs font-mono font-bold bg-primary-foreground/20">
           {coverageReport.coveragePercentage}%
         </span>
       )}

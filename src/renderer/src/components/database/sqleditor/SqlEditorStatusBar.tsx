@@ -78,7 +78,7 @@ export const SqlEditorStatusBar: React.FC<SqlEditorStatusBarProps> = ({
         >
           A-
         </button>
-        <span className="text-[10px] text-muted-foreground px-1">{fontSize}px</span>
+        <span className="text-2xs text-muted-foreground px-1">{fontSize}px</span>
         <button
           type="button"
           onClick={onZoomIn}

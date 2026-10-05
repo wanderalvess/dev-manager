@@ -34,7 +34,7 @@ export const BackupDefaultCommandPanel: React.FC<BackupDefaultCommandPanelProps>
             placeholder="DATA_PUMP_DIR"
             className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
           />
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-2xs text-muted-foreground">
             Nome do objeto DIRECTORY registrado no Oracle (ex: <code>DATA_PUMP_DIR</code>). O schema exportado é o usuário da conexão (<code>{activeConnection.user}</code>).
           </p>
         </div>
@@ -58,7 +58,7 @@ export const BackupDefaultCommandPanel: React.FC<BackupDefaultCommandPanelProps>
       {/* Preview do comando padrão */}
       <div className="mt-2.5 p-3.5 bg-muted/40 border border-border/70 rounded-xl space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <Terminal className="w-3 h-3 text-primary" /> Linha de Comando Gerada (Automática)
           </span>
           <div className="flex items-center gap-2">
@@ -68,14 +68,14 @@ export const BackupDefaultCommandPanel: React.FC<BackupDefaultCommandPanelProps>
                 setUseCustomBackupCommand(true);
                 setCustomBackupCommand(previewBackupCommandResolved);
               }}
-              className="px-2 py-0.5 text-[10px] text-primary hover:underline font-semibold cursor-pointer"
+              className="px-2 py-0.5 text-2xs text-primary hover:underline font-semibold cursor-pointer"
             >
               Editar como personalizado
             </button>
             <button
               type="button"
               onClick={copyCommandPreview}
-              className="flex items-center gap-1 px-2 py-0.5 text-muted-foreground hover:text-foreground text-[10px] font-medium rounded-md hover:bg-muted transition cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 text-muted-foreground hover:text-foreground text-2xs font-medium rounded-md hover:bg-muted transition cursor-pointer"
               title="Copiar comando"
             >
               {commandCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}

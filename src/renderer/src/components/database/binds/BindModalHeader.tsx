@@ -15,7 +15,7 @@ export const BindModalHeader: React.FC<BindModalHeaderProps> = ({ count, onClose
       <div>
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-foreground text-sm">Parâmetros e Variáveis da Consulta</h3>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-400">
+          <span className="px-2 py-0.5 rounded-full text-2xs font-bold bg-violet-500/20 text-violet-400">
             {count} {count === 1 ? 'parâmetro' : 'parâmetros'}
           </span>
         </div>

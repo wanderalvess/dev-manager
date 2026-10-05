@@ -22,7 +22,7 @@ export const DeployKarafPrompt: React.FC<DeployKarafPromptProps> = ({
       <span className="font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
         <Terminal className="w-3 h-3 text-primary" /> Prompt Karaf
       </span>
-      <span className="text-[10px] text-muted-foreground font-mono">Histórico: ↑ / ↓</span>
+      <span className="text-2xs text-muted-foreground font-mono">Histórico: ↑ / ↓</span>
     </div>
     <form onSubmit={onSubmit} className="flex gap-1.5">
       <div className="relative flex-1">

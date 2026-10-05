@@ -37,7 +37,7 @@ export const ContainerCardGauge: React.FC<ContainerCardGaugeProps> = ({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+      <span className="text-2xs text-muted-foreground flex items-center gap-1">
         {icon} {label}
       </span>
       <div className="w-16 bg-background/80 h-1.5 rounded-full overflow-hidden border border-border/60">
@@ -46,7 +46,7 @@ export const ContainerCardGauge: React.FC<ContainerCardGaugeProps> = ({
           style={{ width: containerCardGaugeWidth(percent) }}
         />
       </div>
-      <span className={`text-[10px] font-mono tabular-nums text-foreground font-semibold ${valueClassName}`.trimEnd()}>
+      <span className={`text-2xs font-mono tabular-nums text-foreground font-semibold ${valueClassName}`.trimEnd()}>
         {valueText}
       </span>
     </div>

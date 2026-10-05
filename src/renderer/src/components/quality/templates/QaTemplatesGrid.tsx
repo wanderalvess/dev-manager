@@ -34,10 +34,10 @@ export const QaTemplatesGrid: React.FC<QaTemplatesGridProps> = ({
         >
           <div>
             <div className="flex items-start justify-between gap-2 mb-2">
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-medium bg-muted text-muted-foreground border border-border">
+              <span className="px-1.5 py-0.2 rounded text-2xs font-mono font-medium bg-muted text-muted-foreground border border-border">
                 {tmpl.category || 'Geral'}
               </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
+              <span className="text-2xs text-muted-foreground font-mono">
                 v{tmpl.version || '1.0.0'}
               </span>
             </div>

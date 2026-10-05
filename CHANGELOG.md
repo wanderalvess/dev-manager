@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.31.3] - 2026-10-05
+### Alterado
+- **Legibilidade**: nenhum texto da interface fica abaixo de 11px. O novo token `text-2xs` (11px) substituiu todas as fontes de 7 a 10,5px em badges, rótulos de seção, dicas de atalho e consoles.
+- **Qualidade**: as abas agora estão agrupadas em Automação (TAUT, Test Runners), Validação (Matriz, Validador Regressivo) e Entrega (Prontidão, Roadmap). Os badges decorativos ("QA Hub", "Automação", "Oracle QA") saíram; ficam só a contagem da Matriz e a nota de Prontidão. Abas renomeadas: "TAUT (Cypress)", "Matriz" e "Prontidão (PO)".
+- **Configurações**: as abas ficam em três grupos separados por divisor, e o contador só aparece quando há itens (antes mostrava 0). A barra virou o componente `SettingsTabsNav`.
+- **Contraste**: o texto do botão primário atinge 4,5:1 em todos os temas (texto escuro nos temas escuros; laranja e verde do tema claro levemente mais escuros). No tema claro, tons fixos como `text-emerald-500`/`-600` e o texto secundário em chips ficam mais escuros, preservando consoles e superfícies escuras.
+
+### Corrigido
+- **Acessibilidade**: os campos de Configurações agora têm rótulo associado (`label` ligado ao campo ou `aria-label`), incluindo busca, perfis de ambiente, launchers por extensão, portas monitoradas e o toggle do WinThor Start. Leitores de tela leem o nome do campo, e o rótulo não some mais ao digitar.
+- **Central de Ajuda**: os nomes das abas de Qualidade no Guia dos Módulos e nos atalhos acompanham a nova interface.
+
 ## [1.31.2] - 2026-10-05
 ### Alterado
 - **Qualidade — Painel de Prontidão (PO)**: os cartões por categoria (Rotinas Delphi, Serviço Karaf, API REST, Fluxo E2E) agora mostram números reais calculados da Matriz de Validação (aprovados/total, barra de progresso e contagem de pendentes, em teste, falhas e bloqueados). Antes eram textos fixos, que sugeriam ler a saúde do Karaf.

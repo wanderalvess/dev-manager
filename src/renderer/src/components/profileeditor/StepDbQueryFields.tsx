@@ -30,7 +30,7 @@ export const StepDbQueryFields: React.FC<StepDbQueryFieldsProps> = ({
         ))}
       </select>
       {dbConnections.length === 0 && (
-        <p className="text-[10px] text-amber-500 mt-1">
+        <p className="text-2xs text-amber-500 mt-1">
           Nenhuma conexão salva. Cadastre uma na página "Banco de Dados" primeiro.
         </p>
       )}
@@ -47,7 +47,7 @@ export const StepDbQueryFields: React.FC<StepDbQueryFieldsProps> = ({
         placeholder={`UPDATE tb_parametro SET valor = '{{localIp}}' WHERE parametro LIKE 'IP';`}
         className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
       />
-      <p className="text-[10px] text-muted-foreground mt-1">
+      <p className="text-2xs text-muted-foreground mt-1">
         Placeholders disponíveis: <code className="font-mono">{'{{localIp}}'}</code> (IP local da
         máquina) e <code className="font-mono">{'{{wslIp}}'}</code> (IP da distro WSL ativa).
       </p>

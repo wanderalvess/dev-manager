@@ -26,7 +26,7 @@ const CopyButton: React.FC<{
 }> = ({ copied, label, onClick }) => (
   <button
     onClick={onClick}
-    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+    className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground"
   >
     {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
     <span>{copied ? 'Copiado!' : label}</span>
@@ -71,7 +71,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
       <div>
         <div className="flex items-center gap-2 mb-1">
           <span
-            className={`inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono font-bold rounded border ${
+            className={`inline-flex items-center justify-center px-1.5 py-0.5 text-2xs font-mono font-bold rounded border ${
               feature.status === 'LIBERADO'
                 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/35'
                 : 'bg-amber-500/15 text-amber-400 border-amber-500/35'
@@ -79,7 +79,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
           >
             Canal: {feature.status === 'LIBERADO' ? 'Produção [P]' : 'Homologação [H]'}
           </span>
-          <span className="px-1.5 py-0.5 text-[10px] font-mono rounded bg-muted text-muted-foreground border border-border">
+          <span className="px-1.5 py-0.5 text-2xs font-mono rounded bg-muted text-muted-foreground border border-border">
             {feature.tipoProjeto || 'SERVIÇO'}
           </span>
         </div>
@@ -97,7 +97,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
 
       {/* Bloco de Versão */}
       <div className="p-2.5 rounded-md border border-border bg-muted/30 font-mono text-[11px] space-y-2">
-        <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+        <div className="text-muted-foreground text-2xs uppercase tracking-wider">
           Versão do Artefato
         </div>
         <div className="flex items-center justify-between">
@@ -114,14 +114,14 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
         {/* Input de Customização de Versão Alvo */}
         <div className="pt-2 border-t border-border/60">
           <div className="flex items-center justify-between mb-1">
-            <label htmlFor="inspected-version-input" className="text-[10px] text-muted-foreground">
+            <label htmlFor="inspected-version-input" className="text-2xs text-muted-foreground">
               Versão Alvo para Instalação / Registro:
             </label>
             {customVersion !== feature.versao && (
               <button
                 type="button"
                 onClick={() => onChangeCustomVersion(feature.versao)}
-                className="text-[10px] text-primary hover:underline"
+                className="text-2xs text-primary hover:underline"
               >
                 Restaurar ({feature.versao})
               </button>
@@ -152,7 +152,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
           )}
         </div>
 
-        <div className="p-2 rounded border border-border bg-background font-mono text-[10px] text-foreground leading-relaxed select-all">
+        <div className="p-2 rounded border border-border bg-background font-mono text-2xs text-foreground leading-relaxed select-all">
           {repo ? (
             <>
               <div><span className="text-muted-foreground">groupId:</span> {repo.groupId}</div>
@@ -177,7 +177,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
             />
           </div>
 
-          <div className="p-2 rounded border border-border bg-background font-mono text-[10px] text-foreground break-all select-all">
+          <div className="p-2 rounded border border-border bg-background font-mono text-2xs text-foreground break-all select-all">
             {repo.featureMavenUrl}
           </div>
         </div>
@@ -195,7 +195,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
             />
           </div>
 
-          <div className="p-2 rounded border border-border bg-background font-mono text-[10px] text-primary break-all select-all space-y-1">
+          <div className="p-2 rounded border border-border bg-background font-mono text-2xs text-primary break-all select-all space-y-1">
             {commands.repoCommand && <div>$ {commands.repoCommand}</div>}
             <div>$ {commands.installCommand}</div>
           </div>
@@ -219,7 +219,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
             {feature.dependencias.map((dep, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-1.5 rounded border border-border/80 bg-background font-mono text-[10px]"
+                className="flex items-center justify-between p-1.5 rounded border border-border/80 bg-background font-mono text-2xs"
               >
                 <span className="truncate mr-2 text-foreground">{dep.featureName}</span>
                 <span className="text-muted-foreground shrink-0">{dep.version || '*'}</span>

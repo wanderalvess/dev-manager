@@ -51,7 +51,7 @@ export const InfrScriptsTab: React.FC<InfrScriptsTabProps> = ({
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold font-mono text-foreground">{s.name}</span>
               <span
-                className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase border ${
+                className={`text-2xs font-bold px-1.5 py-0.2 rounded uppercase border ${
                   s.exists
                     ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                     : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30'
@@ -61,7 +61,7 @@ export const InfrScriptsTab: React.FC<InfrScriptsTabProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground">{s.description}</p>
-            <div className="text-[10px] font-mono text-muted-foreground/80 truncate">{s.path}</div>
+            <div className="text-2xs font-mono text-muted-foreground/80 truncate">{s.path}</div>
           </div>
         </div>
       ))}

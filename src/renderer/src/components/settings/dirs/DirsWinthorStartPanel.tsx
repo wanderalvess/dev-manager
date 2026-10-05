@@ -25,12 +25,13 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
         <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
           <Activity className="w-4 h-4 text-emerald-500" /> Integração WinThor Start (DataSnap) & WTA
         </span>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Abre rotinas desktop autenticadas via serviço local do WinThor Start sem necessitar do menu aberto.
         </p>
       </div>
       <label className="relative inline-flex items-center cursor-pointer">
         <input
+          aria-label="Integração WinThor Start"
           type="checkbox"
           checked={settings.winthorStartEnabled ?? true}
           onChange={(e) => setField('winthorStartEnabled', e.target.checked)}
@@ -42,10 +43,10 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
       <div>
-        <label className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-1" className="block text-[11px] font-semibold text-foreground mb-1">
           Porta do WinThor Start:
         </label>
-        <input
+        <input id="dirs-winthor-start-panel-1"
           type="number"
           value={settings.winthorStartPort ?? 9195}
           onChange={(e) => setField('winthorStartPort', parseWinthorStartPort(e.target.value))}
@@ -54,10 +55,10 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
         />
       </div>
       <div>
-        <label className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-2" className="block text-[11px] font-semibold text-foreground mb-1">
           URL do Portal WTA:
         </label>
-        <input
+        <input id="dirs-winthor-start-panel-2"
           type="text"
           value={settings.wtaUrl || 'http://localhost:8889'}
           onChange={(e) => setField('wtaUrl', e.target.value)}
@@ -69,10 +70,10 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
       <div id="field-wtaLogin">
-        <label className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-3" className="block text-[11px] font-semibold text-foreground mb-1">
           Usuário WTA (Login Automático):
         </label>
-        <input
+        <input id="dirs-winthor-start-panel-3"
           type="text"
           value={settings.wtaLogin || ''}
           onChange={(e) => setField('wtaLogin', e.target.value)}
@@ -81,18 +82,18 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
         />
       </div>
       <div id="field-wtaPassword">
-        <label className="block text-[11px] font-semibold text-foreground mb-1 flex items-center justify-between">
+        <label htmlFor="dirs-winthor-start-panel-4" className="block text-[11px] font-semibold text-foreground mb-1 flex items-center justify-between">
           <span>Senha / Hash WTA:</span>
           <button
             type="button"
             onClick={() => setShowWtaPassword(!showWtaPassword)}
-            className="text-[10px] text-muted-foreground hover:text-foreground font-normal flex items-center gap-1"
+            className="text-2xs text-muted-foreground hover:text-foreground font-normal flex items-center gap-1"
           >
             {showWtaPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
             <span>{showWtaPassword ? 'Ocultar' : 'Exibir'}</span>
           </button>
         </label>
-        <input
+        <input id="dirs-winthor-start-panel-4"
           type={showWtaPassword ? 'text' : 'password'}
           value={settings.wtaPassword || ''}
           onChange={(e) => setField('wtaPassword', e.target.value)}
@@ -104,17 +105,17 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
 
     <div className="space-y-2 pt-1 border-t border-border/40">
       <div id="field-wtaAuthToken">
-        <label className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-5" className="block text-[11px] font-semibold text-foreground mb-1">
           Cookie de Autenticação WTA (<code>suukie</code>):
         </label>
-        <input
+        <input id="dirs-winthor-start-panel-5"
           type="text"
           value={settings.wtaAuthToken || ''}
           onChange={(e) => setField('wtaAuthToken', e.target.value)}
           className={INPUT_CLASS}
           placeholder="Cole o valor do cookie 'suukie' do WTA (opcional)"
         />
-        <p className="text-[10px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Permite que o Dev Manager consulte os parâmetros atualizados direto da sua sessão web. Abra o
           DevTools do navegador (F12) na tela do WTA logado, aba Application/Cookies, e copie o valor
           de <code>suukie</code>.
@@ -122,17 +123,17 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
       </div>
 
       <div>
-        <label className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-6" className="block text-[11px] font-semibold text-foreground mb-1">
           Payload de Fallback (JSON com <code>m, u, p, t, s</code>):
         </label>
-        <textarea
+        <textarea id="dirs-winthor-start-panel-6"
           rows={2}
           value={settings.winthorStartDefaultPayload || ''}
           onChange={(e) => setField('winthorStartDefaultPayload', e.target.value)}
           className="w-full bg-muted/40 border border-border rounded-lg p-2 text-foreground font-mono text-[11px] focus:outline-none focus:border-primary resize-none"
           placeholder='{"m":"...","u":"...","p":"...","t":"...","s":"..."}'
         />
-        <p className="text-[10px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Usado como parâmetros fixos quando o WTA estiver fechado ou sem cookie ativo.
         </p>
       </div>

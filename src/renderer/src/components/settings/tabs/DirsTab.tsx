@@ -71,7 +71,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
             <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
               <Folder className="w-3.5 h-3.5 text-primary" /> Diretórios e Executáveis Locais
             </h3>
-            <span className="text-[10px] text-muted-foreground font-mono">Windows Explorer</span>
+            <span className="text-2xs text-muted-foreground font-mono">Windows Explorer</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs items-start">
@@ -118,7 +118,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               browseIcon={<FolderOpen className="w-3.5 h-3.5 text-orange-500" />}
               browseTitle="Selecionar pasta do JDK"
               hint={
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-2xs text-muted-foreground">
                   Utilizado pelo runtime, compilador Maven e scripts. Se vazio, detecta o JAVA_HOME padrão do sistema operacional.
                 </p>
               }
@@ -135,7 +135,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               browseIcon={<FileCode2 className="w-3.5 h-3.5 text-amber-500" />}
               browseTitle="Selecionar script .bat / .cmd"
               hint={
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-2xs text-muted-foreground">
                   Script usado para subir o servidor na automação. Se vazio, prioriza os scripts padrão detectados na raiz.
                 </p>
               }
@@ -205,20 +205,20 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               browseIcon={<FolderOpen className="w-3.5 h-3.5 text-emerald-400" />}
               browseTitle="Selecionar pasta do projeto de testes"
               hint={
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-2xs text-muted-foreground">
                   Utilizado pelo módulo <strong>Automação de Testes</strong> na Central de Qualidade e pelas ferramentas MCP da IA. Se não preenchido, o Dev Manager procura automaticamente uma pasta de testes (<code>taut*</code>, <code>cypress-tests</code>, <code>cypress</code> ou <code>e2e-tests</code>) no Diretório Base dos Repositórios Git ou pastas irmãs.
                 </p>
               }
             />
 
             <div id="field-tautKeyPrefix" className="md:col-span-2 space-y-1.5">
-              <label
+              <label htmlFor="dirs-tab-1"
                 className="text-xs font-semibold text-foreground"
                 title="Prefixo das chaves de cenário do Zephyr no seu projeto (ex.: PROJ-T para PROJ-T123). Vazio aceita qualquer chave no formato ABC-T123."
               >
                 Prefixo das chaves de cenário Zephyr (TAUT):
               </label>
-              <input
+              <input id="dirs-tab-1"
                 type="text"
                 value={settings.tautKeyPrefix || ''}
                 onChange={(e) => setField('tautKeyPrefix', e.target.value)}

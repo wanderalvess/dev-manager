@@ -69,9 +69,9 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
                 />
                 <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                 <span className="font-semibold text-foreground truncate">{source.name}</span>
-                <span className="font-mono text-[10px] text-muted-foreground truncate">{source.baseUrl}</span>
+                <span className="font-mono text-2xs text-muted-foreground truncate">{source.baseUrl}</span>
                 {source.projectKey && (
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0 font-bold">
+                  <span className="text-2xs font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground shrink-0 font-bold">
                     {source.projectKey}
                   </span>
                 )}
@@ -81,7 +81,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
                   type="button"
                   onClick={() => onTest(source)}
                   disabled={testingId === source.id}
-                  className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+                  className="px-2 py-1 bg-muted hover:bg-muted/80 text-foreground rounded-md text-2xs font-bold transition disabled:opacity-50 cursor-pointer"
                 >
                   {testingId === source.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Testar'}
                 </button>
@@ -103,7 +103,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
             </div>
             {testResults[source.id] && (
               <div
-                className={`text-[10px] px-2 py-1 rounded-md ${
+                className={`text-2xs px-2 py-1 rounded-md ${
                   testResults[source.id].success
                     ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                     : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
@@ -133,7 +133,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-foreground">Nome Identificador</label>
+            <label className="text-2xs font-bold text-foreground">Nome Identificador</label>
             <input
               type="text"
               required
@@ -144,7 +144,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-foreground">Project Key (opcional)</label>
+            <label className="text-2xs font-bold text-foreground">Project Key (opcional)</label>
             <input
               type="text"
               placeholder="Ex: WIN (opcional)"
@@ -155,7 +155,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
           </div>
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-foreground">URL Base do Jira</label>
+          <label className="text-2xs font-bold text-foreground">URL Base do Jira</label>
           <input
             type="url"
             required
@@ -166,7 +166,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-foreground">JQL Customizado (opcional)</label>
+          <label className="text-2xs font-bold text-foreground">JQL Customizado (opcional)</label>
           <input
             type="text"
             placeholder="Ex: project = WIN AND status != Done ORDER BY updated DESC"
@@ -176,7 +176,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-foreground">Token de API / PAT (Bearer)</label>
+          <label className="text-2xs font-bold text-foreground">Token de API / PAT (Bearer)</label>
           <input
             type="password"
             required

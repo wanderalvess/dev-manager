@@ -93,7 +93,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
                     title={`Clique para inspecionar o diff de ${file.path}`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className={`px-1 rounded text-[9px] font-bold border shrink-0 ${badge.className}`}>{badge.label}</span>
+                      <span className={`px-1 rounded text-2xs font-bold border shrink-0 ${badge.className}`}>{badge.label}</span>
                       <span className="truncate">{file.path}</span>
                     </div>
                     <Eye className="w-3.5 h-3.5 text-muted-foreground shrink-0 opacity-70" />

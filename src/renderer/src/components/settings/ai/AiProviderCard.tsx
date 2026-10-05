@@ -55,13 +55,13 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           </div>
           <div className="min-w-0">
             <span className="font-bold text-sm text-foreground truncate block">{provider.name}</span>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase">{provider.provider}</span>
+            <span className="text-2xs font-mono text-muted-foreground uppercase">{provider.provider}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
           {isActive ? (
-            <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 flex items-center gap-1">
+            <span className="px-2 py-0.5 text-2xs font-mono font-bold rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               ATIVO
             </span>
@@ -69,7 +69,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
             <button
               type="button"
               onClick={() => onSetActive(provider.id)}
-              className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-lg bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary border border-border transition-colors cursor-pointer"
+              className="px-2 py-0.5 text-2xs font-mono font-bold rounded-lg bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary border border-border transition-colors cursor-pointer"
               title="Definir como motor ativo"
             >
               Ativar
@@ -96,7 +96,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           <span className="text-muted-foreground">Credencial:</span>
           <span className="text-muted-foreground">{maskApiKey(provider)}</span>
         </div>
-        <div className="flex items-center justify-between text-[10px] pt-1 border-t border-border/40 text-muted-foreground">
+        <div className="flex items-center justify-between text-2xs pt-1 border-t border-border/40 text-muted-foreground">
           <span>Temp: {(provider.temperature ?? 0.7).toFixed(2)}</span>
           <span>Timeout: {formatTimeoutSeconds(provider.timeoutMs)}s</span>
         </div>
@@ -122,7 +122,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
             <span className="truncate">{testResult.message}</span>
           </div>
           {testResult.latencyMs !== undefined && (
-            <span className="px-1.5 py-0.5 rounded bg-background/80 border border-current text-[10px] font-bold shrink-0">
+            <span className="px-1.5 py-0.5 rounded bg-background/80 border border-current text-2xs font-bold shrink-0">
               ⚡ {testResult.latencyMs}ms
             </span>
           )}

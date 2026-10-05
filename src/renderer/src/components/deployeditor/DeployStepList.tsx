@@ -59,7 +59,7 @@ export const DeployStepList: React.FC<DeployStepListProps> = ({
                 </span>
                 <div className="truncate">
                   <p className="font-bold text-foreground truncate">{step.name || 'Sem nome'}</p>
-                  <span className="text-[10px] text-muted-foreground font-mono">{step.type}</span>
+                  <span className="text-2xs text-muted-foreground font-mono">{step.type}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>

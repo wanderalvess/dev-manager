@@ -65,12 +65,12 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-bold text-xs font-mono">{prereq.file}</span>
                 <span
-                  className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase border ${visual.badgeClass}`}
+                  className={`text-2xs font-bold px-1.5 py-0.2 rounded uppercase border ${visual.badgeClass}`}
                 >
                   {visual.label}
                 </span>
                 {prereq.size && (
-                  <span className="text-[10px] font-mono text-muted-foreground">
+                  <span className="text-2xs font-mono text-muted-foreground">
                     ({prereq.formattedSize})
                   </span>
                 )}

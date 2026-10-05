@@ -15,7 +15,7 @@ export const WshUtilsHeader: React.FC<WshUtilsHeaderProps> = ({ containerName, o
       <div>
         <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
           <span>Utilitários WSH — {containerName}</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-500 border border-violet-500/20">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded bg-violet-500/10 text-violet-500 border border-violet-500/20">
             Winthor Smart Hub
           </span>
         </h3>

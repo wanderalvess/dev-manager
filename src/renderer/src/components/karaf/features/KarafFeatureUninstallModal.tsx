@@ -59,7 +59,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
               </div>
             )}
             {feature.repository && (
-              <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center justify-between text-2xs">
                 <span className="text-muted-foreground">Repositório:</span>
                 <span className="text-muted-foreground truncate max-w-[200px]" title={feature.repository}>
                   {feature.repository}
@@ -69,7 +69,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
           </div>
 
           <div className="p-3 rounded-xl bg-rose-500/5 border border-rose-500/20 text-[11px] text-muted-foreground leading-relaxed">
-            <strong className="text-rose-600 dark:text-rose-400 block mb-0.5 font-mono text-[10px] uppercase">Impacto OSGi:</strong>
+            <strong className="text-rose-600 dark:text-rose-400 block mb-0.5 font-mono text-2xs uppercase">Impacto OSGi:</strong>
             A opção <code className="text-rose-700 dark:text-rose-300 font-bold bg-rose-500/10 px-1 py-0.2 rounded">-r</code> desinstala a feature e limpa as referências de todos os bundles que não sejam dependência de outros módulos ativos, impedindo que retornem após reiniciar o Karaf.
           </div>
         </div>

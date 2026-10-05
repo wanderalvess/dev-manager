@@ -13,7 +13,7 @@ export const DatabaseSidebarColumnList: React.FC<DatabaseSidebarColumnListProps>
   isLoadingCols,
   onInsertColumnName
 }) => (
-  <div className="bg-background/80 border-t border-border/40 p-1 pl-4 space-y-0.5 text-[10px]">
+  <div className="bg-background/80 border-t border-border/40 p-1 pl-4 space-y-0.5 text-2xs">
     {isLoadingCols ? (
       <div className="py-2 text-center text-muted-foreground flex items-center justify-center gap-1">
         <RotateCw className="w-3 h-3 animate-spin text-primary" /> Carregando colunas...
@@ -39,9 +39,9 @@ export const DatabaseSidebarColumnList: React.FC<DatabaseSidebarColumnListProps>
             </span>
           </div>
           <div className="flex items-center space-x-1 shrink-0">
-            <span className="text-[9px] text-muted-foreground font-mono">{col.type}</span>
+            <span className="text-2xs text-muted-foreground font-mono">{col.type}</span>
             {col.nullable === false && (
-              <span className="text-[8px] px-1 rounded bg-amber-500/10 text-amber-400 font-bold">
+              <span className="text-2xs px-1 rounded bg-amber-500/10 text-amber-400 font-bold">
                 NOT NULL
               </span>
             )}

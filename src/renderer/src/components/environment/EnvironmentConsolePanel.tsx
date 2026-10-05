@@ -27,7 +27,7 @@ export const EnvironmentConsolePanel: React.FC<EnvironmentConsolePanelProps> = (
     <button
       onClick={onOpenHistory}
       title="Ver histórico persistido do Karaf embedded (sobrevive a reinícios)"
-      className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 bg-card/90 hover:bg-muted border border-border rounded-lg text-[10px] font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
+      className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 bg-card/90 hover:bg-muted border border-border rounded-lg text-2xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
     >
       <History className="w-3 h-3" /> Histórico
     </button>

@@ -25,10 +25,10 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
 }) => (
   <div className="pt-2 border-t border-border/50" data-tour="profile-stepper">
     <div className="flex items-center justify-between mb-2">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+      <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
         <Clock className="w-3.5 h-3.5 text-primary" /> Esteira Sequencial de Inicialização ({profile.steps.filter((s) => s.enabled !== false).length} etapas)
       </span>
-      <span className="text-[10px] font-mono text-muted-foreground">
+      <span className="text-2xs font-mono text-muted-foreground">
         Ordem de subida: 1º ao último com intervalo e monitoramento de porta
       </span>
     </div>

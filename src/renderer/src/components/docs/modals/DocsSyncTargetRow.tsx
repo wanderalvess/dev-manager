@@ -33,11 +33,11 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
       <div className="min-w-0 flex-1 space-y-1">
         <div className="font-bold text-foreground flex items-center gap-2">
           <span className="truncate">{target.name}</span>
-          <span className="text-[10px] font-mono bg-muted/80 border border-border/60 px-1.5 py-0.5 rounded font-bold text-foreground">
+          <span className="text-2xs font-mono bg-muted/80 border border-border/60 px-1.5 py-0.5 rounded font-bold text-foreground">
             {target.method || 'POST'}
           </span>
           <span
-            className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${
+            className={`text-2xs font-semibold px-2 py-0.5 rounded-full border ${
               target.syncMode === 'articles'
                 ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-400'
                 : target.syncMode === 'chunks'
@@ -55,7 +55,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
         <div className="font-mono text-[11px] text-muted-foreground truncate" title={target.endpointUrl}>
           {target.endpointUrl}
         </div>
-        <div className="text-[10px] text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
+        <div className="text-2xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
           <span>Lote: <strong>{target.batchSize || 50}</strong></span>
           {target.authHeader && (
             <span>Auth: <strong>{target.authHeader}</strong> ({target.authValue ? 'definida' : 'sem chave'})</span>

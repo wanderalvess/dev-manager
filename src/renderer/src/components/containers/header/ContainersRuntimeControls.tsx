@@ -39,7 +39,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
   <div className="flex items-center bg-muted/50 border border-border/80 rounded-xl p-1 gap-1.5 shadow-2xs">
     {/* Seletor WSL */}
     <div className="flex items-center px-2 py-0.5 text-xs">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1.5">
+      <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground mr-1.5">
         Runtime
       </span>
       <select
@@ -89,7 +89,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
     {/* Seletor de Ambientes */}
     {environments.length > 0 && (
       <div className="flex items-center px-2 py-0.5 text-xs">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1.5">
+        <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground mr-1.5">
           Grupo
         </span>
         <select

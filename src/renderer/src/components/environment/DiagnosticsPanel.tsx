@@ -56,7 +56,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                 <button
                   onClick={onBatchStop}
                   disabled={actionLoading === 'batch-stop-srv'}
-                  className="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold"
+                  className="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-2xs font-bold"
                 >
                   Parar Serviços
                 </button>
@@ -65,7 +65,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                 <button
                   onClick={onBatchStart}
                   disabled={actionLoading === 'batch-start-srv'}
-                  className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold"
+                  className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-2xs font-bold"
                 >
                   Iniciar Serviços
                 </button>
@@ -93,7 +93,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     <button
                       onClick={() => onStopService(srv.name)}
                       disabled={actionLoading === `stop-${srv.name}`}
-                      className="px-2 py-0.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-[10px] font-bold"
+                      className="px-2 py-0.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-2xs font-bold"
                     >
                       Parar
                     </button>
@@ -101,7 +101,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     <button
                       onClick={() => onStartService(srv.name)}
                       disabled={actionLoading === `start-${srv.name}`}
-                      className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded text-[10px] font-bold"
+                      className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded text-2xs font-bold"
                     >
                       Iniciar
                     </button>
@@ -114,7 +114,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
           {/* Processos com travas */}
           {processes.length > 0 && (
             <div className="pt-2 border-t border-border/40">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+              <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
                 <RefreshCw className={`w-3 h-3 ${isCheckingProcesses ? 'animate-spin text-primary' : ''}`} />
                 Processos Conflitantes:
               </span>
@@ -128,12 +128,12 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     {p.isRunning ? (
                       <button
                         onClick={() => onKillProcess(p.name)}
-                        className="px-1.5 py-0.5 bg-rose-500 text-white rounded text-[9px] font-bold"
+                        className="px-1.5 py-0.5 bg-rose-500 text-white rounded text-2xs font-bold"
                       >
                         Matar
                       </button>
                     ) : (
-                      <span className="text-[9px] text-muted-foreground font-mono">Inativo</span>
+                      <span className="text-2xs text-muted-foreground font-mono">Inativo</span>
                     )}
                   </div>
                 ))}

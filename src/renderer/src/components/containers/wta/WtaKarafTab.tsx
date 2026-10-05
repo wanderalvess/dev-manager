@@ -45,39 +45,39 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">HTTP Web</span>
+          <span className="text-2xs uppercase font-bold text-muted-foreground">HTTP Web</span>
           <div className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">8080</div>
-          <p className="text-[10px] text-muted-foreground">Portal & APIs</p>
+          <p className="text-2xs text-muted-foreground">Portal & APIs</p>
         </div>
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">SSH Karaf</span>
+          <span className="text-2xs uppercase font-bold text-muted-foreground">SSH Karaf</span>
           <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">8101</div>
-          <p className="text-[10px] text-muted-foreground">user/pass: karaf</p>
+          <p className="text-2xs text-muted-foreground">user/pass: karaf</p>
         </div>
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">JMX RMI</span>
+          <span className="text-2xs uppercase font-bold text-muted-foreground">JMX RMI</span>
           <div className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">1099</div>
-          <p className="text-[10px] text-muted-foreground">Monitoramento</p>
+          <p className="text-2xs text-muted-foreground">Monitoramento</p>
         </div>
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">Artemis JMS</span>
+          <span className="text-2xs uppercase font-bold text-muted-foreground">Artemis JMS</span>
           <div className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">61616</div>
-          <p className="text-[10px] text-muted-foreground">Broker de Filas</p>
+          <p className="text-2xs text-muted-foreground">Broker de Filas</p>
         </div>
       </div>
     </div>
 
     {/* Comandos Úteis */}
     <div className="p-3.5 bg-[#090D14] rounded-xl border border-border/60 text-xs font-mono text-emerald-400 space-y-1">
-      <div className="text-muted-foreground text-[10px] font-sans font-semibold mb-1">
+      <div className="text-muted-foreground text-2xs font-sans font-semibold mb-1">
         Comandos frequentes no console Karaf:
       </div>
-      <div>bundle:list | grep -i winthor <span className="text-muted-foreground font-sans text-[10px]"># Lista bundles WinThor</span></div>
-      <div>bundle:diag &lt;id&gt; <span className="text-muted-foreground font-sans text-[10px]"># Diagnóstico de falha de resolução</span></div>
-      <div>log:tail <span className="text-muted-foreground font-sans text-[10px]"># Acompanha logs do Karaf em tempo real</span></div>
+      <div>bundle:list | grep -i winthor <span className="text-muted-foreground font-sans text-2xs"># Lista bundles WinThor</span></div>
+      <div>bundle:diag &lt;id&gt; <span className="text-muted-foreground font-sans text-2xs"># Diagnóstico de falha de resolução</span></div>
+      <div>log:tail <span className="text-muted-foreground font-sans text-2xs"># Acompanha logs do Karaf em tempo real</span></div>
     </div>
   </div>
 );

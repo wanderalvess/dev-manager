@@ -15,7 +15,7 @@ export const WtaUtilsHeader: React.FC<WtaUtilsHeaderProps> = ({ containerName, o
       <div>
         <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
           <span>Utilitários WTA — {containerName}</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
             Apache Karaf
           </span>
         </h3>

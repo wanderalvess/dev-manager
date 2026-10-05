@@ -54,16 +54,16 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
               <h2 className="text-sm font-bold text-foreground tracking-tight" data-tour="catalogo-rotinas">
                 Catálogo de Rotinas &amp; Atalhos
               </h2>
-              <span className="text-[9px] bg-primary/15 text-primary border border-primary/30 px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+              <span className="text-2xs bg-primary/15 text-primary border border-primary/30 px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
                 {routinesCount} {routinesCount === 1 ? 'Rotina' : 'Rotinas'}
               </span>
               {mappedProgramsCount > 0 && (
-                <span className="text-[9px] bg-muted/70 text-muted-foreground border border-border px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+                <span className="text-2xs bg-muted/70 text-muted-foreground border border-border px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
                   {mappedProgramsCount} {mappedProgramsCount === 1 ? 'Atalho' : 'Atalhos'}
                 </span>
               )}
               <span
-                className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-1 border uppercase tracking-wider ${
+                className={`text-2xs px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-1 border uppercase tracking-wider ${
                   winthorStartActive
                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                     : 'bg-muted/70 text-muted-foreground border-border'
@@ -78,14 +78,14 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
                 <span>WinThor Start: {winthorStartActive ? 'Ativo' : 'Desativado'}</span>
               </span>
               <span
-                className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-1 border uppercase tracking-wider ${badgeInfo.colorClass}`}
+                className={`text-2xs px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-1 border uppercase tracking-wider ${badgeInfo.colorClass}`}
                 title={badgeInfo.tooltip}
               >
                 <Server className="w-2.5 h-2.5" />
                 <span>{badgeInfo.label}</span>
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
+            <p className="text-2xs text-muted-foreground font-mono mt-0.5 truncate">
               Pasta configurada: <span className="text-foreground">{appPath || 'não configurada'}</span> | Busca instantânea, favoritos e rollback (.bak).
             </p>
           </div>

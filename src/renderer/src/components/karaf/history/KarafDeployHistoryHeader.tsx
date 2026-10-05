@@ -20,7 +20,7 @@ export const KarafDeployHistoryHeader: React.FC<KarafDeployHistoryHeaderProps> =
       <div>
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-slate-100 tracking-tight">Histórico & Telemetria de Deploys</h3>
-          <span className="text-[10px] uppercase font-mono tracking-wider px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 font-semibold">
+          <span className="text-2xs uppercase font-mono tracking-wider px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 font-semibold">
             OSGi Audit Rail
           </span>
         </div>

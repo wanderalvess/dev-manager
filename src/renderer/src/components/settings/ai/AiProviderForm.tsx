@@ -41,8 +41,8 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
       {/* Nome de Exibição */}
       <div className="space-y-1">
-        <label className="font-semibold text-foreground">Nome de Identificação</label>
-        <input
+        <label htmlFor="ai-provider-form-1" className="font-semibold text-foreground">Nome de Identificação</label>
+        <input id="ai-provider-form-1"
           type="text"
           value={provider.name || ''}
           onChange={(e) => onChange({ ...provider, name: e.target.value })}
@@ -53,8 +53,8 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
 
       {/* Família de Provedor */}
       <div className="space-y-1">
-        <label className="font-semibold text-foreground">Tipo de Provedor / Protocolo</label>
-        <select
+        <label htmlFor="ai-provider-form-2" className="font-semibold text-foreground">Tipo de Provedor / Protocolo</label>
+        <select id="ai-provider-form-2"
           value={provider.provider || 'openai'}
           onChange={(e) => onChange(switchProviderType(provider, e.target.value as LlmProviderType))}
           className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary shadow-2xs cursor-pointer"
@@ -70,8 +70,8 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
 
       {/* URL Base */}
       <div className="space-y-1">
-        <label className="font-semibold text-foreground">URL Base do Endpoint</label>
-        <input
+        <label htmlFor="ai-provider-form-3" className="font-semibold text-foreground">URL Base do Endpoint</label>
+        <input id="ai-provider-form-3"
           type="text"
           value={provider.baseUrl || ''}
           onChange={(e) => onChange({ ...provider, baseUrl: e.target.value })}
@@ -82,8 +82,8 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
 
       {/* Nome do Modelo */}
       <div className="space-y-1">
-        <label className="font-semibold text-foreground">Identificador do Modelo</label>
-        <input
+        <label htmlFor="ai-provider-form-4" className="font-semibold text-foreground">Identificador do Modelo</label>
+        <input id="ai-provider-form-4"
           type="text"
           value={provider.model || ''}
           onChange={(e) => onChange({ ...provider, model: e.target.value })}
@@ -95,15 +95,15 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
       {/* Chave de API */}
       <div className="space-y-1 md:col-span-2">
         <div className="flex items-center justify-between">
-          <label className="font-semibold text-foreground">Chave de API (API Key)</label>
-          <span className="text-[10px] text-muted-foreground">
+          <label htmlFor="ai-provider-form-5" className="font-semibold text-foreground">Chave de API (API Key)</label>
+          <span className="text-2xs text-muted-foreground">
             {provider.provider === 'ollama'
               ? 'Opcional para Ollama local'
               : 'Armazenada localmente e sanitizada em exportações'}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <input
+          <input id="ai-provider-form-5"
             type={showKey ? 'text' : 'password'}
             value={provider.apiKey || ''}
             onChange={(e) => onChange({ ...provider, apiKey: e.target.value })}
@@ -124,12 +124,12 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
       {/* Temperatura Slider */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="font-semibold text-foreground">Temperatura (Calibração)</label>
+          <label htmlFor="ai-provider-form-6" className="font-semibold text-foreground">Temperatura (Calibração)</label>
           <span className="font-mono text-muted-foreground">
             {(provider.temperature ?? 0.7).toFixed(2)} ({describeTemperature(provider.temperature)})
           </span>
         </div>
-        <input
+        <input id="ai-provider-form-6"
           type="range"
           min="0"
           max="1"
@@ -143,10 +143,10 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
       {/* Timeout em segundos */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="font-semibold text-foreground">Timeout da Requisição (segundos)</label>
+          <label htmlFor="ai-provider-form-7" className="font-semibold text-foreground">Timeout da Requisição (segundos)</label>
           <span className="font-mono text-muted-foreground">{formatTimeoutSeconds(provider.timeoutMs)}s</span>
         </div>
-        <input
+        <input id="ai-provider-form-7"
           type="number"
           min="5"
           max="180"

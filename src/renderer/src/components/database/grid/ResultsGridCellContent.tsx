@@ -13,7 +13,7 @@ export const ResultsGridCellContent: React.FC<ResultsGridCellContentProps> = ({ 
   switch (kind) {
     case 'null':
       return (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono select-none bg-slate-200/70 dark:bg-slate-800 text-slate-500 dark:text-slate-400 italic border border-slate-300/70 dark:border-slate-700/70">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-mono select-none bg-slate-200/70 dark:bg-slate-800 text-slate-500 dark:text-slate-400 italic border border-slate-300/70 dark:border-slate-700/70">
           [NULL]
         </span>
       );

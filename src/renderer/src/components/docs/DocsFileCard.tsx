@@ -22,14 +22,14 @@ export const DocsFileCard: React.FC<DocsFileCardProps> = ({
     <div className="cockpit-card rounded-xl p-3.5 border border-border shadow-2xs flex items-center justify-between gap-3 hover:border-primary/50 transition-all group">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+          <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
             {ext}
           </span>
           <span className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors" title={fileName}>
             {fileName}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground font-mono truncate">
+        <div className="flex items-center gap-1.5 mt-1 text-2xs text-muted-foreground font-mono truncate">
           {parentFolder && (
             <>
               <span className="truncate max-w-[140px] opacity-75">{parentFolder}</span>

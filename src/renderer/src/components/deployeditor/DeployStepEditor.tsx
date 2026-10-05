@@ -99,7 +99,7 @@ export const DeployStepEditor: React.FC<DeployStepEditorProps> = ({
                 <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${isChosen ? 'text-primary' : ''}`} />
                 <div>
                   <p className="text-xs font-semibold text-foreground">{opt.label}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</p>
+                  <p className="text-2xs text-muted-foreground leading-tight">{opt.desc}</p>
                 </div>
               </button>
             );

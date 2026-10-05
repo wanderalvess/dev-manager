@@ -43,7 +43,7 @@ export const QaTemplateStepList: React.FC<QaTemplateStepListProps> = ({
           }`}
         >
           <div className="truncate flex-1 pr-2">
-            <div className="text-[10px] text-muted-foreground font-mono">
+            <div className="text-2xs text-muted-foreground font-mono">
               #{String(idx + 1).padStart(2, '0')} {step.tableName ? `[${step.tableName}]` : ''}
             </div>
             <div className="truncate font-sans">{step.title}</div>

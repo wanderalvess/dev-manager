@@ -42,7 +42,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
 
         {isSelected && (
           <span
-            className="w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center shrink-0 text-white shadow-2xs"
+            className="w-5 h-5 rounded-full text-2xs font-mono font-bold flex items-center justify-center shrink-0 text-white shadow-2xs"
             style={{ backgroundColor: color }}
             title={`Ordem de inicialização: #${slotIndex + 1}`}
           >
@@ -57,7 +57,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
             </span>
 
             <span
-              className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
+              className={`text-2xs px-1.5 py-0.2 rounded font-semibold ${
                 container.state === 'running'
                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                   : 'bg-muted text-muted-foreground'
@@ -67,7 +67,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
             </span>
           </div>
 
-          <div className="text-[10px] text-muted-foreground truncate font-mono mt-0.5">
+          <div className="text-2xs text-muted-foreground truncate font-mono mt-0.5">
             {container.image}
             {container.ports ? ` • ${container.ports}` : ''}
           </div>
@@ -80,7 +80,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
           {/* Delay de inicialização em segundos */}
           <div className="flex items-center gap-1 text-[11px] px-1.5 py-0.5" title="Delay de warm-up antes de iniciar o próximo container">
             <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-muted-foreground text-[10px]">Delay:</span>
+            <span className="text-muted-foreground text-2xs">Delay:</span>
             <input
               type="number"
               min="0"
@@ -89,7 +89,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
               onChange={(e) => onUpdateDelay(container.cleanName, parseInt(e.target.value, 10))}
               className="w-12 bg-background border border-border rounded px-1 text-center text-xs font-mono font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <span className="text-muted-foreground text-[10px]">s</span>
+            <span className="text-muted-foreground text-2xs">s</span>
           </div>
 
           {/* Mover para Cima / Baixo na Ordem */}

@@ -36,7 +36,7 @@ export const HelpOverviewModules: React.FC<HelpOverviewModulesProps> = ({ onNavi
               </p>
             </div>
             {mod.shortcut && (
-              <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shrink-0">
+              <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shrink-0">
                 {mod.shortcut}
               </kbd>
             )}

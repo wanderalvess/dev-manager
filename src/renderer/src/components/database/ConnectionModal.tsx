@@ -215,7 +215,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                 <span>{testResult.message}</span>
               </div>
               {testResult.version && (
-                <p className="text-[10px] font-mono opacity-80 mt-1 truncate">
+                <p className="text-2xs font-mono opacity-80 mt-1 truncate">
                   {testResult.version}
                 </p>
               )}

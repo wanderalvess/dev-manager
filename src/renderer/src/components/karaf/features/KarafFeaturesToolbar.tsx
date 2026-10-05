@@ -74,7 +74,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
               <X className="w-3.5 h-3.5" />
             </button>
           ) : (
-            <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/80 pointer-events-none select-none">
+            <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-2xs font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/80 pointer-events-none select-none">
               /
             </kbd>
           )}
@@ -93,7 +93,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
           >
             <Layers className="w-3 h-3" />
             <span>Todas</span>
-            <span className="text-[10px] opacity-70 tabular-nums">({totalCount})</span>
+            <span className="text-2xs opacity-70 tabular-nums">({totalCount})</span>
           </button>
 
           <button
@@ -107,7 +107,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
           >
             <Shield className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
             <span>WinThor</span>
-            <span className="text-[10px] opacity-70 tabular-nums">({winthorCount})</span>
+            <span className="text-2xs opacity-70 tabular-nums">({winthorCount})</span>
           </button>
 
           <button
@@ -120,7 +120,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
             }`}
           >
             <span>Sistema</span>
-            <span className="text-[10px] opacity-70 tabular-nums">({systemCount})</span>
+            <span className="text-2xs opacity-70 tabular-nums">({systemCount})</span>
           </button>
         </div>
       </div>

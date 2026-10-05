@@ -45,14 +45,14 @@ export const QaRunnerStepCard: React.FC<QaRunnerStepCardProps> = ({
           )}
 
           {step.tableName && (
-            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-muted text-foreground border border-border shrink-0">
+            <span className="px-1.5 py-0.2 rounded text-2xs font-mono font-bold bg-muted text-foreground border border-border shrink-0">
               {step.tableName}
             </span>
           )}
 
           <span className="text-xs font-semibold text-foreground truncate">{step.stepTitle}</span>
 
-          <span className="text-[10px] text-muted-foreground ml-auto shrink-0 font-mono tabular-nums">
+          <span className="text-2xs text-muted-foreground ml-auto shrink-0 font-mono tabular-nums">
             {step.rowCount} reg • {step.executionTimeMs}ms
           </span>
         </div>
@@ -61,7 +61,7 @@ export const QaRunnerStepCard: React.FC<QaRunnerStepCardProps> = ({
           <button
             type="button"
             onClick={() => onShowSql(step.stepTitle, step.interpolatedQuery || step.query)}
-            className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 border border-border"
+            className="px-2 py-0.5 rounded text-2xs font-mono font-medium bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 border border-border"
             title="Visualizar query SQL executada com binds preenchidos"
           >
             <Code2 className="w-3 h-3" />
@@ -72,7 +72,7 @@ export const QaRunnerStepCard: React.FC<QaRunnerStepCardProps> = ({
             <button
               type="button"
               onClick={() => onShowRows(`${step.stepTitle} (Linhas Retornadas)`, step.rows || [])}
-              className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 border border-border"
+              className="px-2 py-0.5 rounded text-2xs font-mono font-medium bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 border border-border"
               title="Visualizar registros retornados pelo banco"
             >
               <Table className="w-3 h-3" />

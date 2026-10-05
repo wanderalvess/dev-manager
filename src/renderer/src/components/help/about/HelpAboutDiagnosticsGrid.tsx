@@ -35,7 +35,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
       {/* UAC / Permissão */}
       <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
-        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+        <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Elevação UAC (Windows):
         </span>
         <div className="flex items-center space-x-1.5 font-bold">
@@ -55,7 +55,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
 
       {/* Sistema Operacional */}
       <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
-        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+        <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Sistema Operacional:
         </span>
         <div className="flex items-center space-x-1.5 font-mono text-foreground font-semibold truncate">
@@ -69,10 +69,10 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       {/* Memória RAM */}
       <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+          <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
             Memória RAM do Sistema:
           </span>
-          <span className="text-[10px] font-mono text-primary font-bold">
+          <span className="text-2xs font-mono text-primary font-bold">
             {memoryUsagePercent}% em uso
           </span>
         </div>
@@ -95,7 +95,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
 
       {/* Versão Electron & Chromium */}
       <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
-        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+        <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Runtimes Desktop:
         </span>
         <div className="font-mono text-foreground text-[11px] truncate">
@@ -106,7 +106,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
 
       {/* Versão Node & V8 */}
       <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
-        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+        <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Motor JavaScript:
         </span>
         <div className="font-mono text-foreground text-[11px] truncate">
@@ -117,7 +117,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
 
       {/* Hostname */}
       <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
-        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+        <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Nome da Máquina (Host):
         </span>
         <div className="font-mono text-foreground text-[11px] truncate flex items-center gap-1.5">
@@ -138,14 +138,14 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       {/* Notas de Versão / Changelog */}
       <div className="p-3.5 rounded-xl bg-card/60 border border-border flex items-center justify-between gap-2 shadow-xs">
         <div className="min-w-0">
-          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+          <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
             Notas de Versão
           </span>
           <span className="text-[11px] text-foreground truncate block">Histórico de mudanças e melhorias</span>
         </div>
         <button
           onClick={handleOpenChangelog}
-          className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-[10px] font-bold transition cursor-pointer"
+          className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg text-2xs font-bold transition cursor-pointer"
         >
           <FileText className="w-3.5 h-3.5" /> Ver Changelog
         </button>

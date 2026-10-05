@@ -68,7 +68,7 @@ export const DocSettingsLlmProviderList: React.FC<DocSettingsLlmProviderListProp
                 <button
                   type="button"
                   onClick={() => onSetActive(p.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold border transition flex items-center gap-1 cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-2xs font-mono font-bold border transition flex items-center gap-1 cursor-pointer ${
                     isActive
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-xs'
                       : 'bg-muted text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted/80'
@@ -87,11 +87,11 @@ export const DocSettingsLlmProviderList: React.FC<DocSettingsLlmProviderListProp
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-foreground truncate">{p.name}</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground font-semibold">
+                    <span className="text-2xs font-mono px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground font-semibold">
                       {p.model}
                     </span>
                   </div>
-                  <div className="text-[10px] text-muted-foreground font-mono truncate">
+                  <div className="text-2xs text-muted-foreground font-mono truncate">
                     {p.baseUrl || (p.provider === 'gemini' ? 'Google API' : 'Padrão')}
                   </div>
                 </div>

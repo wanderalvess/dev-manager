@@ -52,7 +52,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
       >
         <RotateCw className="w-3.5 h-3.5 text-primary" />
         <span>Atualizações</span>
-        <span className="px-1.5 py-0.2 rounded font-mono text-[10px] tabular-nums bg-muted text-muted-foreground">
+        <span className="px-1.5 py-0.2 rounded font-mono text-2xs tabular-nums bg-muted text-muted-foreground">
           {updatesCount}
         </span>
       </button>
@@ -67,7 +67,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
       >
         <Download className="w-3.5 h-3.5 text-primary" />
         <span>Instalações</span>
-        <span className="px-1.5 py-0.2 rounded font-mono text-[10px] tabular-nums bg-muted text-muted-foreground">
+        <span className="px-1.5 py-0.2 rounded font-mono text-2xs tabular-nums bg-muted text-muted-foreground">
           {installsCount}
         </span>
       </button>
@@ -93,7 +93,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
             <X className="w-3 h-3" />
           </button>
         ) : (
-          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 px-1 py-0.2 text-[9px] font-mono text-muted-foreground bg-muted/60 border border-border rounded pointer-events-none">
+          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 px-1 py-0.2 text-2xs font-mono text-muted-foreground bg-muted/60 border border-border rounded pointer-events-none">
             /
           </kbd>
         )}

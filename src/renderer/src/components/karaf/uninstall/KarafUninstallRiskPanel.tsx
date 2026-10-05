@@ -42,11 +42,11 @@ export const KarafUninstallRiskPanel: React.FC<KarafUninstallRiskPanelProps> = (
           {/* Lista de dependentes */}
           <div className="mt-2 bg-card/80 border border-rose-500/30 rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
             {check.dependentBundles.map((dep) => (
-              <div key={dep.id} className="text-[10px] font-mono text-foreground flex items-center justify-between">
+              <div key={dep.id} className="text-2xs font-mono text-foreground flex items-center justify-between">
                 <span>
                   [{dep.id}] {dep.name} {dep.version ? `(${dep.version})` : ''}
                 </span>
-                <span className="text-rose-600 dark:text-rose-400 font-semibold text-[9px]">{dep.reason}</span>
+                <span className="text-rose-600 dark:text-rose-400 font-semibold text-2xs">{dep.reason}</span>
               </div>
             ))}
           </div>

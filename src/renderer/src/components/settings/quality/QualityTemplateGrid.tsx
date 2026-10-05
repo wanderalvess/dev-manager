@@ -25,7 +25,7 @@ export const QualityTemplateGrid: React.FC<QualityTemplateGridProps> = ({ onAppl
             </span>
             <Sparkles className="w-3.5 h-3.5 text-primary opacity-60 group-hover:opacity-100" />
           </div>
-          <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">{tmpl.description}</p>
+          <p className="text-2xs text-muted-foreground line-clamp-2 leading-relaxed">{tmpl.description}</p>
         </button>
       ))}
     </div>

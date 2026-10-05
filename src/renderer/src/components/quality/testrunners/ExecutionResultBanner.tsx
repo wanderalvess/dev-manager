@@ -25,7 +25,7 @@ export const ExecutionResultBanner: React.FC<ExecutionResultBannerProps> = ({ re
       <div>
         <div className="font-bold flex items-center gap-2">
           <span>{result.runnerName}</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded border border-current font-semibold">
+          <span className="text-2xs px-1.5 py-0.2 rounded border border-current font-semibold">
             {result.status.toUpperCase()}
           </span>
           <span className="text-[11px] opacity-75">({formatDurationSeconds(result.durationMs)})</span>

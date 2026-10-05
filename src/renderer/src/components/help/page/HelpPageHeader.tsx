@@ -23,7 +23,7 @@ export const HelpPageHeader: React.FC<HelpPageHeaderProps> = ({
           <h2 className="text-sm sm:text-base font-extrabold text-foreground tracking-tight truncate">
             Central de Ajuda &amp; Documentação
           </h2>
-          <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold tracking-wider uppercase">
+          <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold tracking-wider uppercase">
             PORTA DE ENTRADA
           </span>
         </div>

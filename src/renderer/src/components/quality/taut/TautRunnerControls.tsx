@@ -38,7 +38,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
     <div className="p-3.5 rounded-xl bg-card border border-border shadow-xs space-y-2.5">
       <label className="text-xs font-bold text-foreground flex items-center justify-between">
         <span>Filtro de Meta-Tags (@cypress/grep)</span>
-        <span className="text-[10px] text-muted-foreground font-normal">Clique para alternar</span>
+        <span className="text-2xs text-muted-foreground font-normal">Clique para alternar</span>
       </label>
 
       <div className="flex flex-wrap gap-1.5">
@@ -66,7 +66,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
     <div className="p-3.5 rounded-xl bg-card border border-border shadow-xs space-y-2.5">
       <label className="text-xs font-bold text-foreground flex items-center justify-between">
         <span>Módulos de Negócio (Serviços WTA)</span>
-        <span className="text-[10px] text-muted-foreground font-normal">Selecione para focar</span>
+        <span className="text-2xs text-muted-foreground font-normal">Selecione para focar</span>
       </label>
 
       <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">

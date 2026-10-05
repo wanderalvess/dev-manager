@@ -32,7 +32,7 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
         <Terminal className="w-3.5 h-3.5 text-primary" />
         <span className="font-semibold text-[11px]">Console Karaf — Execução da Rotina 801</span>
         {isExecuting && (
-          <span className="flex items-center gap-1.5 text-primary font-mono text-[10px] ml-2">
+          <span className="flex items-center gap-1.5 text-primary font-mono text-2xs ml-2">
             <RotateCw className="w-3 h-3 animate-spin" />
             <span>Processando {executingTargetName}...</span>
           </span>
@@ -40,7 +40,7 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="inline-flex rounded border border-border p-0.5 text-[10px] font-mono">
+        <div className="inline-flex rounded border border-border p-0.5 text-2xs font-mono">
           <button
             onClick={() => onChangeFilter('ALL')}
             className={`px-1.5 py-0.2 rounded ${logFilter === 'ALL' ? 'bg-primary/20 text-primary font-medium' : 'text-muted-foreground'}`}
@@ -58,7 +58,7 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
         {consoleLogs.length > 0 && (
           <button
             onClick={onClear}
-            className="text-muted-foreground hover:text-foreground text-[10px]"
+            className="text-muted-foreground hover:text-foreground text-2xs"
           >
             Limpar
           </button>

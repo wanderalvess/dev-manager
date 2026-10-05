@@ -33,12 +33,12 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
       <div className="flex items-center gap-1.5 shrink-0">
         {webHealth && (
           (webHealth.reachable ?? webHealth.isHealthy) ? (
-            <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">
+            <span className="flex items-center gap-1 text-2xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {webHealth.status ?? webHealth.statusCode ?? 200} ({webHealth.timeMs ?? webHealth.responseTimeMs ?? 0}ms)
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-[10px] font-mono text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">
+            <span className="flex items-center gap-1 text-2xs font-mono text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
               Off
             </span>

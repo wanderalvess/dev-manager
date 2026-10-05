@@ -13,7 +13,7 @@ interface DocSettingsTabsProps {
 }
 
 const BASE_TAB = 'px-3.5 py-2 text-xs font-bold rounded-t-xl transition-all flex items-center gap-2 border-b-2 cursor-pointer';
-const COUNT_BADGE = 'text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground font-semibold';
+const COUNT_BADGE = 'text-2xs font-mono px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground font-semibold';
 
 const tabClass = (active: boolean, activeBorder: string) =>
   `${BASE_TAB} ${
@@ -46,7 +46,7 @@ export const DocSettingsTabs: React.FC<DocSettingsTabsProps> = ({
       <Sparkles className={`w-3.5 h-3.5 ${activeTab === 'llm' ? 'text-primary' : 'text-muted-foreground'}`} />
       <span>Assistente IA / LLM</span>
       {activeProvider && activeProvider.enabled && (
-        <span className="flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/25">
+        <span className="flex items-center gap-1 text-2xs font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/25">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>{activeProvider.model}</span>
         </span>

@@ -50,7 +50,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
+                      className={`text-2xs font-mono px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
                         severity === 'critical'
                           ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
                           : severity === 'slow'
@@ -75,7 +75,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                           else if (onFilterByEndpoint) onFilterByEndpoint(sq.statement);
                         }}
                         title="Filtrar traces com esta query lenta no Traces Explorer"
-                        className="px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground border border-border text-[10px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                        className="px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground border border-border text-2xs font-medium flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <Search className="w-3 h-3 text-muted-foreground" />
                         Filtrar
@@ -85,7 +85,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                       type="button"
                       onClick={() => onOpenInDbStudio(sq.statement)}
                       title="Abrir query no DB Studio para executar ou Explain Plan"
-                      className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 text-[10px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                      className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 text-2xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       <Database className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                       DB Studio

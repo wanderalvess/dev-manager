@@ -33,7 +33,7 @@ export const JvmMemoryAlerts: React.FC<JvmMemoryAlertsProps> = ({
           </div>
           <p className="text-[11px] text-rose-300/90 mt-1 leading-relaxed">
             O consumo de Heap ultrapassou o limiar de segurança. Dispare a coleta de lixo (GC) ou eleve o parâmetro{' '}
-            <code className="bg-rose-950/60 px-1 py-0.5 rounded font-mono text-[10px] text-rose-200 border border-rose-500/40">
+            <code className="bg-rose-950/60 px-1 py-0.5 rounded font-mono text-2xs text-rose-200 border border-rose-500/40">
               -Xmx
             </code>{' '}
             nos argumentos de inicialização do Karaf.

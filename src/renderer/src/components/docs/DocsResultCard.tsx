@@ -18,7 +18,7 @@ export const DocsResultCard: React.FC<DocsResultCardProps> = ({
   <div className="cockpit-card rounded-2xl p-4 border border-border shadow-sm space-y-2">
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/80 shrink-0">
+        <span className="text-2xs font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/80 shrink-0">
           {result.chunk.sourceLabel}
         </span>
         <span className="text-xs font-semibold text-foreground truncate flex items-center gap-1" title={result.chunk.entryTitle}>
@@ -27,7 +27,7 @@ export const DocsResultCard: React.FC<DocsResultCardProps> = ({
         </span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
-        <span className="text-[10px] font-mono text-muted-foreground mr-1">
+        <span className="text-2xs font-mono text-muted-foreground mr-1">
           {(result.score * 100).toFixed(0)}% relevante
         </span>
         <button

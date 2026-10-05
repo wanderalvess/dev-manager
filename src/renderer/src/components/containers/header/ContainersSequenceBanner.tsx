@@ -23,7 +23,7 @@ export const ContainersSequenceBanner: React.FC<ContainersSequenceBannerProps> =
       <div>
         <div className="font-bold flex items-center gap-2">
           <span>Orquestrando Ambiente WinThor</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 font-mono">
+          <span className="text-2xs px-1.5 py-0.2 rounded bg-emerald-500/20 font-mono">
             Etapa {index} de {total}
           </span>
         </div>

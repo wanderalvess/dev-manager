@@ -27,7 +27,7 @@ export const HelpOverviewWorkflow: React.FC<HelpOverviewWorkflowProps> = ({ debu
               <span className={`w-7 h-7 rounded-lg ${step.numberClass} flex items-center justify-center font-bold text-xs`}>
                 {step.number}
               </span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${step.badgeClass} font-semibold`}>
+              <span className={`text-2xs font-mono px-1.5 py-0.5 rounded ${step.badgeClass} font-semibold`}>
                 {step.badge}
               </span>
             </div>
@@ -39,7 +39,7 @@ export const HelpOverviewWorkflow: React.FC<HelpOverviewWorkflowProps> = ({ debu
               {step.inlineCode && <code className="font-mono text-primary">{step.inlineCode}</code>}
               {step.descriptionSuffix}
             </p>
-            <div className="flex flex-wrap gap-1 pt-1 font-mono text-[9px] text-muted-foreground">
+            <div className="flex flex-wrap gap-1 pt-1 font-mono text-2xs text-muted-foreground">
               {step.chips(debugPort).map((chip) => (
                 <span key={chip} className="px-1.5 py-0.5 rounded bg-muted/70">{chip}</span>
               ))}

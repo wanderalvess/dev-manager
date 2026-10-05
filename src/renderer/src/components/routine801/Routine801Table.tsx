@@ -58,7 +58,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
 
   return (
     <table className="w-full text-left text-xs border-collapse">
-      <thead className="sticky top-0 bg-card border-b border-border text-muted-foreground uppercase tracking-wider text-[10px] font-mono select-none z-10">
+      <thead className="sticky top-0 bg-card border-b border-border text-muted-foreground uppercase tracking-wider text-2xs font-mono select-none z-10">
         <tr>
           <th className="py-2 pl-4 pr-2 w-10">
             <input
@@ -123,7 +123,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
               {/* Tipo de Projeto */}
               <td className="py-2 px-3 whitespace-nowrap">
                 <span
-                  className={`inline-block px-1.5 py-0.5 text-[9px] font-mono font-medium rounded border ${
+                  className={`inline-block px-1.5 py-0.5 text-2xs font-mono font-medium rounded border ${
                     item.tipoProjeto === 'ROTINA'
                       ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                       : 'bg-muted text-muted-foreground border-border'
@@ -144,7 +144,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
                   <span className="truncate max-w-md">{item.descricao}</span>
                 </div>
                 {item.codigoModulo > 0 && (
-                  <span className="text-[10px] text-muted-foreground font-mono">
+                  <span className="text-2xs text-muted-foreground font-mono">
                     Módulo {item.codigoModulo}
                   </span>
                 )}

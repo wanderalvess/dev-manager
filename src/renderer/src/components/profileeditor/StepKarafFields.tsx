@@ -35,7 +35,7 @@ export const StepKarafFields: React.FC<StepKarafFieldsProps> = ({
       <div>
         <label className="block text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-between">
           <span>Porta de Debug (JDWP)</span>
-          <span className="text-[10px] text-muted-foreground font-normal">
+          <span className="text-2xs text-muted-foreground font-normal">
             Padrão global: {globalDebugPort}
           </span>
         </label>

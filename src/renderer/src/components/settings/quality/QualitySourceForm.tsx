@@ -39,8 +39,8 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
       <div>
-        <label className="font-bold text-foreground block mb-1">Nome da Conexão / Rótulo</label>
-        <input
+        <label htmlFor="quality-source-form-1" className="font-bold text-foreground block mb-1">Nome da Conexão / Rótulo</label>
+        <input id="quality-source-form-1"
           type="text"
           value={source.name || ''}
           onChange={(e) => onChange({ ...source, name: e.target.value })}
@@ -50,8 +50,8 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
       </div>
 
       <div>
-        <label className="font-bold text-foreground block mb-1">Provedor / Tipo</label>
-        <select
+        <label htmlFor="quality-source-form-2" className="font-bold text-foreground block mb-1">Provedor / Tipo</label>
+        <select id="quality-source-form-2"
           value={source.type || 'zephyr-scale'}
           onChange={(e) => onChange({ ...source, type: e.target.value as QualitySourceType })}
           className={`${TEXT_INPUT} cursor-pointer`}
@@ -65,8 +65,8 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
       </div>
 
       <div className="md:col-span-2">
-        <label className="font-bold text-foreground block mb-1">URL Base da API / Instância</label>
-        <input
+        <label htmlFor="quality-source-form-3" className="font-bold text-foreground block mb-1">URL Base da API / Instância</label>
+        <input id="quality-source-form-3"
           type="text"
           value={source.baseUrl || ''}
           onChange={(e) => onChange({ ...source, baseUrl: e.target.value })}
@@ -76,8 +76,8 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
       </div>
 
       <div>
-        <label className="font-bold text-foreground block mb-1">Chave do Projeto (Project Key)</label>
-        <input
+        <label htmlFor="quality-source-form-4" className="font-bold text-foreground block mb-1">Chave do Projeto (Project Key)</label>
+        <input id="quality-source-form-4"
           type="text"
           value={source.projectKey || ''}
           onChange={(e) => onChange({ ...source, projectKey: e.target.value })}
@@ -87,8 +87,8 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
       </div>
 
       <div>
-        <label className="font-bold text-foreground block mb-1">Plano ou Ciclo de Teste (Opcional)</label>
-        <input
+        <label htmlFor="quality-source-form-5" className="font-bold text-foreground block mb-1">Plano ou Ciclo de Teste (Opcional)</label>
+        <input id="quality-source-form-5"
           type="text"
           value={source.testPlanKey || ''}
           onChange={(e) => onChange({ ...source, testPlanKey: e.target.value })}
@@ -98,8 +98,8 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
       </div>
 
       <div>
-        <label className="font-bold text-foreground block mb-1">E-mail / Usuário de Autenticação</label>
-        <input
+        <label htmlFor="quality-source-form-6" className="font-bold text-foreground block mb-1">E-mail / Usuário de Autenticação</label>
+        <input id="quality-source-form-6"
           type="text"
           value={source.userEmail || ''}
           onChange={(e) => onChange({ ...source, userEmail: e.target.value })}
@@ -110,15 +110,15 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
 
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="font-bold text-foreground">API Token / Zephyr Token / PAT</label>
+          <label htmlFor="quality-source-form-7" className="font-bold text-foreground">API Token / Zephyr Token / PAT</label>
           {source.hasApiToken && !source.apiToken && (
-            <span className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
+            <span className="text-2xs text-emerald-500 font-semibold flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> Token salvo e protegido
             </span>
           )}
         </div>
         <div className="relative">
-          <input
+          <input id="quality-source-form-7"
             type={showToken ? 'text' : 'password'}
             value={source.apiToken || ''}
             onChange={(e) => onChange({ ...source, apiToken: e.target.value })}
@@ -137,8 +137,8 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
       </div>
 
       <div className="md:col-span-2">
-        <label className="font-bold text-foreground block mb-1">Filtro JQL / Query de Testes &amp; Bugs (Opcional)</label>
-        <input
+        <label htmlFor="quality-source-form-8" className="font-bold text-foreground block mb-1">Filtro JQL / Query de Testes &amp; Bugs (Opcional)</label>
+        <input id="quality-source-form-8"
           type="text"
           value={source.jqlFilter || ''}
           onChange={(e) => onChange({ ...source, jqlFilter: e.target.value })}

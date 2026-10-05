@@ -55,7 +55,7 @@ export const BackupTabNav: React.FC<BackupTabNavProps> = ({
             )}
             {tab.count !== undefined && tab.count > 0 && (
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono leading-none ${
+                className={`px-1.5 py-0.2 rounded-full text-2xs font-mono leading-none ${
                   isActive
                     ? 'bg-primary/15 text-primary font-bold'
                     : 'bg-muted text-muted-foreground'

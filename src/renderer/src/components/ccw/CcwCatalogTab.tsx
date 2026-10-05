@@ -99,11 +99,11 @@ export const CcwCatalogTab: React.FC<CcwCatalogTabProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold font-mono text-foreground">{item.rotina}</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground border border-border">
+                  <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground border border-border">
                     {item.moduloDesc}
                   </span>
                 </div>
-                <div className="text-[10px] text-muted-foreground font-mono mt-0.5 flex gap-2">
+                <div className="text-2xs text-muted-foreground font-mono mt-0.5 flex gap-2">
                   <span>Corrente: <b>{item.versaoCorrente || 'N/A'}</b></span>
                   {item.versaoNova && <span>Nova: <b>{item.versaoNova}</b></span>}
                 </div>

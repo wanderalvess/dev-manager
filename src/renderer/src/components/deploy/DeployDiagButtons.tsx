@@ -30,7 +30,7 @@ export const DeployDiagCommandButton: React.FC<DeployDiagCommandButtonProps> = (
     {icon}
     <div className="truncate">
       <span className="font-semibold block truncate">{label}</span>
-      <span className="text-[10px] text-muted-foreground font-mono">{command}</span>
+      <span className="text-2xs text-muted-foreground font-mono">{command}</span>
     </div>
   </button>
 );

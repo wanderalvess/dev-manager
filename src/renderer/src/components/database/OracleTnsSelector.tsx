@@ -114,7 +114,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
             })}
           </select>
           {filePath && (
-            <p className="text-[10px] text-muted-foreground font-mono truncate" title={filePath}>
+            <p className="text-2xs text-muted-foreground font-mono truncate" title={filePath}>
               Origem: {filePath.split(/[\\/]/).pop()}
             </p>
           )}
@@ -134,7 +134,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
           <button
             type="button"
             onClick={handleBrowseFile}
-            className="text-[10px] text-primary hover:underline font-bold shrink-0 ml-2 cursor-pointer"
+            className="text-2xs text-primary hover:underline font-bold shrink-0 ml-2 cursor-pointer"
           >
             Localizar arquivo
           </button>

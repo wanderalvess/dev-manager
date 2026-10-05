@@ -101,13 +101,13 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
 
       {matchedPreset && matchedPreset.models.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] text-muted-foreground font-semibold">Modelos sugeridos:</span>
+          <span className="text-2xs text-muted-foreground font-semibold">Modelos sugeridos:</span>
           {matchedPreset.models.map((mod) => (
             <button
               key={mod}
               type="button"
               onClick={() => setEditing({ ...editing, model: mod })}
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-lg border cursor-pointer transition ${
+              className={`text-2xs font-mono px-2 py-0.5 rounded-lg border cursor-pointer transition ${
                 editing.model === mod
                   ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
                   : 'bg-background hover:bg-muted text-foreground border-border'
@@ -123,7 +123,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
         <div className="space-y-1">
           <label className="text-[11px] font-bold text-foreground flex items-center justify-between">
             <span>URL Base da API (Endpoint)</span>
-            <span className="text-[10px] text-muted-foreground font-normal">
+            <span className="text-2xs text-muted-foreground font-normal">
               {editing.provider === 'ollama' ? 'Padrão local Ollama' : 'Compatível com OpenAI'}
             </span>
           </label>
@@ -139,7 +139,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-bold text-foreground">Chave de API / Token</label>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-2xs text-muted-foreground">
               {editing.provider === 'ollama' ? 'Opcional para Ollama local' : 'Fica salva localmente nas configurações'}
             </span>
           </div>
@@ -169,7 +169,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-bold text-foreground">Temperatura</label>
-            <span className="text-[10px] font-mono text-primary font-bold">{editing.temperature ?? 0.3}</span>
+            <span className="text-2xs font-mono text-primary font-bold">{editing.temperature ?? 0.3}</span>
           </div>
           <input
             type="range"
@@ -180,7 +180,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
             onChange={(e) => setEditing({ ...editing, temperature: parseFloat(e.target.value) })}
             className="w-full accent-primary cursor-pointer"
           />
-          <div className="flex justify-between text-[9px] text-muted-foreground">
+          <div className="flex justify-between text-2xs text-muted-foreground">
             <span>Preciso (0.0)</span>
             <span>Equilibrado (0.3)</span>
             <span>Criativo (1.0)</span>
@@ -207,7 +207,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
           <button
             type="button"
             onClick={() => setEditing({ ...editing, systemPrompt: DEFAULT_SYSTEM_PROMPT })}
-            className="text-[10px] text-primary hover:underline font-semibold cursor-pointer flex items-center gap-1"
+            className="text-2xs text-primary hover:underline font-semibold cursor-pointer flex items-center gap-1"
           >
             <RotateCcw className="w-3 h-3" /> Restaurar padrão WinThor
           </button>

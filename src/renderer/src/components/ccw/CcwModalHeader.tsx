@@ -16,11 +16,11 @@ export const CcwModalHeader: React.FC<CcwModalHeaderProps> = ({ appPath, onClose
           <h3 className="text-xs font-bold text-foreground tracking-tight">
             Central de Controle WinThor
           </h3>
-          <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30 uppercase tracking-wider">
+          <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30 uppercase tracking-wider">
             CCW
           </span>
         </div>
-        <p className="text-[10px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
+        <p className="text-2xs text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>Destino:</span>
           <span className="text-foreground font-semibold font-mono">{appPath || DEFAULT_CCW_APP_PATH}</span>

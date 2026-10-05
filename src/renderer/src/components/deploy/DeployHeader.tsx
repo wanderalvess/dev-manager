@@ -67,7 +67,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
         <div>
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
             Perfis de Deploy
-            <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
+            <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
               Karaf · Docker · Genérico
             </span>
             <button

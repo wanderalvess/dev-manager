@@ -87,7 +87,7 @@ export const WhatsNewVersionDropdown: React.FC<WhatsNewVersionDropdownProps> = (
                 <span className="font-mono font-bold truncate">v{v.version}</span>
                 {v.date && (
                   <span
-                    className={`text-[10px] font-mono truncate ${
+                    className={`text-2xs font-mono truncate ${
                       isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
                     }`}
                   >
@@ -99,7 +99,7 @@ export const WhatsNewVersionDropdown: React.FC<WhatsNewVersionDropdownProps> = (
               <div className="flex items-center gap-1.5 shrink-0">
                 {isLatest && (
                   <span
-                    className={`px-1.5 py-0.2 rounded-md text-[9px] font-bold ${
+                    className={`px-1.5 py-0.2 rounded-md text-2xs font-bold ${
                       isSelected
                         ? 'bg-white/20 text-white'
                         : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400'

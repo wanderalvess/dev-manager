@@ -15,7 +15,7 @@ export const GitOutputConsole: React.FC<GitOutputConsoleProps> = ({ output, isEr
     }`}
   >
     <div
-      className={`flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider mb-1 ${
+      className={`flex items-center space-x-1.5 text-2xs font-bold uppercase tracking-wider mb-1 ${
         isError ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'
       }`}
     >

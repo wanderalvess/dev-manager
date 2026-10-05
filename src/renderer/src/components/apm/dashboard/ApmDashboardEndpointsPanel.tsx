@@ -29,7 +29,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
         </div>
 
         {/* Alternador de Ordenação: Volume vs Lentidão */}
-        <div className="flex items-center p-0.5 rounded bg-muted/60 border border-border text-[10px] font-medium">
+        <div className="flex items-center p-0.5 rounded bg-muted/60 border border-border text-2xs font-medium">
           <button
             type="button"
             onClick={() => onSortModeChange('volume')}
@@ -67,7 +67,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span
-                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold shrink-0 ${getMethodBadgeClass(
+                  className={`text-2xs font-mono px-1.5 py-0.5 rounded font-bold shrink-0 ${getMethodBadgeClass(
                     ep.method
                   )}`}
                 >
@@ -81,7 +81,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
               <div className="flex items-center gap-3 shrink-0">
                 <div className="text-right font-mono text-xs">
                   <div className="font-semibold text-foreground">{ep.requestCount} reqs</div>
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-2xs text-muted-foreground">
                     p95:{' '}
                     <span
                       className={`font-bold ${

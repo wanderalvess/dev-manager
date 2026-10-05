@@ -55,10 +55,10 @@ export const StatementsTable: React.FC<{
                 <td className="px-2.5 py-2 whitespace-nowrap font-medium text-foreground">{st.parsingSchemaName || '-'}</td>
                 <td className="px-2.5 py-2">
                   <div className="truncate max-w-[140px]">{st.module || '-'}</div>
-                  <div className="text-muted-foreground text-[10px] truncate max-w-[140px]">{st.action || '-'}</div>
+                  <div className="text-muted-foreground text-2xs truncate max-w-[140px]">{st.action || '-'}</div>
                 </td>
                 <td className="px-2.5 py-2 whitespace-nowrap">{st.executions ?? '-'}</td>
-                <td className="px-2.5 py-2 whitespace-nowrap text-muted-foreground text-[10px]">
+                <td className="px-2.5 py-2 whitespace-nowrap text-muted-foreground text-2xs">
                   {st.lastActiveTime || '-'}
                 </td>
                 <td className="px-2.5 py-2 whitespace-nowrap">

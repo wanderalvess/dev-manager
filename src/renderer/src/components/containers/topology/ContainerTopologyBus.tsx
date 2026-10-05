@@ -50,7 +50,7 @@ export const ContainerTopologyBus: React.FC<ContainerTopologyBusProps> = ({
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
             <span>Topologia do Ambiente WinThor</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/60 font-normal">
+            <span className="text-2xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/60 font-normal">
               WSL2 &amp; Containers
             </span>
           </h3>

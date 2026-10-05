@@ -44,12 +44,12 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
 
           <div className="flex items-center gap-2">
             {hasBackupFileTag(customBackupCommand) ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <Check className="w-3 h-3" />
                 <span>Sintaxe Válida</span>
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 <span>Requer {'{filePath}'}</span>
               </span>
@@ -58,7 +58,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
             <button
               type="button"
               onClick={() => setShowPasswordInCommandPreview((prev) => !prev)}
-              className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 text-2xs font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition cursor-pointer"
               title={showPasswordInCommandPreview ? 'Ocultar senha' : 'Exibir senha real'}
             >
               {showPasswordInCommandPreview ? (
@@ -77,7 +77,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
             <button
               type="button"
               onClick={copyCommandPreview}
-              className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition cursor-pointer"
+              className="flex items-center gap-1 px-2 py-0.5 text-2xs font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition cursor-pointer"
               title="Copiar comando resolvido"
             >
               {commandCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -99,9 +99,9 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
 
         {/* Live Preview Console Output */}
         <div className="p-3 bg-slate-900/60 font-mono text-[11px] leading-relaxed">
-          <div className="flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-wider mb-1 select-none">
+          <div className="flex items-center justify-between text-2xs text-slate-500 uppercase tracking-wider mb-1 select-none">
             <span>Visualização com Parâmetros Reais (Passados Diretamente ao Executável)</span>
-            <span className="text-[9px] text-slate-500 font-mono">execFile sem shell</span>
+            <span className="text-2xs text-slate-500 font-mono">execFile sem shell</span>
           </div>
           <div className="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800 text-slate-200 overflow-x-auto whitespace-pre-wrap break-all select-all flex items-start gap-2">
             <span className="text-sky-400 select-none font-bold shrink-0">&gt;_</span>

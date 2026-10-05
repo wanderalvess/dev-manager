@@ -23,14 +23,14 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
           <Globe className="w-3.5 h-3.5" />
         </div>
         <div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
+          <div className="text-2xs font-mono uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-bold">
             WTA (Karaf)
           </div>
           <div className="text-xs font-bold text-foreground font-mono truncate max-w-[120px]">{node.name}</div>
         </div>
       </div>
       <span
-        className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+        className={`text-2xs font-mono font-bold px-1.5 py-0.2 rounded border ${
           node.running
             ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
             : 'bg-muted text-muted-foreground border-border/70'
@@ -40,7 +40,7 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
       </span>
     </div>
 
-    <div className="pt-1 flex items-center justify-between gap-1 text-[10px]">
+    <div className="pt-1 flex items-center justify-between gap-1 text-2xs">
       {node.running ? (
         <button
           type="button"
@@ -51,7 +51,7 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
           <ExternalLink className="w-2.5 h-2.5" />
         </button>
       ) : (
-        <span className="text-muted-foreground text-[10px] font-mono">Porta 8080</span>
+        <span className="text-muted-foreground text-2xs font-mono">Porta 8080</span>
       )}
       {node.container && (
         <button

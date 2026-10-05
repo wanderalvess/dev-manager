@@ -51,14 +51,14 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
               <Activity className="w-4 h-4 text-primary" />
               <span className="text-xs font-bold text-foreground">Diagnósticos & Rede</span>
             </div>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+            <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
               Online
             </span>
           </div>
 
           {/* Seção de Endereços IP */}
           <div className="space-y-1.5">
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+            <div className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
               <Wifi className="w-3 h-3 text-primary" />
               <span>Endereços IP</span>
             </div>
@@ -123,7 +123,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
 
             return (
               <div className="space-y-2">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                <div className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                   <Cpu className="w-3 h-3 text-primary" />
                   <span>Uso da Máquina</span>
                 </div>

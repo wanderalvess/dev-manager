@@ -123,7 +123,7 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
               className={actionButtonClass(action === 'install')}
             >
               <div className="font-semibold text-foreground">Registrar e Instalar</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-2xs text-muted-foreground mt-0.5">
                 Executa repo-add e feature:install -r -u
               </div>
             </button>
@@ -134,7 +134,7 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
               className={actionButtonClass(action === 'repo_add_only')}
             >
               <div className="font-semibold text-foreground">Apenas Registrar Repo</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-2xs text-muted-foreground mt-0.5">
                 Executa apenas feature:repo-add
               </div>
             </button>
@@ -142,8 +142,8 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
         </div>
 
         {/* Preview dos comandos gerados */}
-        <div className="p-2.5 rounded border border-border bg-muted/30 font-mono text-[10px] space-y-1">
-          <div className="text-muted-foreground uppercase text-[9px] tracking-wider">Preview dos Comandos Karaf:</div>
+        <div className="p-2.5 rounded border border-border bg-muted/30 font-mono text-2xs space-y-1">
+          <div className="text-muted-foreground uppercase text-2xs tracking-wider">Preview dos Comandos Karaf:</div>
           <div className="text-primary truncate">
             $ feature:repo-add mvn:br.com.pcsist.winthor.{tipo === 'ROTINA' ? 'rotina' : 'servico'}/{nome.trim()}-features/{versao.trim()}/xml/features
           </div>

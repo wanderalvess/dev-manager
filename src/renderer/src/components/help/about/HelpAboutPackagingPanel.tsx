@@ -24,7 +24,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
           <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-foreground">
             Empacotamento &amp; Geração de Executável (.exe)
           </h3>
-          <span className="text-[10px] text-muted-foreground font-mono">Electron Builder • Windows Release</span>
+          <span className="text-2xs text-muted-foreground font-mono">Electron Builder • Windows Release</span>
         </div>
       </div>
       <button
@@ -53,7 +53,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
 
       <div className="p-3 rounded-xl bg-card/80 border border-border font-mono text-xs text-primary flex items-center justify-between shadow-inner">
         <span>npm run build:electron</span>
-        <span className="text-[10px] text-muted-foreground font-sans">PowerShell / CMD</span>
+        <span className="text-2xs text-muted-foreground font-sans">PowerShell / CMD</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">

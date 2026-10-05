@@ -28,7 +28,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
           placeholder="sys ou system"
           className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
         />
-        <p className="text-[10px] text-muted-foreground mt-1">Conexão como <span className="font-mono text-foreground font-semibold">sys</span> eleva automaticamente para AS SYSDBA.</p>
+        <p className="text-2xs text-muted-foreground mt-1">Conexão como <span className="font-mono text-foreground font-semibold">sys</span> eleva automaticamente para AS SYSDBA.</p>
       </div>
       <div>
         <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Senha</label>

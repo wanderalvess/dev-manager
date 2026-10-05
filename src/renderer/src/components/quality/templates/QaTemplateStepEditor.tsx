@@ -56,7 +56,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
             Comando SQL (suporta :binds como :codFilial, :numCupom):
           </label>
           {detectedBinds.length > 0 && (
-            <span className="text-[10px] text-primary font-mono font-semibold">
+            <span className="text-2xs text-primary font-mono font-semibold">
               Binds detectados: {detectedBinds.map((b) => `:${b}`).join(', ')}
             </span>
           )}

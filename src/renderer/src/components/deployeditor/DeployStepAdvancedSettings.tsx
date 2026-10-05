@@ -65,11 +65,11 @@ export const DeployStepAdvancedSettings: React.FC<DeployStepAdvancedSettingsProp
         {DYNAMIC_VARIABLES.map((v) => (
           <span
             key={v.token}
-            className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-card border border-border text-foreground"
+            className="inline-flex items-center gap-1 text-2xs font-mono px-2 py-0.5 rounded bg-card border border-border text-foreground"
             title={v.desc}
           >
             <code className="text-primary font-bold">{v.token}</code>
-            <span className="text-muted-foreground text-[9px]">({v.desc})</span>
+            <span className="text-muted-foreground text-2xs">({v.desc})</span>
           </span>
         ))}
       </div>

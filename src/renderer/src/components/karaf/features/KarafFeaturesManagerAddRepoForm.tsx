@@ -34,7 +34,7 @@ export const KarafFeaturesManagerAddRepoForm: React.FC<KarafFeaturesManagerAddRe
     </div>
 
     <div className="flex flex-col space-y-1">
-      <label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+      <label className="text-2xs font-mono uppercase tracking-wider text-muted-foreground">
         Coordenada Maven (mvn:groupId/artifactId/version/xml/features) ou URI:
       </label>
       <input
@@ -51,7 +51,7 @@ export const KarafFeaturesManagerAddRepoForm: React.FC<KarafFeaturesManagerAddRe
       <button
         type="button"
         onClick={() => onUrlChange('mvn:br.com.totvs.winthor/winthor-features/LATEST/xml/features')}
-        className="text-[10px] text-primary hover:underline cursor-pointer font-mono"
+        className="text-2xs text-primary hover:underline cursor-pointer font-mono"
       >
         + Inserir template WinThor
       </button>

@@ -22,7 +22,7 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
         </div>
         <button
           onClick={() => copyToClipboard('npm run mcp', 'cmd-mcp-module')}
-          className="px-2.5 py-1 bg-card hover:bg-card/90 text-foreground border border-border rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+          className="px-2.5 py-1 bg-card hover:bg-card/90 text-foreground border border-border rounded-lg text-2xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
         >
           {copiedItem === 'cmd-mcp-module' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
           <span>Copiar Comando</span>

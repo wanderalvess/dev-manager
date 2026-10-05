@@ -43,12 +43,12 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
                 Copilot Técnico WinThor {activeLlmProvider ? `· ${activeLlmProvider.name}` : ''}
               </span>
               {activeLlmProvider && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/25 font-bold shrink-0">
+                <span className="text-2xs font-mono px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/25 font-bold shrink-0">
                   {activeLlmProvider.model}
                 </span>
               )}
             </div>
-            <span className="text-[10px] text-muted-foreground block truncate">
+            <span className="text-2xs text-muted-foreground block truncate">
               Síntese contextual gerada com base na documentação dos projetos e wikis indexadas
             </span>
           </div>
@@ -111,7 +111,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
               <span>Consultando {activeLlmProvider?.name || 'modelo de IA'} ({activeLlmProvider?.model || 'LLM'})...</span>
             </div>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+            <span className="text-2xs font-mono text-muted-foreground uppercase tracking-wider">
               RAG Vector Search
             </span>
           </div>

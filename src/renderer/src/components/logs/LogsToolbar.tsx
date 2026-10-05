@@ -86,7 +86,7 @@ export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
       <Bug className="w-3.5 h-3.5" />
       <span>Exceções</span>
       {props.detectedExceptionsCount > 0 && (
-        <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-500 text-white font-mono font-bold tabular-nums">
+        <span className="px-1.5 py-0.2 rounded text-2xs bg-rose-500 text-white font-mono font-bold tabular-nums">
           {props.detectedExceptionsCount}
         </span>
       )}

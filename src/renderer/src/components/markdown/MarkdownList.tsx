@@ -13,7 +13,7 @@ export const MarkdownList: React.FC<MarkdownListProps> = ({ items, searchTerm })
       <li key={idx} className="flex items-start gap-2.5 text-foreground/90 leading-relaxed text-[13.5px]">
         {li.isTask ? (
           <span
-            className={`inline-flex items-center justify-center w-4 h-4 rounded-md mt-0.5 border text-[10px] shrink-0 font-bold ${
+            className={`inline-flex items-center justify-center w-4 h-4 rounded-md mt-0.5 border text-2xs shrink-0 font-bold ${
               li.checked
                 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400'
                 : 'border-border bg-muted/40 text-transparent'

@@ -93,7 +93,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
               </div>
 
               {isRunningProfile && (
-                <span className="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold animate-pulse flex items-center gap-1">
+                <span className="text-2xs bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold animate-pulse flex items-center gap-1">
                   <RefreshCw className="w-3 h-3 animate-spin" />
                   Executando [{activeStepIndex}/{activeStepTotal}]...
                 </span>

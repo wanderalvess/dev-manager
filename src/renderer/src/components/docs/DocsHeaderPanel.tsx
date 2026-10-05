@@ -44,7 +44,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
           <h2 className="text-base font-bold text-foreground flex items-center gap-2">
             Documentação
             {hasIndex && status && (
-              <span className="text-[10px] bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
+              <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
                 {status.totalChunks} trechos · {status.totalFiles} arquivos · {status.totalSources} fontes
                 {!status.isTextOnly && ' · IA Neural Ativa'}
               </span>

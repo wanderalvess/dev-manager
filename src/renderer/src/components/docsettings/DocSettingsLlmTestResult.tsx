@@ -19,7 +19,7 @@ export const DocSettingsLlmTestResult: React.FC<{ result: LlmTestResult }> = ({ 
       <div className="font-bold">
         {result.success ? 'Conexão Estabelecida!' : 'Falha no Teste de Conexão'}
         {result.latencyMs !== undefined && (
-          <span className="ml-2 text-[10px] font-mono font-normal opacity-80">({result.latencyMs}ms)</span>
+          <span className="ml-2 text-2xs font-mono font-normal opacity-80">({result.latencyMs}ms)</span>
         )}
       </div>
       <p className="text-[11px] mt-0.5">{result.message}</p>

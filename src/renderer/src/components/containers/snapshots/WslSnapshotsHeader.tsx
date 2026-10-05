@@ -14,7 +14,7 @@ export const WslSnapshotsHeader: React.FC<WslSnapshotsHeaderProps> = ({ onClose 
       <div>
         <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
           <span>Snapshots WSL (.tar)</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
             WSL2 Backup & Restore
           </span>
         </h3>

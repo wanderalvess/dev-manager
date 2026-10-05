@@ -41,7 +41,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
                 {runner.name}
               </h4>
               <span
-                className={`px-1.5 py-0.2 rounded text-[9px] font-mono uppercase tracking-wider font-semibold border ${badge.badgeClass}`}
+                className={`px-1.5 py-0.2 rounded text-2xs font-mono uppercase tracking-wider font-semibold border ${badge.badgeClass}`}
               >
                 {badge.label}
               </span>
@@ -90,7 +90,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
 
       {/* Itens vinculados da matriz */}
       {runner.linkedValidationItemIds && runner.linkedValidationItemIds.length > 0 && (
-        <div className="mt-2 flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
+        <div className="mt-2 flex items-center gap-1.5 text-2xs font-mono text-muted-foreground">
           <Layers className="w-3 h-3 text-primary" />
           <span>{runner.linkedValidationItemIds.length} cenário(s) da Matriz</span>
         </div>

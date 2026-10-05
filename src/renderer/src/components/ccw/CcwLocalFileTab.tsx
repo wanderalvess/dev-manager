@@ -52,7 +52,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
           <span>Procurar...</span>
         </button>
       </div>
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-2xs text-muted-foreground">
         Se você já baixou o arquivo manualmente pelo navegador (ex: na pasta Downloads), selecione-o aqui para que o Dev Manager extraia e instale na pasta certa.
       </p>
     </div>

@@ -39,7 +39,7 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
               <Wifi className="w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col truncate">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">IP Local (Windows)</span>
+              <span className="text-2xs font-bold text-muted-foreground uppercase">IP Local (Windows)</span>
               <span className="font-mono text-xs font-bold text-foreground truncate">{networkIps.primaryLocalIp}</span>
             </div>
           </div>
@@ -50,7 +50,7 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
             title="Copiar IP Local"
           >
             {copiedIp === 'main_lan' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-            <span className="text-[10px]">{copiedIp === 'main_lan' ? 'Copiado' : 'Copiar'}</span>
+            <span className="text-2xs">{copiedIp === 'main_lan' ? 'Copiado' : 'Copiar'}</span>
           </button>
         </div>
 
@@ -61,7 +61,7 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
               <Cpu className="w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col truncate">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">IP WSL2 / Linux</span>
+              <span className="text-2xs font-bold text-muted-foreground uppercase">IP WSL2 / Linux</span>
               <span className="font-mono text-xs font-bold text-foreground truncate">
                 {networkIps.wslIp || 'Não detectado / inativo'}
               </span>
@@ -75,7 +75,7 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
               title="Copiar IP WSL"
             >
               {copiedIp === 'main_wsl' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-              <span className="text-[10px]">{copiedIp === 'main_wsl' ? 'Copiado' : 'Copiar'}</span>
+              <span className="text-2xs">{copiedIp === 'main_wsl' ? 'Copiado' : 'Copiar'}</span>
             </button>
           )}
         </div>

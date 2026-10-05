@@ -37,7 +37,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
               <Globe className="w-3.5 h-3.5 text-cyan-500" />
               <span>Portal WTA</span>
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
+            <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
               Porta {port}
             </span>
           </div>
@@ -60,7 +60,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
               <Wrench className="w-3.5 h-3.5 text-amber-500" />
               <span>Instalador WTA</span>
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
+            <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
               /instalador
             </span>
           </div>
@@ -87,7 +87,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
           </span>
           <button
             onClick={() => onCopy(WTA_DEFAULT_CREDENTIALS_CLIPBOARD, 'wta-creds')}
-            className="text-[10px] px-2 py-0.5 rounded bg-card hover:bg-muted text-foreground border border-border/80 font-medium transition cursor-pointer"
+            className="text-2xs px-2 py-0.5 rounded bg-card hover:bg-muted text-foreground border border-border/80 font-medium transition cursor-pointer"
           >
             {copiedKey === 'wta-creds' ? 'Copiado!' : 'Copiar Credenciais'}
           </button>
@@ -95,11 +95,11 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
 
         <div className="grid grid-cols-2 gap-3">
           <div className="p-2.5 bg-background rounded-lg border border-border/60">
-            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Usuário</span>
+            <span className="text-2xs text-muted-foreground uppercase font-bold block">Usuário</span>
             <div className="font-mono text-xs font-bold text-foreground">PCADMIN</div>
           </div>
           <div className="p-2.5 bg-background rounded-lg border border-border/60">
-            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Senha</span>
+            <span className="text-2xs text-muted-foreground uppercase font-bold block">Senha</span>
             <div className="font-mono text-xs font-bold text-foreground">1</div>
           </div>
         </div>

@@ -77,13 +77,13 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
               )}
               {backupResult.success && backupResult.checksumSha256 && (
                 <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-[10px] font-mono opacity-80 truncate" title={backupResult.checksumSha256}>
+                  <span className="text-2xs font-mono opacity-80 truncate" title={backupResult.checksumSha256}>
                     SHA-256: {backupResult.checksumSha256}
                   </span>
                   <button
                     type="button"
                     onClick={() => onCopyHash(backupResult.checksumSha256!, 'result-hash')}
-                    className="text-[10px] px-1.5 py-0.2 rounded hover:bg-emerald-500/20 font-mono transition cursor-pointer"
+                    className="text-2xs px-1.5 py-0.2 rounded hover:bg-emerald-500/20 font-mono transition cursor-pointer"
                     title="Copiar hash"
                   >
                     {copyFeedback === 'result-hash' ? '✓ Copiado' : 'Copiar hash'}

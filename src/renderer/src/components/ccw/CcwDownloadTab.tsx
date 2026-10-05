@@ -52,7 +52,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
           className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
         {normalized.baseName && (
-          <p className="text-[10px] text-muted-foreground font-mono">
+          <p className="text-2xs text-muted-foreground font-mono">
             Identificado como: <span className="text-primary font-bold">{normalized.baseName}.EXE</span>
             {normalized.code && ` (Rotina ${normalized.code})`}
           </p>
@@ -88,7 +88,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
           onChange={(e) => onTargetModuleChange(e.target.value)}
           className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Se vazio, o Dev Manager detecta automaticamente se a rotina já existe em alguma subpasta ou calcula pelo código.
         </p>
       </div>
@@ -104,7 +104,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
           onChange={(e) => onCustomDownloadUrlChange(e.target.value)}
           className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
-        <p className="text-[10px] text-muted-foreground truncate" title={estimatedDownloadUrl}>
+        <p className="text-2xs text-muted-foreground truncate" title={estimatedDownloadUrl}>
           URL padrão: {estimatedDownloadUrl || 'https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/...'}
         </p>
       </div>

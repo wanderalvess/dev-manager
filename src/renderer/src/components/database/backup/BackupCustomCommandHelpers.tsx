@@ -21,10 +21,10 @@ interface BackupCommandPresetsProps {
 export const BackupCommandPresets: React.FC<BackupCommandPresetsProps> = ({ type, onSelect }) => (
   <div className="space-y-1.5">
     <div className="flex items-center justify-between">
-      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+      <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <Zap className="w-3 h-3 text-amber-500" /> Modelos Recomendados (Presets Rápidos):
       </span>
-      <span className="text-[10px] text-muted-foreground">Clique em um modelo para carregar</span>
+      <span className="text-2xs text-muted-foreground">Clique em um modelo para carregar</span>
     </div>
     <div className="flex flex-wrap gap-1.5">
       {getBackupCommandPresets(type).map((preset) => (
@@ -50,16 +50,16 @@ interface BackupVariableChipsProps {
 export const BackupVariableChips: React.FC<BackupVariableChipsProps> = ({ onInsert }) => (
   <div className="space-y-2 p-3 bg-muted/30 border border-border/60 rounded-xl">
     <div className="flex items-center justify-between">
-      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+      <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">
         Variáveis Disponíveis (clique para inserir):
       </span>
-      <span className="text-[10px] text-amber-500 font-mono font-semibold">
+      <span className="text-2xs text-amber-500 font-mono font-semibold">
         * tag {'{filePath}'} ou {'{fileName}'} é obrigatória
       </span>
     </div>
 
     <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+      <div className="flex items-center gap-1.5 flex-wrap text-2xs">
         <span className="text-muted-foreground font-semibold shrink-0 w-20">Arquivo:</span>
         {BACKUP_FILE_TAGS.map((item) => (
           <button
@@ -74,12 +74,12 @@ export const BackupVariableChips: React.FC<BackupVariableChipsProps> = ({ onInse
             title={item.tip}
           >
             <span>{item.tag}</span>
-            {item.req && <span className="text-[9px] opacity-75 font-sans">(obrigatório)</span>}
+            {item.req && <span className="text-2xs opacity-75 font-sans">(obrigatório)</span>}
           </button>
         ))}
       </div>
 
-      <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+      <div className="flex items-center gap-1.5 flex-wrap text-2xs">
         <span className="text-muted-foreground font-semibold shrink-0 w-20">Conexão:</span>
         {BACKUP_CONNECTION_TAGS.map((tag) => (
           <button
@@ -94,7 +94,7 @@ export const BackupVariableChips: React.FC<BackupVariableChipsProps> = ({ onInse
         ))}
       </div>
 
-      <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+      <div className="flex items-center gap-1.5 flex-wrap text-2xs">
         <span className="text-muted-foreground font-semibold shrink-0 w-20">Utilitários:</span>
         {BACKUP_UTILITY_TAGS.map((tag) => (
           <button

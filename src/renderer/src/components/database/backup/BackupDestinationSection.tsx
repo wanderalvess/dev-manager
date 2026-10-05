@@ -27,7 +27,7 @@ export const BackupDestinationSection: React.FC<BackupDestinationSectionProps> =
               : 'Pasta de Destino do Backup'}
           </span>
         </label>
-        <span className="text-[10px] text-muted-foreground font-mono">
+        <span className="text-2xs text-muted-foreground font-mono">
           {backupFolder ? 'Destino selecionado' : 'Pasta pendente'}
         </span>
       </div>

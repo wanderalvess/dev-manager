@@ -22,7 +22,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
       <div className="lg:col-span-1 p-5 rounded-2xl bg-card border border-border shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <h3 className="text-sm font-black text-foreground">Semáforo de Liberação</h3>
-          <span className="text-[10px] font-mono text-muted-foreground">Critérios PO</span>
+          <span className="text-2xs font-mono text-muted-foreground">Critérios PO</span>
         </div>
 
         <div className="flex flex-col items-center justify-center p-6 text-center space-y-2">
@@ -51,7 +51,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
       <div className="lg:col-span-2 p-5 rounded-2xl bg-card border border-border shadow-sm space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <h3 className="text-sm font-black text-foreground">Distribuição e Cobertura</h3>
-          <span className="text-[10px] font-mono text-muted-foreground">{metrics.total} itens mapeados</span>
+          <span className="text-2xs font-mono text-muted-foreground">{metrics.total} itens mapeados</span>
         </div>
 
         <div className="space-y-3">
@@ -91,7 +91,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
               <div key={category} className="p-3 rounded-xl bg-muted/30 border border-border space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-bold text-foreground">{getCategoryLabel(category)}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">
+                  <span className="text-2xs font-mono text-muted-foreground">
                     {cat.total === 0 ? 'sem cenários' : `${cat.passed}/${cat.total} aprovados`}
                   </span>
                 </div>

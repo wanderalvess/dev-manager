@@ -19,7 +19,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
   } = runtime;
 
   return (
-    <div className="mt-1 space-y-0.5 text-[10px] font-mono text-muted-foreground truncate">
+    <div className="mt-1 space-y-0.5 text-2xs font-mono text-muted-foreground truncate">
       {/* 1. Comando */}
       {step.type === 'command' && (
         <>
@@ -46,7 +46,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
           </span>
           {srvFound && (
             <span
-              className={`text-[9px] px-1.5 py-0.2 rounded font-sans font-bold ${
+              className={`text-2xs px-1.5 py-0.2 rounded font-sans font-bold ${
                 srvFound.state === 'RUNNING'
                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                   : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
@@ -67,7 +67,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
           </span>
           {procFound && (
             <span
-              className={`text-[9px] px-1.5 py-0.2 rounded font-sans font-bold ${
+              className={`text-2xs px-1.5 py-0.2 rounded font-sans font-bold ${
                 procFound.isRunning
                   ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                   : 'bg-muted text-muted-foreground'
@@ -104,7 +104,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
             <span className="text-purple-600 dark:text-purple-400 font-bold font-mono">
               :{effectiveKarafPort}
             </span>
-            <span className="text-[9px] text-muted-foreground">
+            <span className="text-2xs text-muted-foreground">
               (Configure no IntelliJ: Remote JVM Debug)
             </span>
           </p>

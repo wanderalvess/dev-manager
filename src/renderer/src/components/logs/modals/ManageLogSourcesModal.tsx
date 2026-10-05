@@ -124,7 +124,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center space-x-2">
                     <span className="font-semibold text-xs text-foreground">{src.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+                    <span className="text-2xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
                       {src.encoding || 'utf-8'}
                     </span>
                   </div>

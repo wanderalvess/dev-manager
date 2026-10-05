@@ -62,7 +62,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-foreground tracking-tight">Sincronização de Documentação</h3>
-              <span className="text-[10px] bg-primary/15 text-primary px-2 py-0.5 rounded-full font-mono font-bold">
+              <span className="text-2xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-mono font-bold">
                 RAG Agnóstico
               </span>
             </div>

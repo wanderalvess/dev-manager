@@ -134,8 +134,8 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
         {/* Preview da Branch Gerada estilo Terminal */}
         <div className="p-3 bg-muted/20 border border-border/60 rounded-lg space-y-1.5">
           <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-            <span className="uppercase tracking-wider font-semibold text-[10px]">Branch Destino</span>
-            <span className="text-[10px] text-muted-foreground/60">checkout &amp; switch</span>
+            <span className="uppercase tracking-wider font-semibold text-2xs">Branch Destino</span>
+            <span className="text-2xs text-muted-foreground/60">checkout &amp; switch</span>
           </div>
           <div className="flex items-center gap-2 bg-background border border-border rounded-md px-2.5 py-1.5 font-mono text-xs">
             <span className="text-muted-foreground select-none">$</span>

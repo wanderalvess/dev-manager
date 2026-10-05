@@ -73,7 +73,7 @@ export const ProfileEditorStepDetails: React.FC<ProfileEditorStepDetailsProps> =
                   <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${isChosen ? 'text-primary' : ''}`} />
                   <div>
                     <p className="text-xs font-semibold text-foreground">{opt.label.split('(')[0]}</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</p>
+                    <p className="text-2xs text-muted-foreground leading-tight">{opt.desc}</p>
                   </div>
                 </button>
               );
@@ -127,7 +127,7 @@ export const ProfileEditorStepDetails: React.FC<ProfileEditorStepDetailsProps> =
               }
               className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-2xs text-muted-foreground mt-1">
               Tempo de espera antes de chamar o próximo passo na esteira.
             </p>
           </div>
@@ -143,7 +143,7 @@ export const ProfileEditorStepDetails: React.FC<ProfileEditorStepDetailsProps> =
                 />
                 <span>Aguardar porta :{step.port} responder antes do próximo</span>
               </label>
-              <p className="text-[10px] text-muted-foreground mt-1 ml-6">
+              <p className="text-2xs text-muted-foreground mt-1 ml-6">
                 Pausa a esteira até o serviço abrir a porta (timeout 30s).
               </p>
             </div>

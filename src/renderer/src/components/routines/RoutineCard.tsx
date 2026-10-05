@@ -44,19 +44,19 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
           {/* Telemetria de Módulo, Extensão e Versão PE */}
           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             <span
-              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-muted/70 text-foreground border border-border/70 shrink-0"
+              className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-muted/70 text-foreground border border-border/70 shrink-0"
               title={`Módulo WinThor: ${routine.module}`}
             >
               {routine.module}
             </span>
             {extension && (
-              <span className="text-[9px] font-mono font-bold px-1 py-0.5 rounded bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/25 shrink-0">
+              <span className="text-2xs font-mono font-bold px-1 py-0.5 rounded bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/25 shrink-0">
                 {extension}
               </span>
             )}
             {routine.fileVersion && (
               <span
-                className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-2xs shrink-0"
+                className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-2xs shrink-0"
                 title={`Versão PE do Executável: FileVersion ${routine.fileVersion}${
                   routine.productVersion ? ` / ProductVersion ${routine.productVersion}` : ''
                 }`}
@@ -113,11 +113,11 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
           >
             {routine.name}
           </h4>
-          <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground mt-1">
+          <div className="flex items-center justify-between text-2xs font-mono text-muted-foreground mt-1">
             <span className="truncate opacity-80" title={routine.fullPath}>
               {routine.sizeMb}
             </span>
-            <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 font-mono">
+            <span className="text-2xs uppercase tracking-wider text-muted-foreground/60 font-mono">
               Binário Local
             </span>
           </div>

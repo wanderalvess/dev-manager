@@ -38,7 +38,7 @@ export const StepTargetFields: React.FC<StepTargetFieldsProps> = ({ step, onUpda
           placeholder="Ex: CoreService.API, AppServer, Spooler... (se vazio, usa o Nome da Etapa)"
           className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
         />
-        <p className="text-[10px] text-muted-foreground mt-1">
+        <p className="text-2xs text-muted-foreground mt-1">
           Identificador do serviço registrado no Windows (como visto em services.msc ou net start).
         </p>
       </div>
@@ -56,7 +56,7 @@ export const StepTargetFields: React.FC<StepTargetFieldsProps> = ({ step, onUpda
           placeholder="Ex: pdvsyncclientservicocontrole.exe, node.exe... (se vazio, usa o Nome da Etapa)"
           className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
         />
-        <p className="text-[10px] text-muted-foreground mt-1">
+        <p className="text-2xs text-muted-foreground mt-1">
           Nome do processo que será encerrado via taskkill /F /IM.
         </p>
       </div>

@@ -28,7 +28,7 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
         <Terminal className="w-4 h-4 text-primary" />
         <span className="text-xs font-bold text-foreground">Console de Execução Cypress</span>
         {isRunning && (
-          <span className="flex items-center space-x-1 text-[10px] font-mono text-emerald-400 font-bold animate-pulse">
+          <span className="flex items-center space-x-1 text-2xs font-mono text-emerald-400 font-bold animate-pulse">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>AO VIVO</span>
           </span>
@@ -55,7 +55,7 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
           type="button"
           onClick={onClear}
           disabled={!activeOutput}
-          className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition cursor-pointer disabled:opacity-40"
+          className="text-2xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition cursor-pointer disabled:opacity-40"
         >
           Limpar
         </button>
@@ -73,7 +73,7 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
         <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-2 select-none">
           <Play className="w-8 h-8 opacity-30" />
           <p className="text-xs">Nenhuma execução em andamento.</p>
-          <p className="text-[10px] text-slate-600">
+          <p className="text-2xs text-slate-600">
             Selecione as tags ou arquivos de teste à esquerda e clique em &quot;Rodar Headless&quot;.
           </p>
         </div>

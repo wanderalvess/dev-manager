@@ -82,7 +82,7 @@ export const KarafSnapshotDiffSections: React.FC<KarafSnapshotDiffSectionsProps>
                 <span className="font-mono font-bold text-foreground">[{b.id}] </span>
                 <span className="text-foreground">{b.name}</span>
               </div>
-              <div className="font-mono text-[10px] text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
+              <div className="font-mono text-2xs text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
                 v{b.version} · {b.state}
               </div>
             </div>
@@ -108,7 +108,7 @@ export const KarafSnapshotDiffSections: React.FC<KarafSnapshotDiffSectionsProps>
                 <span className="font-mono font-bold text-foreground">[{b.id}] </span>
                 <span className="text-muted-foreground line-through">{b.name}</span>
               </div>
-              <div className="font-mono text-[10px] text-rose-700 dark:text-rose-400 font-bold shrink-0">
+              <div className="font-mono text-2xs text-rose-700 dark:text-rose-400 font-bold shrink-0">
                 v{b.version} (era {b.state})
               </div>
             </div>
