@@ -115,8 +115,8 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5">
         <span className="text-[10px] text-muted-foreground">Framework E2E</span>
         <div className="font-semibold text-foreground flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span>Cypress {projectStatus?.cypressVersion || '15.6.0'}</span>
+          <span className={`w-2 h-2 rounded-full ${projectStatus?.cypressVersion ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} />
+          <span>{projectStatus?.cypressVersion ? `Cypress ${projectStatus.cypressVersion}` : 'Cypress não detectado'}</span>
         </div>
       </div>
 

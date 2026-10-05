@@ -1,6 +1,8 @@
 import React from 'react';
-import type { QualityMetrics } from '../../../utils/qualityPageUtils';
+import type { QualityMetrics, QualityValidationItem } from '../../../utils/qualityPageUtils';
 import {
+  calculateCategoryBreakdown,
+  getCategoryLabel,
   getProgressWidth,
   getReadinessSummary,
   getReadinessVerdict
@@ -8,9 +10,10 @@ import {
 
 interface QualityReadinessPanelProps {
   metrics: QualityMetrics;
+  items: QualityValidationItem[];
 }
 
-export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ metrics }) => {
+export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ metrics, items }) => {
   const verdict = getReadinessVerdict(metrics.readinessScore, metrics.failed + metrics.blocked + metrics.pending);
 
   return (
@@ -82,32 +85,29 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
             </div>
           </div>
 
-          {/* Status por categoria */}
+          {/* Status por categoria, calculado a partir dos cenários da Matriz */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div className="p-3 rounded-xl bg-muted/30 border border-border space-y-1">
-              <span className="text-xs font-bold text-foreground">Rotinas Delphi</span>
-              <p className="text-[11px] text-muted-foreground">
-                Executáveis locais testados diretamente com suporte a dados do Oracle.
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-muted/30 border border-border space-y-1">
-              <span className="text-xs font-bold text-foreground">Serviços &amp; Bundles Karaf</span>
-              <p className="text-[11px] text-muted-foreground">
-                Saúde dos bundles OSGi e portas de comunicação ativas.
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-muted/30 border border-border space-y-1">
-              <span className="text-xs font-bold text-foreground">APIs de Integração</span>
-              <p className="text-[11px] text-muted-foreground">
-                Validadores de contratos e respostas de microsserviços.
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-muted/30 border border-border space-y-1">
-              <span className="text-xs font-bold text-foreground">Fluxos End-to-End</span>
-              <p className="text-[11px] text-muted-foreground">
-                Jornadas completas do usuário cobrindo ponta a ponta.
-              </p>
-            </div>
+            {calculateCategoryBreakdown(items).map(({ category, metrics: cat }) => (
+              <div key={category} className="p-3 rounded-xl bg-muted/30 border border-border space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-foreground">{getCategoryLabel(category)}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    {cat.total === 0 ? 'sem cenários' : `${cat.passed}/${cat.total} aprovados`}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex">
+                  <div style={{ width: getProgressWidth(cat.passed, cat.total) }} className="bg-emerald-500 h-full" />
+                  <div style={{ width: getProgressWidth(cat.inProgress, cat.total) }} className="bg-cyan-500 h-full" />
+                  <div style={{ width: getProgressWidth(cat.blocked, cat.total) }} className="bg-amber-500 h-full" />
+                  <div style={{ width: getProgressWidth(cat.failed, cat.total) }} className="bg-rose-500 h-full" />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {cat.total === 0
+                    ? 'Nenhum cenário cadastrado nesta categoria na Matriz de Validação.'
+                    : `${cat.pending} pendente(s) · ${cat.inProgress} em teste · ${cat.failed} falha(s) · ${cat.blocked} bloqueado(s)`}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

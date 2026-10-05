@@ -103,7 +103,7 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVe
             />
           )}
 
-          {tabMode === 'readiness' && <QualityReadinessPanel metrics={metrics} />}
+          {tabMode === 'readiness' && <QualityReadinessPanel metrics={metrics} items={items} />}
 
           {tabMode === 'roadmap' && <QualityRoadmapPanel />}
         </div>

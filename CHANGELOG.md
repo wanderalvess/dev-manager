@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.31.2] - 2026-10-05
+### Alterado
+- **Qualidade — Painel de Prontidão (PO)**: os cartões por categoria (Rotinas Delphi, Serviço Karaf, API REST, Fluxo E2E) agora mostram números reais calculados da Matriz de Validação (aprovados/total, barra de progresso e contagem de pendentes, em teste, falhas e bloqueados). Antes eram textos fixos, que sugeriam ler a saúde do Karaf.
+- **TAUT**: o cabeçalho mostra "Cypress não detectado" quando não há versão no projeto (antes exibia "Cypress 15.6.0" fixo). O placeholder do campo Release deixou de sugerir `v1.24.0`.
+
+### Corrigido
+- **Matriz de Validação**: cenários-modelo antigos já gravados no navegador (um "Aprovado" e um "Em teste" com testador "QA Team", nunca verificados) voltam a *pendente* ao abrir a tela, e a release `v1.24.0` antiga é limpa. Itens editados pelo usuário são preservados.
+
 ## [1.31.1] - 2026-10-05
 ### Adicionado
 - **Prefixo das chaves de cenário Zephyr (TAUT)** em Configurações > Diretórios & IDE (`tautKeyPrefix`): restringe a cobertura e o Intake CSV às chaves de um projeto (ex.: `PROJ-T`). Vazio aceita qualquer chave no formato `ABC-T123`.

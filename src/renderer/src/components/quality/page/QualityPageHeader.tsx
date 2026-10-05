@@ -62,7 +62,7 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
           type="text"
           value={releaseVersion}
           onChange={(e) => onReleaseVersionChange(e.target.value)}
-          placeholder="v1.24.0"
+          placeholder="ex.: v2.0.0"
           className="bg-transparent border-none text-foreground font-mono font-bold text-xs focus:outline-none w-20"
           title="Identificador da versão / release em homologação"
         />

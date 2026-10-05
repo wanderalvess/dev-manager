@@ -1,6 +1,8 @@
 import type { TestExecutionResult } from '../../../shared/types';
 import {
+  calculateQualityMetrics,
   getDefaultValidationItems,
+  type QualityMetrics,
   type QualityValidationItem,
   type ValidationCategory,
   type ValidationItemStatus
@@ -12,9 +14,31 @@ export const QUALITY_DEFAULT_RELEASE = '';
 
 export type QualityTabMode = 'taut' | 'matrix' | 'runners' | 'regression' | 'readiness' | 'roadmap';
 
+// Release gravada pelas versões anteriores como valor padrão (nunca digitada pelo usuário)
+const LEGACY_DEFAULT_RELEASE = 'v1.24.0';
+const LEGACY_SEED_IDS = new Set(['val-1', 'val-2']);
+
+export function migrateLegacyRelease(value: string): string {
+  return value === LEGACY_DEFAULT_RELEASE ? QUALITY_DEFAULT_RELEASE : value;
+}
+
+// As versões anteriores gravavam no navegador cenários-modelo já com resultado ("Aprovado" / "Em teste", testador
+// "QA Team") sem que nada tivesse sido verificado. Só os itens ainda com a assinatura intacta voltam a "pendente".
+export function migrateLegacySeedItems(items: QualityValidationItem[]): QualityValidationItem[] {
+  return items.map((item) => {
+    const isUntouchedSeed =
+      LEGACY_SEED_IDS.has(item.id) &&
+      item.testerName === 'QA Team' &&
+      (item.status === 'passed' || item.status === 'in_progress');
+    if (!isUntouchedSeed) return item;
+    const { testerName: _tester, testedVersion: _version, ...rest } = item;
+    return { ...rest, status: 'pending' };
+  });
+}
+
 export function readStoredReleaseVersion(): string {
   try {
-    return localStorage.getItem(QUALITY_STORAGE_KEY_RELEASE) || QUALITY_DEFAULT_RELEASE;
+    return migrateLegacyRelease(localStorage.getItem(QUALITY_STORAGE_KEY_RELEASE) || QUALITY_DEFAULT_RELEASE);
   } catch {
     return QUALITY_DEFAULT_RELEASE;
   }
@@ -25,7 +49,7 @@ export function readStoredValidationItems(): QualityValidationItem[] {
     const raw = localStorage.getItem(QUALITY_STORAGE_KEY_VALIDATION);
     const parsed = raw ? JSON.parse(raw) : null;
     if (Array.isArray(parsed) && parsed.every((i) => i && typeof i.id === 'string' && typeof i.title === 'string')) {
-      return parsed;
+      return migrateLegacySeedItems(parsed);
     }
   } catch {
     // fallback
@@ -82,6 +106,18 @@ export function getReadinessVerdict(score: number, openIssues = 0): {
     ringClass: 'border-rose-500 bg-rose-500/10 text-rose-500',
     title: 'Bloqueado: Correções Necessárias ⛔'
   };
+}
+
+const CATEGORY_ORDER: ValidationCategory[] = ['routine', 'service', 'api', 'e2e'];
+
+/** Métricas dos cenários da Matriz agrupadas por categoria (sempre as 4, mesmo vazias). */
+export function calculateCategoryBreakdown(
+  items: QualityValidationItem[]
+): Array<{ category: ValidationCategory; metrics: QualityMetrics }> {
+  return CATEGORY_ORDER.map((category) => ({
+    category,
+    metrics: calculateQualityMetrics(items.filter((item) => item.category === category))
+  }));
 }
 
 export function getReadinessSummary(failed: number, pending: number): string {

@@ -2,13 +2,70 @@ import { describe, expect, it } from 'vitest';
 import type { TestExecutionResult } from '../../../shared/types';
 import {
   applyRunnerResultToItem,
+  calculateCategoryBreakdown,
   buildNewValidationItem,
   getCategoryLabel,
   getProgressWidth,
   getReadinessSummary,
   getReadinessVerdict,
-  getStatusSelectClass
+  getStatusSelectClass,
+  migrateLegacyRelease,
+  migrateLegacySeedItems
 } from './qualityPageView';
+
+describe('migração dos dados-modelo antigos', () => {
+  const seed = (id: string, status: 'passed' | 'in_progress', testerName?: string) => ({
+    id,
+    title: id,
+    category: 'service' as const,
+    status,
+    targetName: 'x',
+    testerName,
+    testedVersion: '1.0',
+    updatedAt: '2026-10-01T00:00:00.000Z'
+  });
+
+  it('volta a pendente só o seed intacto, limpando o testador fictício', () => {
+    const [a, b] = migrateLegacySeedItems([seed('val-1', 'passed', 'QA Team'), seed('val-2', 'in_progress', 'QA Team')]);
+    expect(a.status).toBe('pending');
+    expect(a.testerName).toBeUndefined();
+    expect(b.status).toBe('pending');
+  });
+
+  it('preserva o que o usuário editou (outro testador) e itens que não são do seed', () => {
+    const edited = seed('val-1', 'passed', 'Maria');
+    const own = seed('meu-item', 'passed', 'QA Team');
+    expect(migrateLegacySeedItems([edited, own])).toEqual([edited, own]);
+  });
+
+  it('limpa a release padrão antiga, mas mantém a digitada pelo usuário', () => {
+    expect(migrateLegacyRelease('v1.24.0')).toBe('');
+    expect(migrateLegacyRelease('v2.0.0')).toBe('v2.0.0');
+  });
+});
+
+describe('calculateCategoryBreakdown', () => {
+  const item = (id: string, category: 'routine' | 'service' | 'api' | 'e2e', status: 'passed' | 'failed' | 'pending') => ({
+    id,
+    title: id,
+    category,
+    status,
+    targetName: 'x',
+    updatedAt: '2026-10-05T00:00:00.000Z'
+  });
+
+  it('agrupa por categoria, sempre devolvendo as 4 na mesma ordem', () => {
+    const result = calculateCategoryBreakdown([
+      item('a', 'service', 'passed'),
+      item('b', 'service', 'failed'),
+      item('c', 'api', 'pending')
+    ]);
+    expect(result.map((r) => r.category)).toEqual(['routine', 'service', 'api', 'e2e']);
+    expect(result[0].metrics.total).toBe(0);
+    expect(result[1].metrics).toMatchObject({ total: 2, passed: 1, failed: 1, passRate: 50 });
+    expect(result[2].metrics).toMatchObject({ total: 1, pending: 1 });
+  });
+});
 
 describe('qualityPageView', () => {
   it('mapeia classes de status e rótulos de categoria', () => {
