@@ -23,8 +23,14 @@ describe('qaPayloadUtils', () => {
         limit: 10
       });
 
-      expect(sql).toContain('numCupom');
-      expect(sql).toContain('codFilial');
+      // Valores do usuário vão apenas em bind variables, nunca interpolados no SQL
+      expect(sql).toContain(':pCupomStr');
+      expect(sql).toContain(':pCupomNum');
+      expect(sql).toContain(':pFilialStr');
+      expect(sql).toContain(':pFilialNum');
+      expect(sql).not.toContain('271454');
+      expect(binds.pCupomNum).toBe('%"numCupom": 271454%');
+      expect(binds.pFilialNum).toBe('%"codFilial": 1%');
       expect(binds.pCupomStr).toBe('%"numCupom": "271454"%');
       expect(binds.pFilialStr).toBe('%"codFilial": "1"%');
       expect(binds.pLimit).toBe(10);
@@ -36,9 +42,11 @@ describe('qaPayloadUtils', () => {
         chaveNfe: '26250611468154000200650010002714391954558770'
       });
 
-      expect(sql).toContain('chaveNfce');
-      expect(sql).toContain('chaveNfe');
-      expect(binds.pChaveNfce).toContain('26250611468154000200650010002714391954558770');
+      expect(sql).toContain(':pChaveNfce');
+      expect(sql).toContain(':pChaveNfe');
+      expect(sql).not.toContain('26250611468154000200650010002714391954558770');
+      expect(binds.pChaveNfce).toBe('%"chaveNfce": "26250611468154000200650010002714391954558770"%');
+      expect(binds.pChaveNfe).toBe('%"chaveNfe": "26250611468154000200650010002714391954558770"%');
     });
 
     it('deve gerar query para busca de mensagens recentes', () => {
