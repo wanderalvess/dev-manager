@@ -1654,12 +1654,13 @@ export class KarafService {
     // 1. Tentar ler Heap e Non-Heap via JMX MBeans (feature management do Karaf)
     try {
       const heapJmxRes = await this.executeKarafCommand('jmx:read java.lang:type=Memory HeapMemoryUsage', dummyChunk, credentials, 15000);
-      const nonHeapJmxRes = await this.executeKarafCommand('jmx:read java.lang:type=Memory NonHeapMemoryUsage', dummyChunk, credentials, 15000);
-
       const heapParsed = parseJmxMemoryOutput(heapJmxRes.stdout);
-      const nonHeapParsed = parseJmxMemoryOutput(nonHeapJmxRes.stdout);
 
       if (heapParsed) {
+        // Só consulta Non-Heap quando o JMX respondeu ao Heap (evita round-trip SSH inútil)
+        const nonHeapJmxRes = await this.executeKarafCommand('jmx:read java.lang:type=Memory NonHeapMemoryUsage', dummyChunk, credentials, 15000);
+        const nonHeapParsed = parseJmxMemoryOutput(nonHeapJmxRes.stdout);
+
         // Tentar obter threads e uptime via info rápido
         const infoRes = await this.executeKarafCommand('info', dummyChunk, credentials, 15000);
         const infoParsed = parseKarafInfoOutput(infoRes.stdout);

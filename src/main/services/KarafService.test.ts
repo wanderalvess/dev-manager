@@ -968,7 +968,8 @@ totvs-pdv-sync           │ 2.3.1          │          │ Started │ totvs-r
         state: 'Started',
         repository: 'standard-4.4.6',
         description: 'Karaf standard feature',
-        isWinthor: false
+        isWinthor: false,
+        installed: true
       });
 
       expect(features[1]).toEqual({
@@ -978,11 +979,13 @@ totvs-pdv-sync           │ 2.3.1          │          │ Started │ totvs-r
         state: 'Started',
         repository: 'hub-carga-dados',
         description: 'Rotina de integração de varejo WinThor',
-        isWinthor: true
+        isWinthor: true,
+        installed: true
       });
 
       expect(features[2].isWinthor).toBe(true);
       expect(features[2].required).toBe(false);
+      expect(features[2].installed).toBe(true);
     });
 
     it('uninstallFeature executa comando feature:uninstall -r com nome e versão', async () => {
