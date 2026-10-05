@@ -173,6 +173,7 @@ Ao criar arquivos novos ou refatorar componentes e serviços existentes:
 - Comentários de código, mensagens de commit e textos de UI em **português (Brasil)**.
 - Commits seguem **Conventional Commits** (`feat(escopo):`, `fix(escopo):`, `test(escopo):`,
   `perf(escopo):`, `chore:`) com corpo descritivo em português.
+- **Comandos de Commit Prontos para o Shell**: Sempre que o usuário solicitar mensagens ou sugestões de commit, forneça sempre o comando completo e formatado diretamente para execução no shell (PowerShell com `git commit -m "..." -m "..."`, comandos de `git add .`, criação de tag com `git tag -a vX.Y.Z -m "..."` e `git push --tags`), eliminando a necessidade de montagem manual.
 - Ao escrever comentários, siga a política geral do Claude Code: só comente o "porquê" não
   óbvio, nunca o "o quê".
 
