@@ -42,10 +42,10 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
       <div className="space-y-2.5 max-w-2xl">
         <div className="flex items-center space-x-2 flex-wrap gap-y-1">
           <span className="text-2xs uppercase font-extrabold tracking-wider px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
-            COCKPIT DO DESENVOLVEDOR
+            COCKPIT INTEGRADO
           </span>
           <span className="text-xs text-muted-foreground font-mono">
-            Dev Manager • v{appInfo?.appVersion || '1.22.0'}
+            Hub Manager • v{appInfo?.appVersion || '1.31.3'}
           </span>
           {appInfo?.isAdmin ? (
             <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
@@ -59,10 +59,10 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
         </div>
 
         <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
-          Bem-vindo ao Dev Manager 🚀
+          Bem-vindo ao Hub Manager 🚀
         </h3>
         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          O cockpit unificado para eliminar o atrito diário do desenvolvimento WinThor. Controle serviços do Windows, compile e publique bundles OSGi no Apache Karaf e containers Docker, sincronize branches e abra Pull Requests no Azure DevOps sem preenchimento manual.
+          Cockpit Integrado de Operação, Desenvolvimento e Qualidade para o ecossistema WinThor. Projetado para squads completas (Dev, QA, PO e SME): controle de serviços e containers, catálogo de rotinas, banco de dados multi-vendor, automação e evidências de testes, deploys e esteira DevOps.
         </p>
 
         {/* Chips de Informações Chave */}

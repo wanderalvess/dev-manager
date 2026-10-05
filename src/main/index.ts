@@ -74,7 +74,7 @@ function createWindow() {
     height: 840,
     minWidth: 1000,
     minHeight: 650,
-    title: 'Dev Manager',
+    title: 'Hub Manager',
     icon: iconPath,
     webPreferences: {
       preload: preloadPath,
@@ -233,11 +233,11 @@ function createWindow() {
         trayIcon = nativeImage.createEmpty();
       }
       tray = new Tray(trayIcon);
-      tray.setToolTip('Dev Manager');
+      tray.setToolTip('Hub Manager');
 
       const contextMenu = Menu.buildFromTemplate([
         {
-          label: 'Abrir Dev Manager',
+          label: 'Abrir Hub Manager',
           click: () => {
             if (mainWindow) {
               mainWindow.show();

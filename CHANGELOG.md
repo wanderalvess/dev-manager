@@ -6,6 +6,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [1.31.3] - 2026-10-05
 ### Alterado
+- **Identidade do Produto (Rebranding)**: o cockpit agora se chama **Hub Manager**, com o subtítulo oficial *"Cockpit Integrado de Operação, Desenvolvimento e Qualidade"*. O novo posicionamento reflete a evolução da plataforma para atender toda a squad (Dev, QA, PO e SME) em fluxos de infraestrutura, banco de dados, catálogo de rotinas, qualidade de software e observabilidade.
 - **Legibilidade**: nenhum texto da interface fica abaixo de 11px. O novo token `text-2xs` (11px) substituiu todas as fontes de 7 a 10,5px em badges, rótulos de seção, dicas de atalho e consoles.
 - **Qualidade**: as abas agora estão agrupadas em Automação (TAUT, Test Runners), Validação (Matriz, Validador Regressivo) e Entrega (Prontidão, Roadmap). Os badges decorativos ("QA Hub", "Automação", "Oracle QA") saíram; ficam só a contagem da Matriz e a nota de Prontidão. Abas renomeadas: "TAUT (Cypress)", "Matriz" e "Prontidão (PO)".
 - **Configurações**: as abas ficam em três grupos separados por divisor, e o contador só aparece quando há itens (antes mostrava 0). A barra virou o componente `SettingsTabsNav`.

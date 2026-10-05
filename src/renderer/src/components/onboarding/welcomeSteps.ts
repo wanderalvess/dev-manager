@@ -20,8 +20,8 @@ export const WELCOME_STEPS: WelcomeStep[] = [
     id: 'theme',
     eyebrow: 'PRAZER, EU SOU',
     title: 'O seu',
-    highlight: 'Dev Manager',
-    desc: 'Organizo seu ambiente WinThor e cuido da infraestrutura pra você. Escolha o tema — dá pra trocar depois pelo cabeçalho — e use Ctrl+K a qualquer momento para a busca rápida.',
+    highlight: 'Hub Manager',
+    desc: 'Cockpit Integrado de Operação, Desenvolvimento e Qualidade para o ecossistema WinThor. Escolha o tema — dá pra trocar depois pelo cabeçalho — e use Ctrl+K a qualquer momento para a busca rápida.',
     icon: Sparkles
   }
 ];

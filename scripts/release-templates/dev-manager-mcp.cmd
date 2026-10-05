@@ -1,26 +1,45 @@
 @echo off
-rem Launcher do servidor MCP do Dev Manager (stdio).
+rem Launcher do servidor MCP do Hub Manager (stdio).
 rem Nada pode ir para stdout aqui fora o proprio servidor: stdout e o canal do protocolo MCP.
-rem Runtime: o Dev Manager.exe instalado (Electron rodando como Node) ou, na falta dele, o Node do PATH.
+rem Runtime: o Hub Manager.exe instalado (Electron rodando como Node) ou, na falta dele, o Node do PATH.
 setlocal
 set "MCP_SCRIPT=%~dp0dev-manager-mcp.mjs"
 
-if defined DEV_MANAGER_EXE if exist "%DEV_MANAGER_EXE%" goto run_app
-set "DEV_MANAGER_EXE=%LOCALAPPDATA%\Programs\Dev Manager\Dev Manager.exe"
-if exist "%DEV_MANAGER_EXE%" goto run_app
-set "DEV_MANAGER_EXE=%ProgramFiles%\Dev Manager\Dev Manager.exe"
-if exist "%DEV_MANAGER_EXE%" goto run_app
+if defined HUB_MANAGER_EXE if exist "%HUB_MANAGER_EXE%" (
+  set "TARGET_EXE=%HUB_MANAGER_EXE%"
+  goto run_app
+)
+if defined DEV_MANAGER_EXE if exist "%DEV_MANAGER_EXE%" (
+  set "TARGET_EXE=%DEV_MANAGER_EXE%"
+  goto run_app
+)
+if exist "%LOCALAPPDATA%\Programs\Hub Manager\Hub Manager.exe" (
+  set "TARGET_EXE=%LOCALAPPDATA%\Programs\Hub Manager\Hub Manager.exe"
+  goto run_app
+)
+if exist "%ProgramFiles%\Hub Manager\Hub Manager.exe" (
+  set "TARGET_EXE=%ProgramFiles%\Hub Manager\Hub Manager.exe"
+  goto run_app
+)
+if exist "%LOCALAPPDATA%\Programs\Dev Manager\Dev Manager.exe" (
+  set "TARGET_EXE=%LOCALAPPDATA%\Programs\Dev Manager\Dev Manager.exe"
+  goto run_app
+)
+if exist "%ProgramFiles%\Dev Manager\Dev Manager.exe" (
+  set "TARGET_EXE=%ProgramFiles%\Dev Manager\Dev Manager.exe"
+  goto run_app
+)
 
 where node >nul 2>nul
 if not errorlevel 1 goto run_node
 
-echo [dev-manager-mcp] Dev Manager.exe nao encontrado e Node.js nao esta no PATH. 1>&2
-echo [dev-manager-mcp] Instale o Dev Manager pelo Setup ou defina DEV_MANAGER_EXE com o caminho do executavel. 1>&2
+echo [hub-manager-mcp] Hub Manager.exe nao encontrado e Node.js nao esta no PATH. 1>&2
+echo [hub-manager-mcp] Instale o Hub Manager pelo Setup ou defina HUB_MANAGER_EXE com o caminho do executavel. 1>&2
 exit /b 1
 
 :run_app
 set "ELECTRON_RUN_AS_NODE=1"
-"%DEV_MANAGER_EXE%" "%MCP_SCRIPT%" %*
+"%TARGET_EXE%" "%MCP_SCRIPT%" %*
 exit /b %errorlevel%
 
 :run_node

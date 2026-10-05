@@ -1,9 +1,10 @@
 ===============================================================================
-  DEV MANAGER {{VERSION}} - LEIA-ME
+  HUB MANAGER {{VERSION}} - LEIA-ME
 ===============================================================================
 
-Cockpit para desenvolvedores Apache Karaf/OSGi: ambiente, Karaf, banco de
-dados, Docker, deploy, Git/Azure DevOps, busca em documentação (RAG), assistente
+Cockpit Integrado de Operação, Desenvolvimento e Qualidade para o ecossistema
+WinThor: ambiente, Karaf, banco de dados multi-vendor, Docker, deploy, Git/Azure
+DevOps, qualidade & testes (QA/PO/Dev), busca em documentação (RAG), assistente
 de IA e servidor MCP para Claude Code, VS Code/Copilot e Antigravity.
 
 Documentação completa: https://github.com/wanderalvess/dev-manager#readme
@@ -14,10 +15,10 @@ Dentro do app: Central de Ajuda (Alt+9).
 1. O QUE TEM NESTA PASTA
 -------------------------------------------------------------------------------
 
-  Dev Manager Setup {{VERSION}}.exe   Instalador (recomendado). Cria atalhos,
+  Hub Manager Setup {{VERSION}}.exe   Instalador (recomendado). Cria atalhos,
                                      recebe atualizações automáticas e serve
                                      de runtime para o servidor MCP.
-  Dev Manager {{VERSION}}.exe         Versão portátil: não instala nada.
+  Hub Manager {{VERSION}}.exe         Versão portátil: não instala nada.
   mcp\                               Servidor MCP para assistentes de IA
                                      (veja a seção 4).
   instalar-extras.cmd                Instala o modelo do RAG e o Oracle

@@ -106,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex flex-col">
           <div className="flex items-center space-x-1.5">
             <h1 className="text-xs sm:text-sm font-extrabold tracking-tight text-foreground font-sans flex items-center gap-1">
-              Dev <span className="text-primary font-bold">Manager</span>
+              Hub <span className="text-primary font-bold">Manager</span>
             </h1>
             <button
               type="button"

@@ -1,6 +1,6 @@
 {
-  "appId": "com.devmanager.cockpit",
-  "productName": "Dev Manager",
+  "appId": "com.hubmanager.cockpit",
+  "productName": "Hub Manager",
   "directories": {
     "output": "release",
     "buildResources": "build"

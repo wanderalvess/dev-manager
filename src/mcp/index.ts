@@ -259,7 +259,7 @@ function resolveDbConfig(connectionId?: string, customConfig?: any): DatabaseCon
   return conns.find((c) => c.isDefault) || conns[0] || null;
 }
 
-const server = new McpServer({ name: 'dev-manager', version: appVersion });
+const server = new McpServer({ name: 'hub-manager', version: appVersion });
 
 // --- 1. Sistema ---
 server.registerTool(
@@ -269,7 +269,7 @@ server.registerTool(
     const isAdmin = await windowsService.checkAdminPrivileges();
     const configPath = configService.getConfigFilePath();
     return ok({
-      appName: 'Dev Manager (MCP)',
+      appName: 'Hub Manager (MCP)',
       appVersion,
       nodeVersion: process.version,
       osPlatform: os.platform(),
@@ -3416,10 +3416,10 @@ server.registerTool(
 // --- Inicialização ---
 async function main() {
   await server.connect(new StdioServerTransport());
-  console.error('[Dev Manager MCP] Servidor conectado via stdio.');
+  console.error('[Hub Manager MCP] Servidor conectado via stdio.');
 }
 
 main().catch((err) => {
-  console.error('[Dev Manager MCP] Falha ao iniciar servidor:', err);
+  console.error('[Hub Manager MCP] Falha ao iniciar servidor:', err);
   process.exit(1);
 });

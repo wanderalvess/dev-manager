@@ -10,8 +10,8 @@ export const TOUR_STORAGE_KEY = 'devManager:onboardingTourV2';
 export const TOUR_STEPS: TourStep[] = [
   {
     target: null,
-    title: 'Bem-vindo ao Dev Manager 🚀',
-    desc: 'Um tour rápido pelos principais recursos do cockpit de desenvolvimento. Leva menos de 1 minuto.'
+    title: 'Bem-vindo ao Hub Manager 🚀',
+    desc: 'Um tour rápido pelos principais recursos do Cockpit Integrado de Operação, Desenvolvimento e Qualidade. Leva menos de 1 minuto.'
   },
   {
     target: 'nav-infra',
