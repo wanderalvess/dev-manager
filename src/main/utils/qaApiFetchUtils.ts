@@ -77,7 +77,7 @@ export function formatPayloadAsPrettyJson(data: any): string {
 
   try {
     return JSON.stringify(data, null, 2);
-  } catch (err: any) {
+  } catch {
     return String(data);
   }
 }

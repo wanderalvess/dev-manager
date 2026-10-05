@@ -31,7 +31,9 @@ export function migrateLegacySeedItems(items: QualityValidationItem[]): QualityV
       item.testerName === 'QA Team' &&
       (item.status === 'passed' || item.status === 'in_progress');
     if (!isUntouchedSeed) return item;
-    const { testerName: _tester, testedVersion: _version, ...rest } = item;
+    const rest = { ...item };
+    delete rest.testerName;
+    delete rest.testedVersion;
     return { ...rest, status: 'pending' };
   });
 }

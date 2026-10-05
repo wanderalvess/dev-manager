@@ -17,8 +17,6 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
 }) => {
   if (!feature) return null;
 
-  const targetIdentifier = `${feature.name}${feature.version ? `/${feature.version}` : ''}`;
-
   return (
     <div className="fixed inset-0 z-[95] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
       <div className="bg-card border border-rose-500/30 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">

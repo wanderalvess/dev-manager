@@ -5,7 +5,7 @@ import {
   DEFAULT_TEST_RUNNER_PRESETS,
   TestRunnerPreset
 } from '../../../../../shared/types';
-import { TYPE_ICONS } from './testRunnersVisuals';
+import { TYPE_ICONS } from './testRunnerTypeVisuals';
 import { RunnerCard } from './RunnerCard';
 
 interface RunnerListPanelProps {

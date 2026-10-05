@@ -32,6 +32,8 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
     if (settings.karafEnvironment === 'wsl') {
       fetchDistros();
     }
+    // fetchDistros é recriada a cada render; listar só ao trocar o ambiente evita refazer a consulta ao WSL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.karafEnvironment]);
 
   const isWsl = settings.karafEnvironment === 'wsl';

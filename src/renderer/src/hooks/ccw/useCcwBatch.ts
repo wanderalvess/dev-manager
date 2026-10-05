@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { BatchRoutineItemProgress, BatchRoutineDownloadResult } from '../../../../shared/types';
 import { parseBatchCodes, upsertBatchProgress } from '../../utils/ccwModalUtils';
 
@@ -55,11 +55,11 @@ export function useCcwBatch(onSuccess: () => void) {
     return () => unsubscribe();
   }, []);
 
-  const resetBatchFeedback = () => {
+  const resetBatchFeedback = useCallback(() => {
     setBatchSummary(null);
     setBatchError(null);
     setBatchProgressList([]);
-  };
+  }, []);
 
   return {
     batchTargetType,

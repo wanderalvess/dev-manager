@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Copy, Trash2, Check, RotateCw, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Layers, Copy, Trash2, Check, RotateCw, ShieldCheck } from 'lucide-react';
 import { KarafFeatureInfo } from '../../../../../shared/types';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 

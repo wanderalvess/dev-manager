@@ -62,7 +62,7 @@ export const CcwRoutineModal: React.FC<CcwRoutineModalProps> = ({
         fetchBackups(initialRoutineName);
       }
     }
-  }, [isOpen, initialRoutineName, initialTab, fetchBackups]);
+  }, [isOpen, initialRoutineName, initialTab, fetchBackups, resetBatchFeedback, setRollbackRoutine, setRollbackSuccessMsg, setRoutineInput]);
 
   if (!isOpen) return null;
 

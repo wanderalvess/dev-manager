@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UploadCloud, Sparkles, Play, RotateCw, X, ChevronRight } from 'lucide-react';
+import { UploadCloud, Sparkles, RotateCw, X, ChevronRight } from 'lucide-react';
 
 interface KarafFeaturesInstallDrawerProps {
   isOpen: boolean;

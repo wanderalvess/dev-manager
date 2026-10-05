@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   BookOpen,
-  HelpCircle,
   Copy,
   Check,
   Download,
@@ -11,7 +10,6 @@ import {
   Code2,
   CheckCircle2,
   Table,
-  Terminal,
   Zap
 } from 'lucide-react';
 import {

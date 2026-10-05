@@ -46,7 +46,7 @@ export const QaOraclePayloadTab: React.FC<QaOraclePayloadTabProps> = ({
   }, [defaultCupom, defaultFilial]);
 
   const handleSearch = useCallback(async () => {
-    const val = validateSearchTerm(searchMode, searchTerm, filialTerm);
+    const val = validateSearchTerm(searchMode, searchTerm);
     if (!val.isValid) {
       setError(val.message || 'Parâmetro de busca inválido.');
       return;

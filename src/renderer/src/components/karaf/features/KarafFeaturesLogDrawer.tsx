@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Terminal, Trash2, X } from 'lucide-react';
+import { Terminal, Trash2 } from 'lucide-react';
 
 interface KarafFeaturesLogDrawerProps {
   logs: string | null;

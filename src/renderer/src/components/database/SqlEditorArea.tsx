@@ -14,7 +14,6 @@ import { SqlEditorToolbar } from './sqleditor/SqlEditorToolbar';
 import { SqlEditorSurface } from './sqleditor/SqlEditorSurface';
 import { SqlEditorStatusBar } from './sqleditor/SqlEditorStatusBar';
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { DEFAULT_SQL_SNIPPETS };
 
 export interface SqlEditorAreaProps {

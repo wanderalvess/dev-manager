@@ -2,7 +2,7 @@ import React from 'react';
 import { Play, Trash2, Edit2, Terminal, RefreshCw, FolderOpen, Layers } from 'lucide-react';
 import type { TestRunnerConfig } from '../../../../../shared/types';
 import { getCommandPreview } from '../../../utils/testRunnersUtils';
-import { TYPE_ICONS, TYPE_BADGES } from './testRunnersVisuals';
+import { TYPE_ICONS, TYPE_BADGES } from './testRunnerTypeVisuals';
 
 interface RunnerCardProps {
   runner: TestRunnerConfig;
