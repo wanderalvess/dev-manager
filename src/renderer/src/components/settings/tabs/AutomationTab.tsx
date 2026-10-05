@@ -136,7 +136,7 @@ export const AutomationTab: React.FC<AutomationTabProps> = ({
           <span className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-primary" /> Perfis de Automação Cadastrados ({settings.automationProfiles?.length || 0})
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-2xs text-muted-foreground">
             Gerencie, adicione e edite passos na aba de Ambiente
           </span>
         </div>
@@ -157,16 +157,16 @@ export const AutomationTab: React.FC<AutomationTabProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-foreground truncate">{prof.name}</span>
                     {isActive && (
-                      <span className="text-[9px] bg-primary text-primary-foreground font-bold px-1.5 py-0.5 rounded">
+                      <span className="text-2xs bg-primary text-primary-foreground font-bold px-1.5 py-0.5 rounded">
                         Ativo
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                  <p className="text-2xs text-muted-foreground truncate mt-0.5">
                     {prof.description || `${prof.steps?.length || 0} passos configurados`}
                   </p>
                 </div>
-                <span className="text-[10px] font-mono font-bold bg-muted px-2 py-1 rounded shrink-0">
+                <span className="text-2xs font-mono font-bold bg-muted px-2 py-1 rounded shrink-0">
                   {prof.steps?.length || 0} passos
                 </span>
               </div>

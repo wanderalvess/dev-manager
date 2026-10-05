@@ -20,7 +20,7 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({
           <ListChecks className="w-3.5 h-3.5 text-primary" />
           Checklist de Configuração Inicial
         </span>
-        <span className="text-[10px] text-muted-foreground font-mono">
+        <span className="text-2xs text-muted-foreground font-mono">
           {checklist.length - pendingCount}/{checklist.length} concluídos
         </span>
       </div>

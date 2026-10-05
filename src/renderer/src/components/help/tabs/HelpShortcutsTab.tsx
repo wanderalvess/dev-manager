@@ -53,7 +53,7 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
             >
               <div className="space-y-0.5 min-w-0 pr-3">
                 <span className="text-xs font-bold text-foreground block truncate">{sc.desc}</span>
-                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">
+                <span className="text-2xs text-muted-foreground font-mono uppercase tracking-wider">
                   {sc.category}
                 </span>
               </div>
@@ -78,7 +78,7 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
           </p>
           <div className="p-2.5 rounded-xl bg-muted/60 border border-border font-mono text-[11px] text-foreground flex items-center justify-between">
             <span>Host: localhost • Port: {debugPort}</span>
-            <span className="text-[10px] text-muted-foreground font-sans">JDWP Socket</span>
+            <span className="text-2xs text-muted-foreground font-sans">JDWP Socket</span>
           </div>
         </div>
 

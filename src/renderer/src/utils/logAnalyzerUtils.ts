@@ -134,6 +134,7 @@ export function analyzeLogLine(line: string, lineIndex: number): LogExceptionMat
       rawLine: line,
       suggestedCommands: [
         'jmx:run java.lang:type=Memory gc',
+        'system:gc',
         'Aumentar parâmetros de memória -Xmx e -XX:MaxMetaspaceSize no setenv.bat do Karaf.',
         'Abrir o Monitor de Memória JVM no Cockpit para inspecionar curva de consumo.'
       ],

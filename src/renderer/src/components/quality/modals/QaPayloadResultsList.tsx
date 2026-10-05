@@ -40,14 +40,14 @@ export const QaPayloadResultsList: React.FC<QaPayloadResultsListProps> = ({
                 : 'bg-card border-border hover:border-primary/50 text-muted-foreground'
             }`}
           >
-            <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+            <div className="flex items-center justify-between text-2xs font-mono mb-1">
               <span className="font-bold text-primary">{summary.badge}</span>
               {summary.valueDisplay && (
                 <span className="font-semibold text-foreground">{summary.valueDisplay}</span>
               )}
             </div>
             <div className="text-xs font-semibold text-foreground truncate">{summary.title}</div>
-            <div className="text-[10px] text-muted-foreground truncate mt-0.5">{summary.subtitle}</div>
+            <div className="text-2xs text-muted-foreground truncate mt-0.5">{summary.subtitle}</div>
           </div>
         );
       })}

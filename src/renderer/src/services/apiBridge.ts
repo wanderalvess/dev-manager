@@ -1984,11 +1984,7 @@ export function initApiBridge() {
       }
     },
     generateApmDemo: async (): Promise<{ generatedSpans: number; generatedTraces: number }> => {
-      try {
-        return await apiFetch<{ generatedSpans: number; generatedTraces: number }>('/api/apm/demo', { method: 'POST' });
-      } catch {
-        return { generatedSpans: 0, generatedTraces: 0 };
-      }
+      return apiFetch<{ generatedSpans: number; generatedTraces: number }>('/api/apm/demo', { method: 'POST' });
     },
     changeApmReceiverPort: async (port: number): Promise<ApmReceiverPortChangeResult> => {
       return apiFetch<ApmReceiverPortChangeResult>('/api/apm/receiver-port', {

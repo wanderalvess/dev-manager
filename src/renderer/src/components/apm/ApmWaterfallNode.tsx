@@ -47,7 +47,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
           style={{ paddingLeft: `${depth * 14}px` }}
         >
           {depth > 0 && (
-            <span className="text-border shrink-0 font-mono text-[10px]">└</span>
+            <span className="text-border shrink-0 font-mono text-2xs">└</span>
           )}
 
           {hasChildren ? (
@@ -67,7 +67,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
 
           {/* Pílula Semântica de Camada: [HTTP], [JAVA], [JDBC] */}
           <span
-            className={`px-1 py-0.2 rounded border text-[9px] font-bold tracking-tight shrink-0 ${tier.badgeClass}`}
+            className={`px-1 py-0.2 rounded border text-2xs font-bold tracking-tight shrink-0 ${tier.badgeClass}`}
             title={`Camada: ${tier.label}`}
           >
             {tier.label}
@@ -90,7 +90,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
           {/* Tag de Alerta para Consulta/Span Lento (>= 300ms) */}
           {tier.isSlow && (
             <span
-              className="px-1 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-[9px] font-bold flex items-center gap-0.5 shrink-0"
+              className="px-1 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-2xs font-bold flex items-center gap-0.5 shrink-0"
               title={`Span com duração elevada: ${span.durationMs}ms`}
             >
               <Zap className="w-2.5 h-2.5 text-amber-500" />
@@ -109,7 +109,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
             className={`h-2.5 rounded absolute transition-all ${getBarColor()}`}
             title={`${span.name}: ${span.durationMs}ms (início: +${offsetPercent}%) [${tier.label}]`}
           />
-          <span className="absolute right-1 text-[10px] font-mono text-foreground/80 dark:text-muted-foreground tabular-nums">
+          <span className="absolute right-1 text-2xs font-mono text-foreground/80 dark:text-muted-foreground tabular-nums">
             {span.durationMs}ms
           </span>
         </div>

@@ -142,7 +142,7 @@ export const ThemeToggle: React.FC = () => {
                 Aparência & Tema
               </span>
             </div>
-            <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
+            <span className="text-2xs font-mono font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
               {variant}
             </span>
           </div>
@@ -221,7 +221,7 @@ export const ThemeToggle: React.FC = () => {
                           </span>
                           <span className={`w-2 h-2 rounded-full ${item.bgPreview}`} />
                         </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">
+                        <p className="text-2xs text-muted-foreground leading-tight">
                           {item.description}
                         </p>
                       </div>

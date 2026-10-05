@@ -25,7 +25,7 @@ export const QuickSearchButton: React.FC<QuickSearchButtonProps> = ({ onOpenQuic
           Buscar...
         </span>
       </div>
-      <kbd className="px-1.5 py-0.5 rounded bg-card text-[10px] font-mono font-bold text-foreground border border-border/70 shadow-xs shrink-0">
+      <kbd className="px-1.5 py-0.5 rounded bg-card text-2xs font-mono font-bold text-foreground border border-border/70 shadow-xs shrink-0">
         Ctrl+K
       </kbd>
     </button>

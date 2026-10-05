@@ -196,14 +196,14 @@ export function parseNewmanTestOutput(cleanText: string, exitCode: number): Pars
   let found = false;
 
   // Procura por tabela do newman: "assertions | total | failed"
-  const assertionRowMatch = cleanText.match(/assertions\s*│?\s*\|\s*(\d+)\s*│?\s*\|\s*(\d+)/i);
+  const assertionRowMatch = cleanText.match(/assertions\s*[│|]\s*(\d+)\s*[│|]\s*(\d+)/i);
   if (assertionRowMatch) {
     total = parseInt(assertionRowMatch[1], 10);
     failed = parseInt(assertionRowMatch[2], 10);
     found = true;
   } else {
     // Procura por "requests | total | failed"
-    const reqMatch = cleanText.match(/requests\s*│?\s*\|\s*(\d+)\s*│?\s*\|\s*(\d+)/i);
+    const reqMatch = cleanText.match(/requests\s*[│|]\s*(\d+)\s*[│|]\s*(\d+)/i);
     if (reqMatch) {
       total = parseInt(reqMatch[1], 10);
       failed = parseInt(reqMatch[2], 10);

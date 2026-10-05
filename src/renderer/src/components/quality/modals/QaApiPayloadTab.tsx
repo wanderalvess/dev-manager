@@ -141,7 +141,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
             <KeyRound className="w-3.5 h-3.5 text-primary" />
             <span>Caminho do Objeto no JSON (Opcional)</span>
           </span>
-          <span className="text-[10px] text-muted-foreground/80">Vazio = usa toda a resposta</span>
+          <span className="text-2xs text-muted-foreground/80">Vazio = usa toda a resposta</span>
         </label>
         <input
           type="text"
@@ -201,7 +201,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
             <span>{statusInfo.error || `HTTP ${statusInfo.code} OK - Payload extraído com sucesso!`}</span>
           </div>
           {statusInfo.durationMs !== undefined && (
-            <span className="text-[10px] opacity-75 shrink-0">{statusInfo.durationMs}ms</span>
+            <span className="text-2xs opacity-75 shrink-0">{statusInfo.durationMs}ms</span>
           )}
         </div>
       )}

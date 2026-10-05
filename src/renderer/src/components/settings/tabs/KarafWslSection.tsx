@@ -32,6 +32,8 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
     if (settings.karafEnvironment === 'wsl') {
       fetchDistros();
     }
+    // fetchDistros é recriada a cada render; listar só ao trocar o ambiente evita refazer a consulta ao WSL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.karafEnvironment]);
 
   const isWsl = settings.karafEnvironment === 'wsl';
@@ -81,13 +83,13 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
       {isWsl && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
           <div>
-            <label className="block font-bold text-foreground mb-1 flex items-center justify-between">
+            <label htmlFor="karaf-wsl-section-1" className="block font-bold text-foreground mb-1 flex items-center justify-between">
               <span>Distribuição WSL Alvo:</span>
               <button
                 type="button"
                 onClick={fetchDistros}
                 disabled={loadingDistros}
-                className="text-[10px] text-primary hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                className="text-2xs text-primary hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 title="Recarregar distribuições do wsl --list"
               >
                 <RefreshCw className={`w-3 h-3 ${loadingDistros ? 'animate-spin' : ''}`} />
@@ -95,7 +97,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
               </button>
             </label>
             {distros.length > 0 ? (
-              <select
+              <select id="karaf-wsl-section-1"
                 value={settings.karafWslDistro || ''}
                 onChange={(e) => setSettings({ ...settings, karafWslDistro: e.target.value })}
                 className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary text-xs"
@@ -116,7 +118,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
                 placeholder="Ex: Ubuntu, Debian"
               />
             )}
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-2xs text-muted-foreground mt-1">
               O caminho do Karaf pode ser Linux (<code className="font-mono text-foreground">/home/...</code>) ou rede UNC (<code className="font-mono text-foreground">\\wsl.localhost\...</code>).
             </p>
           </div>

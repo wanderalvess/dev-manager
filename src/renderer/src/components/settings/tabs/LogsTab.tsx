@@ -70,8 +70,8 @@ export const LogsTab: React.FC<LogsTabProps> = ({
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-foreground block">Nome de Exibição</label>
-                  <input
+                  <label htmlFor={`logs-tab-1-${idx}`} className="text-[11px] font-bold text-foreground block">Nome de Exibição</label>
+                  <input id={`logs-tab-1-${idx}`}
                     type="text"
                     value={src.name || ''}
                     onChange={(e) => handleUpdateLogSource(idx, 'name', e.target.value)}
@@ -82,11 +82,11 @@ export const LogsTab: React.FC<LogsTabProps> = ({
 
                 <div className="space-y-1 md:col-span-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-foreground block">Caminho do Arquivo de Log (.log, .out, .txt)</label>
-                    <span className="text-[10px] text-muted-foreground font-mono">Windows Local</span>
+                    <label htmlFor={`logs-tab-2-${idx}`} className="text-[11px] font-bold text-foreground block">Caminho do Arquivo de Log (.log, .out, .txt)</label>
+                    <span className="text-2xs text-muted-foreground font-mono">Windows Local</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <input
+                    <input id={`logs-tab-2-${idx}`}
                       type="text"
                       value={src.filePath || ''}
                       onChange={(e) => handleUpdateLogSource(idx, 'filePath', e.target.value)}
@@ -107,8 +107,8 @@ export const LogsTab: React.FC<LogsTabProps> = ({
 
               <div className="flex flex-wrap items-center justify-between pt-1 gap-2">
                 <div className="flex items-center space-x-2">
-                  <label className="text-[11px] font-semibold text-muted-foreground">Codificação:</label>
-                  <select
+                  <label htmlFor={`logs-tab-3-${idx}`} className="text-[11px] font-semibold text-muted-foreground">Codificação:</label>
+                  <select id={`logs-tab-3-${idx}`}
                     value={src.encoding || 'utf-8'}
                     onChange={(e) => handleUpdateLogSource(idx, 'encoding', e.target.value)}
                     className="px-2.5 py-1 bg-background border border-border rounded-lg text-xs"

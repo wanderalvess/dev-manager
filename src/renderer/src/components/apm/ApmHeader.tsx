@@ -43,7 +43,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
               }`}
             />
             <span className="font-semibold">:{receiverPort}</span>
-            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-sans font-medium">OTLP</span>
+            <span className="text-2xs uppercase tracking-wider text-muted-foreground font-sans font-medium">OTLP</span>
           </button>
 
           <div className="h-4 w-[1px] bg-border shrink-0" />
@@ -128,7 +128,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             <Layers className="w-3.5 h-3.5 text-indigo-500" />
             <span>Traces Explorer</span>
             {traceCount > 0 && (
-              <span className="text-[10px] font-mono px-1 rounded bg-muted text-muted-foreground">
+              <span className="text-2xs font-mono px-1 rounded bg-muted text-muted-foreground">
                 {traceCount}
               </span>
             )}
@@ -138,7 +138,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
         {/* Lado Direito: Ações & Gravação */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Dica de navegação por teclado */}
-          <div className="hidden 2xl:flex items-center gap-1 text-[10px] text-muted-foreground/70 font-mono">
+          <div className="hidden 2xl:flex items-center gap-1 text-2xs text-muted-foreground/70 font-mono">
             <span className="px-1 py-0.5 rounded bg-muted/60 border border-border/60">↑/↓</span>
             <span>navegar</span>
             <span className="px-1 py-0.5 rounded bg-muted/60 border border-border/60 ml-1">/</span>

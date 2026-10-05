@@ -12,6 +12,7 @@ import { KarafService } from './KarafService';
 import { runCapturedProcess, killProcessTree } from '../utils/process';
 import { parseTestOutput } from '../utils/testRunnerParsers';
 import { isSafeLocalPath } from '../utils/security';
+import { splitCommandLine } from '../utils/commandLineUtils';
 
 const MAX_TEST_HISTORY_ENTRIES = 100;
 
@@ -202,6 +203,13 @@ export class TestRunnerService {
     onChunk(`Tipo: ${runner.type.toUpperCase()} | Diretório: ${workingDir}\r\n`);
     onChunk(`==================================================\r\n\r\n`);
 
+    // Diretório informado que não existe cai em process.cwd() na resolução; rodar `mvn test` na pasta do app seria enganoso
+    if (runner.workingDir?.trim() && workingDir === process.cwd()) {
+      const err = `[ERRO] Diretório de trabalho não encontrado: "${runner.workingDir}". Ajuste o runner antes de executar.\r\n`;
+      onChunk(err);
+      return this.createAndSaveFailedResult(runner, executionId, startTime, 1, err, 'Diretório de trabalho não encontrado.');
+    }
+
     if (workingDir && !isSafeLocalPath(workingDir)) {
       const err = `[ERRO DE SEGURANÇA] Caminho de trabalho inválido ou não seguro: "${workingDir}"\r\n`;
       onChunk(err);
@@ -237,7 +245,7 @@ export class TestRunnerService {
           command = 'mvn';
         }
 
-        const splitArgs = rawArgs ? rawArgs.split(/\s+/) : ['test'];
+        const splitArgs = rawArgs ? splitCommandLine(rawArgs) : ['test'];
         // Garante que não pule testes
         args = splitArgs.filter((a) => !a.includes('-DskipTests=true'));
         break;
@@ -245,21 +253,21 @@ export class TestRunnerService {
 
       case 'playwright': {
         command = 'npx';
-        const splitArgs = rawArgs ? rawArgs.split(/\s+/) : ['test'];
+        const splitArgs = rawArgs ? splitCommandLine(rawArgs) : ['test'];
         args = ['playwright', ...splitArgs];
         break;
       }
 
       case 'cypress': {
         command = 'npx';
-        const splitArgs = rawArgs ? rawArgs.split(/\s+/) : ['run'];
+        const splitArgs = rawArgs ? splitCommandLine(rawArgs) : ['run'];
         args = ['cypress', ...splitArgs];
         break;
       }
 
       case 'newman': {
         command = 'npx';
-        const splitArgs = rawArgs ? rawArgs.split(/\s+/) : ['run', './tests/collection.json'];
+        const splitArgs = rawArgs ? splitCommandLine(rawArgs) : ['run', './tests/collection.json'];
         args = ['newman', ...splitArgs];
         break;
       }
@@ -270,7 +278,7 @@ export class TestRunnerService {
         const fullCmd = customExec
           ? (rawArgs ? `${customExec} ${rawArgs}` : customExec)
           : (rawArgs || 'npm test');
-        const parts = fullCmd.split(/\s+/);
+        const parts = splitCommandLine(fullCmd);
         command = parts[0];
         args = parts.slice(1);
         break;

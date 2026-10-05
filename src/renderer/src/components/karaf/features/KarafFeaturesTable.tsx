@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Copy, Trash2, Check, RotateCw, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Layers, Copy, Trash2, Check, RotateCw, ShieldCheck } from 'lucide-react';
 import { KarafFeatureInfo } from '../../../../../shared/types';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 
@@ -48,7 +48,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
   return (
     <div className="overflow-x-auto min-h-[300px]">
       <table className="w-full text-left text-xs border-collapse">
-        <thead className="sticky top-0 bg-muted/80 backdrop-blur-xs border-b border-border z-10 text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider">
+        <thead className="sticky top-0 bg-muted/80 backdrop-blur-xs border-b border-border z-10 text-2xs font-mono font-bold text-muted-foreground uppercase tracking-wider">
           <tr>
             <th className="py-2.5 px-4">Feature / Descrição</th>
             <th className="py-2.5 px-3">Versão</th>
@@ -93,7 +93,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                     {/* Tag WinThor */}
                     {feat.isWinthor && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25 uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-2xs font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25 uppercase tracking-wider">
                         <ShieldCheck className="w-2.5 h-2.5" />
                         WinThor
                       </span>
@@ -101,14 +101,14 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                     {/* Tag Obrigatório / Required */}
                     {feat.required && (
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
+                      <span className="px-1.5 py-0.2 rounded text-2xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
                         Required
                       </span>
                     )}
                   </div>
 
                   {feat.description && (
-                    <p className="text-[10px] text-muted-foreground font-sans truncate max-w-lg mt-0.5 select-text">
+                    <p className="text-2xs text-muted-foreground font-sans truncate max-w-lg mt-0.5 select-text">
                       {feat.description}
                     </p>
                   )}
@@ -116,7 +116,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                 {/* Versão */}
                 <td className="py-2.5 px-3">
-                  <span className="text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60 border border-border/60 text-[10px] font-mono tabular-nums">
+                  <span className="text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60 border border-border/60 text-2xs font-mono tabular-nums">
                     {feat.version || 'latest'}
                   </span>
                 </td>
@@ -125,7 +125,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                 <td className="py-2.5 px-3 text-muted-foreground max-w-[220px]">
                   {feat.repository ? (
                     <span
-                      className="truncate block text-[10px] hover:text-foreground transition-colors cursor-help"
+                      className="truncate block text-2xs hover:text-foreground transition-colors cursor-help"
                       title={feat.repository}
                     >
                       {feat.repository}
@@ -138,7 +138,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                 {/* Estado OSGi */}
                 <td className="py-2.5 px-3">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-bold border ${
                       isStarted
                         ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25'
                         : 'bg-muted text-muted-foreground border-border'

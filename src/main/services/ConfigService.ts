@@ -49,20 +49,20 @@ export const DEFAULT_DEPLOY_PROFILES: DeployProfile[] = [
   {
     id: 'deploy-profile-karaf-osgi',
     name: 'Deploy Karaf OSGi',
-    description: 'Registra o repositório Maven e instala/atualiza a feature no Karaf local',
+    description: 'Modelo de exemplo (etapas desabilitadas): troque as coordenadas Maven pelas do seu projeto e habilite as etapas',
     steps: [
       {
         id: 'deploy-step-karaf-repo-add',
         name: 'Registrar Repositório Maven',
         type: 'karaf-command',
-        enabled: true,
+        enabled: false,
         command: 'feature:repo-add mvn:com.empresa.service/meu-servico/0.0.1-SNAPSHOT/xml/features'
       },
       {
         id: 'deploy-step-karaf-feature-install',
         name: 'Instalar / Atualizar Feature',
         type: 'karaf-command',
-        enabled: true,
+        enabled: false,
         command: 'feature:install -r -u meu-servico/0.0.1-SNAPSHOT'
       }
     ]
@@ -538,6 +538,7 @@ export class ConfigService {
       this.cachedSettings = { data: updated, mtimeMs: stat.mtimeMs };
     } catch (err) {
       console.error('Erro ao salvar configurações:', err);
+      throw new Error(`Não foi possível gravar as configurações: ${err instanceof Error ? err.message : String(err)}`);
     }
     return updated;
   }

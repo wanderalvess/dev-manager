@@ -28,11 +28,11 @@ export const KarafFeaturesModalHeader: React.FC<KarafFeaturesModalHeaderProps> =
               <h3 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
                 Features Karaf Instaladas
               </h3>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-mono font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 OSGi :8101
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
+              <span className="text-2xs font-mono px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
                 feature:list -i
               </span>
             </div>
@@ -64,7 +64,7 @@ export const KarafFeaturesModalHeader: React.FC<KarafFeaturesModalHeaderProps> =
           <Cpu className="w-3.5 h-3.5 text-primary shrink-0" />
           <div className="flex items-baseline space-x-1.5">
             <span className="text-xs font-mono font-bold text-foreground tabular-nums">{totalCount}</span>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Instaladas</span>
+            <span className="text-2xs font-mono text-muted-foreground uppercase tracking-wider">Instaladas</span>
           </div>
         </div>
 
@@ -72,7 +72,7 @@ export const KarafFeaturesModalHeader: React.FC<KarafFeaturesModalHeaderProps> =
           <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
           <div className="flex items-baseline space-x-1.5">
             <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">{winthorCount}</span>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">WinThor / TOTVS</span>
+            <span className="text-2xs font-mono text-muted-foreground uppercase tracking-wider">WinThor / TOTVS</span>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export const KarafFeaturesModalHeader: React.FC<KarafFeaturesModalHeaderProps> =
           <Terminal className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <div className="flex items-baseline space-x-1.5">
             <span className="text-xs font-mono font-bold text-foreground tabular-nums">{systemCount}</span>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Core / Sistema</span>
+            <span className="text-2xs font-mono text-muted-foreground uppercase tracking-wider">Core / Sistema</span>
           </div>
         </div>
       </div>

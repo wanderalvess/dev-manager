@@ -50,7 +50,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <span className="hidden 2xl:inline">{group.shortTitle}</span>
                 <span className="2xl:hidden">{group.compactTitle}</span>
                 {activeSubItem && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-primary text-primary-foreground font-mono leading-none shrink-0 hidden xl:inline">
+                  <span className="px-1.5 py-0.5 text-2xs font-bold rounded bg-primary text-primary-foreground font-mono leading-none shrink-0 hidden xl:inline">
                     {activeSubItem.shortLabel}
                   </span>
                 )}
@@ -67,7 +67,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   style={{ backgroundColor: 'hsl(var(--card))' }}
                   className="absolute top-full left-0 mt-2 w-72 bg-card text-card-foreground rounded-xl border border-border shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-150"
                 >
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60 mb-1.5 flex items-center justify-between">
+                  <div className="px-3 py-1.5 text-2xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60 mb-1.5 flex items-center justify-between">
                     <span>{group.title}</span>
                   </div>
                   <div className="space-y-1">
@@ -97,7 +97,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                             <div className="truncate">
                               <div className="text-xs font-semibold leading-tight">{item.label}</div>
                               <div
-                                className={`text-[10px] truncate leading-normal ${
+                                className={`text-2xs truncate leading-normal ${
                                   isItemActive ? 'text-primary-foreground/90' : 'text-muted-foreground'
                                 }`}
                               >
@@ -106,7 +106,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                             </div>
                           </div>
                           <span
-                            className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                            className={`text-2xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
                               isItemActive
                                 ? 'bg-primary-foreground/20 text-primary-foreground'
                                 : 'bg-muted text-muted-foreground border border-border/60'
@@ -155,7 +155,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           >
             {NAV_THEME_GROUPS.map((group) => (
               <div key={group.id} className="space-y-1">
-                <div className="px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <div className="px-2 text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <group.icon className="w-3 h-3 text-primary" />
                   <span>{group.title}</span>
                 </div>
@@ -181,7 +181,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                           <ItemIcon className="w-3.5 h-3.5 shrink-0" />
                           <span className="text-xs truncate">{item.label}</span>
                         </div>
-                        <span className="text-[9px] font-mono opacity-80 shrink-0 ml-2">{item.shortcut}</span>
+                        <span className="text-2xs font-mono opacity-80 shrink-0 ml-2">{item.shortcut}</span>
                       </button>
                     );
                   })}
@@ -190,7 +190,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             ))}
 
             <div className="space-y-1 pt-1 border-t border-border/50">
-              <div className="px-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <div className="px-2 text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <HelpCircle className="w-3 h-3 text-primary" />
                 <span>Sistema &amp; Suporte</span>
               </div>
@@ -211,7 +211,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     <HelpCircle className="w-3.5 h-3.5 shrink-0" />
                     <span className="text-xs truncate">Central de Ajuda</span>
                   </div>
-                  <span className="text-[9px] font-mono opacity-80 shrink-0 ml-2">Alt+9</span>
+                  <span className="text-2xs font-mono opacity-80 shrink-0 ml-2">Alt+9</span>
                 </button>
                 <button
                   type="button"

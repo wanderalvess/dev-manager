@@ -70,7 +70,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
               Logs:{' '}
               <span className="font-mono text-primary">{container.names.replace(/^\//, '')}</span>
             </h3>
-            <span className="text-[10px] text-muted-foreground font-mono bg-muted/70 px-1.5 py-0.2 rounded border border-border/50">
+            <span className="text-2xs text-muted-foreground font-mono bg-muted/70 px-1.5 py-0.2 rounded border border-border/50">
               {container.id.slice(0, 12)}
             </span>
           </div>
@@ -84,7 +84,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
                 value={logSearchQuery}
                 onChange={(e) => setLogSearchQuery(e.target.value)}
                 placeholder="Filtrar linhas..."
-                className="bg-muted/70 border border-border/80 rounded-lg pl-6 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary w-28 md:w-36 font-mono text-[10px]"
+                className="bg-muted/70 border border-border/80 rounded-lg pl-6 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary w-28 md:w-36 font-mono text-2xs"
               />
             </div>
 

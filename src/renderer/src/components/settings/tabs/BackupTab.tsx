@@ -27,7 +27,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
               <HardDriveDownload className="w-4 h-4 text-sky-500" /> Executáveis de Backup
             </h3>
-            <span className="text-[10px] text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
+            <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
           </div>
           <p className="text-xs text-muted-foreground">
             Usados pela função de Backup da aba <strong>Banco de Dados</strong>. Deixe em branco se o executável já
@@ -37,11 +37,11 @@ export const BackupTab: React.FC<BackupTabProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             {/* pg_dump */}
             <div className="space-y-1.5">
-              <label className="font-bold text-foreground flex items-center gap-1.5">
+              <label htmlFor="backup-tab-1" className="font-bold text-foreground flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-sky-500" /> pg_dump (Postgres)
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="backup-tab-1"
                   type="text"
                   value={settings.pgDumpPath || ''}
                   onChange={(e) => setSettings({ ...settings, pgDumpPath: e.target.value })}
@@ -61,11 +61,11 @@ export const BackupTab: React.FC<BackupTabProps> = ({
 
             {/* expdp */}
             <div className="space-y-1.5">
-              <label className="font-bold text-foreground flex items-center gap-1.5">
+              <label htmlFor="backup-tab-2" className="font-bold text-foreground flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-rose-500" /> expdp (Oracle)
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="backup-tab-2"
                   type="text"
                   value={settings.expdpPath || ''}
                   onChange={(e) => setSettings({ ...settings, expdpPath: e.target.value })}
@@ -85,11 +85,11 @@ export const BackupTab: React.FC<BackupTabProps> = ({
 
             {/* mysqldump */}
             <div className="space-y-1.5">
-              <label className="font-bold text-foreground flex items-center gap-1.5">
+              <label htmlFor="backup-tab-3" className="font-bold text-foreground flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-amber-500" /> mysqldump (MySQL)
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="backup-tab-3"
                   type="text"
                   value={settings.mysqldumpPath || ''}
                   onChange={(e) => setSettings({ ...settings, mysqldumpPath: e.target.value })}
@@ -114,17 +114,17 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
               <RotateCcw className="w-4 h-4 text-emerald-500" /> Executáveis de Restauração
             </h3>
-            <span className="text-[10px] text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
+            <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             {/* psql */}
             <div className="space-y-1.5">
-              <label className="font-bold text-foreground flex items-center gap-1.5">
+              <label htmlFor="backup-tab-4" className="font-bold text-foreground flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-sky-500" /> psql (Postgres)
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="backup-tab-4"
                   type="text"
                   value={settings.psqlPath || ''}
                   onChange={(e) => setSettings({ ...settings, psqlPath: e.target.value })}
@@ -144,11 +144,11 @@ export const BackupTab: React.FC<BackupTabProps> = ({
 
             {/* impdp */}
             <div className="space-y-1.5">
-              <label className="font-bold text-foreground flex items-center gap-1.5">
+              <label htmlFor="backup-tab-5" className="font-bold text-foreground flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-rose-500" /> impdp (Oracle)
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="backup-tab-5"
                   type="text"
                   value={settings.impdpPath || ''}
                   onChange={(e) => setSettings({ ...settings, impdpPath: e.target.value })}
@@ -168,11 +168,11 @@ export const BackupTab: React.FC<BackupTabProps> = ({
 
             {/* mysql */}
             <div className="space-y-1.5">
-              <label className="font-bold text-foreground flex items-center gap-1.5">
+              <label htmlFor="backup-tab-6" className="font-bold text-foreground flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-amber-500" /> mysql (Cliente MySQL)
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="backup-tab-6"
                   type="text"
                   value={settings.mysqlPath || ''}
                   onChange={(e) => setSettings({ ...settings, mysqlPath: e.target.value })}
@@ -198,18 +198,18 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
               <Network className="w-4 h-4 text-orange-500" /> Rede Oracle & tnsnames.ora
             </h3>
-            <span className="text-[10px] text-muted-foreground font-mono">Busca de conexões & TNS_ADMIN</span>
+            <span className="text-2xs text-muted-foreground font-mono">Busca de conexões & TNS_ADMIN</span>
           </div>
           <p className="text-xs text-muted-foreground">
             Caminho do arquivo <span className="font-mono text-foreground font-semibold">tnsnames.ora</span> utilizado pelo DB Studio para importar e preencher automaticamente os dados de conexão do Oracle (Host, Porta, Service Name e SID).
           </p>
 
           <div className="space-y-1.5 text-xs">
-            <label className="font-bold text-foreground flex items-center gap-1.5">
+            <label htmlFor="backup-tab-7" className="font-bold text-foreground flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-orange-500" /> Arquivo de Configuração (tnsnames.ora)
             </label>
             <div className="flex items-center space-x-2">
-              <input
+              <input id="backup-tab-7"
                 type="text"
                 value={settings.oracleTnsnamesPath || ''}
                 onChange={(e) => setSettings({ ...settings, oracleTnsnamesPath: e.target.value })}

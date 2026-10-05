@@ -68,17 +68,26 @@ describe('TautAutomationService', () => {
       expect(res).toBe('C:\\projetos\\TAUT-Mississauga');
     });
 
-    it('deve autodetectar TAUT-Mississauga dentro de projectsPath se tautProjectPath não estiver definido', () => {
+    it('deve autodetectar qualquer pasta "taut*" dentro de projectsPath se tautProjectPath não estiver definido', () => {
       vi.mocked(configService.getSettings).mockReturnValue({
         projectsPath: 'C:\\MeusProjetosGit',
         tautProjectPath: ''
       } as any);
-      vi.mocked(fs.existsSync).mockImplementation((p: any) => {
-        return p === path.join('C:\\MeusProjetosGit', 'TAUT-Mississauga');
-      });
+      const expected = path.join('C:\\MeusProjetosGit', 'taut-meu-projeto');
+      vi.mocked(fs.existsSync).mockImplementation((p: any) => p === 'C:\\MeusProjetosGit' || p === expected);
+      vi.mocked(fs.readdirSync).mockReturnValue([{ name: 'taut-meu-projeto', isDirectory: () => true }] as any);
 
-      const res = service.resolveProjectPath();
-      expect(res).toBe(path.join('C:\\MeusProjetosGit', 'TAUT-Mississauga'));
+      expect(service.resolveProjectPath()).toBe(expected);
+    });
+
+    it('sem nenhuma pasta encontrada, cai no nome genérico "taut" em projectsPath', () => {
+      vi.mocked(configService.getSettings).mockReturnValue({
+        projectsPath: 'C:\\MeusProjetosGit',
+        tautProjectPath: ''
+      } as any);
+      vi.mocked(fs.existsSync).mockReturnValue(false);
+
+      expect(service.resolveProjectPath()).toBe(path.join('C:\\MeusProjetosGit', 'taut'));
     });
   });
 
@@ -148,7 +157,7 @@ describe('TautAutomationService', () => {
 
       const result = await service.processCsvIntake('Insumo/invalido.csv');
       expect(result.checklistBlockers.length).toBeGreaterThan(0);
-      expect(result.checklistBlockers[0]).toContain('DDWMISSI-TXXXX');
+      expect(result.checklistBlockers[0]).toContain('PROJ-TXXXX');
     });
   });
 

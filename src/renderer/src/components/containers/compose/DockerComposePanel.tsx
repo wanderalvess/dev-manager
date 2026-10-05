@@ -70,7 +70,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
           <Layers className="w-3.5 h-3.5 text-primary" />
           <span>Docker Compose</span>
           {composeServices.length > 0 && (
-            <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-muted border border-border/50 text-muted-foreground font-normal">
+            <span className="text-2xs font-mono px-2 py-0.2 rounded-full bg-muted border border-border/50 text-muted-foreground font-normal">
               {composeServices.length} serviços
             </span>
           )}
@@ -85,7 +85,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
                   if (e.target.value) setComposeFilePath(e.target.value);
                 }}
                 value=""
-                className="bg-muted/70 text-foreground text-[10px] border border-border/70 rounded px-1.5 py-0.5 cursor-pointer focus:outline-none max-w-[140px] truncate"
+                className="bg-muted/70 text-foreground text-2xs border border-border/70 rounded px-1.5 py-0.5 cursor-pointer focus:outline-none max-w-[140px] truncate"
               >
                 <option value="">Selecionar recente...</option>
                 {recentComposeFiles.map((file, idx) => (
@@ -210,7 +210,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
           {composeServices.map((s) => (
             <span
               key={s.name}
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-md border ${
+              className={`text-2xs font-mono px-2 py-0.5 rounded-md border ${
                 s.state.toLowerCase().includes('running')
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
                   : 'bg-muted/80 border-border text-muted-foreground'
@@ -225,7 +225,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
       {composeOutput && (
         <pre
           ref={composeOutputRef}
-          className="max-h-32 overflow-auto bg-muted/60 dark:bg-muted/20 text-foreground text-[10px] font-mono p-2.5 rounded-lg whitespace-pre-wrap border border-border/70 shadow-inner"
+          className="max-h-32 overflow-auto bg-muted/60 dark:bg-muted/20 text-foreground text-2xs font-mono p-2.5 rounded-lg whitespace-pre-wrap border border-border/70 shadow-inner"
         >
           {composeOutput}
         </pre>

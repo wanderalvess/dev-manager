@@ -19,7 +19,7 @@ export const ApmTimeBudgetPanel: React.FC<ApmTimeBudgetPanelProps> = ({
         <Clock className="w-3.5 h-3.5 text-primary" />
         <span>Time Budget (Alocação de Tempo)</span>
       </span>
-      <div className="flex items-center gap-2 text-[10px] tabular-nums">
+      <div className="flex items-center gap-2 text-2xs tabular-nums">
         <span className="text-sky-600 dark:text-sky-400 font-semibold" title="Tempo em handlers e chamadas HTTP">🌐 HTTP: {timeBudget.httpPct}% ({timeBudget.httpMs}ms)</span>
         <span>•</span>
         <span className="text-purple-600 dark:text-purple-400 font-semibold" title="Tempo em lógica Java / OSGi">☕ Java: {timeBudget.javaPct}% ({timeBudget.javaMs}ms)</span>

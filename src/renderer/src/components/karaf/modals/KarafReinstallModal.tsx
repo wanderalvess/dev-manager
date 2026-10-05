@@ -112,7 +112,7 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="p-3 bg-muted/30 border border-border rounded-xl">
             <div className="text-xs font-bold text-foreground">{target.name}</div>
-            <div className="text-[10px] text-muted-foreground font-mono">
+            <div className="text-2xs text-muted-foreground font-mono">
               ID: {target.id} · Versão: {target.version}
             </div>
           </div>
@@ -151,7 +151,7 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
                 <span className="text-foreground font-medium block">
                   Executar compilação Maven (<code className="font-mono text-primary">mvn clean install -DskipTests</code>) antes de reinstalar
                 </span>
-                <span className="text-[10px] text-muted-foreground font-mono block mt-0.5 truncate">
+                <span className="text-2xs text-muted-foreground font-mono block mt-0.5 truncate">
                   Pasta: {reinstallProjectPath}
                 </span>
               </div>

@@ -129,7 +129,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
                   <Play className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0 fill-current" />
                   <div>
                     <div className="font-semibold text-xs">Subir em Modo Debug</div>
-                    <div className="text-[10px] text-muted-foreground">karaf.bat debug com porta JDWP (:5005)</div>
+                    <div className="text-2xs text-muted-foreground">karaf.bat debug com porta JDWP (:5005)</div>
                   </div>
                 </button>
                 <button
@@ -143,7 +143,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
                   <Terminal className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                   <div>
                     <div className="font-semibold text-xs">Iniciar Console Embutido</div>
-                    <div className="text-[10px] text-muted-foreground">Executa o Karaf no console interno do app</div>
+                    <div className="text-2xs text-muted-foreground">Executa o Karaf no console interno do app</div>
                   </div>
                 </button>
               </div>
@@ -217,7 +217,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
         <Camera className="w-3.5 h-3.5 text-muted-foreground" />
         <span className="hidden sm:inline">Snapshots / Diff</span>
         {snapshotsCount > 0 && (
-          <span className="bg-muted text-foreground text-[10px] px-1.5 py-0.2 rounded font-mono font-semibold border border-border/60">
+          <span className="bg-muted text-foreground text-2xs px-1.5 py-0.2 rounded font-mono font-semibold border border-border/60">
             {snapshotsCount}
           </span>
         )}

@@ -17,12 +17,12 @@ export const ApmErrorSpans: React.FC<{
             <span className="flex items-center gap-1.5 min-w-0">
               <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
               <span className="truncate" title={span.name}>{span.name}</span>
-              <span className="px-1 rounded bg-rose-500/15 text-[9px] font-semibold shrink-0">{span.kind}</span>
+              <span className="px-1 rounded bg-rose-500/15 text-2xs font-semibold shrink-0">{span.kind}</span>
             </span>
             <button
               type="button"
               onClick={() => copyToClipboard(formatSpanErrorForClipboard(span), `err-${span.spanId}`)}
-              className="px-2 py-0.5 rounded border border-rose-500/30 bg-rose-500/15 text-[10px] text-rose-700 hover:bg-rose-500/25 dark:border-rose-800/80 dark:bg-rose-900/40 dark:text-rose-200 dark:hover:bg-rose-900/60 cursor-pointer flex items-center gap-1 shrink-0"
+              className="px-2 py-0.5 rounded border border-rose-500/30 bg-rose-500/15 text-2xs text-rose-700 hover:bg-rose-500/25 dark:border-rose-800/80 dark:bg-rose-900/40 dark:text-rose-200 dark:hover:bg-rose-900/60 cursor-pointer flex items-center gap-1 shrink-0"
             >
               {copyFeedback === `err-${span.spanId}` ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
               Copiar Erro
@@ -34,7 +34,7 @@ export const ApmErrorSpans: React.FC<{
             </div>
           )}
           {span.exception?.stacktrace ? (
-            <pre className="p-2.5 rounded bg-card border border-rose-500/30 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-[10.5px] overflow-auto max-h-80 whitespace-pre leading-relaxed select-text">
+            <pre className="p-2.5 rounded bg-card border border-rose-500/30 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-2xs overflow-auto max-h-80 whitespace-pre leading-relaxed select-text">
               {span.exception.stacktrace}
             </pre>
           ) : (

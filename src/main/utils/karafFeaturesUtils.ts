@@ -35,8 +35,8 @@ export function parseFeatureRepoListOutput(stdout: string): KarafFeatureRepoInfo
       }
     }
 
-    // Formato com múltiplos espaços
-    const spaceMatch = trimmed.match(/^([a-zA-Z0-9_.-]+)\s{2,}(mvn:[^\s]+|file:[^\s]+|http[s]?:[^\s]+)/);
+    // Formato com espaços (a coluna mais larga fica separada por apenas 1 espaço da URI)
+    const spaceMatch = trimmed.match(/^([a-zA-Z0-9_.-]+)\s+(mvn:[^\s]+|file:[^\s]+|http[s]?:[^\s]+)/);
     if (spaceMatch) {
       const name = spaceMatch[1];
       const url = spaceMatch[2];

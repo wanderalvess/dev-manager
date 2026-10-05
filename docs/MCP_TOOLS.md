@@ -231,7 +231,7 @@ Automação de homologação regressiva para equipes de QA e desenvolvedores: ex
 > "Consulte a última transação da PCINTEGRACAOCORE pelo cupom 271454 da filial 1 e me mostre o JSON transformado."
 > "Liste os cenários de teste regressivo de QA cadastrados."
 > "Crie um template de teste regressivo chamado 'Validação de Devolução WSH' com query na PCDEVCONSUM e asserção de que CODCLI é igual ao do JSON."
-> "Execute o teste regressivo 'wsh-venda-pdv-completa' para a filial 1 usando o payload do arquivo 'C:\Testes\cupom_4387.json' e gere o relatório para a issue DDWMISSI-T966."
+> "Execute o teste regressivo 'wsh-venda-pdv-completa' para a filial 1 usando o payload do arquivo 'C:\Testes\cupom_4387.json' e gere o relatório para a issue PROJ-123."
 > "Valide se a venda 10047 gravou corretamente os cabeçalhos PCNFSAID, PCPEDC e a movimentação fiscal PCMOV."
 > "Exclua o template de teste temporário 'temp-homolog-123'."
 
@@ -251,18 +251,18 @@ Executa suítes completas de testes automatizados unitários, de integração, E
 
 ---
 
-## 15. TAUT-Mississauga & Automação Cypress (QA Hub)
-Integração nativa com o projeto de testes automatizados de APIs REST e integrações WinThor (**TAUT-Mississauga**). Permite que assistentes de IA disparem suítes de teste Cypress por tags (@cypress/grep), auditem a cobertura do Zephyr Scale (`COVERAGE.md`), listem specs por módulo, sincronizem credenciais de banco e processem arquivos CSV para intake de automação com IA.
+## 15. TAUT & Automação Cypress (QA Hub)
+Integração com o projeto de testes automatizados Cypress (**TAUT**), localizado pela pasta configurada em Configurações > Diretórios & IDE ou detectada automaticamente (`taut*`, `cypress-tests`, `cypress`, `e2e-tests`). Permite que assistentes de IA disparem suítes de teste Cypress por tags (@cypress/grep), auditem a cobertura do Zephyr Scale (`COVERAGE.md`), listem specs por módulo, sincronizem credenciais de banco e processem arquivos CSV para intake de automação com IA.
 
-*   **`taut_get_status`**: Inspeciona a integridade da pasta do TAUT-Mississauga, validando versão do Cypress, configuração do `cypress.config.ts` e variáveis do `.env` (Oracle e WTA).
+*   **`taut_get_status`**: Inspeciona a integridade da pasta do projeto TAUT, validando versão do Cypress, configuração do `cypress.config.ts` e variáveis do `.env` (Oracle e WTA).
 *   **`taut_run_tests`**: Executa testes Cypress no TAUT com filtros flexíveis de tags (`tags: "critico,winthor-pedido-venda,-develop"`), specs (`spec: "cypress/e2e/api/Pedido/**/*"`) e modo de API (`v39` ou `legacy`), coletando extrato da execução e métricas de aprovação/falhas.
-*   **`taut_get_coverage`**: Analisa a paridade entre os cenários desenhados nos CSVs da pasta `/Insumo/` (chaves `DDWMISSI-TXXXX`) e os testes implementados em `cypress/e2e/api/`, reportando percentual de cobertura e lista de testes pendentes.
+*   **`taut_get_coverage`**: Analisa a paridade entre os cenários desenhados nos CSVs da pasta `/Insumo/` (chaves `ABC-T123`, ou só as do prefixo configurado em Configurações > Diretórios & IDE) e os testes implementados em `cypress/e2e/`, reportando percentual de cobertura e lista de testes pendentes. Sem CSV na pasta `Insumo/`, o percentual não é calculado (`baselineMissing`).
 *   **`taut_list_specs`**: Varre todos os arquivos `.cy.ts` do projeto TAUT, retornando quantidade de testes, tags de módulo e chaves do Zephyr associadas a cada spec.
-*   **`taut_sync_env`**: Gera ou atualiza o arquivo `.env` do TAUT-Mississauga utilizando a conexão Oracle ativa no Dev Manager (`ORACLE_USER`, `ORACLE_PASSWORD`, `ORACLE_CONNECT_STRING`) e parâmetros do WTA.
-*   **`taut_process_csv_intake`**: Atua como o Orquestrador de Intake (Subagente 0) do TAUT: lê um arquivo CSV do Zephyr, valida os 11 pontos do checklist de arquitetura e gera o bloco estruturado e plano de implementação das 4 camadas.
+*   **`taut_sync_env`**: Gera ou atualiza o arquivo `.env` do projeto TAUT utilizando a conexão Oracle ativa no Dev Manager (`ORACLE_USER`, `ORACLE_PASSWORD`, `ORACLE_CONNECT_STRING`) e parâmetros do WTA. As credenciais da API (`CYPRESS_API_USUARIO`/`CYPRESS_API_SENHA`) só são gravadas quando o login do WTA está configurado.
+*   **`taut_process_csv_intake`**: Atua como o Orquestrador de Intake (Subagente 0) do TAUT: lê um arquivo CSV do Zephyr, valida a chave do cenário, o endpoint, a coluna Serviço e a existência de cenários de contrato e negativo, e gera o bloco estruturado e plano de implementação das 4 camadas.
 
 **Exemplo de como pedir à IA:**
-> "Verifique o status do projeto TAUT-Mississauga e confira se o .env está configurado com o Oracle."
+> "Verifique o status do projeto TAUT e confira se o .env está configurado com o Oracle."
 > "Sincronize o .env do TAUT com a minha conexão Oracle ativa no Dev Manager."
 > "Execute os testes críticos de Pedido do TAUT com a tag 'critico,winthor-pedido-venda'."
 > "Qual é a cobertura atual de testes do Zephyr no TAUT e quais cenários ainda estão pendentes?"

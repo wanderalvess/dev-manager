@@ -3,23 +3,13 @@ import {
   Settings,
   Save,
   CheckCircle2,
-  Folder,
-  KeyRound,
-  GitBranch,
-  Radio,
-  Server,
-  Zap,
   Download,
   Upload,
   ShieldCheck,
   ChevronDown,
-  ScrollText,
-  HardDriveDownload,
-  Bot,
   HelpCircle,
   RotateCcw,
-  AlertTriangle,
-  CheckCheck
+  AlertTriangle
 } from 'lucide-react';
 import {
   AppSettings,
@@ -51,6 +41,7 @@ import {
   SettingsSearchEntry,
   SETTINGS_SEARCH_INDEX
 } from '../components/settings/settingsSearchData';
+import { SettingsTabsNav } from '../components/settings/SettingsTabsNav';
 import { SettingsSearchBar } from '../components/settings/SettingsSearchBar';
 import { SetupChecklistCard } from '../components/settings/SetupChecklistCard';
 import { DirsTab } from '../components/settings/tabs/DirsTab';
@@ -399,7 +390,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       } else {
         setQualityTestResults((prev) => ({
           ...prev,
-          [source.id]: { success: true, message: `Conexão configurada para ${source.type} (${source.projectKey || 'Projeto Geral'})!` }
+          [source.id]: {
+            success: true,
+            message: `Parâmetros preenchidos para ${source.type} (${source.projectKey || 'Projeto Geral'}). Validação apenas local: nenhuma requisição foi feita e a sincronização com esta fonte ainda não está implementada.`
+          }
         }));
       }
       setTestingQualityId(null);
@@ -516,8 +510,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           oracleTnsnamesPath: st.oracleTnsnamesPath || '',
           ccwBaseUrl: st.ccwBaseUrl || 'https://centraldecontrole.pcinformatica.com.br',
           ccwWinthorVersion: st.ccwWinthorVersion || '30',
-          ccwAuthCookie: st.ccwAuthCookie || '',
-          routineLauncherMap: st.routineLauncherMap || {}
+          ccwAuthCookie: st.ccwAuthCookie || '',              routineLauncherMap: st.routineLauncherMap || {}
         };
         setSettings(loaded);
         setSavedSnapshot(JSON.stringify(loaded));
@@ -960,7 +953,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                     <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
                     <div>
                       <div className="font-bold text-foreground">Exportação Segura (JSON)</div>
-                      <div className="text-[10px] text-muted-foreground">Omite senhas do banco e Karaf (P/ Time)</div>
+                      <div className="text-2xs text-muted-foreground">Omite senhas do banco e Karaf (P/ Time)</div>
                     </div>
                   </button>
                   <button
@@ -971,7 +964,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
                     <Download className="w-4 h-4 text-amber-500 shrink-0" />
                     <div>
                       <div className="font-bold text-foreground">Exportação Completa (Backup)</div>
-                      <div className="text-[10px] text-muted-foreground">Contém todas as senhas (Para este PC)</div>
+                      <div className="text-2xs text-muted-foreground">Contém todas as senhas (Para este PC)</div>
                     </div>
                   </button>
                 </div>
@@ -994,7 +987,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           <div className="relative flex items-center">
             {hasUnsavedChanges && !isSaving && (
               <span
-                className="mr-2 flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md"
+                className="mr-2 flex items-center gap-1 text-2xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md"
                 title="Existem alterações que ainda não foram salvas"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -1048,143 +1041,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       />
 
       {/* Abas de Navegação Interna das Configurações */}
-      <div className="flex items-center border-b border-border pb-0 text-xs flex-wrap gap-x-0.5 gap-y-1" data-tour="tabs-nav-dirs">
-        <button
-          onClick={() => setActiveTab('dirs')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'dirs'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Folder className="w-3.5 h-3.5" />
-          <span>Diretórios & IDE</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('karaf')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'karaf'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <KeyRound className="w-3.5 h-3.5" />
-          <span>Karaf</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('azure')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'azure'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <GitBranch className="w-3.5 h-3.5" />
-          <span>Azure &amp; Git</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('services')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'services'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Server className="w-3.5 h-3.5" />
-          <span>Serviços &amp; Processos</span>
-          <span className="text-[10px] font-mono text-muted-foreground ml-1">
-            {(settings.trackedServices || []).length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ports')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'ports'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Radio className="w-3.5 h-3.5" />
-          <span>Portas</span>
-          <span className="text-[10px] font-mono text-muted-foreground ml-1">
-            {(settings.monitoredPorts || []).length}
-          </span>
-        </button>
-
-        <button
-          data-tour="automation-defaults"
-          onClick={() => setActiveTab('automation')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'automation'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Zap className="w-3.5 h-3.5" />
-          <span>Automação</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('logs')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'logs'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <ScrollText className="w-3.5 h-3.5" />
-          <span>Logs</span>
-          <span className="text-[10px] font-mono text-muted-foreground ml-1">
-            {(settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('backup')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'backup'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <HardDriveDownload className="w-3.5 h-3.5" />
-          <span>Backup</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ai')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'ai'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Bot className="w-3.5 h-3.5" />
-          <span>IA &amp; LLM</span>
-          <span className="text-[10px] font-mono text-muted-foreground ml-1">
-            {(settings.llmProviders || []).length}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('quality')}
-          className={`flex items-center space-x-1.5 px-3 py-2 font-semibold transition-colors border-b-2 -mb-px ${
-            activeTab === 'quality'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <CheckCheck className="w-3.5 h-3.5" />
-          <span>Qualidade &amp; QA</span>
-          <span className="text-[10px] font-mono text-muted-foreground ml-1">
-            {(settings.qualitySources || []).length}
-          </span>
-        </button>
-      </div>
+      <SettingsTabsNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        counts={{
+          services: (settings.trackedServices || []).length,
+          ports: (settings.monitoredPorts || []).length,
+          logs: (settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length,
+          ai: (settings.llmProviders || []).length,
+          quality: (settings.qualitySources || []).length
+        }}
+      />
 
       {/* Área rolável: apenas o conteúdo da aba ativa rola, cabeçalho e abas ficam fixos */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 -mr-1 flex flex-col">

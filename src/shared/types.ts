@@ -594,8 +594,10 @@ export interface AppSettings {
   activeQualitySourceId?: string;
   /** Caminho customizado para os templates de regressivo QA (opcional) */
   qaTemplatesDir?: string;
-  /** Caminho local do projeto de automação TAUT-Mississauga (ex: C:\Users\wanderson.alves\projetosTOTVS\TAUT-Mississauga) */
+  /** Caminho local do projeto de automação TAUT / Cypress (ex: C:\Projetos\TAUT-Mississauga) */
   tautProjectPath?: string;
+  /** Prefixo das chaves de cenário Zephyr do projeto TAUT (ex: PROJ-T). Vazio = aceita qualquer ABC-T123 */
+  tautKeyPrefix?: string;
   /** Suítes e runners de testes automatizados configurados (Maven, Playwright, Cypress, Newman) */
   testRunners?: TestRunnerConfig[];
   /** Histórico das últimas execuções de testes automatizados (limitado a 100) */
@@ -2613,7 +2615,7 @@ export const DEFAULT_TEST_RUNNER_PRESETS: TestRunnerPreset[] = [
   }
 ];
 
-// --- Tipos da Integração TAUT-Mississauga (Cypress / QA Hub) ---
+// --- Tipos da Integração TAUT (Cypress / QA Hub) ---
 
 export interface TautProjectStatus {
   exists: boolean;
@@ -2646,6 +2648,8 @@ export interface TautCoverageReport {
   automatedCount: number;
   pendingCount: number;
   coveragePercentage: number;
+  /** true quando não há CSV de insumo (pasta Insumo/): a porcentagem não é calculada */
+  baselineMissing?: boolean;
   items: TautCoverageItem[];
   generatedAt: string;
 }

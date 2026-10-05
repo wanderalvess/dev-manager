@@ -105,7 +105,7 @@ export function getFaqList({
               <li>No IntelliJ, vá no menu superior em <strong className="text-foreground">Run &gt; Edit Configurations...</strong></li>
               <li>Clique no botão <strong className="text-foreground">+</strong> e adicione uma configuração do tipo <strong className="text-foreground">Remote JVM Debug</strong>.</li>
               <li>Defina o Host como <code className="font-mono text-primary font-semibold">localhost</code> e a Porta como <code className="font-mono text-primary font-semibold">{debugPort}</code>.</li>
-              <li>Clique em <strong className="text-foreground">Apply</strong> e inicie o Debug (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Shift+F9</kbd>). Seus breakpoints nos bundles Maven serão acionados instantaneamente!</li>
+              <li>Clique em <strong className="text-foreground">Apply</strong> e inicie o Debug (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Shift+F9</kbd>). Seus breakpoints nos bundles Maven serão acionados instantaneamente!</li>
             </ol>
           </div>
         </div>
@@ -193,7 +193,7 @@ export function getFaqList({
               </li>
             </ul>
             <p className="pt-1 text-[11px]">
-              Acesse o monitor pelo botão <strong className="text-foreground">"Memória JVM"</strong> no cabeçalho da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Alt+4</kbd>).
+              Acesse o monitor pelo botão <strong className="text-foreground">"Memória JVM"</strong> no cabeçalho da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Alt+4</kbd>).
             </p>
           </div>
         </div>
@@ -250,7 +250,7 @@ export function getFaqList({
               </li>
             </ul>
             <p className="pt-1 text-[11px]">
-              Acesse pelo botão <strong className="text-foreground">"Features Karaf"</strong> na barra de ferramentas da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Alt+4</kbd>).
+              Acesse pelo botão <strong className="text-foreground">"Features Karaf"</strong> na barra de ferramentas da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Alt+4</kbd>).
             </p>
           </div>
         </div>
@@ -793,7 +793,7 @@ export function getFaqList({
             <div className="pt-2 border-t border-border/50">
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 2: JetBrains AI Assistant (Nativo - 2025.1+)</span>
               <ol className="list-decimal pl-4 space-y-1 text-[11px]">
-                <li>No IntelliJ IDEA, abra as configurações: <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Ctrl+Alt+S</kbd>.</li>
+                <li>No IntelliJ IDEA, abra as configurações: <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Ctrl+Alt+S</kbd>.</li>
                 <li>Navegue até <strong className="text-foreground">Tools &gt; AI Assistant &gt; Model Context Protocol (MCP)</strong>.</li>
                 <li>Clique no botão <strong className="text-foreground">+</strong> (Add Server):
                   <ul className="list-disc pl-4 mt-1 space-y-0.5">
@@ -882,7 +882,7 @@ export function getFaqList({
             <div className="pt-2 border-t border-border/50">
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Como acionar no GitHub Copilot Chat do VS Code:</span>
               <ol className="list-decimal pl-4 space-y-1 text-[11px]">
-                <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Ctrl+Alt+I</kbd>).</li>
+                <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Ctrl+Alt+I</kbd>).</li>
                 <li>Selecione o modo <strong className="text-foreground">Agent</strong> (ou digite <code className="font-mono text-primary">@agent</code> no campo de mensagem).</li>
                 <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 145 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
                 <li>Envie sua solicitação diretamente (ex.: <em>"Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."</em>).</li>
@@ -1297,7 +1297,7 @@ export function getFaqList({
                 <strong className="text-foreground">Matriz de Validação &amp; Homologação:</strong> Checklist interativo para registrar status de testes por rotina Delphi, serviço Karaf, APIs ou fluxos E2E com persistência local.
               </li>
               <li>
-                <strong className="text-foreground">Painel de Prontidão (PO):</strong> Semáforo executivo com pontuação de prontidão da release (Readiness Score) e taxa de sucesso dos testes para embasar decisões de entrega.
+                <strong className="text-foreground">Prontidão (PO):</strong> Semáforo executivo com pontuação de prontidão da release (Readiness Score) e taxa de sucesso dos testes para embasar decisões de entrega.
               </li>
               <li>
                 <strong className="text-foreground">Exportação de Relatório Markdown:</strong> Crie com um clique um relatório executivo formatado para compartilhar em chats (Teams, Slack) ou tarefas (Azure DevOps, Jira).
@@ -1324,7 +1324,7 @@ export function getFaqList({
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como configurar e conectar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Onde acessar:</strong> Abra as <em>Configurações</em> e clique na aba <em>Qualidade &amp; QA</em> (ou utilize o atalho de busca <kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-[10px]">Ctrl+K</kbd> e digite <em>"Zephyr"</em>).
+                <strong className="text-foreground">Onde acessar:</strong> Abra as <em>Configurações</em> e clique na aba <em>Qualidade &amp; QA</em> (ou utilize o atalho de busca <kbd className="px-1 py-0.5 rounded bg-muted border border-border font-mono text-2xs">Ctrl+K</kbd> e digite <em>"Zephyr"</em>).
               </li>
               <li>
                 <strong className="text-foreground">Templates em 1 Clique:</strong> Utilize os cards pré-configurados para <em>Zephyr Scale (Cloud)</em>, <em>Zephyr Squad / Jira Server</em>, <em>Jira Software</em> ou <em>Azure DevOps Test Plans</em>.
@@ -1399,7 +1399,7 @@ export function getFaqList({
                 <strong className="text-foreground">Regras de Asserção:</strong> Suporta validações por JSONPath (<code className="font-mono text-primary font-bold">$.vlTotal</code>), valores literais, <code className="font-mono text-primary font-bold">&lt;S&gt;</code> (preenchido), <code className="font-mono text-primary font-bold">&lt;N&gt;</code> (vazio/nulo) e <code className="font-mono text-primary font-bold">&lt;0&gt;</code> (zero).
               </li>
               <li>
-                <strong className="text-foreground">Exportação em 1 Clique para Jira:</strong> Informe o código da issue (ex.: <code className="font-mono text-primary font-bold">DDWMISSI-T966</code>) e clique em <strong className="text-foreground">"Copiar Markdown (Jira)"</strong> para gerar a tabela de evidências pronta para o ticket.
+                <strong className="text-foreground">Exportação em 1 Clique para Jira:</strong> Informe o código da issue (ex.: <code className="font-mono text-primary font-bold">PROJ-123</code>; campo opcional) e clique em <strong className="text-foreground">"Copiar Markdown (Jira)"</strong> para gerar a tabela de evidências pronta para o ticket.
               </li>
               <li>
                 <strong className="text-foreground">Pasta Dedicada de Templates:</strong> Novos templates podem ser criados, editados, duplicados, importados ou exportados em JSON diretamente na pasta dedicada (<code className="font-mono text-foreground font-bold">qa-templates/</code>).
@@ -1453,13 +1453,13 @@ export function getFaqList({
     },
     {
       id: 'taut-cypress-automation',
-      question: 'Como funciona a integração com o projeto TAUT-Mississauga (Cypress) para testes de API?',
+      question: 'Como funciona a integração com o projeto TAUT (Cypress) para testes de API?',
       category: 'Qualidade & Homologação',
-      tags: ['taut', 'mississauga', 'cypress', 'qa', 'tags', 'esteira', 'critico', 'zephyr', 'coverage', 'intake', 'csv'],
+      tags: ['taut', 'cypress', 'prefixo', 'chave', 'qa', 'tags', 'esteira', 'critico', 'zephyr', 'coverage', 'intake', 'csv'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O <strong className="text-foreground">Dev Manager</strong> integra nativamente com o projeto <code className="font-mono text-primary font-bold">TAUT-Mississauga</code> na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
+            O <strong className="text-foreground">Dev Manager</strong> integra com o seu projeto de testes Cypress (pasta definida em <strong className="text-foreground">Configurações &gt; Diretórios &amp; IDE</strong> ou detectada automaticamente: <code className="font-mono text-primary font-bold">taut*</code>, <code className="font-mono text-primary font-bold">cypress-tests</code>, <code className="font-mono text-primary font-bold">cypress</code> ou <code className="font-mono text-primary font-bold">e2e-tests</code>) na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Recursos Integrados:</span>
@@ -1471,10 +1471,10 @@ export function getFaqList({
                 <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-emerald-400">esteira</code>, <code className="font-mono text-rose-400">critico</code>, <code className="font-mono text-blue-400">regressao</code>, <code className="font-mono text-amber-400">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
               </li>
               <li>
-                <strong className="text-foreground">Auditoria de Cobertura Zephyr Scale:</strong> Cruza os cenários dos arquivos CSV da pasta <code className="font-mono text-foreground font-bold">Insumo/</code> com os testes implementados em <code className="font-mono text-foreground font-bold">cypress/e2e/api/</code>, calculando o percentual e apontando testes pendentes.
+                <strong className="text-foreground">Auditoria de Cobertura Zephyr Scale:</strong> Cruza os cenários dos arquivos CSV da pasta <code className="font-mono text-foreground font-bold">Insumo/</code> com os testes implementados em <code className="font-mono text-foreground font-bold">cypress/e2e/api/</code>, calculando o percentual e apontando testes pendentes. Sem nenhum CSV em <code className="font-mono text-foreground font-bold">Insumo/</code> a porcentagem não é calculada (não há universo de cenários para comparar). As chaves reconhecidas seguem o padrão <code className="font-mono text-foreground font-bold">ABC-T123</code>; para restringir a um projeto, preencha o <strong className="text-foreground">Prefixo das chaves de cenário Zephyr</strong> (ex.: <code className="font-mono text-foreground font-bold">PROJ-T</code>) em Configurações &gt; Diretórios &amp; IDE.
               </li>
               <li>
-                <strong className="text-foreground">Orquestrador de Intake CSV (IA):</strong> Lê o CSV do Zephyr, valida as 11 regras arquiteturais do projeto TAUT e gera o bloco estruturado e o plano de implementação pronto para copiar ou passar para a IA.
+                <strong className="text-foreground">Orquestrador de Intake CSV (IA):</strong> Lê o CSV do Zephyr, valida a chave do cenário, o endpoint, a coluna Serviço e a existência de cenários de contrato e negativo, e gera o bloco estruturado e o plano de implementação pronto para copiar ou passar para a IA.
               </li>
               <li>
                 <strong className="text-foreground">Tools MCP:</strong> As ferramentas <code className="font-mono text-primary">taut_*</code> permitem que assistentes de IA disparem os testes, auditem cobertura e criem novos specs sem sair do chat.
@@ -1501,7 +1501,7 @@ export function getFaqList({
                 <strong className="text-foreground">Configurações do App:</strong> Em <strong>Configurações &gt; Backup &amp; Banco de Dados</strong>, preencha o campo <em>"Arquivo de Configuração (tnsnames.ora)"</em> com o caminho do arquivo (ex.: <code className="font-mono text-primary font-semibold">C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora</code>).
               </li>
               <li>
-                <strong className="text-foreground">Modal Nova Conexão:</strong> No DB Studio (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-[10px] text-foreground font-bold shadow-xs">Alt+2</kbd>), clique em <strong>+ Nova Conexão</strong> e selecione o tipo <strong>Oracle</strong>.
+                <strong className="text-foreground">Modal Nova Conexão:</strong> No DB Studio (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Alt+2</kbd>), clique em <strong>+ Nova Conexão</strong> e selecione o tipo <strong>Oracle</strong>.
               </li>
               <li>
                 <strong className="text-foreground">Seletor TNS Integrado:</strong> O painel <em>"Buscar no tnsnames.ora"</em> lista todas as entradas encontradas no arquivo com Host, Porta e Service Name/SID. Basta selecionar um alias no dropdown para preencher o formulário na hora.
@@ -1529,7 +1529,7 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Alt + 8', desc: 'Acessar "Logs em Tempo Real" (tail -f de logs de aplicações)', category: 'Navegação' },
     { key: 'Alt + 9', desc: 'Acessar esta Central de Ajuda & Launchpad do Sistema', category: 'Navegação' },
     { key: 'Alt + 0', desc: 'Acessar "APM & Traces" (Dashboard e Traces Explorer OpenTelemetry)', category: 'Navegação' },
-    { key: 'Alt + Q', desc: 'Acessar "Qualidade & Homologação" (QA Hub e Matriz de Validação)', category: 'Navegação' },
+    { key: 'Alt + Q', desc: 'Acessar "Qualidade & Homologação" (abas agrupadas em Automação, Validação e Entrega)', category: 'Navegação' },
     { key: 'Ctrl + K', desc: 'Abrir o Quick Launcher (busca aproximada de ações, projetos e Configurações)', category: 'Navegação' },
     { key: 'Alt + ← / →', desc: 'Navegar entre versões anterior e seguinte no modal de Novidades', category: 'Navegação' },
     { key: 'Ctrl + Enter', desc: 'Executar consulta SQL selecionada no Database Studio', category: 'Banco de Dados' },

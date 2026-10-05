@@ -32,7 +32,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                 Parâmetros para criação automatizada de Pull Requests e rastreamento de repositórios.
               </p>
             </div>
-            <span className="text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/30 px-2 py-0.5 rounded font-mono font-bold">
+            <span className="text-2xs bg-blue-500/10 text-blue-500 border border-blue-500/30 px-2 py-0.5 rounded font-mono font-bold">
               dev.azure.com
             </span>
           </div>
@@ -40,14 +40,14 @@ export const AzureTab: React.FC<AzureTabProps> = ({
           <div className="space-y-4 text-xs">
             {/* Branch Padrão para Pull Requests */}
             <div className="space-y-2">
-              <label
+              <label htmlFor="azure-tab-1"
                 className="block font-bold text-foreground flex items-center gap-1.5"
                 title="Branch de destino sugerido ao criar um novo Pull Request no Azure DevOps (ex: develop, main)."
               >
                 <GitBranch className="w-3.5 h-3.5 text-primary" /> Branch Padrão para Pull Requests:
               </label>
               <div className="flex flex-wrap items-center gap-2">
-                <input
+                <input id="azure-tab-1"
                   type="text"
                   value={settings.targetPrBranch}
                   onChange={(e) => setSettings({ ...settings, targetPrBranch: e.target.value })}
@@ -69,7 +69,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 Branch alvo utilizada por padrão na aba <strong>Git & Azure DevOps</strong> ao gerar URLs diretas para Pull Requests no Azure.
               </p>
             </div>
@@ -77,7 +77,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
             {/* Diretório de Repositórios Git */}
             <div className="space-y-1.5 pt-2 border-t border-border/60">
               <div className="flex items-center justify-between">
-                <label
+                <label htmlFor="azure-tab-2"
                   className="font-bold text-foreground flex items-center gap-1.5"
                   title="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Dev Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
                 >
@@ -87,7 +87,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                 {renderPathStatusBadge('projectsPath')}
               </div>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="azure-tab-2"
                   type="text"
                   value={settings.projectsPath}
                   onChange={(e) => {
@@ -108,7 +108,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   <span>Procurar...</span>
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 O Dev Manager realiza a varredura das pastas contidas neste diretório procurando por projetos Git com remote do Azure DevOps.
               </p>
             </div>
@@ -116,7 +116,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
             {/* Token de Acesso Pessoal (PAT) do Azure DevOps */}
             <div className="space-y-1.5 pt-2 border-t border-border/60">
               <div className="flex items-center justify-between">
-                <label
+                <label htmlFor="azure-tab-3"
                   className="font-bold text-foreground flex items-center gap-1.5"
                   title="Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e criação de branches baseadas em tarefas."
                 >
@@ -125,7 +125,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                 </label>
               </div>
               <div className="flex items-center space-x-2">
-                <input
+                <input id="azure-tab-3"
                   type="password"
                   value={settings.azureDevOpsToken || ''}
                   onChange={(e) => setSettings({ ...settings, azureDevOpsToken: e.target.value })}
@@ -133,7 +133,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   placeholder="Cole seu Personal Access Token do Azure DevOps (leitura de Work Items)"
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 Utilizado pelo Hub Git para consultar Work Items e sugerir branches padronizadas com título e slug automáticos.
               </p>
             </div>

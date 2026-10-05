@@ -196,10 +196,12 @@ Checklist ao entregar uma funcionalidade:
 - **FAQ** (`faqList`): se o uso não for óbvio (pré-requisito, configuração, permissão,
   porta, troubleshooting), adicione uma pergunta com `tags` pesquisáveis.
 - **Atalhos** (`keyboardShortcuts`): os atalhos `Alt+N` são definidos em 4 lugares que
-  precisam bater: o handler em [App.tsx](src/renderer/src/App.tsx), os `shortcut` do
-  [Header.tsx](src/renderer/src/components/Header.tsx), os `badge` do
-  [QuickLauncherModal.tsx](src/renderer/src/components/QuickLauncherModal.tsx) e a tabela
-  da Ajuda (mais a tabela do README).
+  precisam bater: o mapa Alt+tecla → aba em
+  [appShellNavigation.ts](src/renderer/src/utils/appShellNavigation.ts) (consumido pelo
+  `useGlobalShortcuts` em [App.tsx](src/renderer/src/App.tsx)), os `shortcut` do Header em
+  [headerNavConfig.ts](src/renderer/src/components/header/headerNavConfig.ts), os `badge` do
+  QuickLauncher em [quickLauncherActions.ts](src/renderer/src/utils/quickLauncherActions.ts) e a
+  tabela da Ajuda (mais a tabela do README).
 - **Números citados** (quantidade de tools MCP, portas padrão, limites): confira contra o
   código ou contra [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md) em vez de copiar o texto antigo.
 - Use os nomes exatos da UI (rótulos de abas e botões) para o usuário achar o que o texto
@@ -211,7 +213,7 @@ Checklist ao entregar uma funcionalidade:
 ## Versionamento, Changelog e Release
 
 O modal de **"Novidades da Versão"** que o usuário vê ao abrir o app após um update
-([src/renderer/src/App.tsx](src/renderer/src/App.tsx)) consome diretamente a seção mais
+([useAppShellOnboarding.ts](src/renderer/src/hooks/app/useAppShellOnboarding.ts)) consome diretamente a seção mais
 recente de [CHANGELOG.md](CHANGELOG.md). Portanto, **manter o CHANGELOG, o `package.json`,
 o catálogo de tools e os fallbacks sincronizados é obrigatório a cada fechamento de
 versão ou entrega de funcionalidade relevante.**

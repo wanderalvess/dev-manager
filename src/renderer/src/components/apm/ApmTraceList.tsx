@@ -109,7 +109,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                         {/* Status Code */}
                         <td className="py-1.5 px-3 text-center">
                           <span
-                            className={`inline-block px-1.5 py-0.5 rounded border text-[10px] font-bold ${getStatusBadgeClass(
+                            className={`inline-block px-1.5 py-0.5 rounded border text-2xs font-bold ${getStatusBadgeClass(
                               trace.httpStatusCode,
                               trace.hasError
                             )}`}
@@ -121,7 +121,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                         {/* Método HTTP */}
                         <td className="py-1.5 px-2.5">
                           <span
-                            className={`inline-block px-1.5 py-0.5 rounded border text-[10px] font-bold ${getMethodBadgeClass(
+                            className={`inline-block px-1.5 py-0.5 rounded border text-2xs font-bold ${getMethodBadgeClass(
                               trace.httpMethod
                             )}`}
                           >
@@ -137,7 +137,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                             </span>
                             {trace.hasDatabaseQuery && (
                               <span
-                                className="px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-sky-700 dark:bg-sky-950/50 dark:border-sky-800/60 dark:text-sky-400 text-[9px] font-bold shrink-0"
+                                className="px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-sky-700 dark:bg-sky-950/50 dark:border-sky-800/60 dark:text-sky-400 text-2xs font-bold shrink-0"
                                 title="Executa consultas no banco de dados (Oracle/Postgres)"
                               >
                                 SQL

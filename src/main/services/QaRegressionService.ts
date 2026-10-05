@@ -192,7 +192,7 @@ export class QaRegressionService {
       try {
         jsonContext = JSON.parse(request.rawJson.trim());
       } catch (err: any) {
-        console.warn('[QaRegressionService] JSON de payload inválido:', err.message);
+        throw new Error(`JSON de payload inválido: ${err.message}`);
       }
     } else if (typeof request.rawJson === 'object') {
       jsonContext = request.rawJson;
@@ -379,7 +379,12 @@ export class QaRegressionService {
     }
 
     const totalDuration = Date.now() - startTime;
-    const overallSuccess = failedAssertions === 0 && stepResults.every((s) => !s.error);
+    // Asserção com aviso não foi verificada (JSONPath sem JSON, regex inválida) e suíte sem asserções não prova nada
+    const overallSuccess =
+      failedAssertions === 0 &&
+      warningAssertions === 0 &&
+      totalAssertions > 0 &&
+      stepResults.every((s) => !s.error);
 
     return {
       templateId: template.id,

@@ -5,8 +5,7 @@ import { QaCorePayloadItem, QaCoreSearchMode } from '../../../shared/types';
  */
 export function validateSearchTerm(
   mode: QaCoreSearchMode,
-  term: string,
-  codFilial?: string
+  term: string
 ): { isValid: boolean; message?: string } {
   if (mode === 'recent') {
     return { isValid: true };

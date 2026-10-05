@@ -158,7 +158,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
                         <Check className="w-3 h-3 stroke-[3]" /> Selecionado
                       </span>
                     ) : (
-                      <span className="text-[10px] font-medium text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60">Padrão</span>
+                      <span className="text-2xs font-medium text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60">Padrão</span>
                     )}
                   </div>
                   <div className="font-bold text-xs sm:text-sm text-foreground">Modo Claro</div>

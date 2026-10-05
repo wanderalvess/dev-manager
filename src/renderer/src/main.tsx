@@ -48,7 +48,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               </div>
               <div>
                 <h2 className="text-base font-bold text-white tracking-wide">Erro de Renderização da Interface</h2>
-                <span className="text-[10px] text-rose-400 font-mono">React Runtime Exception</span>
+                <span className="text-2xs text-rose-400 font-mono">React Runtime Exception</span>
               </div>
             </div>
 

@@ -16,7 +16,7 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
     }`}
     title="Clique em uma faixa de latência para filtrar a tabela"
   >
-    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
+    <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
       <Filter className="w-2.5 h-2.5" />
       <span>Espectro:</span>
     </span>
@@ -36,7 +36,7 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
         />
       ))}
     </div>
-    <div className="flex items-center gap-1.5 text-[10px]">
+    <div className="flex items-center gap-1.5 text-2xs">
       {([
         { bracket: 'FAST', count: spectrum.fast, title: 'Filtrar < 100ms', active: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/50', idle: 'text-emerald-700 dark:text-emerald-400 hover:underline' },
         { bracket: 'NORMAL', count: spectrum.normal, title: 'Filtrar 100 - 400ms', active: 'bg-sky-500/20 text-sky-800 dark:text-sky-300 font-bold border border-sky-500/50', idle: 'text-sky-700 dark:text-sky-400 hover:underline' },
@@ -56,7 +56,7 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
         </React.Fragment>
       ))}
       {selected !== 'ALL' && (
-        <button type="button" onClick={onClear} className="ml-1 text-[9px] text-muted-foreground hover:text-foreground underline cursor-pointer">
+        <button type="button" onClick={onClear} className="ml-1 text-2xs text-muted-foreground hover:text-foreground underline cursor-pointer">
           Limpar
         </button>
       )}

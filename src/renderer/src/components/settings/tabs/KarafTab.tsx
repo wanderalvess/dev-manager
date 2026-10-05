@@ -31,39 +31,39 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 Utilizado para autenticação no <code className="font-mono text-amber-500">client.bat</code> (OSGi) e comandos SSH remotos.
               </p>
             </div>
-            <span className="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-bold">
+            <span className="text-2xs bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-bold">
               client.bat SSH
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div id="field-karafUser">
-              <label className="block font-bold text-foreground mb-1">Usuário Karaf (SSH / client.bat):</label>
-              <input
+              <label htmlFor="karaf-tab-1" className="block font-bold text-foreground mb-1">Usuário Karaf (SSH / client.bat):</label>
+              <input id="karaf-tab-1"
                 type="text"
                 value={settings.karafUser}
                 onChange={(e) => setSettings({ ...settings, karafUser: e.target.value })}
                 className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
                 placeholder="karaf"
               />
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-2xs text-muted-foreground mt-1">
                 Usuário configurado em <code>{settings.karafPath}\etc\users.properties</code> (Padrão: <code>karaf</code>).
               </p>
             </div>
 
             <div id="field-karafPass">
-              <label className="block font-bold text-foreground mb-1 flex items-center justify-between">
+              <label htmlFor="karaf-tab-2" className="block font-bold text-foreground mb-1 flex items-center justify-between">
                 <span>Senha Karaf:</span>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[10px] text-muted-foreground hover:text-foreground font-normal flex items-center gap-1 cursor-pointer"
+                  className="text-2xs text-muted-foreground hover:text-foreground font-normal flex items-center gap-1 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                   <span>{showPassword ? 'Ocultar' : 'Exibir'}</span>
                 </button>
               </label>
-              <input
+              <input id="karaf-tab-2"
                 type={showPassword ? 'text' : 'password'}
                 value={settings.karafPass}
                 onChange={(e) => setSettings({ ...settings, karafPass: e.target.value })}
@@ -71,41 +71,41 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 placeholder={settings.hasKarafPass ? '(Senha salva e protegida)' : 'karaf'}
               />
               {settings.hasKarafPass && !settings.karafPass ? (
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                <p className="text-2xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                   <span>Senha salva e protegida. Deixe em branco para mantê-la ou digite para alterá-la.</span>
                 </p>
               ) : (
-                <p className="text-[10px] text-muted-foreground mt-1">
+                <p className="text-2xs text-muted-foreground mt-1">
                   Senha de acesso SSH (Padrão: <code>karaf</code>).
                 </p>
               )}
             </div>
 
             <div className="pt-1">
-              <label className="block font-bold text-foreground mb-1">Porta SSH do Karaf (client.bat):</label>
-              <input
+              <label htmlFor="karaf-tab-3" className="block font-bold text-foreground mb-1">Porta SSH do Karaf (client.bat):</label>
+              <input id="karaf-tab-3"
                 type="number"
                 value={settings.karafSshPort ?? 8101}
                 onChange={(e) => setSettings({ ...settings, karafSshPort: parseInt(e.target.value) || 0 })}
                 className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
                 placeholder="8101"
               />
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-2xs text-muted-foreground mt-1">
                 Porta de conexão do console interativo via <code>client.bat -a 8101</code>.
               </p>
             </div>
 
             <div className="pt-1">
-              <label className="block font-bold text-foreground mb-1">Porta Debug Remote JVM (Java):</label>
-              <input
+              <label htmlFor="karaf-tab-4" className="block font-bold text-foreground mb-1">Porta Debug Remote JVM (Java):</label>
+              <input id="karaf-tab-4"
                 type="number"
                 value={settings.karafDebugPort ?? 5005}
                 onChange={(e) => setSettings({ ...settings, karafDebugPort: parseInt(e.target.value) || 0 })}
                 className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
                 placeholder="5005"
               />
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-2xs text-muted-foreground mt-1">
                 Porta JDWP para depuração remota via IntelliJ / IDE.
               </p>
             </div>

@@ -1,17 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import {
-  Camera,
-  X,
-  Trash2,
-  GitCompare,
-  RotateCw,
-  ArrowRight,
-  Play,
-  UploadCloud,
-  CheckCircle2
-} from 'lucide-react';
-import { BundleSnapshot, BundleSnapshotDiff, KarafBundleInfo } from '../../../../../shared/types';
-import { computeSnapshotDiff } from '../../../utils/karafBundleUtils';
+import React from 'react';
+import { Camera, X } from 'lucide-react';
+import { BundleSnapshot, KarafBundleInfo } from '../../../../../shared/types';
+import { useKarafSnapshotModal } from '../../../hooks/karaf/useKarafSnapshotModal';
+import { KarafSnapshotList } from '../snapshot/KarafSnapshotList';
+import { KarafSnapshotDiffPanel } from '../snapshot/KarafSnapshotDiffPanel';
 
 interface KarafSnapshotModalProps {
   isOpen: boolean;
@@ -28,52 +20,15 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
   snapshots,
   onSnapshotsChange
 }) => {
-  const [newSnapshotLabel, setNewSnapshotLabel] = useState('');
-  const [selectedSnapshot, setSelectedSnapshot] = useState<BundleSnapshot | null>(null);
-
-  const handleCreateSnapshot = () => {
-    if (bundles.length === 0) return;
-    const snap: BundleSnapshot = {
-      id: `snap_${Date.now()}`,
-      label: newSnapshotLabel.trim() || `Snapshot #${snapshots.length + 1} (${new Date().toLocaleTimeString('pt-BR')})`,
-      createdAt: new Date().toLocaleString('pt-BR'),
-      bundleCount: bundles.length,
-      bundles: bundles.map((b) => ({
-        id: b.id,
-        name: b.name,
-        version: b.version,
-        state: b.state,
-        symbolicName: b.symbolicName,
-        location: b.location
-      }))
-    };
-    const updated = [snap, ...snapshots];
-    onSnapshotsChange(updated);
-    try {
-      localStorage.setItem('devManager:bundleSnapshots', JSON.stringify(updated));
-    } catch {
-      // Ignore storage errors
-    }
-    setNewSnapshotLabel('');
-    setSelectedSnapshot(snap);
-  };
-
-  const handleDeleteSnapshot = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = snapshots.filter((s) => s.id !== id);
-    onSnapshotsChange(updated);
-    if (selectedSnapshot?.id === id) setSelectedSnapshot(null);
-    try {
-      localStorage.setItem('devManager:bundleSnapshots', JSON.stringify(updated));
-    } catch {
-      // Ignore storage errors
-    }
-  };
-
-  const snapshotDiff = useMemo<BundleSnapshotDiff | null>(
-    () => computeSnapshotDiff(bundles, selectedSnapshot),
-    [selectedSnapshot, bundles]
-  );
+  const {
+    newSnapshotLabel,
+    setNewSnapshotLabel,
+    selectedSnapshot,
+    setSelectedSnapshot,
+    snapshotDiff,
+    handleCreateSnapshot,
+    handleDeleteSnapshot
+  } = useKarafSnapshotModal({ bundles, snapshots, onSnapshotsChange });
 
   if (!isOpen) return null;
 
@@ -127,223 +82,17 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
 
         {/* Conteúdo: Lista à esquerda + Comparativo à direita */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Coluna de snapshots salvos */}
-          <div className="w-72 border-r border-border bg-card/40 flex flex-col shrink-0 overflow-y-auto p-2.5 space-y-1.5">
-            <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-1">
-              Snapshots Salvos ({snapshots.length})
-            </div>
-            {snapshots.length === 0 ? (
-              <div className="text-center py-10 px-3 text-xs text-muted-foreground">
-                <Camera className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p>Nenhum snapshot criado.</p>
-                <p className="text-[11px] mt-1 text-muted-foreground/70">
-                  Clique no botão acima para salvar a foto atual dos bundles.
-                </p>
-              </div>
-            ) : (
-              snapshots.map((snap) => {
-                const isSelected = selectedSnapshot?.id === snap.id;
-                return (
-                  <div
-                    key={snap.id}
-                    onClick={() => setSelectedSnapshot(snap)}
-                    className={`p-2.5 rounded-xl border cursor-pointer transition flex items-start justify-between group ${
-                      isSelected
-                        ? 'border-purple-500/50 bg-purple-500/10'
-                        : 'border-border/60 hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="space-y-0.5 min-w-0 pr-2">
-                      <div className={`text-xs font-bold truncate ${isSelected ? 'text-purple-400' : 'text-foreground'}`}>
-                        {snap.label}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {snap.createdAt} · {snap.bundleCount} bundles
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeleteSnapshot(snap.id, e)}
-                      className="text-muted-foreground/50 hover:text-rose-400 opacity-0 group-hover:opacity-100 p-1 rounded transition"
-                      title="Excluir snapshot"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Coluna de comparação Diff */}
-          <div className="flex-1 flex flex-col overflow-y-auto p-4 space-y-4">
-            {!selectedSnapshot ? (
-              <div className="h-full flex flex-col items-center justify-center text-xs text-muted-foreground space-y-2">
-                <GitCompare className="w-10 h-10 text-muted-foreground/30" />
-                <p>Selecione um snapshot à esquerda para comparar com o estado em execução no Karaf.</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between pb-3 border-b border-border">
-                  <div>
-                    <span className="text-xs font-bold text-foreground">Comparando com: </span>
-                    <span className="text-xs font-mono text-purple-400 font-bold">{selectedSnapshot.label}</span>
-                    <span className="text-[10px] text-muted-foreground ml-2">({selectedSnapshot.createdAt})</span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground font-mono">
-                    Snapshot: {selectedSnapshot.bundleCount} | Atual: {bundles.length}
-                  </span>
-                </div>
-
-                {/* Resumo com badges */}
-                <div className="flex flex-wrap gap-2 text-xs font-mono">
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                    {snapshotDiff?.unchanged.length || 0} inalterados
-                  </span>
-                  {(snapshotDiff?.versionChanged.length || 0) > 0 && (
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold">
-                      {snapshotDiff?.versionChanged.length} versões alteradas
-                    </span>
-                  )}
-                  {(snapshotDiff?.stateChanged.length || 0) > 0 && (
-                    <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-bold">
-                      {snapshotDiff?.stateChanged.length} estados alterados
-                    </span>
-                  )}
-                  {(snapshotDiff?.added.length || 0) > 0 && (
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold">
-                      +{snapshotDiff?.added.length} novos
-                    </span>
-                  )}
-                  {(snapshotDiff?.removed.length || 0) > 0 && (
-                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 font-bold">
-                      -{snapshotDiff?.removed.length} ausentes
-                    </span>
-                  )}
-                </div>
-
-                {/* Se nenhuma diferença */}
-                {snapshotDiff &&
-                  snapshotDiff.versionChanged.length === 0 &&
-                  snapshotDiff.stateChanged.length === 0 &&
-                  snapshotDiff.added.length === 0 &&
-                  snapshotDiff.removed.length === 0 && (
-                    <div className="p-4 bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-center text-xs text-emerald-800 dark:text-emerald-300 font-medium">
-                      <CheckCircle2 className="w-6 h-6 mx-auto mb-1.5 text-emerald-600 dark:text-emerald-400" />
-                      Todos os bundles estão idênticos ao snapshot em versão e estado!
-                    </div>
-                  )}
-
-                {/* Versões alteradas */}
-                {snapshotDiff && snapshotDiff.versionChanged.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                      <RotateCw className="w-3.5 h-3.5" />
-                      Versões Atualizadas ({snapshotDiff.versionChanged.length})
-                    </div>
-                    <div className="space-y-1.5">
-                      {snapshotDiff.versionChanged.map(({ snapshot, current }) => (
-                        <div
-                          key={current.id}
-                          className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 flex items-center justify-between text-xs"
-                        >
-                          <div>
-                            <span className="font-mono font-bold text-foreground">[{current.id}] </span>
-                            <span className="text-foreground font-medium">{current.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 font-mono text-[11px]">
-                            <span className="text-muted-foreground line-through">{snapshot.version}</span>
-                            <ArrowRight className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                            <span className="text-amber-700 dark:text-amber-400 font-bold">{current.version}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Estados alterados */}
-                {snapshotDiff && snapshotDiff.stateChanged.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                      <Play className="w-3.5 h-3.5" />
-                      Estados Alterados ({snapshotDiff.stateChanged.length})
-                    </div>
-                    <div className="space-y-1.5">
-                      {snapshotDiff.stateChanged.map(({ snapshot, current }) => (
-                        <div
-                          key={current.id}
-                          className="p-2.5 rounded-xl border border-blue-500/30 bg-blue-500/5 flex items-center justify-between text-xs"
-                        >
-                          <div>
-                            <span className="font-mono font-bold text-foreground">[{current.id}] </span>
-                            <span className="text-foreground font-medium">{current.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 font-mono text-[11px]">
-                            <span className="text-muted-foreground">{snapshot.state}</span>
-                            <ArrowRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                            <span className="text-blue-700 dark:text-blue-400 font-bold">{current.state}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Novos bundles adicionados */}
-                {snapshotDiff && snapshotDiff.added.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                      <UploadCloud className="w-3.5 h-3.5" />
-                      Novos Bundles Instalados (+{snapshotDiff.added.length})
-                    </div>
-                    <div className="space-y-1.5">
-                      {snapshotDiff.added.map((b) => (
-                        <div
-                          key={b.id}
-                          className="p-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between text-xs"
-                        >
-                          <div className="truncate pr-2">
-                            <span className="font-mono font-bold text-foreground">[{b.id}] </span>
-                            <span className="text-foreground">{b.name}</span>
-                          </div>
-                          <div className="font-mono text-[10px] text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
-                            v{b.version} · {b.state}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Bundles removidos */}
-                {snapshotDiff && snapshotDiff.removed.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Bundles Removidos / Ausentes (-{snapshotDiff.removed.length})
-                    </div>
-                    <div className="space-y-1.5">
-                      {snapshotDiff.removed.map((b) => (
-                        <div
-                          key={b.id}
-                          className="p-2 rounded-xl border border-rose-500/30 bg-rose-500/5 flex items-center justify-between text-xs"
-                        >
-                          <div className="truncate pr-2">
-                            <span className="font-mono font-bold text-foreground">[{b.id}] </span>
-                            <span className="text-muted-foreground line-through">{b.name}</span>
-                          </div>
-                          <div className="font-mono text-[10px] text-rose-700 dark:text-rose-400 font-bold shrink-0">
-                            v{b.version} (era {b.state})
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <KarafSnapshotList
+            snapshots={snapshots}
+            selectedSnapshot={selectedSnapshot}
+            onSelect={setSelectedSnapshot}
+            onDelete={handleDeleteSnapshot}
+          />
+          <KarafSnapshotDiffPanel
+            selectedSnapshot={selectedSnapshot}
+            snapshotDiff={snapshotDiff}
+            currentCount={bundles.length}
+          />
         </div>
 
         {/* Footer */}

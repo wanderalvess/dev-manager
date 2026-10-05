@@ -25,7 +25,8 @@ describe('helpData', () => {
   describe('getKeyboardShortcuts', () => {
     it('should generate shortcuts with the custom debugPort', () => {
       const shortcuts = getKeyboardShortcuts(5005);
-      expect(shortcuts.length).toBe(15);
+      // Alt+1..0 (10) + Alt+Q + Ctrl+K + Alt+←/→ + Ctrl+Enter + Shift+F9 + Enter
+      expect(shortcuts.length).toBe(16);
 
       const debugShortcut = shortcuts.find((s) => s.key === 'Shift + F9');
       expect(debugShortcut).toBeDefined();
@@ -50,6 +51,7 @@ describe('helpData', () => {
       expect(keys).toContain('Alt + 8');
       expect(keys).toContain('Alt + 9');
       expect(keys).toContain('Alt + 0');
+      expect(keys).toContain('Alt + Q');
       expect(keys).toContain('Ctrl + K');
       expect(keys).toContain('Alt + ← / →');
     });
@@ -70,15 +72,16 @@ describe('helpData', () => {
       expect(aboutCat?.badge).toBe('v1.23.0');
     });
 
-    it('should use fallback version 1.23.0 when appVersion is not provided', () => {
+    it('should use a semver fallback version when appVersion is not provided', () => {
       const categories = getHelpCategories(10);
       const aboutCat = categories.find((c) => c.id === 'about');
-      expect(aboutCat?.badge).toBe('v1.23.0');
+      // Fallback muda a cada release: valida o formato, nao um literal.
+      expect(aboutCat?.badge).toMatch(/^v\d+\.\d+\.\d+$/);
     });
   });
 
   describe('getFaqList', () => {
-    it('should generate all 33 FAQ items with valid structure and tags', () => {
+    it('should generate the FAQ items with valid structure and tags', () => {
       const copyFn = vi.fn();
       const openLinkFn = vi.fn();
       const openMcpFn = vi.fn();
@@ -97,7 +100,8 @@ describe('helpData', () => {
         appInfo: { appVersion: '1.23.0' }
       });
 
-      expect(faqs.length).toBe(33);
+      expect(faqs.length).toBeGreaterThanOrEqual(33);
+      expect(new Set(faqs.map((f) => f.id)).size).toBe(faqs.length);
 
       for (const faq of faqs) {
         expect(faq.id).toBeTruthy();

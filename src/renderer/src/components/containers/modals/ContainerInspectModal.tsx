@@ -42,7 +42,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
             <div>
               <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                 <span>{inspectingContainer.name}</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted border border-border text-muted-foreground font-normal">
+                <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted border border-border text-muted-foreground font-normal">
                   {inspectingContainer.id.slice(0, 12)}
                 </span>
                 {getStateBadge(inspectingContainer.state.status)}
@@ -116,41 +116,41 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">ID Completo</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">ID Completo</span>
                   <div className="text-xs font-mono select-all text-foreground break-all">{inspectingContainer.id}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Criado em</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Criado em</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.created || 'N/D'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Iniciado em</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Iniciado em</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.state.startedAt || 'N/D'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Plataforma</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Plataforma</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.platform || 'linux/amd64'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Política de Reinício</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Política de Reinício</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.restartPolicy?.name || 'no'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Diretório de Trabalho</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Diretório de Trabalho</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.workingDir || '/'}</div>
                 </div>
               </div>
 
               {inspectingContainer.entrypoint && inspectingContainer.entrypoint.length > 0 && (
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Entrypoint</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Entrypoint</span>
                   <div className="text-xs font-mono text-foreground">{inspectingContainer.entrypoint.join(' ')}</div>
                 </div>
               )}
 
               {inspectingContainer.cmd && inspectingContainer.cmd.length > 0 && (
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Comando (Cmd)</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Comando (Cmd)</span>
                   <div className="text-xs font-mono text-foreground">{inspectingContainer.cmd.join(' ')}</div>
                 </div>
               )}
@@ -162,19 +162,19 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Endereço IP</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Endereço IP</span>
                   <div className="text-xs font-mono font-bold text-sky-600 dark:text-sky-400 select-all">
                     {inspectingContainer.networkSettings.ipAddress || 'Host Mode / Nenhum'}
                   </div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Gateway</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Gateway</span>
                   <div className="text-xs font-mono text-foreground select-all">
                     {inspectingContainer.networkSettings.gateway || 'N/D'}
                   </div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Endereço MAC</span>
+                  <span className="text-2xs uppercase font-bold text-muted-foreground">Endereço MAC</span>
                   <div className="text-xs font-mono text-foreground select-all">
                     {inspectingContainer.networkSettings.macAddress || 'N/D'}
                   </div>
@@ -182,7 +182,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
               </div>
 
               <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground block">Mapeamento de Portas</span>
+                <span className="text-2xs uppercase font-bold text-muted-foreground block">Mapeamento de Portas</span>
                 {(() => {
                   const portEntries = flattenPortBindings(inspectingContainer.networkSettings.ports);
                   return portEntries.length === 0 ? (
@@ -211,10 +211,10 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                 inspectingContainer.mounts.map((m, idx) => (
                   <div key={idx} className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1.5 text-xs">
                     <div className="flex items-center justify-between font-mono">
-                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold uppercase">
+                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-2xs font-bold uppercase">
                         {m.type} {m.rw ? '(rw)' : '(ro)'}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">{m.mode || 'default'}</span>
+                      <span className="text-2xs text-muted-foreground">{m.mode || 'default'}</span>
                     </div>
                     <div className="font-mono text-[11px] space-y-1 select-all">
                       <div><span className="text-muted-foreground font-sans">Host:</span> <span className="text-foreground">{m.source}</span></div>
