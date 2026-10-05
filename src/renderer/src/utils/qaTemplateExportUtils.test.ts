@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   sanitizeTemplateForExport,
   serializeTemplateToJson,
@@ -75,49 +75,46 @@ describe('qaTemplateExportUtils', () => {
     expect(sanitizedFilename).toBe('cen-rio-teste-1-vendas.json');
   });
 
-  it('exportTemplateAsJsonFile deve disparar o download com click em elemento âncora', () => {
+  describe('download via âncora', () => {
+    // O Vitest roda em ambiente node (sem jsdom), então o DOM mínimo é simulado.
     const clickMock = vi.fn();
     const removeMock = vi.fn();
     const setAttributeMock = vi.fn();
+    const createElementMock = vi.fn();
+    const appendChildMock = vi.fn();
 
-    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue({
-      setAttribute: setAttributeMock,
-      click: clickMock,
-      remove: removeMock
-    } as any);
+    beforeEach(() => {
+      createElementMock.mockReturnValue({
+        setAttribute: setAttributeMock,
+        click: clickMock,
+        remove: removeMock
+      });
+      vi.stubGlobal('document', {
+        createElement: createElementMock,
+        body: { appendChild: appendChildMock }
+      });
+    });
 
-    const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => null as any);
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.clearAllMocks();
+    });
 
-    exportTemplateAsJsonFile(mockTemplate);
+    it('exportTemplateAsJsonFile deve disparar o download com click em elemento âncora', () => {
+      exportTemplateAsJsonFile(mockTemplate);
 
-    expect(createElementSpy).toHaveBeenCalledWith('a');
-    expect(setAttributeMock).toHaveBeenCalledWith('download', 'template-venda-pdv.json');
-    expect(clickMock).toHaveBeenCalled();
-    expect(removeMock).toHaveBeenCalled();
+      expect(createElementMock).toHaveBeenCalledWith('a');
+      expect(setAttributeMock).toHaveBeenCalledWith('download', 'template-venda-pdv.json');
+      expect(appendChildMock).toHaveBeenCalled();
+      expect(clickMock).toHaveBeenCalled();
+      expect(removeMock).toHaveBeenCalled();
+    });
 
-    createElementSpy.mockRestore();
-    appendChildSpy.mockRestore();
-  });
+    it('exportTemplatesBundleAsJsonFile deve disparar o download com nome de arquivo customizado', () => {
+      exportTemplatesBundleAsJsonFile([mockTemplate], 'backup-completo.json');
 
-  it('exportTemplatesBundleAsJsonFile deve disparar o download com nome de arquivo customizado', () => {
-    const clickMock = vi.fn();
-    const removeMock = vi.fn();
-    const setAttributeMock = vi.fn();
-
-    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue({
-      setAttribute: setAttributeMock,
-      click: clickMock,
-      remove: removeMock
-    } as any);
-
-    const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => null as any);
-
-    exportTemplatesBundleAsJsonFile([mockTemplate], 'backup-completo.json');
-
-    expect(setAttributeMock).toHaveBeenCalledWith('download', 'backup-completo.json');
-    expect(clickMock).toHaveBeenCalled();
-
-    createElementSpy.mockRestore();
-    appendChildSpy.mockRestore();
+      expect(setAttributeMock).toHaveBeenCalledWith('download', 'backup-completo.json');
+      expect(clickMock).toHaveBeenCalled();
+    });
   });
 });

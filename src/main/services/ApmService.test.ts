@@ -257,7 +257,7 @@ describe('ApmService', () => {
     expect(details?.rootTree).toHaveLength(1);
     expect(details?.rootTree[0].children).toHaveLength(1);
     expect(details?.rootTree[0].children[0].span.dbStatement).toBe('SELECT * FROM PCPRODUT');
-    expect(details?.breakdown).toEqual({ totalMs: 200, dbMs: 160, externalMs: 0, appMs: 40 });
+    expect(details?.breakdown).toEqual({ totalMs: 200, dbMs: 160, externalMs: 0, appMs: 40, httpMs: 20, javaMs: 20, jdbcMs: 160 });
   });
 
   it('aplica o filtro de serviço a todas as métricas do overview, não só às latências', () => {

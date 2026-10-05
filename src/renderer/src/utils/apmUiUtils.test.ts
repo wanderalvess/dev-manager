@@ -275,10 +275,9 @@ describe('apmUiUtils', () => {
       expect(res[0].traceId).toBe('tr-02');
     });
 
-    it('filtra por preset SLOW (>1000ms)', () => {
+    it('filtra por preset SLOW (>=400ms)', () => {
       const res = filterTraces(traces, { preset: 'SLOW' });
-      expect(res).toHaveLength(1);
-      expect(res[0].traceId).toBe('tr-02');
+      expect(res.map((t) => t.traceId)).toEqual(['tr-02', 'tr-04']);
     });
 
     it('filtra por preset DB', () => {
