@@ -517,8 +517,12 @@ export interface AppSettings {
   wtaLogin?: string;
   /** Senha ou hash MD5 da senha do usuário no WTA */
   wtaPassword?: string;
+  /** Indicador de que a senha do WTA já está salva (wtaPassword trafega vazio quando sanitizado). */
+  hasWtaPassword?: boolean;
   /** Cookie de sessão ou token do WTA para autenticação automática no lançamento de rotinas (opcional) */
   wtaAuthToken?: string;
+  /** Indicador de que o cookie do WTA já está salvo (wtaAuthToken trafega vazio quando sanitizado). */
+  hasWtaAuthToken?: boolean;
   /** Payload de sessão pré-configurado para o Winthor Start (contendo m, u, p, t, s) como fallback permanente */
   winthorStartDefaultPayload?: string;
   /** URL base da Central de Controle WinThor (CCW) (padrão: https://centraldecontrole.pcinformatica.com.br) */

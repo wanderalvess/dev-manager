@@ -414,6 +414,8 @@ export class ConfigService {
       if (w.authValue) w.authValue = decryptSecret(w.authValue, dir)!;
     });
     if (settings.ccwAuthCookie) settings.ccwAuthCookie = decryptSecret(settings.ccwAuthCookie, dir)!;
+    if (settings.wtaPassword) settings.wtaPassword = decryptSecret(settings.wtaPassword, dir)!;
+    if (settings.wtaAuthToken) settings.wtaAuthToken = decryptSecret(settings.wtaAuthToken, dir)!;
     if (settings.azureDevOpsToken) settings.azureDevOpsToken = decryptSecret(settings.azureDevOpsToken, dir)!;
     settings.qualitySources?.forEach((qs) => {
       if (qs.apiToken) qs.apiToken = decryptSecret(qs.apiToken, dir)!;
@@ -447,6 +449,8 @@ export class ConfigService {
       w.authValue ? { ...w, authValue: encryptSecret(w.authValue, dir)! } : w
     );
     if (clone.ccwAuthCookie) clone.ccwAuthCookie = encryptSecret(clone.ccwAuthCookie, dir)!;
+    if (clone.wtaPassword) clone.wtaPassword = encryptSecret(clone.wtaPassword, dir)!;
+    if (clone.wtaAuthToken) clone.wtaAuthToken = encryptSecret(clone.wtaAuthToken, dir)!;
     if (clone.azureDevOpsToken) clone.azureDevOpsToken = encryptSecret(clone.azureDevOpsToken, dir)!;
     clone.qualitySources = clone.qualitySources?.map((qs) =>
       qs.apiToken ? { ...qs, apiToken: encryptSecret(qs.apiToken, dir)! } : qs
@@ -616,6 +620,14 @@ export class ConfigService {
     if (!merged.azureDevOpsToken && current.azureDevOpsToken) {
       merged.azureDevOpsToken = current.azureDevOpsToken;
     }
+    // Credenciais do WTA: o destino é a wtaUrl, então trocar a URL sem reenviar o segredo não leva o antigo junto
+    const wtaDestinationChanged = !!merged.wtaUrl && !!current.wtaUrl && merged.wtaUrl !== current.wtaUrl;
+    if (!merged.wtaPassword && current.wtaPassword) {
+      merged.wtaPassword = wtaDestinationChanged ? '' : current.wtaPassword;
+    }
+    if (!merged.wtaAuthToken && current.wtaAuthToken) {
+      merged.wtaAuthToken = wtaDestinationChanged ? '' : current.wtaAuthToken;
+    }
     if (Array.isArray(merged.qualitySources)) {
       merged.qualitySources = merged.qualitySources.map((s) => {
         const existing = current.qualitySources?.find((e) => e.id === s.id);
@@ -737,6 +749,10 @@ export class ConfigService {
     if (sanitized.ccwAuthCookie) {
       sanitized.ccwAuthCookie = '';
     }
+    sanitized.hasWtaPassword = Boolean(settings.wtaPassword && settings.wtaPassword.trim().length > 0);
+    sanitized.hasWtaAuthToken = Boolean(settings.wtaAuthToken && settings.wtaAuthToken.trim().length > 0);
+    sanitized.wtaPassword = '';
+    sanitized.wtaAuthToken = '';
     if (sanitized.azureDevOpsToken) {
       sanitized.azureDevOpsToken = '';
     }

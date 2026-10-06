@@ -98,7 +98,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
           value={settings.wtaPassword || ''}
           onChange={(e) => setField('wtaPassword', e.target.value)}
           className={INPUT_CLASS}
-          placeholder="Senha ou Hash MD5 do WTA"
+          placeholder={settings.hasWtaPassword ? '(Senha salva e protegida)' : 'Senha ou Hash MD5 do WTA'}
         />
       </div>
     </div>
@@ -113,7 +113,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
           value={settings.wtaAuthToken || ''}
           onChange={(e) => setField('wtaAuthToken', e.target.value)}
           className={INPUT_CLASS}
-          placeholder="Cole o valor do cookie 'suukie' do WTA (opcional)"
+          placeholder={settings.hasWtaAuthToken ? '(Cookie salvo e protegido)' : "Cole o valor do cookie 'suukie' do WTA (opcional)"}
         />
         <p className="text-2xs text-muted-foreground mt-0.5">
           Permite que o Hub Manager consulte os parâmetros atualizados direto da sua sessão web. Abra o

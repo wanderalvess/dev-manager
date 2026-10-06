@@ -362,6 +362,43 @@ describe('ConfigService', () => {
     });
   });
 
+  describe('Credenciais do WTA', () => {
+    it('grava senha e cookie do WTA criptografados em disco, mas getSettings() retorna texto plano', () => {
+      const service = new ConfigService();
+      service.saveSettings({ wtaUrl: 'https://wta.corp', wtaLogin: 'PCADMIN', wtaPassword: 'senha-wta-111', wtaAuthToken: 'cookie-wta-222' });
+
+      const rawDisk = fs.readFileSync(service.getConfigFilePath(), 'utf-8');
+      expect(rawDisk).not.toContain('senha-wta-111');
+      expect(rawDisk).not.toContain('cookie-wta-222');
+      expect(service.getSettings().wtaPassword).toBe('senha-wta-111');
+      expect(service.getSettings().wtaAuthToken).toBe('cookie-wta-222');
+    });
+
+    it('sanitizeSecrets esconde os segredos do WTA e sinaliza que existem', () => {
+      const service = new ConfigService();
+      service.saveSettings({ wtaPassword: 'senha-wta-111', wtaAuthToken: 'cookie-wta-222' });
+
+      const sanitized = service.sanitizeSecrets(service.getSettings());
+      expect(sanitized.wtaPassword).toBe('');
+      expect(sanitized.wtaAuthToken).toBe('');
+      expect(sanitized.hasWtaPassword).toBe(true);
+      expect(sanitized.hasWtaAuthToken).toBe(true);
+    });
+
+    it('preserva os segredos quando o save volta vazio, mas não os leva para outra wtaUrl', () => {
+      const service = new ConfigService();
+      service.saveSettings({ wtaUrl: 'https://wta.corp', wtaPassword: 'senha-wta-111', wtaAuthToken: 'cookie-wta-222' });
+
+      service.saveSettings({ wtaUrl: 'https://wta.corp', wtaPassword: '', wtaAuthToken: '' });
+      expect(service.getSettings().wtaPassword).toBe('senha-wta-111');
+      expect(service.getSettings().wtaAuthToken).toBe('cookie-wta-222');
+
+      service.saveSettings({ wtaUrl: 'https://outro-destino.example', wtaPassword: '', wtaAuthToken: '' });
+      expect(service.getSettings().wtaPassword).toBe('');
+      expect(service.getSettings().wtaAuthToken).toBe('');
+    });
+  });
+
   describe('Criptografia de segredos em repouso', () => {
     it('grava os segredos criptografados em disco, mas getSettings() continua retornando texto plano', () => {
       const service = new ConfigService();
