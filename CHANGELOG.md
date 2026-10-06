@@ -4,6 +4,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.33.0] - 2026-10-06
+### Adicionado
+- **Banco de Dados — transações**: cada conexão ativa ganha uma sessão própria, com barra **Auto-commit / Manual**, **Commit (F11)**, **Rollback (F12)**, contador de alterações pendentes e **Cancelar consulta**. Conexões marcadas como **Ambiente de produção** (novo campo no cadastro) começam em modo manual. Há confirmação para `UPDATE`/`DELETE` sem `WHERE` (em auto-commit) e para `DROP`/`TRUNCATE`, e aviso ao voltar para auto-commit com alterações pendentes. No PostgreSQL, um erro dentro da transação desfaz só o comando que falhou. Fechar o app faz rollback do que estiver pendente.
+- **Banco de Dados — editor Monaco**: destaque de sintaxe, busca, múltiplos cursores, comentar linhas e formatar (`Ctrl+Shift+F`). O **autocomplete** funciona no cursor e conhece o contexto: colunas após `alias.` (carregadas sob demanda), tabelas após `FROM`/`JOIN`, colunas das tabelas do comando em `SELECT`/`WHERE`/`ON` (mesmo com o `FROM` depois do cursor), funções por dialeto, palavras-chave e snippets (`sel`, `ins`, `upd`, `cte`, `begin`...). `Ctrl+Enter` executa a seleção ou o comando sob o cursor; `F5` executa o script inteiro, parando no primeiro erro.
+- **Banco de Dados — descrever tabela**: painel com colunas (PK, FK, NOT NULL, default, comentário), constraints (com navegação pelas chaves estrangeiras), índices, triggers e DDL, aberto pelo botão ⓘ da tabela ou por `F4` no editor. A sidebar passou a filtrar por tipo de objeto (tabelas, views, procedures, functions, packages, sequences, triggers, sinônimos, types), com contagem e selo de objeto inválido. Suporta `OWNER.TABELA` no Oracle (DDL por `DBMS_METADATA`), PostgreSQL e MySQL.
+- **Banco de Dados — resultados**: exportar em **Excel (.xlsx)**, **CSV para Excel Brasil** (`;`, BOM e vírgula decimal), CSV padrão e JSON; botão **Carregar mais** quando o resultado atinge o limite (de 100 até 10.000 linhas); edição do grid **em lote** com **Aplicar** e **Descartar**, na mesma transação do editor; plano de execução em **árvore** (Oracle e PostgreSQL) com custo próprio por operação, alertas de *full scan* e produto cartesiano e predicados.
+- Cadastro de conexão: opção **Usar SSL/TLS** para PostgreSQL e MySQL, antes inacessível pela interface.
+
+### Corrigido
+- **PL/SQL**: blocos `BEGIN ... END;` perdiam o `;` final e davam ORA-06550; o `/` terminador também passa a ser tratado.
+- **PostgreSQL e MySQL**: as consultas traziam todas as linhas para a memória antes do corte; agora usam `LIMIT`, e há timeout de 60 s. O resultado avisa "Limite atingido" quando existem mais linhas.
+- A conexão compartilhada era fechada no meio de uma consulta mais longa que 30 s, e o cache ignorava senha, modo SID/Service, Thick e SSL.
+- Clicar numa tabela com maiúsculas ou símbolos no PostgreSQL (ex.: `public.Clientes`) gerava um `SELECT` que falhava; agora o nome vai entre aspas quando o banco exige.
+- Resultado sem linhas dizia "nenhum resultado corresponde aos filtros" e oferecia remover filtros; agora informa que a consulta rodou e não retornou linhas.
+
+### Testes
+- Novos testes para sessões e transações, autocomplete, divisão de scripts, catálogo por banco, exportação (incluindo leitura do `.xlsx` gerado), edição em lote e plano em árvore. Os caminhos de transação foram verificados por mutação.
+
 ## [1.32.0] - 2026-10-06
 ### Adicionado
 - **Qualidade em páginas próprias**: o menu **QA** do cabeçalho agora abre quatro páginas separadas — **Homologação** (Matriz, Prontidão e Roadmap; atalho `Alt+Q`), **Validador Regressivo**, **Test Runners** e **TAUT (Cypress)**. Cada página mostra só o que é dela; Release, Exportar Relatório e Novo Cenário ficam apenas em Homologação. A Matriz de Validação é única e compartilhada, então o resultado de um runner continua atualizando os cenários vinculados. As novas páginas também aparecem na busca rápida (`Ctrl+K`).
