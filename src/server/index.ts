@@ -921,6 +921,32 @@ app.post('/api/db/query', async (req, res) => {
   }
 });
 
+app.post('/api/db/table-details', async (req, res) => {
+  try {
+    const { config, tableName } = req.body;
+    res.json(await databaseService.getTableDetails(config, tableName));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || 'Erro ao ler a tabela', name: '', objectType: 'TABLE', columns: [], constraints: [], indexes: [], triggers: [] });
+  }
+});
+
+app.post('/api/db/object-ddl', async (req, res) => {
+  try {
+    const { config, objectType, objectName } = req.body;
+    res.json(await databaseService.getObjectDdl(config, objectType, objectName));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || 'Erro ao obter o DDL' });
+  }
+});
+
+app.post('/api/db/objects', async (req, res) => {
+  try {
+    res.json(await databaseService.listObjects(req.body.config ?? req.body));
+  } catch {
+    res.json([]);
+  }
+});
+
 // Sessões dedicadas do editor SQL (transação manual, commit/rollback, cancelamento)
 const sessionRoute = (handler: (body: any) => Promise<unknown>) => async (req: express.Request, res: express.Response) => {
   try {

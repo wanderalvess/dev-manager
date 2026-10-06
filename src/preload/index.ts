@@ -39,8 +39,12 @@ import type {
   DocSyncProgress,
   DocSyncResult,
   DatabaseConnectionConfig,
+  DbObjectInfo,
+  DbObjectType,
   DbSessionQueryResult,
   DbSessionState,
+  ObjectDdlResult,
+  TableDetails,
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
@@ -472,6 +476,11 @@ const electronAPI = {
     ipcRenderer.invoke('db:test-connection', config),
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<QueryResult> =>
     ipcRenderer.invoke('db:execute-query', config, sql, maxRows, binds),
+  getDbTableDetails: (config: DatabaseConnectionConfig, tableName: string): Promise<TableDetails> =>
+    ipcRenderer.invoke('db:get-table-details', config, tableName),
+  getDbObjectDdl: (config: DatabaseConnectionConfig, objectType: DbObjectType, objectName: string): Promise<ObjectDdlResult> =>
+    ipcRenderer.invoke('db:get-object-ddl', config, objectType, objectName),
+  listDbObjects: (config: DatabaseConnectionConfig): Promise<DbObjectInfo[]> => ipcRenderer.invoke('db:list-objects', config),
   openDbSession: (config: DatabaseConnectionConfig, autoCommit?: boolean): Promise<DbSessionState> =>
     ipcRenderer.invoke('db:session-open', config, autoCommit),
   executeDbSession: (sessionId: string, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<DbSessionQueryResult> =>

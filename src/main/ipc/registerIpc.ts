@@ -49,6 +49,7 @@ import {
   TestRunnerConfig,
   DocsIndexProgress,
   DatabaseConnectionConfig,
+  DbObjectType,
   OracleTracerFilter,
   OracleCaptureOptions,
   BackupConfig,
@@ -920,6 +921,22 @@ export function registerIpcHandlers(
 
   ipcMain.handle('db:execute-query', async (_, config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>) => {
     return await databaseService.executeQuery(config, sql, maxRows, binds);
+  });
+
+  ipcMain.handle('db:get-table-details', async (_, config: DatabaseConnectionConfig, tableName: string) => {
+    return await databaseService.getTableDetails(config, tableName);
+  });
+
+  ipcMain.handle('db:get-object-ddl', async (_, config: DatabaseConnectionConfig, objectType: DbObjectType, objectName: string) => {
+    return await databaseService.getObjectDdl(config, objectType, objectName);
+  });
+
+  ipcMain.handle('db:list-objects', async (_, config: DatabaseConnectionConfig) => {
+    try {
+      return await databaseService.listObjects(config);
+    } catch {
+      return [];
+    }
   });
 
   ipcMain.handle('db:session-open', async (_, config: DatabaseConnectionConfig, autoCommit?: boolean) => {

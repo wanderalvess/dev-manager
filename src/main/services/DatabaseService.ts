@@ -13,7 +13,11 @@ import {
   OracleCapturedBind,
   OracleStatementBindsResult,
   ParseTnsNamesResult,
-  DbSessionState
+  DbSessionState,
+  DbObjectInfo,
+  DbObjectType,
+  ObjectDdlResult,
+  TableDetails
 } from '../../shared/types';
 import { interpolateSqlBinds } from '../utils/databaseSqlUtils';
 import type { ConfigService } from './ConfigService';
@@ -30,6 +34,7 @@ import { getMysqlConnection } from './database/databaseMysql';
 import { getOracleConnection } from './database/databaseOracle';
 import { formatErrorMessage } from './database/databaseErrors';
 import { DatabaseSessionManager } from './database/databaseSessions';
+import * as schemaInfo from './database/databaseSchemaInfo';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -109,6 +114,20 @@ export class DatabaseService {
     binds?: Record<string, any>
   ): Promise<QueryResult> {
     return queries.executeQuery(this.ctx, config, sql, maxRows, binds);
+  }
+
+  // --- Especificação de objetos (Descrever tabela, DDL, árvore de objetos) ---
+
+  public getTableDetails(config: DatabaseConnectionConfig, tableName: string): Promise<TableDetails> {
+    return schemaInfo.getTableDetails(this.ctx, config, tableName);
+  }
+
+  public getObjectDdl(config: DatabaseConnectionConfig, objectType: DbObjectType, objectName: string): Promise<ObjectDdlResult> {
+    return schemaInfo.getObjectDdl(this.ctx, config, objectType, objectName);
+  }
+
+  public listObjects(config: DatabaseConnectionConfig): Promise<DbObjectInfo[]> {
+    return schemaInfo.listObjects(this.ctx, config);
   }
 
   // --- Sessões dedicadas do editor SQL (transação manual, commit/rollback e cancelamento) ---

@@ -23,6 +23,20 @@ export function extractReferencedTables(sql: string): ReferencedTable[] {
   return result;
 }
 
+/**
+ * Identificador (com ponto, como `OWNER.TABELA`) que contém a posição do cursor, para "descrever o objeto sob o cursor".
+ * Aspas ao redor são removidas; pontos soltos nas pontas, ignorados. Retorna null se o cursor não está sobre um nome.
+ */
+export function extractIdentifierAt(text: string, offset: number): string | null {
+  const isIdent = (ch: string | undefined) => !!ch && /[A-Za-z0-9_$#."]/.test(ch);
+  let start = Math.min(offset, text.length);
+  let end = start;
+  while (start > 0 && isIdent(text[start - 1])) start--;
+  while (end < text.length && isIdent(text[end])) end++;
+  const cleaned = text.slice(start, end).replace(/"/g, '').replace(/^\.+|\.+$/g, '');
+  return cleaned || null;
+}
+
 /** Resolve o nome da tabela como listada no schema (ignora o prefixo de owner). */
 export function resolveTableKey(tables: string[], table: string): string {
   return tables.find((t) => t === table || t.split('.').pop() === table.split('.').pop()) || table;

@@ -1,5 +1,6 @@
 import React from 'react';
-import { DatabaseConnectionConfig, DatabaseType, TableColumnInfo } from '../../../../shared/types';
+import { DatabaseConnectionConfig, DatabaseType, DbObjectInfo, DbObjectType, TableColumnInfo } from '../../../../shared/types';
+import type { ExplorerObjectType } from '../../hooks/database/useDatabaseObjects';
 import { useDatabaseSidebarRenderLimit } from '../../hooks/database/useDatabaseSidebarRenderLimit';
 import { DatabaseSidebarCollapsed } from './sidebar/DatabaseSidebarCollapsed';
 import { DatabaseSidebarHeader } from './sidebar/DatabaseSidebarHeader';
@@ -30,6 +31,13 @@ export interface DatabaseSidebarProps {
   getDbBadge: (type: DatabaseType) => React.ReactNode;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  onOpenSpec: (name: string, type: DbObjectType) => void;
+  objectType: ExplorerObjectType;
+  onObjectTypeChange: (type: ExplorerObjectType) => void;
+  objectsOfType: DbObjectInfo[];
+  objectCounts: Partial<Record<DbObjectType, number>>;
+  isLoadingObjects: boolean;
+  onFetchObjects: () => void;
 }
 
 export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
@@ -55,7 +63,14 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
   activeConnection,
   getDbBadge,
   isCollapsed = false,
-  onToggleCollapse
+  onToggleCollapse,
+  onOpenSpec,
+  objectType,
+  onObjectTypeChange,
+  objectsOfType,
+  objectCounts,
+  isLoadingObjects,
+  onFetchObjects
 }) => {
   const pagination = useDatabaseSidebarRenderLimit(filteredTables);
 
@@ -93,6 +108,13 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
         onTableClick={onTableClick}
         onInsertColumnName={onInsertColumnName}
         activeConnection={activeConnection}
+        onOpenSpec={onOpenSpec}
+        objectType={objectType}
+        onObjectTypeChange={onObjectTypeChange}
+        objectsOfType={objectsOfType}
+        objectCounts={objectCounts}
+        isLoadingObjects={isLoadingObjects}
+        onFetchObjects={onFetchObjects}
         visibleTables={pagination.visibleTables}
         hasMoreTables={pagination.hasMoreTables}
         showMoreTables={pagination.showMoreTables}

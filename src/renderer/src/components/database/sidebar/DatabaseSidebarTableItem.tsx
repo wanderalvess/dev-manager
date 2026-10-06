@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Info } from 'lucide-react';
 import { TableColumnInfo } from '../../../../../shared/types';
 import { DatabaseSidebarColumnList } from './DatabaseSidebarColumnList';
 
@@ -11,6 +11,7 @@ interface DatabaseSidebarTableItemProps {
   onToggleTableExpand: (tbl: string, e: React.MouseEvent) => void;
   onTableClick: (tbl: string) => void;
   onInsertColumnName: (colName: string) => void;
+  onOpenSpec: (tbl: string) => void;
 }
 
 export const DatabaseSidebarTableItem: React.FC<DatabaseSidebarTableItemProps> = ({
@@ -20,7 +21,8 @@ export const DatabaseSidebarTableItem: React.FC<DatabaseSidebarTableItemProps> =
   isLoadingCols,
   onToggleTableExpand,
   onTableClick,
-  onInsertColumnName
+  onInsertColumnName,
+  onOpenSpec
 }) => (
   <div className="rounded-lg border border-transparent hover:border-border/40 transition overflow-hidden">
     <div
@@ -45,11 +47,25 @@ export const DatabaseSidebarTableItem: React.FC<DatabaseSidebarTableItemProps> =
         </button>
         <span className="truncate">{tbl}</span>
       </div>
-      {cols && (
-        <span className="text-2xs px-1 py-0.2 rounded bg-muted/60 text-muted-foreground shrink-0 font-mono">
-          {cols.length}
-        </span>
-      )}
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenSpec(tbl);
+          }}
+          title={`Descrever ${tbl}: colunas, constraints, índices, triggers e DDL`}
+          aria-label={`Descrever ${tbl}`}
+          className="p-0.5 rounded text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-primary hover:bg-card transition cursor-pointer"
+        >
+          <Info className="w-3.5 h-3.5" />
+        </button>
+        {cols && (
+          <span className="text-2xs px-1 py-0.2 rounded bg-muted/60 text-muted-foreground font-mono">
+            {cols.length}
+          </span>
+        )}
+      </div>
     </div>
 
     {/* Lista de colunas expandida */}

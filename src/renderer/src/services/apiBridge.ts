@@ -41,8 +41,12 @@ import type {
   DatabaseConnectionConfig,
   ParseTnsNamesResult,
   QueryResult,
+  DbObjectInfo,
+  DbObjectType,
   DbSessionQueryResult,
   DbSessionState,
+  ObjectDdlResult,
+  TableDetails,
   DockerContainerInfo,
   DockerDaemonStatus,
   DockerContainerInspect,
@@ -1166,6 +1170,18 @@ export function initApiBridge() {
         method: 'POST',
         body: JSON.stringify({ config, sql, maxRows, binds })
       });
+    },
+
+    getDbTableDetails: async (config: DatabaseConnectionConfig, tableName: string): Promise<TableDetails> => {
+      return apiFetch('/api/db/table-details', { method: 'POST', body: JSON.stringify({ config, tableName }) });
+    },
+
+    getDbObjectDdl: async (config: DatabaseConnectionConfig, objectType: DbObjectType, objectName: string): Promise<ObjectDdlResult> => {
+      return apiFetch('/api/db/object-ddl', { method: 'POST', body: JSON.stringify({ config, objectType, objectName }) });
+    },
+
+    listDbObjects: async (config: DatabaseConnectionConfig): Promise<DbObjectInfo[]> => {
+      return apiFetch('/api/db/objects', { method: 'POST', body: JSON.stringify({ config }) });
     },
 
     openDbSession: async (config: DatabaseConnectionConfig, autoCommit?: boolean): Promise<DbSessionState> => {

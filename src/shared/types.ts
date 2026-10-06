@@ -1176,6 +1176,96 @@ export interface QueryResult {
   error?: string;
 }
 
+export type DbObjectType =
+  | 'TABLE'
+  | 'VIEW'
+  | 'MATERIALIZED VIEW'
+  | 'PROCEDURE'
+  | 'FUNCTION'
+  | 'PACKAGE'
+  | 'PACKAGE BODY'
+  | 'SEQUENCE'
+  | 'TRIGGER'
+  | 'SYNONYM'
+  | 'TYPE'
+  | 'TYPE BODY'
+  | 'INDEX';
+
+export interface DbObjectInfo {
+  name: string;
+  type: DbObjectType;
+  /** Oracle: objetos INVALID precisam ser recompilados. */
+  status: 'VALID' | 'INVALID';
+}
+
+export type TableConstraintKind = 'PRIMARY KEY' | 'FOREIGN KEY' | 'UNIQUE' | 'CHECK' | 'OTHER';
+
+export interface TableColumnDetail {
+  position: number;
+  name: string;
+  /** Tipo já formatado (ex.: VARCHAR2(30), NUMBER(10,2), numeric(12,4)). */
+  type: string;
+  nullable: boolean;
+  defaultValue?: string;
+  comment?: string;
+  isPrimaryKey: boolean;
+}
+
+export interface TableConstraintDetail {
+  name: string;
+  kind: TableConstraintKind;
+  columns: string[];
+  /** Chave estrangeira: tabela e colunas referenciadas. */
+  refTable?: string;
+  refColumns?: string[];
+  onDelete?: string;
+  /** CHECK: expressão. */
+  condition?: string;
+  status?: string;
+  /** Definição pronta do banco (PostgreSQL), quando as colunas não bastam para descrever. */
+  definition?: string;
+}
+
+export interface TableIndexDetail {
+  name: string;
+  unique: boolean;
+  primary?: boolean;
+  type?: string;
+  columns: string[];
+  status?: string;
+  definition?: string;
+}
+
+export interface TableTriggerDetail {
+  name: string;
+  event: string;
+  timing?: string;
+  status?: string;
+  definition?: string;
+}
+
+/** Especificação completa de uma tabela ou view: o que o "Descrever tabela" mostra. */
+export interface TableDetails {
+  success: boolean;
+  error?: string;
+  name: string;
+  owner?: string;
+  objectType: string;
+  comment?: string;
+  rowCountEstimate?: number;
+  lastAnalyzed?: string;
+  columns: TableColumnDetail[];
+  constraints: TableConstraintDetail[];
+  indexes: TableIndexDetail[];
+  triggers: TableTriggerDetail[];
+}
+
+export interface ObjectDdlResult {
+  success: boolean;
+  ddl?: string;
+  error?: string;
+}
+
 /** Estado de uma sessão dedicada do editor SQL (conexão própria, com controle de transação). */
 export interface DbSessionState {
   sessionId: string;

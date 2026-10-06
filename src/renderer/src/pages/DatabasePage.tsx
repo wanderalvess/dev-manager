@@ -9,6 +9,8 @@ import { useDatabaseLayout } from '../hooks/database/useDatabaseLayout';
 import { useDatabaseConnections } from '../hooks/database/useDatabaseConnections';
 import { useDatabaseSchema } from '../hooks/database/useDatabaseSchema';
 import { useDatabaseQuery } from '../hooks/database/useDatabaseQuery';
+import { useDatabaseObjects } from '../hooks/database/useDatabaseObjects';
+import { TableSpecModal, type SpecTarget } from '../components/database/spec/TableSpecModal';
 import { useDatabaseSnippets, readStoredSnippets } from '../hooks/database/useDatabaseSnippets';
 
 // Subcomponentes Modularizados
@@ -40,11 +42,14 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
   const [sql, setSql] = useState<string>('SELECT 1 FROM DUAL');
   const [customSnippets, setCustomSnippets] = useState<SqlSnippet[]>(readStoredSnippets);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
+  // "Descrever tabela": alvo aberto no painel de especificação (null = fechado)
+  const [specTarget, setSpecTarget] = useState<SpecTarget | null>(null);
 
   const layout = useDatabaseLayout();
   const conn = useDatabaseConnections({ settingsVersion, setSql, setCustomSnippets });
   const { activeConnection } = conn;
   const schema = useDatabaseSchema(activeConnection, conn.activeConnectionId);
+  const objectBrowser = useDatabaseObjects(activeConnection, conn.activeConnectionId, schema.tableFilter);
   const query = useDatabaseQuery({
     sql,
     setSql,
@@ -176,6 +181,13 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
           getDbBadge={getDbBadge}
           isCollapsed={layout.isSidebarCollapsed}
           onToggleCollapse={layout.handleToggleSidebar}
+          onOpenSpec={(name, type) => setSpecTarget({ name, type })}
+          objectType={objectBrowser.objectType}
+          onObjectTypeChange={objectBrowser.setObjectType}
+          objectsOfType={objectBrowser.objectsOfType}
+          objectCounts={objectBrowser.counts}
+          isLoadingObjects={objectBrowser.isLoadingObjects}
+          onFetchObjects={objectBrowser.fetchObjects}
         />
 
         {/* Área Principal: Editor SQL e Resultados */}
@@ -208,6 +220,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
             setIsMaximized={layout.handleSetEditorMaximized}
             isSidebarCollapsed={layout.isSidebarCollapsed}
             onToggleSidebar={layout.handleToggleSidebar}
+            onDescribeObject={(name) => setSpecTarget({ name, type: 'TABLE' })}
             transaction={
               query.tx.supported && activeConnection
                 ? {
@@ -245,6 +258,16 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
       </div>
 
       {/* Modal de Conexão */}
+      <TableSpecModal
+        target={specTarget}
+        connection={activeConnection}
+        onClose={() => setSpecTarget(null)}
+        onSelectData={(name) => {
+          handleTableClick(name);
+          setSpecTarget(null);
+        }}
+      />
+
       <ConnectionModal
         isOpen={conn.isModalOpen}
         onClose={() => conn.setIsModalOpen(false)}

@@ -29,8 +29,12 @@ import type {
   DocSyncResult,
   DatabaseConnectionConfig,
   QueryResult,
+  DbObjectInfo,
+  DbObjectType,
   DbSessionQueryResult,
   DbSessionState,
+  ObjectDdlResult,
+  TableDetails,
   DockerContainerInfo,
   DockerContainerInspect,
   DockerDaemonStatus,
@@ -290,6 +294,10 @@ export interface ElectronAPI {
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>) => Promise<QueryResult>;
+  /** Especificação de uma tabela/view (colunas, constraints, índices, triggers), DDL e lista de objetos do schema. */
+  getDbTableDetails: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableDetails>;
+  getDbObjectDdl: (config: DatabaseConnectionConfig, objectType: DbObjectType, objectName: string) => Promise<ObjectDdlResult>;
+  listDbObjects: (config: DatabaseConnectionConfig) => Promise<DbObjectInfo[]>;
   /** Sessão dedicada do editor SQL: conexão própria com auto-commit/manual, commit, rollback e cancelamento. */
   openDbSession: (config: DatabaseConnectionConfig, autoCommit?: boolean) => Promise<DbSessionState>;
   executeDbSession: (sessionId: string, sql: string, maxRows?: number, binds?: Record<string, any>) => Promise<DbSessionQueryResult>;

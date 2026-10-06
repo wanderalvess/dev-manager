@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { SqlSnippet } from '../../../shared/types';
 import {
+  extractIdentifierAt,
   extractReferencedTables,
   filterSqlSnippets,
   parseStoredClamped,
@@ -36,6 +37,26 @@ describe('extractReferencedTables', () => {
       { table: 'HR.EMP', alias: 'e' },
       { table: 'dept', alias: 'dept' }
     ]);
+  });
+});
+
+describe('extractIdentifierAt', () => {
+  it('pega o nome sob o cursor, inclusive com owner', () => {
+    const sql = 'SELECT * FROM wint.pcpedc p WHERE p.codcli = 1';
+    expect(extractIdentifierAt(sql, sql.indexOf('pcpedc') + 2)).toBe('wint.pcpedc');
+    expect(extractIdentifierAt(sql, sql.indexOf('wint'))).toBe('wint.pcpedc');
+    expect(extractIdentifierAt(sql, sql.indexOf('codcli') + 1)).toBe('p.codcli');
+  });
+
+  it('cursor logo depois do nome ainda conta; espaço puro não', () => {
+    expect(extractIdentifierAt('FROM PCPEDC', 11)).toBe('PCPEDC');
+    expect(extractIdentifierAt('FROM  PCPEDC', 6)).toBe('PCPEDC');
+    expect(extractIdentifierAt('SELECT  ,', 7)).toBeNull();
+  });
+
+  it('remove aspas e pontos soltos', () => {
+    expect(extractIdentifierAt('FROM "Public"."Users"', 14)).toBe('Public.Users');
+    expect(extractIdentifierAt('x. ', 1)).toBe('x');
   });
 });
 

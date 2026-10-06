@@ -3,6 +3,7 @@ import type { TableColumnInfo } from '../../../../../shared/types';
 import type { SqlDialect } from '../../../../../shared/sqlStatementUtils';
 import { findStatementAt } from '../../../../../shared/sqlSplitUtils';
 import { formatSql } from '../../../utils/sqlFormatUtils';
+import { extractIdentifierAt } from '../../../utils/sqlEditorUtils';
 import { monaco } from './monacoEntry';
 import {
   SQL_THEME,
@@ -36,6 +37,8 @@ interface MonacoSqlEditorProps {
   onCommit?: () => void;
   onRollback?: () => void;
   onCursorChange?: (offset: number) => void;
+  /** F4: abre a especificação do objeto sob o cursor (ou da seleção). */
+  onDescribeObject?: (name: string) => void;
 }
 
 let modelCounter = 0;
@@ -155,6 +158,19 @@ export const MonacoSqlEditor = forwardRef<MonacoSqlEditorHandle, MonacoSqlEditor
         const useSelection = !!selection && !selection.isEmpty();
         const range = useSelection ? selection! : model.getFullModelRange();
         editor.executeEdits('hub-format', [{ range, text: formatSql(model.getValueInRange(range)) }]);
+      }
+    });
+    editor.addAction({
+      id: 'hub.sql.describe',
+      label: 'Descrever objeto sob o cursor (colunas, índices, DDL)',
+      keybindings: [KeyCode.F4],
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1,
+      run: () => {
+        const selection = editor.getSelection();
+        const selected = selection && !selection.isEmpty() ? model.getValueInRange(selection).trim() : '';
+        const name = selected || extractIdentifierAt(model.getValue(), model.getOffsetAt(editor.getPosition() ?? { lineNumber: 1, column: 1 }));
+        if (name) latest.current.onDescribeObject?.(name);
       }
     });
     editor.addAction({

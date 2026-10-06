@@ -45,6 +45,8 @@ export interface SqlEditorAreaProps {
   setIsMaximized?: React.Dispatch<React.SetStateAction<boolean>>;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  /** F4 no editor: descreve o objeto sob o cursor. */
+  onDescribeObject?: (name: string) => void;
   /** Controle de transação (auto-commit/manual, commit, rollback, cancelar). Ausente = sem sessões dedicadas. */
   transaction?: SqlTransactionControls;
 }
@@ -77,6 +79,7 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   setIsMaximized,
   isSidebarCollapsed: _isSidebarCollapsed,
   onToggleSidebar: _onToggleSidebar,
+  onDescribeObject,
   transaction
 }) => {
   const prefs = useSqlEditorPrefs({ isMaximized, setIsMaximized });
@@ -150,6 +153,7 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
           onCommit={transaction?.onCommit}
           onRollback={transaction?.onRollback}
           onCursorChange={setCursorPos}
+          onDescribeObject={onDescribeObject}
         />
         {copyFeedback && (
           <div className="absolute right-3 bottom-3 z-10 bg-primary text-primary-foreground text-2xs font-bold px-2 py-1 rounded shadow-md animate-fade-in">
