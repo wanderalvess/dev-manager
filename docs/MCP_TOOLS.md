@@ -268,3 +268,15 @@ Integração com o projeto de testes automatizados Cypress (**TAUT**), localizad
 > "Qual é a cobertura atual de testes do Zephyr no TAUT e quais cenários ainda estão pendentes?"
 > "Liste todas as specs de teste do TAUT relacionadas a Tributação e ICMS."
 > "Processe o CSV Insumo/pedido.csv e gere o plano de implementação de automação para mim."
+
+
+---
+
+## 16. Segurança e modo somente leitura
+
+O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
+
+*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `container_remove`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (85 das 166) são registradas. As demais nem aparecem para o cliente.
+*   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
+*   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).

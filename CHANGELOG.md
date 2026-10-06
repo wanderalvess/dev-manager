@@ -8,11 +8,24 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ### Adicionado
 - **Instalador — telas opcionais**: depois da escolha da pasta, o assistente mostra duas telas em português que podem ser puladas com **Avançar** (e não aparecem em atualizações automáticas). **Oracle Instant Client**: explica quando é necessário (Oracle 11g ou anterior e backup com expdp/impdp), traz os links de download e do Visual C++ Redistributable, sugere a pasta `C:\oracle` (com opção de criá-la) e diz onde informar o caminho no app. **Assistente de IA**: chave de API (BYOK) ou modelo local com o Ollama. O `instalar-extras.cmd` e o LEIA-ME continuam como alternativa.
 
+### Segurança
+- A **senha e o cookie do WTA** agora ficam criptografados no `config.json` (estavam em texto plano) e não voltam mais para a tela nem para a API; a tela mostra "senha salva e protegida".
+- **Servidor web/Docker**: a API key é comparada em tempo constante, 10 chaves erradas por minuto bloqueiam a origem (429), sem API key a API só responde para `localhost` (fecha DNS rebinding) e um erro dentro de uma rota não derruba mais o processo nem deixa a requisição pendurada (vira 500 em JSON).
+- **MCP**: toda tool declara `readOnlyHint`/`destructiveHint`, para o cliente pedir confirmação. `HUB_MCP_MODE=readonly` registra só as 85 tools de leitura. `db_execute_query` recusa comando de escrita em conexão marcada como produção.
+- **Backup com comando personalizado**: host, senha ou caminho com espaço ou aspas deixam de poder injetar argumentos. Backup e restore MySQL com `.gz` corrompido ou processo que encerra cedo deixam de derrubar o app e passam a respeitar um tempo limite de 20 min.
+- **Logs**: só arquivos com extensão de log podem ser zerados e o visualizador não lê a pasta de dados do app (`config.json` e chave).
+- A chave do Gemini passa no header, não mais na URL. URLs de metadados de nuvem (169.254.x.x) são recusadas. Chamadas HTTP internas ganham tempo limite ocioso de 60 s e teto de 512 MB. O Karaf em modo debug no WSL valida caminho e script. O navegador de perfil só abre `http`/`https`.
+- O `config.json` é gravado de forma atômica e um segredo que não consegue ser criptografado deixa de ser gravado em texto plano.
+
 ### Corrigido
 - O instalador voltou a abrir em **português (pt-BR)**: a configuração anterior forçava o inglês.
+- Fechar o app no meio de um log, deploy ou backup não gera mais "Object has been destroyed", e ao sair o app encerra o Karaf embutido, os agendamentos de backup e o receptor OTLP.
+- Docker: o healthcheck agora envia a API key (o container ficava "unhealthy"), `.env` e certificados não entram mais na imagem e o `npm ci` do runtime não depende mais do `patch-package`.
+- Ajuda e README: contagem de 166 tools MCP, nível de permissão `asInvoker` e fallbacks de versão corrigidos.
 
 ### Alterado
-- Dependências atualizadas com `npm audit fix` (vulnerabilidades 26 para 23, altas 10 para 7). O patch do `fastembed` foi removido (a versão 2.1.1 não precisa mais dele).
+- Dependências atualizadas com `npm audit fix` e remoção do `patch-package` (vulnerabilidades 26 para 21, altas 10 para 5). O patch do `fastembed` foi removido (a versão 2.1.1 não precisa mais dele).
+- O instalador não leva mais os planos internos de `docs/superpowers`. Removidos scripts e módulos sem uso (`extract_tools`, `releaseNotesUtils`, `NetworkPortScanner`).
 
 ## [1.34.0] - 2026-10-06
 ### Adicionado

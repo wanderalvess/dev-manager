@@ -117,10 +117,22 @@ gerada na primeira execução e persistida em `.secrets.key` (modo `0600`) ao la
 `config.json` — **não** usa `safeStorage` do Electron, porque `ConfigService` é compartilhado
 pelos três runtimes (Electron, server web, MCP) e os dois últimos rodam como Node puro, sem
 Electron. Qualquer campo novo de credencial/segredo adicionado a `shared/types.ts` deve ser
-incluído em `encryptSecretsForDisk`/`decryptSecretsInPlace`/`sanitizeSecrets` — do contrário
+incluído em `encryptSecretsForDisk`/`decryptSecretsInPlace`/`sanitizeSecrets`/`preserveExistingSecrets` — do contrário
 vaza em texto plano no disco e/ou em `GET /api/settings` e `settings:get`. Isso já aconteceu
 uma vez (campos `authValue` ficaram de fora na primeira leva) e foi tratado como bug de
 segurança, não como melhoria.
+
+**Camadas de defesa já existentes (reuse, não reescreva):**
+- [src/server/httpSecurity.ts](src/server/httpSecurity.ts): API key comparada em tempo constante, bloqueio por excesso de tentativas
+  (429), guarda de `Host` local quando não há API key (DNS rebinding) e `wrapAsyncRoutes` + `jsonErrorHandler` (um `throw` em
+  handler async vira 500 JSON em vez de pendurar a requisição). Rota nova no server não precisa de `try/catch` só para isso.
+- [src/mcp/toolSafety.ts](src/mcp/toolSafety.ts): classifica cada tool MCP em leitura/escrita/destrutiva (annotations e
+  `HUB_MCP_MODE=readonly`). **Tool nova que altera algo ou executa comando livre deve entrar em `DESTRUCTIVE_TOOLS`**; nome de
+  leitura que tem efeito colateral vai em `WRITE_EXCEPTIONS`. `db_execute_query` barra escrita em conexão `isProduction`.
+- `isSafeUrl` recusa metadados de nuvem (169.254.0.0/16 e afins); `isLogFilePath`/`isInsideDir` limitam o que o visualizador de
+  logs lê e zera; `safeSend` ([src/main/utils/ipcSend.ts](src/main/utils/ipcSend.ts)) é o jeito de enviar ao renderer — nunca
+  `mainWindow.webContents.send` direto.
+- Comando customizado de backup: o template é tokenizado **antes** de receber os valores (`buildCustomCommandArgv`); mantenha assim.
 
 **Autenticação do WebSocket**: no modo Web/Docker, o upgrade do `/ws` exige a mesma API key
 usada pelas rotas REST, passada via query string (não basta validar o header `Origin`, que um
@@ -161,7 +173,12 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
 
 ## Limite de Linhas e Componentização Estrita (Máximo 300 Linhas)
 
-**Regra mandatória do projeto: nenhum arquivo de código deve ultrapassar 300 linhas.**
+**Regra mandatória do projeto: nenhum arquivo de código novo ou alterado deve ultrapassar 300 linhas.**
+
+> Dívida conhecida (arquivos que ainda passam do teto e devem ser decompostos ao serem tocados, não de uma vez):
+> `src/mcp/index.ts`, `src/shared/types.ts`, `src/server/index.ts`, `renderer/services/apiBridge.ts`, `src/main/ipc/registerIpc.ts`,
+> `SettingsPage.tsx`, `helpData.tsx` e os serviços `RoutinesService`, `WindowsService`, `BackupService`, `WslService`, `ConfigService`.
+> O `npm run check:file-size` só avisa. Não acrescente código novo nesses arquivos sem extrair o que for novo para um módulo próprio.
 
 Ao criar arquivos novos ou refatorar componentes e serviços existentes:
 - **Teto rígido de 300 linhas por arquivo**: caso um arquivo comece a crescer e se aproximar de ~250–300 linhas, ele **deve** ser imediatamente decomposto em subcomponentes ou submódulos menores para garantir legibilidade, manutenibilidade e agilidade na revisão de código.
