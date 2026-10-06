@@ -80,6 +80,25 @@ describe('isValidSqlTableName', () => {
   });
 });
 
+describe('isSafeUrl — metadados de nuvem (SSRF)', () => {
+  it('recusa link-local e hosts de metadados, inclusive em formas alternativas', () => {
+    expect(isSafeUrl('http://169.254.169.254/latest/meta-data/')).toBe(false);
+    expect(isSafeUrl('http://169.254.0.1/')).toBe(false);
+    expect(isSafeUrl('http://2852039166/')).toBe(false); // decimal de 169.254.169.254
+    expect(isSafeUrl('http://0xa9fea9fe/')).toBe(false);
+    expect(isSafeUrl('http://[::ffff:169.254.169.254]/')).toBe(false);
+    expect(isSafeUrl('http://[fd00:ec2::254]/')).toBe(false);
+    expect(isSafeUrl('http://metadata.google.internal/computeMetadata/v1/')).toBe(false);
+  });
+
+  it('continua aceitando rede local e hosts internos comuns do ambiente de desenvolvimento', () => {
+    expect(isSafeUrl('http://192.168.0.10:8181/')).toBe(true);
+    expect(isSafeUrl('http://10.0.0.5/')).toBe(true);
+    expect(isSafeUrl('http://169.253.1.1/')).toBe(true);
+    expect(isSafeUrl('https://ccw.corp.example.com/')).toBe(true);
+  });
+});
+
 describe('isSafeUrl', () => {
   it('aceita apenas http/https', () => {
     expect(isSafeUrl('https://dev.azure.com/org/project')).toBe(true);

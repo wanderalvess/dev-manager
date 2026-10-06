@@ -30,7 +30,7 @@ import {
 import { KarafService } from './KarafService';
 import { DatabaseService } from './DatabaseService';
 import { NetworkService } from './NetworkService';
-import { execFileAsync, isValidIdentifier } from '../utils/security';
+import { execFileAsync, isSafeUrl, isValidIdentifier } from '../utils/security';
 import { checkPortOpen } from '../utils/network';
 import { launchProcessSafely } from '../utils/routineLaunchUtils';
 import { isWslKaraf, launchWslServerDebug, killWslKarafProcesses } from '../utils/karafWslUtils';
@@ -699,7 +699,7 @@ export class WindowsService {
         pushLog('info', `[${currentStepIndex}/${totalSteps}] Abrindo Portal Web no navegador (${targetUrl})...`);
         try {
           const { shell } = await import('electron');
-          if (shell && shell.openExternal) {
+          if (shell && shell.openExternal && isSafeUrl(targetUrl)) {
             await shell.openExternal(targetUrl);
             pushLog('success', `Navegador aberto em ${targetUrl}`);
           }
@@ -972,6 +972,11 @@ export class WindowsService {
         pushLog('info', `Abrindo navegador em ${url}...`);
         try {
           const { shell } = await import('electron');
+          // O perfil pode vir de config importada/MCP: file://, ms-msdt: e afins não podem passar daqui
+          if (!isSafeUrl(url)) {
+            pushLog('error', `URL recusada (só http/https): ${url}`);
+            return false;
+          }
           if (shell && shell.openExternal) {
             await shell.openExternal(url);
             pushLog('success', `Navegador aberto em ${url}`);

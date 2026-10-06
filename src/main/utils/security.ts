@@ -36,13 +36,37 @@ export function isValidSqlTableName(name: string): boolean {
 }
 
 /**
- * Valida se uma URL utiliza protocolo http:// ou https:// seguro.
+ * Endereços de metadados de nuvem (link-local 169.254.0.0/16, AWS IPv6, GCP). Servem credenciais da máquina a quem
+ * conseguir fazer o app requisitá-los (SSRF); nenhum fluxo legítimo do Hub Manager precisa deles.
+ * O `URL` já normaliza formas alternativas de IPv4 (decimal, hex) para a forma pontuada.
+ */
+function isCloudMetadataHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  let unmapped = host.startsWith('::ffff:') ? host.slice('::ffff:'.length) : host;
+  // O URL reescreve IPv4 mapeado em IPv6 como dois grupos hex (::ffff:a9fe:a9fe): volta para a forma pontuada
+  const hexPair = unmapped.match(/^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hexPair) {
+    const hi = parseInt(hexPair[1], 16);
+    const lo = parseInt(hexPair[2], 16);
+    unmapped = `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`;
+  }
+  return (
+    /^169\.254\.\d{1,3}\.\d{1,3}$/.test(unmapped) ||
+    host === 'fd00:ec2::254' ||
+    host === 'metadata.google.internal' ||
+    host === 'metadata'
+  );
+}
+
+/**
+ * Valida se uma URL utiliza protocolo http:// ou https:// e não aponta para endpoint de metadados de nuvem.
  */
 export function isSafeUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    return !isCloudMetadataHost(parsed.hostname);
   } catch {
     return false;
   }
