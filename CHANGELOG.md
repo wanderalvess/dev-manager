@@ -4,6 +4,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.32.0] - 2026-10-06
+### Adicionado
+- **Qualidade em páginas próprias**: o menu **QA** do cabeçalho agora abre quatro páginas separadas — **Homologação** (Matriz, Prontidão e Roadmap; atalho `Alt+Q`), **Validador Regressivo**, **Test Runners** e **TAUT (Cypress)**. Cada página mostra só o que é dela; Release, Exportar Relatório e Novo Cenário ficam apenas em Homologação. A Matriz de Validação é única e compartilhada, então o resultado de um runner continua atualizando os cenários vinculados. As novas páginas também aparecem na busca rápida (`Ctrl+K`).
+- **Matriz de Validação**: editar cenário já criado (título, alvo, categoria e notas), exportar os cenários exibidos em **CSV** (UTF-8, com proteção contra injeção de fórmula no Excel), ordenar por Status, Cenário, Alvo, Categoria e Atualizado (em Status, falhas e bloqueios vêm primeiro), coluna **Atualizado**, contador "Exibindo N de M" com *Limpar filtros* e cards de métrica clicáveis que filtram a Matriz por status.
+- **Primeiro uso**: ao concluir o tour, os caminhos obrigatórios vazios (repositórios, IDE) são preenchidos com o que a detecção automática encontrar, e o app avisa quais foram preenchidos. Nunca sobrescreve valores já configurados.
+- **Instalador (NSIS)**: sempre em pt-BR, com atalhos de Desktop e Menu Iniciar e execução ao finalizar declarados explicitamente.
+
+### Alterado
+- **Marca**: "Dev Manager" deu lugar a **Hub Manager** na interface, na Central de Ajuda, nas descrições das tools MCP, no README, no DOCKER.md, no AGENTS.md, no LEIA-ME e nas notas de release. O README e o LEIA-ME apontam o instalador `Hub Manager Setup <versão>.exe` e a variável `HUB_MANAGER_EXE`; o launcher do MCP continua aceitando `DEV_MANAGER_EXE`. A pasta de dados, o `dev-manager-mcp.cmd` e o nome do servidor MCP não mudaram.
+- **Configurações → Qualidade**: deixa claro que a sincronização com Zephyr, Jira e Azure ainda não existe (as fontes só ficam registradas); o selo "ATIVA" virou "SELECIONADA".
+- **Remover cenário** da Matriz pede confirmação.
+- Removido o código sem uso de *evidências* (`QualityEvidence` e a seção do relatório em Markdown), que nenhuma tela utilizava.
+
+### Corrigido
+- **Onboarding reaparecia na 2ª abertura**: o app apagava os marcadores gravados quando o usuário pulava a introdução antes de o Electron responder a primeira execução. Recarregar a janela também não reabre mais o onboarding nem o "O que há de novo", e a versão do app passa a ser lida na primeira execução.
+- **"Detectar automaticamente"** sobrescrevia caminhos já configurados com vazio quando a detecção não achava nada; agora só preenche campos vazios.
+- **Dados ao atualizar**: a pasta de dados do Electron (`localStorage`: Matriz de Qualidade, tema, marcadores de onboarding) fica fixa em `%APPDATA%\dev-manager`. A troca do nome do pacote para `hub-manager` a moveria e faria quem atualiza perder esses dados.
+- **Sincronização de Test Runners com a Matriz**: o aviso podia mostrar contagem errada; runner abortado agora marca o cenário como *Bloqueado* (antes virava *Falha*); vínculos que já não existem na Matriz são avisados.
+- **Prontidão** sem cenários mostra "Sem cenários para avaliar" em vez de "Bloqueado".
+- **Acessibilidade na Qualidade**: rótulos nos filtros, busca, status, ações de linha e campo de release; o modal de cenário tem `role="dialog"`, fecha com `Esc` e a tabela anuncia a ordenação (`aria-sort`). A tabela da Matriz tem largura mínima por coluna, para não espremer o texto em telas estreitas.
+
+### Testes
+- Cobertura de `readinessScore`, tolerância numérica das asserções e das regras de sincronização e edição da Matriz (lógica extraída dos hooks para funções puras). Verificado por mutação: as 5 alterações propositais de código que antes passavam sem falha agora são detectadas.
+
 ## [1.31.3] - 2026-10-05
 ### Alterado
 - **Identidade do Produto (Rebranding)**: o cockpit agora se chama **Hub Manager**, com o subtítulo oficial *"Cockpit Integrado de Operação, Desenvolvimento e Qualidade"*. O novo posicionamento reflete a evolução da plataforma para atender toda a squad (Dev, QA, PO e SME) em fluxos de infraestrutura, banco de dados, catálogo de rotinas, qualidade de software e observabilidade.

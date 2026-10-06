@@ -1,6 +1,6 @@
 {
   "name": "hub-manager",
-  "version": "1.31.3",
+  "version": "1.32.0",
   "type": "module",
   "description": "Cockpit Integrado de Operação, Desenvolvimento e Qualidade",
   "main": "dist-electron/main/index.js",
