@@ -55,8 +55,8 @@ export function encryptSecret(plainText: string | undefined, configDir: string):
     const authTag = cipher.getAuthTag();
     return ENC_PREFIX + Buffer.concat([iv, authTag, encrypted]).toString('base64');
   } catch (err) {
-    console.error('[secretsCrypto] Falha ao criptografar segredo, mantendo texto plano:', (err as Error).message);
-    return plainText;
+    // Fail-closed: gravar o segredo em texto plano só porque a criptografia falhou esconderia o problema
+    throw new Error(`Não foi possível criptografar um segredo: ${(err as Error).message}`);
   }
 }
 

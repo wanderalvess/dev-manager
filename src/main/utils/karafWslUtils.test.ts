@@ -1,11 +1,44 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { spawn } from 'child_process';
 import {
+  launchWslServerDebug,
   isWslKaraf,
   normalizeWslPath,
   buildWslClientArgs
 } from './karafWslUtils';
 
+vi.mock('child_process', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('child_process')>()),
+  spawn: vi.fn(() => ({ on: vi.fn(), unref: vi.fn() }))
+}));
+
 describe('karafWslUtils', () => {
+  describe('launchWslServerDebug', () => {
+    const wslSettings = (karafScript: string, karafPath = '/home/dev/karaf') =>
+      ({ karafEnvironment: 'wsl', karafWslDistro: 'Ubuntu', karafPath, karafScript }) as never;
+
+    beforeEach(() => {
+      vi.mocked(spawn).mockClear();
+    });
+
+    it('abre o terminal quando caminho e script são só caracteres de caminho', () => {
+      expect(launchWslServerDebug(wslSettings('karaf'), true, 'wt')).toBe(true);
+      expect(spawn).toHaveBeenCalled();
+    });
+
+    it('recusa script com aspas/;/$ que fechariam o bash -c e injetariam comando', () => {
+      for (const evil of ['karaf"; rm -rf ~; "', 'karaf$(id)', 'karaf`id`', 'karaf;id']) {
+        expect(launchWslServerDebug(wslSettings(evil), true, 'wt'), evil).toBe(false);
+      }
+      expect(spawn).not.toHaveBeenCalled();
+    });
+
+    it('recusa pasta do servidor com caracteres de shell', () => {
+      expect(launchWslServerDebug(wslSettings('karaf', '/home/dev/k"; touch /tmp/x; "'), true, 'wt')).toBe(false);
+      expect(spawn).not.toHaveBeenCalled();
+    });
+  });
+
   describe('isWslKaraf', () => {
     it('retorna true apenas quando ambiente for wsl e distro estiver informada', () => {
       expect(isWslKaraf({ karafEnvironment: 'wsl', karafWslDistro: 'Ubuntu' })).toBe(true);

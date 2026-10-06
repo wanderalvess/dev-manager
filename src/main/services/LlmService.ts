@@ -53,11 +53,11 @@ export class LlmService {
           return { success: false, message: 'Chave de API do Google Gemini não informada.' };
         }
         const model = config.model?.trim() || 'gemini-2.0-flash';
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
 
         const response = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: JSON.stringify({
             contents: [{ parts: [{ text: 'ping' }] }],
             generationConfig: { maxOutputTokens: 5 }
@@ -333,7 +333,7 @@ export class LlmService {
   ): Promise<LlmChatResponse> {
     const apiKey = provider.apiKey?.trim() || '';
     const model = provider.model?.trim() || 'gemini-2.0-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
 
     // Separar system instructions e mensagens
     const systemMessages = request.messages.filter((m) => m.role === 'system');
@@ -360,7 +360,7 @@ export class LlmService {
 
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(body),
       signal
     });

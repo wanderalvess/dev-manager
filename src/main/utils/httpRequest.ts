@@ -10,6 +10,11 @@ export interface SimpleHttpResponse {
   buffer: () => Promise<Buffer>;
 }
 
+/** Sem `timeout` explícito, uma conexão que para de responder travaria a chamada para sempre. */
+const DEFAULT_IDLE_TIMEOUT_MS = 60_000;
+/** Teto do corpo da resposta: um servidor com defeito (ou hostil) não pode estourar a memória do app. */
+const MAX_RESPONSE_BYTES = 512 * 1024 * 1024;
+
 function executeRequest(
   urlStr: string,
   options: { method: string; headers: Record<string, string>; body?: string; timeout?: number }
@@ -33,7 +38,16 @@ function executeRequest(
         } as any,
         (res) => {
           const chunks: Buffer[] = [];
-          res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+          let received = 0;
+          res.on('data', (chunk) => {
+            const piece = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+            received += piece.length;
+            if (received > MAX_RESPONSE_BYTES) {
+              req.destroy(new Error(`Resposta HTTP maior que o limite de ${MAX_RESPONSE_BYTES / (1024 * 1024)} MB`));
+              return;
+            }
+            chunks.push(piece);
+          });
           res.on('end', () => {
             const bodyBuffer = Buffer.concat(chunks);
             const statusCode = res.statusCode || 200;
@@ -52,11 +66,10 @@ function executeRequest(
         reject(err);
       });
 
-      if (options.timeout && options.timeout > 0) {
-        req.setTimeout(options.timeout, () => {
-          req.destroy(new Error(`Timeout de requisição HTTP excedido (${options.timeout}ms)`));
-        });
-      }
+      const timeoutMs = options.timeout && options.timeout > 0 ? options.timeout : DEFAULT_IDLE_TIMEOUT_MS;
+      req.setTimeout(timeoutMs, () => {
+        req.destroy(new Error(`Timeout de requisição HTTP excedido (${timeoutMs}ms)`));
+      });
 
       if (options.body) {
         req.write(options.body);

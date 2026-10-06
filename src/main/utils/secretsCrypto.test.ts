@@ -15,6 +15,13 @@ describe('secretsCrypto', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
+  it('não grava o segredo em texto plano quando a criptografia falha (fail-closed)', () => {
+    // configDir aponta para um arquivo: a chave não pode ser criada ali
+    const notADir = path.join(tmpDir, 'arquivo.txt');
+    fs.writeFileSync(notADir, 'x');
+    expect(() => encryptSecret('segredo', path.join(notADir, 'sub'))).toThrow(/criptografar/);
+  });
+
   it('criptografa e descriptografa de volta ao valor original', () => {
     const encrypted = encryptSecret('minha-senha-super-secreta', tmpDir);
     expect(encrypted).toBeDefined();

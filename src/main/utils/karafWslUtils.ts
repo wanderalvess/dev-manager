@@ -153,6 +153,12 @@ export function launchWslServerDebug(
 
   const { distro, linuxServerDir, scriptName } = resolved;
   if (!isValidIdentifier(distro)) return false;
+  // linuxServerDir e scriptName vêm das configurações e entram num `bash -c "..."`: aspas, $, crases e `;`
+  // fechariam a string e executariam comando arbitrário dentro do WSL.
+  if (!/^[A-Za-z0-9_\-./ ~]+$/.test(linuxServerDir) || !/^[A-Za-z0-9_\-.]+$/.test(scriptName)) {
+    console.error('[karafWslUtils] Caminho ou script do Karaf no WSL contém caracteres não permitidos.');
+    return false;
+  }
 
   const debugPort = customDebugPort || settings.karafDebugPort || 5005;
   const title = `Karaf Debug (WSL - ${distro})`;

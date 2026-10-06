@@ -537,7 +537,10 @@ export class ConfigService {
     const updated = { ...current, ...candidate };
     try {
       const forDisk = this.encryptSecretsForDisk(updated);
-      fs.writeFileSync(this.configPath, JSON.stringify(forDisk, null, 2), 'utf-8');
+      // Grava num temporário e renomeia: uma queda no meio da escrita não deixa o config.json truncado
+      const tmpPath = `${this.configPath}.tmp`;
+      fs.writeFileSync(tmpPath, JSON.stringify(forDisk, null, 2), 'utf-8');
+      fs.renameSync(tmpPath, this.configPath);
       const stat = fs.statSync(this.configPath);
       this.cachedSettings = { data: updated, mtimeMs: stat.mtimeMs };
     } catch (err) {
