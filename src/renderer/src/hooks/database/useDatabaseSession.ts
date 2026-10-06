@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DatabaseConnectionConfig, DbSessionState, QueryResult } from '../../../../shared/types';
 import { showToast } from '../../components/ToastHost';
+import { requestConfirm } from '../../components/ui/confirmService';
 import {
   buildSwitchToAutoMessage,
   readStoredTxMode,
@@ -134,7 +135,7 @@ export function useDatabaseSession(activeConnection: DatabaseConnectionConfig | 
       if (sid) {
         if (next === 'auto') {
           const warning = buildSwitchToAutoMessage(state);
-          if (warning && !window.confirm(warning)) return;
+          if (warning && !(await requestConfirm({ title: 'Trocar para auto-commit?', message: warning, confirmLabel: 'Trocar', tone: 'warning' }))) return;
         }
         try {
           remember(connId, await window.electronAPI.setDbSessionAutoCommit(sid, next === 'auto'));

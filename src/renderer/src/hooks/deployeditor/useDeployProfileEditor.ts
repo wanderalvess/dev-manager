@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { showToast } from '../../components/ToastHost';
 import type {
   DeployProfile,
   DeployStep,
@@ -109,7 +110,7 @@ export function useDeployProfileEditor({
 
   const save = async () => {
     if (!name.trim()) {
-      alert('Por favor, informe um nome para o perfil.');
+      showToast('Por favor, informe um nome para o perfil.', 'info');
       return;
     }
 

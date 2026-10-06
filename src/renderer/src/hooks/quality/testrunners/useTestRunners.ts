@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { TestRunnerConfig, TestExecutionResult, TestRunnerPreset } from '../../../../../shared/types';
 import { api } from '../../../services/apiBridge';
 import { showToast } from '../../../components/ToastHost';
+import { requestConfirm } from '../../../components/ui/confirmService';
 import {
   createEmptyRunner,
   presetToRunner,
@@ -141,7 +142,13 @@ export function useTestRunners() {
   };
 
   const handleDeleteRunner = async (id: string, name: string) => {
-    if (!window.confirm(`Tem certeza que deseja excluir o runner "${name}"?`)) return;
+    const confirmed = await requestConfirm({
+      title: 'Excluir runner?',
+      message: `Tem certeza que deseja excluir o runner "${name}"?`,
+      confirmLabel: 'Excluir',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
 
     try {
       await api.testRunnerDelete(id);
@@ -153,7 +160,13 @@ export function useTestRunners() {
   };
 
   const handleClearHistory = async () => {
-    if (!window.confirm('Deseja limpar todo o histórico de execuções de testes?')) return;
+    const confirmed = await requestConfirm({
+      title: 'Limpar histórico?',
+      message: 'Deseja limpar todo o histórico de execuções de testes?',
+      confirmLabel: 'Limpar',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
     try {
       await api.testRunnerClearHistory();
       setHistory([]);

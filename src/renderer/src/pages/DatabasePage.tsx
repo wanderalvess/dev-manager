@@ -37,6 +37,7 @@ import { getDbBadge } from '../components/database/DatabaseBadge';
 import { DatabaseFirstUseBanner } from '../components/database/DatabaseFirstUseBanner';
 import { DatabaseTabsBar } from '../components/database/DatabaseTabsBar';
 import { DatabaseWorkspace, type WorkspaceStatus } from '../components/database/DatabaseWorkspace';
+import { requestConfirm } from '../components/ui/confirmService';
 
 export { DEFAULT_SQL_SNIPPETS };
 export type { ExecutionHistoryItem };
@@ -118,7 +119,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
     setTabsState((s) => addTab(s, { connectionId: target.id, sql: defaultSqlFor(target.type) }));
   };
 
-  const handleCloseTab = (id: string) => {
+  const handleCloseTab = async (id: string) => {
     const st = workspaceStatus[id];
     const tab = tabsState.tabs.find((t) => t.id === id);
     if (st && (st.gridPending > 0 || st.txPending > 0)) {
@@ -126,7 +127,13 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
         st.txPending > 0 ? `${st.txPending} comando(s) sem commit (serão desfeitos com rollback)` : '',
         st.gridPending > 0 ? `${st.gridPending} alteração(ões) do grid não aplicadas` : ''
       ].filter(Boolean);
-      if (!window.confirm(`A aba "${tab?.title ?? ''}" tem alterações pendentes:\n  • ${parts.join('\n  • ')}\n\nFechar mesmo assim?`)) return;
+      const confirmed = await requestConfirm({
+        title: 'Fechar aba com alterações pendentes?',
+        message: `A aba "${tab?.title ?? ''}" tem alterações pendentes:\n  • ${parts.join('\n  • ')}\n\nFechar mesmo assim?`,
+        confirmLabel: 'Fechar aba',
+        tone: 'warning'
+      });
+      if (!confirmed) return;
     }
     sqlHandlers.current.delete(id);
     setWorkspaceStatus((prev) => {

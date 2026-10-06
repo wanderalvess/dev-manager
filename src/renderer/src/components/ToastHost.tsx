@@ -70,7 +70,7 @@ export const ToastHost: React.FC = () => {
           ) : (
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           )}
-          <span className="flex-1 break-words">{toast.message}</span>
+          <span className="flex-1 break-words whitespace-pre-line">{toast.message}</span>
           <button
             type="button"
             onClick={() => dismiss(toast.id)}

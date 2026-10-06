@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { GitProjectInfo, KarafBundleInfo } from '../../../../shared/types';
 import { getMatchedProject } from '../../utils/karafBundleUtils';
+import { requestConfirm } from '../../components/ui/confirmService';
+import { showToast } from '../../components/ToastHost';
 import {
   buildKarafBundleExportFilename,
   buildKarafBundleExportPayload,
@@ -60,9 +62,12 @@ export function useKarafBundleActions({
     const ids = Array.from(selectedBundleIds);
 
     if (action === 'uninstall') {
-      const confirmed = window.confirm(
-        `Atenção: Desinstalar ${ids.length} bundle(s) selecionado(s) pode quebrar módulos dependentes no runtime OSGi. Deseja continuar?`
-      );
+      const confirmed = await requestConfirm({
+        title: 'Desinstalar bundles?',
+        message: `Desinstalar ${ids.length} bundle(s) selecionado(s) pode quebrar módulos dependentes no runtime OSGi. Deseja continuar?`,
+        confirmLabel: 'Desinstalar',
+        tone: 'danger'
+      });
       if (!confirmed) return;
     }
 
@@ -161,11 +166,11 @@ export function useKarafBundleActions({
     try {
       const res = await window.electronAPI.manageKarafBundle(action, bundleId);
       if (!res.success) {
-        alert(`Erro na ação ${action}: ${res.output}`);
+        showToast(`Erro na ação ${action}: ${res.output}`, 'error');
       }
       await fetchBundles();
     } catch (err: any) {
-      alert(`Falha: ${err?.message || err}`);
+      showToast(`Falha: ${err?.message || err}`, 'error');
     } finally {
       setActionLoading((prev) => {
         const next = { ...prev };

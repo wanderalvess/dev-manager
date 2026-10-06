@@ -13,6 +13,7 @@ import {
 } from '../../utils/settingsDefaults';
 import { addToList, coercePortFieldValue, removeAtIndex, updateAtIndex } from '../../utils/settingsListEditors';
 import type { SetSettings } from './settingsHookTypes';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 type ListKey = 'trackedServices' | 'trackedProcesses' | 'monitoredPorts' | 'realtimeLogSources';
 
@@ -43,7 +44,8 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
   const logs = createListEditor<RealtimeLogSource>(settings, setSettings, 'realtimeLogSources', DEFAULT_LOG_SOURCES);
 
   /** Pede confirmação só quando há algo a perder; a remoção só vale ao salvar. */
-  const confirmRemoval = (count: number, message: string) => count === 0 || window.confirm(message);
+  const confirmRemoval = async (count: number, title: string, message: string) =>
+    count === 0 || (await requestConfirm({ title, message, confirmLabel: 'Remover', tone: 'danger' }));
 
   return {
     handleAddService: (name = 'NovoServico', displayName = 'Novo Serviço Windows') =>
@@ -51,9 +53,9 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
     handleUpdateService: (index: number, field: keyof TrackedServiceConfig, value: unknown) =>
       services.update(index, { [field]: value } as Partial<TrackedServiceConfig>),
     handleRemoveService: services.remove,
-    handleResetServices: () => {
+    handleResetServices: async () => {
       const count = services.count();
-      if (confirmRemoval(count, `Remover os ${count} serviço(s) monitorado(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      if (await confirmRemoval(count, 'Remover serviços monitorados?', `Remover os ${count} serviço(s) monitorado(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
         services.reset();
       }
     },
@@ -63,9 +65,9 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
     handleUpdateProcess: (index: number, field: keyof TrackedProcessConfig, value: unknown) =>
       processes.update(index, { [field]: value } as Partial<TrackedProcessConfig>),
     handleRemoveProcess: processes.remove,
-    handleResetProcesses: () => {
+    handleResetProcesses: async () => {
       const count = processes.count();
-      if (confirmRemoval(count, `Remover os ${count} processo(s) conflitante(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      if (await confirmRemoval(count, 'Remover processos conflitantes?', `Remover os ${count} processo(s) conflitante(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
         processes.reset();
       }
     },
@@ -74,8 +76,14 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
     handleUpdatePort: (index: number, field: keyof MonitoredPortConfig, value: unknown) =>
       ports.update(index, { [field]: coercePortFieldValue(field, value) } as Partial<MonitoredPortConfig>),
     handleRemovePort: ports.remove,
-    handleResetPorts: () => {
-      if (window.confirm('Restaurar a lista de portas monitoradas para o padrão (:8889, :9195, :8101, :5005, :1521)? Qualquer porta personalizada adicionada será perdida ao salvar.')) {
+    handleResetPorts: async () => {
+      const confirmed = await requestConfirm({
+        title: 'Restaurar portas padrão?',
+        message: 'Restaurar a lista de portas monitoradas para o padrão (:8889, :9195, :8101, :5005, :1521)? Qualquer porta personalizada adicionada será perdida ao salvar.',
+        confirmLabel: 'Restaurar',
+        tone: 'warning'
+      });
+      if (confirmed) {
         ports.reset();
       }
     },
@@ -85,9 +93,9 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
     handleUpdateLogSource: (index: number, field: keyof RealtimeLogSource, value: unknown) =>
       logs.update(index, { [field]: value } as Partial<RealtimeLogSource>),
     handleRemoveLogSource: logs.remove,
-    handleResetLogSources: () => {
+    handleResetLogSources: async () => {
       const count = logs.count();
-      if (confirmRemoval(count, `Remover as ${count} fonte(s) de log configurada(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      if (await confirmRemoval(count, 'Remover fontes de log?', `Remover as ${count} fonte(s) de log configurada(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
         logs.reset();
       }
     },

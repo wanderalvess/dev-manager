@@ -8,6 +8,7 @@ import type {
 } from '../../../../shared/types';
 import { parseOptionalNumber, upsertBackupConfig } from '../../utils/backupModalUtils';
 import type { BackupFormState } from './useBackupForm';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 interface UseBackupActionsParams {
   activeConnection: DatabaseConnectionConfig | null;
@@ -151,10 +152,14 @@ export function useBackupActions({
   const handleRestoreBackup = async (file: BackupFileInfo) => {
     if (!activeConnection || !window.electronAPI?.restoreDbBackup) return;
 
-    const confirmed = window.confirm(
-      `Restaurar "${file.fileName}" na conexão "${activeConnection.name}"?\n\n` +
-        'Isso executa o backup contra o banco de dados AGORA e pode sobrescrever ou duplicar dados existentes. Essa ação não pode ser desfeita pelo Hub Manager.'
-    );
+    const confirmed = await requestConfirm({
+      title: 'Restaurar backup?',
+      message:
+        `Restaurar "${file.fileName}" na conexão "${activeConnection.name}"?\n\n` +
+        'Isso executa o backup contra o banco de dados AGORA e pode sobrescrever ou duplicar dados existentes. Essa ação não pode ser desfeita pelo Hub Manager.',
+      confirmLabel: 'Restaurar',
+      tone: 'danger'
+    });
     if (!confirmed) return;
 
     setRestoringFilePath(file.filePath);
@@ -175,10 +180,14 @@ export function useBackupActions({
     const scratchConnection = connections.find((c) => c.id === scratchConnectionId);
     if (!scratchConnection) return;
 
-    const confirmed = window.confirm(
-      `Restaurar "${file.fileName}" na conexão "${scratchConnection.name}" como teste de integridade?\n\n` +
-        'Use apenas uma conexão descartável aqui — essa restauração sobrescreve dados na conexão escolhida.'
-    );
+    const confirmed = await requestConfirm({
+      title: 'Testar restauração?',
+      message:
+        `Restaurar "${file.fileName}" na conexão "${scratchConnection.name}" como teste de integridade?\n\n` +
+        'Use apenas uma conexão descartável aqui — essa restauração sobrescreve dados na conexão escolhida.',
+      confirmLabel: 'Restaurar para testar',
+      tone: 'warning'
+    });
     if (!confirmed) return;
 
     setDrillingFilePath(file.filePath);

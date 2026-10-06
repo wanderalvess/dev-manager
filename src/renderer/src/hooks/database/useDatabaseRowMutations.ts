@@ -4,6 +4,7 @@ import { showToast } from '../../components/ToastHost';
 import { getRowKeyColumns } from '../../utils/databaseMutationUtils';
 import type { EditableTableState } from '../../utils/dbPageTypes';
 import type { TxMode } from '../../utils/databaseSessionUtils';
+import { requestConfirm } from '../../components/ui/confirmService';
 import {
   EMPTY_PENDING,
   applyPendingChanges,
@@ -70,10 +71,14 @@ export function useDatabaseRowMutations({
     if (!activeConnection || !editableTable || count === 0) return;
 
     if (txMode === 'auto' && count > 1) {
-      const ok = window.confirm(
-        `Aplicar ${count} alterações?\n\nEm auto-commit cada comando é confirmado assim que roda: se um falhar, os anteriores já estarão gravados. ` +
-          'Para aplicar tudo como uma única transação (com rollback), mude para o modo Manual.'
-      );
+      const ok = await requestConfirm({
+        title: `Aplicar ${count} alterações?`,
+        message:
+          'Em auto-commit cada comando é confirmado assim que roda: se um falhar, os anteriores já estarão gravados. ' +
+          'Para aplicar tudo como uma única transação (com rollback), mude para o modo Manual.',
+        confirmLabel: 'Aplicar',
+        tone: 'warning'
+      });
       if (!ok) return;
     }
 

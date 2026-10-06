@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { AppSettings, AutomationProfile } from '../../../../shared/types';
 import { resolveActiveProfile, getMissingRequiredPaths } from '../../utils/environmentPageUtils';
+import { showToast } from '../../components/ToastHost';
 import {
   buildProfileExportData,
   buildExportFileName,
@@ -90,7 +91,7 @@ export function useEnvironmentProfiles(settingsVersion?: number) {
     async (id: string, skipConfirm = false) => {
       const currentList = profilesRef.current;
       if (currentList.length <= 1) {
-        alert('Não é possível excluir o único perfil existente.');
+        showToast('Não é possível excluir o único perfil existente.', 'info');
         return;
       }
       const target = currentList.find((p) => p.id === id);
@@ -118,7 +119,7 @@ export function useEnvironmentProfiles(settingsVersion?: number) {
     (profileToExport?: AutomationProfile) => {
       const target = profileToExport || activeProfile;
       if (!target) {
-        alert('Nenhum perfil selecionado para exportação.');
+        showToast('Nenhum perfil selecionado para exportação.', 'info');
         return;
       }
 
@@ -134,7 +135,7 @@ export function useEnvironmentProfiles(settingsVersion?: number) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } catch (err: any) {
-        alert(`Erro ao exportar perfil: ${err?.message || err}`);
+        showToast(`Erro ao exportar perfil: ${err?.message || err}`, 'error');
       }
     },
     [activeProfile]
@@ -151,14 +152,14 @@ export function useEnvironmentProfiles(settingsVersion?: number) {
         const parsed = JSON.parse(await file.text());
         const importedProfile = buildImportedProfile(parsed);
         if (!importedProfile) {
-          alert('Arquivo JSON inválido. O arquivo deve conter uma lista de etapas (steps) válida.');
+          showToast('Arquivo JSON inválido. O arquivo deve conter uma lista de etapas (steps) válida.', 'info');
           return;
         }
 
         await persistProfiles([...profilesRef.current, importedProfile], importedProfile.id);
-        alert(`Perfil "${importedProfile.name}" importado com sucesso!`);
+        showToast(`Perfil "${importedProfile.name}" importado com sucesso!`, 'success');
       } catch (err: any) {
-        alert(`Falha ao importar perfil: ${err?.message || err}`);
+        showToast(`Falha ao importar perfil: ${err?.message || err}`, 'error');
       } finally {
         if (e.target) e.target.value = '';
       }

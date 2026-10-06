@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { showToast } from '../../components/ToastHost';
 import type {
   BundleDependencyCheckResult,
   KarafBundleInfo,
@@ -81,12 +82,12 @@ export function useKarafUninstallModal({ target, onClose, onSuccess }: UseKarafU
     try {
       if (uninstallMode === 'feature') {
         if (!uninstallFeatureName.trim()) {
-          alert('Informe o nome da feature para desinstalar.');
+          showToast('Informe o nome da feature para desinstalar.', 'info');
           setIsUninstalling(false);
           return;
         }
         if (!window.electronAPI?.uninstallKarafFeature) {
-          alert('API de desinstalação de feature não disponível.');
+          showToast('API de desinstalação de feature não disponível.', 'info');
           setIsUninstalling(false);
           return;
         }
@@ -95,7 +96,7 @@ export function useKarafUninstallModal({ target, onClose, onSuccess }: UseKarafU
           uninstallFeatureVersion.trim() || undefined
         );
         if (!res.success) {
-          alert(`Falha na desinstalação da Feature: ${res.output}`);
+          showToast(`Falha na desinstalação da Feature: ${res.output}`, 'error');
         } else {
           await onSuccess();
           onClose();
@@ -104,14 +105,14 @@ export function useKarafUninstallModal({ target, onClose, onSuccess }: UseKarafU
         if (!window.electronAPI?.uninstallKarafBundle) return;
         const res = await window.electronAPI.uninstallKarafBundle(target.id);
         if (!res.success) {
-          alert(`Falha na desinstalação do Bundle: ${res.output}`);
+          showToast(`Falha na desinstalação do Bundle: ${res.output}`, 'error');
         } else {
           await onSuccess();
           onClose();
         }
       }
     } catch (err: any) {
-      alert(`Erro: ${err?.message || err}`);
+      showToast(`Erro: ${err?.message || err}`, 'error');
     } finally {
       unsubscribe?.();
       setIsUninstalling(false);

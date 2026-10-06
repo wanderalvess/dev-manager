@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AutomationProfile, AutomationStep, AutomationStepType } from '../../../../shared/types';
+import { showToast } from '../../components/ToastHost';
 import {
   applyStepUpdate,
   createDefaultProfileSteps,
@@ -100,15 +101,16 @@ export function useProfileEditorState({
 
   const handleSave = async () => {
     if (!name.trim()) {
-      alert('Por favor, informe um nome para o perfil.');
+      showToast('Por favor, informe um nome para o perfil.', 'info');
       return;
     }
 
     const incompleteSteps = steps.filter(isStepIncomplete);
     if (incompleteSteps.length > 0) {
       const nomes = incompleteSteps.map((s) => s.name || 'Sem nome').join(', ');
-      alert(
-        `As seguintes etapas de "Executar SQL" estão incompletas (falta conexão de banco e/ou SQL): ${nomes}. Preencha-as antes de salvar.`
+      showToast(
+        `As seguintes etapas de "Executar SQL" estão incompletas (falta conexão de banco e/ou SQL): ${nomes}. Preencha-as antes de salvar.`,
+        'error'
       );
       return;
     }
@@ -131,7 +133,7 @@ export function useProfileEditorState({
 
   const handleExport = () => {
     if (!name.trim()) {
-      alert('Por favor, informe ao menos um nome para o perfil antes de exportar.');
+      showToast('Por favor, informe ao menos um nome para o perfil antes de exportar.', 'info');
       return;
     }
     if (onExport) {

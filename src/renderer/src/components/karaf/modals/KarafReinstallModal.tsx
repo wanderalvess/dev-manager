@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RotateCcw, X, RotateCw } from 'lucide-react';
+import { showToast } from '../../ToastHost';
 import {
   BundleDependencyCheckResult,
   GitProjectInfo,
@@ -70,13 +71,13 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
 
       const res = await window.electronAPI.reinstallKarafBundle(req);
       if (!res.success) {
-        alert(`Falha na reinstalação: ${res.output}`);
+        showToast(`Falha na reinstalação: ${res.output}`, 'error');
       } else {
         await onSuccess();
         onClose();
       }
     } catch (err: any) {
-      alert(`Erro: ${err?.message || err}`);
+      showToast(`Erro: ${err?.message || err}`, 'error');
     } finally {
       unsubscribe?.();
       setIsReinstalling(false);

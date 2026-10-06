@@ -19,6 +19,7 @@ import { buildRiskConfirmMessage } from '../../utils/databaseSessionUtils';
 import { useDatabaseSession } from './useDatabaseSession';
 import { nextRowLimit } from '../../utils/rowLimitUtils';
 import { pendingCount } from '../../utils/gridPendingChanges';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 interface UseDatabaseQueryParams {
   sql: string;
@@ -86,7 +87,7 @@ export function useDatabaseQuery({
     limitOverride?: number
   ): Promise<void> => {
     if (!activeConnection) {
-      alert('Selecione ou crie uma conexão antes de executar consultas.');
+      showToast('Selecione ou crie uma conexão antes de executar consultas.', 'info');
       return;
     }
 
@@ -97,12 +98,18 @@ export function useDatabaseQuery({
     if (!overrideBinds && binds.promptIfHasVariables(cleanSql)) return;
 
     const riskMessage = buildRiskConfirmMessage(findRiskyStatement(cleanSql), tx.mode);
-    if (riskMessage && !window.confirm(riskMessage)) return;
+    if (riskMessage && !(await requestConfirm({ title: 'Comando de risco', message: riskMessage, confirmLabel: 'Executar', tone: 'warning' }))) return;
 
     // Alterações do grid ainda não aplicadas se perderiam com o novo resultado
     const pendingChanges = mutations.pendingRef.current;
     if (pendingCount(pendingChanges) > 0) {
-      if (!window.confirm(`Há ${pendingCount(pendingChanges)} alteração(ões) no grid ainda não aplicadas.\n\nDescartá-las e executar a consulta?`)) return;
+      const discard = await requestConfirm({
+        title: 'Alterações do grid pendentes',
+        message: `Há ${pendingCount(pendingChanges)} alteração(ões) no grid ainda não aplicadas.\n\nDescartá-las e executar a consulta?`,
+        confirmLabel: 'Descartar e executar',
+        tone: 'warning'
+      });
+      if (!discard) return;
       mutations.discardPending();
     }
 
@@ -175,7 +182,7 @@ export function useDatabaseQuery({
   /** F5: executa todos os comandos em sequência, parando no primeiro erro. Mostra o resultado do último comando. */
   const handleExecuteScript = async (script: string): Promise<void> => {
     if (!activeConnection) {
-      alert('Selecione ou crie uma conexão antes de executar consultas.');
+      showToast('Selecione ou crie uma conexão antes de executar consultas.', 'info');
       return;
     }
     const statements = splitSqlStatements(script);
@@ -195,7 +202,13 @@ export function useDatabaseQuery({
       .filter((r) => r.message);
     if (risky.length > 0) {
       const list = risky.map((r) => `  • comando ${r.i + 1}: ${cleaned[r.i].split('\n')[0].slice(0, 70)}`).join('\n');
-      if (!window.confirm(`Este script tem ${risky.length} comando(s) que exigem atenção:\n${list}\n\nExecutar o script mesmo assim?`)) return;
+      const proceed = await requestConfirm({
+        title: 'Script com comandos de risco',
+        message: `Este script tem ${risky.length} comando(s) que exigem atenção:\n${list}\n\nExecutar o script mesmo assim?`,
+        confirmLabel: 'Executar mesmo assim',
+        tone: 'warning'
+      });
+      if (!proceed) return;
     }
 
     setIsExecuting(true);
@@ -246,7 +259,7 @@ export function useDatabaseQuery({
 
   const handleExplainPlan = async () => {
     if (!activeConnection) {
-      alert('Selecione ou crie uma conexão antes de gerar o Explain Plan.');
+      showToast('Selecione ou crie uma conexão antes de gerar o Explain Plan.', 'info');
       return;
     }
     if (!sql.trim()) return;

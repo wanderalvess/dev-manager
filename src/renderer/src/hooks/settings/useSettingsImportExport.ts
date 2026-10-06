@@ -1,4 +1,6 @@
 import React, { useRef, useState } from 'react';
+import { showToast } from '../../components/ToastHost';
+import { showNotice } from '../../components/ui/confirmService';
 
 interface ImportResult {
   success?: boolean;
@@ -38,7 +40,7 @@ export function useSettingsImportExport(reload: () => Promise<unknown>, onSettin
         3500
       );
     } catch (err) {
-      alert(`Falha ao exportar configurações: ${err instanceof Error ? err.message : err}`);
+      showToast(`Falha ao exportar configurações: ${err instanceof Error ? err.message : err}`, 'error');
     }
   };
 
@@ -54,14 +56,14 @@ export function useSettingsImportExport(reload: () => Promise<unknown>, onSettin
       await reload();
       onSettingsSaved?.();
       if (res?.warnings?.length) {
-        alert(
-          `Configurações importadas, mas atenção:\n\n${res.warnings.join('\n')}\n\n` +
-            'Revise esses perfis antes de executá-los — eles rodam comandos no seu computador.'
-        );
+        void showNotice({
+          title: 'Configurações importadas, mas com atenção',
+          message: `${res.warnings.join('\n')}\n\nRevise esses perfis antes de executá-los — eles rodam comandos no seu computador.`
+        });
       }
       showStatus('Configurações importadas e aplicadas com sucesso!', 4000);
     } catch (err) {
-      alert(`Erro ao importar arquivo de configurações: ${err instanceof Error ? err.message : err}`);
+      showToast(`Erro ao importar arquivo de configurações: ${err instanceof Error ? err.message : err}`, 'error');
     } finally {
       input.value = '';
     }

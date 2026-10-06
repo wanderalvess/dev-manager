@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { showToast } from '../../components/ToastHost';
 import type {
   BundleDependencyCheckResult,
   GitProjectInfo,
@@ -98,7 +99,7 @@ export function useKarafInstallModal({
   const handleCheckInstallImpact = async () => {
     const loc = computedLocation;
     if (!loc) {
-      alert('Informe a localização ou coordenada Maven do bundle.');
+      showToast('Informe a localização ou coordenada Maven do bundle.', 'info');
       return;
     }
     setIsCheckingInstallDeps(true);
@@ -121,7 +122,7 @@ export function useKarafInstallModal({
   const handleConfirmInstall = async () => {
     const loc = computedLocation;
     if (!loc) {
-      alert('Informe a coordenada ou arquivo do bundle.');
+      showToast('Informe a coordenada ou arquivo do bundle.', 'info');
       return;
     }
 

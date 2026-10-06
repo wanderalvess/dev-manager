@@ -6,6 +6,7 @@ import type {
 } from '../../../../../shared/types';
 import { api } from '../../../services/apiBridge';
 import { showToast } from '../../../components/ToastHost';
+import { requestConfirm } from '../../../components/ui/confirmService';
 import {
   exportTemplateAsJsonFile,
   exportTemplatesBundleAsJsonFile
@@ -58,7 +59,13 @@ export function useQaTemplatesManager() {
     startEditing(duplicateTemplate(tmpl));
 
   const handleDeleteTemplate = async (tmpl: QaRegressionTemplate) => {
-    if (!window.confirm(`Deseja realmente excluir o template "${tmpl.name}"?`)) return;
+    const confirmed = await requestConfirm({
+      title: 'Excluir template?',
+      message: `Deseja realmente excluir o template "${tmpl.name}"?`,
+      confirmLabel: 'Excluir',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
 
     try {
       if (api?.qaDeleteTemplate) {

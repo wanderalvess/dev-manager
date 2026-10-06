@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { DeployProfile } from '../../../../shared/types';
+import { showToast } from '../../components/ToastHost';
 import {
   buildImportedProfile,
   buildProfileExportFileName,
@@ -66,7 +67,7 @@ export function useDeployProfiles(settingsVersion?: number) {
 
   const handleDeleteProfile = async (id: string) => {
     if (profiles.length <= 1) {
-      alert('Mantenha ao menos um perfil de deploy.');
+      showToast('Mantenha ao menos um perfil de deploy.', 'info');
       return;
     }
     const remaining = profiles.filter((p) => p.id !== id);
@@ -102,12 +103,12 @@ export function useDeployProfiles(settingsVersion?: number) {
       const text = await file.text();
       const imported = buildImportedProfile(JSON.parse(text));
       if (!imported) {
-        alert('Arquivo JSON inválido para Perfil de Deploy.');
+        showToast('Arquivo JSON inválido para Perfil de Deploy.', 'info');
         return;
       }
       await persistProfiles([...profiles, imported], imported.id);
     } catch (err: any) {
-      alert(`Falha ao importar perfil: ${err?.message || err}`);
+      showToast(`Falha ao importar perfil: ${err?.message || err}`, 'error');
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }

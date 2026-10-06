@@ -272,3 +272,10 @@ Checklist automático a cada ciclo de versão / release:
   - Não introduzir elementos ou componentes com estilos desconexos ("AI slop", botões fora do padrão, fontes não mono onde se espera mono, ou quebras de alinhamento).
   - Manter consistência nos ícones (`lucide-react`), densidade de dados, estados de loading, tooltips e feedback sonoro/visual (toasts).
 
+### Diálogos e feedback
+
+não use `window.confirm`/`alert`. Confirmar uma ação é `await requestConfirm({ title, message, tone })`
+([components/ui/confirmService.ts](src/renderer/src/components/ui/confirmService.ts), funciona em hooks e fora de componentes, o
+`ConfirmHost` fica em `AppGlobalModals`); aviso que precisa ser lido é `showNotice`; feedback rápido é `showToast`. Modal novo parte de
+[components/ui/Modal.tsx](src/renderer/src/components/ui/Modal.tsx) (portal, Esc, foco preso, ARIA) em vez de repetir `fixed inset-0`;
+os ~65 modais antigos que ainda fazem isso à mão migram quando forem tocados.

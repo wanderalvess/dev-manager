@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { KarafBundleInfo } from '../../../../shared/types';
 import { KarafContainerStatus } from '../../utils/karafBundleUtils';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 /**
  * Lista de bundles, status do container Karaf, polling de inicialização
@@ -121,9 +122,13 @@ export function useKarafBundleData(isOpen: boolean) {
   };
 
   const handleStopKaraf = async () => {
-    if (!window.confirm('Deseja realmente encerrar a execução do container Apache Karaf?')) {
-      return;
-    }
+    const confirmed = await requestConfirm({
+      title: 'Encerrar o Karaf?',
+      message: 'Deseja realmente encerrar a execução do container Apache Karaf?',
+      confirmLabel: 'Encerrar',
+      tone: 'warning'
+    });
+    if (!confirmed) return;
     setIsStoppingKaraf(true);
     try {
       if (isEmbeddedRunning && window.electronAPI?.stopEmbeddedKaraf) {

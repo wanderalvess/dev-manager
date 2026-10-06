@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { TestExecutionResult } from '../../../../../shared/types';
 import { showToast } from '../../../components/ToastHost';
 import { useCopyToClipboard } from '../../useCopyToClipboard';
+import { requestConfirm } from '../../../components/ui/confirmService';
 import {
   calculateQualityMetrics,
   filterValidationItems,
@@ -92,14 +93,26 @@ export function useQualityValidationItems() {
     );
   }, []);
 
-  const handleDeleteItem = useCallback((id: string) => {
-    if (!window.confirm('Remover este cenário da matriz? Esta ação não pode ser desfeita.')) return;
+  const handleDeleteItem = useCallback(async (id: string) => {
+    const confirmed = await requestConfirm({
+      title: 'Remover cenário?',
+      message: 'Remover este cenário da matriz? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Remover',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
     showToast('Cenário removido com sucesso.', 'info');
   }, []);
 
-  const handleResetDefaults = useCallback(() => {
-    if (window.confirm('Deseja restaurar os cenários de teste padrão de exemplo?')) {
+  const handleResetDefaults = useCallback(async () => {
+    const confirmed = await requestConfirm({
+      title: 'Restaurar cenários padrão?',
+      message: 'Deseja restaurar os cenários de teste padrão de exemplo? Os cenários atuais serão substituídos.',
+      confirmLabel: 'Restaurar',
+      tone: 'warning'
+    });
+    if (confirmed) {
       const defaults = getDefaultValidationItems();
       setItems(defaults);
       showToast('Cenários restaurados para o padrão.', 'info');
