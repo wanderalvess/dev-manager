@@ -54,6 +54,13 @@ import {
 } from '../shared/types';
 import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 import { z } from 'zod';
+import {
+  createApiKeyMiddleware,
+  createLocalHostGuard,
+  isValidApiKey,
+  jsonErrorHandler,
+  wrapAsyncRoutes
+} from './httpSecurity';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -91,7 +98,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Origem não permitida pela política de segurança CORS.'));
+        callback(Object.assign(new Error('Origem não permitida pela política de segurança CORS.'), { status: 403 }));
       }
     }
   })
@@ -117,12 +124,10 @@ if (!API_KEY && exposedBeyondLocalhost) {
   process.exit(1);
 }
 
-app.use((req, res, next) => {
-  if (!API_KEY || !req.path.startsWith('/api/')) return next();
-  const provided = req.header('x-api-key');
-  if (provided === API_KEY) return next();
-  res.status(401).json({ error: 'API key ausente ou inválida. Envie o header x-api-key.' });
-});
+app.use(createLocalHostGuard(API_KEY));
+app.use(createApiKeyMiddleware(API_KEY));
+// Express 4 não captura rejeição de handler async: embrulha as rotas abaixo para um throw virar 500 JSON
+wrapAsyncRoutes(app);
 
 // Inicializa os serviços
 const configService = new ConfigService();
@@ -190,7 +195,7 @@ wss.on('connection', (ws, req) => {
   if (API_KEY) {
     const requestUrl = new URL(req.url || '', 'http://localhost');
     const providedKey = requestUrl.searchParams.get('apiKey');
-    if (providedKey !== API_KEY) {
+    if (!isValidApiKey(providedKey, API_KEY)) {
       console.warn('[Segurança] Conexão WebSocket rejeitada: API key ausente ou inválida.');
       ws.close(1008, 'API key ausente ou inválida');
       return;
@@ -2198,6 +2203,8 @@ if (fs.existsSync(clientDist)) {
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 }
+
+app.use(jsonErrorHandler);
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || (process.env.DOCKER_CONTAINER ? '0.0.0.0' : '127.0.0.1');
