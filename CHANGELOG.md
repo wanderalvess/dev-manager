@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.35.0] - 2026-10-06
+### Adicionado
+- **Instalador — telas opcionais**: depois da escolha da pasta, o assistente mostra duas telas em português que podem ser puladas com **Avançar** (e não aparecem em atualizações automáticas). **Oracle Instant Client**: explica quando é necessário (Oracle 11g ou anterior e backup com expdp/impdp), traz os links de download e do Visual C++ Redistributable, sugere a pasta `C:\oracle` (com opção de criá-la) e diz onde informar o caminho no app. **Assistente de IA**: chave de API (BYOK) ou modelo local com o Ollama. O `instalar-extras.cmd` e o LEIA-ME continuam como alternativa.
+
+### Corrigido
+- O instalador voltou a abrir em **português (pt-BR)**: a configuração anterior forçava o inglês.
+
+### Alterado
+- Dependências atualizadas com `npm audit fix` (vulnerabilidades 26 para 23, altas 10 para 7). O patch do `fastembed` foi removido (a versão 2.1.1 não precisa mais dele).
+
 ## [1.34.0] - 2026-10-06
 ### Adicionado
 - **Banco de Dados — abas de consulta**: cada aba tem a sua conexão, o seu editor, o seu resultado (com filtros, ordenação e plano de execução) e a sua transação (sessão própria, com commit e rollback independentes). As abas continuam montadas quando ocultas, então trocar de aba ou de banco não apaga o resultado das outras e dá para **comparar dados entre conexões diferentes**. Clicar numa conexão da sidebar volta para a aba mais recente dela ou abre uma nova com a consulta padrão do banco; o botão **+** abre outra aba na conexão selecionada (até 12) e o botão do meio do mouse fecha. A barra indica o banco por cor e mostra um ponto âmbar quando há alterações pendentes.
