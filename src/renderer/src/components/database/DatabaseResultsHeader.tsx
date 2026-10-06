@@ -12,6 +12,9 @@ interface DatabaseResultsHeaderProps {
   isExecuting: boolean;
   queryResult: QueryResult | null;
   onExport: (format: ExportFormat) => void;
+  /** Repete a consulta com o próximo limite de linhas; `nextLimit` null = já no máximo. */
+  onLoadMore?: () => void;
+  nextLimit?: number | null;
 }
 
 /** Barra de status com as abas de resultado e as estatísticas da última execução. */
@@ -21,7 +24,9 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
   historyCount,
   isExecuting,
   queryResult,
-  onExport
+  onExport,
+  onLoadMore,
+  nextLimit
 }) => (
   <div className="px-3 py-1.5 bg-card/60 border-b border-border/70 flex items-center justify-between shrink-0">
     <div className="flex items-center space-x-2">
@@ -93,11 +98,25 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
               {queryResult.executionTimeMs} ms
             </span>
             {queryResult.isQuery && queryResult.truncated && (
-              <span
-                className="text-amber-500 font-semibold"
-                title="O banco tem mais linhas do que o limite configurado. Aumente o limite ou refine a consulta."
-              >
-                Limite atingido: há mais linhas
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="text-amber-500 font-semibold"
+                  title="O banco tem mais linhas do que o limite configurado."
+                >
+                  Limite atingido: há mais linhas
+                </span>
+                {nextLimit && onLoadMore ? (
+                  <button
+                    type="button"
+                    onClick={onLoadMore}
+                    className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 text-[11px] font-bold cursor-pointer"
+                    title={`Executar de novo trazendo até ${nextLimit} linhas`}
+                  >
+                    Carregar mais (até {nextLimit})
+                  </button>
+                ) : (
+                  <span className="text-2xs text-muted-foreground">limite máximo: refine a consulta com WHERE</span>
+                )}
               </span>
             )}
             {queryResult.isQuery && queryResult.rows && queryResult.rows.length > 0 && (

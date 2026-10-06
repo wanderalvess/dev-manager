@@ -248,6 +248,8 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
                 isExecuting={query.isExecuting}
                 queryResult={query.queryResult}
                 onExport={view.handleExport}
+                onLoadMore={query.handleLoadMore}
+                nextLimit={query.nextLimit}
               />
               {/* Conteúdo: Grid de Resultados, Explain, Tracer ou Histórico */}
               <div className="flex-1 overflow-auto bg-card/20" data-tour="results-panel">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type {
   DatabaseConnectionConfig,
   ExplainPlanResult,
@@ -17,6 +17,7 @@ import { extractSqlVariables } from '../../utils/sqlBinds';
 import { showToast } from '../../components/ToastHost';
 import { buildRiskConfirmMessage } from '../../utils/databaseSessionUtils';
 import { useDatabaseSession } from './useDatabaseSession';
+import { nextRowLimit } from '../../utils/rowLimitUtils';
 
 interface UseDatabaseQueryParams {
   sql: string;
@@ -70,7 +71,14 @@ export function useDatabaseQuery({
     }
   }, [activeConnectionId]);
 
-  const handleExecuteSql = async (customSql?: string, overrideBinds?: Record<string, any>): Promise<void> => {
+  // Última consulta executada com sucesso, para "carregar mais" repetir com um limite maior
+  const lastRun = useRef<{ sql: string; binds?: Record<string, any> } | null>(null);
+
+  const handleExecuteSql = async (
+    customSql?: string,
+    overrideBinds?: Record<string, any>,
+    limitOverride?: number
+  ): Promise<void> => {
     if (!activeConnection) {
       alert('Selecione ou crie uma conexão antes de executar consultas.');
       return;
@@ -91,8 +99,9 @@ export function useDatabaseQuery({
     view.handleClearAllFilters();
 
     try {
-      const res = await tx.execute(cleanSql, maxRows, overrideBinds);
+      const res = await tx.execute(cleanSql, limitOverride ?? maxRows, overrideBinds);
       setQueryResult(res);
+      if (res.success && res.isQuery) lastRun.current = { sql: cleanSql, binds: overrideBinds };
 
       // Detecta se o resultado veio de um SELECT * FROM <tabela única> — só nesse caso a grid
       // consegue editar/inserir/excluir linhas com segurança (sabe de qual tabela e, com sorte,
@@ -139,6 +148,15 @@ export function useDatabaseQuery({
     } finally {
       setIsExecuting(false);
     }
+  };
+
+  /** Repete a última consulta com o próximo limite de linhas (ex.: 100 → 250). */
+  const handleLoadMore = async (): Promise<void> => {
+    const next = nextRowLimit(maxRows);
+    const last = lastRun.current;
+    if (next === null || !last) return;
+    setMaxRows(next);
+    await handleExecuteSql(last.sql, last.binds ?? {}, next);
   };
 
   /** F5: executa todos os comandos em sequência, parando no primeiro erro. Mostra o resultado do último comando. */
@@ -248,6 +266,8 @@ export function useDatabaseQuery({
     explainResult,
     editableTable,
     handleExecuteSql,
+    handleLoadMore,
+    nextLimit: nextRowLimit(maxRows),
     handleExecuteScript,
     handleExplainPlan,
     tx,
