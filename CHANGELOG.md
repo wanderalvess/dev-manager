@@ -4,6 +4,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.34.0] - 2026-10-06
+### Adicionado
+- **Banco de Dados — abas de consulta**: cada aba tem a sua conexão, o seu editor, o seu resultado (com filtros, ordenação e plano de execução) e a sua transação (sessão própria, com commit e rollback independentes). As abas continuam montadas quando ocultas, então trocar de aba ou de banco não apaga o resultado das outras e dá para **comparar dados entre conexões diferentes**. Clicar numa conexão da sidebar volta para a aba mais recente dela ou abre uma nova com a consulta padrão do banco; o botão **+** abre outra aba na conexão selecionada (até 12) e o botão do meio do mouse fecha. A barra indica o banco por cor e mostra um ponto âmbar quando há alterações pendentes.
+- O texto e a conexão de cada aba **persistem entre aberturas**; abas de conexões apagadas somem.
+- Fechar uma aba com alterações pendentes (alterações do grid não aplicadas ou comandos sem commit) pede confirmação e encerra a sessão com rollback.
+
+### Alterado
+- Ao trocar de conexão, o editor deixa de manter o texto da conexão anterior: cada conexão tem a sua aba, com a consulta padrão do banco na primeira vez.
+- A lista de tabelas e as colunas da sidebar ficam em cache **por conexão**: alternar entre bancos não recarrega a lista, e colunas de tabelas com o mesmo nome em bancos diferentes não se misturam mais.
+- O histórico de execuções é único e compartilhado entre as abas.
+
+### Testes
+- Lógica de abas (criar, selecionar, fechar, reabrir por conexão, reconciliar com as conexões existentes e persistência) coberta por testes.
+
 ## [1.33.0] - 2026-10-06
 ### Adicionado
 - **Banco de Dados — transações**: cada conexão ativa ganha uma sessão própria, com barra **Auto-commit / Manual**, **Commit (F11)**, **Rollback (F12)**, contador de alterações pendentes e **Cancelar consulta**. Conexões marcadas como **Ambiente de produção** (novo campo no cadastro) começam em modo manual. Há confirmação para `UPDATE`/`DELETE` sem `WHERE` (em auto-commit) e para `DROP`/`TRUNCATE`, e aviso ao voltar para auto-commit com alterações pendentes. No PostgreSQL, um erro dentro da transação desfaz só o comando que falhou. Fechar o app faz rollback do que estiver pendente.
