@@ -1,11 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
+import { pipeline } from 'stream';
 import crypto from 'crypto';
 import { execFile, spawn } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
 import type { ConfigService } from './ConfigService';
+
+/** Tempo máximo de um dump/restore MySQL via spawn (os execFile dos demais bancos já têm timeout). */
+const SPAWN_TIMEOUT_MS = 20 * 60 * 1000;
 
 /** Margem mínima de espaço livre exigida na pasta de destino antes de iniciar um backup local. */
 const MIN_FREE_DISK_BYTES = 200 * 1024 * 1024;
@@ -186,6 +190,15 @@ export function parseCommandLineTokens(cmd: string): string[] {
 }
 
 /**
+ * Monta o argv do comando customizado. O template é tokenizado ANTES de receber os valores,
+ * então um host, senha ou caminho com espaço/aspas continua sendo um único argumento
+ * (interpolar primeiro e tokenizar depois deixava o valor injetar argumentos).
+ */
+export function buildCustomCommandArgv(template: string, placeholders: BackupPlaceholders): string[] {
+  return parseCommandLineTokens(template).map((token) => interpolateBackupTemplate(token, placeholders));
+}
+
+/**
  * Mascara qualquer ocorrência da senha com asteriscos.
  */
 export function maskSensitiveText(text: string, sensitive?: string): string {
@@ -349,8 +362,7 @@ export class BackupService {
       }
     }
 
-    const resolvedCommand = interpolateBackupTemplate(customCommandTemplate, placeholders);
-    const tokens = parseCommandLineTokens(resolvedCommand);
+    const tokens = buildCustomCommandArgv(customCommandTemplate, placeholders);
 
     if (tokens.length === 0) {
       return { success: false, message: 'Comando personalizado vazio após processamento.' };
@@ -814,9 +826,15 @@ export class BackupService {
 
       let stderr = '';
       let settled = false;
+      const timer = setTimeout(() => {
+        child.kill();
+        fs.promises.unlink(filePath).catch(() => {});
+        finish({ success: false, message: 'mysqldump excedeu o tempo limite e foi encerrado.', durationMs: Date.now() - startTime });
+      }, SPAWN_TIMEOUT_MS);
       const finish = (result: BackupResult) => {
         if (settled) return;
         settled = true;
+        clearTimeout(timer);
         resolve(result);
       };
 
@@ -830,26 +848,13 @@ export class BackupService {
         finish({ success: false, message: this.formatMysqlCliError('mysqldump', err, stderr), durationMs });
       });
 
-      const writeStream = fs.createWriteStream(filePath);
-      writeStream.on('error', (err) => {
+      // O resultado só sai quando o processo fechou E o arquivo terminou de ser gravado: antes, o
+      // 'close' do processo podia chegar antes do fim do gzip e o stat media um arquivo incompleto.
+      let closeCode: number | null | undefined;
+      let writeDone = false;
+      const complete = () => {
+        if (closeCode === undefined || !writeDone) return;
         const durationMs = Date.now() - startTime;
-        finish({ success: false, message: `Falha ao gravar arquivo de backup: ${err.message}`, durationMs });
-      });
-
-      child.stdout.pipe(zlib.createGzip()).pipe(writeStream);
-
-      child.on('close', (code) => {
-        const durationMs = Date.now() - startTime;
-        if (code !== 0) {
-          fs.promises.unlink(filePath).catch(() => {});
-          finish({
-            success: false,
-            message: this.formatMysqlCliError('mysqldump', { message: `Processo encerrou com código ${code}` }, stderr),
-            durationMs
-          });
-          return;
-        }
-
         fs.promises
           .stat(filePath)
           .then((stat) => {
@@ -858,6 +863,35 @@ export class BackupService {
           .catch(() => {
             finish({ success: true, message: `Backup gerado com sucesso em ${filePath}`, filePath, durationMs });
           });
+      };
+
+      // Erro de spawn (binário ausente) derruba o stdout: o setImmediate deixa o 'error' do processo,
+      // com a mensagem amigável, chegar antes deste callback.
+      pipeline(child.stdout, zlib.createGzip(), fs.createWriteStream(filePath), (err) => {
+        if (err) {
+          setImmediate(() => {
+            child.kill();
+            fs.promises.unlink(filePath).catch(() => {});
+            finish({ success: false, message: `Falha ao gravar arquivo de backup: ${err.message}`, durationMs: Date.now() - startTime });
+          });
+          return;
+        }
+        writeDone = true;
+        complete();
+      });
+
+      child.on('close', (code) => {
+        closeCode = code;
+        if (code !== 0) {
+          fs.promises.unlink(filePath).catch(() => {});
+          finish({
+            success: false,
+            message: this.formatMysqlCliError('mysqldump', { message: `Processo encerrou com código ${code}` }, stderr),
+            durationMs: Date.now() - startTime
+          });
+          return;
+        }
+        complete();
       });
     });
   }
@@ -888,34 +922,55 @@ export class BackupService {
       });
 
       let stderr = '';
+      let settled = false;
+      const timer = setTimeout(() => {
+        child.kill();
+        finish({ success: false, message: 'mysql excedeu o tempo limite e foi encerrado.', durationMs: Date.now() - startTime });
+      }, SPAWN_TIMEOUT_MS);
+      const finish = (result: BackupResult) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(result);
+      };
+
       child.stderr.on('data', (chunk) => {
         stderr += chunk.toString();
       });
 
       child.on('error', (err: any) => {
-        const durationMs = Date.now() - startTime;
-        resolve({ success: false, message: this.formatMysqlCliError('mysql', err, stderr), durationMs });
+        finish({ success: false, message: this.formatMysqlCliError('mysql', err, stderr), durationMs: Date.now() - startTime });
       });
 
       child.on('close', (code) => {
         const durationMs = Date.now() - startTime;
         if (code !== 0) {
-          resolve({
+          finish({
             success: false,
             message: this.formatMysqlCliError('mysql', { message: `Processo encerrou com código ${code}` }, stderr),
             durationMs
           });
           return;
         }
-        resolve({ success: true, message: `Restauração concluída a partir de ${filePath}`, durationMs });
+        finish({ success: true, message: `Restauração concluída a partir de ${filePath}`, durationMs });
       });
 
-      const readStream = fs.createReadStream(filePath);
-      readStream.on('error', () => child.stdin.end());
+      // pipeline propaga e trata erro de qualquer ponta: arquivo ilegível, .gz corrompido ou EPIPE no stdin
+      // do mysql (que encerrou cedo) — antes, um 'error' sem handler derrubava o processo principal.
+      const source = fs.createReadStream(filePath);
+      const done = (err: NodeJS.ErrnoException | null) => {
+        if (!err) return;
+        // Se o mysql morreu primeiro, a causa real está no 'close'/stderr dele: deixa ele responder.
+        setImmediate(() => {
+          if (settled) return;
+          child.kill();
+          finish({ success: false, message: `Falha ao ler o arquivo de restauração: ${err.message}`, durationMs: Date.now() - startTime });
+        });
+      };
       if (/\.gz$/i.test(filePath)) {
-        readStream.pipe(zlib.createGunzip()).pipe(child.stdin);
+        pipeline(source, zlib.createGunzip(), child.stdin, done);
       } else {
-        readStream.pipe(child.stdin);
+        pipeline(source, child.stdin, done);
       }
     });
   }

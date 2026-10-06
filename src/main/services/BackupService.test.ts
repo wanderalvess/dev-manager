@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   BackupService,
   buildBackupPlaceholders,
+  buildCustomCommandArgv,
   interpolateBackupTemplate,
   parseCommandLineTokens,
   maskSensitiveText
@@ -155,6 +156,38 @@ describe('BackupService', () => {
 
     expect(result.success).toBe(false);
     expect(result.message).toContain('{filePath}');
+  });
+
+  it('valores com espaço ou aspas continuam sendo um único argumento (sem injetar argumentos)', () => {
+    const config: DatabaseConnectionConfig = {
+      id: 'c', name: 'n', type: 'oracle', host: 'h', port: 1521, database: 'XE', user: 'sys',
+      password: 'pa ss" extra=1 --evil'
+    };
+    const placeholders = buildBackupPlaceholders(config, 'C:\\Backups', {});
+    const argv = buildCustomCommandArgv('expdp {user}/{password}@{connectString} dumpfile={fileName}', placeholders);
+
+    expect(argv).toHaveLength(3);
+    expect(argv[1]).toBe('sys/pa ss" extra=1 --evil@h:1521/XE');
+    expect(argv[2]).toBe('dumpfile=' + placeholders.fileName);
+  });
+
+  it('restauração MySQL com .gz corrompido termina com resultado, sem derrubar o processo', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dev-manager-restore-'));
+    try {
+      const dump = path.join(dir, 'corrompido.sql.gz');
+      fs.writeFileSync(dump, Buffer.from('isto nao e um gzip valido, so lixo'.repeat(50)));
+      const service = new BackupService();
+      const config: DatabaseConnectionConfig = {
+        id: 'conn-gz', name: 'gz', type: 'mysql', host: 'localhost', port: 3306, database: 'db', user: 'u'
+      };
+
+      // O "mysql" é o próprio node: sai logo, então o stdin quebra (EPIPE) enquanto o gunzip falha.
+      const result = await service.restoreBackup(config, dump, { mysqlPath: process.execPath });
+      expect(typeof result.success).toBe('boolean');
+    } finally {
+      // Assíncrono de propósito: o handle do arquivo só fecha com o event loop livre (no Windows)
+      await fs.promises.rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
+    }
   });
 
   it('bloqueia caracteres de injeção de shell no comando customizado', async () => {
