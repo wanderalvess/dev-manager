@@ -1,7 +1,5 @@
 export type ValidationItemStatus = 'pending' | 'in_progress' | 'passed' | 'failed' | 'blocked';
 export type ValidationCategory = 'routine' | 'service' | 'api' | 'e2e';
-export type EvidenceSeverity = 'critical' | 'high' | 'medium' | 'low';
-export type EvidenceStatus = 'open' | 'investigating' | 'resolved';
 
 export interface QualityValidationItem {
   id: string;
@@ -13,19 +11,6 @@ export interface QualityValidationItem {
   testerName?: string;
   notes?: string;
   updatedAt?: string;
-}
-
-export interface QualityEvidence {
-  id: string;
-  validationItemId?: string;
-  title: string;
-  scenario: string;
-  expectedResult: string;
-  actualResult: string;
-  severity: EvidenceSeverity;
-  status: EvidenceStatus;
-  logExcerpt?: string;
-  createdAt: string;
 }
 
 export interface QualityMetrics {
@@ -223,9 +208,8 @@ export function generateQualityMarkdownReport(options: {
   releaseVersion: string;
   metrics: QualityMetrics;
   items: QualityValidationItem[];
-  evidences?: QualityEvidence[];
 }): string {
-  const { releaseVersion, metrics, items, evidences = [] } = options;
+  const { releaseVersion, metrics, items } = options;
   const now = new Date().toLocaleString('pt-BR');
 
   const lines: string[] = [
@@ -269,22 +253,6 @@ export function generateQualityMarkdownReport(options: {
     const notesText = (item.notes || '-').replace(/\|/g, '-');
     const tester = item.testerName || '-';
     lines.push(`| ${item.title} | ${item.targetName} | ${catText} | ${statusText} | ${tester} | ${notesText} |`);
-  }
-
-  if (evidences.length > 0) {
-    lines.push('');
-    lines.push('## Evidências & Falhas Encontradas');
-    for (const ev of evidences) {
-      lines.push(`### [${ev.severity.toUpperCase()}] ${ev.title} (${ev.status})`);
-      lines.push(`- **Cenário:** ${ev.scenario}`);
-      lines.push(`- **Resultado Esperado:** ${ev.expectedResult}`);
-      lines.push(`- **Resultado Obtido:** ${ev.actualResult}`);
-      if (ev.logExcerpt) {
-        lines.push('```text');
-        lines.push(ev.logExcerpt);
-        lines.push('```');
-      }
-    }
   }
 
   lines.push('');

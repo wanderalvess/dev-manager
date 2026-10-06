@@ -56,26 +56,12 @@ describe('qualityPageUtils', () => {
     const report = generateQualityMarkdownReport({
       releaseVersion: 'v1.24.0',
       metrics,
-      items,
-      evidences: [
-        {
-          id: 'ev-1',
-          title: 'Erro 500 no endpoint de login',
-          scenario: 'Autenticar com usuário teste',
-          expectedResult: 'HTTP 200 com Token',
-          actualResult: 'HTTP 500 NullPointerException',
-          severity: 'high',
-          status: 'open',
-          logExcerpt: 'java.lang.NullPointerException at com.totvs...',
-          createdAt: new Date().toISOString()
-        }
-      ]
+      items
     });
 
     expect(report).toContain('Relatório de Homologação e Qualidade (QA)');
     expect(report).toContain('v1.24.0');
     expect(report).toContain('Taxa de Aprovação');
     expect(report).toContain('Matriz de Validação');
-    expect(report).toContain('Erro 500 no endpoint de login');
   });
 });
