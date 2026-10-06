@@ -1,7 +1,9 @@
 import React from 'react';
-import { Table, Clock, Download, Zap, CheckCircle2, AlertCircle, Radio } from 'lucide-react';
+import { Table, Clock, Zap, CheckCircle2, AlertCircle, Radio } from 'lucide-react';
 import type { QueryResult } from '../../../../shared/types';
 import type { ResultTab } from '../../utils/dbPageTypes';
+import type { ExportFormat } from '../../utils/databaseExportUtils';
+import { ExportMenu } from './ExportMenu';
 
 interface DatabaseResultsHeaderProps {
   activeTab: ResultTab;
@@ -9,7 +11,7 @@ interface DatabaseResultsHeaderProps {
   historyCount: number;
   isExecuting: boolean;
   queryResult: QueryResult | null;
-  onExportCsv: () => void;
+  onExport: (format: ExportFormat) => void;
 }
 
 /** Barra de status com as abas de resultado e as estatísticas da última execução. */
@@ -19,7 +21,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
   historyCount,
   isExecuting,
   queryResult,
-  onExportCsv
+  onExport
 }) => (
   <div className="px-3 py-1.5 bg-card/60 border-b border-border/70 flex items-center justify-between shrink-0">
     <div className="flex items-center space-x-2">
@@ -99,14 +101,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
               </span>
             )}
             {queryResult.isQuery && queryResult.rows && queryResult.rows.length > 0 && (
-              <button
-                onClick={onExportCsv}
-                title="Exportar dados para CSV"
-                className="flex items-center space-x-1 text-primary hover:underline font-medium text-[11px] cursor-pointer"
-              >
-                <Download className="w-3 h-3" />
-                <span>CSV</span>
-              </button>
+              <ExportMenu onExport={onExport} />
             )}
           </>
         ) : (

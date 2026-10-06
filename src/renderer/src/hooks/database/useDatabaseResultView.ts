@@ -2,7 +2,16 @@ import { useMemo, useState } from 'react';
 import type { QueryResult } from '../../../../shared/types';
 import { useCopyToClipboard } from '../useCopyToClipboard';
 import { detectColumnDataTypes, processQueryRows, hasActiveQueryFilters } from '../../utils/databaseResultsUtils';
-import { buildCsvContent, formatCellForCopy } from '../../utils/databaseCsvUtils';
+import { formatCellForCopy } from '../../utils/databaseCsvUtils';
+import {
+  EXPORT_FORMATS,
+  buildCsvContent,
+  buildJsonContent,
+  buildXlsx,
+  downloadBlob,
+  exportFileName,
+  type ExportFormat
+} from '../../utils/databaseExportUtils';
 import type { CellContextMenuState, SortConfig } from '../../utils/dbPageTypes';
 
 /** Filtros, ordenação, seleção, menus, exportação CSV e cópia sobre o resultado atual. */
@@ -62,19 +71,21 @@ export function useDatabaseResultView(queryResult: QueryResult | null) {
     setCellContextMenu(null);
   };
 
-  const handleExportCsv = () => {
+  /** Exporta as linhas exibidas (já com busca, filtros e ordenação aplicados) no formato escolhido. */
+  const handleExport = (format: ExportFormat) => {
     if (!queryResult || !queryResult.columns || processedRows.length === 0) return;
+    const columns = queryResult.columns;
+    const numeric = new Set(columns.filter((c) => columnDataTypes[c] === 'number'));
+    const meta = EXPORT_FORMATS.find((f) => f.id === format);
+    if (!meta) return;
 
-    const blob = new Blob([buildCsvContent(queryResult.columns, processedRows)], {
-      type: 'text/csv;charset=utf-8;'
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `query_result_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    let content: BlobPart;
+    if (format === 'xlsx') content = buildXlsx(columns, processedRows, { numericColumns: numeric }) as BlobPart;
+    else if (format === 'json') content = buildJsonContent(columns, processedRows);
+    else if (format === 'csv-br') content = buildCsvContent(columns, processedRows, { delimiter: ';', bom: true, decimalCommaColumns: numeric });
+    else content = buildCsvContent(columns, processedRows);
+
+    downloadBlob(content, exportFileName(meta.extension), meta.mime);
   };
 
   const handleCopyCell = (text: any, cellKey?: string) => {
@@ -101,7 +112,7 @@ export function useDatabaseResultView(queryResult: QueryResult | null) {
     handleClearAllFilters,
     handleToggleSort,
     handleFilterByCellValue,
-    handleExportCsv,
+    handleExport,
     handleCopyCell
   };
 }

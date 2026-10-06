@@ -247,7 +247,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
                 historyCount={historyState.history.length}
                 isExecuting={query.isExecuting}
                 queryResult={query.queryResult}
-                onExportCsv={view.handleExportCsv}
+                onExport={view.handleExport}
               />
               {/* Conteúdo: Grid de Resultados, Explain, Tracer ou Histórico */}
               <div className="flex-1 overflow-auto bg-card/20" data-tour="results-panel">
