@@ -6,6 +6,8 @@ import {
   isSafeUrl,
   isSafeKarafCommand,
   isSafeLocalPath,
+  isLogFilePath,
+  isInsideDir,
   isSafePath,
   isLoopbackAddress
 } from './security';
@@ -121,6 +123,35 @@ describe('isSafeLocalPath', () => {
     expect(isSafeLocalPath('//server/share')).toBe(false);
     expect(isSafeLocalPath('C:/foo\0bar')).toBe(false);
     expect(isSafeLocalPath('')).toBe(false);
+  });
+});
+
+describe('isLogFilePath', () => {
+  it('aceita extensões de log, inclusive com rotação numerada', () => {
+    expect(isLogFilePath('C:/karaf/data/log/karaf.log')).toBe(true);
+    expect(isLogFilePath('C:/karaf/data/log/karaf.log.3')).toBe(true);
+    expect(isLogFilePath('C:/app/saida.OUT')).toBe(true);
+  });
+
+  it('rejeita arquivos que não são log (config, chaves, executáveis) e caminhos de rede', () => {
+    expect(isLogFilePath('C:/Users/x/AppData/Roaming/dev-manager/config.json')).toBe(false);
+    expect(isLogFilePath('C:/Users/x/AppData/Roaming/dev-manager/.secret-key')).toBe(false);
+    expect(isLogFilePath('C:/Windows/System32/cmd.exe')).toBe(false);
+    expect(isLogFilePath('C:/app/foo.log.bak')).toBe(false);
+    expect(isLogFilePath('//server/share/a.log')).toBe(false);
+  });
+});
+
+describe('isInsideDir', () => {
+  it('aceita o próprio diretório e filhos, resolvendo ..', () => {
+    expect(isInsideDir('C:/data/app', 'C:/data/app')).toBe(true);
+    expect(isInsideDir('C:/data/app/config.json', 'C:/data/app')).toBe(true);
+    expect(isInsideDir('C:/data/app/sub/../config.json', 'C:/data/app')).toBe(true);
+  });
+
+  it('não se engana por prefixo nem por ..', () => {
+    expect(isInsideDir('C:/data/app-evil/x.log', 'C:/data/app')).toBe(false);
+    expect(isInsideDir('C:/data/app/../outro/x.log', 'C:/data/app')).toBe(false);
   });
 });
 

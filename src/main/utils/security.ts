@@ -94,6 +94,32 @@ export function isSafeLocalPath(targetPath: string): boolean {
   return true;
 }
 
+/** Extensões aceitas como arquivo de log (inclui rotação: karaf.log.1). */
+const LOG_FILE_PATTERN = /\.(log|out|err|txt|trace)(\.\d+)?$/i;
+
+/**
+ * Só arquivos com extensão de log podem ser zerados pelo Cockpit — impede que um caminho
+ * qualquer (ex.: o config.json) seja truncado pelas telas, pela API REST ou pelo MCP.
+ */
+export function isLogFilePath(targetPath: string): boolean {
+  return isSafeLocalPath(targetPath) && LOG_FILE_PATTERN.test(targetPath.trim());
+}
+
+/**
+ * Indica se `targetPath` é o próprio `dir` ou está dentro dele (sem enganar por prefixo:
+ * "C:\app-evil" não está dentro de "C:\app"). Resolve `..` antes de comparar.
+ */
+export function isInsideDir(targetPath: string, dir: string): boolean {
+  if (!isSafeLocalPath(targetPath) || !dir) return false;
+  const norm = (p: string) => {
+    const resolved = path.normalize(path.resolve(p));
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const target = norm(targetPath);
+  const base = norm(dir);
+  return target === base || target.startsWith(base + path.sep);
+}
+
 /**
  * Valida se o caminho informado existe e está dentro de um diretório base permitido.
  */

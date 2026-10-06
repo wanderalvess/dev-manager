@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { LogWatchStatus, LogChunkEvent } from '../../shared/types';
-import { isSafeLocalPath } from '../utils/security';
+import { isInsideDir, isLogFilePath, isSafeLocalPath } from '../utils/security';
+import { getAppDataDir } from './ConfigService';
 
 interface ActiveWatcher {
   sourceId: string;
@@ -15,6 +16,11 @@ interface ActiveWatcher {
   partialLine: string;
 }
 
+/** Caminho local legível pelo visualizador de logs: nunca a pasta de dados do app (config.json e chave de criptografia). */
+function isReadableLogPath(filePath: string): boolean {
+  return isSafeLocalPath(filePath) && !isInsideDir(filePath, getAppDataDir());
+}
+
 export class LogWatcherService {
   private watchers = new Map<string, ActiveWatcher>();
 
@@ -22,7 +28,7 @@ export class LogWatcherService {
    * Verifica o status físico do arquivo de log no sistema operacional.
    */
   public checkFile(filePath: string, sourceId: string = ''): LogWatchStatus {
-    if (!filePath || typeof filePath !== 'string' || !isSafeLocalPath(filePath)) {
+    if (!filePath || typeof filePath !== 'string' || !isReadableLogPath(filePath)) {
       return {
         sourceId,
         filePath: filePath || '',
@@ -73,7 +79,7 @@ export class LogWatcherService {
     maxLines: number = 300,
     encoding: BufferEncoding = 'utf-8'
   ): Promise<{ lines: string[]; fileSizeBytes: number }> {
-    if (!filePath || !fs.existsSync(filePath)) {
+    if (!filePath || !isReadableLogPath(filePath) || !fs.existsSync(filePath)) {
       return { lines: [], fileSizeBytes: 0 };
     }
 
@@ -295,7 +301,7 @@ export class LogWatcherService {
    * Limpa (zera) o arquivo de log no disco.
    */
   public async clearLogFile(filePath: string): Promise<boolean> {
-    if (!filePath || !isSafeLocalPath(filePath)) return false;
+    if (!filePath || !isLogFilePath(filePath) || !isReadableLogPath(filePath)) return false;
 
     try {
       if (fs.existsSync(filePath)) {
