@@ -38,6 +38,16 @@ if (typeof (globalThis as any).__filename === 'undefined') {
   (globalThis as any).__filename = __filename;
 }
 
+// A pasta userData do Electron (localStorage: Matriz de Qualidade, tema, marcadores de onboarding, e o
+// marcador .last_seen_version) deriva do `name` do package.json, que passou de "dev-manager" para
+// "hub-manager" na renomeação. Sem fixar, quem atualiza perde esses dados e vê o onboarding de novo.
+// Mantém a pasta original (a mesma que getAppDataDir() já usa para o config.json).
+try {
+  app.setPath('userData', path.join(app.getPath('appData'), 'dev-manager'));
+} catch (err) {
+  console.warn('[Electron] Não foi possível fixar a pasta userData:', (err as Error).message);
+}
+
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 
