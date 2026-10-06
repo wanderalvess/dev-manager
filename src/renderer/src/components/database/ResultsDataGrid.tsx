@@ -157,18 +157,30 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
             {processedRows.length === 0 ? (
               <tr className="bg-background">
                 <td colSpan={columnCount} className="py-12 text-center text-muted-foreground text-xs font-sans">
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <FilterX className="w-8 h-8 opacity-30 text-amber-500" />
-                    <p className="font-semibold text-foreground">Nenhum resultado corresponde aos filtros aplicados.</p>
-                    <span className="text-[11px] opacity-70">Tente ajustar o termo de busca ou filtros de coluna.</span>
-                    <button
-                      type="button"
-                      onClick={onClearAllFilters}
-                      className="mt-2 px-3 py-1 bg-primary/15 text-primary hover:bg-primary/25 rounded text-xs font-semibold transition cursor-pointer"
-                    >
-                      Remover todos os filtros
-                    </button>
-                  </div>
+                  {queryResult.rows.length === 0 ? (
+                    // A consulta rodou, mas o banco não devolveu linhas (tabela vazia, WHERE sem correspondência ou sem permissão de leitura)
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <FilterX className="w-8 h-8 opacity-30 text-sky-500" />
+                      <p className="font-semibold text-foreground">A consulta foi executada, mas não retornou nenhuma linha.</p>
+                      <span className="text-[11px] opacity-70 max-w-md">
+                        A tabela pode estar vazia, o WHERE pode não ter correspondência, ou o usuário da conexão pode não ter
+                        permissão de leitura nas linhas (por exemplo, políticas de segurança por linha).
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <FilterX className="w-8 h-8 opacity-30 text-amber-500" />
+                      <p className="font-semibold text-foreground">Nenhum resultado corresponde aos filtros aplicados.</p>
+                      <span className="text-[11px] opacity-70">Tente ajustar o termo de busca ou filtros de coluna.</span>
+                      <button
+                        type="button"
+                        onClick={onClearAllFilters}
+                        className="mt-2 px-3 py-1 bg-primary/15 text-primary hover:bg-primary/25 rounded text-xs font-semibold transition cursor-pointer"
+                      >
+                        Remover todos os filtros
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ) : (
