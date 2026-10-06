@@ -13,6 +13,7 @@ import { useSqlEditorAutocomplete } from '../../hooks/database/useSqlEditorAutoc
 import { SqlEditorToolbar } from './sqleditor/SqlEditorToolbar';
 import { SqlEditorSurface } from './sqleditor/SqlEditorSurface';
 import { SqlEditorStatusBar } from './sqleditor/SqlEditorStatusBar';
+import { SqlTransactionBar, type SqlTransactionControls } from './sqleditor/SqlTransactionBar';
 
 export { DEFAULT_SQL_SNIPPETS };
 
@@ -45,6 +46,8 @@ export interface SqlEditorAreaProps {
   setIsMaximized?: React.Dispatch<React.SetStateAction<boolean>>;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  /** Controle de transação (auto-commit/manual, commit, rollback, cancelar). Ausente = sem sessões dedicadas. */
+  transaction?: SqlTransactionControls;
 }
 
 export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
@@ -75,7 +78,8 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   isMaximized,
   setIsMaximized,
   isSidebarCollapsed: _isSidebarCollapsed,
-  onToggleSidebar: _onToggleSidebar
+  onToggleSidebar: _onToggleSidebar,
+  transaction
 }) => {
   const prefs = useSqlEditorPrefs({ isMaximized, setIsMaximized });
   const [cursorPos, setCursorPos] = useState<number>(0);
@@ -109,8 +113,20 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
     }
   };
 
+  // F11 confirma e F12 desfaz enquanto o foco está no editor (só no modo manual)
+  const handleTransactionKeys = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!transaction || transaction.mode !== 'manual' || isExecuting) return;
+    if (e.key === 'F11') {
+      e.preventDefault();
+      transaction.onCommit();
+    } else if (e.key === 'F12') {
+      e.preventDefault();
+      transaction.onRollback();
+    }
+  };
+
   return (
-    <div className="flex flex-col shrink-0">
+    <div className="flex flex-col shrink-0" onKeyDown={handleTransactionKeys}>
       <SqlEditorToolbar
         sql={sql}
         activeConnection={activeConnection}
@@ -133,6 +149,8 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
         toggleMaximize={prefs.toggleMaximize}
         detectedVariables={detectedVariables}
       />
+
+      {transaction && <SqlTransactionBar {...transaction} isExecuting={isExecuting} />}
 
       {/* Editor de Código SQL com Gutter de Linhas e Altura Ajustável */}
       <SqlEditorSurface

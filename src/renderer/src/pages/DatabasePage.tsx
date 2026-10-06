@@ -209,6 +209,19 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
             setIsMaximized={layout.handleSetEditorMaximized}
             isSidebarCollapsed={layout.isSidebarCollapsed}
             onToggleSidebar={layout.handleToggleSidebar}
+            transaction={
+              query.tx.supported && activeConnection
+                ? {
+                    mode: query.tx.mode,
+                    state: query.tx.state,
+                    isProduction: !!activeConnection.isProduction,
+                    onChangeMode: query.tx.changeMode,
+                    onCommit: query.tx.commit,
+                    onRollback: query.tx.rollback,
+                    onCancel: query.tx.cancel
+                  }
+                : undefined
+            }
           />
 
           {!layout.isEditorMaximized ? (

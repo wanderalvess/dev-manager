@@ -1079,6 +1079,8 @@ export interface DatabaseConnectionConfig {
   /** Flag para SSL/TLS (PostgreSQL e MySQL) */
   ssl?: boolean;
   isDefault?: boolean;
+  /** Conexão de produção: o editor SQL começa em modo manual de commit e destaca o ambiente. */
+  isProduction?: boolean;
 }
 
 /** Configuração de backup persistida por conexão (pasta de destino, agendamento e retenção). */

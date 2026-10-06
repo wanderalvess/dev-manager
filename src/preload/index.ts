@@ -488,12 +488,12 @@ const electronAPI = {
     ipcRenderer.invoke('db:list-tables', config),
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
     ipcRenderer.invoke('db:get-table-columns', config, tableName),
-  insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>): Promise<QueryResult> =>
-    ipcRenderer.invoke('db:insert-row', config, tableName, values),
-  updateDbRow: (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>): Promise<QueryResult> =>
-    ipcRenderer.invoke('db:update-row', config, tableName, changes, where),
-  deleteDbRow: (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>): Promise<QueryResult> =>
-    ipcRenderer.invoke('db:delete-row', config, tableName, where),
+  insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>, sessionId?: string): Promise<QueryResult> =>
+    ipcRenderer.invoke('db:insert-row', config, tableName, values, sessionId),
+  updateDbRow: (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>, sessionId?: string): Promise<QueryResult> =>
+    ipcRenderer.invoke('db:update-row', config, tableName, changes, where, sessionId),
+  deleteDbRow: (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>, sessionId?: string): Promise<QueryResult> =>
+    ipcRenderer.invoke('db:delete-row', config, tableName, where, sessionId),
   getOracleActiveSessions: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleActiveSessionsResult> =>
     ipcRenderer.invoke('db:get-oracle-active-sessions', config, filter),
   getOracleRecentStatements: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter): Promise<OracleRecentStatementsResult> =>

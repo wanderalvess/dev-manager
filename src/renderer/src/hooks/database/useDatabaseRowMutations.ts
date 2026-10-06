@@ -8,17 +8,24 @@ interface UseDatabaseRowMutationsParams {
   editableTable: EditableTableState | null;
   /** Reexecuta a consulta atual para refletir a mutação na grid. */
   reexecute: () => Promise<void>;
+  /** Sessão do editor: a edição do grid entra na mesma transação (evita esperar linhas travadas pelo modo manual). */
+  getSessionId?: () => string | undefined;
 }
 
 /** Inserção, edição de célula e exclusão de linha na grid (só com SELECT * FROM <tabela única>). */
-export function useDatabaseRowMutations({ activeConnection, editableTable, reexecute }: UseDatabaseRowMutationsParams) {
+export function useDatabaseRowMutations({
+  activeConnection,
+  editableTable,
+  reexecute,
+  getSessionId
+}: UseDatabaseRowMutationsParams) {
   const [isMutatingRow, setIsMutatingRow] = useState<boolean>(false);
 
   const handleInsertRow = async (values: Record<string, any>) => {
     if (!activeConnection || !editableTable || !window.electronAPI?.insertDbRow) return;
     setIsMutatingRow(true);
     try {
-      const res = await window.electronAPI.insertDbRow(activeConnection, editableTable.name, values);
+      const res = await window.electronAPI.insertDbRow(activeConnection, editableTable.name, values, getSessionId?.());
       if (!res.success) {
         alert(`Falha ao inserir linha:\n${res.error}`);
         return;
@@ -37,7 +44,13 @@ export function useDatabaseRowMutations({ activeConnection, editableTable, reexe
 
     setIsMutatingRow(true);
     try {
-      const res = await window.electronAPI.updateDbRow(activeConnection, editableTable.name, { [column]: newValue }, where);
+      const res = await window.electronAPI.updateDbRow(
+        activeConnection,
+        editableTable.name,
+        { [column]: newValue },
+        where,
+        getSessionId?.()
+      );
       if (!res.success) {
         alert(`Falha ao atualizar célula:\n${res.error}`);
         return;
@@ -58,7 +71,7 @@ export function useDatabaseRowMutations({ activeConnection, editableTable, reexe
 
     setIsMutatingRow(true);
     try {
-      const res = await window.electronAPI.deleteDbRow(activeConnection, editableTable.name, where);
+      const res = await window.electronAPI.deleteDbRow(activeConnection, editableTable.name, where, getSessionId?.());
       if (!res.success) {
         alert(`Falha ao excluir linha:\n${res.error}`);
         return;

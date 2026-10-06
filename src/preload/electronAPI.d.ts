@@ -301,9 +301,9 @@ export interface ElectronAPI {
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
-  insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>) => Promise<QueryResult>;
-  updateDbRow: (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>) => Promise<QueryResult>;
-  deleteDbRow: (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>) => Promise<QueryResult>;
+  insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>, sessionId?: string) => Promise<QueryResult>;
+  updateDbRow: (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>, sessionId?: string) => Promise<QueryResult>;
+  deleteDbRow: (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>, sessionId?: string) => Promise<QueryResult>;
   getOracleActiveSessions: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => Promise<OracleActiveSessionsResult>;
   getOracleRecentStatements: (config: DatabaseConnectionConfig, filter?: OracleTracerFilter) => Promise<OracleRecentStatementsResult>;
   startOracleCapture: (config: DatabaseConnectionConfig, options: OracleCaptureOptions) => Promise<OracleCaptureState>;

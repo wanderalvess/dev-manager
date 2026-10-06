@@ -1217,24 +1217,24 @@ export function initApiBridge() {
       });
     },
 
-    insertDbRow: async (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>): Promise<QueryResult> => {
+    insertDbRow: async (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>, sessionId?: string): Promise<QueryResult> => {
       return apiFetch('/api/db/row/insert', {
         method: 'POST',
-        body: JSON.stringify({ config, tableName, values })
+        body: JSON.stringify({ config, tableName, values, sessionId })
       });
     },
 
-    updateDbRow: async (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>): Promise<QueryResult> => {
+    updateDbRow: async (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>, sessionId?: string): Promise<QueryResult> => {
       return apiFetch('/api/db/row/update', {
         method: 'POST',
-        body: JSON.stringify({ config, tableName, changes, where })
+        body: JSON.stringify({ config, tableName, changes, where, sessionId })
       });
     },
 
-    deleteDbRow: async (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>): Promise<QueryResult> => {
+    deleteDbRow: async (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>, sessionId?: string): Promise<QueryResult> => {
       return apiFetch('/api/db/row/delete', {
         method: 'POST',
-        body: JSON.stringify({ config, tableName, where })
+        body: JSON.stringify({ config, tableName, where, sessionId })
       });
     },
 

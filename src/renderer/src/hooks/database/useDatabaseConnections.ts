@@ -102,7 +102,8 @@ export function useDatabaseConnections({ settingsVersion, setSql, setCustomSnipp
         oracleMode: editingConn.oracleMode || 'serviceName',
         oracleClientPath: editingConn.oracleClientPath,
         oracleThickMode: editingConn.oracleThickMode,
-        ssl: editingConn.ssl
+        ssl: editingConn.ssl,
+        isProduction: editingConn.isProduction
       };
 
       const res = await window.electronAPI.testDbConnection(fullConfig);
@@ -136,7 +137,8 @@ export function useDatabaseConnections({ settingsVersion, setSql, setCustomSnipp
       oracleClientPath: editingConn.oracleClientPath?.trim() || undefined,
       oracleThickMode: editingConn.oracleThickMode,
       ssl: editingConn.ssl,
-      isDefault: editingConn.isDefault || false
+      isDefault: editingConn.isDefault || false,
+      isProduction: editingConn.isProduction || false
     };
 
     let updated: DatabaseConnectionConfig[];

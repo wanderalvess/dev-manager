@@ -11,7 +11,9 @@ import { useDatabaseBinds } from './useDatabaseBinds';
 import { useDatabaseHistory } from './useDatabaseHistory';
 import { useDatabaseResultView } from './useDatabaseResultView';
 import { useDatabaseRowMutations } from './useDatabaseRowMutations';
-import { normalizeSqlForExecution } from '../../../../shared/sqlStatementUtils';
+import { findRiskyStatement, normalizeSqlForExecution } from '../../../../shared/sqlStatementUtils';
+import { buildRiskConfirmMessage } from '../../utils/databaseSessionUtils';
+import { useDatabaseSession } from './useDatabaseSession';
 
 interface UseDatabaseQueryParams {
   sql: string;
@@ -40,6 +42,7 @@ export function useDatabaseQuery({
   // Só existe quando o resultado atual veio de um SELECT * FROM <tabela única>
   const [editableTable, setEditableTable] = useState<EditableTableState | null>(null);
 
+  const tx = useDatabaseSession(activeConnection);
   const view = useDatabaseResultView(queryResult);
   const historyState = useDatabaseHistory();
   const binds = useDatabaseBinds({
@@ -52,7 +55,8 @@ export function useDatabaseQuery({
   const mutations = useDatabaseRowMutations({
     activeConnection,
     editableTable,
-    reexecute: () => handleExecuteSql()
+    reexecute: () => handleExecuteSql(),
+    getSessionId: tx.getSessionId
   });
 
   // Sempre que a seleção de conexão ativa mudar (não a cada refresh da lista), limpa resultado
@@ -75,13 +79,16 @@ export function useDatabaseQuery({
 
     if (!overrideBinds && binds.promptIfHasVariables(cleanSql)) return;
 
+    const riskMessage = buildRiskConfirmMessage(findRiskyStatement(cleanSql), tx.mode);
+    if (riskMessage && !window.confirm(riskMessage)) return;
+
     setIsExecuting(true);
     setQueryResult(null);
     setActiveResultTab('grid');
     view.handleClearAllFilters();
 
     try {
-      const res = await window.electronAPI.executeDbQuery(activeConnection, cleanSql, maxRows, overrideBinds);
+      const res = await tx.execute(cleanSql, maxRows, overrideBinds);
       setQueryResult(res);
 
       // Detecta se o resultado veio de um SELECT * FROM <tabela única> — só nesse caso a grid
@@ -167,6 +174,7 @@ export function useDatabaseQuery({
     editableTable,
     handleExecuteSql,
     handleExplainPlan,
+    tx,
     view,
     historyState,
     binds,

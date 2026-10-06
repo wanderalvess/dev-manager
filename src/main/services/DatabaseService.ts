@@ -158,26 +158,37 @@ export class DatabaseService {
   public async insertRow(
     config: DatabaseConnectionConfig,
     tableName: string,
-    values: Record<string, any>
+    values: Record<string, any>,
+    sessionId?: string
   ): Promise<QueryResult> {
-    return mutations.insertRow(this.ctx, config, tableName, values);
+    return mutations.insertRow(this.ctx, config, tableName, values, this.sessionExecutor(sessionId));
   }
 
   public async updateRow(
     config: DatabaseConnectionConfig,
     tableName: string,
     changes: Record<string, any>,
-    where: Record<string, any>
+    where: Record<string, any>,
+    sessionId?: string
   ): Promise<QueryResult> {
-    return mutations.updateRow(this.ctx, config, tableName, changes, where);
+    return mutations.updateRow(this.ctx, config, tableName, changes, where, this.sessionExecutor(sessionId));
   }
 
   public async deleteRow(
     config: DatabaseConnectionConfig,
     tableName: string,
-    where: Record<string, any>
+    where: Record<string, any>,
+    sessionId?: string
   ): Promise<QueryResult> {
-    return mutations.deleteRow(this.ctx, config, tableName, where);
+    return mutations.deleteRow(this.ctx, config, tableName, where, this.sessionExecutor(sessionId));
+  }
+
+  /**
+   * Mutações do grid na sessão da aba (mesma transação do editor). Pela conexão compartilhada, um UPDATE ficaria
+   * esperando as linhas travadas pela transação manual aberta na sessão e estouraria o timeout.
+   */
+  private sessionExecutor(sessionId?: string): mutations.MutationExecutor | undefined {
+    return sessionId ? (sql, binds) => this.sessions.execute(sessionId, sql, 1, binds) : undefined;
   }
 
   public interpolateBinds(sql: string, binds?: Record<string, any>): string {

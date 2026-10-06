@@ -3,6 +3,17 @@ import { isValidSqlIdentifier, isValidSqlTableName } from '../../utils/security'
 import { buildEqualityWhereClause, mutationValidationError } from '../../utils/databaseSqlUtils';
 import type { DatabaseContext } from './databaseContext';
 
+/** Executa o SQL da mutação. Padrão: conexão compartilhada (auto-commit); com sessão, a da aba do editor. */
+export type MutationExecutor = (sql: string, binds: Record<string, any>) => Promise<QueryResult>;
+
+const runMutation = (
+  ctx: DatabaseContext,
+  config: DatabaseConnectionConfig,
+  sql: string,
+  binds: Record<string, any>,
+  exec?: MutationExecutor
+): Promise<QueryResult> => (exec ? exec(sql, binds) : ctx.executeQuery(config, sql, 1, binds));
+
 /**
  * Insere uma linha em `tableName` a partir do editor de dados do DB Studio. Nomes de tabela
  * e coluna vêm da UI (clique numa tabela do schema), por isso são revalidados aqui como
@@ -13,7 +24,8 @@ export async function insertRow(
   ctx: DatabaseContext,
   config: DatabaseConnectionConfig,
   tableName: string,
-  values: Record<string, any>
+  values: Record<string, any>,
+  exec?: MutationExecutor
 ): Promise<QueryResult> {
   if (!isValidSqlTableName(tableName)) {
     return mutationValidationError(`Nome de tabela inválido: "${tableName}".`);
@@ -35,7 +47,7 @@ export async function insertRow(
   });
 
   const sql = `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders.join(', ')})`;
-  return ctx.executeQuery(config, sql, 1, binds);
+  return runMutation(ctx, config, sql, binds, exec);
 }
 
 /**
@@ -48,7 +60,8 @@ export async function updateRow(
   config: DatabaseConnectionConfig,
   tableName: string,
   changes: Record<string, any>,
-  where: Record<string, any>
+  where: Record<string, any>,
+  exec?: MutationExecutor
 ): Promise<QueryResult> {
   if (!isValidSqlTableName(tableName)) {
     return mutationValidationError(`Nome de tabela inválido: "${tableName}".`);
@@ -79,7 +92,7 @@ export async function updateRow(
   const { clause: whereClause } = buildEqualityWhereClause(where, binds, idx);
 
   const sql = `UPDATE ${tableName} SET ${setClause} WHERE ${whereClause}`;
-  return ctx.executeQuery(config, sql, 1, binds);
+  return runMutation(ctx, config, sql, binds, exec);
 }
 
 /**
@@ -90,7 +103,8 @@ export async function deleteRow(
   ctx: DatabaseContext,
   config: DatabaseConnectionConfig,
   tableName: string,
-  where: Record<string, any>
+  where: Record<string, any>,
+  exec?: MutationExecutor
 ): Promise<QueryResult> {
   if (!isValidSqlTableName(tableName)) {
     return mutationValidationError(`Nome de tabela inválido: "${tableName}".`);
@@ -109,5 +123,5 @@ export async function deleteRow(
   const { clause: whereClause } = buildEqualityWhereClause(where, binds, 0);
 
   const sql = `DELETE FROM ${tableName} WHERE ${whereClause}`;
-  return ctx.executeQuery(config, sql, 1, binds);
+  return runMutation(ctx, config, sql, binds, exec);
 }

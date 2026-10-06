@@ -197,6 +197,35 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
             setEditingConn={setEditingConn}
           />
 
+          {/* SSL (PostgreSQL e MySQL) e ambiente de produção */}
+          <div className="space-y-1.5 pt-1">
+            {editingConn.type !== 'oracle' && (
+              <label className="flex items-center space-x-2 cursor-pointer text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={!!editingConn.ssl}
+                  onChange={(e) => setEditingConn({ ...editingConn, ssl: e.target.checked })}
+                  className="rounded text-primary focus:ring-0 cursor-pointer"
+                />
+                <span>Usar SSL/TLS na conexão</span>
+              </label>
+            )}
+            <label className="flex items-start space-x-2 cursor-pointer text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={!!editingConn.isProduction}
+                onChange={(e) => setEditingConn({ ...editingConn, isProduction: e.target.checked })}
+                className="mt-0.5 rounded text-primary focus:ring-0 cursor-pointer"
+              />
+              <span>
+                <span className="font-semibold text-foreground">Ambiente de produção</span>
+                <span className="block text-2xs">
+                  O editor SQL começa em modo manual (commit e rollback sob seu controle) e destaca a conexão.
+                </span>
+              </span>
+            </label>
+          </div>
+
           {/* Feedback de Teste de Conexão */}
           {testResult && (
             <div
