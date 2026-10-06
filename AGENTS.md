@@ -274,7 +274,7 @@ Checklist automático a cada ciclo de versão / release:
 
 ### Diálogos e feedback
 
-não use `window.confirm`/`alert`. Confirmar uma ação é `await requestConfirm({ title, message, tone })`
+Não use `window.confirm`/`alert`. Confirmar uma ação é `await requestConfirm({ title, message, tone })`
 ([components/ui/confirmService.ts](src/renderer/src/components/ui/confirmService.ts), funciona em hooks e fora de componentes, o
 `ConfirmHost` fica em `AppGlobalModals`); aviso que precisa ser lido é `showNotice`; feedback rápido é `showToast`. Modal novo parte de
 [components/ui/Modal.tsx](src/renderer/src/components/ui/Modal.tsx) (portal, Esc, foco preso, ARIA) em vez de repetir `fixed inset-0`;
