@@ -84,7 +84,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src/renderer/src'),
-      '@shared': path.resolve(__dirname, 'src/shared')
+      '@shared': path.resolve(__dirname, 'src/shared'),
+      // O pacote só exporta 'monaco-editor' inteiro; o alias permite importar só o necessário (ver monacoEntry.ts)
+      '@monaco': path.resolve(__dirname, 'node_modules/monaco-editor/esm/vs')
     }
   },
   build: {

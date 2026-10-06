@@ -9,9 +9,8 @@ import { extractSqlVariables } from '../../utils/sqlBinds';
 import { formatSql, getSqlMetrics } from '../../utils/sqlFormatUtils';
 import { DEFAULT_SQL_SNIPPETS } from '../../utils/sqlEditorSnippets';
 import { useSqlEditorPrefs } from '../../hooks/database/useSqlEditorPrefs';
-import { useSqlEditorAutocomplete } from '../../hooks/database/useSqlEditorAutocomplete';
 import { SqlEditorToolbar } from './sqleditor/SqlEditorToolbar';
-import { SqlEditorSurface } from './sqleditor/SqlEditorSurface';
+import { MonacoSqlEditor, type MonacoSqlEditorHandle } from './sqleditor/MonacoSqlEditor';
 import { SqlEditorStatusBar } from './sqleditor/SqlEditorStatusBar';
 import { SqlTransactionBar, type SqlTransactionControls } from './sqleditor/SqlTransactionBar';
 
@@ -23,6 +22,8 @@ export interface SqlEditorAreaProps {
   activeConnection: DatabaseConnectionConfig | null;
   isExecuting: boolean;
   onExecuteSql: (customSql?: string) => void;
+  /** Executa todos os comandos do editor em sequência (F5). */
+  onExecuteScript: (script: string) => void;
   isExplaining: boolean;
   onExplainPlan: () => void;
   maxRows: number;
@@ -37,8 +38,6 @@ export interface SqlEditorAreaProps {
   onDeleteSnippet: (id: string, e?: React.MouseEvent) => void;
   tables: string[];
   tableColumns: Record<string, TableColumnInfo[]>;
-  isLoadingColumns: Record<string, boolean>;
-  setIsLoadingColumns: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   setTableColumns: React.Dispatch<React.SetStateAction<Record<string, TableColumnInfo[]>>>;
   getDbBadge: (type: DatabaseType) => React.ReactNode;
   copyFeedback: string | null;
@@ -56,6 +55,7 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   activeConnection,
   isExecuting,
   onExecuteSql,
+  onExecuteScript,
   isExplaining,
   onExplainPlan,
   maxRows,
@@ -70,8 +70,6 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   onDeleteSnippet,
   tables,
   tableColumns,
-  isLoadingColumns,
-  setIsLoadingColumns,
   setTableColumns,
   getDbBadge,
   copyFeedback,
@@ -83,55 +81,31 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
 }) => {
   const prefs = useSqlEditorPrefs({ isMaximized, setIsMaximized });
   const [cursorPos, setCursorPos] = useState<number>(0);
-  const lineNumbersRef = useRef<HTMLDivElement | null>(null);
-  const sqlTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const autocompleteState = useSqlEditorAutocomplete({
-    sql,
-    setSql,
-    activeConnection,
-    onExecuteSql,
-    tables,
-    tableColumns,
-    isLoadingColumns,
-    setIsLoadingColumns,
-    setTableColumns,
-    sqlTextareaRef
-  });
+  const editorRef = useRef<MonacoSqlEditorHandle | null>(null);
 
   const metrics = useMemo(() => getSqlMetrics(sql, cursorPos), [sql, cursorPos]);
-  const linesArray = useMemo(() => {
-    const count = sql.split('\n').length;
-    return Array.from({ length: Math.max(1, count) }, (_, i) => i + 1);
-  }, [sql]);
-
   const detectedVariables = useMemo(() => extractSqlVariables(sql), [sql]);
 
-  const handleEditorScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
-    if (lineNumbersRef.current) {
-      lineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
-    }
+  // Carrega as colunas de uma tabela para o autocomplete e as guarda no estado da tela (compartilhado com a sidebar)
+  const loadColumns = async (tableKey: string): Promise<TableColumnInfo[]> => {
+    if (!activeConnection || !window.electronAPI?.getDbTableColumns) return [];
+    const cols = (await window.electronAPI.getDbTableColumns(activeConnection, tableKey)) ?? [];
+    setTableColumns((prev) => ({ ...prev, [tableKey]: cols }));
+    return cols;
   };
 
-  // F11 confirma e F12 desfaz enquanto o foco está no editor (só no modo manual)
-  const handleTransactionKeys = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!transaction || transaction.mode !== 'manual' || isExecuting) return;
-    if (e.key === 'F11') {
-      e.preventDefault();
-      transaction.onCommit();
-    } else if (e.key === 'F12') {
-      e.preventDefault();
-      transaction.onRollback();
-    }
-  };
+  // O botão e o atalho executam o mesmo: a seleção ou, sem seleção, o comando sob o cursor
+  const runCurrent = () => onExecuteSql(editorRef.current?.getRunnableSql() ?? sql);
+  const runScript = () => onExecuteScript(editorRef.current?.getAllSql() ?? sql);
 
   return (
-    <div className="flex flex-col shrink-0" onKeyDown={handleTransactionKeys}>
+    <div className="flex flex-col shrink-0">
       <SqlEditorToolbar
         sql={sql}
         activeConnection={activeConnection}
         isExecuting={isExecuting}
-        onExecuteSql={onExecuteSql}
+        onExecuteSql={runCurrent}
+        onExecuteScript={runScript}
         isExplaining={isExplaining}
         onExplainPlan={onExplainPlan}
         maxRows={maxRows}
@@ -152,27 +126,37 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
 
       {transaction && <SqlTransactionBar {...transaction} isExecuting={isExecuting} />}
 
-      {/* Editor de Código SQL com Gutter de Linhas e Altura Ajustável */}
-      <SqlEditorSurface
-        sql={sql}
-        isMaximizedActual={prefs.isMaximizedActual}
-        editorHeight={prefs.editorHeight}
-        fontSize={prefs.fontSize}
-        wordWrap={prefs.wordWrap}
-        linesArray={linesArray}
-        currentLine={metrics.currentLine}
-        autocomplete={autocompleteState.autocomplete}
-        copyFeedback={copyFeedback}
-        sqlTextareaRef={sqlTextareaRef}
-        lineNumbersRef={lineNumbersRef}
-        onChange={autocompleteState.handleSqlChange}
-        onKeyDown={autocompleteState.handleKeyDown}
-        onCursorChange={setCursorPos}
-        onScroll={handleEditorScroll}
-        onClickCompute={(caret) => autocompleteState.computeAutocomplete(sql, caret)}
-        onBlur={autocompleteState.dismissAutocompleteDelayed}
-        onApplySuggestion={autocompleteState.applyAutocompleteSuggestion}
-      />
+      {/* Editor SQL (Monaco) com altura ajustável */}
+      <div
+        className={`border-b border-border/70 relative overflow-hidden shrink-0 bg-[#0B0F17] ${
+          prefs.isMaximizedActual ? 'flex-1 h-full min-h-[350px]' : ''
+        }`}
+        style={!prefs.isMaximizedActual ? { height: `${prefs.editorHeight}px` } : undefined}
+        data-tour="sql-editor"
+      >
+        <MonacoSqlEditor
+          ref={editorRef}
+          value={sql}
+          onChange={setSql}
+          dialect={activeConnection?.type ?? 'oracle'}
+          cacheKey={activeConnection?.id ?? ''}
+          tables={tables}
+          tableColumns={tableColumns}
+          loadColumns={loadColumns}
+          fontSize={prefs.fontSize}
+          wordWrap={prefs.wordWrap}
+          onRun={onExecuteSql}
+          onRunScript={onExecuteScript}
+          onCommit={transaction?.onCommit}
+          onRollback={transaction?.onRollback}
+          onCursorChange={setCursorPos}
+        />
+        {copyFeedback && (
+          <div className="absolute right-3 bottom-3 z-10 bg-primary text-primary-foreground text-2xs font-bold px-2 py-1 rounded shadow-md animate-fade-in">
+            {copyFeedback}
+          </div>
+        )}
+      </div>
 
       <SqlEditorStatusBar
         sql={sql}

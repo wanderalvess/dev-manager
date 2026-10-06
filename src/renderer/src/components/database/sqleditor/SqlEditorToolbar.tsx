@@ -8,7 +8,8 @@ import {
   HardDriveDownload,
   AlertCircle,
   Maximize2,
-  Minimize2
+  Minimize2,
+  ListVideo
 } from 'lucide-react';
 import type { DatabaseConnectionConfig, DatabaseType, SqlSnippet } from '../../../../../shared/types';
 import { SqlSnippetsMenu } from './SqlSnippetsMenu';
@@ -18,6 +19,7 @@ interface SqlEditorToolbarProps {
   activeConnection: DatabaseConnectionConfig | null;
   isExecuting: boolean;
   onExecuteSql: (customSql?: string) => void;
+  onExecuteScript: () => void;
   isExplaining: boolean;
   onExplainPlan: () => void;
   maxRows: number;
@@ -41,6 +43,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
   activeConnection,
   isExecuting,
   onExecuteSql,
+  onExecuteScript,
   isExplaining,
   onExplainPlan,
   maxRows,
@@ -190,6 +193,18 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
           <option value={1000}>1000</option>
         </select>
       </div>
+
+      {/* Botão Executar Script (todos os comandos, F5) */}
+      <button
+        type="button"
+        onClick={onExecuteScript}
+        disabled={isExecuting || !activeConnection}
+        className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-semibold text-foreground transition shadow-xs disabled:opacity-50 cursor-pointer"
+        title="Executar todos os comandos do editor em sequência, parando no primeiro erro (F5)"
+      >
+        <ListVideo className="w-3.5 h-3.5 text-emerald-500" />
+        <span>Script (F5)</span>
+      </button>
 
       {/* Botão Executar */}
       <button

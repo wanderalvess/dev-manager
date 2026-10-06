@@ -43,6 +43,7 @@
     "iconv-lite": "^0.7.3",
     "lucide-react": "^0.344.0",
     "mammoth": "^1.12.2",
+    "monaco-editor": "^0.57.0",
     "mysql2": "^3.12.0",
     "node-cron": "^4.6.0",
     "oracledb": "^6.7.1",

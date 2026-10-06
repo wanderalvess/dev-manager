@@ -12,6 +12,9 @@ import { useDatabaseHistory } from './useDatabaseHistory';
 import { useDatabaseResultView } from './useDatabaseResultView';
 import { useDatabaseRowMutations } from './useDatabaseRowMutations';
 import { findRiskyStatement, normalizeSqlForExecution } from '../../../../shared/sqlStatementUtils';
+import { splitSqlStatements } from '../../../../shared/sqlSplitUtils';
+import { extractSqlVariables } from '../../utils/sqlBinds';
+import { showToast } from '../../components/ToastHost';
 import { buildRiskConfirmMessage } from '../../utils/databaseSessionUtils';
 import { useDatabaseSession } from './useDatabaseSession';
 
@@ -138,6 +141,78 @@ export function useDatabaseQuery({
     }
   };
 
+  /** F5: executa todos os comandos em sequência, parando no primeiro erro. Mostra o resultado do último comando. */
+  const handleExecuteScript = async (script: string): Promise<void> => {
+    if (!activeConnection) {
+      alert('Selecione ou crie uma conexão antes de executar consultas.');
+      return;
+    }
+    const statements = splitSqlStatements(script);
+    if (statements.length === 0) return;
+    if (statements.length === 1) {
+      await handleExecuteSql(statements[0].text);
+      return;
+    }
+    if (extractSqlVariables(script).length > 0) {
+      showToast('Scripts com variáveis (:VAR, &VAR) não são suportados. Execute cada comando com Ctrl+Enter.', 'info');
+      return;
+    }
+
+    const cleaned = statements.map((s) => normalizeSqlForExecution(s.text, activeConnection.type));
+    const risky = cleaned
+      .map((sqlText, i) => ({ i, message: buildRiskConfirmMessage(findRiskyStatement(sqlText), tx.mode) }))
+      .filter((r) => r.message);
+    if (risky.length > 0) {
+      const list = risky.map((r) => `  • comando ${r.i + 1}: ${cleaned[r.i].split('\n')[0].slice(0, 70)}`).join('\n');
+      if (!window.confirm(`Este script tem ${risky.length} comando(s) que exigem atenção:\n${list}\n\nExecutar o script mesmo assim?`)) return;
+    }
+
+    setIsExecuting(true);
+    setQueryResult(null);
+    setEditableTable(null);
+    setActiveResultTab('grid');
+    view.handleClearAllFilters();
+
+    let last: QueryResult | null = null;
+    let done = 0;
+    try {
+      for (let i = 0; i < cleaned.length; i++) {
+        const res = await tx.execute(cleaned[i], maxRows);
+        historyState.addHistoryItem({
+          id: `hist_${Date.now()}_${i}`,
+          sql: cleaned[i],
+          connectionName: activeConnection.name,
+          timestamp: new Date().toLocaleTimeString('pt-BR'),
+          success: res.success,
+          timeMs: res.executionTimeMs,
+          rowCount: res.rowCount,
+          affectedRows: res.affectedRows,
+          error: res.error
+        });
+        last = res;
+        if (!res.success) {
+          setQueryResult({ ...res, error: `Comando ${i + 1} de ${cleaned.length} falhou (${done} executado(s) antes):\n${res.error ?? ''}` });
+          return;
+        }
+        done++;
+      }
+      if (last) setQueryResult(last);
+      showToast(`Script concluído: ${done} comando(s) executado(s).`, 'success');
+    } catch (err: any) {
+      setQueryResult({
+        success: false,
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        executionTimeMs: 0,
+        isQuery: false,
+        error: err.message || 'Erro inesperado ao executar o script.'
+      });
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   const handleExplainPlan = async () => {
     if (!activeConnection) {
       alert('Selecione ou crie uma conexão antes de gerar o Explain Plan.');
@@ -173,6 +248,7 @@ export function useDatabaseQuery({
     explainResult,
     editableTable,
     handleExecuteSql,
+    handleExecuteScript,
     handleExplainPlan,
     tx,
     view,

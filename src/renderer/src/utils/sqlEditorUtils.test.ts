@@ -1,17 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import type { SqlSnippet, TableColumnInfo } from '../../../shared/types';
+import type { SqlSnippet } from '../../../shared/types';
 import {
-  computeAutocompleteState,
   extractReferencedTables,
   filterSqlSnippets,
-  getCurrentWordRange,
   parseStoredClamped,
   resolveColumnLoadKey,
   resolveTableKey
 } from './sqlEditorUtils';
 import { DEFAULT_SQL_SNIPPETS } from './sqlEditorSnippets';
 
-const makeColumn = (name: string): TableColumnInfo => ({ name, type: 'VARCHAR' });
 const makeSnippet = (over: Partial<SqlSnippet> = {}): SqlSnippet => ({
   id: 's1',
   title: 'Clientes ativos',
@@ -42,12 +39,6 @@ describe('extractReferencedTables', () => {
   });
 });
 
-describe('getCurrentWordRange', () => {
-  it('inclui pontos e underscores na palavra', () => {
-    expect(getCurrentWordRange('SELECT a.nome_', 14)).toEqual({ start: 7, end: 14 });
-  });
-});
-
 describe('resolveTableKey / resolveColumnLoadKey', () => {
   const tables = ['HR.EMPLOYEES', 'DEPT'];
   it('ignora owner na comparação', () => {
@@ -57,30 +48,6 @@ describe('resolveTableKey / resolveColumnLoadKey', () => {
   it('ignora caixa ao carregar colunas', () => {
     expect(resolveColumnLoadKey(tables, 'employees')).toBe('HR.EMPLOYEES');
     expect(resolveColumnLoadKey(tables, 'x')).toBe('x');
-  });
-});
-
-describe('computeAutocompleteState', () => {
-  const tables = ['EMP', 'DEPT'];
-  const cols = { EMP: [makeColumn('ID'), makeColumn('NOME')] };
-  const refs = [{ table: 'EMP', alias: 'e' }];
-
-  it('retorna null sem palavra', () => {
-    expect(computeAutocompleteState('SELECT ', 7, refs, tables, cols)).toBeNull();
-  });
-  it('sugere colunas após alias.', () => {
-    const state = computeAutocompleteState('SELECT e.n', 10, refs, tables, cols);
-    expect(state?.suggestions).toEqual([{ label: 'NOME', type: 'column' }]);
-    expect(state?.wordStart).toBe(9);
-  });
-  it('sugere tabelas, colunas e palavras-chave nessa ordem', () => {
-    const state = computeAutocompleteState('SEL', 3, [], tables, cols);
-    expect(state?.suggestions[0]).toEqual({ label: 'SELECT', type: 'keyword' });
-    const state2 = computeAutocompleteState('D', 1, refs, tables, cols);
-    expect(state2?.suggestions.map((s) => s.type)).toEqual(['table', 'keyword', 'keyword', 'keyword']);
-  });
-  it('retorna null sem correspondências', () => {
-    expect(computeAutocompleteState('zzz', 3, [], tables, cols)).toBeNull();
   });
 });
 
