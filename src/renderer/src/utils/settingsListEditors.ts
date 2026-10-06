@@ -71,3 +71,54 @@ export function computeSetupChecklistStatus(
     }
   ];
 }
+
+export interface LauncherRow {
+  ext: string;
+  path: string;
+}
+
+/** `exe` e `.exe` viram `.EXE`; vazio vira vazio. */
+function normalizeLauncherExt(ext: string): string {
+  const trimmed = ext.trim();
+  if (!trimmed) return '';
+  return trimmed.startsWith('.') ? trimmed.toUpperCase() : `.${trimmed.toUpperCase()}`;
+}
+
+/** Linhas do editor do launcher de rotinas para o mapa extensão -> executável salvo nas configurações. */
+export function launcherRowsToMap(rows: LauncherRow[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const row of rows) {
+    const key = normalizeLauncherExt(row.ext);
+    if (key) map[key] = row.path.trim();
+  }
+  return map;
+}
+
+export function launcherMapToRows(map: Record<string, string> | undefined): LauncherRow[] {
+  return Object.entries(map || {}).map(([ext, path]) => ({ ext, path }));
+}
+
+/** Mapa já no formato que a tela produz (extensão em maiúsculas, com ponto, caminho sem espaços nas pontas). */
+export function normalizeLauncherMap(map: Record<string, string>): Record<string, string> {
+  return launcherRowsToMap(launcherMapToRows(map));
+}
+
+/** Insere o item na lista ou, se já existir um com o mesmo `id`, substitui no lugar. */
+export function upsertById<T extends { id: string }>(list: T[] | undefined, item: T): T[] {
+  const existing = list || [];
+  const index = existing.findIndex((entry) => entry.id === item.id);
+  if (index < 0) return [...existing, item];
+  const updated = [...existing];
+  updated[index] = item;
+  return updated;
+}
+
+/** Remove o item e, se ele era o ativo, passa o "ativo" para o primeiro que sobrou. */
+export function removeById<T extends { id: string }>(
+  list: T[] | undefined,
+  id: string,
+  activeId: string | undefined
+): { list: T[]; activeId: string | undefined } {
+  const updated = (list || []).filter((entry) => entry.id !== id);
+  return { list: updated, activeId: activeId === id ? updated[0]?.id : activeId };
+}

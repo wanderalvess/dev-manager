@@ -177,7 +177,7 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
 
 > Dívida conhecida (arquivos que ainda passam do teto e devem ser decompostos ao serem tocados, não de uma vez):
 > `src/mcp/index.ts`, `src/shared/types.ts`, `src/server/index.ts`, `renderer/services/apiBridge.ts`, `src/main/ipc/registerIpc.ts`,
-> `SettingsPage.tsx`, `helpData.tsx` e os serviços `RoutinesService`, `WindowsService`, `BackupService`, `WslService`, `ConfigService`.
+> `helpData.tsx` e os serviços `RoutinesService`, `WindowsService`, `BackupService`, `WslService`, `ConfigService`.
 > O `npm run check:file-size` só avisa. Não acrescente código novo nesses arquivos sem extrair o que for novo para um módulo próprio.
 
 Ao criar arquivos novos ou refatorar componentes e serviços existentes:

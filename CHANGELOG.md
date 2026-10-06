@@ -20,11 +20,13 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ### Corrigido
 - O instalador voltou a abrir em **português (pt-BR)**: a configuração anterior forçava o inglês.
 - Fechar o app no meio de um log, deploy ou backup não gera mais "Object has been destroyed", e ao sair o app encerra o Karaf embutido, os agendamentos de backup e o receptor OTLP.
+- **Configurações**: escolher o arquivo de uma fonte de log perdia o caminho (só o nome era aplicado). A tela não mostra mais "Não salvo" logo na abertura quando os launchers de rotina estavam salvos sem normalizar, e depois de **importar** um arquivo ela recarrega do disco (antes continuava marcando alterações pendentes). Falha ao salvar passa a mostrar um aviso na tela.
 - Docker: o healthcheck agora envia a API key (o container ficava "unhealthy"), `.env` e certificados não entram mais na imagem e o `npm ci` do runtime não depende mais do `patch-package`.
 - Ajuda e README: contagem de 166 tools MCP, nível de permissão `asInvoker` e fallbacks de versão corrigidos.
 
 ### Alterado
 - Dependências atualizadas com `npm audit fix` e remoção do `patch-package` (vulnerabilidades 26 para 21, altas 10 para 5). O patch do `fastembed` foi removido (a versão 2.1.1 não precisa mais dele).
+- A tela de Configurações foi reorganizada por dentro (de 1204 para 241 linhas, com a lógica em hooks por assunto e testes das regras puras), sem mudar o que o usuário vê.
 - O instalador não leva mais os planos internos de `docs/superpowers`. Removidos scripts e módulos sem uso (`extract_tools`, `releaseNotesUtils`, `NetworkPortScanner`).
 
 ## [1.34.0] - 2026-10-06

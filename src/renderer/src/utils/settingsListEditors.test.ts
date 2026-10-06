@@ -3,8 +3,13 @@ import {
   addToList,
   coercePortFieldValue,
   computeSetupChecklistStatus,
+  launcherMapToRows,
+  launcherRowsToMap,
+  normalizeLauncherMap,
   removeAtIndex,
-  updateAtIndex
+  removeById,
+  updateAtIndex,
+  upsertById
 } from './settingsListEditors';
 import type { MonitoredPortConfig, PathStatusInfo } from '../../../shared/types';
 
@@ -139,5 +144,47 @@ describe('computeSetupChecklistStatus', () => {
         {}
       ).find((i) => i.id === 'database')?.done
     ).toBe(true);
+  });
+});
+
+describe('launcher de rotinas (linhas <-> mapa)', () => {
+  it('normaliza extensão (ponto + maiúsculas), apara o caminho e ignora linha sem extensão', () => {
+    expect(
+      launcherRowsToMap([
+        { ext: 'exe', path: ' C:\\a.exe ' },
+        { ext: '.Bat', path: 'C:\\b.bat' },
+        { ext: '  ', path: 'ignorada' }
+      ])
+    ).toEqual({ '.EXE': 'C:\\a.exe', '.BAT': 'C:\\b.bat' });
+  });
+
+  it('ida e volta mantém o conteúdo e normalizeLauncherMap é idempotente', () => {
+    const map = { exe: 'C:\\a.exe', '.bat': 'C:\\b.bat' };
+    const normalized = normalizeLauncherMap(map);
+    expect(normalized).toEqual({ '.EXE': 'C:\\a.exe', '.BAT': 'C:\\b.bat' });
+    expect(normalizeLauncherMap(normalized)).toEqual(normalized);
+    expect(launcherMapToRows(normalized)).toEqual([
+      { ext: '.EXE', path: 'C:\\a.exe' },
+      { ext: '.BAT', path: 'C:\\b.bat' }
+    ]);
+    expect(launcherMapToRows(undefined)).toEqual([]);
+  });
+});
+
+describe('upsertById / removeById', () => {
+  it('upsertById acrescenta quando novo e substitui no lugar quando o id já existe', () => {
+    const base = [{ id: 'a', n: 1 }, { id: 'b', n: 2 }];
+    expect(upsertById(base, { id: 'c', n: 3 })).toEqual([...base, { id: 'c', n: 3 }]);
+    expect(upsertById(base, { id: 'a', n: 9 })).toEqual([{ id: 'a', n: 9 }, { id: 'b', n: 2 }]);
+    expect(upsertById(undefined, { id: 'x', n: 1 })).toEqual([{ id: 'x', n: 1 }]);
+    expect(base[0].n).toBe(1);
+  });
+
+  it('removeById passa o ativo para o primeiro que sobrou só quando o removido era o ativo', () => {
+    const base = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    expect(removeById(base, 'a', 'a')).toEqual({ list: [{ id: 'b' }, { id: 'c' }], activeId: 'b' });
+    expect(removeById(base, 'b', 'a')).toEqual({ list: [{ id: 'a' }, { id: 'c' }], activeId: 'a' });
+    expect(removeById([{ id: 'a' }], 'a', 'a')).toEqual({ list: [], activeId: undefined });
+    expect(removeById(undefined, 'a', undefined)).toEqual({ list: [], activeId: undefined });
   });
 });
