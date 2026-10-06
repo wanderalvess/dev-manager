@@ -14,6 +14,9 @@ interface ResultsGridToolbarProps {
   onClearAllFilters: () => void;
   visibleRowCount: number;
   totalRowCount: number;
+  pendingCount?: number;
+  onApplyPending?: () => void;
+  onDiscardPending?: () => void;
 }
 
 /** Barra de Filtro Rápido Superior (estilo DBeaver) */
@@ -29,7 +32,10 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
   hasActiveFilters,
   onClearAllFilters,
   visibleRowCount,
-  totalRowCount
+  totalRowCount,
+  pendingCount = 0,
+  onApplyPending,
+  onDiscardPending
 }) => (
   <div className="px-3 py-2 bg-muted/40 border-b border-border/70 flex items-center justify-between gap-3 shrink-0 flex-wrap">
     <div className="relative flex-1 min-w-[240px] max-w-xl">
@@ -54,11 +60,36 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
     </div>
 
     <div className="flex items-center space-x-2 text-xs">
+      {pendingCount > 0 && (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/40" role="status">
+          <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
+            {pendingCount} {pendingCount === 1 ? 'alteração pendente' : 'alterações pendentes'}
+          </span>
+          <button
+            type="button"
+            onClick={onApplyPending}
+            disabled={isMutatingRow}
+            className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold cursor-pointer disabled:opacity-50"
+            title="Gravar as alterações no banco (na transação do editor)"
+          >
+            Aplicar
+          </button>
+          <button
+            type="button"
+            onClick={onDiscardPending}
+            disabled={isMutatingRow}
+            className="px-2 py-0.5 rounded bg-card hover:bg-muted border border-border text-foreground text-[11px] font-semibold cursor-pointer disabled:opacity-50"
+            title="Descartar as alterações pendentes"
+          >
+            Descartar
+          </button>
+        </span>
+      )}
       {isEditable ? (
         <>
           <span
             className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-            title={`Editável: duplo-clique numa célula para editar, botão direito para excluir a linha. Tabela: ${editableTableName}`}
+            title={`Editável: duplo-clique numa célula para editar, botão direito para marcar a linha para exclusão. As alterações só vão ao banco em Aplicar. Tabela: ${editableTableName}`}
           >
             <Pencil className="w-3 h-3" />
             <span>Editável</span>

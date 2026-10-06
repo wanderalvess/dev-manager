@@ -115,9 +115,14 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
             editableTableName={query.editableTable?.name || null}
             editableColumns={query.editableTable?.columns || []}
             isMutatingRow={mutations.isMutatingRow}
-            onInsertRow={mutations.handleInsertRow}
-            onUpdateCell={mutations.handleUpdateCell}
-            onDeleteRow={mutations.handleDeleteRow}
+            onInsertRow={mutations.stageInsertRow}
+            onUpdateCell={mutations.stageUpdateCell}
+            onDeleteRow={mutations.stageDeleteRow}
+            pending={mutations.pending}
+            keyColumns={mutations.keyColumns}
+            onApplyPending={mutations.applyPending}
+            onDiscardPending={mutations.discardPending}
+            onUnstageInsert={mutations.unstageInsertRow}
           />
         );
       case 'explain':

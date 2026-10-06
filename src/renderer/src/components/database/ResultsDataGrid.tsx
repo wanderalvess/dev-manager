@@ -10,6 +10,8 @@ import { ResultsGridHeader } from './grid/ResultsGridHeader';
 import { ResultsGridNewRow } from './grid/ResultsGridNewRow';
 import { ResultsGridRow } from './grid/ResultsGridRow';
 import { ResultsGridContextMenu } from './grid/ResultsGridContextMenu';
+import { X } from 'lucide-react';
+import { EMPTY_PENDING, isRowDeleted, pendingCount as countPending, pendingValuesOf, type PendingChanges } from '../../utils/gridPendingChanges';
 
 export interface ResultsDataGridProps {
   queryResult: QueryResult | null;
@@ -51,6 +53,12 @@ export interface ResultsDataGridProps {
   onInsertRow?: (values: Record<string, any>) => void;
   onUpdateCell?: (row: Record<string, any>, column: string, newValue: any) => void;
   onDeleteRow?: (row: Record<string, any>) => void;
+  /** Alterações em lote ainda não gravadas (edições, exclusões e novas linhas). */
+  pending?: PendingChanges;
+  keyColumns?: string[];
+  onApplyPending?: () => void;
+  onDiscardPending?: () => void;
+  onUnstageInsert?: (index: number) => void;
 }
 
 export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
@@ -79,7 +87,12 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
   isMutatingRow = false,
   onInsertRow,
   onUpdateCell,
-  onDeleteRow
+  onDeleteRow,
+  pending = EMPTY_PENDING,
+  keyColumns = [],
+  onApplyPending,
+  onDiscardPending,
+  onUnstageInsert
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const isEditable = Boolean(editableTableName && onUpdateCell && onInsertRow && onDeleteRow);
@@ -127,6 +140,9 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
         onClearAllFilters={onClearAllFilters}
         visibleRowCount={processedRows.length}
         totalRowCount={queryResult.rowCount}
+        pendingCount={countPending(pending)}
+        onApplyPending={onApplyPending}
+        onDiscardPending={onDiscardPending}
       />
 
       {/* Tabela de Resultados Virtualizada */}
@@ -154,6 +170,26 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                 onCancel={editing.cancelAddingRow}
               />
             )}
+            {pending.inserts.map((values, i) => (
+              <tr key={`new_${i}`} className="bg-emerald-500/10" style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}>
+                <td className="px-2 py-1.5 text-center border-r border-border/30">
+                  <button
+                    type="button"
+                    onClick={() => onUnstageInsert?.(i)}
+                    className="text-emerald-600 hover:text-rose-500 cursor-pointer"
+                    title="Remover esta nova linha pendente"
+                    aria-label="Remover nova linha pendente"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </td>
+                {queryResult.columns.map((col) => (
+                  <td key={col} className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate text-emerald-700 dark:text-emerald-300" title="Nova linha (ainda não gravada)">
+                    {values[col] === null || values[col] === undefined ? <span className="opacity-50">NULL</span> : String(values[col])}
+                  </td>
+                ))}
+              </tr>
+            ))}
             {processedRows.length === 0 ? (
               <tr className="bg-background">
                 <td colSpan={columnCount} className="py-12 text-center text-muted-foreground text-xs font-sans">
@@ -209,6 +245,8 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                     onCommitEditing={editing.commitEditingCell}
                     onCancelEditing={editing.cancelEditingCell}
                     onOpenContextMenu={setCellContextMenu}
+                    pendingValues={pendingValuesOf(pending, row, keyColumns)}
+                    isDeleted={isRowDeleted(pending, row, keyColumns)}
                   />
                 ))}
 

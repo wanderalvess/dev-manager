@@ -60,9 +60,10 @@ export function useResultsGridEditing({
   const changeEditingValue = (value: string) =>
     setEditingCell((prev) => (prev ? { ...prev, value } : prev));
 
-  const commitEditingCell = (row: Record<string, any>) => {
+  /** `currentValue`: o que a célula mostra agora (valor pendente, se houver, senão o original). */
+  const commitEditingCell = (row: Record<string, any>, currentValue: any = row[editingCell?.column ?? '']) => {
     if (!editingCell || !onUpdateCell) return;
-    if (hasCellChanged(editingCell.value, row[editingCell.column])) {
+    if (hasCellChanged(editingCell.value, currentValue)) {
       const casted = castEditedValue(editingCell.value, columnByName.get(editingCell.column));
       onUpdateCell(row, editingCell.column, casted);
     }

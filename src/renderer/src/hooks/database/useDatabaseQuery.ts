@@ -18,6 +18,7 @@ import { showToast } from '../../components/ToastHost';
 import { buildRiskConfirmMessage } from '../../utils/databaseSessionUtils';
 import { useDatabaseSession } from './useDatabaseSession';
 import { nextRowLimit } from '../../utils/rowLimitUtils';
+import { pendingCount } from '../../utils/gridPendingChanges';
 
 interface UseDatabaseQueryParams {
   sql: string;
@@ -60,7 +61,8 @@ export function useDatabaseQuery({
     activeConnection,
     editableTable,
     reexecute: () => handleExecuteSql(),
-    getSessionId: tx.getSessionId
+    getSessionId: tx.getSessionId,
+    txMode: tx.mode
   });
 
   // Sempre que a seleção de conexão ativa mudar (não a cada refresh da lista), limpa resultado
@@ -68,7 +70,9 @@ export function useDatabaseQuery({
     if (activeConnectionId) {
       setQueryResult(null);
       setEditableTable(null);
+      mutations.discardPending();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConnectionId]);
 
   // Última consulta executada com sucesso, para "carregar mais" repetir com um limite maior
@@ -92,6 +96,13 @@ export function useDatabaseQuery({
 
     const riskMessage = buildRiskConfirmMessage(findRiskyStatement(cleanSql), tx.mode);
     if (riskMessage && !window.confirm(riskMessage)) return;
+
+    // Alterações do grid ainda não aplicadas se perderiam com o novo resultado
+    const pendingChanges = mutations.pendingRef.current;
+    if (pendingCount(pendingChanges) > 0) {
+      if (!window.confirm(`Há ${pendingCount(pendingChanges)} alteração(ões) no grid ainda não aplicadas.\n\nDescartá-las e executar a consulta?`)) return;
+      mutations.discardPending();
+    }
 
     setIsExecuting(true);
     setQueryResult(null);
