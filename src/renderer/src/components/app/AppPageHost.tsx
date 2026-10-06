@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { ServiceStatus, GitProjectInfo } from '../../../../shared/types';
+import { QualityValidationProvider } from '../../hooks/quality/page/QualityValidationContext';
 
 // Code-split cada página: cada aba só baixa/parseia seu próprio bundle na primeira
 // vez que é visitada (visitedTabs em conjunto com isso evita tanto o parse quanto o
@@ -17,6 +18,11 @@ const HelpPage = lazy(() => import('../../pages/HelpPage').then((m) => ({ defaul
 const LogsPage = lazy(() => import('../../pages/LogsPage').then((m) => ({ default: m.LogsPage })));
 const ApmPage = lazy(() => import('../../pages/ApmPage').then((m) => ({ default: m.ApmPage })));
 const QualityPage = lazy(() => import('../../pages/QualityPage').then((m) => ({ default: m.QualityPage })));
+const QualityRegressionPage = lazy(() =>
+  import('../../pages/QualityRegressionPage').then((m) => ({ default: m.QualityRegressionPage }))
+);
+const QualityRunnersPage = lazy(() => import('../../pages/QualityRunnersPage').then((m) => ({ default: m.QualityRunnersPage })));
+const QualityTautPage = lazy(() => import('../../pages/QualityTautPage').then((m) => ({ default: m.QualityTautPage })));
 
 const PageLoadingFallback: React.FC = () => (
   <div className="h-full w-full flex items-center justify-center">
@@ -128,13 +134,36 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
             onNavigateToDatabase={() => setActiveTab('database')}
           />
         </PageSlot>
-        <PageSlot id="quality" {...slot}>
-          <QualityPage
-            isActive={activeTab === 'quality'}
-            onNavigate={(tab) => setActiveTab(tab)}
-            settingsVersion={settingsVersion}
-          />
-        </PageSlot>
+        <QualityValidationProvider>
+          <PageSlot id="quality" {...slot}>
+            <QualityPage
+              isActive={activeTab === 'quality'}
+              onNavigate={(tab) => setActiveTab(tab)}
+              settingsVersion={settingsVersion}
+            />
+          </PageSlot>
+          <PageSlot id="quality-regression" {...slot}>
+            <QualityRegressionPage
+              isActive={activeTab === 'quality-regression'}
+              onNavigate={(tab) => setActiveTab(tab)}
+              settingsVersion={settingsVersion}
+            />
+          </PageSlot>
+          <PageSlot id="quality-runners" {...slot}>
+            <QualityRunnersPage
+              isActive={activeTab === 'quality-runners'}
+              onNavigate={(tab) => setActiveTab(tab)}
+              settingsVersion={settingsVersion}
+            />
+          </PageSlot>
+          <PageSlot id="quality-taut" {...slot}>
+            <QualityTautPage
+              isActive={activeTab === 'quality-taut'}
+              onNavigate={(tab) => setActiveTab(tab)}
+              settingsVersion={settingsVersion}
+            />
+          </PageSlot>
+        </QualityValidationProvider>
         <PageSlot id="settings" {...slot}>
           <SettingsPage onSettingsSaved={onSettingsSaved} onNavigate={(tab) => setActiveTab(tab)} />
         </PageSlot>

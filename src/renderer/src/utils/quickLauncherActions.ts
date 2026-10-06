@@ -12,7 +12,9 @@ import {
   Database,
   FileSearch,
   Activity,
-  CheckCheck
+  CheckCheck,
+  PlayCircle,
+  Zap
 } from 'lucide-react';
 
 export interface QuickLauncherItem {
@@ -122,10 +124,31 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
   {
     id: 'act-quality',
     tab: 'quality',
-    title: 'Central de Qualidade (QA Studio)',
-    subtitle: 'Validador regressivo Oracle, asserções de banco e matriz de homologação',
+    title: 'Homologação (Matriz & Prontidão)',
+    subtitle: 'Matriz de cenários, prontidão da release e relatório de homologação',
     badge: 'Alt+Q',
     icon: CheckCheck
+  },
+  {
+    id: 'act-quality-regression',
+    tab: 'quality-regression',
+    title: 'Validador Regressivo',
+    subtitle: 'Validação de dados Oracle com templates, asserções e payloads de API',
+    icon: Database
+  },
+  {
+    id: 'act-quality-runners',
+    tab: 'quality-runners',
+    title: 'Test Runners',
+    subtitle: 'Suítes automatizadas com sincronização para a Matriz de Homologação',
+    icon: PlayCircle
+  },
+  {
+    id: 'act-quality-taut',
+    tab: 'quality-taut',
+    title: 'TAUT (Cypress)',
+    subtitle: 'Automação E2E com Cypress: execução, cobertura e intake via CSV',
+    icon: Zap
   },
   {
     id: 'act-help',

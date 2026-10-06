@@ -105,15 +105,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                               </div>
                             </div>
                           </div>
-                          <span
-                            className={`text-2xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                              isItemActive
-                                ? 'bg-primary-foreground/20 text-primary-foreground'
-                                : 'bg-muted text-muted-foreground border border-border/60'
-                            }`}
-                          >
-                            {item.shortcut}
-                          </span>
+                          {item.shortcut && (
+                            <span
+                              className={`text-2xs font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                isItemActive
+                                  ? 'bg-primary-foreground/20 text-primary-foreground'
+                                  : 'bg-muted text-muted-foreground border border-border/60'
+                              }`}
+                            >
+                              {item.shortcut}
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -181,7 +183,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                           <ItemIcon className="w-3.5 h-3.5 shrink-0" />
                           <span className="text-xs truncate">{item.label}</span>
                         </div>
-                        <span className="text-2xs font-mono opacity-80 shrink-0 ml-2">{item.shortcut}</span>
+                        {item.shortcut && <span className="text-2xs font-mono opacity-80 shrink-0 ml-2">{item.shortcut}</span>}
                       </button>
                     );
                   })}

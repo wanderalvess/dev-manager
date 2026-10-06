@@ -15,7 +15,12 @@ import {
   QUALITY_STORAGE_KEY_VALIDATION,
   applyRunnerResultToItem,
   readStoredReleaseVersion,
-  readStoredValidationItems
+  readStoredValidationItems,
+  downloadQualityCsv,
+  generateQualityCsv,
+  sortValidationItems,
+  type QualitySortDir,
+  type QualitySortKey
 } from '../../../utils/qualityPageView';
 
 export function useQualityValidationItems() {
@@ -47,10 +52,35 @@ export function useQualityValidationItems() {
   const { copy, copiedKey } = useCopyToClipboard(2000);
   const metrics = useMemo(() => calculateQualityMetrics(items), [items]);
 
+  const [sort, setSort] = useState<{ key: QualitySortKey | null; dir: QualitySortDir }>({ key: null, dir: 'asc' });
+  const { key: sortKey, dir: sortDir } = sort;
+
   const filteredItems = useMemo(
-    () => filterValidationItems(items, searchTerm, statusFilter, categoryFilter),
-    [items, searchTerm, statusFilter, categoryFilter]
+    () => sortValidationItems(filterValidationItems(items, searchTerm, statusFilter, categoryFilter), sortKey, sortDir),
+    [items, searchTerm, statusFilter, categoryFilter, sortKey, sortDir]
   );
+
+  // Mesmo cabeçalho: alterna asc/desc; novo cabeçalho começa em asc
+  const handleSort = useCallback((key: QualitySortKey) => {
+    setSort((prev) => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' }));
+  }, []);
+
+  const updateItem = useCallback((id: string, patch: Pick<QualityValidationItem, 'title' | 'targetName' | 'category' | 'notes'>) => {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item))
+    );
+    showToast('Cenário atualizado.', 'success');
+  }, []);
+
+  const handleExportCsv = useCallback(() => {
+    if (filteredItems.length === 0) {
+      showToast('Nenhum cenário para exportar.', 'info');
+      return;
+    }
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadQualityCsv(generateQualityCsv(filteredItems), `matriz-qualidade-${stamp}.csv`);
+    showToast(`${filteredItems.length} cenário(s) exportado(s) em CSV.`, 'success');
+  }, [filteredItems]);
 
   const handleStatusChange = useCallback((id: string, newStatus: ValidationItemStatus) => {
     setItems((prev) =>
@@ -63,6 +93,7 @@ export function useQualityValidationItems() {
   }, []);
 
   const handleDeleteItem = useCallback((id: string) => {
+    if (!window.confirm('Remover este cenário da matriz? Esta ação não pode ser desfeita.')) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
     showToast('Cenário removido com sucesso.', 'info');
   }, []);
@@ -98,25 +129,29 @@ export function useQualityValidationItems() {
         return;
       }
 
-      const newStatus: ValidationItemStatus = result.status === 'passed' ? 'passed' : 'failed';
-      let updatedCount = 0;
+      // Execução abortada não prova falha do cenário: fica bloqueada até nova execução
+      const newStatus: ValidationItemStatus =
+        result.status === 'passed' ? 'passed' : result.status === 'aborted' ? 'blocked' : 'failed';
+      const updatedCount = items.filter((item) => linkedIds.includes(item.id)).length;
+
+      if (updatedCount === 0) {
+        showToast('Os cenários vinculados a este runner não existem mais na Matriz.', 'info');
+        return;
+      }
 
       setItems((prev) =>
-        prev.map((item) => {
-          if (linkedIds.includes(item.id)) {
-            updatedCount++;
-            return applyRunnerResultToItem(item, result, newStatus);
-          }
-          return item;
-        })
+        prev.map((item) =>
+          linkedIds.includes(item.id) ? applyRunnerResultToItem(item, result, newStatus) : item
+        )
       );
 
+      const label = newStatus === 'passed' ? 'Aprovado' : newStatus === 'blocked' ? 'Bloqueado' : 'Falha';
       showToast(
-        `${updatedCount} cenário(s) da Matriz atualizado(s) para "${newStatus === 'passed' ? 'Aprovado' : 'Falha'}"!`,
-        newStatus === 'passed' ? 'success' : 'error'
+        `${updatedCount} cenário(s) da Matriz atualizado(s) para "${label}"!`,
+        newStatus === 'passed' ? 'success' : newStatus === 'blocked' ? 'info' : 'error'
       );
     },
-    []
+    [items]
   );
 
   return {
@@ -132,6 +167,11 @@ export function useQualityValidationItems() {
     categoryFilter,
     setCategoryFilter,
     copiedKey,
+    sortKey,
+    sortDir,
+    handleSort,
+    updateItem,
+    handleExportCsv,
     handleStatusChange,
     handleDeleteItem,
     handleResetDefaults,

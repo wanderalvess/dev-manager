@@ -12,7 +12,7 @@ export const QUALITY_STORAGE_KEY_VALIDATION = 'devManager:quality:validationItem
 export const QUALITY_STORAGE_KEY_RELEASE = 'devManager:quality:releaseVersion';
 export const QUALITY_DEFAULT_RELEASE = '';
 
-export type QualityTabMode = 'taut' | 'matrix' | 'runners' | 'regression' | 'readiness' | 'roadmap';
+export type QualityTabMode = 'matrix' | 'readiness' | 'roadmap';
 
 // Release gravada pelas versões anteriores como valor padrão (nunca digitada pelo usuário)
 const LEGACY_DEFAULT_RELEASE = 'v1.24.0';
@@ -88,10 +88,16 @@ export function getCategoryLabel(category: ValidationCategory): string {
 }
 
 // openIssues = falhas + bloqueios + pendências: com qualquer um deles a release nunca é dada como pronta
-export function getReadinessVerdict(score: number, openIssues = 0): {
+export function getReadinessVerdict(score: number, openIssues = 0, total = 1): {
   ringClass: string;
   title: string;
 } {
+  if (total === 0) {
+    return {
+      ringClass: 'border-border bg-muted text-muted-foreground',
+      title: 'Sem cenários para avaliar'
+    };
+  }
   if (score >= 80 && openIssues === 0) {
     return {
       ringClass: 'border-emerald-500 bg-emerald-500/10 text-emerald-500',
@@ -122,7 +128,10 @@ export function calculateCategoryBreakdown(
   }));
 }
 
-export function getReadinessSummary(failed: number, pending: number): string {
+export function getReadinessSummary(failed: number, pending: number, total = 1): string {
+  if (total === 0) {
+    return 'Cadastre cenários na Matriz para calcular a prontidão da release.';
+  }
   if (failed > 0) {
     return `Existem ${failed} falhas registradas que precisam de resolução pela equipe de desenvolvimento antes da entrega.`;
   }
@@ -168,4 +177,80 @@ export function applyRunnerResultToItem(
     notes: item.notes ? `${item.notes}\n${runInfo}` : runInfo,
     updatedAt: new Date().toISOString()
   };
+}
+
+export type QualitySortKey = 'status' | 'title' | 'targetName' | 'category' | 'updatedAt';
+export type QualitySortDir = 'asc' | 'desc';
+
+// Ordem "atenção primeiro": o que precisa de ação aparece antes do que já está aprovado
+const STATUS_RANK: Record<ValidationItemStatus, number> = {
+  failed: 0,
+  blocked: 1,
+  in_progress: 2,
+  pending: 3,
+  passed: 4
+};
+
+export function sortValidationItems(
+  items: QualityValidationItem[],
+  key: QualitySortKey | null,
+  dir: QualitySortDir
+): QualityValidationItem[] {
+  if (!key) return items;
+  const factor = dir === 'asc' ? 1 : -1;
+  const value = (item: QualityValidationItem): number | string => {
+    if (key === 'status') return STATUS_RANK[item.status] ?? STATUS_RANK.pending;
+    if (key === 'updatedAt') return item.updatedAt ? Date.parse(item.updatedAt) || 0 : 0;
+    return (item[key] ?? '').toLowerCase();
+  };
+  return [...items].sort((a, b) => {
+    const va = value(a);
+    const vb = value(b);
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * factor;
+    return String(va).localeCompare(String(vb), 'pt-BR') * factor;
+  });
+}
+
+const STATUS_LABELS: Record<ValidationItemStatus, string> = {
+  pending: 'Pendente',
+  in_progress: 'Em Teste',
+  passed: 'Aprovado',
+  failed: 'Falha',
+  blocked: 'Bloqueado'
+};
+
+function csvCell(value: string): string {
+  // Neutraliza fórmulas (=, +, -, @) ao abrir no Excel e escapa aspas
+  const safe = /^[=+\-@]/.test(value) ? `'${value}` : value;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
+export function generateQualityCsv(items: QualityValidationItem[]): string {
+  const header = ['Cenário', 'Alvo', 'Categoria', 'Status', 'Responsável', 'Versão testada', 'Notas', 'Atualizado em'];
+  const rows = items.map((item) =>
+    [
+      item.title,
+      item.targetName,
+      getCategoryLabel(item.category),
+      STATUS_LABELS[item.status] ?? item.status,
+      item.testerName ?? '',
+      item.testedVersion ?? '',
+      (item.notes ?? '').replace(/\r?\n/g, ' '),
+      item.updatedAt ?? ''
+    ].map(csvCell).join(',')
+  );
+  // BOM para o Excel reconhecer UTF-8
+  return '﻿' + [header.map(csvCell).join(','), ...rows].join('\r\n');
+}
+
+export function downloadQualityCsv(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

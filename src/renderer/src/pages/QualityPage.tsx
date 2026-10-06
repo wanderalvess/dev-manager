@@ -1,8 +1,4 @@
 import React, { useState } from 'react';
-import { QaRegressionRunner } from '../components/quality/QaRegressionRunner';
-import { QaRegressionTemplatesManager } from '../components/quality/QaRegressionTemplatesManager';
-import { AutomatedTestRunners } from '../components/quality/AutomatedTestRunners';
-import { TautAutomationPanel } from '../components/quality/TautAutomationPanel';
 import { QualityPageHeader } from '../components/quality/page/QualityPageHeader';
 import { QualityPageTabs } from '../components/quality/page/QualityPageTabs';
 import { QualityMetricsStrip } from '../components/quality/page/QualityMetricsStrip';
@@ -11,7 +7,7 @@ import { QualityReadinessPanel } from '../components/quality/page/QualityReadine
 import { QualityRoadmapPanel } from '../components/quality/page/QualityRoadmapPanel';
 import { QualityAddItemModal } from '../components/quality/page/QualityAddItemModal';
 import { useQualityPageSettings } from '../hooks/quality/page/useQualityPageSettings';
-import { useQualityValidationItems } from '../hooks/quality/page/useQualityValidationItems';
+import { useQualityValidation } from '../hooks/quality/page/useQualityValidation';
 import { useQualityAddItemForm } from '../hooks/quality/page/useQualityAddItemForm';
 import type { QualityTabMode } from '../utils/qualityPageView';
 
@@ -21,18 +17,19 @@ interface QualityPageProps {
   isActive?: boolean;
 }
 
+// Homologação: matriz de cenários, prontidão da release e roadmap. TAUT, Test Runners e Validador
+// Regressivo têm página própria (QualityTautPage, QualityRunnersPage, QualityRegressionPage).
 export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVersion }) => {
   const [tabMode, setTabMode] = useState<QualityTabMode>('matrix');
-  const [isTemplatesManagerOpen, setIsTemplatesManagerOpen] = useState<boolean>(false);
 
-  const { settings, qualitySources, activeQualitySource } = useQualityPageSettings(settingsVersion);
-  const validation = useQualityValidationItems();
+  const { qualitySources, activeQualitySource } = useQualityPageSettings(settingsVersion);
+  const validation = useQualityValidation();
   const { items, metrics } = validation;
-  const addForm = useQualityAddItemForm(validation.addItem);
+  const addForm = useQualityAddItemForm(validation.addItem, validation.updateItem);
 
-  const handleTabChange = (tab: QualityTabMode) => {
-    setTabMode(tab);
-    if (tab === 'regression') setIsTemplatesManagerOpen(false);
+  const handleFilterByStatus = (status: string) => {
+    validation.setStatusFilter(status);
+    setTabMode('matrix');
   };
 
   return (
@@ -43,71 +40,48 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVe
         onReleaseVersionChange={validation.setReleaseVersion}
         copiedKey={validation.copiedKey}
         onCopyReport={validation.handleCopyReport}
-        onOpenAddModal={() => addForm.setIsAddModalOpen(true)}
+        onOpenAddModal={addForm.openCreate}
         onNavigate={onNavigate}
       />
 
       <QualityPageTabs
         tabMode={tabMode}
-        onTabChange={handleTabChange}
+        onTabChange={setTabMode}
         itemsCount={items.length}
         readinessScore={metrics.readinessScore}
         onNavigate={onNavigate}
       />
 
-      {/* Conteúdo Principal */}
-      {tabMode === 'taut' ? (
-        <div className="flex-1 overflow-y-auto p-6">
-          <TautAutomationPanel
-            settings={settings}
-            onNavigateToSettings={() => onNavigate?.('settings')}
-          />
-        </div>
-      ) : tabMode === 'runners' ? (
-        <AutomatedTestRunners
-          settings={settings}
-          validationItems={items}
-          onSyncWithValidationMatrix={validation.handleSyncWithValidationMatrix}
-          onNavigate={onNavigate}
-        />
-      ) : tabMode === 'regression' ? (
-        isTemplatesManagerOpen ? (
-          <QaRegressionTemplatesManager
-            onBack={() => setIsTemplatesManagerOpen(false)}
-          />
-        ) : (
-          <QaRegressionRunner
-            settings={settings}
+      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <QualityMetricsStrip metrics={metrics} onFilterStatus={handleFilterByStatus} />
+
+        {tabMode === 'matrix' && (
+          <QualityMatrixPanel
+            qualitySources={qualitySources}
+            filteredItems={validation.filteredItems}
+            totalCount={items.length}
+            searchTerm={validation.searchTerm}
+            onSearchTermChange={validation.setSearchTerm}
+            statusFilter={validation.statusFilter}
+            onStatusFilterChange={validation.setStatusFilter}
+            categoryFilter={validation.categoryFilter}
+            onCategoryFilterChange={validation.setCategoryFilter}
+            onResetDefaults={validation.handleResetDefaults}
+            onStatusChange={validation.handleStatusChange}
+            onDeleteItem={validation.handleDeleteItem}
+            onEditItem={addForm.openEdit}
+            onExportCsv={validation.handleExportCsv}
+            sortKey={validation.sortKey}
+            sortDir={validation.sortDir}
+            onSort={validation.handleSort}
             onNavigate={onNavigate}
-            onOpenTemplatesManager={() => setIsTemplatesManagerOpen(true)}
           />
-        )
-      ) : (
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          <QualityMetricsStrip metrics={metrics} />
+        )}
 
-          {tabMode === 'matrix' && (
-            <QualityMatrixPanel
-              qualitySources={qualitySources}
-              filteredItems={validation.filteredItems}
-              searchTerm={validation.searchTerm}
-              onSearchTermChange={validation.setSearchTerm}
-              statusFilter={validation.statusFilter}
-              onStatusFilterChange={validation.setStatusFilter}
-              categoryFilter={validation.categoryFilter}
-              onCategoryFilterChange={validation.setCategoryFilter}
-              onResetDefaults={validation.handleResetDefaults}
-              onStatusChange={validation.handleStatusChange}
-              onDeleteItem={validation.handleDeleteItem}
-              onNavigate={onNavigate}
-            />
-          )}
+        {tabMode === 'readiness' && <QualityReadinessPanel metrics={metrics} items={items} />}
 
-          {tabMode === 'readiness' && <QualityReadinessPanel metrics={metrics} items={items} />}
-
-          {tabMode === 'roadmap' && <QualityRoadmapPanel />}
-        </div>
-      )}
+        {tabMode === 'roadmap' && <QualityRoadmapPanel />}
+      </div>
 
       {addForm.isAddModalOpen && (
         <QualityAddItemModal
@@ -120,7 +94,8 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVe
           notes={addForm.newNotes}
           onNotesChange={addForm.setNewNotes}
           onSubmit={addForm.handleAddItem}
-          onClose={() => addForm.setIsAddModalOpen(false)}
+          onClose={addForm.closeModal}
+          isEditing={addForm.isEditing}
         />
       )}
     </div>

@@ -24,13 +24,16 @@ describe('headerNavConfig', () => {
         expect(itemIds.has(item.id)).toBe(false);
         itemIds.add(item.id);
 
-        expect(shortcuts.has(item.shortcut)).toBe(false);
-        shortcuts.add(item.shortcut);
+        // Atalho é opcional (subpáginas como as de Qualidade não têm Alt+N); quando existe, é único
+        if (item.shortcut) {
+          expect(shortcuts.has(item.shortcut)).toBe(false);
+          shortcuts.add(item.shortcut);
+          expect(item.shortcut).toMatch(/^Alt\+[0-9Q]$/);
+        }
 
         expect(item.label).toBeDefined();
         expect(item.shortLabel).toBeDefined();
         expect(item.description).toBeDefined();
-        expect(item.shortcut).toMatch(/^Alt\+[0-9Q]$/);
       }
     }
   });

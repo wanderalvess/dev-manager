@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, FileSpreadsheet, Grid, ScrollText, ShieldCheck, Zap, Rocket, LucideIcon } from 'lucide-react';
+import { Database, FileSpreadsheet, Grid, ScrollText, ShieldCheck, Rocket, LucideIcon } from 'lucide-react';
 import type { QualityTabMode } from '../../../utils/qualityPageView';
 
 interface QualityPageTabsProps {
@@ -16,34 +16,10 @@ interface TabDef {
   icon: LucideIcon;
 }
 
-interface TabGroup {
-  title: string;
-  tabs: TabDef[];
-}
-
-// Três grupos pelo ciclo de QA: automatizar, validar e entregar. Só abas com número útil exibem badge.
-const TAB_GROUPS: TabGroup[] = [
-  {
-    title: 'Automação',
-    tabs: [
-      { id: 'taut', label: 'TAUT (Cypress)', icon: Zap },
-      { id: 'runners', label: 'Test Runners', icon: Zap }
-    ]
-  },
-  {
-    title: 'Validação',
-    tabs: [
-      { id: 'matrix', label: 'Matriz', icon: FileSpreadsheet },
-      { id: 'regression', label: 'Validador Regressivo', icon: Database }
-    ]
-  },
-  {
-    title: 'Entrega',
-    tabs: [
-      { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck },
-      { id: 'roadmap', label: 'Roadmap & Demandas', icon: Rocket }
-    ]
-  }
+const TABS: TabDef[] = [
+  { id: 'matrix', label: 'Matriz', icon: FileSpreadsheet },
+  { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck },
+  { id: 'roadmap', label: 'Roadmap & Demandas', icon: Rocket }
 ];
 
 const INACTIVE_CLASS = 'text-muted-foreground hover:text-foreground hover:bg-muted/60';
@@ -85,37 +61,25 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
   };
 
   return (
-    <div className="border-b border-border bg-card px-6 py-1.5 flex items-center justify-between gap-4 shrink-0">
-      <div role="tablist" aria-label="Seções de Qualidade" className="flex items-end gap-3 overflow-x-auto">
-        {TAB_GROUPS.map((group, groupIndex) => (
-          <div key={group.title} className="flex items-end gap-3">
-            {groupIndex > 0 && <span aria-hidden="true" className="self-center h-6 w-px bg-border" />}
-            <div className="flex flex-col gap-0.5">
-              <span className="px-3 text-2xs uppercase tracking-wider font-bold text-muted-foreground/80">
-                {group.title}
-              </span>
-              <div className="flex items-center gap-1">
-                {group.tabs.map(({ id, label, icon: Icon }) => {
-                  const active = tabMode === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => onTabChange(id)}
-                      className={`${TAB_BASE} ${active ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS}`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{label}</span>
-                      {renderBadge(id, active)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        ))}
+    <div className="border-b border-border bg-card px-6 py-2 flex items-center justify-between gap-4 shrink-0">
+      <div role="tablist" aria-label="Seções de Homologação" className="flex items-center gap-1 overflow-x-auto">
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const active = tabMode === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onTabChange(id)}
+              className={`${TAB_BASE} ${active ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS}`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{label}</span>
+              {renderBadge(id, active)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Atalhos para Ecossistema de Testes */}

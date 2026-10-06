@@ -8,10 +8,13 @@ import {
   getProgressWidth,
   getReadinessSummary,
   getReadinessVerdict,
+  generateQualityCsv,
   getStatusSelectClass,
   migrateLegacyRelease,
-  migrateLegacySeedItems
+  migrateLegacySeedItems,
+  sortValidationItems
 } from './qualityPageView';
+import type { QualityValidationItem } from './qualityPageUtils';
 
 describe('migração dos dados-modelo antigos', () => {
   const seed = (id: string, status: 'passed' | 'in_progress', testerName?: string) => ({
@@ -116,5 +119,37 @@ describe('qualityPageView', () => {
     expect(withoutNotes.notes).toContain('[Auto-Runner R1]');
     const withNotes = applyRunnerResultToItem({ ...base, notes: 'n' }, result, 'passed');
     expect(withNotes.notes?.startsWith('n\n[Auto-Runner')).toBe(true);
+  });
+});
+
+describe('sortValidationItems / generateQualityCsv', () => {
+  const mk = (id: string, status: QualityValidationItem['status'], title: string, notes?: string): QualityValidationItem => ({
+    id,
+    title,
+    category: 'api',
+    status,
+    targetName: 'X',
+    notes
+  });
+
+  it('ordena por status com falhas primeiro e não altera a lista original', () => {
+    const items = [mk('1', 'passed', 'A'), mk('2', 'failed', 'B'), mk('3', 'pending', 'C')];
+    const sorted = sortValidationItems(items, 'status', 'asc');
+    expect(sorted.map((i) => i.id)).toEqual(['2', '3', '1']);
+    expect(items.map((i) => i.id)).toEqual(['1', '2', '3']);
+  });
+
+  it('ordena por título desc e devolve a lista intacta sem chave', () => {
+    const items = [mk('1', 'passed', 'a'), mk('2', 'passed', 'b')];
+    expect(sortValidationItems(items, 'title', 'desc').map((i) => i.id)).toEqual(['2', '1']);
+    expect(sortValidationItems(items, null, 'asc')).toBe(items);
+  });
+
+  it('gera CSV escapando aspas, quebras de linha e fórmulas', () => {
+    const csv = generateQualityCsv([mk('1', 'failed', '=SOMA(A1)', 'diz "oi"\nlinha 2')]);
+    expect(csv.startsWith('﻿"Cenário"')).toBe(true);
+    expect(csv).toContain(`"'=SOMA(A1)"`);
+    expect(csv).toContain('"diz ""oi"" linha 2"');
+    expect(csv).toContain('"Falha"');
   });
 });

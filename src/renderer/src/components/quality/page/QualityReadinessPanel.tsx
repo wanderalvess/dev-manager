@@ -14,7 +14,7 @@ interface QualityReadinessPanelProps {
 }
 
 export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ metrics, items }) => {
-  const verdict = getReadinessVerdict(metrics.readinessScore, metrics.failed + metrics.blocked + metrics.pending);
+  const verdict = getReadinessVerdict(metrics.readinessScore, metrics.failed + metrics.blocked + metrics.pending, metrics.total);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -33,7 +33,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
           </div>
           <h4 className="text-sm font-bold text-foreground">{verdict.title}</h4>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            {getReadinessSummary(metrics.failed, metrics.pending)}
+            {getReadinessSummary(metrics.failed, metrics.pending, metrics.total)}
           </p>
         </div>
 

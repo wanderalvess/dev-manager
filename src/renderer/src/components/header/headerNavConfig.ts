@@ -9,6 +9,9 @@ import {
   GitPullRequest,
   FileSearch,
   CheckCheck,
+  ClipboardCheck,
+  PlayCircle,
+  Zap,
   LucideIcon
 } from 'lucide-react';
 
@@ -18,7 +21,7 @@ export interface NavSubItem {
   shortLabel: string;
   icon: LucideIcon;
   description: string;
-  shortcut: string;
+  shortcut?: string;
 }
 
 export interface NavThemeGroup {
@@ -139,11 +142,32 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
     items: [
       {
         id: 'quality',
-        label: 'Central de Qualidade (QA)',
-        shortLabel: 'QA Hub',
-        icon: CheckCheck,
-        description: 'Validador regressivo Oracle, asserções de banco e homologação',
+        label: 'Homologação',
+        shortLabel: 'Homologação',
+        icon: ClipboardCheck,
+        description: 'Matriz de cenários, prontidão da release e relatório de homologação',
         shortcut: 'Alt+Q'
+      },
+      {
+        id: 'quality-regression',
+        label: 'Validador Regressivo',
+        shortLabel: 'Regressivo',
+        icon: Database,
+        description: 'Validação de dados Oracle com templates, asserções e payloads de API',
+      },
+      {
+        id: 'quality-runners',
+        label: 'Test Runners',
+        shortLabel: 'Runners',
+        icon: PlayCircle,
+        description: 'Suítes automatizadas com sincronização para a Matriz de Homologação',
+      },
+      {
+        id: 'quality-taut',
+        label: 'TAUT (Cypress)',
+        shortLabel: 'TAUT',
+        icon: Zap,
+        description: 'Automação E2E com Cypress: execução, cobertura e intake via CSV',
       }
     ]
   }

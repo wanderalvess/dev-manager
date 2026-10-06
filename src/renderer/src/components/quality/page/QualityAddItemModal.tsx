@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { ValidationCategory } from '../../../utils/qualityPageUtils';
 
 interface QualityAddItemModalProps {
@@ -12,6 +12,7 @@ interface QualityAddItemModalProps {
   onNotesChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
+  isEditing?: boolean;
 }
 
 export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
@@ -24,15 +25,31 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
   notes,
   onNotesChange,
   onSubmit,
-  onClose
-}) => (
+  onClose,
+  isEditing = false
+}) => {
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
+  return (
   <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-    <div className="bg-card w-full max-w-md rounded-lg border border-border shadow-xl p-5 space-y-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}
+      className="bg-card w-full max-w-md rounded-lg border border-border shadow-xl p-5 space-y-4"
+    >
       <div className="flex items-center justify-between pb-2 border-b border-border">
-        <h3 className="text-sm font-semibold text-foreground">Novo Cenário de Teste</h3>
+        <h3 className="text-sm font-semibold text-foreground">{isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}</h3>
         <button
           type="button"
           onClick={onClose}
+          aria-label="Fechar"
           className="text-muted-foreground hover:text-foreground cursor-pointer font-mono"
         >
           ✕
@@ -101,10 +118,11 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
             type="submit"
             className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold cursor-pointer hover:bg-primary/90 transition-colors"
           >
-            Adicionar Cenário
+            {isEditing ? 'Salvar Alterações' : 'Adicionar Cenário'}
           </button>
         </div>
       </form>
     </div>
   </div>
-);
+  );
+};

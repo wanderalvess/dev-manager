@@ -1,12 +1,13 @@
 import React from 'react';
-import { RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Download, Pencil, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import type { QualitySourceConfig } from '../../../../../shared/types';
 import type { QualityValidationItem, ValidationItemStatus } from '../../../utils/qualityPageUtils';
-import { getCategoryLabel, getStatusSelectClass } from '../../../utils/qualityPageView';
+import { getCategoryLabel, getStatusSelectClass, type QualitySortDir, type QualitySortKey } from '../../../utils/qualityPageView';
 
 interface QualityMatrixPanelProps {
   qualitySources: QualitySourceConfig[];
   filteredItems: QualityValidationItem[];
+  totalCount: number;
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   statusFilter: string;
@@ -16,12 +17,41 @@ interface QualityMatrixPanelProps {
   onResetDefaults: () => void;
   onStatusChange: (id: string, status: ValidationItemStatus) => void;
   onDeleteItem: (id: string) => void;
+  onEditItem: (item: QualityValidationItem) => void;
+  onExportCsv: () => void;
+  sortKey: QualitySortKey | null;
+  sortDir: QualitySortDir;
+  onSort: (key: QualitySortKey) => void;
   onNavigate?: (tab: string) => void;
 }
+
+const SortableTh: React.FC<{
+  label: string;
+  sortKey: QualitySortKey;
+  active: QualitySortKey | null;
+  dir: QualitySortDir;
+  onSort: (key: QualitySortKey) => void;
+}> = ({ label, sortKey, active, dir, onSort }) => {
+  const isActive = active === sortKey;
+  const Icon = !isActive ? ArrowUpDown : dir === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <th className="px-4 py-3" aria-sort={isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className="inline-flex items-center gap-1 uppercase font-bold tracking-wider hover:text-foreground cursor-pointer"
+      >
+        {label}
+        <Icon className={`w-3 h-3 ${isActive ? 'text-primary' : 'opacity-50'}`} />
+      </button>
+    </th>
+  );
+};
 
 export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
   qualitySources,
   filteredItems,
+  totalCount,
   searchTerm,
   onSearchTermChange,
   statusFilter,
@@ -31,8 +61,21 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
   onResetDefaults,
   onStatusChange,
   onDeleteItem,
+  onEditItem,
+  onExportCsv,
+  sortKey,
+  sortDir,
+  onSort,
   onNavigate
-}) => (
+}) => {
+  const isFiltered = statusFilter !== 'all' || categoryFilter !== 'all' || searchTerm.trim() !== '';
+  const clearFilters = () => {
+    onSearchTermChange('');
+    onStatusFilterChange('all');
+    onCategoryFilterChange('all');
+  };
+
+  return (
   <div className="space-y-4">
     {qualitySources.length === 0 && (
       <div className="p-3.5 rounded-md bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -62,6 +105,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           type="text"
           value={searchTerm}
           onChange={(e) => onSearchTermChange(e.target.value)}
+          aria-label="Buscar cenários"
           placeholder="Buscar por cenário, rotina, alvo ou anotações..."
           className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 border border-border/80 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
         />
@@ -70,6 +114,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
       <div className="flex items-center space-x-2 w-full sm:w-auto">
         <select
           value={statusFilter}
+          aria-label="Filtrar por status"
           onChange={(e) => onStatusFilterChange(e.target.value)}
           className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-none"
         >
@@ -83,6 +128,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
 
         <select
           value={categoryFilter}
+          aria-label="Filtrar por categoria"
           onChange={(e) => onCategoryFilterChange(e.target.value)}
           className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-none"
         >
@@ -97,11 +143,33 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           type="button"
           onClick={onResetDefaults}
           title="Restaurar cenários padrão de teste"
+          aria-label="Restaurar cenários padrão de teste"
           className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground border border-border cursor-pointer transition"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
+
+        <button
+          type="button"
+          onClick={onExportCsv}
+          title="Exportar cenários exibidos em CSV"
+          aria-label="Exportar cenários exibidos em CSV"
+          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground border border-border cursor-pointer transition"
+        >
+          <Download className="w-4 h-4" />
+        </button>
       </div>
+    </div>
+
+    <div className="flex items-center justify-between text-xs text-muted-foreground px-1" aria-live="polite">
+      <span>
+        Exibindo <strong className="text-foreground">{filteredItems.length}</strong> de {totalCount} cenários
+      </span>
+      {isFiltered && (
+        <button type="button" onClick={clearFilters} className="text-primary hover:underline cursor-pointer">
+          Limpar filtros
+        </button>
+      )}
     </div>
 
     {/* Lista / Tabela da Matriz */}
@@ -110,18 +178,19 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
         <table className="w-full text-left text-xs">
           <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase text-2xs tracking-wider font-bold">
             <tr>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Cenário / Teste</th>
-              <th className="px-4 py-3">Alvo / Componente</th>
-              <th className="px-4 py-3">Categoria</th>
+              <SortableTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onSort={onSort} />
+              <SortableTh label="Cenário / Teste" sortKey="title" active={sortKey} dir={sortDir} onSort={onSort} />
+              <SortableTh label="Alvo / Componente" sortKey="targetName" active={sortKey} dir={sortDir} onSort={onSort} />
+              <SortableTh label="Categoria" sortKey="category" active={sortKey} dir={sortDir} onSort={onSort} />
               <th className="px-4 py-3">Notas &amp; Critérios</th>
+              <SortableTh label="Atualizado" sortKey="updatedAt" active={sortKey} dir={sortDir} onSort={onSort} />
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                   Nenhum cenário de teste encontrado com os filtros selecionados.
                 </td>
               </tr>
@@ -131,6 +200,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                   <td className="px-4 py-3 whitespace-nowrap">
                     <select
                       value={item.status}
+                      aria-label={`Status de ${item.title}`}
                       onChange={(e) => onStatusChange(item.id, e.target.value as ValidationItemStatus)}
                       className={`px-2 py-1 rounded text-[11px] font-bold border cursor-pointer focus:outline-none ${getStatusSelectClass(item.status)}`}
                     >
@@ -158,12 +228,26 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                     {item.notes || '—'}
                   </td>
 
+                  <td className="px-4 py-3 whitespace-nowrap text-muted-foreground font-mono text-[11px]">
+                    {item.updatedAt ? new Date(item.updatedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
+                  </td>
+
                   <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => onEditItem(item)}
+                      className="p-1 hover:text-primary text-muted-foreground transition cursor-pointer"
+                      title="Editar cenário"
+                      aria-label={`Editar cenário ${item.title}`}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => onDeleteItem(item.id)}
                       className="p-1 hover:text-rose-400 text-muted-foreground transition cursor-pointer"
                       title="Remover cenário"
+                      aria-label={`Remover cenário ${item.title}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -176,4 +260,5 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
       </div>
     </div>
   </div>
-);
+  );
+};
