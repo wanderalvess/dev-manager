@@ -40,3 +40,56 @@ describe('mutações do grid: executor da sessão', () => {
     expect(exec).not.toHaveBeenCalled();
   });
 });
+
+describe('mutações sem PK: identificação por ROWID/ctid', () => {
+  const pg = { ...config, type: 'postgres' } as DatabaseConnectionConfig;
+  const mysql = { ...config, type: 'mysql' } as DatabaseConnectionConfig;
+  const rid = 'AAAR3sAAEAAAACXAAA';
+
+  it('Oracle: UPDATE usa ROWID = :bind e não lista colunas no WHERE', async () => {
+    const exec = vi.fn().mockResolvedValue(ok);
+    await updateRow(ctxWith(vi.fn()), config, 'HR.T', { A: 1 }, { __ROWID__: rid }, exec);
+    expect(exec).toHaveBeenCalledWith('UPDATE HR.T SET A = :p0 WHERE ROWID = :p1', { p0: 1, p1: rid });
+  });
+
+  it('Oracle: DELETE usa ROWID = :p0', async () => {
+    const exec = vi.fn().mockResolvedValue(ok);
+    await deleteRow(ctxWith(vi.fn()), config, 'T', { __ROWID__: rid }, exec);
+    expect(exec).toHaveBeenCalledWith('DELETE FROM T WHERE ROWID = :p0', { p0: rid });
+  });
+
+  it('PostgreSQL: usa ctid e aceita só o formato (bloco,posição)', async () => {
+    const exec = vi.fn().mockResolvedValue(ok);
+    await updateRow(ctxWith(vi.fn()), pg, 'T', { A: 1 }, { __ROWID__: '(0,12)' }, exec);
+    expect(exec).toHaveBeenCalledWith('UPDATE T SET A = :p0 WHERE ctid = :p1', { p0: 1, p1: '(0,12)' });
+
+    const bad = await deleteRow(ctxWith(vi.fn()), pg, 'T', { __ROWID__: "(0,1)' OR '1'='1" }, exec);
+    expect(bad.success).toBe(false);
+    expect(exec).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejeita valor ausente, não-string ou inválido sem tocar o banco', async () => {
+    const exec = vi.fn().mockResolvedValue(ok);
+    for (const value of [null, undefined, '', 42, 'a b; DROP']) {
+      const res = await deleteRow(ctxWith(vi.fn()), config, 'T', { __ROWID__: value }, exec);
+      expect(res.success).toBe(false);
+    }
+    expect(exec).not.toHaveBeenCalled();
+  });
+
+  it('não combina ROWID com outras colunas e MySQL não suporta', async () => {
+    const exec = vi.fn().mockResolvedValue(ok);
+    expect((await deleteRow(ctxWith(vi.fn()), config, 'T', { __ROWID__: rid, ID: 1 }, exec)).success).toBe(false);
+    expect((await deleteRow(ctxWith(vi.fn()), mysql, 'T', { __ROWID__: rid }, exec)).success).toBe(false);
+    expect(exec).not.toHaveBeenCalled();
+  });
+
+  it('WHERE vazio e identificador inválido continuam bloqueados', async () => {
+    const exec = vi.fn().mockResolvedValue(ok);
+    expect((await updateRow(ctxWith(vi.fn()), config, 'T', { A: 1 }, {}, exec)).success).toBe(false);
+    expect((await deleteRow(ctxWith(vi.fn()), config, 'T', {}, exec)).success).toBe(false);
+    expect((await deleteRow(ctxWith(vi.fn()), config, 'T', { 'ID; DROP': 1 }, exec)).success).toBe(false);
+    expect((await updateRow(ctxWith(vi.fn()), config, 'T; X', { A: 1 }, { __ROWID__: rid }, exec)).success).toBe(false);
+    expect(exec).not.toHaveBeenCalled();
+  });
+});
