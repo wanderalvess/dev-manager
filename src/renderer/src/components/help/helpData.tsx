@@ -81,7 +81,7 @@ export function getFaqList({
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como resolver:</span>
             <ul className="list-disc pl-4 space-y-1">
-              <li>Feche o Dev Manager.</li>
+              <li>Feche o Hub Manager.</li>
               <li>Clique com o botão direito no atalho ou executável do programa.</li>
               <li>Selecione <strong className="text-foreground">"Executar como Administrador"</strong>.</li>
             </ul>
@@ -150,9 +150,9 @@ export function getFaqList({
             No ecossistema OSGi/Karaf, quando um bundle importa um pacote ou serviço Java (<code className="font-mono text-primary font-semibold">osgi.wiring.package</code>) fornecido por outro módulo ou feature, o container só consegue ativar a feature se esse fornecedor já estiver instalado e ativo na versão exigida.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
-            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Diagnóstico Inteligente do Dev Manager:</span>
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Diagnóstico Inteligente do Hub Manager:</span>
             <p>
-              Ao detectar esse erro, o Dev Manager analisa automaticamente a árvore causal da falha, extrai o pacote e a faixa de versão requerida e correlaciona com o <code className="font-mono text-primary font-semibold">pom.xml</code> do projeto.
+              Ao detectar esse erro, o Hub Manager analisa automaticamente a árvore causal da falha, extrai o pacote e a faixa de versão requerida e correlaciona com o <code className="font-mono text-primary font-semibold">pom.xml</code> do projeto.
             </p>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -207,7 +207,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager suporta nativamente tanto o Karaf instalado no Windows quanto virtualizado dentro do WSL 2:
+            O Hub Manager suporta nativamente tanto o Karaf instalado no Windows quanto virtualizado dentro do WSL 2:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Configuração Passo a Passo:</span>
@@ -216,7 +216,7 @@ export function getFaqList({
                 <strong className="text-foreground">Ativar Ambiente WSL:</strong> Em <strong className="text-foreground">Configurações &gt; Apache Karaf</strong>, marque a opção <em>"WSL 2 (Linux Virtualizado)"</em> e selecione sua distro (ex: Ubuntu ou Debian).
               </li>
               <li>
-                <strong className="text-foreground">Diretório do Karaf:</strong> Informe o caminho Linux (ex: <code className="font-mono text-primary">/home/usuario/karaf</code>) ou o caminho UNC Windows (<code className="font-mono text-primary">\\wsl.localhost\Ubuntu\home\usuario\karaf</code>). O Dev Manager resolve ambos automaticamente.
+                <strong className="text-foreground">Diretório do Karaf:</strong> Informe o caminho Linux (ex: <code className="font-mono text-primary">/home/usuario/karaf</code>) ou o caminho UNC Windows (<code className="font-mono text-primary">\\wsl.localhost\Ubuntu\home\usuario\karaf</code>). O Hub Manager resolve ambos automaticamente.
               </li>
               <li>
                 <strong className="text-foreground">Rede Espelhada (Recomendado):</strong> Para máxima estabilidade nas portas SSH (<code className="font-mono text-primary">8101</code>) e Debug (<code className="font-mono text-primary">5005</code>), configure seu <code className="font-mono text-foreground">%USERPROFILE%\.wslconfig</code> com <code className="font-mono text-primary">[wsl2] networkingMode=mirrored</code>.
@@ -325,7 +325,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inspeciona o arquivo de configuração do Git (<code className="font-mono text-primary font-semibold">.git/config</code>) de cada repositório, identifica a URL do Azure DevOps (organização, projeto e repositório) e a branch em que você está trabalhando no momento.
+            O Hub Manager inspeciona o arquivo de configuração do Git (<code className="font-mono text-primary font-semibold">.git/config</code>) de cada repositório, identifica a URL do Azure DevOps (organização, projeto e repositório) e a branch em que você está trabalhando no momento.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
             <p>
@@ -359,7 +359,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Nada disso é obrigatório para usar o Dev Manager: cada item só libera uma funcionalidade. Se a pasta do release já trouxer os arquivos, rode o <code className="font-mono text-primary font-semibold">instalar-extras.cmd</code> que está nela: ele instala o modelo do RAG e extrai o Instant Client em <code className="font-mono text-primary">C:\\oracle</code>.
+            Nada disso é obrigatório para usar o Hub Manager: cada item só libera uma funcionalidade. Se a pasta do release já trouxer os arquivos, rode o <code className="font-mono text-primary font-semibold">instalar-extras.cmd</code> que está nela: ele instala o modelo do RAG e extrai o Instant Client em <code className="font-mono text-primary">C:\\oracle</code>.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div className="space-y-1">
@@ -428,7 +428,7 @@ export function getFaqList({
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como funciona o fluxo de autenticação:</span>
             <ol className="list-decimal pl-4 space-y-1.5">
               <li>
-                O Dev Manager faz uma requisição HTTP para a API do WTA (<code className="font-mono text-primary">:8889</code>) buscando os tokens de sessão da rotina (<code className="font-mono text-primary">m, u, p, t, s</code>).
+                O Hub Manager faz uma requisição HTTP para a API do WTA (<code className="font-mono text-primary">:8889</code>) buscando os tokens de sessão da rotina (<code className="font-mono text-primary">m, u, p, t, s</code>).
               </li>
               <li>
                 Com a sessão autenticada, envia os parâmetros para o serviço local do WinThor Start (<code className="font-mono text-primary">:9195</code>), que abre a rotina já logada no ERP.
@@ -452,7 +452,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager se integra diretamente à <strong className="text-foreground">Central de Controle do WinThor (CCW)</strong> em <code className="font-mono text-primary">centraldecontrole.pcinformatica.com.br</code> para baixar e atualizar rotinas sem precisar abrir o navegador nem descompactar arquivos manualmente.
+            O Hub Manager se integra diretamente à <strong className="text-foreground">Central de Controle do WinThor (CCW)</strong> em <code className="font-mono text-primary">centraldecontrole.pcinformatica.com.br</code> para baixar e atualizar rotinas sem precisar abrir o navegador nem descompactar arquivos manualmente.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como utilizar:</span>
@@ -464,10 +464,10 @@ export function getFaqList({
                 <strong className="text-foreground">Atualização Rápida no Cartão:</strong> No card de qualquer rotina existente, clique no ícone de nuvem (<Download className="w-3 h-3 inline text-primary" />) para abrir o diálogo já com o código da rotina e versão preenchidos.
               </li>
               <li>
-                <strong className="text-foreground">Backup Automático (.bak):</strong> Sempre que um executável já existir no diretório de destino (ex.: <code className="font-mono text-primary">C:\\Winthor\\Prod\\MOD-001\\PCSIS101.EXE</code>), o Dev Manager cria automaticamente uma cópia de segurança renomeada com timestamp (ex.: <code className="font-mono text-primary">PCSIS101.EXE.20260929_120000.bak</code>).
+                <strong className="text-foreground">Backup Automático (.bak):</strong> Sempre que um executável já existir no diretório de destino (ex.: <code className="font-mono text-primary">C:\\Winthor\\Prod\\MOD-001\\PCSIS101.EXE</code>), o Hub Manager cria automaticamente uma cópia de segurança renomeada com timestamp (ex.: <code className="font-mono text-primary">PCSIS101.EXE.20260929_120000.bak</code>).
               </li>
               <li>
-                <strong className="text-foreground">Suporte a ZIP e EXE:</strong> Caso a CCW retorne um pacote ZIP compactado, o Dev Manager extrai os binários transparentemente sem requerer ferramentas externas.
+                <strong className="text-foreground">Suporte a ZIP e EXE:</strong> Caso a CCW retorne um pacote ZIP compactado, o Hub Manager extrai os binários transparentemente sem requerer ferramentas externas.
               </li>
               <li>
                 <strong className="text-foreground">Instalação Local ou Árvore CCW:</strong> Você também pode instalar arquivos <code className="font-mono text-primary">.exe</code> ou <code className="font-mono text-primary">.zip</code> baixados manualmente ou explorar a árvore oficial com cookie de sessão.
@@ -485,7 +485,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager oferece gestão completa do ciclo de vida das rotinas WinThor no disco local:
+            O Hub Manager oferece gestão completa do ciclo de vida das rotinas WinThor no disco local:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
             <div>
@@ -501,7 +501,7 @@ export function getFaqList({
                 2. Leitura Binária de Versão do Executável (PE Header / FileVersion)
               </span>
               <p>
-                O Dev Manager inspeciona o cabeçalho binário (PE Header / <code className="font-mono text-primary">.rsrc</code>) do executável sem depender de ferramentas externas do Windows. Ele extrai e exibe diretamente no card o badge verde com a <code className="font-mono text-primary">FileVersion</code> (ex: <span className="text-emerald-500 font-bold">v30.0.12</span>) e a <code className="font-mono text-primary">ProductVersion</code>, facilitando a comparação visual com as versões publicadas na CCW.
+                O Hub Manager inspeciona o cabeçalho binário (PE Header / <code className="font-mono text-primary">.rsrc</code>) do executável sem depender de ferramentas externas do Windows. Ele extrai e exibe diretamente no card o badge verde com a <code className="font-mono text-primary">FileVersion</code> (ex: <span className="text-emerald-500 font-bold">v30.0.12</span>) e a <code className="font-mono text-primary">ProductVersion</code>, facilitando a comparação visual com as versões publicadas na CCW.
               </p>
             </div>
             <div className="pt-2 border-t border-border/50">
@@ -527,10 +527,10 @@ export function getFaqList({
             No Windows, o host <code className="font-mono text-primary font-bold">localhost</code> pode ser resolvido prioritariamente para o endereço IPv6 (<code className="font-mono text-primary">::1</code>), enquanto a JVM do Apache Karaf / WTA normalmente se vincula apenas à interface IPv4 (<code className="font-mono text-primary">127.0.0.1:8889</code>).
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
-            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como o Dev Manager trata e como resolver:</span>
+            <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como o Hub Manager trata e como resolver:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Fallback automático:</strong> O Dev Manager implementa detecção automática (Happy Eyeballs) e fallback transparente de <code className="font-mono text-primary">localhost</code> para <code className="font-mono text-primary">127.0.0.1</code> ao consultar a API da Rotina 801.
+                <strong className="text-foreground">Fallback automático:</strong> O Hub Manager implementa detecção automática (Happy Eyeballs) e fallback transparente de <code className="font-mono text-primary">localhost</code> para <code className="font-mono text-primary">127.0.0.1</code> ao consultar a API da Rotina 801.
               </li>
               <li>
                 <strong className="text-foreground">Botões rápidos no modal:</strong> No cabeçalho do Catálogo Oficial (Rotina 801), clique em <strong className="text-foreground">Conexão</strong> e utilize os botões rápidos para alternar diretamente entre <code className="font-mono text-primary">localhost</code> e <code className="font-mono text-primary">127.0.0.1</code>.
@@ -548,13 +548,13 @@ export function getFaqList({
                 <strong className="text-foreground">Instalação Direta &amp; Override de Versão:</strong> Precisa instalar uma versão específica que não consta no catálogo ativo ou montar um ambiente com pacotes pontuais? Use o botão <strong className="text-foreground">+ Instalação Direta</strong> no cabeçalho ou informe a versão no campo <strong className="text-foreground">Versão Alvo (Override)</strong> na barra de lote / drawer de inspeção.
               </li>
               <li>
-                <strong className="text-foreground">Resolução de "No matching features":</strong> Esse erro ocorre no Karaf quando o comando <code className="font-mono text-primary">feature:install</code> é executado sem que o repositório Maven (<code className="font-mono text-primary">features.xml</code>) tenha sido registrado previamente via <code className="font-mono text-primary">feature:repo-add</code>. O Dev Manager agora infere automaticamente as coordenadas canônicas Maven do WinThor (<code className="font-mono text-primary">mvn:br.com.pcsist.winthor...</code>) e executa o <code className="font-mono text-primary">feature:repo-add</code> antes da instalação, além de oferecer o botão dedicado <strong className="text-foreground">Registrar Repositórios</strong> para pré-adicionar as features no Karaf.
+                <strong className="text-foreground">Resolução de "No matching features":</strong> Esse erro ocorre no Karaf quando o comando <code className="font-mono text-primary">feature:install</code> é executado sem que o repositório Maven (<code className="font-mono text-primary">features.xml</code>) tenha sido registrado previamente via <code className="font-mono text-primary">feature:repo-add</code>. O Hub Manager agora infere automaticamente as coordenadas canônicas Maven do WinThor (<code className="font-mono text-primary">mvn:br.com.pcsist.winthor...</code>) e executa o <code className="font-mono text-primary">feature:repo-add</code> antes da instalação, além de oferecer o botão dedicado <strong className="text-foreground">Registrar Repositórios</strong> para pré-adicionar as features no Karaf.
               </li>
               <li>
-                <strong className="text-foreground">Download e Timeout Estendido:</strong> Instalar serviços ou rotinas completas baixa dezenas de dependências Maven do Nexus/Artifactory. O Dev Manager aplica timeouts dedicados de até 5 minutos para que downloads pesados nunca sejam cancelados prematuramente.
+                <strong className="text-foreground">Download e Timeout Estendido:</strong> Instalar serviços ou rotinas completas baixa dezenas de dependências Maven do Nexus/Artifactory. O Hub Manager aplica timeouts dedicados de até 5 minutos para que downloads pesados nunca sejam cancelados prematuramente.
               </li>
               <li>
-                <strong className="text-foreground">Credenciais WTA:</strong> Caso o ambiente exija autenticação (Apache Shiro), o Dev Manager envia automaticamente o token/cookie do usuário configurado em Configurações.
+                <strong className="text-foreground">Credenciais WTA:</strong> Caso o ambiente exija autenticação (Apache Shiro), o Hub Manager envia automaticamente o token/cookie do usuário configurado em Configurações.
               </li>
             </ul>
           </div>
@@ -563,13 +563,13 @@ export function getFaqList({
     },
     {
       id: 'build-executable',
-      question: 'Como gerar o executável (.exe) de produção do Dev Manager para o Windows?',
+      question: 'Como gerar o executável (.exe) de produção do Hub Manager para o Windows?',
       category: 'Build & Executável',
       tags: ['executavel', 'exe', 'build', 'electron-builder', 'producao', 'instalador', 'nsis', 'portable', 'release'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager pode ser empacotado em executáveis nativos do Windows (<code className="font-mono text-primary font-bold">.exe</code>) através do script configurado com o Electron Builder.
+            O Hub Manager pode ser empacotado em executáveis nativos do Windows (<code className="font-mono text-primary font-bold">.exe</code>) através do script configurado com o Electron Builder.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Comando para compilar e gerar na pasta release/:</span>
@@ -586,10 +586,10 @@ export function getFaqList({
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Arquivos gerados na pasta release/:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Dev Manager {appInfo?.appVersion || '1.25.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Hub Manager {appInfo?.appVersion || '1.25.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Dev Manager Setup {appInfo?.appVersion || '1.25.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Hub Manager Setup {appInfo?.appVersion || '1.25.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
               <li>
                 <strong className="text-foreground">LEIA-ME.txt, instalar-extras.cmd e mcp\\:</strong> guia do usuário com os links dos downloads opcionais, script que instala o modelo do RAG e o Oracle Instant Client colocados na pasta, e o servidor MCP pronto para uso. Para regenerar só esses arquivos: <code className="font-mono text-primary">npm run release:folder</code>.
@@ -647,7 +647,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            A aba <strong className="text-foreground">Documentação</strong> é a central de busca inteligente do Dev Manager. Ela indexa manuais, diagnósticos de projetos, mapeamentos de rotinas e contratos de API REST (<code className="font-mono text-primary">.md, .txt, .pdf, .docx</code>), permitindo encontrar informações técnicas em segundos.
+            A aba <strong className="text-foreground">Documentação</strong> é a central de busca inteligente do Hub Manager. Ela indexa manuais, diagnósticos de projetos, mapeamentos de rotinas e contratos de API REST (<code className="font-mono text-primary">.md, .txt, .pdf, .docx</code>), permitindo encontrar informações técnicas em segundos.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Busca Vetorizada (Embeddings) vs. Ctrl+F:</span>
@@ -671,7 +671,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">163 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
+            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">163 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
@@ -697,7 +697,7 @@ export function getFaqList({
             <div className="pt-2 border-t border-border/50">
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Com o app instalado (pasta do release):</span>
               <p className="mb-2">
-                A pasta do release traz o servidor pronto em <code className="font-mono text-primary font-semibold">mcp\\</code>, sem precisar do código-fonte nem de Node.js: o launcher usa o próprio <code className="font-mono text-primary">Dev Manager.exe</code> instalado pelo Setup. Copie a pasta para um local fixo (ex.: <code className="font-mono text-primary">C:\\DevManager\\mcp</code>) e registre no Claude Code:
+                A pasta do release traz o servidor pronto em <code className="font-mono text-primary font-semibold">mcp\\</code>, sem precisar do código-fonte nem de Node.js: o launcher usa o próprio <code className="font-mono text-primary">Hub Manager.exe</code> instalado pelo Setup. Copie a pasta para um local fixo (ex.: <code className="font-mono text-primary">C:\\DevManager\\mcp</code>) e registre no Claude Code:
               </p>
               <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60 mb-2">
                 <code className="break-all">{MCP_ADD_COMMAND}</code>
@@ -742,7 +742,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Você pode conectar o servidor MCP do Dev Manager ao <strong className="text-foreground">IntelliJ IDEA</strong> tanto pelo <strong className="text-foreground">GitHub Copilot Chat</strong> (modo Agent) quanto pelo <strong className="text-foreground">JetBrains AI Assistant</strong> ou pelo plugin <strong className="text-foreground">Continue</strong>.
+            Você pode conectar o servidor MCP do Hub Manager ao <strong className="text-foreground">IntelliJ IDEA</strong> tanto pelo <strong className="text-foreground">GitHub Copilot Chat</strong> (modo Agent) quanto pelo <strong className="text-foreground">JetBrains AI Assistant</strong> ou pelo plugin <strong className="text-foreground">Continue</strong>.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
@@ -826,7 +826,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            No <strong className="text-foreground">Visual Studio Code (VS Code)</strong>, você pode utilizar o servidor MCP do Dev Manager tanto com o <strong className="text-foreground">GitHub Copilot Chat</strong> (no modo <em>Agent</em>) quanto com extensões agênticas como <strong className="text-foreground">Cline</strong>, <strong className="text-foreground">Roo Code</strong> ou <strong className="text-foreground">Continue</strong>.
+            No <strong className="text-foreground">Visual Studio Code (VS Code)</strong>, você pode utilizar o servidor MCP do Hub Manager tanto com o <strong className="text-foreground">GitHub Copilot Chat</strong> (no modo <em>Agent</em>) quanto com extensões agênticas como <strong className="text-foreground">Cline</strong>, <strong className="text-foreground">Roo Code</strong> ou <strong className="text-foreground">Continue</strong>.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
@@ -875,7 +875,7 @@ export function getFaqList({
                 </button>
               </div>
               <p className="mt-2 text-[11px]">
-                💡 <em>Dica:</em> Se o projeto aberto no VS Code for o próprio Dev Manager, você também pode usar <code className="font-mono text-primary font-semibold">{'${workspaceFolder}'}/src/mcp/index.ts</code>.
+                💡 <em>Dica:</em> Se o projeto aberto no VS Code for o próprio Hub Manager, você também pode usar <code className="font-mono text-primary font-semibold">{'${workspaceFolder}'}/src/mcp/index.ts</code>.
               </p>
             </div>
 
@@ -948,7 +948,7 @@ export function getFaqList({
                   <strong className="text-foreground">Compilação Maven:</strong> A IA dispara <code className="font-mono text-primary font-semibold">mvn clean install -DskipTests</code> (ou chama <code className="font-mono text-primary font-semibold">karaf_run_maven_build</code>) no diretório do projeto e aguarda o <code className="font-mono text-emerald-500 font-bold">BUILD SUCCESS</code>.
                 </li>
                 <li>
-                  <strong className="text-foreground">Injeção no Karaf:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_exec_command</code> do Dev Manager para executar <code className="font-mono text-primary">feature:repo-add mvn:.../features.xml</code> e <code className="font-mono text-primary">feature:install &lt;nome-da-feature&gt;</code> via <code className="font-mono text-primary">client.bat</code>.
+                  <strong className="text-foreground">Injeção no Karaf:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_exec_command</code> do Hub Manager para executar <code className="font-mono text-primary">feature:repo-add mvn:.../features.xml</code> e <code className="font-mono text-primary">feature:install &lt;nome-da-feature&gt;</code> via <code className="font-mono text-primary">client.bat</code>.
                 </li>
                 <li>
                   <strong className="text-foreground">Verificação Pós-Deploy:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_verify_bundle</code> para validar <code className="font-mono text-primary">feature:list -i</code> e <code className="font-mono text-primary">bundle:list</code>, confirmando que a feature passou para o estado <strong className="text-emerald-500 font-bold">Started (Ativa)</strong>.
@@ -1031,7 +1031,7 @@ export function getFaqList({
             <ol className="list-decimal pl-4 space-y-1">
               <li>Selecione uma conexão <strong className="text-foreground">Oracle</strong> na barra lateral do Banco de Dados e abra a aba <strong className="text-foreground">Statement Tracer</strong>.</li>
               <li>Escolha o intervalo (2s, 5s, 10s ou 30s) e clique em <strong className="text-foreground">Iniciar Captura</strong>.</li>
-              <li>Vá até o outro sistema (rotina WinThor, API no Karaf etc.) e dispare a ação. A captura continua mesmo se você trocar de aba ou de página no Dev Manager.</li>
+              <li>Vá até o outro sistema (rotina WinThor, API no Karaf etc.) e dispare a ação. A captura continua mesmo se você trocar de aba ou de página no Hub Manager.</li>
               <li>Volte e veja a <strong className="text-foreground">Linha do tempo</strong> (cada troca de SQL por sessão, com SID/SERIAL, schema, programa e módulo) ou a lista <strong className="text-foreground">SQL capturado</strong> (instruções distintas por <code className="font-mono text-primary">SQL_ID</code>, com número de execuções). Os filtros por schema e por texto ajudam a achar a sua sessão.</li>
             </ol>
             <p className="pt-1">
@@ -1049,7 +1049,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O <strong className="text-foreground">Statement Tracer</strong> do Dev Manager agora captura automaticamente os valores dos parâmetros passados nas instruções SQL (<code className="font-mono text-primary">v$sql_bind_capture</code>), eliminando a necessidade de habilitar <code className="font-mono text-primary font-bold">log:set trace root</code> no Karaf ou depender de utilitários externos como o <em>Statement Tracer for Oracle (OraTracer.exe)</em>.
+            O <strong className="text-foreground">Statement Tracer</strong> do Hub Manager agora captura automaticamente os valores dos parâmetros passados nas instruções SQL (<code className="font-mono text-primary">v$sql_bind_capture</code>), eliminando a necessidade de habilitar <code className="font-mono text-primary font-bold">log:set trace root</code> no Karaf ou depender de utilitários externos como o <em>Statement Tracer for Oracle (OraTracer.exe)</em>.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
             <div>
@@ -1067,7 +1067,7 @@ export function getFaqList({
               <ol className="list-decimal pl-4 space-y-1">
                 <li>No <strong>Statement Tracer</strong>, selecione qualquer query na tabela para abrir o inspetor inferior.</li>
                 <li>Na aba <strong>Parâmetros (Binds)</strong>, veja a posição (<code className="font-mono text-primary">:1</code>, <code className="font-mono text-primary">:NOME</code>), o tipo do dado (VARCHAR2, NUMBER, DATE, etc.) e o valor exato capturado.</li>
-                <li>O Dev Manager formata e interpola os valores no SQL automaticamente, tratando aspas, datas e números.</li>
+                <li>O Hub Manager formata e interpola os valores no SQL automaticamente, tratando aspas, datas e números.</li>
                 <li>Clique em <strong>"Usar no Editor"</strong> para abrir a query já pronta no Editor SQL do DB Studio, ou <strong>"Copiar SQL"</strong> para colar onde precisar.</li>
               </ol>
             </div>
@@ -1083,12 +1083,12 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager traz um receptor <strong className="text-foreground">OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> embutido, que escuta por padrão na porta <code className="font-mono text-primary font-semibold">4318</code>. Os spans recebidos alimentam o <strong className="text-foreground">Dashboard</strong> (vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries lentas) e o <strong className="text-foreground">Traces Explorer</strong> (waterfall, atributos, SQL, stacktrace e divisão do tempo entre banco, chamadas externas e aplicação). Métricas e logs OTLP não são coletados, só traces.
+            O Hub Manager traz um receptor <strong className="text-foreground">OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> embutido, que escuta por padrão na porta <code className="font-mono text-primary font-semibold">4318</code>. Os spans recebidos alimentam o <strong className="text-foreground">Dashboard</strong> (vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries lentas) e o <strong className="text-foreground">Traces Explorer</strong> (waterfall, atributos, SQL, stacktrace e divisão do tempo entre banco, chamadas externas e aplicação). Métricas e logs OTLP não são coletados, só traces.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Karaf iniciado pelo Cockpit:</span>
             <p>
-              Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf e ative a opção <strong className="text-foreground">"Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf"</strong> em <strong className="text-foreground">Configurações → Apache Karaf</strong> ou em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong> — desligado por padrão, para não poluir o log do Karaf nem adicionar overhead quando você não estiver inspecionando traces. Com a opção ligada, o agente é anexado e exporta para a porta configurada a cada start pelo Dev Manager. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto na mesma tela.
+              Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf e ative a opção <strong className="text-foreground">"Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf"</strong> em <strong className="text-foreground">Configurações → Apache Karaf</strong> ou em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong> — desligado por padrão, para não poluir o log do Karaf nem adicionar overhead quando você não estiver inspecionando traces. Com a opção ligada, o agente é anexado e exporta para a porta configurada a cada start pelo Hub Manager. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto na mesma tela.
             </p>
             <span className="font-bold text-foreground block pt-1 text-[11px] uppercase tracking-wider text-primary">Porta ocupada?</span>
             <p>
@@ -1159,7 +1159,7 @@ export function getFaqList({
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Login no WTA:</strong> o Dev Manager se autentica no portal WinThor Anywhere para obter token, matrícula e dados de banco da sessão.
+                <strong className="text-foreground">Login no WTA:</strong> o Hub Manager se autentica no portal WinThor Anywhere para obter token, matrícula e dados de banco da sessão.
               </li>
               <li>
                 <strong className="text-foreground">Payload fixo:</strong> se o login falhar, usa o payload de sessão salvo como contingência.
@@ -1192,7 +1192,7 @@ export function getFaqList({
                 <strong className="text-foreground">Lançador Seguro Windows:</strong> Todas as rotinas e aplicativos agora utilizam delegação ao Shell do Windows (<code className="font-mono text-primary">cmd /c start</code>), respeitando o diretório de trabalho (<code className="font-mono text-primary">cwd</code>) indispensável para carregar DLLs e arquivos INI das rotinas Delphi, além de suportar elevação UAC e scripts transparentemente.
               </li>
               <li>
-                <strong className="text-foreground">Timeouts Estendidos &amp; Sem Concorrência:</strong> O tempo limite de espera pelo WinThor Start foi ampliado de 3s para 8s. Se a requisição expirar ou o serviço responder com erro, o Dev Manager não dispara um processo concorrente às cegas, prevenindo contenção e travamento de arquivos.
+                <strong className="text-foreground">Timeouts Estendidos &amp; Sem Concorrência:</strong> O tempo limite de espera pelo WinThor Start foi ampliado de 3s para 8s. Se a requisição expirar ou o serviço responder com erro, o Hub Manager não dispara um processo concorrente às cegas, prevenindo contenção e travamento de arquivos.
               </li>
               <li>
                 <strong className="text-foreground">Contingência com 1 Clique:</strong> Caso o WinThor Start demore ou retorne erro, o botão <strong className="text-foreground">"Tentar abrir direto (sem autenticação)"</strong> surge instantaneamente no banner de feedback para abrir a rotina localmente de forma isolada.
@@ -1231,14 +1231,14 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Para comandos Karaf (<code className="font-mono text-primary font-semibold">feature:repo-add</code>, <code className="font-mono text-primary font-semibold">feature:install</code>, <code className="font-mono text-primary font-semibold">bundle:*</code>), o Dev Manager valida previamente se o contêiner OSGi está rodando e escutando na porta SSH (padrão <code className="font-mono text-primary font-semibold">8101</code>).
+            Para comandos Karaf (<code className="font-mono text-primary font-semibold">feature:repo-add</code>, <code className="font-mono text-primary font-semibold">feature:install</code>, <code className="font-mono text-primary font-semibold">bundle:*</code>), o Hub Manager valida previamente se o contêiner OSGi está rodando e escutando na porta SSH (padrão <code className="font-mono text-primary font-semibold">8101</code>).
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
             <p>
               O script oficial <code className="font-mono text-primary">client.bat</code> do Windows frequentemente retorna código de saída <code className="font-mono text-primary">0</code> mesmo ao exibir a mensagem de erro <code className="font-mono text-primary">"Failed to get the session."</code> quando o Karaf não está ativo.
             </p>
             <p>
-              A verificação prévia do Dev Manager impede que você gaste tempo esperando compilações Maven lentas (<code className="font-mono text-primary">mvn clean install</code>) para depois falhar no deploy, e garante que falhas de conexão SSH não sejam mascaradas como falso sucesso.
+              A verificação prévia do Hub Manager impede que você gaste tempo esperando compilações Maven lentas (<code className="font-mono text-primary">mvn clean install</code>) para depois falhar no deploy, e garante que falhas de conexão SSH não sejam mascaradas como falso sucesso.
             </p>
             <p className="pt-1">
               <strong>Como resolver:</strong> Inicie o Karaf pelo botão <strong className="text-foreground">Iniciar Karaf Embutido</strong> no banner de alerta da tela de Deploy, pela tela de <strong className="text-foreground">Ambiente Dev</strong>, ou adicione uma etapa que inicie o serviço/script Karaf antes dos comandos no seu perfil.
@@ -1255,7 +1255,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager traz um modal interativo de <strong className="text-foreground">Novidades da Versão</strong> que é exibido automaticamente após uma atualização e pode ser reaberto a qualquer momento.
+            O Hub Manager traz um modal interativo de <strong className="text-foreground">Novidades da Versão</strong> que é exibido automaticamente após uma atualização e pode ser reaberto a qualquer momento.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como acessar e navegar:</span>
@@ -1288,7 +1288,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O módulo <strong className="text-foreground">Qualidade &amp; Homologação (QA Hub)</strong> marca a expansão do Dev Manager além do desenvolvimento puro, fornecendo um cockpit dedicado para analistas de qualidade (QA) e donos de produto (PO).
+            O módulo <strong className="text-foreground">Qualidade &amp; Homologação (QA Hub)</strong> marca a expansão do Hub Manager além do desenvolvimento puro, fornecendo um cockpit dedicado para analistas de qualidade (QA) e donos de produto (PO).
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Principais recursos da 1ª etapa:</span>
@@ -1459,13 +1459,13 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O <strong className="text-foreground">Dev Manager</strong> integra com o seu projeto de testes Cypress (pasta definida em <strong className="text-foreground">Configurações &gt; Diretórios &amp; IDE</strong> ou detectada automaticamente: <code className="font-mono text-primary font-bold">taut*</code>, <code className="font-mono text-primary font-bold">cypress-tests</code>, <code className="font-mono text-primary font-bold">cypress</code> ou <code className="font-mono text-primary font-bold">e2e-tests</code>) na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
+            O <strong className="text-foreground">Hub Manager</strong> integra com o seu projeto de testes Cypress (pasta definida em <strong className="text-foreground">Configurações &gt; Diretórios &amp; IDE</strong> ou detectada automaticamente: <code className="font-mono text-primary font-bold">taut*</code>, <code className="font-mono text-primary font-bold">cypress-tests</code>, <code className="font-mono text-primary font-bold">cypress</code> ou <code className="font-mono text-primary font-bold">e2e-tests</code>) na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Recursos Integrados:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Sincronização de .env:</strong> Botão de 1 clique que atualiza as variáveis <code className="font-mono text-primary">ORACLE_USER</code>, <code className="font-mono text-primary">ORACLE_PASSWORD</code> e <code className="font-mono text-primary">ORACLE_CONNECT_STRING</code> do TAUT com base na conexão Oracle ativa no Dev Manager.
+                <strong className="text-foreground">Sincronização de .env:</strong> Botão de 1 clique que atualiza as variáveis <code className="font-mono text-primary">ORACLE_USER</code>, <code className="font-mono text-primary">ORACLE_PASSWORD</code> e <code className="font-mono text-primary">ORACLE_CONNECT_STRING</code> do TAUT com base na conexão Oracle ativa no Hub Manager.
               </li>
               <li>
                 <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-emerald-400">esteira</code>, <code className="font-mono text-rose-400">critico</code>, <code className="font-mono text-blue-400">regressao</code>, <code className="font-mono text-amber-400">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
@@ -1492,7 +1492,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Dev Manager permite importar aliases e configurações de rede diretamente de um arquivo <strong className="text-foreground font-mono">tnsnames.ora</strong> para acelerar a criação de conexões Oracle:
+            O Hub Manager permite importar aliases e configurações de rede diretamente de um arquivo <strong className="text-foreground font-mono">tnsnames.ora</strong> para acelerar a criação de conexões Oracle:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como configurar e usar:</span>
@@ -1507,7 +1507,7 @@ export function getFaqList({
                 <strong className="text-foreground">Seletor TNS Integrado:</strong> O painel <em>"Buscar no tnsnames.ora"</em> lista todas as entradas encontradas no arquivo com Host, Porta e Service Name/SID. Basta selecionar um alias no dropdown para preencher o formulário na hora.
               </li>
               <li>
-                <strong className="text-foreground">TNS_ADMIN Automático:</strong> O Dev Manager também injeta a pasta do arquivo como variável de ambiente <code className="font-mono text-primary font-semibold">TNS_ADMIN</code> e configura o diretório de rede do Oracle Thick Client (<code className="font-mono text-primary">configDir</code>), garantindo compatibilidade total com os drivers da Oracle.
+                <strong className="text-foreground">TNS_ADMIN Automático:</strong> O Hub Manager também injeta a pasta do arquivo como variável de ambiente <code className="font-mono text-primary font-semibold">TNS_ADMIN</code> e configura o diretório de rede do Oracle Thick Client (<code className="font-mono text-primary">configDir</code>), garantindo compatibilidade total com os drivers da Oracle.
               </li>
             </ol>
           </div>

@@ -93,7 +93,7 @@ function markdownToPlainText(md) {
 }
 
 function formatReleaseNotesMarkdown(opts) {
-  const productName = opts.productName || 'Dev Manager';
+  const productName = opts.productName || 'Hub Manager';
   const version = opts.version || '1.0.0';
   const dateFormatted = formatDateBr(opts.date);
   const installerFile = opts.installerFileName || `${productName} Setup ${version}.exe`;
@@ -175,7 +175,7 @@ ${changelogBody}
 }
 
 function formatReleaseNotesText(opts) {
-  const productName = opts.productName || 'Dev Manager';
+  const productName = opts.productName || 'Hub Manager';
   const version = opts.version || '1.0.0';
   const dateFormatted = formatDateBr(opts.date);
   const installerFile = opts.installerFileName || `${productName} Setup ${version}.exe`;
@@ -274,7 +274,7 @@ function generateReleaseNotes(customOutputDir, customVersion) {
     }
   }
 
-  const productName = 'Dev Manager';
+  const productName = 'Hub Manager';
   const version = customVersion || pkg.version || '1.0.0';
   const author = pkg.author || 'Wanderson Alves';
   const repoUrl = 'https://github.com/wanderalvess/dev-manager';

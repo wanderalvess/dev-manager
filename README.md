@@ -1,8 +1,8 @@
-# Dev Manager 🚀
+# Hub Manager 🚀
 
 > **Cockpit e Painel de Automação Desktop Integrado para Desenvolvedores e Apache Karaf OSGi.**
 
-Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manager** centraliza e automatiza todas as tarefas rotineiras do dia a dia de desenvolvimento: liberação de portas e serviços conflitantes em segundo plano, inicialização de IDEs, disparo do contêiner OSGi em modo debug, deploy automatizado de features Maven no Karaf, gerenciamento de repositórios Git / Azure DevOps, catálogo de rotinas e central completa de ajuda e diagnósticos. Além do Cockpit desktop, todas essas automações também ficam disponíveis para assistentes de IA como o Claude Code via um **servidor MCP** embutido.
+Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Hub Manager** centraliza e automatiza todas as tarefas rotineiras do dia a dia de desenvolvimento: liberação de portas e serviços conflitantes em segundo plano, inicialização de IDEs, disparo do contêiner OSGi em modo debug, deploy automatizado de features Maven no Karaf, gerenciamento de repositórios Git / Azure DevOps, catálogo de rotinas e central completa de ajuda e diagnósticos. Além do Cockpit desktop, todas essas automações também ficam disponíveis para assistentes de IA como o Claude Code via um **servidor MCP** embutido.
 
 ---
 
@@ -10,7 +10,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                   DEV MANAGER                                                    │
+│                                                   HUB MANAGER                                                    │
 ├─────────────┬──────────────┬─────────────┬─────────────────┬──────────────┬────────────┬──────────┬────────┬─────────┤
 │ ⚡ Ambiente │ 🗄️ Database  │ 🐳 Docker   │ 📦 Karaf Deploy │ 🔀 Git/Azure │ 📑 Rotinas │ 📚 Docs  │⚙ Config│ ❓ Ajuda│
 ├─────────────┴──────────────┴─────────────┴─────────────────┴──────────────┴────────────┴──────────┴────────┴─────────┤
@@ -66,7 +66,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Dev Manage
   * **Inspetor Dedicado (`StatementInspector`)**: Tabela de binds com botões *"Copiar SQL"* e *"Usar no Editor"*, transferindo a query já interpolada direto para a aba de execução SQL.
 
 #### 🛡️ Central de Backup & Restauração Integrada (5 Abas de Controle)
-O Dev Manager conta com uma central avançada de backup acessível pelo botão **Backup & Restore**:
+O Hub Manager conta com uma central avançada de backup acessível pelo botão **Backup & Restore**:
 1. **Executar Backup:**
    * Seleção de banco/schema, escolha da pasta de destino com seletor nativo e alternância entre **Modo Padrão** e **Comando Personalizado**.
    * Console de terminal integrado com streaming de log ao vivo da saída da ferramenta CLI (`expdp`, `exp`, `pg_dump`, `mysqldump`).
@@ -210,7 +210,7 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 ---
 
 ### 7. 📚 Central de Documentação, RAG & Assistente IA Integrado
-O **Módulo de Documentações** do Dev Manager transforma a base documental técnica dispersa do projeto em uma **central de conhecimento viva, pesquisável e acionável por Inteligência Artificial**. Ele funciona simultaneamente como catálogo centralizado para consulta rápida do desenvolvedor e como **motor de RAG (Retrieval-Augmented Generation)** tanto para o Assistente IA embutido quanto para agentes externos via servidor MCP.
+O **Módulo de Documentações** do Hub Manager transforma a base documental técnica dispersa do projeto em uma **central de conhecimento viva, pesquisável e acionável por Inteligência Artificial**. Ele funciona simultaneamente como catálogo centralizado para consulta rápida do desenvolvedor e como **motor de RAG (Retrieval-Augmented Generation)** tanto para o Assistente IA embutido quanto para agentes externos via servidor MCP.
 
 #### 🧠 1. Motor de Busca Semântica Local com Embeddings Neurais (FastEmbed)
 * **Por que Vetorizar? (Busca Semântica vs. Ctrl+F tradicional):**
@@ -325,7 +325,7 @@ Permite exportar a base de conhecimento local já processada para backends exter
   7. Catálogo e leitor integrado de documentos.
 
 #### 🤖 9. Integração com Servidor MCP (Tools de RAG para Agentes de IA)
-Para desenvolvedores que utilizam assistentes de codificação como **Claude Code**, **Cursor**, **GitHub Copilot Chat** ou **Antigravity**, o Dev Manager disponibiliza ferramentas MCP nativas:
+Para desenvolvedores que utilizam assistentes de codificação como **Claude Code**, **Cursor**, **GitHub Copilot Chat** ou **Antigravity**, o Hub Manager disponibiliza ferramentas MCP nativas:
 * `rag_search_docs`: Executa buscas semânticas vetoriais ou textuais na base indexada, retornando trechos mais relevantes e seus caminhos.
 * `rag_reindex_docs`: Dispara o processo de varredura e atualização de índices sob demanda diretamente via prompt da IA.
 * `rag_index_status`: Consulta o total de documentos, trechos, fontes ativas e status do modelo neural.
@@ -371,7 +371,7 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
   Inicia o servidor MCP via stdio (`tsx src/mcp/index.ts`) — mesmo mecanismo do script `server` (REST/Docker), agora falando o protocolo MCP.
 
 #### Uso a partir do release (sem o repositório)
-O `npm run build:electron` gera `release/mcp/`: um bundle único do servidor (`dev-manager-mcp.mjs`), só os módulos nativos que não cabem no bundle (`oracledb`, `fastembed`/`onnxruntime-node`) e o launcher `dev-manager-mcp.cmd`. O launcher usa o próprio `Dev Manager.exe` instalado pelo Setup como runtime (Electron em modo Node, via `ELECTRON_RUN_AS_NODE`), então o usuário não precisa de Node.js nem do código-fonte. Sem o app instalado, cai para o Node.js 20+ do PATH. A versão portátil não serve de runtime, porque é extraída numa pasta temporária a cada execução.
+O `npm run build:electron` gera `release/mcp/`: um bundle único do servidor (`dev-manager-mcp.mjs`), só os módulos nativos que não cabem no bundle (`oracledb`, `fastembed`/`onnxruntime-node`) e o launcher `dev-manager-mcp.cmd`. O launcher usa o próprio `Hub Manager.exe` instalado pelo Setup como runtime (Electron em modo Node, via `ELECTRON_RUN_AS_NODE`), então o usuário não precisa de Node.js nem do código-fonte. Sem o app instalado, cai para o Node.js 20+ do PATH. A versão portátil não serve de runtime, porque é extraída numa pasta temporária a cada execução.
 
 1. Copie a pasta `mcp` para um local fixo (ex.: `C:\DevManager\mcp`).
 2. Registre no assistente:
@@ -379,7 +379,7 @@ O `npm run build:electron` gera `release/mcp/`: um bundle único do servidor (`d
    claude mcp add dev-manager --scope user -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd
    ```
    Em arquivos JSON (`.mcp.json`, `mcp.json` do VS Code ou `mcp_config.json` do Antigravity), use `"command": "cmd"` e `"args": ["/c", "C:\\DevManager\\mcp\\dev-manager-mcp.cmd"]` (no VS Code a chave raiz é `servers`, nos demais `mcpServers`).
-3. Instalou o app fora da pasta padrão (`%LOCALAPPDATA%\Programs\Dev Manager`)? Defina a variável `DEV_MANAGER_EXE` com o caminho do `Dev Manager.exe` no campo `env` do registro.
+3. Instalou o app fora da pasta padrão (`%LOCALAPPDATA%\Programs\Hub Manager`)? Defina a variável `HUB_MANAGER_EXE` com o caminho do `Hub Manager.exe` no campo `env` do registro.
 
 Para gerar só essa pasta, sem empacotar o app: `npm run build:mcp`.
 
@@ -431,7 +431,7 @@ Para gerar só essa pasta, sem empacotar o app: `npm run build:mcp`.
 
 ## 📥 Instalação para Usuários (Pacote de Release)
 
-A pasta de cada release traz o instalador, a versão portátil, o servidor MCP pronto para uso (`mcp/`), o `instalar-extras.cmd` e um `LEIA-ME.txt` com o passo a passo. Basta rodar o `Dev Manager Setup <versão>.exe`: nada abaixo é obrigatório para abrir o app, cada item só libera uma funcionalidade específica.
+A pasta de cada release traz o instalador, a versão portátil, o servidor MCP pronto para uso (`mcp/`), o `instalar-extras.cmd` e um `LEIA-ME.txt` com o passo a passo. Basta rodar o `Hub Manager Setup <versão>.exe`: nada abaixo é obrigatório para abrir o app, cada item só libera uma funcionalidade específica.
 
 | Item | Para que serve | Quando precisa | Download |
 | :--- | :--- | :--- | :--- |
@@ -513,8 +513,8 @@ npm run build:electron
 
 | Arquivo | Formato | Descrição |
 | :--- | :--- | :--- |
-| **`Dev Manager <versão>.exe`** | Portátil (*Standalone*) | Executa diretamente sem necessidade de instalação prévia. Ideal para pendrives, ambientes restritos ou compartilhamento rápido em rede. |
-| **`Dev Manager Setup <versão>.exe`** | Instalador NSIS | Assistente tradicional do Windows com opções de escolha do diretório de instalação e criação de atalhos no Desktop e Menu Iniciar. |
+| **`Hub Manager <versão>.exe`** | Portátil (*Standalone*) | Executa diretamente sem necessidade de instalação prévia. Ideal para pendrives, ambientes restritos ou compartilhamento rápido em rede. |
+| **`Hub Manager Setup <versão>.exe`** | Instalador NSIS | Assistente tradicional do Windows com opções de escolha do diretório de instalação e criação de atalhos no Desktop e Menu Iniciar. |
 | **`LEIA-ME.txt`** | Texto Puro (CRLF) | Guia rápido de instalação para o usuário final, ideal para abrir no Bloco de Notas, com explicação do executável a escolher, aviso do SmartScreen e resumo das mudanças. |
 | **`RELEASE_NOTES.md`** | Markdown | Notas completas da versão com as novidades extraídas do changelog, ideal para publicação em releases no GitHub ou documentações internas. |
 | **`instalar-extras.cmd`** | Script | Extrai o modelo do RAG e o Oracle Instant Client que forem colocados à mão na mesma pasta. |

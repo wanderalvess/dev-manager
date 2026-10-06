@@ -277,7 +277,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
         {/* Rodapé com Fechar */}
         <div className="px-5 py-3 border-t border-border bg-card/80 flex items-center justify-between shrink-0">
           <span className="text-[11px] text-muted-foreground font-mono">
-            Dev Manager · Módulo de Qualidade &amp; Regressivo
+            Hub Manager · Módulo de Qualidade &amp; Regressivo
           </span>
           <button
             type="button"

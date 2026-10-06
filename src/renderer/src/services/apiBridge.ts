@@ -153,7 +153,7 @@ class WebSocketManager {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('[WebSocket] Conectado ao servidor Dev Manager');
+        console.log('[WebSocket] Conectado ao servidor Hub Manager');
       };
 
       this.ws.onmessage = (event) => {

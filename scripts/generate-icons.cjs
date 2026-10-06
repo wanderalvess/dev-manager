@@ -1,5 +1,5 @@
 /**
- * Gerador e validador de ícones da aplicação Dev Manager (.ico, .png, .svg).
+ * Gerador e validador de ícones da aplicação Hub Manager (.ico, .png, .svg).
  * Tema: Foguete Tech Futurista / Cyberpunk Cockpit.
  * Garante que build/icon.ico, build/icon.png e public/icon.png estejam presentes
  * e em conformidade com os requisitos do electron-builder (mínimo 256x256).
@@ -559,7 +559,7 @@ function ensureIcons(force = false) {
     }
   }
 
-  console.log('[Icons] Gerando ícones Foguete Tech da aplicação Dev Manager (.ico / .png)...');
+  console.log('[Icons] Gerando ícones Foguete Tech da aplicação Hub Manager (.ico / .png)...');
 
   let pngMap = {};
   let usedCanvas = false;

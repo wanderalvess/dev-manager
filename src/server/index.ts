@@ -231,7 +231,7 @@ app.get('/api/system/info', async (_req, res) => {
   const isAdmin = await windowsService.checkAdminPrivileges();
 
   res.json({
-    appName: 'Dev Manager (Web/Docker)',
+    appName: 'Hub Manager (Web/Docker)',
     appVersion,
     electronVersion: 'N/A (Docker Web Mode)',
     nodeVersion: process.version,
@@ -2162,7 +2162,7 @@ const HOST = process.env.HOST || (process.env.DOCKER_CONTAINER ? '0.0.0.0' : '12
 
 server.listen(PORT, HOST, () => {
   console.log(`\r\n=================================================`);
-  console.log(`🚀 Dev Manager Web Server Online!`);
+  console.log(`🚀 Hub Manager Web Server Online!`);
   console.log(`🌐 Acesso Web: http://${HOST}:${PORT}`);
   console.log(`📡 WebSocket:  ws://${HOST}:${PORT}/ws`);
   console.log(`📁 Modo:       ${process.env.DOCKER_CONTAINER ? 'Docker Container' : 'Local Node.js'}`);

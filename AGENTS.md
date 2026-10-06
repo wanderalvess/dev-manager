@@ -142,7 +142,7 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
   [scripts/release-templates/](scripts/release-templates)) e `mcp/`. O `mcp/` é gerado por
   [scripts/build-mcp.cjs](scripts/build-mcp.cjs): bundle ESM único de `src/mcp/index.ts` via
   esbuild + cópia só dos módulos nativos (mesma lista de `external` do Vite, podada para
-  win32-x64). O launcher `dev-manager-mcp.cmd` roda o bundle com o `Dev Manager.exe` instalado
+  win32-x64). O launcher `dev-manager-mcp.cmd` roda o bundle com o `Hub Manager.exe` instalado
   em modo `ELECTRON_RUN_AS_NODE`, para o usuário não precisar de Node nem do repositório — por
   isso não desligue o fuse `RunAsNode` do Electron. Código do MCP não pode depender de arquivos
   do repositório em runtime (a versão, por exemplo, é injetada via `__DEV_MANAGER_VERSION__`).
@@ -249,7 +249,7 @@ Checklist automático a cada ciclo de versão / release:
 ## Consistência de Design e Design System
 
 - **Manter sempre o design visual do sistema**:
-  - Respeitar a identidade visual dark/cockpit do Dev Manager (paleta Tailwind, classes `cockpit-panel`, `bg-card`, `border-border`, tokens semânticos `primary`, `foreground`, `muted-foreground`).
+  - Respeitar a identidade visual dark/cockpit do Hub Manager (paleta Tailwind, classes `cockpit-panel`, `bg-card`, `border-border`, tokens semânticos `primary`, `foreground`, `muted-foreground`).
   - Não introduzir elementos ou componentes com estilos desconexos ("AI slop", botões fora do padrão, fontes não mono onde se espera mono, ou quebras de alinhamento).
   - Manter consistência nos ícones (`lucide-react`), densidade de dados, estados de loading, tooltips e feedback sonoro/visual (toasts).
 

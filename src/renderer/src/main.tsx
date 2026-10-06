@@ -101,7 +101,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-console.log('[React] Inicializando Dev Manager...');
+console.log('[React] Inicializando Hub Manager...');
 
 const rootElement = document.getElementById('root');
 if (rootElement) {

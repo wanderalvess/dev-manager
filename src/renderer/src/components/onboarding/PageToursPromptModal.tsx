@@ -48,7 +48,7 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed">
-          O Dev Manager possui tours rápidos em módulos como <strong>Banco de Dados</strong>, <strong>Rotinas</strong>,{' '}
+          O Hub Manager possui tours rápidos em módulos como <strong>Banco de Dados</strong>, <strong>Rotinas</strong>,{' '}
           <strong>Deploy</strong>, <strong>Containers</strong> e <strong>Git</strong> para apresentar os recursos. Você
           pode vê-los ao visitar cada tela ou pular todos agora e explorar por conta própria.
         </p>

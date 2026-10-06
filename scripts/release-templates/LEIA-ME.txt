@@ -34,8 +34,8 @@ Dentro do app: Central de Ajuda (Alt+9).
 2. INSTALAÇÃO RÁPIDA
 -------------------------------------------------------------------------------
 
-  1) Execute "Dev Manager Setup {{VERSION}}.exe" e siga o assistente.
-  2) Abra o Dev Manager. Na primeira execução um tour apresenta as telas.
+  1) Execute "Hub Manager Setup {{VERSION}}.exe" e siga o assistente.
+  2) Abra o Hub Manager. Na primeira execução um tour apresenta as telas.
   3) Se precisar de algum item da seção 3, dê dois cliques em
      instalar-extras.cmd (ou siga as instruções manuais de cada item).
 
@@ -94,11 +94,11 @@ Dentro do app: Central de Ajuda (Alt+9).
 4. SERVIDOR MCP (Claude Code, VS Code/Copilot, Antigravity)
 -------------------------------------------------------------------------------
 
-  O servidor MCP expõe as automações do Dev Manager como ferramentas para
+  O servidor MCP expõe as automações do Hub Manager como ferramentas para
   assistentes de IA. Catálogo das ferramentas:
   https://github.com/wanderalvess/dev-manager/blob/main/docs/MCP_TOOLS.md
 
-  Pré-requisito: o Dev Manager instalado pelo Setup (o launcher usa o próprio
+  Pré-requisito: o Hub Manager instalado pelo Setup (o launcher usa o próprio
   executável como runtime, sem precisar de Node.js). Sem o Setup, é preciso
   ter o Node.js 20 ou mais novo no PATH (https://nodejs.org). A versão
   portátil não serve de runtime, porque é extraída numa pasta temporária a
@@ -138,9 +138,9 @@ Dentro do app: Central de Ajuda (Alt+9).
      (no Claude Code: /mcp).
 
   Observações:
-  - Instalou o Dev Manager em outra pasta? Adicione ao registro do servidor
-    a variável de ambiente DEV_MANAGER_EXE com o caminho completo do
-    "Dev Manager.exe" (campo "env" nos arquivos JSON).
+  - Instalou o Hub Manager em outra pasta? Adicione ao registro do servidor
+    a variável de ambiente HUB_MANAGER_EXE com o caminho completo do
+    "Hub Manager.exe" (campo "env" nos arquivos JSON).
   - O MCP usa as mesmas configurações do app (%APPDATA%\dev-manager).
   - As ferramentas apm_* (traces) só respondem com o app aberto.
   - A cada nova versão, substitua a pasta mcp pela do novo release.

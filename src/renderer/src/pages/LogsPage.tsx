@@ -120,7 +120,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
     try {
       const success = await window.electronAPI.clearLogFile(activeSource.filePath);
       if (success) {
-        setLines(['--- [ARQUIVO LIMPO NO DISCO PELO DEV MANAGER] ---']);
+        setLines(['--- [ARQUIVO LIMPO NO DISCO PELO HUB MANAGER] ---']);
         if (window.electronAPI.checkLogFile) {
           const updated = await window.electronAPI.checkLogFile(activeSource.filePath, activeSource.id);
           setStatus(updated);

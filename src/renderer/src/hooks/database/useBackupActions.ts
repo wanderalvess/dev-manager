@@ -153,7 +153,7 @@ export function useBackupActions({
 
     const confirmed = window.confirm(
       `Restaurar "${file.fileName}" na conexão "${activeConnection.name}"?\n\n` +
-        'Isso executa o backup contra o banco de dados AGORA e pode sobrescrever ou duplicar dados existentes. Essa ação não pode ser desfeita pelo Dev Manager.'
+        'Isso executa o backup contra o banco de dados AGORA e pode sobrescrever ou duplicar dados existentes. Essa ação não pode ser desfeita pelo Hub Manager.'
     );
     if (!confirmed) return;
 

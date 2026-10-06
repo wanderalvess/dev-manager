@@ -84,7 +84,7 @@ export const StatementTracerPanel: React.FC<StatementTracerPanelProps> = ({ acti
         <TracerEmptyState
           icon={<Radio className="w-8 h-8 mx-auto opacity-30 text-sky-500" />}
           title="Nenhuma captura em andamento."
-          subtitle='Clique em "Iniciar Captura" e vá disparar a ação no outro app (Delphi/Karaf) — a captura roda em segundo plano e continua mesmo se você trocar de aba ou de página aqui no Dev Manager.'
+          subtitle='Clique em "Iniciar Captura" e vá disparar a ação no outro app (Delphi/Karaf) — a captura roda em segundo plano e continua mesmo se você trocar de aba ou de página aqui no Hub Manager.'
         />
       ) : view === 'sessions' ? (
         <SessionsTimeline

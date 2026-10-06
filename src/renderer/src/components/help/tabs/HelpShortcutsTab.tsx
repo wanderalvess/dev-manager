@@ -110,7 +110,7 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
             <span>Dica Pro: Automação por IA no IntelliJ &amp; VS Code (Copilot / MCP)</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Conecte o servidor MCP do Dev Manager ao seu GitHub Copilot no IntelliJ IDEA ou VS Code. Basta pedir em linguagem natural: <strong className="text-foreground">"Faça o clean install do projeto atual e instale a feature no Karaf"</strong>. A IA compila via Maven, aciona os comandos Karaf e verifica se o bundle ficou ativo automaticamente!
+            Conecte o servidor MCP do Hub Manager ao seu GitHub Copilot no IntelliJ IDEA ou VS Code. Basta pedir em linguagem natural: <strong className="text-foreground">"Faça o clean install do projeto atual e instale a feature no Karaf"</strong>. A IA compila via Maven, aciona os comandos Karaf e verifica se o bundle ficou ativo automaticamente!
           </p>
           <div className="flex items-center justify-between p-2 rounded-xl bg-muted/60 border border-border font-mono text-[11px]">
             <code className="text-primary truncate" title="Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa.">Faça o clean install... e instale a feature</code>

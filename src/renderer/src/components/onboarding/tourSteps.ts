@@ -31,7 +31,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: 'nav-qa',
     title: 'Qualidade & Homologação',
-    desc: 'Espaço dedicado para QA e homologação: validador regressivo Oracle, asserções de banco, matriz de testes e prontidão de release.'
+    desc: 'Quatro páginas para QA e homologação: Homologação (matriz e prontidão de release), Validador Regressivo Oracle, Test Runners e TAUT (Cypress).'
   },
   {
     target: 'search',

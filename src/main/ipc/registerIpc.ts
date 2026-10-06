@@ -191,7 +191,7 @@ export function registerIpcHandlers(
     const configPath = configService.getConfigFilePath();
 
     return {
-      appName: 'Dev Manager',
+      appName: 'Hub Manager',
       appVersion: app.getVersion(),
       electronVersion: process.versions.electron || 'N/A',
       nodeVersion: process.versions.node || 'N/A',

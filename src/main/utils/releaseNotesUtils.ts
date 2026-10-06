@@ -123,7 +123,7 @@ export function markdownToPlainText(md: string): string {
  * Gera as notas de versão formatadas em Markdown (RELEASE_NOTES.md).
  */
 export function formatReleaseNotesMarkdown(options: ReleaseNotesOptions): string {
-  const productName = options.productName || 'Dev Manager';
+  const productName = options.productName || 'Hub Manager';
   const version = options.version || '1.0.0';
   const dateFormatted = formatDateBr(options.date);
   const installerFile = options.installerFileName || `${productName} Setup ${version}.exe`;
@@ -209,7 +209,7 @@ ${changelogBody}
  * compatível com o Bloco de Notas do Windows (Notepad) com quebras CRLF.
  */
 export function formatReleaseNotesText(options: ReleaseNotesOptions): string {
-  const productName = options.productName || 'Dev Manager';
+  const productName = options.productName || 'Hub Manager';
   const version = options.version || '1.0.0';
   const dateFormatted = formatDateBr(options.date);
   const installerFile = options.installerFileName || `${productName} Setup ${version}.exe`;

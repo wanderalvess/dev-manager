@@ -67,7 +67,7 @@ describe('ApmReceiverClient', () => {
     await owner.stopReceiver();
     const err = await client.getOverview().catch((e) => e);
     expect(err).toBeInstanceOf(ApmReceiverUnavailableError);
-    expect(err.message).toContain('Nenhum receptor APM do Dev Manager está ativo');
+    expect(err.message).toContain('Nenhum receptor APM do Hub Manager está ativo');
   });
 
   it('explica quando o dono do arquivo de acesso deixou de responder (app encerrado à força)', async () => {

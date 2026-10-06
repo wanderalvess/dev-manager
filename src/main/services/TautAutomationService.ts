@@ -92,7 +92,7 @@ export class TautAutomationService {
   }
 
   /**
-   * Salva o caminho do projeto TAUT nas configurações do Dev Manager.
+   * Salva o caminho do projeto TAUT nas configurações do Hub Manager.
    */
   public saveProjectPath(targetPath: string): void {
     if (!targetPath || !targetPath.trim()) {
@@ -336,7 +336,7 @@ export class TautAutomationService {
 
   /**
    * Sincroniza o arquivo .env do projeto TAUT utilizando a conexão Oracle ativa
-   * e as credenciais/URLs configuradas no WinThor Dev Manager.
+   * e as credenciais/URLs configuradas no Hub Manager.
    */
   public async syncEnvFromDevManager(
     customPath?: string,
@@ -359,7 +359,7 @@ export class TautAutomationService {
     }
 
     if (!targetConn) {
-      throw new Error('Nenhuma conexão Oracle configurada no Dev Manager para sincronização.');
+      throw new Error('Nenhuma conexão Oracle configurada no Hub Manager para sincronização.');
     }
 
     const resolved = this.databaseService.resolveConnectionConfig(targetConn);

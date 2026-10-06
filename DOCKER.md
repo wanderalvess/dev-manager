@@ -1,6 +1,6 @@
-# Guia de Execução no Docker 🐳 - Dev Manager
+# Guia de Execução no Docker 🐳 - Hub Manager
 
-O **Dev Manager** suporta execução nativa em contêineres **Docker**, disponibilizando um **Web Cockpit completo** acessível via navegador web (`http://localhost:3000`), sem necessidade de instalar Electron na máquina de execução.
+O **Hub Manager** suporta execução nativa em contêineres **Docker**, disponibilizando um **Web Cockpit completo** acessível via navegador web (`http://localhost:3000`), sem necessidade de instalar Electron na máquina de execução.
 
 ---
 
@@ -35,13 +35,13 @@ Abra seu navegador em:
 
 O `docker-compose.yml` inclui perfis modulares para diferentes cenários:
 
-### 🔹 Modo 1: Apenas o Dev Manager (Padrão)
+### 🔹 Modo 1: Apenas o Hub Manager (Padrão)
 Inicia o painel de gerenciamento Web conectado às suas pastas locais montadas:
 ```bash
 docker compose up -d
 ```
 
-### 🔹 Modo 2: Full-Stack (Dev Manager + Karaf OSGi + Oracle Database)
+### 🔹 Modo 2: Full-Stack (Hub Manager + Karaf OSGi + Oracle Database)
 Inicia o painel Web junto com contêineres dedicados do Apache Karaf e Oracle Database Free:
 ```bash
 docker compose --profile full-stack up -d
@@ -114,7 +114,7 @@ docker run -d \
 O servidor escuta em `0.0.0.0`, permitindo que outros membros do time acessem pelo IP da sua máquina (ex: `http://192.168.1.50:3000`).
 
 ### Várias pessoas podem usar essa mesma instância ao mesmo tempo?
-Tecnicamente sim, mas **não é esse o modelo pensado para o Dev Manager**. Cada instância é *single-tenant*: existe um único arquivo de configurações (`CONFIG_DIR/config.json`) compartilhado por qualquer um que acesse aquela URL — conexões de banco, credenciais do Karaf, perfis de backup e chaves de LLM incluídos. Não há login nem separação por usuário; a `API_KEY` autentica o acesso à instância como um todo, não identifica quem está usando. Se duas pessoas editarem configurações ao mesmo tempo, uma sobrescreve a outra.
+Tecnicamente sim, mas **não é esse o modelo pensado para o Hub Manager**. Cada instância é *single-tenant*: existe um único arquivo de configurações (`CONFIG_DIR/config.json`) compartilhado por qualquer um que acesse aquela URL — conexões de banco, credenciais do Karaf, perfis de backup e chaves de LLM incluídos. Não há login nem separação por usuário; a `API_KEY` autentica o acesso à instância como um todo, não identifica quem está usando. Se duas pessoas editarem configurações ao mesmo tempo, uma sobrescreve a outra.
 
 O modelo pretendido é **uma instância por pessoa** (rodando localmente ou no seu próprio container). Para padronizar a configuração entre a equipe sem compartilhar credenciais, use **Configurações → Exportar** (com a opção de sanitizar senhas) e cada pessoa importa o arquivo na sua própria instância.
 

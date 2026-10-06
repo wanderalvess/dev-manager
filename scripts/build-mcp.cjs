@@ -4,7 +4,7 @@
  *
  * Saída (padrão: release/mcp):
  *   dev-manager-mcp.mjs   bundle único de src/mcp/index.ts (dependências JS inlineadas)
- *   dev-manager-mcp.cmd   launcher: usa o Dev Manager.exe instalado como runtime Node
+ *   dev-manager-mcp.cmd   launcher: usa o Hub Manager.exe instalado como runtime Node
  *   node_modules/         só os módulos nativos que não podem ir para o bundle
  *
  * Uso: node scripts/build-mcp.cjs [pastaDeSaida]

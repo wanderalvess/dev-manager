@@ -20,7 +20,7 @@ export class ApmReceiverUnavailableError extends Error {
 }
 
 const NO_RECEIVER_MESSAGE =
-  'Nenhum receptor APM do Dev Manager está ativo: abra o app desktop (ou rode `npm run server`) ' +
+  'Nenhum receptor APM do Hub Manager está ativo: abra o app desktop (ou rode `npm run server`) ' +
   'para receber spans OpenTelemetry e consultá-los por aqui.';
 
 /**
@@ -63,7 +63,7 @@ export class ApmReceiverClient {
       });
     } catch (err: any) {
       throw new ApmReceiverUnavailableError(
-        `O receptor APM do Dev Manager (porta ${port}) não respondeu (${err?.message}). ${NO_RECEIVER_MESSAGE}`
+        `O receptor APM do Hub Manager (porta ${port}) não respondeu (${err?.message}). ${NO_RECEIVER_MESSAGE}`
       );
     }
 
@@ -82,8 +82,8 @@ export class ApmReceiverClient {
   private async get<T>(route: string): Promise<T> {
     const { status, body } = await this.request<T>(route);
     if (status === 404 || body === undefined) {
-      // Um coletor de terceiros (ex.: OTel Collector) na porta responde 404 para as rotas do Dev Manager
-      throw new ApmReceiverUnavailableError(`A porta registrada não serve a API de consulta do Dev Manager. ${NO_RECEIVER_MESSAGE}`);
+      // Um coletor de terceiros (ex.: OTel Collector) na porta responde 404 para as rotas do Hub Manager
+      throw new ApmReceiverUnavailableError(`A porta registrada não serve a API de consulta do Hub Manager. ${NO_RECEIVER_MESSAGE}`);
     }
     return body;
   }

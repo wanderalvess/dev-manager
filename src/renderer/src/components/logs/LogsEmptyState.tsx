@@ -32,7 +32,7 @@ export const LogsEmptyState: React.FC<LogsEmptyStateProps> = ({
       ) : status && !status.exists ? (
         <div className="text-xs text-rose-400/90 leading-relaxed bg-rose-950/20 border border-rose-900/40 p-3 rounded-xl">
           O arquivo <code className="text-slate-200 font-mono font-bold">{filePath}</code> não
-          foi encontrado. O Dev Manager está em escuta contínua e iniciará a transmissão assim que o serviço
+          foi encontrado. O Hub Manager está em escuta contínua e iniciará a transmissão assim que o serviço
           gravar as primeiras saídas.
         </div>
       ) : hasActiveFilter ? (

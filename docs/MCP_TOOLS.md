@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Dev Manager expõe **166 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **166 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -18,7 +18,7 @@ Permite verificar e manipular o ambiente local: matar processos, iniciar serviç
 *   **`env_launch_ide` / `env_launch_app`**: Inicia a sua IDE (IntelliJ, VS Code) ou outros executáveis no Windows.
 *   **`env_launch_server_debug`**: Abre o script de debug do Karaf em uma janela externa.
 *   **`env_reset_environment`**: Executa uma automação completa de "reset" para limpar o ambiente local e subir tudo do zero.
-*   **`settings_get` / `settings_save`**: Lê as configurações do Dev Manager (com segredos ofuscados) e grava um conjunto parcial delas.
+*   **`settings_get` / `settings_save`**: Lê as configurações do Hub Manager (com segredos ofuscados) e grava um conjunto parcial delas.
 
 **Exemplo de como pedir à IA:**
 > "Verifique o status do meu ambiente, mate qualquer processo preso na porta 8181 e inicie a IDE."
@@ -41,7 +41,7 @@ Ferramentas de orquestração local (macros).
 Domínio completo para interagir com o Karaf, inspecionar logs, diagnosticar conflitos OSGi e fazer deploys.
 
 *   **`karaf_is_running`**: Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101).
-*   **`karaf_start_embedded` / `karaf_stop_embedded` / `karaf_is_embedded_running`**: Inicia, encerra e verifica se a instância do Karaf embutida do Dev Manager está ativa.
+*   **`karaf_start_embedded` / `karaf_stop_embedded` / `karaf_is_embedded_running`**: Inicia, encerra e verifica se a instância do Karaf embutida do Hub Manager está ativa.
 *   **`karaf_get_embedded_output` / `karaf_send_embedded_input`**: Lê a saída acumulada do console embutido desde a última leitura e envia uma linha de comando a ele.
 *   **`karaf_get_persisted_logs`**: Lê o final do log do console embutido gravado em disco, sem consumir o buffer (sobrevive a reinícios).
 *   **`karaf_exec_command`**: Executa um único comando no shell do Karaf via `client.bat` (ex.: `feature:list -i`).
@@ -110,7 +110,7 @@ Busca semântica avançada em PDFs, markdowns e manuais.
 
 *   **`rag_reindex_docs` / `rag_search_docs` / `rag_index_status`**: Permite indexar pastas, criar embeddings e buscar informações específicas nos documentos da empresa offline.
 *   **`docs_ask_ai`**: Usa a IA (com os LLMs configurados - BYOK) para formular respostas precisas baseadas nos seus documentos internos.
-*   **`llm_chat`**: Proxy direto para conversar com os modelos (OpenAI, Anthropic, Gemini, etc) pelo Dev Manager.
+*   **`llm_chat`**: Proxy direto para conversar com os modelos (OpenAI, Anthropic, Gemini, etc) pelo Hub Manager.
 
 **Exemplo de como pedir à IA:**
 > "Busque nas documentações do projeto como configurar a variável de ambiente do banco."
@@ -127,7 +127,7 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 *   **`db_get_oracle_active_sessions` / `db_get_oracle_recent_statements`**: Statement Tracer do Oracle — lista sessões conectadas com a SQL atual/última de cada uma (`v$session`/`v$sql`) ou as instruções mais recentes no cursor cache, com filtro opcional por schema/texto. Útil para descobrir qual query um app ou rotina disparou, quando vários sistemas compartilham o mesmo banco.
 *   **`db_get_oracle_statement_binds`**: Captura os valores dos parâmetros (`bind variables`) passados na execução de um SQL no Oracle via `v$sql_bind_capture`, retornando tipo de dado, posição, nome e valor capturado, acompanhado do SQL executável interpolado (com os parâmetros substituídos no formato literal correto). Permite inspecionar parâmetros sem precisar habilitar `log:set trace root` no Karaf ou usar ferramentas externas como `OraTracer.exe`.
 *   **`db_start_oracle_capture` / `db_get_oracle_capture_state` / `db_stop_oracle_capture` / `db_clear_oracle_capture`**: Captura contínua do Statement Tracer — consulta `v$session`/`v$sql` em segundo plano (intervalo padrão de 3s, mínimo de 2s, parada automática após 30 minutos) e acumula as SQLs distintas e a linha do tempo de qual sessão passou a rodar qual SQL. A leitura devolve até 50 itens de cada lista por padrão (`limit`). É uma captura própria do servidor MCP: não enxerga a captura iniciada na tela do app, e vice-versa.
-*   **`db_list_tns_entries`**: Lê e analisa o arquivo de rede `tnsnames.ora` configurado no Dev Manager (ou informado pontualmente via `filePath`), extraindo aliases, host, porta, SID, SERVICE_NAME e protocolo configurados para conexão ao Oracle.
+*   **`db_list_tns_entries`**: Lê e analisa o arquivo de rede `tnsnames.ora` configurado no Hub Manager (ou informado pontualmente via `filePath`), extraindo aliases, host, porta, SID, SERVICE_NAME e protocolo configurados para conexão ao Oracle.
 
 **Exemplo de como pedir à IA:**
 > "Mostre as colunas da tabela PCEMPR."
@@ -219,7 +219,7 @@ Automação de homologação regressiva para equipes de QA e desenvolvedores: ex
 
 *   **`qa_list_templates`**: Lista todos os cenários/templates de regressivo disponíveis na pasta dedicada (ex.: Venda PDV Completa, Cancelamento, Kits e Cestas).
 *   **`qa_get_template`**: Consulta a definição detalhada de um template por ID, com todas as suas queries SQL e asserções configuradas.
-*   **`qa_save_template`**: Cria ou atualiza um template de teste regressivo no catálogo local do Dev Manager, persistindo título, queries SQL, binds, variáveis e regras de asserção contra colunas.
+*   **`qa_save_template`**: Cria ou atualiza um template de teste regressivo no catálogo local do Hub Manager, persistindo título, queries SQL, binds, variáveis e regras de asserção contra colunas.
 *   **`qa_delete_template`**: Remove um template de teste regressivo do catálogo local pelo ID.
 *   **`qa_fetch_incoming_payload`**: Localiza e recupera o payload JSON original de uma transação gravado na tabela `PCINTEGRACAOCORE` (coluna `DADOSTRANSFORMADOS`) do Oracle. Permite buscar por CPF/CNPJ do consumidor (`cgcEnt`), número de cupom fiscal/venda, chave de 44 dígitos da NFC-e/NF-e, ID externo ou listar transações recentes.
 *   **`qa_fetch_api_payload`**: Dispara uma requisição HTTP (GET ou POST) a um serviço de mensageria, API gateway ou endpoint externo e extrai o payload JSON de entrada para alimentar o validador regressivo. Suporta cabeçalhos customizados (tokens, Bearer) e JSONPath para navegar até o objeto desejado (ex: `"data.pedido"`).
@@ -240,7 +240,7 @@ Automação de homologação regressiva para equipes de QA e desenvolvedores: ex
 ## 14. Test Runners & Automação de Testes (Maven, Playwright, Cypress, Newman)
 Executa suítes completas de testes automatizados unitários, de integração, E2E ou de contratos de API REST com captura e streaming de logs em tempo real, cálculo de métricas e vínculo com a Matriz de Validação da Central de Qualidade.
 
-*   **`test_runner_list`**: Lista todos os executores/suítes de testes automatizados configurados no Dev Manager.
+*   **`test_runner_list`**: Lista todos os executores/suítes de testes automatizados configurados no Hub Manager.
 *   **`test_runner_execute`**: Dispara a execução de um runner por ID ou configuração inline (suporta Maven `mvn test`/`verify`, Playwright `npx playwright test`, Cypress `npx cypress run`, Newman `npx newman run` ou scripts personalizados). Retorna métricas detalhadas (testes passados, falhas, pulados, duração, código de saída e resumo).
 *   **`test_runner_history`**: Obtém o histórico persistido das últimas execuções de testes automatizados com seus status e resultados analíticos.
 
@@ -258,12 +258,12 @@ Integração com o projeto de testes automatizados Cypress (**TAUT**), localizad
 *   **`taut_run_tests`**: Executa testes Cypress no TAUT com filtros flexíveis de tags (`tags: "critico,winthor-pedido-venda,-develop"`), specs (`spec: "cypress/e2e/api/Pedido/**/*"`) e modo de API (`v39` ou `legacy`), coletando extrato da execução e métricas de aprovação/falhas.
 *   **`taut_get_coverage`**: Analisa a paridade entre os cenários desenhados nos CSVs da pasta `/Insumo/` (chaves `ABC-T123`, ou só as do prefixo configurado em Configurações > Diretórios & IDE) e os testes implementados em `cypress/e2e/`, reportando percentual de cobertura e lista de testes pendentes. Sem CSV na pasta `Insumo/`, o percentual não é calculado (`baselineMissing`).
 *   **`taut_list_specs`**: Varre todos os arquivos `.cy.ts` do projeto TAUT, retornando quantidade de testes, tags de módulo e chaves do Zephyr associadas a cada spec.
-*   **`taut_sync_env`**: Gera ou atualiza o arquivo `.env` do projeto TAUT utilizando a conexão Oracle ativa no Dev Manager (`ORACLE_USER`, `ORACLE_PASSWORD`, `ORACLE_CONNECT_STRING`) e parâmetros do WTA. As credenciais da API (`CYPRESS_API_USUARIO`/`CYPRESS_API_SENHA`) só são gravadas quando o login do WTA está configurado.
+*   **`taut_sync_env`**: Gera ou atualiza o arquivo `.env` do projeto TAUT utilizando a conexão Oracle ativa no Hub Manager (`ORACLE_USER`, `ORACLE_PASSWORD`, `ORACLE_CONNECT_STRING`) e parâmetros do WTA. As credenciais da API (`CYPRESS_API_USUARIO`/`CYPRESS_API_SENHA`) só são gravadas quando o login do WTA está configurado.
 *   **`taut_process_csv_intake`**: Atua como o Orquestrador de Intake (Subagente 0) do TAUT: lê um arquivo CSV do Zephyr, valida a chave do cenário, o endpoint, a coluna Serviço e a existência de cenários de contrato e negativo, e gera o bloco estruturado e plano de implementação das 4 camadas.
 
 **Exemplo de como pedir à IA:**
 > "Verifique o status do projeto TAUT e confira se o .env está configurado com o Oracle."
-> "Sincronize o .env do TAUT com a minha conexão Oracle ativa no Dev Manager."
+> "Sincronize o .env do TAUT com a minha conexão Oracle ativa no Hub Manager."
 > "Execute os testes críticos de Pedido do TAUT com a tag 'critico,winthor-pedido-venda'."
 > "Qual é a cobertura atual de testes do Zephyr no TAUT e quais cenários ainda estão pendentes?"
 > "Liste todas as specs de teste do TAUT relacionadas a Tributação e ICMS."

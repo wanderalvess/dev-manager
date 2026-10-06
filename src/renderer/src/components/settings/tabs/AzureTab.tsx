@@ -79,7 +79,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
               <div className="flex items-center justify-between">
                 <label htmlFor="azure-tab-2"
                   className="font-bold text-foreground flex items-center gap-1.5"
-                  title="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Dev Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
+                  title="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Hub Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
                 >
                   <HardDrive className="w-3.5 h-3.5 text-primary" />
                   Diretório Base dos Repositórios Git:
@@ -109,7 +109,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                 </button>
               </div>
               <p className="text-2xs text-muted-foreground">
-                O Dev Manager realiza a varredura das pastas contidas neste diretório procurando por projetos Git com remote do Azure DevOps.
+                O Hub Manager realiza a varredura das pastas contidas neste diretório procurando por projetos Git com remote do Azure DevOps.
               </p>
             </div>
 

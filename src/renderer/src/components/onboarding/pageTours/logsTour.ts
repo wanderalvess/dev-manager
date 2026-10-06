@@ -11,7 +11,7 @@ export const LOGS_TOUR_STEPS: TourStep[] = [
   {
     target: 'gerenciar-fontes',
     title: 'Gerenciar Fontes',
-    desc: 'Cadastre, edite ou remova arquivos de log que o Dev Manager acompanha.'
+    desc: 'Cadastre, edite ou remova arquivos de log que o Hub Manager acompanha.'
   },
   {
     target: 'status-conexao-live',

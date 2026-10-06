@@ -57,7 +57,7 @@ export class QaPayloadService {
         success: false,
         totalFound: 0,
         items: [],
-        error: 'Nenhuma conexão Oracle selecionada ou configurada no Dev Manager.'
+        error: 'Nenhuma conexão Oracle selecionada ou configurada no Hub Manager.'
       };
     }
 

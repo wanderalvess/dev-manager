@@ -1,6 +1,6 @@
 /**
  * Decodificador de baixo nível e alto desempenho para payloads binários OTLP Protobuf (v1/traces).
- * Permite que o Dev Manager APM receba traces nativos enviados pelo OpenTelemetry Java Agent
+ * Permite que o Hub Manager APM receba traces nativos enviados pelo OpenTelemetry Java Agent
  * (protocolo padrão `http/protobuf` via Content-Type: `application/x-protobuf`)
  * sem requerer dependências externas pesadas ou compilação nativa.
  *

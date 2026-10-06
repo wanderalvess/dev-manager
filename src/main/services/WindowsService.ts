@@ -710,7 +710,7 @@ export class WindowsService {
 
       pushLog('success', '🎉 Ambiente preparado com sucesso! Bom trabalho!');
 
-      await this.showNativeNotification('Dev Manager', 'Ambiente de desenvolvimento preparado com sucesso!');
+      await this.showNativeNotification('Hub Manager', 'Ambiente de desenvolvimento preparado com sucesso!');
 
       return { success: true, logs };
     } catch (err: any) {
@@ -1172,7 +1172,7 @@ export class WindowsService {
 
       pushLog('success', `🎉 Perfil "${profile.name}" executado com sucesso! Todos os passos disparados.`);
 
-      await this.showNativeNotification('Dev Manager', `Perfil "${profile.name}" iniciado com sucesso!`);
+      await this.showNativeNotification('Hub Manager', `Perfil "${profile.name}" iniciado com sucesso!`);
 
       return { success: true, logs };
     } catch (err: any) {

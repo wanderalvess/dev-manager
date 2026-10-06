@@ -116,7 +116,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
           placeholder="Cole o valor do cookie 'suukie' do WTA (opcional)"
         />
         <p className="text-2xs text-muted-foreground mt-0.5">
-          Permite que o Dev Manager consulte os parâmetros atualizados direto da sua sessão web. Abra o
+          Permite que o Hub Manager consulte os parâmetros atualizados direto da sua sessão web. Abra o
           DevTools do navegador (F12) na tela do WTA logado, aba Application/Cookies, e copie o valor
           de <code>suukie</code>.
         </p>

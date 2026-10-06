@@ -10,7 +10,7 @@ export function helpAboutMemoryUsagePercent(appInfo: SystemAppInfo | null): numb
 /** Relatório de diagnóstico copiado pelo botão da aba Sobre (texto de produto, pt-BR). */
 export function helpAboutBuildDiagnosticReport(appInfo: SystemAppInfo, now: Date = new Date()): string {
   return [
-    `=== DIAGNÓSTICO DO SISTEMA - DEV MANAGER ===`,
+    `=== DIAGNÓSTICO DO SISTEMA - HUB MANAGER ===`,
     `Data/Hora: ${now.toLocaleString('pt-BR')}`,
     `Aplicação: ${appInfo.appName} v${appInfo.appVersion}`,
     `Privilégios UAC: ${appInfo.isAdmin ? 'Administrador (Elevado)' : 'Usuário Padrão (Sem Elevação)'}`,

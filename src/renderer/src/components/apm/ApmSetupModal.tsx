@@ -67,7 +67,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
             {/* Modal Body */}
             <div className="p-4 flex flex-col gap-3 font-mono text-xs">
               <p className="text-muted-foreground leading-relaxed font-sans text-xs">
-                O Dev Manager escuta traces padrão <strong>OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> na porta{' '}
+                O Hub Manager escuta traces padrão <strong>OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> na porta{' '}
                 <code className="text-primary font-bold">{receiverPort}</code>. Qualquer aplicação instrumentada envia
                 seus spans automaticamente — métricas e logs OTLP não são coletados.
               </p>
@@ -128,7 +128,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                   {isChangingPort ? 'Aplicando…' : 'Aplicar'}
                 </button>
                 <span className="text-[11px] text-muted-foreground">
-                  O Karaf iniciado pelo Dev Manager passa a exportar para esta porta no próximo start.
+                  O Karaf iniciado pelo Hub Manager passa a exportar para esta porta no próximo start.
                 </span>
               </div>
 
@@ -196,7 +196,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
               {setupTab === 'karaf' && (
                 <div className="flex flex-col gap-2 mt-1">
                   <p className="text-muted-foreground font-sans text-xs">
-                    Coloque o arquivo <code className="text-foreground font-mono">opentelemetry-javaagent.jar</code> dentro da pasta <code className="text-foreground font-mono">bin</code> do seu Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> acima — o Dev Manager passa a anexar o agente sozinho ao iniciar pelo Cockpit. Para scripts externos (<code className="text-foreground font-mono">winthor.bat</code>), use:
+                    Coloque o arquivo <code className="text-foreground font-mono">opentelemetry-javaagent.jar</code> dentro da pasta <code className="text-foreground font-mono">bin</code> do seu Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> acima — o Hub Manager passa a anexar o agente sozinho ao iniciar pelo Cockpit. Para scripts externos (<code className="text-foreground font-mono">winthor.bat</code>), use:
                   </p>
                   <div className="relative">
                     <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-emerald-400 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">

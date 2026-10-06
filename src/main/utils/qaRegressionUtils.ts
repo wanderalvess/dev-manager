@@ -445,7 +445,7 @@ export function generateMarkdownEvidence(
   }
 
   lines.push('---');
-  lines.push('*Gerado automaticamente pelo Dev Manager — Módulo de Qualidade & Regressivo*');
+  lines.push('*Gerado automaticamente pelo Hub Manager — Módulo de Qualidade & Regressivo*');
 
   return lines.join('\n');
 }

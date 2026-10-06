@@ -3,7 +3,7 @@ import type { SystemAppInfo } from '../../../shared/types';
 import { helpAboutMemoryUsagePercent, helpAboutBuildDiagnosticReport } from './helpAboutUtils';
 
 const info: SystemAppInfo = {
-  appName: 'Dev Manager',
+  appName: 'Hub Manager',
   appVersion: '1.0.0',
   electronVersion: '29',
   nodeVersion: '20',
@@ -34,8 +34,8 @@ describe('helpAboutMemoryUsagePercent', () => {
 describe('helpAboutBuildDiagnosticReport', () => {
   it('monta o relatório com os campos principais', () => {
     const lines = helpAboutBuildDiagnosticReport(info, new Date(2026, 0, 1)).split('\n');
-    expect(lines[0]).toBe('=== DIAGNÓSTICO DO SISTEMA - DEV MANAGER ===');
-    expect(lines).toContain('Aplicação: Dev Manager v1.0.0');
+    expect(lines[0]).toBe('=== DIAGNÓSTICO DO SISTEMA - HUB MANAGER ===');
+    expect(lines).toContain('Aplicação: Hub Manager v1.0.0');
     expect(lines).toContain('Privilégios UAC: Administrador (Elevado)');
     expect(lines).toContain('Arquivo Config: C:\\cfg.json');
     expect(lines).toHaveLength(13);

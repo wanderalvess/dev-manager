@@ -125,7 +125,7 @@ export class LlmService {
       }
       if (config.provider === 'openrouter') {
         headers['HTTP-Referer'] = 'https://github.com/wanderalvess/dev-manager';
-        headers['X-Title'] = 'WinThor Dev Manager';
+        headers['X-Title'] = 'Hub Manager';
       }
 
       const response = await fetch(url, {
@@ -236,7 +236,7 @@ export class LlmService {
     }).join('\n\n---\n\n');
 
     const defaultSystemPrompt =
-      'Você é o Assistente Especialista em WinThor e Engenharia de Software do WinThor Dev Manager.\n' +
+      'Você é o Assistente Especialista em WinThor e Engenharia de Software do Hub Manager.\n' +
       'Sua missão é responder à dúvida do desenvolvedor com precisão técnica e clareza, baseando-se PRIMARIAMENTE no contexto documental fornecido.\n' +
       'Diretrizes:\n' +
       '1. Cite nomes de tabelas, rotinas, endpoints ou classes mencionadas no contexto.\n' +
@@ -288,7 +288,7 @@ export class LlmService {
     }
     if (provider.provider === 'openrouter') {
       headers['HTTP-Referer'] = 'https://github.com/wanderalvess/dev-manager';
-      headers['X-Title'] = 'WinThor Dev Manager';
+      headers['X-Title'] = 'Hub Manager';
     }
 
     const payload = {

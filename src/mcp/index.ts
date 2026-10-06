@@ -1890,7 +1890,7 @@ server.registerTool(
   'llm_chat',
   {
     title: 'Conversar com LLM (BYOK)',
-    description: 'Envia mensagens diretamente para o provedor de LLM configurado e ativo no Dev Manager.',
+    description: 'Envia mensagens diretamente para o provedor de LLM configurado e ativo no Hub Manager.',
     inputSchema: {
       messages: z.array(
         z.object({
@@ -1916,7 +1916,7 @@ server.registerTool(
 // --- 7. Configurações ---
 server.registerTool(
   'settings_get',
-  { title: 'Ler configurações', description: 'Retorna as configurações atuais do Dev Manager (com segredos ofuscados).' },
+  { title: 'Ler configurações', description: 'Retorna as configurações atuais do Hub Manager (com segredos ofuscados).' },
   async () => ok(configService.sanitizeSecrets(configService.getSettings()))
 );
 
@@ -1924,7 +1924,7 @@ server.registerTool(
   'settings_save',
   {
     title: 'Salvar configurações',
-    description: 'Persiste um conjunto parcial de configurações do Dev Manager.',
+    description: 'Persiste um conjunto parcial de configurações do Hub Manager.',
     inputSchema: { settings: z.record(z.string(), z.unknown()) }
   },
   async ({ settings }) => {
@@ -1943,7 +1943,7 @@ server.registerTool(
   'db_list_connections',
   {
     title: 'Listar conexões de banco',
-    description: 'Lista as conexões de banco de dados configuradas no Dev Manager (com senhas ocultadas).'
+    description: 'Lista as conexões de banco de dados configuradas no Hub Manager (com senhas ocultadas).'
   },
   async () => {
     const settings = configService.getSettings();
@@ -1970,7 +1970,7 @@ server.registerTool(
   {
     title: 'Listar conexões do tnsnames.ora',
     description:
-      'Lê e extrai os aliases e configurações de conexão (Host, Porta, Service Name, SID) do arquivo tnsnames.ora do Oracle configurado no Dev Manager ou de um arquivo específico.',
+      'Lê e extrai os aliases e configurações de conexão (Host, Porta, Service Name, SID) do arquivo tnsnames.ora do Oracle configurado no Hub Manager ou de um arquivo específico.',
     inputSchema: {
       filePath: z.string().optional().describe('Caminho do arquivo tnsnames.ora (opcional se já configurado em oracleTnsnamesPath).')
     }
@@ -2697,7 +2697,7 @@ server.registerTool(
 
 // Buffer vazio no app é diferente de "sem tráfego": o motivo mais comum é o Karaf sem o agente
 const APM_NO_TRACES_NOTICE =
-  'Nenhum trace recebido ainda. Para o Karaf iniciado pelo Dev Manager, coloque opentelemetry-javaagent.jar ' +
+  'Nenhum trace recebido ainda. Para o Karaf iniciado pelo Hub Manager, coloque opentelemetry-javaagent.jar ' +
   'em <karaf>/bin e reinicie o Karaf; outras aplicações devem exportar OTLP/HTTP para a porta do receptor.';
 
 function withNoTracesNotice<T extends object>(data: T, isEmpty: boolean): T & { notice?: string } {
@@ -2922,7 +2922,7 @@ server.registerTool(
   {
     title: 'Criar ou atualizar template de teste regressivo (QA)',
     description:
-      'Cria ou atualiza um template de teste regressivo no catálogo local do Dev Manager, persistindo queries SQL, variáveis e regras de asserção.',
+      'Cria ou atualiza um template de teste regressivo no catálogo local do Hub Manager, persistindo queries SQL, variáveis e regras de asserção.',
     inputSchema: {
       id: z.string().optional().describe('ID único do template (slug em minúsculas, ex: "wsh-validacao-devolucao"). Se omitido, é gerado automaticamente.'),
       name: z.string().describe('Nome claro do template de validação (ex: "Validação de Devolução de Cupom Fiscal")'),
@@ -3013,7 +3013,7 @@ server.registerTool(
     inputSchema: {
       templateId: z.string().optional().describe('ID do template de regressivo cadastrado a executar (ex: "wsh-venda-pdv-completa")'),
       template: QaTemplateInputSchema.optional().describe('Definição de template inline para execução ad-hoc sem persistir no catálogo'),
-      connectionId: z.string().optional().describe('ID da conexão de banco Oracle configurada no Dev Manager. Se omitido, usa a primeira ativa.'),
+      connectionId: z.string().optional().describe('ID da conexão de banco Oracle configurada no Hub Manager. Se omitido, usa a primeira ativa.'),
       rawJson: z.string().optional().describe('Payload JSON da API/PDV em texto para mapeamento de variáveis via JSONPath ($.foo)'),
       jsonFilePath: z.string().optional().describe('Caminho absoluto ou relativo do arquivo JSON local contendo o payload/dados de teste'),
       variables: z.record(z.string(), z.any()).optional().describe('Variáveis manuais para bind (ex: { codFilial: "1", numCupom: "4387" })'),
@@ -3374,12 +3374,12 @@ server.registerTool(
 server.registerTool(
   'taut_sync_env',
   {
-    title: 'Sincronizar .env do TAUT (Cypress) com o Dev Manager',
+    title: 'Sincronizar .env do TAUT (Cypress) com o Hub Manager',
     description:
-      'Gera ou atualiza automaticamente o arquivo .env do TAUT (Cypress) utilizando os dados da conexão Oracle ativa no Dev Manager (ORACLE_USER, ORACLE_PASSWORD, ORACLE_CONNECT_STRING) e URLs do WTA.',
+      'Gera ou atualiza automaticamente o arquivo .env do TAUT (Cypress) utilizando os dados da conexão Oracle ativa no Hub Manager (ORACLE_USER, ORACLE_PASSWORD, ORACLE_CONNECT_STRING) e URLs do WTA.',
     inputSchema: {
       customPath: z.string().optional().describe('Caminho opcional do projeto TAUT (Cypress)'),
-      connectionId: z.string().optional().describe('ID da conexão Oracle salva no Dev Manager. Se omitido, usa a primeira conexão Oracle ativa.')
+      connectionId: z.string().optional().describe('ID da conexão Oracle salva no Hub Manager. Se omitido, usa a primeira conexão Oracle ativa.')
     }
   },
   async (args) => {

@@ -115,16 +115,16 @@ describe('releaseNotesUtils', () => {
   describe('formatReleaseNotesMarkdown', () => {
     it('gera documento Markdown completo com tabelas, requisitos e novidades', () => {
       const md = formatReleaseNotesMarkdown({
-        productName: 'Dev Manager',
+        productName: 'Hub Manager',
         version: '1.15.0',
         date: '2026-09-24',
         changelogBody: '### Adicionado\n- Feature nova fantástica'
       });
 
-      expect(md).toContain('# Dev Manager - v1.15.0 🚀');
+      expect(md).toContain('# Hub Manager - v1.15.0 🚀');
       expect(md).toContain('24/09/2026');
-      expect(md).toContain('Dev Manager Setup 1.15.0.exe');
-      expect(md).toContain('Dev Manager 1.15.0.exe');
+      expect(md).toContain('Hub Manager Setup 1.15.0.exe');
+      expect(md).toContain('Hub Manager 1.15.0.exe');
       expect(md).toContain('SmartScreen');
       expect(md).toContain('Feature nova fantástica');
       expect(md).toContain('Alt + 1');
@@ -135,13 +135,13 @@ describe('releaseNotesUtils', () => {
   describe('formatReleaseNotesText', () => {
     it('gera texto puro formatado com separadores ASCII e quebras CRLF', () => {
       const text = formatReleaseNotesText({
-        productName: 'Dev Manager',
+        productName: 'Hub Manager',
         version: '1.15.0',
         date: '2026-09-24',
         changelogBody: '### Adicionado\n- Feature nova fantástica'
       });
 
-      expect(text).toContain('DEV MANAGER - NOTAS DE VERSAO E GUIA DE INSTALACAO');
+      expect(text).toContain('HUB MANAGER - NOTAS DE VERSAO E GUIA DE INSTALACAO');
       expect(text).toContain('Versao: v1.15.0');
       expect(text).toContain('Data:   24/09/2026');
       expect(text).toContain('1. QUAL ARQUIVO EXECUTAR?');
@@ -160,7 +160,7 @@ describe('releaseNotesUtils', () => {
       try {
         const { markdownPath, textPath } = generateReleaseNotesFiles({
           outputDir: tmpDir,
-          productName: 'Dev Manager',
+          productName: 'Hub Manager',
           version: '1.15.0',
           date: '2026-09-24',
           changelogBody: '### Adicionado\n- Teste de gravação'
@@ -172,8 +172,8 @@ describe('releaseNotesUtils', () => {
         const mdContent = fs.readFileSync(markdownPath, 'utf-8');
         const txtContent = fs.readFileSync(textPath, 'utf-8');
 
-        expect(mdContent).toContain('Dev Manager - v1.15.0');
-        expect(txtContent).toContain('DEV MANAGER - NOTAS DE VERSAO');
+        expect(mdContent).toContain('Hub Manager - v1.15.0');
+        expect(txtContent).toContain('HUB MANAGER - NOTAS DE VERSAO');
       } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });
       }

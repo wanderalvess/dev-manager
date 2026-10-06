@@ -128,7 +128,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
               <Network className="w-3.5 h-3.5 text-primary shrink-0" /> Integração de Rede Localhost
             </span>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              O Dev Manager conecta na porta SSH (<code className="font-mono text-foreground">{settings.karafSshPort ?? 8101}</code>) e JDWP (<code className="font-mono text-foreground">{settings.karafDebugPort ?? 5005}</code>). Para conexões instantâneas sem NAT, configure <code className="font-mono text-foreground">[wsl2] networkingMode=mirrored</code> no <code className="font-mono text-foreground">%USERPROFILE%\.wslconfig</code>.
+              O Hub Manager conecta na porta SSH (<code className="font-mono text-foreground">{settings.karafSshPort ?? 8101}</code>) e JDWP (<code className="font-mono text-foreground">{settings.karafDebugPort ?? 5005}</code>). Para conexões instantâneas sem NAT, configure <code className="font-mono text-foreground">[wsl2] networkingMode=mirrored</code> no <code className="font-mono text-foreground">%USERPROFILE%\.wslconfig</code>.
             </p>
           </div>
         </div>

@@ -79,7 +79,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               fieldId="field-projectsPath"
               labelIcon={<HardDrive className="w-3.5 h-3.5 text-primary" />}
               labelText="Diretório Base dos Repositórios Git:"
-              labelTitle="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Dev Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
+              labelTitle="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Hub Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
               statusBadge={renderPathStatusBadge('projectsPath')}
               inputValue={settings.projectsPath}
               inputTourId="dirs-projects-path"
@@ -196,7 +196,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               wrapperClassName="md:col-span-2 space-y-1.5 pt-2 border-t border-border/50"
               labelIcon={<TestTube className="w-3.5 h-3.5 text-emerald-400" />}
               labelText="Diretório do Projeto de Testes Automatizados (Cypress):"
-              labelTitle="Caminho do repositório de testes automatizados (Cypress / TAUT). Se deixado em branco, o Dev Manager tenta autodetectar automaticamente dentro da pasta de Projetos."
+              labelTitle="Caminho do repositório de testes automatizados (Cypress / TAUT). Se deixado em branco, o Hub Manager tenta autodetectar automaticamente dentro da pasta de Projetos."
               statusBadge={renderPathStatusBadge('tautProjectPath')}
               inputValue={settings.tautProjectPath || ''}
               placeholder="Ex: C:\Projetos\taut ou C:\Projetos\testes-cypress (Vazio: autodetecta na pasta de projetos)"
@@ -206,7 +206,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               browseTitle="Selecionar pasta do projeto de testes"
               hint={
                 <p className="text-2xs text-muted-foreground">
-                  Utilizado pelo módulo <strong>Automação de Testes</strong> na Central de Qualidade e pelas ferramentas MCP da IA. Se não preenchido, o Dev Manager procura automaticamente uma pasta de testes (<code>taut*</code>, <code>cypress-tests</code>, <code>cypress</code> ou <code>e2e-tests</code>) no Diretório Base dos Repositórios Git ou pastas irmãs.
+                  Utilizado pelo módulo <strong>Automação de Testes</strong> na Central de Qualidade e pelas ferramentas MCP da IA. Se não preenchido, o Hub Manager procura automaticamente uma pasta de testes (<code>taut*</code>, <code>cypress-tests</code>, <code>cypress</code> ou <code>e2e-tests</code>) no Diretório Base dos Repositórios Git ou pastas irmãs.
                 </p>
               }
             />

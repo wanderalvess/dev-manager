@@ -79,7 +79,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
           </div>
         ) : (
           <p className="text-xs text-muted-foreground leading-relaxed">
-            O hub de observabilidade do Dev Manager aguarda requisições em{' '}
+            O hub de observabilidade do Hub Manager aguarda requisições em{' '}
             <code className="text-foreground font-mono">{snippets.endpoint}</code> vindas do Apache Karaf (CXF / Oracle)
             ou de qualquer microserviço instrumentado via OpenTelemetry.
           </p>

@@ -55,7 +55,7 @@ export const QA_TEMPLATE_WORKFLOW_STEPS = [
   {
     step: '1',
     title: 'Escolha a Conexão Oracle de Homologação',
-    description: 'Selecione no menu de conexões o banco de dados Oracle onde o teste foi ou será realizado. O Dev Manager se conecta diretamente ao schema para consultar as tabelas.'
+    description: 'Selecione no menu de conexões o banco de dados Oracle onde o teste foi ou será realizado. O Hub Manager se conecta diretamente ao schema para consultar as tabelas.'
   },
   {
     step: '2',
@@ -70,7 +70,7 @@ export const QA_TEMPLATE_WORKFLOW_STEPS = [
   {
     step: '4',
     title: 'Execute a Validação Regressiva',
-    description: 'Clique em "Executar Validação Regressiva". O Dev Manager executa cada consulta SQL, substitui os binds com segurança, valida todas as asserções e destaca em verde ou vermelho cada campo com discrepância.'
+    description: 'Clique em "Executar Validação Regressiva". O Hub Manager executa cada consulta SQL, substitui os binds com segurança, valida todas as asserções e destaca em verde ou vermelho cada campo com discrepância.'
   },
   {
     step: '5',

@@ -38,7 +38,7 @@ export const DocSettingsFoldersTab: React.FC<DocSettingsFoldersTabProps> = ({
         icon={<GitBranch className="w-3.5 h-3.5" />}
         iconWrapperClass="bg-amber-500/10 text-amber-500 border border-amber-500/20"
         title="Repositórios Git"
-        description="Vasculha arquivos README e pastas docs/ em todos os projetos Git clonados no Dev Manager."
+        description="Vasculha arquivos README e pastas docs/ em todos os projetos Git clonados no Hub Manager."
         checked={indexProjectsDocs}
         onToggle={onToggleIndexProjects}
         activeLabel="Indexação Ativa"

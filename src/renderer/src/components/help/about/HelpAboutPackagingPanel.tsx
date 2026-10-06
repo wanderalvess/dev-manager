@@ -48,7 +48,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
 
     <div className="text-xs text-muted-foreground space-y-3 leading-relaxed">
       <p>
-        Para distribuir o <strong className="text-foreground">Dev Manager</strong> para outros desenvolvedores ou computadores em formato executável Windows sem necessidade de Node.js instalado:
+        Para distribuir o <strong className="text-foreground">Hub Manager</strong> para outros desenvolvedores ou computadores em formato executável Windows sem necessidade de Node.js instalado:
       </p>
 
       <div className="p-3 rounded-xl bg-card/80 border border-border font-mono text-xs text-primary flex items-center justify-between shadow-inner">
@@ -60,7 +60,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
         <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
           <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            Dev Manager {appInfo?.appVersion || '1.22.0'}.exe (Portátil)
+            Hub Manager {appInfo?.appVersion || '1.22.0'}.exe (Portátil)
           </span>
           <p className="text-[11px] text-muted-foreground">
             Versão autônoma que não necessita instalação. Pode ser executada diretamente de pastas de rede ou pendrives.
@@ -70,7 +70,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
         <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
           <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            Dev Manager Setup {appInfo?.appVersion || '1.22.0'}.exe (Instalador)
+            Hub Manager Setup {appInfo?.appVersion || '1.22.0'}.exe (Instalador)
           </span>
           <p className="text-[11px] text-muted-foreground">
             Instalador padrão NSIS que cria atalhos no Menu Iniciar e Área de Trabalho com desinstalador integrado.

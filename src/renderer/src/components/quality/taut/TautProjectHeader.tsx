@@ -71,7 +71,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
           onClick={onSyncEnv}
           disabled={syncingEnv || !projectStatus?.exists}
           className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50 text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer disabled:opacity-50"
-          title="Gera ou atualiza as variáveis de ambiente (.env) do TAUT com a conexão Oracle ativa no Dev Manager"
+          title="Gera ou atualiza as variáveis de ambiente (.env) do TAUT com a conexão Oracle ativa no Hub Manager"
         >
           <Database className={`w-3.5 h-3.5 ${syncingEnv ? 'animate-spin' : ''}`} />
           <span>Sincronizar .env com Oracle Ativo</span>
