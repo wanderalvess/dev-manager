@@ -13,7 +13,9 @@ import {
 import {
   QUALITY_STORAGE_KEY_RELEASE,
   QUALITY_STORAGE_KEY_VALIDATION,
-  applyRunnerResultToItem,
+  applyRunnerResultToItems,
+  updateValidationItem,
+  type EditableValidationFields,
   readStoredReleaseVersion,
   readStoredValidationItems,
   downloadQualityCsv,
@@ -65,10 +67,8 @@ export function useQualityValidationItems() {
     setSort((prev) => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' }));
   }, []);
 
-  const updateItem = useCallback((id: string, patch: Pick<QualityValidationItem, 'title' | 'targetName' | 'category' | 'notes'>) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item))
-    );
+  const updateItem = useCallback((id: string, patch: EditableValidationFields) => {
+    setItems((prev) => updateValidationItem(prev, id, patch));
     showToast('Cenário atualizado.', 'success');
   }, []);
 
@@ -129,21 +129,14 @@ export function useQualityValidationItems() {
         return;
       }
 
-      // Execução abortada não prova falha do cenário: fica bloqueada até nova execução
-      const newStatus: ValidationItemStatus =
-        result.status === 'passed' ? 'passed' : result.status === 'aborted' ? 'blocked' : 'failed';
-      const updatedCount = items.filter((item) => linkedIds.includes(item.id)).length;
+      const { items: next, updatedCount, newStatus } = applyRunnerResultToItems(items, result);
 
       if (updatedCount === 0) {
         showToast('Os cenários vinculados a este runner não existem mais na Matriz.', 'info');
         return;
       }
 
-      setItems((prev) =>
-        prev.map((item) =>
-          linkedIds.includes(item.id) ? applyRunnerResultToItem(item, result, newStatus) : item
-        )
-      );
+      setItems(next);
 
       const label = newStatus === 'passed' ? 'Aprovado' : newStatus === 'blocked' ? 'Bloqueado' : 'Falha';
       showToast(

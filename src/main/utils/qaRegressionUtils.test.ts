@@ -118,6 +118,13 @@ describe('qaRegressionUtils', () => {
       expect(areValuesEquivalent(10, 11)).toBe(false);
     });
 
+    it('deve distinguir valores numéricos próximos (tolerância apenas de arredondamento)', () => {
+      expect(areValuesEquivalent(768.7, 768.9)).toBe(false);
+      expect(areValuesEquivalent(100, 100.5)).toBe(false);
+      expect(areValuesEquivalent('0.01', 0)).toBe(false);
+      expect(areValuesEquivalent('1,5', 1.5)).toBe(true);
+    });
+
     it('deve considerar equivalentes flags WinThor e booleanos', () => {
       expect(areValuesEquivalent('S', true)).toBe(true);
       expect(areValuesEquivalent('N', false)).toBe(true);

@@ -8,7 +8,10 @@ import {
   getProgressWidth,
   getReadinessSummary,
   getReadinessVerdict,
+  applyRunnerResultToItems,
   generateQualityCsv,
+  mapRunnerStatus,
+  updateValidationItem,
   getStatusSelectClass,
   migrateLegacyRelease,
   migrateLegacySeedItems,
@@ -151,5 +154,89 @@ describe('sortValidationItems / generateQualityCsv', () => {
     expect(csv).toContain(`"'=SOMA(A1)"`);
     expect(csv).toContain('"diz ""oi"" linha 2"');
     expect(csv).toContain('"Falha"');
+  });
+});
+
+describe('sync de runners com a Matriz', () => {
+  const mkItem = (id: string, status: QualityValidationItem['status'] = 'pending'): QualityValidationItem => ({
+    id,
+    title: id,
+    category: 'api',
+    status,
+    targetName: 'X'
+  });
+  const mkResult = (status: TestExecutionResult['status'], linked?: string[]) =>
+    ({
+      runnerName: 'R1',
+      executedAt: '2026-01-01T10:00:00.000Z',
+      status,
+      passedCount: 1,
+      failedCount: 0,
+      linkedValidationItemIds: linked
+    }) as TestExecutionResult;
+
+  it('mapeia o status do runner: abortado vira bloqueado, não aprovado nem falha', () => {
+    expect(mapRunnerStatus('passed')).toBe('passed');
+    expect(mapRunnerStatus('failed')).toBe('failed');
+    expect(mapRunnerStatus('aborted')).toBe('blocked');
+  });
+
+  it('atualiza só os cenários vinculados e conta quantos foram', () => {
+    const items = [mkItem('a'), mkItem('b'), mkItem('c', 'passed')];
+    const out = applyRunnerResultToItems(items, mkResult('failed', ['a', 'c', 'inexistente']));
+    expect(out.updatedCount).toBe(2);
+    expect(out.newStatus).toBe('failed');
+    expect(out.items.map((i) => i.status)).toEqual(['failed', 'pending', 'failed']);
+    expect(out.items[1]).toBe(items[1]);
+    expect(items[0].status).toBe('pending');
+  });
+
+  it('runner abortado marca os vinculados como bloqueados', () => {
+    const out = applyRunnerResultToItems([mkItem('a')], mkResult('aborted', ['a']));
+    expect(out.items[0].status).toBe('blocked');
+  });
+
+  it('sem vínculos ou com vínculos inexistentes não altera nada e conta zero', () => {
+    const items = [mkItem('a')];
+    expect(applyRunnerResultToItems(items, mkResult('passed', undefined)).updatedCount).toBe(0);
+    const orphan = applyRunnerResultToItems(items, mkResult('passed', ['zzz']));
+    expect(orphan.updatedCount).toBe(0);
+    expect(orphan.items[0]).toBe(items[0]);
+  });
+});
+
+describe('updateValidationItem', () => {
+  const base = (id: string): QualityValidationItem => ({
+    id,
+    title: `t-${id}`,
+    category: 'api',
+    status: 'passed',
+    targetName: 'alvo',
+    notes: 'nota',
+    updatedAt: '2020-01-01T00:00:00.000Z'
+  });
+
+  it('edita somente o cenário escolhido, preserva status e carimba updatedAt', () => {
+    const items = [base('a'), base('b')];
+    const out = updateValidationItem(items, 'b', {
+      title: 'novo',
+      targetName: 'novo-alvo',
+      category: 'e2e',
+      notes: undefined
+    });
+    expect(out[0]).toBe(items[0]);
+    expect(out[1].title).toBe('novo');
+    expect(out[1].targetName).toBe('novo-alvo');
+    expect(out[1].category).toBe('e2e');
+    expect(out[1].notes).toBeUndefined();
+    expect(out[1].status).toBe('passed');
+    expect(out[1].updatedAt).not.toBe('2020-01-01T00:00:00.000Z');
+    expect(items[1].title).toBe('t-b');
+  });
+
+  it('id inexistente não altera nenhum cenário', () => {
+    const items = [base('a')];
+    const out = updateValidationItem(items, 'x', { title: 'n', targetName: 'n', category: 'api' });
+    expect(out[0]).toBe(items[0]);
   });
 });

@@ -16,6 +16,28 @@ describe('qualityPageUtils', () => {
     expect(metrics.readinessScore).toBe(0);
   });
 
+  it('calcula a nota de prontidão ponderando aprovados, em teste, falhas e bloqueios', () => {
+    const mk = (status: QualityValidationItem['status']): QualityValidationItem => ({
+      id: status,
+      title: status,
+      category: 'api',
+      status,
+      targetName: 'X'
+    });
+    // (2*100 + 1*40 - 1*50) / 4 = 47.5 -> 48
+    const mixed = calculateQualityMetrics([mk('passed'), mk('passed'), mk('in_progress'), mk('failed')]);
+    expect(mixed.readinessScore).toBe(48);
+    // falhas e bloqueios nunca elevam a nota: piso em 0
+    expect(calculateQualityMetrics([mk('failed'), mk('blocked')]).readinessScore).toBe(0);
+    // uma falha derruba a nota em relação à mesma matriz sem ela
+    const withoutFail = calculateQualityMetrics([mk('passed'), mk('passed')]).readinessScore;
+    const withFail = calculateQualityMetrics([mk('passed'), mk('failed')]).readinessScore;
+    expect(withoutFail).toBe(100);
+    expect(withFail).toBe(25);
+    // bloqueio pesa menos que falha: (100 - 30) / 2 = 35
+    expect(calculateQualityMetrics([mk('passed'), mk('blocked')]).readinessScore).toBe(35);
+  });
+
   it('calcula métricas de qualidade corretamente com itens variados', () => {
     const items: QualityValidationItem[] = [
       { id: '1', title: 'Teste 1', category: 'routine', status: 'passed', targetName: 'Rotina A' },

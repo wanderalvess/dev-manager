@@ -179,6 +179,40 @@ export function applyRunnerResultToItem(
   };
 }
 
+/** Execução abortada não prova falha do cenário: fica bloqueada até nova execução. */
+export function mapRunnerStatus(status: TestExecutionResult['status']): ValidationItemStatus {
+  if (status === 'passed') return 'passed';
+  if (status === 'aborted') return 'blocked';
+  return 'failed';
+}
+
+/** Aplica o resultado do runner nos cenários vinculados; os demais ficam intactos. */
+export function applyRunnerResultToItems(
+  items: QualityValidationItem[],
+  result: TestExecutionResult
+): { items: QualityValidationItem[]; updatedCount: number; newStatus: ValidationItemStatus } {
+  const linkedIds = result.linkedValidationItemIds ?? [];
+  const newStatus = mapRunnerStatus(result.status);
+  let updatedCount = 0;
+  const next = items.map((item) => {
+    if (!linkedIds.includes(item.id)) return item;
+    updatedCount++;
+    return applyRunnerResultToItem(item, result, newStatus);
+  });
+  return { items: next, updatedCount, newStatus };
+}
+
+export type EditableValidationFields = Pick<QualityValidationItem, 'title' | 'targetName' | 'category' | 'notes'>;
+
+/** Edita só o cenário com o id informado e carimba `updatedAt`. */
+export function updateValidationItem(
+  items: QualityValidationItem[],
+  id: string,
+  patch: EditableValidationFields
+): QualityValidationItem[] {
+  return items.map((item) => (item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item));
+}
+
 export type QualitySortKey = 'status' | 'title' | 'targetName' | 'category' | 'updatedAt';
 export type QualitySortDir = 'asc' | 'desc';
 
