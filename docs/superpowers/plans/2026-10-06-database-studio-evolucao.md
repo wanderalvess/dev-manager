@@ -5,6 +5,19 @@ Decisões: editor **Monaco**; prioridade **Oracle** (WinThor); ordem: bugs, tran
 Referências: SQL Developer (Worksheet: `Ctrl+Espaço`, F11 commit, F12 rollback, `DESCRIBE`, arrastar tabela para o editor)
 e DBeaver (modo de transação auto/manual, padrão manual em conexões de produção).
 
+## Status (2026-10-06)
+
+| Fase | Estado |
+|---|---|
+| 0 Bugs | feito (B1-B5); B6 resolvido na Fase 4 (aplicar valida `rowsAffected`); B7 pendente (`listTables` engole erros) |
+| 1 Transações | feito: sessão por conexão, auto/manual, commit/rollback, cancelar, modo produção |
+| 2 Monaco | feito: autocomplete por contexto, Ctrl+Enter (seleção/comando), F5 (script), F11/F12 |
+| 3 Spec da tabela | feito: painel, DDL, árvore de objetos por tipo, F4 |
+| 4 Resultados | feito: exportar xlsx/csv-br/csv/json, carregar mais, edição em lote, plano em árvore (Oracle/PostgreSQL). Virtualização já existia. Pendente: ROWID para tabelas sem PK |
+| 5 Opcional | não iniciada |
+
+**Validação:** tudo testado com drivers simulados e na interface com API simulada. Falta validar contra Oracle, PostgreSQL e MySQL reais.
+
 ## Fase 0: bugs (antes de qualquer feature)
 | # | Problema | Correção |
 |---|---|---|
