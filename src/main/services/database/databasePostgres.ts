@@ -41,6 +41,54 @@ export async function testPostgres(ctx: DatabaseContext, config: DatabaseConnect
   );
 }
 
+/** Executa um comando numa conexão (cliente) PostgreSQL já aberta. */
+export async function runPostgresStatement(
+  ctx: DatabaseContext,
+  client: any,
+  sql: string,
+  maxRows: number,
+  startTime: number,
+  binds?: Record<string, any>
+): Promise<QueryResult> {
+  const finalSql = applyRowLimit(ctx.interpolateBinds(sql, binds), 'postgres', maxRows);
+  const res = await client.query(finalSql);
+  const executionTimeMs = Date.now() - startTime;
+
+  if (Array.isArray(res)) {
+    // Múltiplos comandos
+    const last = res[res.length - 1];
+    const isQuery = Boolean(last.fields && last.fields.length > 0);
+    const columns = isQuery ? last.fields.map((f: any) => f.name) : [];
+    const allRows = isQuery ? last.rows || [] : [];
+    const rawRows = allRows.slice(0, maxRows);
+    return {
+      success: true,
+      columns,
+      rows: sanitizeRows(rawRows, columns),
+      rowCount: rawRows.length,
+      affectedRows: !isQuery ? last.rowCount ?? undefined : undefined,
+      executionTimeMs,
+      isQuery,
+      truncated: allRows.length > maxRows
+    };
+  }
+
+  const isQuery = Boolean(res.fields && res.fields.length > 0);
+  const columns = isQuery ? res.fields.map((f: any) => f.name) : [];
+  const allRows = isQuery ? res.rows || [] : [];
+  const rawRows = allRows.slice(0, maxRows);
+  return {
+    success: true,
+    columns,
+    rows: sanitizeRows(rawRows, columns),
+    rowCount: rawRows.length,
+    affectedRows: !isQuery ? res.rowCount ?? undefined : undefined,
+    executionTimeMs,
+    isQuery,
+    truncated: allRows.length > maxRows
+  };
+}
+
 export async function executePostgres(
   ctx: DatabaseContext,
   config: DatabaseConnectionConfig,
@@ -53,45 +101,7 @@ export async function executePostgres(
     config,
     () => ctx.getPgClient(config),
     (client) => client.end(),
-    async (client) => {
-      const finalSql = applyRowLimit(ctx.interpolateBinds(sql, binds), 'postgres', maxRows);
-      const res = await client.query(finalSql);
-      const executionTimeMs = Date.now() - startTime;
-
-      if (Array.isArray(res)) {
-        // Múltiplos comandos
-        const last = res[res.length - 1];
-        const isQuery = Boolean(last.fields && last.fields.length > 0);
-        const columns = isQuery ? last.fields.map((f: any) => f.name) : [];
-        const allRows = isQuery ? last.rows || [] : [];
-        const rawRows = allRows.slice(0, maxRows);
-        return {
-          success: true,
-          columns,
-          rows: sanitizeRows(rawRows, columns),
-          rowCount: rawRows.length,
-          affectedRows: !isQuery ? last.rowCount ?? undefined : undefined,
-          executionTimeMs,
-          isQuery,
-          truncated: allRows.length > maxRows
-        };
-      }
-
-      const isQuery = Boolean(res.fields && res.fields.length > 0);
-      const columns = isQuery ? res.fields.map((f: any) => f.name) : [];
-      const allRows = isQuery ? res.rows || [] : [];
-      const rawRows = allRows.slice(0, maxRows);
-      return {
-        success: true,
-        columns,
-        rows: sanitizeRows(rawRows, columns),
-        rowCount: rawRows.length,
-        affectedRows: !isQuery ? res.rowCount ?? undefined : undefined,
-        executionTimeMs,
-        isQuery,
-        truncated: allRows.length > maxRows
-      };
-    },
+    (client) => runPostgresStatement(ctx, client, sql, maxRows, startTime, binds),
     true
   );
 }

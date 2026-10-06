@@ -41,6 +41,8 @@ import type {
   DatabaseConnectionConfig,
   ParseTnsNamesResult,
   QueryResult,
+  DbSessionQueryResult,
+  DbSessionState,
   DockerContainerInfo,
   DockerDaemonStatus,
   DockerContainerInspect,
@@ -1164,6 +1166,34 @@ export function initApiBridge() {
         method: 'POST',
         body: JSON.stringify({ config, sql, maxRows, binds })
       });
+    },
+
+    openDbSession: async (config: DatabaseConnectionConfig, autoCommit?: boolean): Promise<DbSessionState> => {
+      return apiFetch('/api/db/session/open', { method: 'POST', body: JSON.stringify({ config, autoCommit }) });
+    },
+
+    executeDbSession: async (sessionId: string, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<DbSessionQueryResult> => {
+      return apiFetch('/api/db/session/execute', { method: 'POST', body: JSON.stringify({ sessionId, sql, maxRows, binds }) });
+    },
+
+    commitDbSession: async (sessionId: string): Promise<DbSessionState> => {
+      return apiFetch('/api/db/session/commit', { method: 'POST', body: JSON.stringify({ sessionId }) });
+    },
+
+    rollbackDbSession: async (sessionId: string): Promise<DbSessionState> => {
+      return apiFetch('/api/db/session/rollback', { method: 'POST', body: JSON.stringify({ sessionId }) });
+    },
+
+    setDbSessionAutoCommit: async (sessionId: string, autoCommit: boolean): Promise<DbSessionState> => {
+      return apiFetch('/api/db/session/autocommit', { method: 'POST', body: JSON.stringify({ sessionId, autoCommit }) });
+    },
+
+    cancelDbSession: async (sessionId: string): Promise<DbSessionState> => {
+      return apiFetch('/api/db/session/cancel', { method: 'POST', body: JSON.stringify({ sessionId }) });
+    },
+
+    closeDbSession: async (sessionId: string): Promise<void> => {
+      await apiFetch('/api/db/session/close', { method: 'POST', body: JSON.stringify({ sessionId }) });
     },
 
     explainDbPlan: async (config: DatabaseConnectionConfig, sql: string): Promise<ExplainPlanResult> => {

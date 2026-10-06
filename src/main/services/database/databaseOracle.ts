@@ -132,6 +132,76 @@ export async function testOracle(ctx: DatabaseContext, config: DatabaseConnectio
   );
 }
 
+/**
+ * Executa um comando numa conexão Oracle já aberta. `autoCommit=false` deixa a transação aberta
+ * (modo manual da sessão dedicada); comandos DDL ainda fazem commit implícito no próprio Oracle.
+ */
+export async function runOracleStatement(
+  ctx: DatabaseContext,
+  conn: any,
+  oracledb: any,
+  sql: string,
+  maxRows: number,
+  startTime: number,
+  binds: Record<string, any> | undefined,
+  autoCommit: boolean
+): Promise<QueryResult> {
+  const cleanSql = normalizeSqlForExecution(sql, 'oracle');
+  const sqlWithoutComments = stripLeadingComments(cleanSql);
+  const isSelect = /^(SELECT|WITH)\b/i.test(sqlWithoutComments);
+
+  let sqlToExecute = cleanSql;
+  let bindParams: any = [];
+
+  if (binds && typeof binds === 'object' && Object.keys(binds).length > 0) {
+    const hasSubstitutionVars = /(?<!&)&(?!=)[a-zA-Z_]|&&[a-zA-Z_]|@[a-zA-Z_]|\$\{[a-zA-Z_]|#\{[a-zA-Z_]/.test(cleanSql);
+    if (hasSubstitutionVars) {
+      sqlToExecute = ctx.interpolateBinds(cleanSql, binds);
+      bindParams = [];
+    } else {
+      bindParams = binds;
+    }
+  }
+
+  const execOptions: any = {
+    outFormat: oracledb.OUT_FORMAT_OBJECT,
+    autoCommit: autoCommit && !isSelect,
+    // maxRows+1: a linha extra indica que o resultado foi truncado
+    maxRows: isSelect ? maxRows + 1 : undefined
+  };
+  // callTimeout (ms) evita travamento de socket em consultas demoradas
+  execOptions.callTimeout = 60000;
+
+  const result = await conn.execute(sqlToExecute, bindParams, execOptions);
+
+  const executionTimeMs = Date.now() - startTime;
+
+  if (result.rows && result.metaData) {
+    const columns = result.metaData.map((m: any) => m.name);
+    const allRows = result.rows as Record<string, any>[];
+    const rawRows = allRows.slice(0, maxRows);
+    return {
+      success: true,
+      columns,
+      rows: sanitizeRows(rawRows, columns),
+      rowCount: rawRows.length,
+      executionTimeMs,
+      isQuery: true,
+      truncated: allRows.length > maxRows
+    };
+  }
+
+  return {
+    success: true,
+    columns: [],
+    rows: [],
+    rowCount: 0,
+    affectedRows: result.rowsAffected ?? 0,
+    executionTimeMs,
+    isQuery: false
+  };
+}
+
 export async function executeOracle(
   ctx: DatabaseContext,
   config: DatabaseConnectionConfig,
@@ -144,62 +214,7 @@ export async function executeOracle(
     config,
     () => ctx.getOracleConnection(config),
     ({ conn }) => conn.close(),
-    async ({ conn, oracledb }) => {
-      const cleanSql = normalizeSqlForExecution(sql, 'oracle');
-      const sqlWithoutComments = stripLeadingComments(cleanSql);
-      const isSelect = /^(SELECT|WITH)\b/i.test(sqlWithoutComments);
-
-      let sqlToExecute = cleanSql;
-      let bindParams: any = [];
-
-      if (binds && typeof binds === 'object' && Object.keys(binds).length > 0) {
-        const hasSubstitutionVars = /(?<!&)&(?!=)[a-zA-Z_]|&&[a-zA-Z_]|@[a-zA-Z_]|\$\{[a-zA-Z_]|#\{[a-zA-Z_]/.test(cleanSql);
-        if (hasSubstitutionVars) {
-          sqlToExecute = ctx.interpolateBinds(cleanSql, binds);
-          bindParams = [];
-        } else {
-          bindParams = binds;
-        }
-      }
-
-      const execOptions: any = {
-        outFormat: oracledb.OUT_FORMAT_OBJECT,
-        autoCommit: !isSelect,
-        // maxRows+1: a linha extra indica que o resultado foi truncado
-        maxRows: isSelect ? maxRows + 1 : undefined
-      };
-      // callTimeout (ms) evita travamento de socket em consultas demoradas
-      execOptions.callTimeout = 60000;
-
-      const result = await conn.execute(sqlToExecute, bindParams, execOptions);
-
-      const executionTimeMs = Date.now() - startTime;
-
-      if (result.rows && result.metaData) {
-        const columns = result.metaData.map((m: any) => m.name);
-        const allRows = result.rows as Record<string, any>[];
-        const rawRows = allRows.slice(0, maxRows);
-        return {
-          success: true,
-          columns,
-          rows: sanitizeRows(rawRows, columns),
-          rowCount: rawRows.length,
-          executionTimeMs,
-          isQuery: true,
-          truncated: allRows.length > maxRows
-        };
-      }
-
-      return {
-        success: true,
-        columns: [],
-        rows: [],
-        rowCount: 0,
-        affectedRows: result.rowsAffected ?? 0,
-        executionTimeMs,
-        isQuery: false
-      };
-    },
+    ({ conn, oracledb }) => runOracleStatement(ctx, conn, oracledb, sql, maxRows, startTime, binds, true),
     true
   );
 }

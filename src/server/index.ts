@@ -921,6 +921,22 @@ app.post('/api/db/query', async (req, res) => {
   }
 });
 
+// Sessões dedicadas do editor SQL (transação manual, commit/rollback, cancelamento)
+const sessionRoute = (handler: (body: any) => Promise<unknown>) => async (req: express.Request, res: express.Response) => {
+  try {
+    res.json(await handler(req.body ?? {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || 'Erro na sessão do banco' });
+  }
+};
+app.post('/api/db/session/open', sessionRoute(({ config, autoCommit }) => databaseService.openSession(config, autoCommit ?? true)));
+app.post('/api/db/session/execute', sessionRoute(({ sessionId, sql, maxRows, binds }) => databaseService.executeInSession(sessionId, sql, maxRows, binds)));
+app.post('/api/db/session/commit', sessionRoute(({ sessionId }) => databaseService.commitSession(sessionId)));
+app.post('/api/db/session/rollback', sessionRoute(({ sessionId }) => databaseService.rollbackSession(sessionId)));
+app.post('/api/db/session/autocommit', sessionRoute(({ sessionId, autoCommit }) => databaseService.setSessionAutoCommit(sessionId, autoCommit)));
+app.post('/api/db/session/cancel', sessionRoute(({ sessionId }) => databaseService.cancelSession(sessionId)));
+app.post('/api/db/session/close', sessionRoute(({ sessionId }) => databaseService.closeSession(sessionId).then(() => ({ success: true }))));
+
 app.post('/api/db/tables', async (req, res) => {
   try {
     const result = await databaseService.listTables(req.body);

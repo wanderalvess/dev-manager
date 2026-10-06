@@ -105,6 +105,10 @@ function createWindow() {
   const configService = new ConfigService();
   const karafService = new KarafService(configService);
   const databaseService = new DatabaseService(configService);
+  // Sessões do editor SQL com transação aberta não podem vazar: ao sair, desfaz o pendente e fecha as conexões
+  app.on('before-quit', () => {
+    void databaseService.closeAllSessions();
+  });
   const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
   const backupService = new BackupService(configService);
   const backupSchedulerService = new BackupSchedulerService(configService, backupService);

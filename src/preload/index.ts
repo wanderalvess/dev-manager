@@ -39,6 +39,8 @@ import type {
   DocSyncProgress,
   DocSyncResult,
   DatabaseConnectionConfig,
+  DbSessionQueryResult,
+  DbSessionState,
   QueryResult,
   DockerContainerInfo,
   DockerDaemonStatus,
@@ -470,6 +472,16 @@ const electronAPI = {
     ipcRenderer.invoke('db:test-connection', config),
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<QueryResult> =>
     ipcRenderer.invoke('db:execute-query', config, sql, maxRows, binds),
+  openDbSession: (config: DatabaseConnectionConfig, autoCommit?: boolean): Promise<DbSessionState> =>
+    ipcRenderer.invoke('db:session-open', config, autoCommit),
+  executeDbSession: (sessionId: string, sql: string, maxRows?: number, binds?: Record<string, any>): Promise<DbSessionQueryResult> =>
+    ipcRenderer.invoke('db:session-execute', sessionId, sql, maxRows, binds),
+  commitDbSession: (sessionId: string): Promise<DbSessionState> => ipcRenderer.invoke('db:session-commit', sessionId),
+  rollbackDbSession: (sessionId: string): Promise<DbSessionState> => ipcRenderer.invoke('db:session-rollback', sessionId),
+  setDbSessionAutoCommit: (sessionId: string, autoCommit: boolean): Promise<DbSessionState> =>
+    ipcRenderer.invoke('db:session-set-autocommit', sessionId, autoCommit),
+  cancelDbSession: (sessionId: string): Promise<DbSessionState> => ipcRenderer.invoke('db:session-cancel', sessionId),
+  closeDbSession: (sessionId: string): Promise<void> => ipcRenderer.invoke('db:session-close', sessionId),
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string): Promise<ExplainPlanResult> =>
     ipcRenderer.invoke('db:explain-plan', config, sql),
   listDbTables: (config: DatabaseConnectionConfig): Promise<string[]> =>

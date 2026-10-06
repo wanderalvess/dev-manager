@@ -1174,6 +1174,21 @@ export interface QueryResult {
   error?: string;
 }
 
+/** Estado de uma sessão dedicada do editor SQL (conexão própria, com controle de transação). */
+export interface DbSessionState {
+  sessionId: string;
+  dbType: DatabaseType;
+  autoCommit: boolean;
+  /** Comandos que alteram dados executados desde o último commit/rollback (só no modo manual). */
+  pendingStatements: number;
+  /** Soma das linhas afetadas por esses comandos. */
+  pendingRows: number;
+  running: boolean;
+}
+
+/** Resultado de uma execução em sessão: o resultado normal mais o estado da transação depois dele. */
+export type DbSessionQueryResult = QueryResult & { session: DbSessionState };
+
 export interface TableInfo {
   name: string;
   schema?: string;

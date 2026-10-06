@@ -51,3 +51,79 @@ export function applyRowLimit(sql: string, dialect: SqlDialect, maxRows: number)
   // Nova linha: um comentário `--` no fim do texto engoliria o LIMIT
   return `${sql.trimEnd().replace(/;+$/, '')}\nLIMIT ${maxRows + 1}`;
 }
+
+export type SqlStatementKind = 'select' | 'dml' | 'ddl' | 'plsql' | 'commit' | 'rollback' | 'savepoint' | 'other';
+
+/** Remove comentários e literais de texto, para procurar palavras-chave sem falso positivo. */
+function maskCommentsAndStrings(sql: string): string {
+  return sql
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/--[^\r\n]*/g, ' ')
+    .replace(/'(?:''|[^'])*'/g, "''");
+}
+
+/**
+ * Classifica o comando para a lógica de transação: DML deixa transação aberta no modo manual, DDL faz commit
+ * implícito no Oracle, SELECT não altera nada (exceto `FOR UPDATE`, que trava linhas).
+ */
+export function classifySqlStatement(sql: string): SqlStatementKind {
+  const body = maskCommentsAndStrings(stripLeadingComments(sql.trim())).trim();
+  const first = (body.match(/^[A-Za-z]+/) || [''])[0].toUpperCase();
+
+  if (isPlsqlBlock(sql) && first !== 'CREATE') return 'plsql';
+  switch (first) {
+    case 'SELECT':
+      return /\bFOR\s+UPDATE\b/i.test(body) ? 'dml' : 'select';
+    case 'WITH':
+      return /\b(INSERT|UPDATE|DELETE|MERGE)\b/i.test(body) ? 'dml' : 'select';
+    case 'INSERT':
+    case 'UPDATE':
+    case 'DELETE':
+    case 'MERGE':
+    case 'LOCK':
+      return 'dml';
+    case 'CREATE':
+    case 'ALTER':
+    case 'DROP':
+    case 'TRUNCATE':
+    case 'GRANT':
+    case 'REVOKE':
+    case 'RENAME':
+    case 'COMMENT':
+    case 'ANALYZE':
+    case 'AUDIT':
+    case 'FLASHBACK':
+    case 'PURGE':
+      return 'ddl';
+    case 'CALL':
+    case 'EXEC':
+    case 'EXECUTE':
+      return 'plsql';
+    case 'COMMIT':
+      return 'commit';
+    case 'ROLLBACK':
+      return /^ROLLBACK\s+(WORK\s+)?TO\b/i.test(body) ? 'savepoint' : 'rollback';
+    case 'SAVEPOINT':
+      return 'savepoint';
+    default:
+      return 'other';
+  }
+}
+
+export interface RiskyStatement {
+  reason: 'no-where' | 'ddl';
+  verb: string;
+}
+
+/** Comando que merece confirmação antes de executar: UPDATE/DELETE sem WHERE ou DDL destrutivo. */
+export function findRiskyStatement(sql: string): RiskyStatement | null {
+  const body = maskCommentsAndStrings(stripLeadingComments(sql.trim())).trim();
+  const first = (body.match(/^[A-Za-z]+/) || [''])[0].toUpperCase();
+  if ((first === 'UPDATE' || first === 'DELETE') && !/\bWHERE\b/i.test(body)) {
+    return { reason: 'no-where', verb: first };
+  }
+  if (first === 'TRUNCATE' || first === 'DROP') {
+    return { reason: 'ddl', verb: first };
+  }
+  return null;
+}

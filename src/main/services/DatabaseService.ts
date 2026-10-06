@@ -12,7 +12,8 @@ import {
   OracleRecentStatementsResult,
   OracleCapturedBind,
   OracleStatementBindsResult,
-  ParseTnsNamesResult
+  ParseTnsNamesResult,
+  DbSessionState
 } from '../../shared/types';
 import { interpolateSqlBinds } from '../utils/databaseSqlUtils';
 import type { ConfigService } from './ConfigService';
@@ -28,6 +29,7 @@ import { getPgClient } from './database/databasePostgres';
 import { getMysqlConnection } from './database/databaseMysql';
 import { getOracleConnection } from './database/databaseOracle';
 import { formatErrorMessage } from './database/databaseErrors';
+import { DatabaseSessionManager } from './database/databaseSessions';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,6 +56,7 @@ export class DatabaseService {
   private static readonly IDLE_MS = 30000;
   private static oracleClientInitialized = false;
   private readonly ctx: DatabaseContext;
+  private readonly sessions: DatabaseSessionManager;
 
   constructor(private configService?: ConfigService) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias -- necessário para os getters/setters do estado privado
@@ -76,6 +79,7 @@ export class DatabaseService {
       formatErrorMessage: (err, c) => self.formatErrorMessage(err, c),
       getOracleBindsForSqlIds: (c, ids) => self.getOracleBindsForSqlIds(c, ids)
     };
+    this.sessions = new DatabaseSessionManager(this.ctx);
   }
 
   public resolveConnectionConfig(config: DatabaseConnectionConfig): DatabaseConnectionConfig {
@@ -105,6 +109,50 @@ export class DatabaseService {
     binds?: Record<string, any>
   ): Promise<QueryResult> {
     return queries.executeQuery(this.ctx, config, sql, maxRows, binds);
+  }
+
+  // --- Sessões dedicadas do editor SQL (transação manual, commit/rollback e cancelamento) ---
+
+  public openSession(config: DatabaseConnectionConfig, autoCommit = true): Promise<DbSessionState> {
+    return this.sessions.open(config, autoCommit);
+  }
+
+  public executeInSession(
+    sessionId: string,
+    sql: string,
+    maxRows = 200,
+    binds?: Record<string, any>
+  ): Promise<QueryResult & { session: DbSessionState }> {
+    return this.sessions.execute(sessionId, sql, maxRows, binds);
+  }
+
+  public getSessionState(sessionId: string): DbSessionState {
+    return this.sessions.getState(sessionId);
+  }
+
+  public commitSession(sessionId: string): Promise<DbSessionState> {
+    return this.sessions.commit(sessionId);
+  }
+
+  public rollbackSession(sessionId: string): Promise<DbSessionState> {
+    return this.sessions.rollback(sessionId);
+  }
+
+  public setSessionAutoCommit(sessionId: string, autoCommit: boolean): Promise<DbSessionState> {
+    return this.sessions.setAutoCommit(sessionId, autoCommit);
+  }
+
+  public cancelSession(sessionId: string): Promise<DbSessionState> {
+    return this.sessions.cancel(sessionId);
+  }
+
+  public closeSession(sessionId: string): Promise<void> {
+    return this.sessions.close(sessionId);
+  }
+
+  /** Fecha todas as sessões (com rollback do que estiver pendente). Chamado ao encerrar o app. */
+  public closeAllSessions(): Promise<void> {
+    return this.sessions.closeAll();
   }
 
   public async insertRow(

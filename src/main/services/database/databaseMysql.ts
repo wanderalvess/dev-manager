@@ -36,6 +36,48 @@ export async function testMysql(ctx: DatabaseContext, config: DatabaseConnection
   );
 }
 
+/** Executa um comando numa conexão MySQL já aberta. */
+export async function runMysqlStatement(
+  ctx: DatabaseContext,
+  conn: any,
+  sql: string,
+  maxRows: number,
+  startTime: number,
+  binds?: Record<string, any>
+): Promise<QueryResult> {
+  const finalSql = applyRowLimit(ctx.interpolateBinds(sql, binds), 'mysql', maxRows);
+  // timeout (ms) por consulta: sem ele uma query travada ocupa a conexão compartilhada indefinidamente
+  const [result, fields] = await conn.query({ sql: finalSql, timeout: 60000 });
+  const executionTimeMs = Date.now() - startTime;
+
+  if (Array.isArray(result) && fields) {
+    // É um SELECT / resultado com colunas
+    const columns = (fields as any[]).map((f) => f.name);
+    const rawRows = (result as Record<string, any>[]).slice(0, maxRows);
+    return {
+      success: true,
+      columns,
+      rows: sanitizeRows(rawRows, columns),
+      rowCount: rawRows.length,
+      executionTimeMs,
+      isQuery: true,
+      truncated: result.length > maxRows
+    };
+  }
+
+  // É um UPDATE / INSERT / DELETE (OkPacket)
+  const affectedRows = (result as any)?.affectedRows ?? 0;
+  return {
+    success: true,
+    columns: [],
+    rows: [],
+    rowCount: 0,
+    affectedRows,
+    executionTimeMs,
+    isQuery: false
+  };
+}
+
 export async function executeMysql(
   ctx: DatabaseContext,
   config: DatabaseConnectionConfig,
@@ -48,39 +90,7 @@ export async function executeMysql(
     config,
     () => ctx.getMysqlConnection(config),
     (conn) => conn.end(),
-    async (conn) => {
-      const finalSql = applyRowLimit(ctx.interpolateBinds(sql, binds), 'mysql', maxRows);
-      // timeout (ms) por consulta: sem ele uma query travada ocupa a conexão compartilhada indefinidamente
-      const [result, fields] = await conn.query({ sql: finalSql, timeout: 60000 });
-      const executionTimeMs = Date.now() - startTime;
-
-      if (Array.isArray(result) && fields) {
-        // É um SELECT / resultado com colunas
-        const columns = (fields as any[]).map((f) => f.name);
-        const rawRows = (result as Record<string, any>[]).slice(0, maxRows);
-        return {
-          success: true,
-          columns,
-          rows: sanitizeRows(rawRows, columns),
-          rowCount: rawRows.length,
-          executionTimeMs,
-          isQuery: true,
-          truncated: result.length > maxRows
-        };
-      }
-
-      // É um UPDATE / INSERT / DELETE (OkPacket)
-      const affectedRows = (result as any)?.affectedRows ?? 0;
-      return {
-        success: true,
-        columns: [],
-        rows: [],
-        rowCount: 0,
-        affectedRows,
-        executionTimeMs,
-        isQuery: false
-      };
-    },
+    (conn) => runMysqlStatement(ctx, conn, sql, maxRows, startTime, binds),
     true
   );
 }

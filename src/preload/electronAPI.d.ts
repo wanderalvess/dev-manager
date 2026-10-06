@@ -29,6 +29,8 @@ import type {
   DocSyncResult,
   DatabaseConnectionConfig,
   QueryResult,
+  DbSessionQueryResult,
+  DbSessionState,
   DockerContainerInfo,
   DockerContainerInspect,
   DockerDaemonStatus,
@@ -288,6 +290,14 @@ export interface ElectronAPI {
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;
   executeDbQuery: (config: DatabaseConnectionConfig, sql: string, maxRows?: number, binds?: Record<string, any>) => Promise<QueryResult>;
+  /** Sessão dedicada do editor SQL: conexão própria com auto-commit/manual, commit, rollback e cancelamento. */
+  openDbSession: (config: DatabaseConnectionConfig, autoCommit?: boolean) => Promise<DbSessionState>;
+  executeDbSession: (sessionId: string, sql: string, maxRows?: number, binds?: Record<string, any>) => Promise<DbSessionQueryResult>;
+  commitDbSession: (sessionId: string) => Promise<DbSessionState>;
+  rollbackDbSession: (sessionId: string) => Promise<DbSessionState>;
+  setDbSessionAutoCommit: (sessionId: string, autoCommit: boolean) => Promise<DbSessionState>;
+  cancelDbSession: (sessionId: string) => Promise<DbSessionState>;
+  closeDbSession: (sessionId: string) => Promise<void>;
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
   listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
   getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;

@@ -922,6 +922,22 @@ export function registerIpcHandlers(
     return await databaseService.executeQuery(config, sql, maxRows, binds);
   });
 
+  ipcMain.handle('db:session-open', async (_, config: DatabaseConnectionConfig, autoCommit?: boolean) => {
+    return await databaseService.openSession(config, autoCommit ?? true);
+  });
+
+  ipcMain.handle('db:session-execute', async (_, sessionId: string, sql: string, maxRows?: number, binds?: Record<string, any>) => {
+    return await databaseService.executeInSession(sessionId, sql, maxRows, binds);
+  });
+
+  ipcMain.handle('db:session-commit', async (_, sessionId: string) => databaseService.commitSession(sessionId));
+  ipcMain.handle('db:session-rollback', async (_, sessionId: string) => databaseService.rollbackSession(sessionId));
+  ipcMain.handle('db:session-set-autocommit', async (_, sessionId: string, autoCommit: boolean) =>
+    databaseService.setSessionAutoCommit(sessionId, autoCommit)
+  );
+  ipcMain.handle('db:session-cancel', async (_, sessionId: string) => databaseService.cancelSession(sessionId));
+  ipcMain.handle('db:session-close', async (_, sessionId: string) => databaseService.closeSession(sessionId));
+
   ipcMain.handle('db:explain-plan', async (_, config: DatabaseConnectionConfig, sql: string) => {
     return await databaseService.explainPlan(config, sql);
   });

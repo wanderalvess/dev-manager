@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { applyRowLimit, isPlsqlBlock, normalizeSqlForExecution, stripLeadingComments } from './sqlStatementUtils';
+import {
+  applyRowLimit,
+  classifySqlStatement,
+  findRiskyStatement,
+  isPlsqlBlock,
+  normalizeSqlForExecution,
+  stripLeadingComments
+} from './sqlStatementUtils';
 
 describe('isPlsqlBlock', () => {
   it('reconhece blocos anônimos e unidades armazenadas, ignorando comentários iniciais', () => {
@@ -75,5 +82,51 @@ describe('applyRowLimit', () => {
 describe('stripLeadingComments', () => {
   it('remove comentários de linha e de bloco só no início', () => {
     expect(stripLeadingComments('-- a\n/* b */\nSELECT 1 -- c')).toBe('SELECT 1 -- c');
+  });
+});
+
+describe('classifySqlStatement', () => {
+  it('SELECT puro não altera dados; FOR UPDATE e CTE com DML sim', () => {
+    expect(classifySqlStatement('SELECT * FROM t')).toBe('select');
+    expect(classifySqlStatement('-- x\nWITH a AS (SELECT 1 FROM dual) SELECT * FROM a')).toBe('select');
+    expect(classifySqlStatement('SELECT * FROM t FOR UPDATE')).toBe('dml');
+    expect(classifySqlStatement('WITH a AS (SELECT 1) DELETE FROM t')).toBe('dml');
+  });
+
+  it('DML, DDL, PL/SQL e controle de transação', () => {
+    expect(classifySqlStatement('insert into t values (1)')).toBe('dml');
+    expect(classifySqlStatement('UPDATE t SET a = 1')).toBe('dml');
+    expect(classifySqlStatement('MERGE INTO t USING s ON (1=1) WHEN MATCHED THEN UPDATE SET a=1')).toBe('dml');
+    expect(classifySqlStatement('CREATE TABLE t (id NUMBER)')).toBe('ddl');
+    expect(classifySqlStatement('TRUNCATE TABLE t')).toBe('ddl');
+    expect(classifySqlStatement('CREATE OR REPLACE PROCEDURE p IS BEGIN NULL; END;')).toBe('ddl');
+    expect(classifySqlStatement('BEGIN NULL; END;')).toBe('plsql');
+    expect(classifySqlStatement('EXEC pkg.proc')).toBe('plsql');
+    expect(classifySqlStatement('COMMIT')).toBe('commit');
+    expect(classifySqlStatement('ROLLBACK')).toBe('rollback');
+    expect(classifySqlStatement('ROLLBACK TO sp1')).toBe('savepoint');
+    expect(classifySqlStatement('SAVEPOINT sp1')).toBe('savepoint');
+    expect(classifySqlStatement('EXPLAIN PLAN FOR SELECT 1 FROM dual')).toBe('other');
+  });
+
+  it('palavra-chave dentro de texto ou comentário não engana', () => {
+    expect(classifySqlStatement("SELECT 'DELETE FROM t' FROM dual")).toBe('select');
+    expect(classifySqlStatement('/* UPDATE t */ SELECT 1 FROM dual')).toBe('select');
+  });
+});
+
+describe('findRiskyStatement', () => {
+  it('UPDATE/DELETE sem WHERE e DROP/TRUNCATE são arriscados', () => {
+    expect(findRiskyStatement('UPDATE t SET a = 1')).toEqual({ reason: 'no-where', verb: 'UPDATE' });
+    expect(findRiskyStatement('delete from t')).toEqual({ reason: 'no-where', verb: 'DELETE' });
+    expect(findRiskyStatement('TRUNCATE TABLE t')).toEqual({ reason: 'ddl', verb: 'TRUNCATE' });
+    expect(findRiskyStatement('DROP TABLE t')).toEqual({ reason: 'ddl', verb: 'DROP' });
+  });
+
+  it('com WHERE, SELECT e WHERE só em comentário/texto', () => {
+    expect(findRiskyStatement('UPDATE t SET a = 1 WHERE id = 2')).toBeNull();
+    expect(findRiskyStatement('SELECT * FROM t')).toBeNull();
+    expect(findRiskyStatement('DELETE FROM t -- WHERE id = 1')).toEqual({ reason: 'no-where', verb: 'DELETE' });
+    expect(findRiskyStatement("UPDATE t SET a = 'WHERE'")).toEqual({ reason: 'no-where', verb: 'UPDATE' });
   });
 });
