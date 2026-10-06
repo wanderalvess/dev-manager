@@ -2,7 +2,8 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session, Notificati
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { ConfigService } from './services/ConfigService';
+import { ConfigService } from './services/ConfigService';
+import { safeSend } from './utils/ipcSend';
 import { WindowsService } from './services/WindowsService';
 import { KarafService } from './services/KarafService';
 import { GitAzureService } from './services/GitAzureService';
@@ -113,7 +114,7 @@ function createWindow() {
   const backupService = new BackupService(configService);
   const backupSchedulerService = new BackupSchedulerService(configService, backupService);
   backupSchedulerService.onResult = (connectionName, result) => {
-    mainWindow?.webContents.send('backup:schedule-result', { connectionName, result });
+    safeSend(mainWindow, 'backup:schedule-result', { connectionName, result });
     // Notificação do sistema operacional: garante visibilidade mesmo com a janela
     // minimizada/em segundo plano, quando o webContents.send acima passa despercebido.
     if (Notification.isSupported()) {
@@ -142,7 +143,7 @@ function createWindow() {
   const logWatcherService = new LogWatcherService();
   const karafLogPersistenceService = new KarafLogPersistenceService();
   const autoUpdateService = new AutoUpdateService((status) => {
-    mainWindow?.webContents.send('update:status', status);
+    safeSend(mainWindow, 'update:status', status);
   });
   const llmService = new LlmService(configService, docsIndexService);
   const routine801Service = new Routine801Service(configService, karafService);
@@ -152,7 +153,7 @@ function createWindow() {
   const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
   const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
   apmService.onNewTrace = (summary) => {
-    mainWindow?.webContents.send('apm:new-trace', summary);
+    safeSend(mainWindow, 'apm:new-trace', summary);
   };
   apmService.startReceiver().catch((err) => {
     console.warn('[ApmService] Falha ao iniciar receptor OTLP no boot:', err);
@@ -186,6 +187,12 @@ function createWindow() {
   );
 
   backupSchedulerService.rescheduleAll();
+  // Ao sair, não deixa para trás o Karaf embutido (processo filho), os agendamentos de backup nem a porta OTLP
+  app.on('before-quit', () => {
+    backupSchedulerService.stopAll();
+    void apmService.stopReceiver().catch(() => undefined);
+    void karafService.stopEmbeddedKaraf().catch(() => undefined);
+  });
   autoUpdateService.checkForUpdates();
   // Rechecagem periódica: cobre o app que fica dias aberto sem reiniciar, sem depender só do check no boot.
   const AUTO_UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
@@ -264,7 +271,7 @@ function createWindow() {
           label: '⚡ Preparar Ambiente Dev',
           click: () => {
             windowsService.resetEnvironment('embedded', (log) => {
-              if (mainWindow) mainWindow.webContents.send('env:log-event', log);
+              if (mainWindow) safeSend(mainWindow, 'env:log-event', log);
             });
           }
         },

@@ -70,6 +70,7 @@ import {
   BatchRoutineDownloadRequest
 } from '../../shared/types';
 import { isSafeUrl, isSafePath, isValidIdentifier } from '../utils/security';
+import { safeSend } from '../utils/ipcSend';
 
 export function registerIpcHandlers(
   mainWindow: BrowserWindow,
@@ -283,11 +284,11 @@ export function registerIpcHandlers(
     return await windowsService.resetEnvironment(
       options || 'embedded',
       (log) => {
-        mainWindow.webContents.send('env:log-event', log);
+        safeSend(mainWindow, 'env:log-event', log);
       },
       (chunk) => {
         karafLogPersistenceService.append(chunk);
-        mainWindow.webContents.send('karaf:stdout', chunk);
+        safeSend(mainWindow, 'karaf:stdout', chunk);
       }
     );
   });
@@ -297,35 +298,35 @@ export function registerIpcHandlers(
     return await windowsService.executeProfile(
       profile,
       (log) => {
-        mainWindow.webContents.send('env:log-event', log);
+        safeSend(mainWindow, 'env:log-event', log);
       },
       (stepIndex, totalSteps, step) => {
-        mainWindow.webContents.send('profile:step-progress', { stepIndex, totalSteps, step });
+        safeSend(mainWindow, 'profile:step-progress', { stepIndex, totalSteps, step });
       }
     );
   });
 
   ipcMain.handle('profile:stop', async (_, profile: AutomationProfile) => {
     return await windowsService.stopProfile(profile, (log) => {
-      mainWindow.webContents.send('env:log-event', log);
+      safeSend(mainWindow, 'env:log-event', log);
     });
   });
 
   ipcMain.handle('profile:run-step', async (_, step: AutomationStep, profileName?: string) => {
     return await windowsService.runProfileStep(step, profileName, (log) => {
-      mainWindow.webContents.send('env:log-event', log);
+      safeSend(mainWindow, 'env:log-event', log);
     });
   });
 
   ipcMain.handle('profile:stop-step', async (_, step: AutomationStep) => {
     return await windowsService.stopProfileStep(step, (log) => {
-      mainWindow.webContents.send('env:log-event', log);
+      safeSend(mainWindow, 'env:log-event', log);
     });
   });
 
   ipcMain.handle('profile:restart-step', async (_, step: AutomationStep, profileName?: string) => {
     return await windowsService.restartProfileStep(step, profileName, (log) => {
-      mainWindow.webContents.send('env:log-event', log);
+      safeSend(mainWindow, 'env:log-event', log);
     });
   });
 
@@ -344,7 +345,7 @@ export function registerIpcHandlers(
   ipcMain.handle('karaf:start-embedded', async () => {
     return karafService.startEmbeddedKarafDebug((chunk) => {
       karafLogPersistenceService.append(chunk);
-      mainWindow.webContents.send('karaf:stdout', chunk);
+      safeSend(mainWindow, 'karaf:stdout', chunk);
     });
   });
 
@@ -375,7 +376,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle('karaf:deploy', async (_, request: KarafDeployRequest) => {
     const result = await karafService.deploy(request, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
     notifyUser(mainWindow, 'karaf:deploy-result', result, {
       title: result.success ? 'Deploy Karaf concluído' : 'Falha no deploy Karaf',
@@ -386,7 +387,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle('karaf:exec-diagnostic', async (_, command: string) => {
     return await karafService.executeKarafCommand(command, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
   });
 
@@ -394,7 +395,7 @@ export function registerIpcHandlers(
     'karaf:build-and-deploy',
     async (_, request: KarafDeployRequest, projectPath: string, skipTests: boolean = true) => {
       const result = await karafService.buildAndDeployMaven(request, projectPath, skipTests, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
       notifyUser(mainWindow, 'karaf:deploy-result', result, {
         title: result.success ? 'Build + Deploy Karaf concluído' : 'Falha no build/deploy Karaf',
@@ -410,7 +411,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle('karaf:run-maven-build', async (_, projectPath: string, skipTests: boolean = true) => {
     const result = await karafService.runMavenBuild(projectPath, skipTests, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
     if (result.code !== 0) {
       notifyUser(mainWindow, 'karaf:build-result', result, {
@@ -434,7 +435,7 @@ export function registerIpcHandlers(
       credentials?: { user?: string; pass?: string; port?: number }
     ) => {
       return await karafService.manageBundle(action, bundleId, credentials, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
     }
   );
@@ -448,7 +449,7 @@ export function registerIpcHandlers(
       credentials?: { user?: string; pass?: string; port?: number }
     ) => {
       return await karafService.manageBundlesBatch(action, bundleIds, credentials, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
     }
   );
@@ -487,13 +488,13 @@ export function registerIpcHandlers(
 
   ipcMain.handle('karaf:install-bundle', async (_, request: InstallBundleRequest) => {
     return await karafService.installBundle(request, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
   });
 
   ipcMain.handle('karaf:uninstall-bundle', async (_, bundleId: string, credentials?: { user?: string; pass?: string; port?: number }) => {
     return await karafService.uninstallBundle(bundleId, credentials, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
   });
 
@@ -510,7 +511,7 @@ export function registerIpcHandlers(
       credentials?: { user?: string; pass?: string; port?: number }
     ) => {
       return await karafService.uninstallFeature(featureName, version, credentials, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
     }
   );
@@ -524,20 +525,20 @@ export function registerIpcHandlers(
       credentials?: { user?: string; pass?: string; port?: number }
     ) => {
       return await karafService.installFeature(featureName, version, credentials, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
     }
   );
 
   ipcMain.handle('karaf:reinstall-bundle', async (_, request: ReinstallBundleRequest) => {
     return await karafService.reinstallBundle(request, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
   });
 
   ipcMain.handle('karaf:update-bundle-version', async (_, request: UpdateBundleVersionRequest) => {
     return await karafService.updateBundleVersion(request, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
   });
 
@@ -563,7 +564,7 @@ export function registerIpcHandlers(
     'karaf:add-feature-repo',
     async (_, url: string, credentials?: { user?: string; pass?: string; port?: number }) => {
       return await karafService.addFeatureRepository(url, credentials, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
     }
   );
@@ -572,7 +573,7 @@ export function registerIpcHandlers(
     'karaf:remove-feature-repo',
     async (_, nameOrUrl: string, credentials?: { user?: string; pass?: string; port?: number }) => {
       return await karafService.removeFeatureRepository(nameOrUrl, credentials, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
     }
   );
@@ -581,7 +582,7 @@ export function registerIpcHandlers(
     'karaf:refresh-feature-repo',
     async (_, nameOrUrl?: string, credentials?: { user?: string; pass?: string; port?: number }) => {
       return await karafService.refreshFeatureRepository(nameOrUrl, credentials, (chunk) => {
-        mainWindow.webContents.send('karaf:log-chunk', chunk);
+        safeSend(mainWindow, 'karaf:log-chunk', chunk);
       });
     }
   );
@@ -613,7 +614,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle('routine801:install-features', async (_, request: Routine801InstallRequest) => {
     return await routine801Service.installFeatures(request, (chunk) => {
-      mainWindow.webContents.send('karaf:log-chunk', chunk);
+      safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
   });
 
@@ -622,17 +623,17 @@ export function registerIpcHandlers(
     return await deployService.executeProfile(
       profile,
       (chunk) => {
-        mainWindow.webContents.send('deploy:log-chunk', chunk);
+        safeSend(mainWindow, 'deploy:log-chunk', chunk);
       },
       (progressEvent) => {
-        mainWindow.webContents.send('deploy:step-progress', progressEvent);
+        safeSend(mainWindow, 'deploy:step-progress', progressEvent);
       }
     );
   });
 
   ipcMain.handle('deploy:run-step', async (_, step: DeployStep, profileName?: string) => {
     return await deployService.executeSingleStep(step, (chunk) => {
-      mainWindow.webContents.send('deploy:log-chunk', chunk);
+      safeSend(mainWindow, 'deploy:log-chunk', chunk);
     }, profileName);
   });
 
@@ -773,14 +774,14 @@ export function registerIpcHandlers(
 
   ipcMain.handle('routines:batch-download', async (_, request: BatchRoutineDownloadRequest) => {
     return routinesService.downloadRoutinesBatch(request, (progress) => {
-      mainWindow.webContents.send('routines:batch-progress', progress);
+      safeSend(mainWindow, 'routines:batch-progress', progress);
     });
   });
 
   // --- Índice de Documentação (RAG local) ---
   ipcMain.handle('docs:reindex', async () => {
     return await docsIndexService.reindex((progress: DocsIndexProgress) => {
-      mainWindow.webContents.send('docs:index-progress', progress);
+      safeSend(mainWindow, 'docs:index-progress', progress);
     });
   });
 
@@ -834,7 +835,7 @@ export function registerIpcHandlers(
 
   ipcMain.handle('docs:sync', async (_, targetId?: string) => {
     return await docSyncService.syncToTarget(targetId, (progress) => {
-      mainWindow.webContents.send('docs:sync-progress', progress);
+      safeSend(mainWindow, 'docs:sync-progress', progress);
     });
   });
 
@@ -1129,7 +1130,7 @@ export function registerIpcHandlers(
         throw new Error('containers deve ser um array.');
       }
       return await dockerService.startContainerSequence(containers, (step) => {
-        mainWindow.webContents.send('docker:sequence-progress', step);
+        safeSend(mainWindow, 'docker:sequence-progress', step);
       });
     }
   );
@@ -1140,7 +1141,7 @@ export function registerIpcHandlers(
         throw new Error('containers deve ser um array.');
       }
       return await dockerService.startContainerSequence(containers, (step) => {
-        mainWindow.webContents.send('docker:sequence-progress', step);
+        safeSend(mainWindow, 'docker:sequence-progress', step);
       });
     }
   );
@@ -1152,7 +1153,7 @@ export function registerIpcHandlers(
         throw new Error('containers deve ser um array.');
       }
       return await dockerService.stopContainerSequence(containers, (step) => {
-        mainWindow.webContents.send('docker:stop-sequence-progress', step);
+        safeSend(mainWindow, 'docker:stop-sequence-progress', step);
       });
     }
   );
@@ -1163,7 +1164,7 @@ export function registerIpcHandlers(
         throw new Error('containers deve ser um array.');
       }
       return await dockerService.stopContainerSequence(containers, (step) => {
-        mainWindow.webContents.send('docker:stop-sequence-progress', step);
+        safeSend(mainWindow, 'docker:stop-sequence-progress', step);
       });
     }
   );
@@ -1341,7 +1342,7 @@ export function registerIpcHandlers(
     'docker:compose-up',
     async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean; build?: boolean }) => {
       return await dockerService.composeUp(composeFilePath, options, (chunk) => {
-        mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+        safeSend(mainWindow, 'docker:compose-log-chunk', chunk);
       });
     }
   );
@@ -1349,30 +1350,30 @@ export function registerIpcHandlers(
     'container:compose-up',
     async (_, composeFilePath: string, options?: { profile?: string; detach?: boolean; build?: boolean }) => {
       return await dockerService.composeUp(composeFilePath, options, (chunk) => {
-        mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+        safeSend(mainWindow, 'docker:compose-log-chunk', chunk);
       });
     }
   );
 
   ipcMain.handle('docker:compose-down', async (_, composeFilePath: string, options?: { profile?: string; volumes?: boolean }) => {
     return await dockerService.composeDown(composeFilePath, options, (chunk) => {
-      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+      safeSend(mainWindow, 'docker:compose-log-chunk', chunk);
     });
   });
   ipcMain.handle('container:compose-down', async (_, composeFilePath: string, options?: { profile?: string; volumes?: boolean }) => {
     return await dockerService.composeDown(composeFilePath, options, (chunk) => {
-      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+      safeSend(mainWindow, 'docker:compose-log-chunk', chunk);
     });
   });
 
   ipcMain.handle('docker:compose-restart', async (_, composeFilePath: string, options?: { profile?: string }) => {
     return await dockerService.composeRestart(composeFilePath, options, (chunk) => {
-      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+      safeSend(mainWindow, 'docker:compose-log-chunk', chunk);
     });
   });
   ipcMain.handle('container:compose-restart', async (_, composeFilePath: string, options?: { profile?: string }) => {
     return await dockerService.composeRestart(composeFilePath, options, (chunk) => {
-      mainWindow.webContents.send('docker:compose-log-chunk', chunk);
+      safeSend(mainWindow, 'docker:compose-log-chunk', chunk);
     });
   });
 
@@ -1411,7 +1412,7 @@ export function registerIpcHandlers(
       filePath,
       (event: LogChunkEvent) => {
         if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('logs:chunk', event);
+          safeSend(mainWindow, 'logs:chunk', event);
         }
       },
       initialLines,
@@ -1529,7 +1530,7 @@ export function registerIpcHandlers(
     const runnerId = typeof target === 'string' ? target : target.id;
     return await testRunnerService.executeRunner(target, (chunk) => {
       if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('test-runner:chunk', { runnerId, chunk });
+        safeSend(mainWindow, 'test-runner:chunk', { runnerId, chunk });
       }
     });
   });
@@ -1576,7 +1577,7 @@ export function registerIpcHandlers(
   ipcMain.handle('taut:run-tests', async (_, options: any) => {
     return tautAutomationService.runTests(options, (chunk) => {
       if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('taut:chunk', { chunk });
+        safeSend(mainWindow, 'taut:chunk', { chunk });
       }
     });
   });
