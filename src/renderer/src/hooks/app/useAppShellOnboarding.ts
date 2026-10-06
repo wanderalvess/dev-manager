@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { showToast } from '../../components/ToastHost';
 import { PAGE_TOURS_PREF_KEY } from '../../components/onboarding/usePageTour';
 import { TOUR_STORAGE_KEY } from '../../components/onboarding/tourSteps';
 import { WELCOME_STORAGE_KEY } from '../../components/onboarding/welcomeSteps';
-import { getMissingRequiredPaths } from '../../utils/environmentPageUtils';
+import { getMissingRequiredPaths, shouldClearStaleOnboarding } from '../../utils/environmentPageUtils';
 import { collectPageTourKeys } from '../../utils/appShellNavigation';
 import changelogRaw from '../../../../../CHANGELOG.md?raw';
 
@@ -23,6 +23,16 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
       return false;
     }
   });
+  // Havia marcadores de onboarding já na abertura? Lido uma vez, antes de o usuário interagir.
+  const hadMarkersAtMount = useRef<boolean>(false);
+  if (hadMarkersAtMount.current === false) {
+    try {
+      hadMarkersAtMount.current =
+        !!window.localStorage.getItem(TOUR_STORAGE_KEY) || !!window.localStorage.getItem(WELCOME_STORAGE_KEY);
+    } catch {
+      // localStorage indisponível
+    }
+  }
   const [isPageToursPromptOpen, setIsPageToursPromptOpen] = useState<boolean>(false);
   const [isWhatsNewOpen, setIsWhatsNewOpen] = useState<boolean>(false);
   const [changelogContent, setChangelogContent] = useState<string>('');
@@ -131,19 +141,22 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
   useEffect(() => {
     if (!window.electronAPI?.getAppInfo) return;
     window.electronAPI.getAppInfo().then((info) => {
-      if (info.isFirstRun) {
-        try {
-          window.localStorage.removeItem(TOUR_STORAGE_KEY);
-          window.localStorage.removeItem(WELCOME_STORAGE_KEY);
-          window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
-        } catch {
-          // localStorage indisponível
-        }
-        return;
-      }
-
+      // A versão vale também na primeira execução (o modal de novidades e o rodapé dependem dela)
       if (info.appVersion) {
         setAppVersion(info.appVersion);
+      }
+
+      if (info.isFirstRun) {
+        if (shouldClearStaleOnboarding(info.isFirstRun, hadMarkersAtMount.current)) {
+          try {
+            window.localStorage.removeItem(TOUR_STORAGE_KEY);
+            window.localStorage.removeItem(WELCOME_STORAGE_KEY);
+            window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
+          } catch {
+            // localStorage indisponível
+          }
+        }
+        return;
       }
 
       if (info.isAppUpdated) {

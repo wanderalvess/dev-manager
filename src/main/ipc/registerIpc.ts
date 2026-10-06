@@ -180,6 +180,13 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('system:get-app-info', async (): Promise<SystemAppInfo> => {
+    // Consome as flags: recarregar a janela (Ctrl+R) na mesma sessão não deve reabrir o onboarding
+    // nem o "O que há de novo". Lidas antes do await para não perder a ordem entre chamadas concorrentes.
+    const isFirstRun = isFirstRunSession;
+    const isAppUpdated = isAppUpdatedSession;
+    isFirstRunSession = false;
+    isAppUpdatedSession = false;
+
     const isAdmin = await windowsService.checkAdminPrivileges();
     const configPath = configService.getConfigFilePath();
 
@@ -198,8 +205,8 @@ export function registerIpcHandlers(
       freeMemoryMb: Math.round(os.freemem() / 1024 / 1024),
       configPath,
       isAdmin,
-      isFirstRun: isFirstRunSession,
-      isAppUpdated: isAppUpdatedSession
+      isFirstRun,
+      isAppUpdated
     };
   });
 

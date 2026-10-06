@@ -36,6 +36,7 @@ import {
   removeAtIndex,
   updateAtIndex
 } from '../utils/settingsListEditors';
+import { mergeDetectedPaths } from '../utils/environmentPageUtils';
 import {
   SettingsTab,
   SettingsSearchEntry,
@@ -588,7 +589,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       setIsDetecting(true);
       try {
         const detected = await window.electronAPI.autoDetectPaths();
-        const updated = { ...settings, ...detected };
+        const updated = mergeDetectedPaths(settings, detected);
         setSettings(updated);
         await validateAllPaths(updated);
       } finally {

@@ -32,6 +32,29 @@ export function getMissingRequiredPaths(settings: AppSettings | null): string[] 
   return missing;
 }
 
+/**
+ * Aplica o resultado da detecção automática só nos campos ainda vazios. A detecção devolve '' quando
+ * não acha nada; espalhar o resultado direto sobrescreveria com vazio caminhos que o usuário já configurou.
+ */
+export function mergeDetectedPaths(settings: AppSettings, detected: Partial<AppSettings>): AppSettings {
+  const next: AppSettings = { ...settings };
+  const target = next as unknown as Record<string, unknown>;
+  for (const [key, value] of Object.entries(detected)) {
+    if (typeof value !== 'string' || value.trim() === '') continue;
+    const current = target[key];
+    if (typeof current === 'string' && current.trim() !== '') continue;
+    target[key] = value;
+  }
+  return next;
+}
+
+/** Decide se os marcadores de onboarding do navegador estão desalinhados da instalação (ex: pasta de dados copiada de outra máquina). */
+export function shouldClearStaleOnboarding(isFirstRun: boolean | undefined, hadMarkersAtMount: boolean): boolean {
+  // Só é "desalinhado" se já havia marcadores quando o app abriu. Se não havia, quem os gravou foi o próprio
+  // usuário ao pular/concluir a introdução durante esta sessão, e apagá-los reabriria o onboarding na próxima abertura.
+  return !!isFirstRun && hadMarkersAtMount;
+}
+
 /** Filtra um texto multi-linha (ex: log persistido) pelas linhas que contêm `searchTerm`, case-insensitive. */
 export function filterLogLines(text: string, searchTerm: string): string {
   if (!searchTerm.trim()) return text;

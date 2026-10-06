@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  mergeDetectedPaths,
+  shouldClearStaleOnboarding,
   resolveActiveProfile,
   getMissingRequiredPaths,
   filterLogLines,
@@ -124,5 +126,41 @@ describe('resolveStepRuntimeTarget', () => {
     expect(result.service).toBeUndefined();
     expect(result.processTargetName).toBeNull();
     expect(result.process).toBeUndefined();
+  });
+});
+
+describe('mergeDetectedPaths', () => {
+  const base = { projectsPath: '', karafPath: 'D:/meu-karaf', jdkPath: '', intellijPath: '' } as AppSettings;
+
+  it('preenche só campos vazios e preserva caminhos já configurados', () => {
+    const out = mergeDetectedPaths(base, {
+      projectsPath: 'C:/Projetos',
+      karafPath: 'C:/karaf',
+      jdkPath: 'C:/Java/jdk-8'
+    });
+    expect(out.projectsPath).toBe('C:/Projetos');
+    expect(out.jdkPath).toBe('C:/Java/jdk-8');
+    expect(out.karafPath).toBe('D:/meu-karaf');
+  });
+
+  it('detecção que não achou nada (string vazia) nunca apaga o valor atual', () => {
+    const out = mergeDetectedPaths(base, { karafPath: '', jdkPath: '   ', intellijPath: '' });
+    expect(out.karafPath).toBe('D:/meu-karaf');
+    expect(out.jdkPath).toBe('');
+  });
+
+  it('não altera o objeto original', () => {
+    mergeDetectedPaths(base, { projectsPath: 'C:/Projetos' });
+    expect(base.projectsPath).toBe('');
+  });
+});
+
+describe('shouldClearStaleOnboarding', () => {
+  it('só limpa quando é primeira execução E já havia marcadores na abertura', () => {
+    expect(shouldClearStaleOnboarding(true, true)).toBe(true);
+    // instalação nova: o usuário pode ter concluído a intro antes da resposta do Electron
+    expect(shouldClearStaleOnboarding(true, false)).toBe(false);
+    expect(shouldClearStaleOnboarding(false, true)).toBe(false);
+    expect(shouldClearStaleOnboarding(undefined, true)).toBe(false);
   });
 });
