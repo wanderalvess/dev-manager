@@ -128,6 +128,15 @@ describe('contexto da cláusula', () => {
   });
 });
 
+describe('tabelas com nome que exige aspas', () => {
+  it('PostgreSQL: o rótulo é o nome listado e o texto inserido ganha aspas', () => {
+    const pg = ctx({ dialect: 'postgres', tables: ['public.Clientes', 'public.users'] });
+    const items = run('SELECT * FROM |', pg).result.items;
+    expect(items.find((i) => i.label === 'public.Clientes')?.insertText).toBe('public."Clientes"');
+    expect(items.find((i) => i.label === 'public.users')?.insertText).toBe('public.users');
+  });
+});
+
 describe('prefixo, faixa de substituição e limites', () => {
   it('filtra pelo prefixo e informa a palavra a substituir', () => {
     const { text, result } = run('SELECT * FROM PCP|');

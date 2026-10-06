@@ -1,6 +1,7 @@
 import type { TableColumnInfo } from '../../../shared/types';
 import type { SqlDialect } from '../../../shared/sqlStatementUtils';
 import { findStatementAt } from '../../../shared/sqlSplitUtils';
+import { quoteTableName } from '../../../shared/sqlIdentifierUtils';
 import { functionsFor, keywordsFor, snippetsFor } from './sqlDictionary';
 import { extractReferencedTables, resolveColumnLoadKey, resolveTableKey, type ReferencedTable } from './sqlEditorUtils';
 
@@ -181,7 +182,8 @@ function tableItems(ctx: CompletionContext, rank: string): CompletionItem[] {
   return ctx.tables.map((t) => ({
     label: t,
     kind: 'table' as const,
-    insertText: t,
+    // O rótulo mostra o nome como listado; o texto inserido leva aspas quando o banco exige
+    insertText: quoteTableName(t, ctx.dialect),
     detail: 'tabela',
     sortText: `${rank}${t}`
   }));

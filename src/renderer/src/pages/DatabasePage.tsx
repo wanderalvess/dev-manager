@@ -9,6 +9,7 @@ import { useDatabaseLayout } from '../hooks/database/useDatabaseLayout';
 import { useDatabaseConnections } from '../hooks/database/useDatabaseConnections';
 import { useDatabaseSchema } from '../hooks/database/useDatabaseSchema';
 import { useDatabaseQuery } from '../hooks/database/useDatabaseQuery';
+import { quoteTableName } from '../../../shared/sqlIdentifierUtils';
 import { useDatabaseObjects } from '../hooks/database/useDatabaseObjects';
 import { TableSpecModal, type SpecTarget } from '../components/database/spec/TableSpecModal';
 import { useDatabaseSnippets, readStoredSnippets } from '../hooks/database/useDatabaseSnippets';
@@ -68,7 +69,9 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
     executeSql: query.handleExecuteSql
   });
 
-  const handleTableClick = (tableName: string) => {
+  const handleTableClick = (rawName: string) => {
+    // Nomes com maiúsculas ou símbolos precisam de aspas (ex.: public."Clientes" no PostgreSQL)
+    const tableName = activeConnection ? quoteTableName(rawName, activeConnection.type) : rawName;
     let statement = '';
     if (activeConnection?.type === 'oracle') {
       statement = `SELECT * FROM ${tableName} WHERE ROWNUM <= 100`;
