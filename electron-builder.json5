@@ -16,7 +16,7 @@
     "!node_modules/@esbuild/**/*",
     "package.json",
     "CHANGELOG.md",
-    "docs/**/*"
+    "docs/MCP_TOOLS.md"
   ],
   "asarUnpack": [
     "node_modules/onnxruntime-node/**/*",

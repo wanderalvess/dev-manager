@@ -3,7 +3,7 @@ import { execFileAsync } from './security';
 
 /**
  * Verifica se uma porta TCP está em escuta (LISTENING) conectando nela via Socket.
- * Compartilhado entre WindowsService e NetworkPortScanner (main e modo web/Docker),
+ * Compartilhado entre o main e o modo web/Docker,
  * que antes reimplementavam a mesma checagem de socket separadamente.
  */
 export function checkPortOpen(port: number, host: string = '127.0.0.1', timeoutMs: number = 400): Promise<boolean> {

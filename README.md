@@ -353,7 +353,7 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
 ### 10. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
   * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code ou GitHub Copilot — pode chamar diretamente, sem passar pela interface gráfica.
-* **145 Tools Organizadas por Domínio:**
+* **166 Tools Organizadas por Domínio:**
   * Para detalhes e exemplos de como usar cada ferramenta, **[acesse o Catálogo Completo de Ferramentas MCP](docs/MCP_TOOLS.md)**.
   * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (gerência de bundles, diagnóstico de dependências OSGi, telemetria Heap/Metaspace JVM com alertas OOM, disparo de GC, gestão de repositórios/features Maven e Log Analyzer), `docker_*`/`container_*`, `git_*` (inspeção de diff, criação de branch por tarefas Azure DevOps/Jira e links de PR), `routines_*` (execução com WinThor Start, download CCW, rollback de `.bak`, versão PE Header e atualização em lote), `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, backup/restore/restore drill, Statement Tracer com captura e interpolação de binds), `logs_*` (leitura pontual e limpeza de arquivos), `apm_*` (traces OTLP, waterfall analítico e top endpoints/queries lentas), `routine801_*`, `deploy_*`, `llm_*` e `network_*`.
 * **Terceiro Consumidor da Mesma Camada de Serviços:**
@@ -544,11 +544,8 @@ Se desejar compilar apenas um dos formatos para economizar tempo de empacotament
 
 ---
 
-### 🛡️ Elevação UAC Automática:
-Ambos os executáveis incluem manifesto interno configurado com `requestedExecutionLevel: requireAdministrator`. Ao abrir o executável, o Windows solicitará permissão de Administrador automaticamente, o que garante permissão para:
-* Iniciar e parar serviços do sistema operacional Windows (`sc.exe`, `net.exe`).
-* Encerrar processos em segundo plano para liberação de portas e arquivos travados.
-* Monitorar sockets e conexões TCP ativas via `netstat`.
+### 🛡️ Permissões (UAC):
+Os executáveis rodam com o nível do usuário (`requestedExecutionLevel: asInvoker`) e **não** pedem Administrador ao abrir. Algumas ações do Cockpit só funcionam elevadas: iniciar/parar serviços do Windows (`sc.exe`, `net.exe`) e encerrar processos de outro usuário. Para usá-las, abra o Hub Manager com "Executar como administrador"; o Cockpit avisa quando uma ação precisar disso.
 
 ---
 
@@ -580,71 +577,16 @@ certutil -addstore -f "Root" dev-manager-public.cer
 ## 📂 Estrutura de Diretórios do Projeto
 
 ```
-dev-manager/
-├── .mcp.json                   # Registro do servidor MCP para clientes como o Claude Code
-├── electron-builder.json5      # Configuração de empacotamento Windows / NSIS
-├── package.json                # Dependências e scripts do projeto
-├── tailwind.config.js          # Configurações de cores, fontes e temas
-├── tsconfig.json               # Configuração do compilador TypeScript
-├── vite.config.ts              # Configuração do Vite + Plugins Electron
-│
-└── src/
-    ├── main/                   # Processo Principal do Electron (Node.js backend)
-    │   ├── index.ts            # Inicialização da janela principal e ciclo de vida
-    │   ├── ipc/
-    │   │   └── registerIpc.ts  # Registro de canais de comunicação IPC seguros
-    │   ├── services/           # Regras de negócio e integração de sistema
-    │   │   ├── ConfigService.ts    # Persistência de configurações e auto-detecção
-    │   │   ├── DocsIndexService.ts # Motor RAG, embeddings FastEmbed, busca e DocSync
-    │   │   ├── LlmService.ts       # Hub de provedores LLM (Gemini, OpenAI, Claude, Ollama)
-    │   │   ├── GitAzureService.ts  # Leitura de repositórios Git e URLs do Azure
-    │   │   ├── KarafService.ts     # Execução de comandos Karaf e console embutido
-    │   │   ├── RoutinesService.ts  # Varredura e lançamento de rotinas
-    │   │   ├── WindowsService.ts   # Controle de serviços Windows e portas de rede
-    │   │   └── docSources/         # Conectores de fontes (Local, Confluence, Jira, Extratores)
-    │   └── utils/
-    │       └── security.ts     # Validadores compartilhados (paths, comandos, identificadores)
-    │
-    ├── server/                 # API REST + WebSocket standalone (modo Web/Docker)
-    │   ├── index.ts            # Express + ws, mesmos services do Electron, sem UI
-    │   └── services/
-    │       └── NetworkPortScanner.ts
-    │
-    ├── mcp/                    # Servidor MCP (Model Context Protocol) via stdio
-    │   └── index.ts            # Terceiro consumidor dos services — tools para clientes MCP/IA
-    │
-    ├── preload/                # Script Preload (Ponte IPC segura com contextBridge)
-    │   ├── index.ts
-    │   └── index.d.ts          # Definição TypeScript global para window.electronAPI
-    │
-    ├── renderer/               # Processo de Renderização (Interface React)
-    │   ├── index.html          # HTML mestre
-    │   └── src/
-    │       ├── App.tsx         # Componente raiz, abas e atalhos de teclado
-    │       ├── main.tsx        # Ponto de entrada do React
-    │       ├── index.css       # Estilos globais e variáveis de tema
-    │       ├── components/     # Componentes reutilizáveis
-    │       │   ├── Header.tsx          # Barra superior cockpit com status e tema
-    │       │   ├── TerminalViewer.tsx  # Terminal com streaming de logs e prompt interativo
-    │       │   ├── DocSettingsModal.tsx# Configurações de pastas, Confluence, Jira e LLMs
-    │       │   ├── MarkdownReader.tsx  # Leitor e renderizador embutido de Markdown
-    │       │   └── ThemeToggle.tsx     # Alternador de modo escuro / claro / midnight
-    │       ├── context/
-    │       │   └── ThemeContext.tsx    # Contexto global de temas
-    │       └── pages/          # Telas principais da aplicação
-    │           ├── EnvironmentPage.tsx # Cockpit de preparação de ambiente e serviços
-    │           ├── DatabasePage.tsx    # Studio SQL Multi-Vendor, histórico e snippets
-    │           ├── ContainersPage.tsx  # Containers (Docker / Podman), métricas em tempo real e terminal
-    │           ├── DeployPage.tsx      # Deployer Karaf OSGi, snapshots e árvore de bundles
-    │           ├── GitAzurePage.tsx    # Hub de repositórios Git e Pull Requests
-    │           ├── RoutinesPage.tsx    # Catálogo e lançador de rotinas
-    │           ├── DocsPage.tsx        # Busca semântica RAG, preview e abertura em editor
-    │           ├── SettingsPage.tsx    # Tela de configurações e portas monitoradas
-    │           └── HelpPage.tsx        # Central de Ajuda, FAQ, atalhos e diagnóstico
-    │
-    └── shared/                 # Tipos e utilitários compartilhados entre main, server e mcp
-        └── types.ts            # Interfaces TypeScript (AppSettings, ServiceStatus, etc.)
+src/
+├── main/       # Processo principal do Electron: services (regras de negócio), ipc/, utils/
+├── preload/    # Ponte segura (contextBridge) exposta como window.electronAPI
+├── renderer/   # Interface React: pages/, components/ (por domínio), hooks/, utils/
+├── server/     # API REST + WebSocket standalone (modo Web/Docker)
+├── mcp/        # Servidor MCP (stdio) para assistentes de IA
+└── shared/     # Tipos e utilitários compartilhados entre main, server, mcp e renderer
 ```
+
+O mesmo conjunto de services alimenta o IPC do Electron, a API REST e o servidor MCP. Arquitetura, convenções e decisões estão em [AGENTS.md](AGENTS.md).
 
 ---
 

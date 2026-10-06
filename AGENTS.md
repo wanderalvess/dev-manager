@@ -133,8 +133,9 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
 - `vite-plugin-electron` com dois entry points (main, preload). Módulos nativos
   (`oracledb`, `pg`, `mysql2`, `fastembed`, `onnxruntime-node`, tokenizers, `.node`) ficam em
   `external` no Vite — continuam `require()` em runtime, não vão para o bundle.
-- `postinstall: patch-package` fica como gancho para patches futuros (hoje não há nenhum: o `fastembed`
-  2.1.1 deixou de importar `tar`, então o patch antigo foi removido; o piso `^2.1.1` evita voltar à 2.1.0).
+- Não há `patch-package` (o `fastembed` 2.1.1 deixou de importar `tar`, então o patch antigo e o gancho
+  `postinstall` foram removidos; o piso `^2.1.1` evita voltar à 2.1.0). Se um dia precisar de patch, reintroduza
+  o `patch-package` como devDependency + `postinstall` e confira o Dockerfile (`npm ci --omit=dev`).
   O override `tar ^7.5.21` continua valendo contra a CVE.
 - `electron-builder.json5`: build só para Windows (nsis + portable), com `asarUnpack` para os
   binários nativos do onnxruntime/tokenizers.

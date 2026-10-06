@@ -671,7 +671,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">163 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
+            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">166 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
             <div>
@@ -690,7 +690,7 @@ export function getFaqList({
                 className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-2 w-fit cursor-pointer"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Ver Catálogo Completo das 163 Ferramentas e Prompts</span>
+                <span>Ver Catálogo Completo das 166 Ferramentas e Prompts</span>
               </button>
             </div>
             
@@ -884,7 +884,7 @@ export function getFaqList({
               <ol className="list-decimal pl-4 space-y-1 text-[11px]">
                 <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Ctrl+Alt+I</kbd>).</li>
                 <li>Selecione o modo <strong className="text-foreground">Agent</strong> (ou digite <code className="font-mono text-primary">@agent</code> no campo de mensagem).</li>
-                <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 145 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
+                <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 166 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
                 <li>Envie sua solicitação diretamente (ex.: <em>"Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."</em>).</li>
               </ol>
             </div>

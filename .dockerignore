@@ -11,3 +11,9 @@ release
 *.log
 .DS_Store
 Thumbs.db
+.env
+.env.*
+certs
+.github
+.claude
+docs/superpowers

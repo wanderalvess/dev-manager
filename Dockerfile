@@ -1,5 +1,5 @@
 # =========================================================
-# Multi-stage Dockerfile para Dev Manager
+# Multi-stage Dockerfile para Hub Manager
 # =========================================================
 
 # --- Estágio 1: Build do Frontend React + Vite ---
@@ -42,7 +42,7 @@ RUN npm ci --omit=dev && npm install -g tsx
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src ./src
-COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/docs/MCP_TOOLS.md ./docs/MCP_TOOLS.md
 COPY --from=builder /app/CHANGELOG.md ./CHANGELOG.md
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
@@ -51,7 +51,7 @@ EXPOSE 3000
 
 # Healthcheck para monitorar o status do contêiner
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3000/api/system/info || exit 1
+  CMD curl -f -H "x-api-key: ${API_KEY}" http://localhost:3000/api/system/info || exit 1
 
 # Inicializa o servidor Web e WebSocket
 CMD ["npm", "run", "start"]
