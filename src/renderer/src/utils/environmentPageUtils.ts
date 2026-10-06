@@ -33,19 +33,25 @@ export function getMissingRequiredPaths(settings: AppSettings | null): string[] 
 }
 
 /**
- * Aplica o resultado da detecção automática só nos campos ainda vazios. A detecção devolve '' quando
- * não acha nada; espalhar o resultado direto sobrescreveria com vazio caminhos que o usuário já configurou.
+ * Campos que a detecção automática pode preencher: só os ainda vazios no `settings` e que a detecção
+ * realmente achou. A detecção devolve '' quando não acha nada; espalhar o resultado direto sobrescreveria
+ * com vazio caminhos que o usuário já configurou.
  */
-export function mergeDetectedPaths(settings: AppSettings, detected: Partial<AppSettings>): AppSettings {
-  const next: AppSettings = { ...settings };
-  const target = next as unknown as Record<string, unknown>;
+export function pickDetectedPaths(settings: AppSettings, detected: Partial<AppSettings>): Partial<AppSettings> {
+  const current = settings as unknown as Record<string, unknown>;
+  const picked: Record<string, string> = {};
   for (const [key, value] of Object.entries(detected)) {
     if (typeof value !== 'string' || value.trim() === '') continue;
-    const current = target[key];
-    if (typeof current === 'string' && current.trim() !== '') continue;
-    target[key] = value;
+    const existing = current[key];
+    if (typeof existing === 'string' && existing.trim() !== '') continue;
+    picked[key] = value;
   }
-  return next;
+  return picked as Partial<AppSettings>;
+}
+
+/** Aplica no `settings` o resultado de `pickDetectedPaths`, sem alterar o original. */
+export function mergeDetectedPaths(settings: AppSettings, detected: Partial<AppSettings>): AppSettings {
+  return { ...settings, ...pickDetectedPaths(settings, detected) };
 }
 
 /** Decide se os marcadores de onboarding do navegador estão desalinhados da instalação (ex: pasta de dados copiada de outra máquina). */

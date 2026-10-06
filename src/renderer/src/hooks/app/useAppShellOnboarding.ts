@@ -3,7 +3,7 @@ import { showToast } from '../../components/ToastHost';
 import { PAGE_TOURS_PREF_KEY } from '../../components/onboarding/usePageTour';
 import { TOUR_STORAGE_KEY } from '../../components/onboarding/tourSteps';
 import { WELCOME_STORAGE_KEY } from '../../components/onboarding/welcomeSteps';
-import { getMissingRequiredPaths, shouldClearStaleOnboarding } from '../../utils/environmentPageUtils';
+import { getMissingRequiredPaths, pickDetectedPaths, shouldClearStaleOnboarding } from '../../utils/environmentPageUtils';
 import { collectPageTourKeys } from '../../utils/appShellNavigation';
 import changelogRaw from '../../../../../CHANGELOG.md?raw';
 
@@ -75,7 +75,23 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
       let missingPaths: string[] = [];
       try {
         if (window.electronAPI?.getSettings) {
-          const st = await window.electronAPI.getSettings();
+          let st = await window.electronAPI.getSettings();
+
+          // Instalação nova: preenche sozinho o que a detecção achar (só campos vazios) para o usuário
+          // não começar com tudo em branco. O que não for achado continua na checklist de Configurações.
+          if (getMissingRequiredPaths(st).length > 0 && window.electronAPI.autoDetectPaths) {
+            try {
+              const filled = pickDetectedPaths(st, await window.electronAPI.autoDetectPaths());
+              const filledCount = Object.keys(filled).length;
+              if (filledCount > 0) {
+                st = await window.electronAPI.saveSettings(filled);
+                showToast(`${filledCount} caminho(s) do ambiente detectado(s) automaticamente. Confira em Configurações.`, 'success');
+              }
+            } catch {
+              // detecção é só conveniência: se falhar, o usuário preenche manualmente
+            }
+          }
+
           missingPaths = getMissingRequiredPaths(st);
         }
       } catch {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   mergeDetectedPaths,
+  pickDetectedPaths,
   shouldClearStaleOnboarding,
   resolveActiveProfile,
   getMissingRequiredPaths,
@@ -152,6 +153,25 @@ describe('mergeDetectedPaths', () => {
   it('não altera o objeto original', () => {
     mergeDetectedPaths(base, { projectsPath: 'C:/Projetos' });
     expect(base.projectsPath).toBe('');
+  });
+});
+
+describe('pickDetectedPaths', () => {
+  const base = { projectsPath: '', karafPath: 'D:/meu-karaf', jdkPath: '' } as AppSettings;
+
+  it('devolve só o que a detecção achou para campos ainda vazios', () => {
+    const picked = pickDetectedPaths(base, {
+      projectsPath: 'C:/Projetos',
+      karafPath: 'C:/karaf',
+      jdkPath: '',
+      intellijPath: 'C:/idea'
+    });
+    expect(picked).toEqual({ projectsPath: 'C:/Projetos', intellijPath: 'C:/idea' });
+  });
+
+  it('devolve objeto vazio quando nada foi achado ou tudo já estava configurado', () => {
+    expect(pickDetectedPaths(base, { projectsPath: '', jdkPath: '  ' })).toEqual({});
+    expect(pickDetectedPaths(base, { karafPath: 'C:/outro' })).toEqual({});
   });
 });
 
