@@ -1,22 +1,43 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DatabaseConnectionConfig, TableColumnInfo } from '../../../../shared/types';
 
-/** Tabelas do schema da conexão ativa e navegador de colunas (com cache por tabela). */
+const NO_TABLES: string[] = [];
+const NO_COLUMNS: Record<string, TableColumnInfo[]> = {};
+
+/**
+ * Tabelas do schema e navegador de colunas, com cache POR CONEXÃO: alternar entre abas de bancos diferentes não
+ * recarrega a lista nem mistura colunas de tabelas de mesmo nome em bancos distintos.
+ */
 export function useDatabaseSchema(activeConnection: DatabaseConnectionConfig | null, activeConnectionId: string) {
-  const [tables, setTables] = useState<string[]>([]);
+  const [tablesByConn, setTablesByConn] = useState<Record<string, string[]>>({});
+  const [columnsByConn, setColumnsByConn] = useState<Record<string, Record<string, TableColumnInfo[]>>>({});
   const [tableFilter, setTableFilter] = useState<string>('');
   const [isLoadingTables, setIsLoadingTables] = useState<boolean>(false);
   const [expandedTable, setExpandedTable] = useState<string | null>(null);
-  const [tableColumns, setTableColumns] = useState<Record<string, TableColumnInfo[]>>({});
   const [isLoadingColumns, setIsLoadingColumns] = useState<Record<string, boolean>>({});
+
+  const tables = tablesByConn[activeConnectionId] ?? NO_TABLES;
+  const tableColumns = columnsByConn[activeConnectionId] ?? NO_COLUMNS;
+
+  const setTableColumns = useCallback<React.Dispatch<React.SetStateAction<Record<string, TableColumnInfo[]>>>>(
+    (updater) => {
+      setColumnsByConn((prev) => {
+        const current = prev[activeConnectionId] ?? NO_COLUMNS;
+        const next = typeof updater === 'function' ? updater(current) : updater;
+        return { ...prev, [activeConnectionId]: next };
+      });
+    },
+    [activeConnectionId]
+  );
 
   // Buscar Tabelas da Conexão Ativa
   const fetchTables = useCallback(async () => {
     if (!activeConnection || !window.electronAPI?.listDbTables) return;
+    const key = activeConnection.id;
     setIsLoadingTables(true);
     try {
       const list = await window.electronAPI.listDbTables(activeConnection);
-      setTables(list || []);
+      setTablesByConn((prev) => ({ ...prev, [key]: list || [] }));
     } catch (err) {
       console.error('Erro ao carregar tabelas:', err);
     } finally {
@@ -24,11 +45,10 @@ export function useDatabaseSchema(activeConnection: DatabaseConnectionConfig | n
     }
   }, [activeConnection]);
 
-  // Só reage à troca da seleção (não a cada refresh da lista de conexões)
+  // Trocou de conexão: filtro e tabela expandida são da conexão anterior
   useEffect(() => {
-    if (activeConnectionId) {
-      setTables([]);
-    }
+    setTableFilter('');
+    setExpandedTable(null);
   }, [activeConnectionId]);
 
   const handleToggleTableExpand = async (tableName: string, e: React.MouseEvent) => {

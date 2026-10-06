@@ -27,6 +27,8 @@ interface UseDatabaseQueryParams {
   activeConnectionId: string;
   tableColumns: Record<string, TableColumnInfo[]>;
   setTableColumns: React.Dispatch<React.SetStateAction<Record<string, TableColumnInfo[]>>>;
+  /** Histórico único da página, compartilhado entre as abas (várias instâncias sobrescreveriam o mesmo localStorage). */
+  historyState: ReturnType<typeof useDatabaseHistory>;
 }
 
 /** Execução de SQL, Explain Plan e estado do resultado (grid, binds, histórico e mutações de linha). */
@@ -36,7 +38,8 @@ export function useDatabaseQuery({
   activeConnection,
   activeConnectionId,
   tableColumns,
-  setTableColumns
+  setTableColumns,
+  historyState
 }: UseDatabaseQueryParams) {
   const [maxRows, setMaxRows] = useState<number>(100);
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
@@ -49,7 +52,6 @@ export function useDatabaseQuery({
 
   const tx = useDatabaseSession(activeConnection);
   const view = useDatabaseResultView(queryResult);
-  const historyState = useDatabaseHistory();
   const binds = useDatabaseBinds({
     sql,
     setSql,

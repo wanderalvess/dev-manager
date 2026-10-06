@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DatabaseConnectionConfig, DbSessionState, QueryResult } from '../../../../shared/types';
 import { showToast } from '../../components/ToastHost';
 import {
@@ -23,6 +23,16 @@ export function useDatabaseSession(activeConnection: DatabaseConnectionConfig | 
   const [states, setStates] = useState<Record<string, DbSessionState>>({});
   const sessionIds = useRef<Record<string, string>>({});
   const opening = useRef<Partial<Record<string, Promise<string | null>>>>({});
+
+  // Aba fechada: encerra as sessões desta aba no banco (o que estiver pendente sofre rollback)
+  useEffect(() => {
+    const ids = sessionIds.current;
+    return () => {
+      for (const id of Object.values(ids)) {
+        window.electronAPI?.closeDbSession?.(id).catch(() => {});
+      }
+    };
+  }, []);
 
   const mode: TxMode = modes[connId] ?? resolveInitialTxMode(activeConnection, connId ? readStoredTxMode(connId) : null);
   const state = states[connId] ?? null;
