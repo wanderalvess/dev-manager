@@ -175,7 +175,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
     {/* Lista / Tabela da Matriz */}
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-xs">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+        <table className="w-full min-w-[56rem] text-left text-xs">
           <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase text-2xs tracking-wider font-bold">
             <tr>
               <SortableTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onSort={onSort} />
@@ -212,19 +212,19 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                     </select>
                   </td>
 
-                  <td className="px-4 py-3 font-semibold text-foreground">{item.title}</td>
+                  <td className="px-4 py-3 font-semibold text-foreground min-w-[14rem]">{item.title}</td>
 
                   <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground">
                     {item.targetName}
                   </td>
 
                   <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 rounded text-2xs font-medium bg-muted text-muted-foreground border border-border">
+                    <span className="px-2 py-0.5 rounded text-2xs font-medium bg-muted text-muted-foreground border border-border whitespace-nowrap">
                       {getCategoryLabel(item.category)}
                     </span>
                   </td>
 
-                  <td className="px-4 py-3 text-muted-foreground max-w-xs truncate" title={item.notes}>
+                  <td className="px-4 py-3 text-muted-foreground max-w-[14rem] truncate" title={item.notes}>
                     {item.notes || '—'}
                   </td>
 
