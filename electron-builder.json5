@@ -30,9 +30,11 @@
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
-    // Público brasileiro (WinThor): instalador sempre em pt-BR, sem depender do idioma do Windows
+    // Público brasileiro (WinThor): instalador sempre em pt-BR, sem depender do idioma do Windows.
+    // ATENÇÃO: "multiLanguageInstaller": false força INGLÊS (o electron-builder usa só en_US nesse modo);
+    // para fixar um idioma, liste-o em installerLanguages. "language" é só o LCID dos metadados do .exe.
     "language": "1046",
-    "multiLanguageInstaller": false,
+    "installerLanguages": ["pt_BR"],
     // Atalhos explícitos (os padrões já eram true): Desktop recriado só se ainda não existir, e Menu Iniciar
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
