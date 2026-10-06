@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findStatementAt, splitSqlStatements } from './sqlSplitUtils';
+import { findStatementAt, isReadOnlySql, splitSqlStatements } from './sqlSplitUtils';
 
 describe('splitSqlStatements', () => {
   it('divide por ponto e vírgula e preserva o texto de cada comando', () => {
@@ -68,5 +68,30 @@ describe('findStatementAt', () => {
   it('cursor dentro de um bloco PL/SQL seleciona o bloco inteiro', () => {
     const block = 'BEGIN\n  NULL;\nEND;\n/';
     expect(findStatementAt(block, block.indexOf('NULL'))?.text).toBe('BEGIN\n  NULL;\nEND;');
+  });
+});
+
+describe('isReadOnlySql', () => {
+  it('aceita consultas, inclusive várias e com comentários', () => {
+    expect(isReadOnlySql('SELECT 1 FROM dual')).toBe(true);
+    expect(isReadOnlySql('-- lista\nselect * from t; select 2 from dual;')).toBe(true);
+    expect(isReadOnlySql('WITH x AS (SELECT 1 a FROM dual) SELECT * FROM x')).toBe(true);
+    expect(isReadOnlySql('EXPLAIN SELECT * FROM t')).toBe(true);
+    expect(isReadOnlySql('SHOW TABLES')).toBe(true);
+  });
+
+  it('recusa escrita, DDL, PL/SQL e SELECT FOR UPDATE, mesmo escondidos atrás de um SELECT', () => {
+    expect(isReadOnlySql('DELETE FROM t')).toBe(false);
+    expect(isReadOnlySql('SELECT 1 FROM dual; DROP TABLE t')).toBe(false);
+    expect(isReadOnlySql('UPDATE t SET a = 1')).toBe(false);
+    expect(isReadOnlySql('BEGIN NULL; END;')).toBe(false);
+    expect(isReadOnlySql('SELECT * FROM t FOR UPDATE')).toBe(false);
+    expect(isReadOnlySql('WITH x AS (SELECT 1 FROM dual) DELETE FROM t')).toBe(false);
+    expect(isReadOnlySql('TRUNCATE TABLE t')).toBe(false);
+  });
+
+  it('texto vazio ou só comentário não conta como leitura', () => {
+    expect(isReadOnlySql('')).toBe(false);
+    expect(isReadOnlySql('-- nada')).toBe(false);
   });
 });

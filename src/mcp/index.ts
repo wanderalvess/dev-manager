@@ -48,6 +48,8 @@ import { buildCompactTraceDetails } from '../main/utils/apmUtils';
 import * as cron from 'node-cron';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
 import { analyzeExplainPlan } from '../main/services/explainAnalyzer';
+import { isReadOnlySql } from '../shared/sqlSplitUtils';
+import { annotationsFor, getMcpMode, isToolAllowed } from './toolSafety';
 import type { AppSettings, BackupConfig, BackupWebhookConfig, DatabaseConnectionConfig, DeployProfile } from '../shared/types';
 
 // --- Composição dos serviços (mesma ordem usada em src/server/index.ts e src/main/index.ts) ---
@@ -189,7 +191,8 @@ const DatabaseConnectionConfigSchema = z.object({
   oracleThickMode: z.boolean().optional(),
   tnsAlias: z.string().optional(),
   ssl: z.boolean().optional(),
-  isDefault: z.boolean().optional()
+  isDefault: z.boolean().optional(),
+  isProduction: z.boolean().optional()
 });
 
 const DeployStepTypeSchema = z.enum([
@@ -259,7 +262,25 @@ function resolveDbConfig(connectionId?: string, customConfig?: any): DatabaseCon
   return conns.find((c) => c.isDefault) || conns[0] || null;
 }
 
+/** Conexão marcada como produção (a própria, ou uma salva com o mesmo destino quando o config veio inline). */
+function isProductionConnection(target: DatabaseConnectionConfig): boolean {
+  if (target.isProduction) return true;
+  const saved = configService.getSettings().databaseConnections || [];
+  return saved.some(
+    (c) => c.isProduction && (c.id === target.id || (c.host === target.host && c.port === target.port && c.database === target.database))
+  );
+}
+
 const server = new McpServer({ name: 'hub-manager', version: appVersion });
+
+// Toda tool sai com annotations (readOnlyHint/destructiveHint) para o cliente poder pedir confirmação.
+// Com HUB_MCP_MODE=readonly só as tools de leitura chegam a ser registradas.
+const mcpMode = getMcpMode();
+const registerToolRaw = server.registerTool.bind(server) as (...a: unknown[]) => unknown;
+(server as unknown as { registerTool: (...a: unknown[]) => unknown }).registerTool = (name, config, handler) => {
+  if (!isToolAllowed(name as string, mcpMode)) return undefined;
+  return registerToolRaw(name, { annotations: annotationsFor(name as string), ...(config as object) }, handler);
+};
 
 // --- 1. Sistema ---
 server.registerTool(
@@ -2020,6 +2041,11 @@ server.registerTool(
     const targetConfig = resolveDbConfig(connectionId, config);
     if (!targetConfig) {
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    }
+    if (isProductionConnection(targetConfig) && !isReadOnlySql(sql)) {
+      return fail(
+        `Conexão "${targetConfig.name}" está marcada como produção: o MCP só executa consultas de leitura nela (SELECT, EXPLAIN, SHOW, DESCRIBE). Use o Database Studio para alterar dados.`
+      );
     }
     const result = await databaseService.executeQuery(targetConfig, sql, maxRows ?? 200);
     return ok(result);

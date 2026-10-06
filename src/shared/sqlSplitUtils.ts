@@ -1,4 +1,4 @@
-import { isPlsqlBlock, stripLeadingComments } from './sqlStatementUtils';
+import { classifySqlStatement, isPlsqlBlock, stripLeadingComments } from './sqlStatementUtils';
 
 export interface SqlStatementRange {
   /** Texto do comando, já sem espaços nas pontas (mantém o `;` final, que o PL/SQL exige). */
@@ -128,4 +128,17 @@ export function findStatementAt(sql: string, offset: number): SqlStatementRange 
   if (inside) return inside;
   const before = [...statements].reverse().find((s) => s.end < offset);
   return before ?? statements[0];
+}
+
+/** Comandos que só consultam e não alteram nada, além do SELECT (`EXPLAIN`, `SHOW`, `DESCRIBE`). */
+const READ_ONLY_VERBS = /^(EXPLAIN|SHOW|DESCRIBE|DESC)\b/i;
+
+/**
+ * Verdadeiro quando TODOS os comandos do texto só leem dados. Usado para barrar escrita em conexão de produção
+ * por onde o usuário não passa (MCP, API REST). Na dúvida, devolve falso.
+ */
+export function isReadOnlySql(sql: string): boolean {
+  const statements = splitSqlStatements(sql);
+  if (statements.length === 0) return false;
+  return statements.every((s) => classifySqlStatement(s.text) === 'select' || READ_ONLY_VERBS.test(stripLeadingComments(s.text).trim()));
 }
