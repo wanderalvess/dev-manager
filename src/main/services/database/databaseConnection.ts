@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import type { DatabaseConnectionConfig } from '../../../shared/types';
 import type { DatabaseContext } from './databaseContext';
 
@@ -28,7 +29,20 @@ export function resolveConnectionConfig(
 }
 
 function cacheKey(config: DatabaseConnectionConfig): string {
-  return `${config.type}|${config.host}|${config.port}|${config.database}|${config.user}`;
+  // Tudo que muda a sessão física entra na chave; a senha só como hash, para não manter o segredo como chave de Map
+  const passwordHash = config.password ? createHash('sha256').update(config.password).digest('hex').slice(0, 12) : '';
+  return [
+    config.type,
+    config.host,
+    config.port,
+    config.database,
+    config.user,
+    passwordHash,
+    config.oracleMode ?? '',
+    config.oracleThickMode ? 'thick' : '',
+    config.oracleClientPath ?? '',
+    config.ssl ? 'ssl' : ''
+  ].join('|');
 }
 
 /**
@@ -66,7 +80,8 @@ export async function withConnection<T, R>(
       conn,
       close: closeConn as (c: any) => Promise<void>,
       timer: undefined as any,
-      queue: Promise.resolve()
+      queue: Promise.resolve(),
+      active: 0
     }));
     // Se a conexão falhar, remove a entrada para permitir uma nova tentativa
     // (sem consumir a rejeição de quem está aguardando `cachedPromise` abaixo).
@@ -75,11 +90,19 @@ export async function withConnection<T, R>(
   }
 
   const cached = await cachedPromise;
+
+  // O timer de ociosidade conta a partir do FIM da última execução. Armado no início, ele fechava a
+  // conexão no meio de uma consulta mais longa que idleMs.
+  const armIdleTimer = () => {
+    clearTimeout(cached.timer);
+    cached.timer = setTimeout(() => {
+      ctx.connCache.delete(key);
+      cached.close(cached.conn).catch(() => {});
+    }, ctx.idleMs);
+  };
+
+  cached.active++;
   clearTimeout(cached.timer);
-  cached.timer = setTimeout(() => {
-    ctx.connCache.delete(key);
-    cached.close(cached.conn).catch(() => {});
-  }, ctx.idleMs);
 
   const runInQueue = () => {
     const next = cached.queue.then(() => fn(cached.conn as T));
@@ -88,8 +111,12 @@ export async function withConnection<T, R>(
   };
 
   try {
-    return await runInQueue();
+    const result = await runInQueue();
+    cached.active--;
+    if (cached.active === 0) armIdleTimer();
+    return result;
   } catch (err) {
+    cached.active--;
     clearTimeout(cached.timer);
     ctx.connCache.delete(key);
     await closeConn(cached.conn as T).catch(() => {});

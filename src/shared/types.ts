@@ -1169,6 +1169,8 @@ export interface QueryResult {
   affectedRows?: number;
   executionTimeMs: number;
   isQuery: boolean;
+  /** O resultado atingiu o limite de linhas: existem mais linhas no banco do que as retornadas. */
+  truncated?: boolean;
   error?: string;
 }
 

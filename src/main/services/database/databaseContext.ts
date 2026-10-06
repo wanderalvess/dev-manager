@@ -6,6 +6,8 @@ export interface CachedConnection {
   close: (conn: any) => Promise<void>;
   timer: ReturnType<typeof setTimeout>;
   queue: Promise<any>;
+  /** Execuções em andamento ou na fila: o timer de ociosidade só conta quando zera. */
+  active: number;
 }
 
 export type OracleConnection = { conn: any; oracledb: any };

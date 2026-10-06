@@ -90,6 +90,14 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
             <span className="text-muted-foreground font-mono">
               {queryResult.executionTimeMs} ms
             </span>
+            {queryResult.isQuery && queryResult.truncated && (
+              <span
+                className="text-amber-500 font-semibold"
+                title="O banco tem mais linhas do que o limite configurado. Aumente o limite ou refine a consulta."
+              >
+                Limite atingido: há mais linhas
+              </span>
+            )}
             {queryResult.isQuery && queryResult.rows && queryResult.rows.length > 0 && (
               <button
                 onClick={onExportCsv}

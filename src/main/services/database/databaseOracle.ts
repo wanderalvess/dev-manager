@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import type { DatabaseConnectionConfig, QueryResult } from '../../../shared/types';
 import { sanitizeRows } from '../../utils/databaseValueUtils';
+import { normalizeSqlForExecution, stripLeadingComments } from '../../../shared/sqlStatementUtils';
 import type { DatabaseContext, OracleConnection } from './databaseContext';
 
 function initOracleThickClient(ctx: DatabaseContext, oracledb: any, libDir?: string): void {
@@ -144,8 +145,8 @@ export async function executeOracle(
     () => ctx.getOracleConnection(config),
     ({ conn }) => conn.close(),
     async ({ conn, oracledb }) => {
-      const cleanSql = sql.trim().replace(/;+\s*$/, '');
-      const sqlWithoutComments = cleanSql.replace(/^(\s*(--[^\r\n]*|\/\*[\s\S]*?\*\/)\s*)+/i, '');
+      const cleanSql = normalizeSqlForExecution(sql, 'oracle');
+      const sqlWithoutComments = stripLeadingComments(cleanSql);
       const isSelect = /^(SELECT|WITH)\b/i.test(sqlWithoutComments);
 
       let sqlToExecute = cleanSql;
@@ -164,7 +165,8 @@ export async function executeOracle(
       const execOptions: any = {
         outFormat: oracledb.OUT_FORMAT_OBJECT,
         autoCommit: !isSelect,
-        maxRows: isSelect ? maxRows : undefined
+        // maxRows+1: a linha extra indica que o resultado foi truncado
+        maxRows: isSelect ? maxRows + 1 : undefined
       };
       // callTimeout (ms) evita travamento de socket em consultas demoradas
       execOptions.callTimeout = 60000;
@@ -175,14 +177,16 @@ export async function executeOracle(
 
       if (result.rows && result.metaData) {
         const columns = result.metaData.map((m: any) => m.name);
-        const rawRows = (result.rows as Record<string, any>[]).slice(0, maxRows);
+        const allRows = result.rows as Record<string, any>[];
+        const rawRows = allRows.slice(0, maxRows);
         return {
           success: true,
           columns,
           rows: sanitizeRows(rawRows, columns),
-          rowCount: result.rows.length,
+          rowCount: rawRows.length,
           executionTimeMs,
-          isQuery: true
+          isQuery: true,
+          truncated: allRows.length > maxRows
         };
       }
 

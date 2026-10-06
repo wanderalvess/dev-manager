@@ -1,5 +1,6 @@
 import type { DatabaseConnectionConfig, QueryResult } from '../../../shared/types';
 import { sanitizeRows } from '../../utils/databaseValueUtils';
+import { applyRowLimit } from '../../../shared/sqlStatementUtils';
 import type { DatabaseContext } from './databaseContext';
 
 export async function getMysqlConnection(config: DatabaseConnectionConfig) {
@@ -48,8 +49,9 @@ export async function executeMysql(
     () => ctx.getMysqlConnection(config),
     (conn) => conn.end(),
     async (conn) => {
-      const finalSql = ctx.interpolateBinds(sql, binds);
-      const [result, fields] = await conn.query(finalSql);
+      const finalSql = applyRowLimit(ctx.interpolateBinds(sql, binds), 'mysql', maxRows);
+      // timeout (ms) por consulta: sem ele uma query travada ocupa a conexão compartilhada indefinidamente
+      const [result, fields] = await conn.query({ sql: finalSql, timeout: 60000 });
       const executionTimeMs = Date.now() - startTime;
 
       if (Array.isArray(result) && fields) {
@@ -60,9 +62,10 @@ export async function executeMysql(
           success: true,
           columns,
           rows: sanitizeRows(rawRows, columns),
-          rowCount: result.length,
+          rowCount: rawRows.length,
           executionTimeMs,
-          isQuery: true
+          isQuery: true,
+          truncated: result.length > maxRows
         };
       }
 

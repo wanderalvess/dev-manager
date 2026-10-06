@@ -1,5 +1,6 @@
 import type { DatabaseConnectionConfig, QueryResult } from '../../../shared/types';
 import { sanitizeRows } from '../../utils/databaseValueUtils';
+import { applyRowLimit } from '../../../shared/sqlStatementUtils';
 import type { DatabaseContext } from './databaseContext';
 
 export async function getPgClient(config: DatabaseConnectionConfig) {
@@ -18,7 +19,9 @@ export async function getPgClient(config: DatabaseConnectionConfig) {
     user: config.user,
     password: config.password,
     ssl: config.ssl ? { rejectUnauthorized: false } : false,
-    connectionTimeoutMillis: 7000
+    connectionTimeoutMillis: 7000,
+    // Sem isto uma consulta travada ocupa a conexão compartilhada indefinidamente
+    statement_timeout: 60000
   });
 
   await client.connect();
@@ -51,7 +54,7 @@ export async function executePostgres(
     () => ctx.getPgClient(config),
     (client) => client.end(),
     async (client) => {
-      const finalSql = ctx.interpolateBinds(sql, binds);
+      const finalSql = applyRowLimit(ctx.interpolateBinds(sql, binds), 'postgres', maxRows);
       const res = await client.query(finalSql);
       const executionTimeMs = Date.now() - startTime;
 
@@ -60,29 +63,33 @@ export async function executePostgres(
         const last = res[res.length - 1];
         const isQuery = Boolean(last.fields && last.fields.length > 0);
         const columns = isQuery ? last.fields.map((f: any) => f.name) : [];
-        const rawRows = isQuery ? (last.rows || []).slice(0, maxRows) : [];
+        const allRows = isQuery ? last.rows || [] : [];
+        const rawRows = allRows.slice(0, maxRows);
         return {
           success: true,
           columns,
           rows: sanitizeRows(rawRows, columns),
-          rowCount: isQuery ? (last.rows ? last.rows.length : 0) : 0,
+          rowCount: rawRows.length,
           affectedRows: !isQuery ? last.rowCount ?? undefined : undefined,
           executionTimeMs,
-          isQuery
+          isQuery,
+          truncated: allRows.length > maxRows
         };
       }
 
       const isQuery = Boolean(res.fields && res.fields.length > 0);
       const columns = isQuery ? res.fields.map((f: any) => f.name) : [];
-      const rawRows = isQuery ? (res.rows || []).slice(0, maxRows) : [];
+      const allRows = isQuery ? res.rows || [] : [];
+      const rawRows = allRows.slice(0, maxRows);
       return {
         success: true,
         columns,
         rows: sanitizeRows(rawRows, columns),
-        rowCount: isQuery ? (res.rows ? res.rows.length : 0) : 0,
+        rowCount: rawRows.length,
         affectedRows: !isQuery ? res.rowCount ?? undefined : undefined,
         executionTimeMs,
-        isQuery
+        isQuery,
+        truncated: allRows.length > maxRows
       };
     },
     true

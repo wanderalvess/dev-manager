@@ -11,6 +11,7 @@ import { useDatabaseBinds } from './useDatabaseBinds';
 import { useDatabaseHistory } from './useDatabaseHistory';
 import { useDatabaseResultView } from './useDatabaseResultView';
 import { useDatabaseRowMutations } from './useDatabaseRowMutations';
+import { normalizeSqlForExecution } from '../../../../shared/sqlStatementUtils';
 
 interface UseDatabaseQueryParams {
   sql: string;
@@ -68,7 +69,8 @@ export function useDatabaseQuery({
       return;
     }
 
-    const cleanSql = (customSql ?? sql).trim().replace(/;+\s*$/, '');
+    // Em Oracle, blocos PL/SQL mantêm o ';' final (BEGIN ... END; sem ele dá ORA-06550)
+    const cleanSql = normalizeSqlForExecution(customSql ?? sql, activeConnection.type);
     if (!cleanSql) return;
 
     if (!overrideBinds && binds.promptIfHasVariables(cleanSql)) return;

@@ -1,4 +1,5 @@
 import type { DatabaseConnectionConfig, QueryResult } from '../../../shared/types';
+import { normalizeSqlForExecution } from '../../../shared/sqlStatementUtils';
 import type { DatabaseContext } from './databaseContext';
 import { testPostgres, executePostgres } from './databasePostgres';
 import { testMysql, executeMysql } from './databaseMysql';
@@ -51,7 +52,7 @@ export async function executeQuery(
   config = ctx.resolveConnectionConfig(config);
   maxRows = Number.isFinite(maxRows) && maxRows > 0 ? Math.floor(maxRows) : 200;
   const startTime = Date.now();
-  const cleanSql = sql.trim().replace(/;+\s*$/, '');
+  const cleanSql = normalizeSqlForExecution(sql, config.type);
 
   if (!cleanSql) {
     return {
