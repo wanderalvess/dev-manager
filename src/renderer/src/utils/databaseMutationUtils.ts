@@ -1,17 +1,40 @@
-import type { TableColumnInfo } from '../../../shared/types';
+import type { QueryResult, TableColumnInfo } from '../../../shared/types';
+import { ROW_ID_COLUMN } from '../../../shared/rowIdentity';
 
 /** Sigilo usado para representar NULL ao editar uma célula — mesma convenção já usada nos filtros da grid. */
 export const NULL_SIGIL = '[NULL]';
 
 /**
  * Colunas usadas para identificar uma linha em UPDATE/DELETE: a chave primária da tabela,
- * quando existe; senão todas as colunas da linha original, como fallback (pode afetar mais de
- * uma linha em tabelas com registros duplicados, mas é o único critério disponível sem PK).
+ * quando existe; sem PK, a pseudo-coluna ROWID/ctid (`useRowId`, Oracle/PostgreSQL, trazida pela
+ * consulta reescrita); como último recurso todas as colunas da linha original (pode afetar mais
+ * de uma linha com registros duplicados, e nunca casa com valores formatados pela grid).
  */
-export function getRowKeyColumns(columns: TableColumnInfo[]): string[] {
+export function getRowKeyColumns(columns: TableColumnInfo[], useRowId = false): string[] {
   const pkCols = columns.filter((c) => c.isPrimaryKey).map((c) => c.name);
   if (pkCols.length > 0) return pkCols;
+  if (useRowId) return [ROW_ID_COLUMN];
   return columns.map((c) => c.name);
+}
+
+/** Tabela com colunas conhecidas e nenhuma PK: candidata a identificação por ROWID/ctid. */
+export function lacksPrimaryKey(columns: TableColumnInfo[]): boolean {
+  return columns.length > 0 && !columns.some((c) => c.isPrimaryKey);
+}
+
+/**
+ * Tira a pseudo-coluna `__ROWID__` do resultado: sai de `columns` (grid, filtros e exportação só
+ * leem `columns`) e fica em cada linha como propriedade NÃO enumerável, assim também não aparece
+ * em cópia/JSON da linha. Linhas continuam as mesmas referências em ordenação e filtro.
+ */
+export function attachRowIds(result: QueryResult): QueryResult {
+  if (!result.columns.includes(ROW_ID_COLUMN)) return result;
+  const rows = result.rows.map((raw) => {
+    const { [ROW_ID_COLUMN]: rowId, ...row } = raw;
+    Object.defineProperty(row, ROW_ID_COLUMN, { value: rowId, enumerable: false });
+    return row;
+  });
+  return { ...result, columns: result.columns.filter((c) => c !== ROW_ID_COLUMN), rows };
 }
 
 /**

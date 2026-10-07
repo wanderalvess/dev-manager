@@ -8,6 +8,7 @@ import { InfrOracleTab } from '../infr/InfrOracleTab';
 import { InfrWtaTab } from '../infr/InfrWtaTab';
 import { InfrWshTab } from '../infr/InfrWshTab';
 import { InfrScriptsTab } from '../infr/InfrScriptsTab';
+import { Modal } from '../../ui/Modal';
 
 export interface InfrBootstrapModalProps {
   isOpen: boolean;
@@ -44,62 +45,67 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
-        <InfrBootstrapHeader onClose={onClose} />
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
+      <InfrBootstrapHeader onClose={onClose} />
 
-        <InfrBootstrapTabs
-          activeTab={state.activeTab}
-          onSelect={state.setActiveTab}
-          onOpenScripts={state.openScriptsTab}
-        />
+      <InfrBootstrapTabs
+        activeTab={state.activeTab}
+        onSelect={state.setActiveTab}
+        onOpenScripts={state.openScriptsTab}
+      />
 
-        <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
-          {state.activeTab === 'oracle' && (
-            <InfrOracleTab
-              container={state.oracleContainer}
-              port={state.oraclePort}
-              isExecuting={isExecutingInfr}
-              onContainerChange={state.setOracleContainer}
-              onPortChange={state.setOraclePort}
-              onRun={() => state.handleRun('oracle')}
-            />
-          )}
+      <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
+        {state.activeTab === 'oracle' && (
+          <InfrOracleTab
+            container={state.oracleContainer}
+            port={state.oraclePort}
+            isExecuting={isExecutingInfr}
+            onContainerChange={state.setOracleContainer}
+            onPortChange={state.setOraclePort}
+            onRun={() => state.handleRun('oracle')}
+          />
+        )}
 
-          {state.activeTab === 'wta' && (
-            <InfrWtaTab
-              container={state.wtaContainer}
-              port={state.wtaPort}
-              isExecuting={isExecutingInfr}
-              onContainerChange={state.setWtaContainer}
-              onPortChange={state.setWtaPort}
-              onRun={() => state.handleRun('wta')}
-            />
-          )}
+        {state.activeTab === 'wta' && (
+          <InfrWtaTab
+            container={state.wtaContainer}
+            port={state.wtaPort}
+            isExecuting={isExecutingInfr}
+            onContainerChange={state.setWtaContainer}
+            onPortChange={state.setWtaPort}
+            onRun={() => state.handleRun('wta')}
+          />
+        )}
 
-          {state.activeTab === 'wsh' && (
-            <InfrWshTab isExecuting={isExecutingInfr} onRun={() => state.handleRun('wsh')} />
-          )}
+        {state.activeTab === 'wsh' && (
+          <InfrWshTab isExecuting={isExecutingInfr} onRun={() => state.handleRun('wsh')} />
+        )}
 
-          {state.activeTab === 'scripts' && (
-            <InfrScriptsTab
-              customPath={state.customPath}
-              scripts={infrScripts}
-              isLoading={isLoadingInfrScripts}
-              onCustomPathChange={state.setCustomPath}
-              onVerify={() => onLoadInfrScripts(state.customPath)}
-            />
-          )}
+        {state.activeTab === 'scripts' && (
+          <InfrScriptsTab
+            customPath={state.customPath}
+            scripts={infrScripts}
+            isLoading={isLoadingInfrScripts}
+            onCustomPathChange={state.setCustomPath}
+            onVerify={() => onLoadInfrScripts(state.customPath)}
+          />
+        )}
 
-          {infrOutput && (
-            <div className="p-3 bg-[#090D14] rounded-xl border border-border/60 text-xs font-mono text-emerald-400 select-text whitespace-pre-wrap">
-              {infrOutput}
-            </div>
-          )}
-        </div>
-
-        <InfrBootstrapFooter onClose={onClose} />
+        {infrOutput && (
+          <div className="p-3 bg-[#090D14] rounded-xl border border-border/60 text-xs font-mono text-emerald-400 select-text whitespace-pre-wrap">
+            {infrOutput}
+          </div>
+        )}
       </div>
-    </div>
+
+      <InfrBootstrapFooter onClose={onClose} />
+    </Modal>
   );
 };

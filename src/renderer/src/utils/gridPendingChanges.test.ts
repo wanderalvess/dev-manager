@@ -146,3 +146,42 @@ describe('applyPendingChanges', () => {
     expect(exec.update).not.toHaveBeenCalled();
   });
 });
+
+describe('identificação por ROWID/ctid (tabela sem PK)', () => {
+  const RID = ['__ROWID__'];
+  // Duas linhas idênticas em todas as colunas: só o ROWID as distingue
+  const dupA = { NOME: 'Ana', CRIADO: '2026-01-01T03:00:00.000Z' };
+  const dupB = { NOME: 'Ana', CRIADO: '2026-01-01T03:00:00.000Z' };
+  Object.defineProperty(dupA, '__ROWID__', { value: 'AAAR3sAAEAAAACXAAA', enumerable: false });
+  Object.defineProperty(dupB, '__ROWID__', { value: 'AAAR3sAAEAAAACXAAB', enumerable: false });
+
+  it('linhas duplicadas viram alterações distintas e o where carrega só o ROWID', () => {
+    let p = stageCellChange(EMPTY_PENDING, dupA, RID, 'NOME', 'X');
+    p = stageCellChange(p, dupB, RID, 'NOME', 'Y');
+    expect(p.updates).toHaveLength(2);
+    expect(p.updates[0].where).toEqual({ __ROWID__: 'AAAR3sAAEAAAACXAAA' });
+    expect(p.updates[1].where).toEqual({ __ROWID__: 'AAAR3sAAEAAAACXAAB' });
+    expect(rowKeyOf(dupA, RID)).not.toBe(rowKeyOf(dupB, RID));
+  });
+
+  it('exclusão marca apenas a linha do ROWID e descarta a edição dela', () => {
+    let p = stageCellChange(EMPTY_PENDING, dupA, RID, 'NOME', 'X');
+    p = stageDelete(p, dupA, RID);
+    expect(p.updates).toHaveLength(0);
+    expect(p.deletes[0].where).toEqual({ __ROWID__: 'AAAR3sAAEAAAACXAAA' });
+    expect(isRowDeleted(p, dupA, RID)).toBe(true);
+    expect(isRowDeleted(p, dupB, RID)).toBe(false);
+  });
+
+  it('o executor recebe o where por ROWID mesmo com valores sanitizados na linha', async () => {
+    const p = stageCellChange(EMPTY_PENDING, dupA, RID, 'NOME', 'X');
+    const exec: PendingExecutor = {
+      update: vi.fn().mockResolvedValue({ success: true, affectedRows: 1 }),
+      remove: vi.fn(),
+      insert: vi.fn()
+    };
+    const out = await applyPendingChanges(p, exec);
+    expect(out.failure).toBeUndefined();
+    expect(exec.update).toHaveBeenCalledWith({ __ROWID__: 'AAAR3sAAEAAAACXAAA' }, { NOME: 'X' });
+  });
+});

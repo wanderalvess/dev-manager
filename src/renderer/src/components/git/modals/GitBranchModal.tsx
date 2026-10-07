@@ -2,6 +2,7 @@ import React from 'react';
 import { GitBranch, X, AlertCircle, Plus, Search } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../../shared/types';
 import { buildBranchEntries } from '../../../utils/gitViewUtils';
+import { Modal } from '../../ui/Modal';
 
 interface GitBranchModalProps {
   project: GitProjectInfo;
@@ -29,8 +30,14 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
   const { entries, total } = buildBranchEntries(project.branches, project.remoteBranches, branchFilter);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-fade-in">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-fade-in"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
           <div className="flex items-center space-x-2">
             <GitBranch className="w-5 h-5 text-emerald-500" />
@@ -133,7 +140,6 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

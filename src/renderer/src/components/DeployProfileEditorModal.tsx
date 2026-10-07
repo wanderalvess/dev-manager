@@ -6,6 +6,7 @@ import { DeployEditorBasicInfo } from './deployeditor/DeployEditorBasicInfo';
 import { DeployStepList } from './deployeditor/DeployStepList';
 import { DeployStepEditor } from './deployeditor/DeployStepEditor';
 import { DeployEditorFooter } from './deployeditor/DeployEditorFooter';
+import { Modal } from './ui/Modal';
 
 interface DeployProfileEditorModalProps {
   isOpen: boolean;
@@ -29,52 +30,57 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-2 sm:p-4 animate-fade-in">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[96vw] xl:max-w-[1540px] h-[93vh] flex flex-col overflow-hidden">
-        <DeployEditorHeader isEditing={!!profile} onClose={onClose} />
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[96vw] xl:max-w-[1540px] h-[93vh] flex flex-col overflow-hidden"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
+      <DeployEditorHeader isEditing={!!profile} onClose={onClose} />
 
-        <DeployEditorBasicInfo
-          name={editor.name}
-          description={editor.description}
-          onNameChange={editor.setName}
-          onDescriptionChange={editor.setDescription}
+      <DeployEditorBasicInfo
+        name={editor.name}
+        description={editor.description}
+        onNameChange={editor.setName}
+        onDescriptionChange={editor.setDescription}
+      />
+
+      {/* Corpo: Lista de Etapas à esquerda + Editor da Etapa selecionada à direita */}
+      <div className="flex-1 flex overflow-hidden">
+        <DeployStepList
+          steps={editor.steps}
+          editingStepIndex={editor.editingStepIndex}
+          onSelect={editor.setEditingStepIndex}
+          onAdd={() => editor.addStep('command')}
+          onMove={editor.moveStep}
+          onDuplicate={editor.duplicateStep}
+          onRemove={editor.removeStep}
         />
 
-        {/* Corpo: Lista de Etapas à esquerda + Editor da Etapa selecionada à direita */}
-        <div className="flex-1 flex overflow-hidden">
-          <DeployStepList
-            steps={editor.steps}
-            editingStepIndex={editor.editingStepIndex}
-            onSelect={editor.setEditingStepIndex}
-            onAdd={() => editor.addStep('command')}
-            onMove={editor.moveStep}
-            onDuplicate={editor.duplicateStep}
-            onRemove={editor.removeStep}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-background">
+          <DeployStepEditor
+            step={editor.editingStep}
+            stepIndex={editor.editingStepIndex}
+            projects={projects}
+            suggestProjectPath={editor.suggestProjectPath}
+            onSuggestProjectPathChange={editor.setSuggestProjectPath}
+            isSuggesting={editor.isSuggesting}
+            onSuggestFromPom={editor.suggestFromPom}
+            onUpdate={editor.updateCurrentStep}
+            onSelectDirectory={editor.selectDirectory}
           />
-
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-background">
-            <DeployStepEditor
-              step={editor.editingStep}
-              stepIndex={editor.editingStepIndex}
-              projects={projects}
-              suggestProjectPath={editor.suggestProjectPath}
-              onSuggestProjectPathChange={editor.setSuggestProjectPath}
-              isSuggesting={editor.isSuggesting}
-              onSuggestFromPom={editor.suggestFromPom}
-              onUpdate={editor.updateCurrentStep}
-              onSelectDirectory={editor.selectDirectory}
-            />
-          </div>
         </div>
-
-        <DeployEditorFooter
-          profile={profile}
-          isSaving={editor.isSaving}
-          onClose={onClose}
-          onSave={editor.save}
-          onDelete={onDelete}
-        />
       </div>
-    </div>
+
+      <DeployEditorFooter
+        profile={profile}
+        isSaving={editor.isSaving}
+        onClose={onClose}
+        onSave={editor.save}
+        onDelete={onDelete}
+      />
+    </Modal>
   );
 };

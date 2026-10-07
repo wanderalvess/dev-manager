@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { DockerContainerInspect } from '../../../../../shared/types';
 import { flattenPortBindings } from '../../../utils/dockerContainerUtils';
+import { Modal } from '../../ui/Modal';
 
 export interface ContainerInspectModalProps {
   inspectingContainer: DockerContainerInspect | null;
@@ -31,8 +32,13 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
   if (!inspectingContainer) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
+      closeOnBackdrop={false}
+    >
         {/* Header do Modal */}
         <div className="px-5 py-3.5 border-b border-border/80 flex items-center justify-between bg-card/60 shrink-0">
           <div className="flex items-center space-x-3">
@@ -285,7 +291,6 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
             Fechar
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

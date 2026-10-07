@@ -7,6 +7,7 @@ import { ProfileEditorBasicInfo } from './profileeditor/ProfileEditorBasicInfo';
 import { ProfileEditorStepList } from './profileeditor/ProfileEditorStepList';
 import { ProfileEditorStepDetails } from './profileeditor/ProfileEditorStepDetails';
 import { ProfileEditorFooter } from './profileeditor/ProfileEditorFooter';
+import { Modal } from './ui/Modal';
 
 interface ProfileEditorModalProps {
   isOpen: boolean;
@@ -31,48 +32,53 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
-        <ProfileEditorHeader isEditing={!!profile} onClose={onClose} />
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
+      <ProfileEditorHeader isEditing={!!profile} onClose={onClose} />
 
-        <ProfileEditorBasicInfo
-          name={editor.name}
-          description={editor.description}
-          onNameChange={editor.setName}
-          onDescriptionChange={editor.setDescription}
+      <ProfileEditorBasicInfo
+        name={editor.name}
+        description={editor.description}
+        onNameChange={editor.setName}
+        onDescriptionChange={editor.setDescription}
+      />
+
+      <div className="flex-1 flex overflow-hidden">
+        <ProfileEditorStepList
+          steps={editor.steps}
+          editingStepIndex={editor.editingStepIndex}
+          globalDebugPort={globalDebugPort}
+          onSelect={editor.setEditingStepIndex}
+          onAdd={editor.handleAddStep}
+          onMove={editor.handleMoveStep}
+          onRemove={editor.handleRemoveStep}
         />
-
-        <div className="flex-1 flex overflow-hidden">
-          <ProfileEditorStepList
-            steps={editor.steps}
-            editingStepIndex={editor.editingStepIndex}
-            globalDebugPort={globalDebugPort}
-            onSelect={editor.setEditingStepIndex}
-            onAdd={editor.handleAddStep}
-            onMove={editor.handleMoveStep}
-            onRemove={editor.handleRemoveStep}
-          />
-          <ProfileEditorStepDetails
-            step={editor.editingStep}
-            stepIndex={editor.editingStepIndex}
-            dbConnections={dbConnections}
-            globalDebugPort={globalDebugPort}
-            onUpdate={editor.handleUpdateCurrentStep}
-            onSelectFile={editor.handleSelectFile}
-            onSelectDirectory={editor.handleSelectDirectory}
-          />
-        </div>
-
-        <ProfileEditorFooter
-          profileId={profile?.id}
-          profileName={profile?.name}
-          isSaving={editor.isSaving}
-          onClose={onClose}
-          onSave={editor.handleSave}
-          onDelete={onDelete}
-          onExport={onExport ? editor.handleExport : undefined}
+        <ProfileEditorStepDetails
+          step={editor.editingStep}
+          stepIndex={editor.editingStepIndex}
+          dbConnections={dbConnections}
+          globalDebugPort={globalDebugPort}
+          onUpdate={editor.handleUpdateCurrentStep}
+          onSelectFile={editor.handleSelectFile}
+          onSelectDirectory={editor.handleSelectDirectory}
         />
       </div>
-    </div>
+
+      <ProfileEditorFooter
+        profileId={profile?.id}
+        profileName={profile?.name}
+        isSaving={editor.isSaving}
+        onClose={onClose}
+        onSave={editor.handleSave}
+        onDelete={onDelete}
+        onExport={onExport ? editor.handleExport : undefined}
+      />
+    </Modal>
   );
 };

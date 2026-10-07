@@ -19,6 +19,7 @@ import {
 } from '../qaTemplatesHelpData';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { showToast } from '../../ToastHost';
+import { Modal } from '../../ui/Modal';
 
 interface QaRegressionTemplatesHelpModalProps {
   isOpen: boolean;
@@ -52,8 +53,13 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      closeOnBackdrop={false}
+    >
         {/* Top Header */}
         <div className="px-5 py-3.5 border-b border-border bg-card/80 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -287,7 +293,6 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
             Entendi, fechar
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

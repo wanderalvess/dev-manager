@@ -10,6 +10,7 @@ import {
 } from '../history/KarafDeployHistoryEmptyStates';
 import { KarafDeployHistoryEntryCard } from '../history/KarafDeployHistoryEntryCard';
 import { KarafDeployHistoryFooter } from '../history/KarafDeployHistoryFooter';
+import { Modal } from '../../ui/Modal';
 
 interface KarafDeployHistoryModalProps {
   isOpen: boolean;
@@ -42,61 +43,65 @@ export const KarafDeployHistoryModal: React.FC<KarafDeployHistoryModalProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-70 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-[#0c1017] border border-slate-800 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in text-slate-100 font-sans">
-        <KarafDeployHistoryHeader
-          isLoading={isLoadingDeployHistory}
-          onReload={fetchDeployHistory}
-          onClose={onClose}
-        />
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-[#0c1017] border border-slate-800 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in text-slate-100 font-sans"
+      closeOnBackdrop={false}
+    >
+      <KarafDeployHistoryHeader
+        isLoading={isLoadingDeployHistory}
+        onReload={fetchDeployHistory}
+        onClose={onClose}
+      />
 
-        <KarafDeployHistoryStats stats={deployStats} />
+      <KarafDeployHistoryStats stats={deployStats} />
 
-        <KarafDeployHistoryToolbar
-          search={deployHistorySearch}
-          onSearchChange={setDeployHistorySearch}
-          filter={deployHistoryFilter}
-          onFilterChange={setDeployHistoryFilter}
-          stats={deployStats}
-        />
+      <KarafDeployHistoryToolbar
+        search={deployHistorySearch}
+        onSearchChange={setDeployHistorySearch}
+        filter={deployHistoryFilter}
+        onFilterChange={setDeployHistoryFilter}
+        stats={deployStats}
+      />
 
-        {/* Área Principal de Conteúdo */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
-          {isLoadingDeployHistory ? (
-            <KarafDeployHistoryLoading />
-          ) : deployHistory.length === 0 ? (
-            <KarafDeployHistoryBlueprint
-              onInstall={() => {
-                onClose();
-                onOpenInstallWithCoords?.('');
-              }}
+      {/* Área Principal de Conteúdo */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+        {isLoadingDeployHistory ? (
+          <KarafDeployHistoryLoading />
+        ) : deployHistory.length === 0 ? (
+          <KarafDeployHistoryBlueprint
+            onInstall={() => {
+              onClose();
+              onOpenInstallWithCoords?.('');
+            }}
+          />
+        ) : filteredDeployHistory.length === 0 ? (
+          <KarafDeployHistoryNoResults onClearFilters={clearFilters} />
+        ) : (
+          filteredDeployHistory.map((entry) => (
+            <KarafDeployHistoryEntryCard
+              key={entry.id}
+              entry={entry}
+              isExpanded={expandedErrorId === entry.id}
+              isCopied={copiedDeployCoordKey === entry.id}
+              onToggleExpanded={() => setExpandedErrorId(expandedErrorId === entry.id ? null : entry.id)}
+              onCopy={(coords) => copyDeployCoord(coords, entry.id)}
+              onUseInInstaller={
+                onOpenInstallWithCoords
+                  ? (coords, version) => {
+                      onClose();
+                      onOpenInstallWithCoords(coords, version);
+                    }
+                  : undefined
+              }
             />
-          ) : filteredDeployHistory.length === 0 ? (
-            <KarafDeployHistoryNoResults onClearFilters={clearFilters} />
-          ) : (
-            filteredDeployHistory.map((entry) => (
-              <KarafDeployHistoryEntryCard
-                key={entry.id}
-                entry={entry}
-                isExpanded={expandedErrorId === entry.id}
-                isCopied={copiedDeployCoordKey === entry.id}
-                onToggleExpanded={() => setExpandedErrorId(expandedErrorId === entry.id ? null : entry.id)}
-                onCopy={(coords) => copyDeployCoord(coords, entry.id)}
-                onUseInInstaller={
-                  onOpenInstallWithCoords
-                    ? (coords, version) => {
-                        onClose();
-                        onOpenInstallWithCoords(coords, version);
-                      }
-                    : undefined
-                }
-              />
-            ))
-          )}
-        </div>
-
-        <KarafDeployHistoryFooter onClose={onClose} />
+          ))
+        )}
       </div>
-    </div>
+
+      <KarafDeployHistoryFooter onClose={onClose} />
+    </Modal>
   );
 };
