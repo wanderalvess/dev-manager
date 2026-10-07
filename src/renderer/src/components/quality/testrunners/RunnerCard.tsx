@@ -26,7 +26,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
     <div
       className={`p-3 rounded-xl border transition-all ${
         isRunning
-          ? 'border-primary/80 bg-primary/5 shadow-xs ring-1 ring-primary/20'
+          ? 'border-primary/80 bg-primary/5 shadow-2xs ring-1 ring-primary/20'
           : 'border-border/70 bg-card hover:border-border hover:bg-card/90'
       }`}
     >
@@ -102,7 +102,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
           type="button"
           disabled={runningRunnerId !== null}
           onClick={() => onExecute(runner)}
-          className={`w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98 ${
+          className={`w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-98 ${
             isRunning
               ? 'bg-primary/15 text-primary border border-primary/30 cursor-not-allowed'
               : 'bg-primary hover:bg-primary/90 text-primary-foreground'

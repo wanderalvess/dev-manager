@@ -68,7 +68,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-3 sm:p-5 animate-in fade-in duration-150">
       <div className="relative flex flex-col w-full max-w-7xl h-[92vh] bg-card text-card-foreground border border-border rounded-lg shadow-2xl overflow-hidden">
         <Routine801Header
           connectionHealth={catalog.connectionHealth}

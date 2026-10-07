@@ -65,7 +65,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                 value={newBranchName}
                 onChange={(e) => onNewBranchNameChange(e.target.value)}
                 placeholder="ex: feature/rotina-1400"
-                className="flex-1 bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
+                className="flex-1 bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary"
               />
               <button
                 type="button"
@@ -92,7 +92,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                   onChange={(e) => onBranchFilterChange(e.target.value)}
                   placeholder="Filtrar..."
                   aria-label="Filtrar branches"
-                  className="w-36 bg-background border border-border rounded-lg pl-6 pr-2 py-1 text-[11px] text-foreground font-mono focus:outline-none focus:border-primary"
+                  className="w-36 bg-background border border-border rounded-lg pl-6 pr-2 py-1 text-[11px] text-foreground font-mono focus:outline-hidden focus:border-primary"
                 />
               </div>
             </div>

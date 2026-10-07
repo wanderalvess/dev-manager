@@ -43,7 +43,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 type="text"
                 value={settings.karafUser}
                 onChange={(e) => setSettings({ ...settings, karafUser: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary"
                 placeholder="karaf"
               />
               <p className="text-2xs text-muted-foreground mt-1">
@@ -67,7 +67,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 type={showPassword ? 'text' : 'password'}
                 value={settings.karafPass}
                 onChange={(e) => setSettings({ ...settings, karafPass: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary"
                 placeholder={settings.hasKarafPass ? '(Senha salva e protegida)' : 'karaf'}
               />
               {settings.hasKarafPass && !settings.karafPass ? (
@@ -88,7 +88,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 type="number"
                 value={settings.karafSshPort ?? 8101}
                 onChange={(e) => setSettings({ ...settings, karafSshPort: parseInt(e.target.value) || 0 })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary"
                 placeholder="8101"
               />
               <p className="text-2xs text-muted-foreground mt-1">
@@ -102,7 +102,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 type="number"
                 value={settings.karafDebugPort ?? 5005}
                 onChange={(e) => setSettings({ ...settings, karafDebugPort: parseInt(e.target.value) || 0 })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary"
                 placeholder="5005"
               />
               <p className="text-2xs text-muted-foreground mt-1">

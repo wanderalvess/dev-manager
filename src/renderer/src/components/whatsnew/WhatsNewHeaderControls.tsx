@@ -54,7 +54,7 @@ export const WhatsNewHeaderControls: React.FC<WhatsNewHeaderControlsProps> = ({
     <button
       type="button"
       onClick={onToggleDropdown}
-      className={`px-2.5 py-0.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+      className={`px-2.5 py-0.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
         isDropdownOpen
           ? 'bg-primary/15 border-primary text-primary'
           : 'bg-background hover:bg-muted border-border/80 text-foreground'

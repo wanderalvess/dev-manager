@@ -35,7 +35,7 @@ export const BindModalFooter: React.FC<BindModalFooterProps> = ({
       <button
         type="submit"
         disabled={!hasBinds}
-        className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+        className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
       >
         <Play className="w-3.5 h-3.5 fill-current" />
         <span>Executar Consulta</span>

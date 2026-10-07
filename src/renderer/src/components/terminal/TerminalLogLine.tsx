@@ -13,7 +13,7 @@ interface TerminalLogLineProps {
 
 export const TerminalLogLine: React.FC<TerminalLogLineProps> = ({ log, index, wordWrap }) => {
   const widthClass = wordWrap ? 'w-full min-w-0' : 'w-fit min-w-full';
-  const textWrapClass = wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre';
+  const textWrapClass = wordWrap ? 'whitespace-pre-wrap wrap-break-word' : 'whitespace-pre';
 
   if (typeof log === 'string') {
     const color = getTerminalStringLogColor(log);

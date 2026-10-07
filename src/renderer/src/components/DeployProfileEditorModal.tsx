@@ -29,7 +29,7 @@ export const DeployProfileEditorModal: React.FC<DeployProfileEditorModalProps> =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-2 sm:p-4 animate-fade-in">
       <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-[96vw] xl:max-w-[1540px] h-[93vh] flex flex-col overflow-hidden">
         <DeployEditorHeader isEditing={!!profile} onClose={onClose} />
 

@@ -47,7 +47,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
         <select
           value={scratchConnectionId}
           onChange={(e) => onScratchConnectionChange(e.target.value)}
-          className="bg-background border border-border/80 rounded-lg p-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+          className="bg-background border border-border/80 rounded-lg p-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         >
           <option value="">Conexão scratch para teste...</option>
           {connections.map((c) => (

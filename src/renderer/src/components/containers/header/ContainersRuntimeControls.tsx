@@ -46,7 +46,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
         value={selectedDistro}
         onChange={(e) => onSelectDistro(e.target.value)}
         disabled={isSwitchingDistro}
-        className="bg-transparent text-foreground font-semibold text-xs focus:outline-none cursor-pointer pr-1"
+        className="bg-transparent text-foreground font-semibold text-xs focus:outline-hidden cursor-pointer pr-1"
       >
         <option value="" className="bg-card text-foreground">
           Windows Host (Nativo)
@@ -84,7 +84,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
     </div>
 
     {/* Separador vertical sutil */}
-    {environments.length > 0 && <div className="h-4 w-[1px] bg-border/80" />}
+    {environments.length > 0 && <div className="h-4 w-px bg-border/80" />}
 
     {/* Seletor de Ambientes */}
     {environments.length > 0 && (
@@ -101,7 +101,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             if (found) onStartEnvironment(found);
           }}
           disabled={sequenceRunning}
-          className="bg-transparent text-foreground font-semibold text-xs focus:outline-none cursor-pointer pr-1"
+          className="bg-transparent text-foreground font-semibold text-xs focus:outline-hidden cursor-pointer pr-1"
         >
           <option value="" className="bg-card text-foreground">
             Escolher...

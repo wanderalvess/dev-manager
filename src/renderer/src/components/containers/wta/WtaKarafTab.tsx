@@ -29,7 +29,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
         <button
           onClick={() => onOpenKarafClient?.(containerNames)}
           disabled={isOpeningKarafClient}
-          className="flex items-center space-x-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+          className="flex items-center space-x-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
         >
           <Terminal className="w-3.5 h-3.5" />
           <span>{isOpeningKarafClient ? 'Abrindo Console...' : 'Abrir Console Karaf'}</span>

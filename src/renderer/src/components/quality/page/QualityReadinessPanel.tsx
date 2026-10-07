@@ -19,7 +19,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* Card Semáforo de Liberação */}
-      <div className="lg:col-span-1 p-5 rounded-2xl bg-card border border-border shadow-sm space-y-4">
+      <div className="lg:col-span-1 p-5 rounded-2xl bg-card border border-border shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <h3 className="text-sm font-black text-foreground">Semáforo de Liberação</h3>
           <span className="text-2xs font-mono text-muted-foreground">Critérios PO</span>
@@ -48,7 +48,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
       </div>
 
       {/* Checklist de Homologação */}
-      <div className="lg:col-span-2 p-5 rounded-2xl bg-card border border-border shadow-sm space-y-4">
+      <div className="lg:col-span-2 p-5 rounded-2xl bg-card border border-border shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <h3 className="text-sm font-black text-foreground">Distribuição e Cobertura</h3>
           <span className="text-2xs font-mono text-muted-foreground">{metrics.total} itens mapeados</span>

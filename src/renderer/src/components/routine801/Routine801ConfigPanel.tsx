@@ -31,7 +31,7 @@ export const Routine801ConfigPanel: React.FC<Routine801ConfigPanelProps> = ({
           value={serverUrlInput}
           onChange={(e) => onChangeUrl(e.target.value)}
           placeholder="http://localhost:8889"
-          className="flex-1 px-2.5 py-1.5 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+          className="flex-1 px-2.5 py-1.5 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
         <button
           type="button"

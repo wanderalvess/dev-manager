@@ -20,7 +20,7 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
       <Filter className="w-2.5 h-2.5" />
       <span>Espectro:</span>
     </span>
-    <div className="w-28 h-2.5 rounded-full bg-muted/60 overflow-hidden flex cursor-pointer p-[1px] gap-0.5">
+    <div className="w-28 h-2.5 rounded-full bg-muted/60 overflow-hidden flex cursor-pointer p-px gap-0.5">
       {([
         { bracket: 'FAST', pct: spectrum.fastPct, count: spectrum.fast, label: '< 100ms', active: 'bg-emerald-400 ring-2 ring-emerald-300', idle: 'bg-emerald-500/80 hover:bg-emerald-400' },
         { bracket: 'NORMAL', pct: spectrum.normalPct, count: spectrum.normal, label: '100 - 400ms', active: 'bg-sky-400 ring-2 ring-sky-300', idle: 'bg-sky-500/80 hover:bg-sky-400' },

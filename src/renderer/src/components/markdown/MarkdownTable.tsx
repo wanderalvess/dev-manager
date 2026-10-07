@@ -8,7 +8,7 @@ interface MarkdownTableProps {
 }
 
 export const MarkdownTable: React.FC<MarkdownTableProps> = ({ header, rows, searchTerm }) => (
-  <div className="my-5 rounded-2xl border border-border/80 overflow-hidden shadow-xs">
+  <div className="my-5 rounded-2xl border border-border/80 overflow-hidden shadow-2xs">
     <div className="overflow-x-auto">
       <table className="w-full text-left text-xs border-collapse">
         <thead>

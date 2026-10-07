@@ -130,7 +130,7 @@ export const Modal: React.FC<ModalProps> = ({
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
-        className={`bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-2xl w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-none animate-fade-in`}
+        className={`bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-2xl w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-hidden animate-fade-in`}
       >
         {hasHeader && (
           <div className="flex items-start gap-3 px-5 pt-5 pb-3 shrink-0">

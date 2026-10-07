@@ -46,7 +46,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 transition-all duration-300 animate-in fade-in-0`}
+      className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 transition-all duration-300 animate-in fade-in-0`}
     >
       <div
         className={`bg-card border border-border/80 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
@@ -135,7 +135,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-bold transition cursor-pointer active:scale-95 shadow-xs"
+              className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-bold transition cursor-pointer active:scale-95 shadow-2xs"
             >
               Concluir Leitura
             </button>

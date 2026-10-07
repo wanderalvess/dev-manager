@@ -46,7 +46,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-70 bg-black/90 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-card dark:bg-slate-900 border border-border rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden animate-fade-in relative">
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/70 shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -77,7 +77,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
               value={logSearch}
               onChange={(e) => setLogSearch(e.target.value)}
               placeholder="Filtrar linhas do log..."
-              className="w-full bg-background border border-border rounded-lg pl-8 pr-2 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+              className="w-full bg-background border border-border rounded-lg pl-8 pr-2 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary font-mono"
             />
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -88,7 +88,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
               max={5000}
               value={logLines}
               onChange={(e) => setLogLines(Number(e.target.value) || 200)}
-              className="w-20 bg-background border border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-none focus:border-primary font-mono"
+              className="w-20 bg-background border border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-hidden focus:border-primary font-mono"
             />
             <span>entradas</span>
           </div>

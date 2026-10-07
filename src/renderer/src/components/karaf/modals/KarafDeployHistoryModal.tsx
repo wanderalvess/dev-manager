@@ -42,7 +42,7 @@ export const KarafDeployHistoryModal: React.FC<KarafDeployHistoryModalProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-70 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-[#0c1017] border border-slate-800 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in text-slate-100 font-sans">
         <KarafDeployHistoryHeader
           isLoading={isLoadingDeployHistory}

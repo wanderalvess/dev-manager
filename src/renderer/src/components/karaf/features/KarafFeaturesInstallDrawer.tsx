@@ -130,7 +130,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
             <button
               type="submit"
               disabled={!featureName.trim() || isInstalling}
-              className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+              className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               {isInstalling ? (
                 <>

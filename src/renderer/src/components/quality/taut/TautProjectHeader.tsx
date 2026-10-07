@@ -30,7 +30,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
   onReload,
   onNavigateToSettings
 }) => (
-  <div className="p-4 rounded-xl bg-card border border-border shadow-xs space-y-3">
+  <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-3">
     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
       <div className="space-y-1">
         <div className="flex items-center space-x-2">

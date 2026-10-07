@@ -51,7 +51,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   type="text"
                   value={settings.targetPrBranch}
                   onChange={(e) => setSettings({ ...settings, targetPrBranch: e.target.value })}
-                  className="flex-1 min-w-[200px] bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary"
+                  className="flex-1 min-w-[200px] bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary"
                   placeholder="develop"
                 />
                 {PRESET_BRANCHES.map((br) => (
@@ -95,13 +95,13 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                     setSettings({ ...settings, projectsPath: val });
                     validateSinglePath('projectsPath', val);
                   }}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                   placeholder="Ex: C:\Projetos ou C:\Users\seu.usuario\Projetos"
                 />
                 <button
                   type="button"
                   onClick={() => handleBrowseDirectory('projectsPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-xs"
                   title="Selecionar pasta no Windows Explorer"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-primary" />
@@ -129,7 +129,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   type="password"
                   value={settings.azureDevOpsToken || ''}
                   onChange={(e) => setSettings({ ...settings, azureDevOpsToken: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-blue-500/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-blue-500 transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-blue-500/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
                   placeholder="Cole seu Personal Access Token do Azure DevOps (leitura de Work Items)"
                 />
               </div>

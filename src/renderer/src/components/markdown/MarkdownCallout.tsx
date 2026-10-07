@@ -53,7 +53,7 @@ export const MarkdownCallout: React.FC<MarkdownCalloutProps> = ({ type, lines, s
   const IconComponent = config.icon;
 
   return (
-    <div className={`my-4 p-4 rounded-2xl border ${config.bg} ${config.border} shadow-xs space-y-1.5`}>
+    <div className={`my-4 p-4 rounded-2xl border ${config.bg} ${config.border} shadow-2xs space-y-1.5`}>
       <div className={`flex items-center gap-2 font-bold text-xs ${config.text} uppercase tracking-wider`}>
         <IconComponent className="w-4 h-4" />
         <span>{config.label}</span>
@@ -81,7 +81,7 @@ export const MarkdownQuote: React.FC<MarkdownQuoteProps> = ({ lines, isPrompt, s
       isPrompt
         ? 'bg-primary/5 dark:bg-primary/10 border-primary/30 text-foreground'
         : 'bg-muted/30 border-border/80 text-muted-foreground italic'
-    } shadow-xs space-y-1.5`}
+    } shadow-2xs space-y-1.5`}
   >
     {isPrompt && (
       <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary uppercase tracking-wider select-none mb-1">

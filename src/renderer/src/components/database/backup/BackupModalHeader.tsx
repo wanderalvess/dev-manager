@@ -22,7 +22,7 @@ interface BackupModalHeaderProps {
 export const BackupModalHeader: React.FC<BackupModalHeaderProps> = ({ activeConnection, onClose }) => (
   <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between bg-muted/40 shrink-0">
     <div className="flex items-center space-x-3.5">
-      <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center shadow-xs shrink-0">
+      <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 dark:text-sky-400 border border-sky-500/20 flex items-center justify-center shadow-2xs shrink-0">
         <HardDriveDownload className="w-5 h-5" />
       </div>
       <div>

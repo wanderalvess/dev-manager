@@ -54,7 +54,7 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
           onOpenScripts={state.openScriptsTab}
         />
 
-        <div className="flex-1 overflow-auto p-5 space-y-4 [scrollbar-width:thin]">
+        <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
           {state.activeTab === 'oracle' && (
             <InfrOracleTab
               container={state.oracleContainer}

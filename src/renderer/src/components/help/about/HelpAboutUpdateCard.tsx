@@ -14,7 +14,7 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
   updateStatus,
   handleCheckForUpdates
 }) => (
-  <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+  <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
     <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
       Versão do Aplicativo:
     </span>

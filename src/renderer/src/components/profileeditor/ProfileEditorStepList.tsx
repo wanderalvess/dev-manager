@@ -51,7 +51,7 @@ export const ProfileEditorStepList: React.FC<ProfileEditorStepListProps> = ({
               onClick={() => onSelect(idx)}
               className={`flex items-center justify-between p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-primary bg-primary/10 shadow-sm'
+                  ? 'border-primary bg-primary/10 shadow-xs'
                   : incomplete
                   ? 'border-destructive/50 bg-destructive/5 hover:bg-destructive/10'
                   : 'border-border/60 bg-card hover:bg-muted/40'

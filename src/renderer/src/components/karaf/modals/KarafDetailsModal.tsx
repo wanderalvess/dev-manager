@@ -19,7 +19,7 @@ export const KarafDetailsModal: React.FC<KarafDetailsModalProps> = ({
   if (!target) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-70 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[86vh] flex flex-col overflow-hidden animate-fade-in">
         {/* Header */}
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">

@@ -150,7 +150,7 @@ export const KarafFeaturesModal: React.FC<KarafFeaturesModalProps> = ({
   const systemCount = featuresList.length - winthorCount;
 
   return (
-    <div className="fixed inset-0 z-[85] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-85 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
       <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Cabeçalho Cockpit com Micro-Métricas */}
         <KarafFeaturesModalHeader features={featuresList} onClose={onClose} />

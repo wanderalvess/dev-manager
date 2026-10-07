@@ -64,7 +64,7 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
               placeholder="Ex: Consulta de Clientes Ativos"
               value={snippetTitle}
               onChange={(e) => setSnippetTitle(e.target.value)}
-              className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+              className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-sans"
               autoFocus
             />
           </div>
@@ -76,7 +76,7 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
                 placeholder="Ex: Vendas, Auditoria, Relatórios"
                 value={snippetCategory}
                 onChange={(e) => setSnippetCategory(e.target.value)}
-                className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-sans"
               />
             </div>
             <div>
@@ -86,7 +86,7 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
                 placeholder="Ex: Filtra por filial e status"
                 value={snippetDesc}
                 onChange={(e) => setSnippetDesc(e.target.value)}
-                className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                className="w-full bg-background border border-border rounded-md p-2 text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-sans"
               />
             </div>
           </div>
@@ -101,7 +101,7 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
               value={snippetSql}
               onChange={(e) => setSnippetSql(e.target.value)}
               placeholder="SELECT * FROM ..."
-              className="w-full bg-[#0B0F17] text-emerald-300 font-mono text-xs p-2.5 rounded-md border border-border/80 focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+              className="w-full bg-[#0B0F17] text-emerald-300 font-mono text-xs p-2.5 rounded-md border border-border/80 focus:outline-hidden focus:ring-1 focus:ring-primary resize-y"
               spellCheck={false}
             />
           </div>

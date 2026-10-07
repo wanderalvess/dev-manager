@@ -18,7 +18,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
   if (!feature) return null;
 
   return (
-    <div className="fixed inset-0 z-[95] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-95 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
       <div className="bg-card border border-rose-500/30 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
         {/* Cabeçalho de Alerta */}
         <div className="p-4 border-b border-border/80 bg-rose-500/10 flex items-center justify-between">
@@ -89,7 +89,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
             type="button"
             onClick={onConfirm}
             disabled={isProcessing}
-            className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-rose-600 hover:bg-rose-500 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+            className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-rose-600 hover:bg-rose-500 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
           >
             {isProcessing ? (
               <>

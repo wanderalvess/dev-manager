@@ -23,7 +23,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
   <div className="md:col-span-4 flex items-center space-x-2">
     <button
       onClick={() => onOpenLink(webPortalUrl)}
-      className="flex-1 py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-between gap-1.5 transition-all shadow-sm group"
+      className="flex-1 py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-between gap-1.5 transition-all shadow-xs group"
       title={`Abrir Portal Web no navegador (${webPortalUrl}) - ${(webHealth?.reachable ?? webHealth?.isHealthy) ? `Ativo: HTTP ${webHealth?.status ?? webHealth?.statusCode ?? 200} (${webHealth?.timeMs ?? webHealth?.responseTimeMs ?? 0}ms)` : 'Serviço HTTP indisponível ou iniciando'}`}
     >
       <div className="flex items-center gap-1.5 truncate">
@@ -51,7 +51,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
     {hasKarafPath && (
       <button
         onClick={() => onOpenLink(karafConsoleUrl)}
-        className="py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all shadow-sm"
+        className="py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all shadow-xs"
         title={`Abrir Console Web OSGi / Apache Felix (${karafConsoleUrl})`}
       >
         <Server className="w-3.5 h-3.5 text-amber-500" />

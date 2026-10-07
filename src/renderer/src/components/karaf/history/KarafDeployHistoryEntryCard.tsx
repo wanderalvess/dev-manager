@@ -152,7 +152,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
                 </button>
 
                 {isExpanded && (
-                  <div className="mt-2 p-2.5 rounded-lg bg-black/60 border border-rose-900/60 text-[11px] font-mono text-rose-300 whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
+                  <div className="mt-2 p-2.5 rounded-lg bg-black/60 border border-rose-900/60 text-[11px] font-mono text-rose-300 whitespace-pre-wrap wrap-break-word max-h-40 overflow-y-auto">
                     {entry.message}
                   </div>
                 )}

@@ -82,7 +82,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
                 <select
                   value={activeProfileId}
                   onChange={(e) => onSelectProfile(e.target.value)}
-                  className="bg-card border border-primary/40 rounded-lg px-3 py-1 text-xs font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer"
+                  className="bg-card border border-primary/40 rounded-lg px-3 py-1 text-xs font-bold text-primary focus:outline-hidden focus:ring-2 focus:ring-primary shadow-xs cursor-pointer"
                 >
                   {profiles.map((p) => (
                     <option key={p.id} value={p.id} className="bg-card text-foreground font-medium">

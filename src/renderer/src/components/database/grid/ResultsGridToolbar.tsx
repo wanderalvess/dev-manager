@@ -45,7 +45,7 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="Filtrar resultados... (digite qualquer termo para buscar em todas as colunas)"
-        className="w-full pl-8 pr-7 py-1 text-xs bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+        className="w-full pl-8 pr-7 py-1 text-xs bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-primary font-sans"
       />
       {searchTerm && (
         <button

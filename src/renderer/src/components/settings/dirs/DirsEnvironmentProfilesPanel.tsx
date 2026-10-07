@@ -80,7 +80,7 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
         value={newEnvironmentProfileLabel}
         onChange={(e) => setNewEnvironmentProfileLabel(e.target.value)}
         placeholder="Rótulo do novo perfil (ex: Cliente A)..."
-        className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+        className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();

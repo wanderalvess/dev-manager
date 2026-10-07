@@ -31,7 +31,7 @@ export const OracleTnsTab: React.FC<OracleTnsTabProps> = ({ ports, copiedKey, on
             const port = extractOraclePort(ports);
             onCopy(getOracleTnsConfig(port), 'oracle-tns-modal');
           }}
-          className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-bold transition shadow-sm cursor-pointer active:scale-98"
+          className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-bold transition shadow-xs cursor-pointer active:scale-98"
         >
           <Copy className="w-3.5 h-3.5" />
           <span>{copiedKey === 'oracle-tns-modal' ? 'Copiado!' : 'Copiar Bloco TNS'}</span>

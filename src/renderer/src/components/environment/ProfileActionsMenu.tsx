@@ -23,7 +23,7 @@ export const ProfileActionsMenu: React.FC<ProfileActionsMenuProps> = ({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         disabled={isRunningProfile}
-        className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-card hover:bg-muted text-foreground border border-border shadow-sm"
+        className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-card hover:bg-muted text-foreground border border-border shadow-xs"
         title="Ações do perfil: parar ou reiniciar toda a esteira"
       >
         <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />

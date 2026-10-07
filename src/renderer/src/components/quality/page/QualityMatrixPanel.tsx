@@ -107,7 +107,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           onChange={(e) => onSearchTermChange(e.target.value)}
           aria-label="Buscar cenários"
           placeholder="Buscar por cenário, rotina, alvo ou anotações..."
-          className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 border border-border/80 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+          className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 border border-border/80 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-primary/50"
         />
       </div>
 
@@ -116,7 +116,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           value={statusFilter}
           aria-label="Filtrar por status"
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-none"
+          className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-hidden"
         >
           <option value="all">Todos os Status</option>
           <option value="pending">Pendente</option>
@@ -130,7 +130,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           value={categoryFilter}
           aria-label="Filtrar por categoria"
           onChange={(e) => onCategoryFilterChange(e.target.value)}
-          className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-none"
+          className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-hidden"
         >
           <option value="all">Todas Categorias</option>
           <option value="routine">Rotinas Delphi</option>
@@ -173,9 +173,9 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
     </div>
 
     {/* Lista / Tabela da Matriz */}
-    <div className="bg-card rounded-xl border border-border overflow-hidden shadow-xs">
+    <div className="bg-card rounded-xl border border-border overflow-hidden shadow-2xs">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[56rem] text-left text-xs">
+        <table className="w-full min-w-4xl text-left text-xs">
           <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase text-2xs tracking-wider font-bold">
             <tr>
               <SortableTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onSort={onSort} />
@@ -202,7 +202,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                       value={item.status}
                       aria-label={`Status de ${item.title}`}
                       onChange={(e) => onStatusChange(item.id, e.target.value as ValidationItemStatus)}
-                      className={`px-2 py-1 rounded text-[11px] font-bold border cursor-pointer focus:outline-none ${getStatusSelectClass(item.status)}`}
+                      className={`px-2 py-1 rounded text-[11px] font-bold border cursor-pointer focus:outline-hidden ${getStatusSelectClass(item.status)}`}
                     >
                       <option value="pending">⚪ Pendente</option>
                       <option value="in_progress">⏳ Em Teste</option>
@@ -212,7 +212,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                     </select>
                   </td>
 
-                  <td className="px-4 py-3 font-semibold text-foreground min-w-[14rem]">{item.title}</td>
+                  <td className="px-4 py-3 font-semibold text-foreground min-w-56">{item.title}</td>
 
                   <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground">
                     {item.targetName}
@@ -224,7 +224,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                     </span>
                   </td>
 
-                  <td className="px-4 py-3 text-muted-foreground max-w-[14rem] truncate" title={item.notes}>
+                  <td className="px-4 py-3 text-muted-foreground max-w-56 truncate" title={item.notes}>
                     {item.notes || '—'}
                   </td>
 

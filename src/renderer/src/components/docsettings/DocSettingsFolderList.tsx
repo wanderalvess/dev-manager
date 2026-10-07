@@ -42,7 +42,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
         type="button"
         onClick={onAddFolder}
         disabled={isAddingFolder}
-        className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs active:scale-95 disabled:opacity-60"
+        className="px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs active:scale-95 disabled:opacity-60"
       >
         <Plus className="w-3.5 h-3.5" />
         <span>Adicionar pasta de docs</span>

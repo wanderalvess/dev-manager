@@ -76,7 +76,7 @@ const NodeRow: React.FC<{ node: PlanNode; expanded: boolean; onToggle: () => voi
       {expanded && hasDetails && (
         <div className="pb-1.5 text-[11px] font-mono text-muted-foreground space-y-0.5" style={{ paddingLeft: `${34 + node.depth * 18}px` }}>
           {node.details.map((d, i) => (
-            <div key={i} className="break-words pr-3">
+            <div key={i} className="wrap-break-word pr-3">
               {d}
             </div>
           ))}

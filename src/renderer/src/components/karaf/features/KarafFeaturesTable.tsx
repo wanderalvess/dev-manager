@@ -67,7 +67,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
               <tr
                 key={`${feat.name}-${feat.version}`}
                 className={`hover:bg-muted/30 transition-colors group ${
-                  feat.isWinthor ? 'bg-indigo-500/[0.02]' : ''
+                  feat.isWinthor ? 'bg-indigo-500/2' : ''
                 }`}
               >
                 {/* Nome da Feature & Detalhes */}
@@ -146,7 +146,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
-                        isStarted ? 'bg-emerald-500 shadow-xs' : 'bg-muted-foreground'
+                        isStarted ? 'bg-emerald-500 shadow-2xs' : 'bg-muted-foreground'
                       }`}
                     />
                     <span>{feat.state || 'Active'}</span>

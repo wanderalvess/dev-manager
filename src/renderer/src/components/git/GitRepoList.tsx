@@ -28,7 +28,7 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
         placeholder="Buscar repositório ou branch..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full bg-card border border-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary font-mono"
+        className="w-full bg-card border border-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:border-primary font-mono"
       />
     </div>
 
@@ -45,7 +45,7 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
             onClick={() => onSelect(p.path)}
             className={`w-full text-left p-3 rounded-xl border transition-all ${
               isSelected
-                ? 'bg-primary/10 border-primary shadow-sm font-semibold'
+                ? 'bg-primary/10 border-primary shadow-xs font-semibold'
                 : 'bg-card/70 border-border/70 hover:border-border hover:bg-muted/40'
             }`}
           >

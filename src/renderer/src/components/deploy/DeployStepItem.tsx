@@ -27,7 +27,7 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
       step.enabled === false
         ? 'border-border/40 bg-muted/20 opacity-50'
         : isRunning
-        ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-sm'
+        ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-xs'
         : status?.status === 'completed'
         ? 'border-emerald-500/40 bg-emerald-500/5'
         : status?.status === 'failed'

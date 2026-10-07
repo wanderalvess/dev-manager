@@ -26,7 +26,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
           value={sql.user}
           onChange={(e) => sql.setUser(e.target.value)}
           placeholder="sys ou system"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
         />
         <p className="text-2xs text-muted-foreground mt-1">Conexão como <span className="font-mono text-foreground font-semibold">sys</span> eleva automaticamente para AS SYSDBA.</p>
       </div>
@@ -36,7 +36,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
           type="password"
           value={sql.pass}
           onChange={(e) => sql.setPass(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>
@@ -45,7 +45,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
       <button
         onClick={sql.open}
         disabled={sql.isOpening}
-        className="flex items-center space-x-2 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-2 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         <Terminal className="w-4 h-4" />
         <span>{sql.isOpening ? 'Abrindo Terminal...' : 'Abrir Sessão SQL*Plus no Terminal'}</span>

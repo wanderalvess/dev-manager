@@ -39,7 +39,7 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
           value={plainPass}
           onChange={(e) => onPlainPassChange(e.target.value)}
           placeholder="Ex: pcinfo, 123456, totvs"
-          className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-violet-500"
+          className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-violet-500"
           autoFocus
         />
       </div>

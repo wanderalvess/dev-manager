@@ -39,7 +39,7 @@ export const KarafInstallModal: React.FC<KarafInstallModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-70 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in">
         <KarafInstallModalHeader updatingTargetBundle={updatingTargetBundle} onClose={onClose} />
 

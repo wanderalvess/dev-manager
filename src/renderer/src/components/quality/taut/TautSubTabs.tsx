@@ -14,7 +14,7 @@ interface TautSubTabsProps {
 const tabClass = (active: boolean) =>
   `px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
     active
-      ? 'bg-primary text-primary-foreground shadow-xs'
+      ? 'bg-primary text-primary-foreground shadow-2xs'
       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
   }`;
 

@@ -21,7 +21,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
   onEdit,
   onDelete
 }) => (
-  <div className="p-3.5 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-all flex items-center justify-between gap-3 text-xs shadow-xs">
+  <div className="p-3.5 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-all flex items-center justify-between gap-3 text-xs shadow-2xs">
     <div className="flex items-start gap-3 min-w-0 flex-1">
       <input
         type="checkbox"

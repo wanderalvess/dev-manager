@@ -38,7 +38,7 @@ export const QaTemplateStepList: React.FC<QaTemplateStepListProps> = ({
           onClick={() => onSelect(idx)}
           className={`p-2.5 rounded-md text-xs cursor-pointer border transition-colors flex items-center justify-between ${
             activeStepIndex === idx
-              ? 'bg-card border-primary/40 border-l-2 border-l-primary text-foreground font-semibold shadow-xs'
+              ? 'bg-card border-primary/40 border-l-2 border-l-primary text-foreground font-semibold shadow-2xs'
               : 'bg-card/50 border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >

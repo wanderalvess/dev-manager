@@ -29,7 +29,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
           placeholder="Buscar rotina por número ou nome..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-xl pl-9 pr-9 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-border/80 rounded-xl pl-9 pr-9 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
         {searchTerm && (
           <button
@@ -48,7 +48,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
         <select
           value={selectedModule}
           onChange={(e) => onModuleChange(e.target.value)}
-          className="bg-card border border-border/80 rounded-xl px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono cursor-pointer shadow-2xs"
+          className="bg-card border border-border/80 rounded-xl px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono cursor-pointer shadow-2xs"
         >
           {modules.map((m) => (
             <option key={m} value={m} className="bg-card text-foreground">

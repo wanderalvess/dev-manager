@@ -27,7 +27,7 @@ export const InfrScriptsTab: React.FC<InfrScriptsTabProps> = ({
           value={customPath}
           onChange={(e) => onCustomPathChange(e.target.value)}
           placeholder="Vazio = detectar em Projetos/INFR-Docker. Ex: C:\Projetos\INFR-Docker"
-          className="flex-1 bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="flex-1 bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-orange-500"
         />
         <button
           onClick={onVerify}

@@ -26,7 +26,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, isOpen, o
   if (!step) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999]" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-9999" role="dialog" aria-modal="true">
       {/* Overlay escuro + spotlight */}
       <TourSpotlight rect={rect} />
 

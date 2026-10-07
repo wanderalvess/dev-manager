@@ -77,7 +77,7 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
               <div
                 className={`w-6 h-6 rounded-lg border flex items-center justify-center font-bold text-[11px] transition-all ${dotStyle}`}
               >
-                {isDone ? <CheckCircle2 className="w-3.5 h-3.5 stroke-[3]" /> : stepNum}
+                {isDone ? <CheckCircle2 className="w-3.5 h-3.5 stroke-3" /> : stepNum}
               </div>
               <span
                 className={`text-[11px] font-semibold truncate max-w-[140px] ${

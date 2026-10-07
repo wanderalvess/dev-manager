@@ -40,7 +40,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
         <select
           value={distro}
           onChange={(e) => onDistroChange(e.target.value)}
-          className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+          className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary cursor-pointer"
         >
           <option value="">Selecione a distro WSL...</option>
           {availableDistros.map((d) => (
@@ -60,7 +60,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
           value={exportPath}
           onChange={(e) => onExportPathChange(e.target.value)}
           placeholder="Ex: C:\WSL\snapshots\backup.tar"
-          className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>
@@ -83,7 +83,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
       <button
         onClick={onExport}
         disabled={exporting || !canExportSnapshot(distro, exportPath)}
-        className="ml-auto flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="ml-auto flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {exporting ? (
           <RotateCw className="w-3.5 h-3.5 animate-spin" />

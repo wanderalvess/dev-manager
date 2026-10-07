@@ -48,7 +48,7 @@ export const InfrOracleTab: React.FC<InfrOracleTabProps> = ({
             value={container}
             onChange={(e) => onContainerChange(e.target.value)}
             placeholder="oracle-winthor"
-            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-orange-500"
           />
         </div>
 
@@ -61,7 +61,7 @@ export const InfrOracleTab: React.FC<InfrOracleTabProps> = ({
             value={port}
             onChange={(e) => onPortChange(infrBootstrapModalParsePort(e.target.value, INFR_DEFAULT_ORACLE_PORT))}
             placeholder="1521"
-            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-orange-500"
           />
         </div>
       </div>
@@ -79,7 +79,7 @@ export const InfrOracleTab: React.FC<InfrOracleTabProps> = ({
       <button
         onClick={onRun}
         disabled={isExecuting}
-        className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {isExecuting ? (
           <RotateCw className="w-4 h-4 animate-spin" />

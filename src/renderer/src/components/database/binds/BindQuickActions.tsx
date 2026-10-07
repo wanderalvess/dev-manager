@@ -41,7 +41,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
           <select
             value={newVarPrefix}
             onChange={(e) => setNewVarPrefix(e.target.value as SqlVariablePrefix)}
-            className="bg-card border border-border text-foreground text-xs rounded px-1.5 py-1 font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+            className="bg-card border border-border text-foreground text-xs rounded px-1.5 py-1 font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
           >
             <option value=":">:</option>
             <option value="&">&</option>
@@ -55,7 +55,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
             placeholder="NOME_VARIAVEL"
             value={newVarName}
             onChange={(e) => setNewVarName(e.target.value.toUpperCase())}
-            className="w-36 bg-background border border-border rounded px-2 py-1 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-36 bg-background border border-border rounded px-2 py-1 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
             autoFocus
           />
           <button

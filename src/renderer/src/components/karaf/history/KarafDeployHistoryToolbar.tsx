@@ -40,7 +40,7 @@ export const KarafDeployHistoryToolbar: React.FC<KarafDeployHistoryToolbarProps>
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Pesquisar por artefato, versão, feature, erro..."
-          className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-8.5 pr-8 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500/60 font-mono placeholder:text-slate-500 placeholder:font-sans transition"
+          className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-8.5 pr-8 py-1.5 text-xs text-slate-100 focus:outline-hidden focus:border-sky-500/60 font-mono placeholder:text-slate-500 placeholder:font-sans transition"
         />
         {search && (
           <button
@@ -65,7 +65,7 @@ export const KarafDeployHistoryToolbar: React.FC<KarafDeployHistoryToolbarProps>
               onClick={() => onFilterChange(chip.id)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer border ${
                 isSelected
-                  ? 'bg-sky-500/20 border-sky-500/50 text-sky-300 shadow-sm'
+                  ? 'bg-sky-500/20 border-sky-500/50 text-sky-300 shadow-xs'
                   : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >

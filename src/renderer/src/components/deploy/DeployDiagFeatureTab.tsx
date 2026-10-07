@@ -51,7 +51,7 @@ export const DeployDiagFeatureTab: React.FC<DeployDiagFeatureTabProps> = ({
           value={featureName}
           onChange={(e) => onFeatureNameChange(e.target.value)}
           placeholder="Ex: winthor-integracao-varejo"
-          className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-none focus:border-primary transition"
+          className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-hidden focus:border-primary transition"
         />
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
           <DeployDiagActionButton

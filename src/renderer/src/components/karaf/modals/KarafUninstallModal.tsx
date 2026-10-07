@@ -29,7 +29,7 @@ export const KarafUninstallModal: React.FC<KarafUninstallModalProps> = ({
     (state.uninstallDepCheck?.riskLevel === 'HIGH' && !state.confirmUninstallChecked);
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-70 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in">
         <KarafUninstallModalHeader onClose={onClose} />
 

@@ -67,7 +67,7 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
             value={nome}
             onChange={(e) => onChangeNome(e.target.value)}
             placeholder="ex: winthor-atualizacao-dados"
-            className="w-full px-3 py-1.5 bg-background border border-input rounded font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full px-3 py-1.5 bg-background border border-input rounded font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
             list="common-winthor-features"
           />
           <datalist id="common-winthor-features">
@@ -92,7 +92,7 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
               value={versao}
               onChange={(e) => onChangeVersao(e.target.value)}
               placeholder="ex: 1.38.0.2 ou 1.39.1.6"
-              className="w-full px-3 py-1.5 bg-background border border-input rounded font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full px-3 py-1.5 bg-background border border-input rounded font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -103,7 +103,7 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
             <select
               value={tipo}
               onChange={(e) => onChangeTipo(e.target.value as Routine801DirectType)}
-              className="w-full px-3 py-1.5 bg-background border border-input rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full px-3 py-1.5 bg-background border border-input rounded text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
             >
               <option value="SERVICO">SERVIÇO (br.com.pcsist.winthor.servico)</option>
               <option value="ROTINA">ROTINA (br.com.pcsist.winthor.rotina)</option>

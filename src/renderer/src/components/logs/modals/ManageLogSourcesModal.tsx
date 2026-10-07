@@ -55,7 +55,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
                 value={editingSource?.name || ''}
                 onChange={(e) => setEditingSource((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder="Ex: API Backend, Serviço de Integração..."
-                className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs focus:outline-none focus:border-primary"
+                className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs focus:outline-hidden focus:border-primary"
               />
             </div>
             <div>
@@ -63,7 +63,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
               <select
                 value={editingSource?.encoding || 'utf-8'}
                 onChange={(e) => setEditingSource((prev) => ({ ...prev, encoding: e.target.value as any }))}
-                className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs focus:outline-none focus:border-primary"
+                className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs focus:outline-hidden focus:border-primary"
               >
                 <option value="utf-8">UTF-8 (Padrão)</option>
                 <option value="latin1">Latin1 / ISO-8859-1 (Delphi legada)</option>
@@ -80,7 +80,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
                 value={editingSource?.filePath || ''}
                 onChange={(e) => setEditingSource((prev) => ({ ...prev, filePath: e.target.value }))}
                 placeholder="Ex: C:\meu-servico\logs\saida.log"
-                className="flex-1 px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-mono focus:outline-none focus:border-primary"
+                className="flex-1 px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs font-mono focus:outline-hidden focus:border-primary"
               />
               <button
                 type="button"

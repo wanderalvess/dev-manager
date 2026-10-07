@@ -65,7 +65,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="Ex: Validar emissão de nota com desconto..."
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary"
           />
         </div>
 
@@ -77,7 +77,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
             value={target}
             onChange={(e) => onTargetChange(e.target.value)}
             placeholder="Ex: Rotina 1402, Karaf, API de Pagamento..."
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary"
           />
         </div>
 
@@ -86,7 +86,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
           <select
             value={category}
             onChange={(e) => onCategoryChange(e.target.value as ValidationCategory)}
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary cursor-pointer"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary cursor-pointer"
           >
             <option value="routine">Rotina Delphi</option>
             <option value="service">Serviço / Karaf</option>
@@ -102,7 +102,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
             value={notes}
             onChange={(e) => onNotesChange(e.target.value)}
             placeholder="Descreva os passos essenciais ou o resultado esperado..."
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary resize-none"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary resize-none"
           />
         </div>
 

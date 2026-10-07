@@ -68,7 +68,7 @@ export const MappedProgramsPanel: React.FC<MappedProgramsPanelProps> = ({
               onChange={(e) => onRename(program.id, e.target.value)}
               onBlur={onRenameBlur}
               title={program.fullPath}
-              className="flex-1 min-w-0 bg-transparent text-xs font-bold font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary rounded px-1 -mx-1"
+              className="flex-1 min-w-0 bg-transparent text-xs font-bold font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary rounded px-1 -mx-1"
             />
             <button
               type="button"

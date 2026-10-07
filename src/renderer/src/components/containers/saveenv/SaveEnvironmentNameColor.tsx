@@ -24,7 +24,7 @@ export const SaveEnvironmentNameColor: React.FC<SaveEnvironmentNameColorProps> =
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         placeholder="Ex: Stack Financeiro, Core Bancos, Mensageria"
-        className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+        className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-medium"
         autoFocus
       />
     </div>
@@ -40,7 +40,7 @@ export const SaveEnvironmentNameColor: React.FC<SaveEnvironmentNameColorProps> =
             style={{ backgroundColor: c }}
             className={`w-6 h-6 rounded-full transition-transform cursor-pointer ${
               color === c
-                ? 'scale-125 ring-2 ring-foreground/40 ring-offset-2 ring-offset-card shadow-xs'
+                ? 'scale-125 ring-2 ring-foreground/40 ring-offset-2 ring-offset-card shadow-2xs'
                 : 'opacity-70 hover:opacity-100 hover:scale-110'
             }`}
           />

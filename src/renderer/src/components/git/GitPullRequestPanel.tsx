@@ -20,7 +20,7 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
   onTargetBranchChange,
   onOpenPr
 }) => (
-  <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+  <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-xs">
     <div className="flex items-center justify-between">
       <span className="text-[13px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
         <GitMerge className="w-4 h-4" />
@@ -32,7 +32,7 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
         <select
           value={targetBranch}
           onChange={(e) => onTargetBranchChange(e.target.value)}
-          className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
+          className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary"
         >
           {targetBranchOptions.map((b) => (
             <option key={b} value={b}>
@@ -53,7 +53,7 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
       </div>
 
       <div className="flex items-center space-x-2 text-muted-foreground shrink-0 px-3">
-        <div className="h-[1px] w-8 bg-border" />
+        <div className="h-px w-8 bg-border" />
         <span className="text-2xs font-bold text-primary">PULL REQUEST</span>
         <ArrowRight className="w-3.5 h-3.5 text-primary" />
       </div>

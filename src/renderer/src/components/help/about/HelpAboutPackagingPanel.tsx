@@ -29,7 +29,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
       </div>
       <button
         onClick={() => copyToClipboard('npm run build:electron', 'btn-copy-build')}
-        className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-semibold transition-all flex items-center space-x-1.5 shadow-sm cursor-pointer"
+        className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-semibold transition-all flex items-center space-x-1.5 shadow-xs cursor-pointer"
         title="Copiar comando de build"
       >
         {copiedItem === 'btn-copy-build' ? (
@@ -57,7 +57,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-        <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
+        <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-2xs">
           <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             Hub Manager {appInfo?.appVersion || '1.22.0'}.exe (Portátil)
@@ -67,7 +67,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
           </p>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-xs">
+        <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1 shadow-2xs">
           <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-primary" />
             Hub Manager Setup {appInfo?.appVersion || '1.22.0'}.exe (Instalador)

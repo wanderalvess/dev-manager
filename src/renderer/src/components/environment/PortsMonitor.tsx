@@ -19,7 +19,7 @@ export const PortsMonitor: React.FC<PortsMonitorProps> = ({
   const activePortsCount = ports.filter((p) => p.inUse).length;
 
   return (
-    <div className="md:col-span-8 bg-card border border-border/80 rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-sm" data-tour="ports-monitor">
+    <div className="md:col-span-8 bg-card border border-border/80 rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-2 shadow-xs" data-tour="ports-monitor">
       <div className="flex items-center space-x-2">
         <Radio className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin text-primary' : 'text-primary'}`} />
         <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground">
