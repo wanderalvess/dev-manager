@@ -139,6 +139,13 @@ usada pelas rotas REST, passada via query string (não basta validar o header `O
 cliente não-browser simplesmente não envia). `apiBridge.ts` já lê a key do `localStorage` e
 anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
 
+**Alerta aceito do `npm audit` — `dompurify` ≤3.4.15 (via `monaco-editor`)**: o Monaco 0.57.0 fixa
+`dompurify@3.4.15` e embute uma cópia própria em `esm/vs/base/browser/dompurify/`, que é a que roda;
+um `overrides` só trocaria o pacote npm sem uso. Os dois XSS valem para o modo `IN_PLACE`, que o
+`domSanitize.js` do Monaco não usa (só `RETURN_DOM_FRAGMENT`), e o app não importa `dompurify`. Não
+use `npm audit fix --force` (faz downgrade para o Monaco 0.56.0). Reavaliar ao subir o `monaco-editor`
+para uma versão que embuta `dompurify` ≥3.4.16.
+
 ## Build e tooling
 
 - `npm run build` = `tsc && vite build` — o typecheck é um gate antes do bundle; não pule.
