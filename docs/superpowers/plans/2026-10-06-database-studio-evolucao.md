@@ -16,7 +16,29 @@ e DBeaver (modo de transação auto/manual, padrão manual em conexões de produ
 | 4 Resultados | feito: exportar xlsx/csv-br/csv/json, carregar mais, edição em lote, plano em árvore (Oracle/PostgreSQL). Virtualização já existia. Pendente: ROWID para tabelas sem PK |
 | 5 Opcional | não iniciada |
 
-**Validação:** tudo testado com drivers simulados e na interface com API simulada. Falta validar contra Oracle, PostgreSQL e MySQL reais.
+**Validação:** drivers simulados e interface com API simulada, mais o roteiro real abaixo.
+
+### Validação real (2026-10-07)
+Roteiro: `databaseReal.oracle.integration.test.ts` (opt-in por `DM_IT_ORACLE_*`; só cria objetos `DM_VALIDATION_*`).
+Ambiente: Oracle Free 23ai (`gvenzl/oracle-free:23-slim`, Docker local), driver Thin, usuário de aplicação sem DBA.
+
+| Item | Oracle 23ai | PostgreSQL | MySQL |
+|---|---|---|---|
+| a SELECT / `truncated` | ok | pendente | pendente |
+| b modo manual, rollback, commit, DDL zera pendentes | ok | pendente | pendente |
+| c cancelar | ok para SELECT pesado (1,5 s); ver nota | pendente | pendente |
+| d `BEGIN ... END;` e `CREATE PROCEDURE` | ok | n/a | n/a |
+| e SAVEPOINT por comando | n/a | pendente | n/a |
+| f descrever tabela e DDL (PK/FK/índice/trigger, DBMS_METADATA no próprio schema) | ok | pendente | pendente |
+| g plano em árvore vs texto cru | ok | pendente | n/a |
+| h edição em lote em auto-commit e manual | ok | pendente | pendente |
+| i duas sessões independentes | ok (mesmo banco) | pendente | pendente |
+
+Correções: `executeInSession` devolvia `session.running = true` mesmo após terminar (estado montado antes do `finally`).
+
+Notas:
+- Cancelar PL/SQL em `DBMS_SESSION.SLEEP`: o `break()` do Thin retorna na hora, mas o servidor só devolve ORA-01013 quando o sleep termina. Observado atrás do NAT do Docker Desktop; provável perda do break fora de banda. Não confirmado em rede sem NAT. O teste c2 exige apenas que o erro chegue e a sessão siga utilizável.
+- Não validado: Oracle 11g/12c (exige Thick + Instant Client), DBMS_METADATA sem permissão no schema de outro usuário, PostgreSQL < 11 e MySQL 5.7.
 
 ## Fase 0: bugs (antes de qualquer feature)
 | # | Problema | Correção |
