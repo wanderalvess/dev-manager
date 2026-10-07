@@ -131,8 +131,9 @@ export function useDatabaseQuery({
         let cols = tableColumns[editableTableName];
         if (!cols && window.electronAPI?.getDbTableColumns) {
           try {
-            cols = await window.electronAPI.getDbTableColumns(activeConnection, editableTableName);
-            setTableColumns((prev) => ({ ...prev, [editableTableName]: cols || [] }));
+            const colsResult = await window.electronAPI.getDbTableColumns(activeConnection, editableTableName);
+            cols = colsResult.columns;
+            if (!colsResult.error) setTableColumns((prev) => ({ ...prev, [editableTableName]: cols || [] }));
           } catch (err) {
             console.error('Erro ao carregar colunas para edição inline:', err);
             cols = [];

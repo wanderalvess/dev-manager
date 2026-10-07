@@ -76,7 +76,8 @@ import type {
   DeployProfileHistoryEntry,
   DeployProgressEvent,
   OsgiResolutionDiagnosticSummary,
-  TableColumnInfo,
+  DbTableColumnsResult,
+  DbTablesResult,
   DockerContainerStats,
   ComposeServiceStatus,
   LogWatchStatus,
@@ -307,8 +308,8 @@ export interface ElectronAPI {
   cancelDbSession: (sessionId: string) => Promise<DbSessionState>;
   closeDbSession: (sessionId: string) => Promise<void>;
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
-  listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
-  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
+  listDbTables: (config: DatabaseConnectionConfig) => Promise<DbTablesResult>;
+  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<DbTableColumnsResult>;
   insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>, sessionId?: string) => Promise<QueryResult>;
   updateDbRow: (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>, sessionId?: string) => Promise<QueryResult>;
   deleteDbRow: (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>, sessionId?: string) => Promise<QueryResult>;

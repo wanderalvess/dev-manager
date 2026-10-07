@@ -190,6 +190,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
           onOpenEditModal={conn.handleOpenEditModal}
           onDeleteConnection={conn.handleDeleteConnection}
           tables={schema.tables}
+          tablesError={schema.tablesError}
           filteredTables={schema.filteredTables}
           tableFilter={schema.tableFilter}
           setTableFilter={schema.setTableFilter}

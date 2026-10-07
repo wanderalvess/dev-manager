@@ -6,6 +6,7 @@ import { DatabaseSidebarTableItem } from './DatabaseSidebarTableItem';
 
 interface DatabaseSidebarTableExplorerProps {
   tables: string[];
+  tablesError?: string | null;
   filteredTables: string[];
   tableFilter: string;
   setTableFilter: (val: string) => void;
@@ -34,6 +35,7 @@ interface DatabaseSidebarTableExplorerProps {
 
 export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorerProps> = ({
   tables,
+  tablesError,
   filteredTables,
   tableFilter,
   setTableFilter,
@@ -145,6 +147,16 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
               <span className="flex items-center justify-center gap-1.5 text-primary">
                 <RotateCw className="w-3 h-3 animate-spin" /> Carregando tabelas...
               </span>
+            ) : tablesError ? (
+              <div role="alert">
+                <p className="text-[11px] text-rose-500 break-words whitespace-pre-wrap">{tablesError}</p>
+                <button
+                  onClick={onFetchTables}
+                  className="mt-1.5 text-[11px] text-primary font-bold hover:underline cursor-pointer"
+                >
+                  Tentar de novo
+                </button>
+              </div>
             ) : (
               <div>
                 <p className="text-[11px]">Nenhuma tabela listada.</p>

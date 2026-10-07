@@ -92,7 +92,8 @@ import type {
   DeployProfileHistoryEntry,
   DeployProgressEvent,
   OsgiResolutionDiagnosticSummary,
-  TableColumnInfo,
+  DbTableColumnsResult,
+  DbTablesResult,
   DockerContainerStats,
   ComposeServiceStatus,
   LogWatchStatus,
@@ -1219,14 +1220,14 @@ export function initApiBridge() {
       });
     },
 
-    listDbTables: async (config: DatabaseConnectionConfig): Promise<string[]> => {
+    listDbTables: async (config: DatabaseConnectionConfig): Promise<DbTablesResult> => {
       return apiFetch('/api/db/tables', {
         method: 'POST',
         body: JSON.stringify(config)
       });
     },
 
-    getDbTableColumns: async (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> => {
+    getDbTableColumns: async (config: DatabaseConnectionConfig, tableName: string): Promise<DbTableColumnsResult> => {
       return apiFetch('/api/db/columns', {
         method: 'POST',
         body: JSON.stringify({ config, tableName })

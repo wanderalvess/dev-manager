@@ -242,12 +242,72 @@ describe('DatabaseService', () => {
     };
 
     try {
-      const tables = await service.listTables(config);
+      const { tables, error } = await service.listTables(config);
+      expect(error).toBeUndefined();
       expect(tables).toHaveLength(1200);
       expect(tables[1199]).toBe('public.tabela_1199');
     } finally {
       spy.mockRestore();
     }
+  });
+
+  describe('listTables / getTableColumns: distinguem vazio legítimo de falha', () => {
+    const config: DatabaseConnectionConfig = {
+      id: 'meta-err',
+      name: 'Meta',
+      type: 'postgres',
+      host: 'db.remoto',
+      port: 5432,
+      database: 'erp',
+      user: 'postgres'
+    };
+    const emptyResult = { success: true, columns: [], rows: [], rowCount: 0, executionTimeMs: 1, isQuery: true };
+
+    it('banco sem tabelas: lista vazia e sem erro', async () => {
+      const spy = vi.spyOn(service, 'executeQuery').mockResolvedValue(emptyResult);
+      expect(await service.listTables(config)).toEqual({ tables: [] });
+      spy.mockRestore();
+    });
+
+    it('falha reportada pela consulta: devolve o erro', async () => {
+      const spy = vi
+        .spyOn(service, 'executeQuery')
+        .mockResolvedValue({ ...emptyResult, success: false, error: 'permission denied for schema x' });
+      expect(await service.listTables(config)).toEqual({ tables: [], error: 'permission denied for schema x' });
+      spy.mockRestore();
+    });
+
+    it('exceção (conexão caída): devolve o erro formatado', async () => {
+      const spy = vi.spyOn(service, 'executeQuery').mockRejectedValue(new Error('boom'));
+      const fmt = vi.spyOn(service as any, 'formatErrorMessage').mockResolvedValue('Conexão perdida');
+      expect(await service.listTables(config)).toEqual({ tables: [], error: 'Conexão perdida' });
+      spy.mockRestore();
+      fmt.mockRestore();
+    });
+
+    it('getTableColumns: sucesso, tabela sem colunas e erro', async () => {
+      const spy = vi.spyOn(service, 'executeQuery');
+      spy.mockResolvedValueOnce({
+        ...emptyResult,
+        rows: [{ column_name: 'id', data_type: 'integer', is_nullable: 'NO', is_pk: 'YES' }],
+        rowCount: 1
+      });
+      const ok = await service.getTableColumns(config, 'public.t');
+      expect(ok.error).toBeUndefined();
+      expect(ok.columns).toEqual([
+        { name: 'id', type: 'integer', nullable: false, isPrimaryKey: true, length: undefined, defaultValue: undefined }
+      ]);
+
+      spy.mockResolvedValueOnce(emptyResult);
+      expect(await service.getTableColumns(config, 'public.t')).toEqual({ columns: [] });
+
+      spy.mockResolvedValueOnce({ ...emptyResult, success: false, error: 'relation does not exist' });
+      expect(await service.getTableColumns(config, 'public.t')).toEqual({
+        columns: [],
+        error: 'relation does not exist'
+      });
+      spy.mockRestore();
+    });
   });
 
   describe('insertRow / updateRow / deleteRow', () => {

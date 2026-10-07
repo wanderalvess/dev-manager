@@ -1300,6 +1300,18 @@ export interface TableColumnInfo {
   defaultValue?: string;
 }
 
+/** Listagem de tabelas: `error` preenchido distingue falha (permissão, conexão caída) de banco legitimamente vazio. */
+export interface DbTablesResult {
+  tables: string[];
+  error?: string;
+}
+
+/** Colunas de uma tabela: `error` preenchido distingue falha de tabela sem colunas. */
+export interface DbTableColumnsResult {
+  columns: TableColumnInfo[];
+  error?: string;
+}
+
 // ==========================================
 // Módulo de Gerenciamento de Containers (Docker / Podman)
 // ==========================================
