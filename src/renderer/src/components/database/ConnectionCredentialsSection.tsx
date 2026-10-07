@@ -24,7 +24,7 @@ export const ConnectionCredentialsSection: React.FC<ConnectionCredentialsSection
           value={editingConn.user || ''}
           onChange={(e) => setEditingConn({ ...editingConn, user: e.target.value })}
           placeholder="Ex: system, postgres, root"
-          className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+          className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
         />
       </div>
       <div>
@@ -44,7 +44,7 @@ export const ConnectionCredentialsSection: React.FC<ConnectionCredentialsSection
           value={editingConn.password || ''}
           onChange={(e) => setEditingConn({ ...editingConn, password: e.target.value })}
           placeholder={hasSavedPassword ? '(Senha salva e protegida)' : '••••••••'}
-          className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+          className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
         />
         {hasSavedPassword && !editingConn.password && (
           <p className="text-2xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">

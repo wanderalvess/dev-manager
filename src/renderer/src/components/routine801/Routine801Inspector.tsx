@@ -133,7 +133,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
             value={customVersion}
             onChange={(e) => onChangeCustomVersion(e.target.value)}
             placeholder={feature.versao}
-            className="w-full px-2 py-1 bg-background border border-input rounded text-foreground font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full px-2 py-1 bg-background border border-input rounded text-foreground font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
             title="Edite para forçar qualquer versão desejada (ex: 1.38.0.2)"
           />
         </div>

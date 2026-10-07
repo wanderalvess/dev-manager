@@ -52,7 +52,7 @@ export const ResultsGridNewRow: React.FC<ResultsGridNewRowProps> = ({
             if (e.key === 'Escape') onCancel();
           }}
           placeholder={col}
-          className="w-full px-1.5 py-0.5 text-xs bg-background border border-emerald-500/40 rounded font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="w-full px-1.5 py-0.5 text-xs bg-background border border-emerald-500/40 rounded font-mono focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
         />
       </td>
     ))}

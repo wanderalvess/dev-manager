@@ -19,7 +19,7 @@ interface KarafInstallSourceFieldsProps {
 }
 
 const INPUT_CLASS =
-  'w-full bg-input/50 border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono';
+  'w-full bg-input/50 border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono';
 
 export const KarafInstallSourceFields: React.FC<KarafInstallSourceFieldsProps> = ({
   sourceType,

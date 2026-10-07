@@ -37,7 +37,7 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
           setSavedQuerySearch('');
           setShowSnippetsMenu((prev) => !prev);
         }}
-        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer ${
+        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           showSnippetsMenu
             ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
@@ -93,7 +93,7 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
                 value={savedQuerySearch}
                 onChange={(e) => setSavedQuerySearch(e.target.value)}
                 placeholder="Buscar por nome, categoria ou comando..."
-                className="w-full pl-7 pr-6 py-1 bg-background border border-border rounded text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                className="w-full pl-7 pr-6 py-1 bg-background border border-border rounded text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-primary font-sans"
                 autoFocus
               />
               {savedQuerySearch && (

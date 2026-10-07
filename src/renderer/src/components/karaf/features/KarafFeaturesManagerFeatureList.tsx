@@ -37,7 +37,7 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
               {/* Pip de status */}
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
-                  isInstalled ? 'bg-emerald-500 shadow-xs' : 'bg-muted-foreground/30'
+                  isInstalled ? 'bg-emerald-500 shadow-2xs' : 'bg-muted-foreground/30'
                 }`}
                 title={isInstalled ? 'Feature instalada' : 'Feature disponível'}
               />

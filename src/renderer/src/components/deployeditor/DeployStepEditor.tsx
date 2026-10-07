@@ -117,7 +117,7 @@ export const DeployStepEditor: React.FC<DeployStepEditorProps> = ({
           value={step.name}
           onChange={(e) => onUpdate({ name: e.target.value })}
           placeholder="Ex: Build Maven, Instalar Feature, Build Imagem Container..."
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
 

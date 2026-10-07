@@ -75,7 +75,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
 
   return (
     <div
-      className="fixed inset-0 z-[10002] bg-background overflow-hidden select-none animate-welcome-overlay"
+      className="fixed inset-0 z-10002 bg-background overflow-hidden select-none animate-welcome-overlay"
       role="dialog"
       aria-modal="true"
     >
@@ -109,7 +109,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
         <button
           type="button"
           onClick={finish}
-          className="h-8 px-3 rounded-lg text-xs font-semibold border border-border/70 text-muted-foreground hover:text-foreground hover:border-border bg-card/60 backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+          className="h-8 px-3 rounded-lg text-xs font-semibold border border-border/70 text-muted-foreground hover:text-foreground hover:border-border bg-card/60 backdrop-blur-xs transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
         >
           Pular introdução
         </button>
@@ -155,7 +155,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
                     </div>
                     {mode === 'light' ? (
                       <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-full border border-primary/30">
-                        <Check className="w-3 h-3 stroke-[3]" /> Selecionado
+                        <Check className="w-3 h-3 stroke-3" /> Selecionado
                       </span>
                     ) : (
                       <span className="text-2xs font-medium text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60">Padrão</span>
@@ -165,7 +165,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
                   <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">Visual clássico e limpo para o dia a dia</div>
 
                   {/* Preview Mini UI */}
-                  <div className="mt-3 p-2 rounded-lg bg-[#f8fafc] border border-slate-200/90 space-y-1.5 pointer-events-none shadow-xs">
+                  <div className="mt-3 p-2 rounded-lg bg-[#f8fafc] border border-slate-200/90 space-y-1.5 pointer-events-none shadow-2xs">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-orange-500" />
                       <div className="h-1.5 w-10 bg-slate-300 rounded-full" />
@@ -191,7 +191,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
                     </div>
                     {mode === 'dark' && (
                       <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-full border border-primary/30">
-                        <Check className="w-3 h-3 stroke-[3]" /> Selecionado
+                        <Check className="w-3 h-3 stroke-3" /> Selecionado
                       </span>
                     )}
                   </div>
@@ -199,7 +199,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
                   <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">Confortável para os olhos e pouca luz</div>
 
                   {/* Preview Mini UI */}
-                  <div className="mt-3 p-2 rounded-lg bg-[#0b0f19] border border-slate-700/90 space-y-1.5 pointer-events-none shadow-xs">
+                  <div className="mt-3 p-2 rounded-lg bg-[#0b0f19] border border-slate-700/90 space-y-1.5 pointer-events-none shadow-2xs">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-orange-500" />
                       <div className="h-1.5 w-10 bg-slate-600 rounded-full" />
@@ -233,7 +233,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
           <button
             type="button"
             onClick={goNext}
-            className="h-9 px-4 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-sm group"
+            className="h-9 px-4 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-xs group"
           >
             {isLast ? 'Começar' : 'Avançar'}
             <ChevronRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />

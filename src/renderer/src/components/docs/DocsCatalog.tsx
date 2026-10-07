@@ -35,7 +35,7 @@ export const DocsCatalog: React.FC<DocsCatalogProps> = ({
           placeholder="Filtrar documentos por nome..."
           value={fileFilter}
           onChange={(e) => onFileFilterChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl pl-8 pr-7 py-1.5 text-[11px] text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-card border border-border rounded-xl pl-8 pr-7 py-1.5 text-[11px] text-foreground placeholder-muted-foreground focus:outline-hidden focus:border-primary"
         />
         {fileFilter && (
           <button

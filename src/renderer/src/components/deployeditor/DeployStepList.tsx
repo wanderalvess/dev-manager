@@ -49,7 +49,7 @@ export const DeployStepList: React.FC<DeployStepListProps> = ({
               onClick={() => onSelect(idx)}
               className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary/40'
+                  ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40'
                   : 'border-border/60 bg-card hover:bg-muted/40'
               }`}
             >

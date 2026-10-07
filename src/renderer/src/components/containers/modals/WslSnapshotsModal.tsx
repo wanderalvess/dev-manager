@@ -74,7 +74,7 @@ export const WslSnapshotsModal: React.FC<WslSnapshotsModalProps> = ({
       )}
 
       {/* Conteúdo */}
-      <div className="flex-1 overflow-auto p-5 space-y-5 [scrollbar-width:thin]">
+      <div className="flex-1 overflow-auto p-5 space-y-5 scrollbar-thin">
         <WslSnapshotsDirBar
           snapshotsDirInput={snapshotsDirInput}
           isLoadingSnapshots={isLoadingSnapshots}

@@ -60,7 +60,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
               <button
                 type="button"
                 onClick={handleResetServices}
-                className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
+                className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
                 title="Restaurar lista de serviços padrão"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -70,7 +70,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
               <button
                 type="button"
                 onClick={() => handleAddService()}
-                className="px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                className="px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Adicionar Serviço</span>
@@ -106,14 +106,14 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
                       type="text"
                       value={srv.displayName}
                       onChange={(e) => handleUpdateService(index, 'displayName', e.target.value)}
-                      className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs font-bold text-foreground focus:outline-none focus:border-primary"
+                      className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs font-bold text-foreground focus:outline-hidden focus:border-primary"
                       placeholder="Nome Amigável (ex: Serviço API Local)"
                     />
                     <input
                       type="text"
                       value={srv.name}
                       onChange={(e) => handleUpdateService(index, 'name', e.target.value)}
-                      className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs font-mono text-muted-foreground focus:outline-none focus:border-primary"
+                      className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs font-mono text-muted-foreground focus:outline-hidden focus:border-primary"
                       placeholder="Nome do Serviço (ex: MeuServico.API)"
                     />
                   </div>
@@ -173,7 +173,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
               <button
                 type="button"
                 onClick={handleResetProcesses}
-                className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
+                className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
                 title="Restaurar padrões de processos"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -183,7 +183,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
               <button
                 type="button"
                 onClick={() => handleAddProcess()}
-                className="px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                className="px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Adicionar</span>
@@ -218,14 +218,14 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
                     type="text"
                     value={proc.displayName}
                     onChange={(e) => handleUpdateProcess(index, 'displayName', e.target.value)}
-                    className="w-full bg-card border border-border rounded-lg px-2 py-1 text-xs font-semibold text-foreground focus:outline-none focus:border-primary"
+                    className="w-full bg-card border border-border rounded-lg px-2 py-1 text-xs font-semibold text-foreground focus:outline-hidden focus:border-primary"
                     placeholder="Nome Amigável"
                   />
                   <input
                     type="text"
                     value={proc.name}
                     onChange={(e) => handleUpdateProcess(index, 'name', e.target.value)}
-                    className="w-full bg-card border border-border rounded-lg px-2 py-1 text-xs font-mono text-muted-foreground focus:outline-none focus:border-primary"
+                    className="w-full bg-card border border-border rounded-lg px-2 py-1 text-xs font-mono text-muted-foreground focus:outline-hidden focus:border-primary"
                     placeholder="Nome do Executável (.exe)"
                   />
                 </div>

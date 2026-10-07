@@ -116,7 +116,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
         </div>
 
         {/* Conteúdo da Aba */}
-        <div className="flex-1 overflow-auto p-5 space-y-4 [scrollbar-width:thin]">
+        <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
           {/* TAB 1: GERAL */}
           {inspectTab === 'general' && (
             <div className="space-y-3">
@@ -242,11 +242,11 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                   value={envSearchFilter}
                   onChange={(e) => setEnvSearchFilter(e.target.value)}
                   placeholder="Filtrar variáveis de ambiente..."
-                  className="w-full bg-background border border-border/80 rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                  className="w-full bg-background border border-border/80 rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
                 />
               </div>
 
-              <div className="space-y-1.5 max-h-96 overflow-auto [scrollbar-width:thin]">
+              <div className="space-y-1.5 max-h-96 overflow-auto scrollbar-thin">
                 {inspectingContainer.env
                   .filter((e) => e.toLowerCase().includes(envSearchFilter.toLowerCase()))
                   .map((envStr, idx) => {

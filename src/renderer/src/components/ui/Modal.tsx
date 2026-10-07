@@ -160,8 +160,8 @@ export const Modal: React.FC<ModalProps> = ({
         tabIndex={-1}
         className={
           bare
-            ? `${panelClassName} outline-none`
-            : `bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-2xl w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-none animate-fade-in`
+            ? `${panelClassName} outline-hidden`
+            : `bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-2xl w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-hidden animate-fade-in`
         }
       >
         {bare && children}

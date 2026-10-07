@@ -14,7 +14,7 @@ export const SaveEnvironmentHeader: React.FC<SaveEnvironmentHeaderProps> = ({
 }) => (
   <div className="p-4 border-b border-border flex items-start space-x-3 shrink-0 bg-muted/20">
     <div
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
+      className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-2xs"
       style={{ backgroundColor: color }}
     >
       {isEditing ? <Pencil className="w-5 h-5" /> : <FolderPlus className="w-5 h-5" />}

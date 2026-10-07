@@ -38,7 +38,7 @@ export const BackupDestinationSection: React.FC<BackupDestinationSectionProps> =
           value={backupFolder}
           onChange={(e) => setBackupFolder(e.target.value)}
           placeholder="Ex: C:\Backups\WinThor"
-          className="flex-1 bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs shadow-2xs"
+          className="flex-1 bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs shadow-2xs"
         />
         <button
           type="button"

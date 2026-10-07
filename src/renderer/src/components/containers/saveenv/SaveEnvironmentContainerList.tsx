@@ -42,7 +42,7 @@ export const SaveEnvironmentContainerList: React.FC<SaveEnvironmentContainerList
             value={searchFilter}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Filtrar containers..."
-            className="w-full bg-background border border-border/80 rounded-lg pl-8 pr-2.5 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border/80 rounded-lg pl-8 pr-2.5 py-1 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
         </div>
       )}

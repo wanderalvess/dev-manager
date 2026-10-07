@@ -54,7 +54,7 @@ export const KarafHistoryModal: React.FC<KarafHistoryModalProps> = ({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Filtrar linhas do histórico..."
-          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         />
       </div>
     )}

@@ -28,7 +28,7 @@ export const DeployDockerBuildFields: React.FC<StepFieldsProps> = ({
         value={step.dockerContextPath || ''}
         onChange={(e) => onUpdate({ dockerContextPath: e.target.value })}
         placeholder="Ex: C:\projetos\minha-api"
-        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
     <div className="grid grid-cols-2 gap-4">
@@ -41,7 +41,7 @@ export const DeployDockerBuildFields: React.FC<StepFieldsProps> = ({
           value={step.dockerFile || ''}
           onChange={(e) => onUpdate({ dockerFile: e.target.value })}
           placeholder="Dockerfile"
-          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
       <div>
@@ -53,7 +53,7 @@ export const DeployDockerBuildFields: React.FC<StepFieldsProps> = ({
           value={step.dockerImageTag || ''}
           onChange={(e) => onUpdate({ dockerImageTag: e.target.value })}
           placeholder="Ex: minha-api:latest"
-          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>
@@ -70,7 +70,7 @@ export const DeployDockerPushFields: React.FC<ContainerFieldsProps> = ({ step, o
       value={step.dockerImageTag || ''}
       onChange={(e) => onUpdate({ dockerImageTag: e.target.value })}
       placeholder="Ex: registro.com/minha-api:latest"
-      className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+      className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
     />
   </div>
 );
@@ -85,7 +85,7 @@ export const DeployDockerRestartFields: React.FC<ContainerFieldsProps> = ({ step
       value={step.dockerContainer || ''}
       onChange={(e) => onUpdate({ dockerContainer: e.target.value })}
       placeholder="Ex: minha-api-container"
-      className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+      className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
     />
   </div>
 );

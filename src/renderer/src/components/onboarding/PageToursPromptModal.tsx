@@ -30,7 +30,7 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
 
   return (
     <div
-      className="fixed inset-0 z-[10001] bg-black/75 backdrop-blur-xs flex items-center justify-center p-4"
+      className="fixed inset-0 z-10001 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
     >
@@ -61,7 +61,7 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
             className="w-full text-left p-3.5 rounded-xl border border-primary/40 hover:border-primary bg-primary/5 hover:bg-primary/10 transition flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center space-x-3 min-w-0 pr-2">
-              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-2xs">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <div className="min-w-0">

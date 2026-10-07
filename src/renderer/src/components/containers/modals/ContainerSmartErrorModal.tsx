@@ -123,7 +123,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
         {/* Detalhes Técnicos do Erro */}
         <div className="space-y-1.5">
           <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Detalhes técnicos:</span>
-          <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-[11px] font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed [scrollbar-width:thin]">
+          <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-[11px] font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed scrollbar-thin">
             {smartError.message}
           </pre>
         </div>
@@ -152,7 +152,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
               <button
                 type="button"
                 onClick={() => onOpenWslTerminal(smartError.distroName)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
               >
                 <Terminal className="w-3.5 h-3.5" />
                 <span>Abrir Terminal WSL</span>
@@ -171,7 +171,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                 type="button"
                 onClick={() => onStartDaemon(smartError.distroName)}
                 disabled={isStartingDaemon}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
               >
                 {isStartingDaemon ? (
                   <RotateCw className="w-3.5 h-3.5 animate-spin" />
@@ -191,7 +191,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                 onClose();
                 if (retry) await retry();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition shadow-xs cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition shadow-2xs cursor-pointer"
             >
               Tentar Novamente
             </button>

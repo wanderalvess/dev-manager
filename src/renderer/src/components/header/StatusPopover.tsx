@@ -30,7 +30,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`h-9 px-2 sm:px-2.5 rounded-lg border transition-all flex items-center space-x-1 sm:space-x-1.5 text-xs select-none cursor-pointer ${
           isOpen
-            ? 'bg-card text-foreground border-primary/50 shadow-xs font-semibold'
+            ? 'bg-card text-foreground border-primary/50 shadow-2xs font-semibold'
             : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
         }`}
         title="Clique para ver IPs da máquina (LAN/WSL) e uso de CPU/RAM"

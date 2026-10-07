@@ -49,7 +49,7 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
           {keyboardShortcuts.map((sc, i) => (
             <div
               key={i}
-              className="p-3 rounded-xl bg-card/60 border border-border flex items-center justify-between hover:border-primary/40 transition-colors shadow-xs"
+              className="p-3 rounded-xl bg-card/60 border border-border flex items-center justify-between hover:border-primary/40 transition-colors shadow-2xs"
             >
               <div className="space-y-0.5 min-w-0 pr-3">
                 <span className="text-xs font-bold text-foreground block truncate">{sc.desc}</span>
@@ -57,7 +57,7 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
                   {sc.category}
                 </span>
               </div>
-              <kbd className="px-2.5 py-1 rounded-lg bg-muted border border-border font-mono text-xs font-bold text-primary shrink-0 shadow-sm">
+              <kbd className="px-2.5 py-1 rounded-lg bg-muted border border-border font-mono text-xs font-bold text-primary shrink-0 shadow-xs">
                 {sc.key}
               </kbd>
             </div>

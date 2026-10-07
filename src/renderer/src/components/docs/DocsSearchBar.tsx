@@ -40,7 +40,7 @@ export const DocsSearchBar: React.FC<DocsSearchBarProps> = ({
           placeholder="Pergunte algo sobre a documentação dos projetos..."
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl pl-10 pr-9 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-card border border-border rounded-xl pl-10 pr-9 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:border-primary"
         />
         {query && (
           <button
@@ -59,7 +59,7 @@ export const DocsSearchBar: React.FC<DocsSearchBarProps> = ({
           data-tour="source-filter-select"
           value={sourceFilter}
           onChange={(e) => onSourceFilterChange(e.target.value)}
-          className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary font-mono"
+          className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:border-primary font-mono"
         >
           <option value="TODOS">Todas as fontes</option>
           {status.sourceLabels.map((label) => (

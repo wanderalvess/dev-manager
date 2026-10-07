@@ -74,7 +74,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
           onChange={(e) => onMessageChange(e.target.value)}
           placeholder="ex: feat: ajustes na rotina de faturamento 1400"
           rows={3}
-          className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary resize-none"
+          className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary resize-none"
         />
       </div>
 

@@ -15,7 +15,7 @@ interface DocSettingsConfluenceSectionProps {
 }
 
 const INPUT_BASE =
-  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
+  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary';
 
 export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSectionProps> = ({
   sources,
@@ -28,7 +28,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
   onDelete,
   onToggleEnabled
 }) => (
-  <div className="p-3.5 rounded-xl border border-border/80 bg-card space-y-3 shadow-xs">
+  <div className="p-3.5 rounded-xl border border-border/80 bg-card space-y-3 shadow-2xs">
     <div className="flex items-center justify-between gap-3">
       <div>
         <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -193,7 +193,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
         <div className="flex justify-end gap-2 pt-1">
           <button
             type="submit"
-            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition text-xs cursor-pointer shadow-xs active:scale-95"
+            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition text-xs cursor-pointer shadow-2xs active:scale-95"
           >
             Salvar Espaço Confluence
           </button>

@@ -50,7 +50,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                   <button
                     type="button"
                     onClick={onGenerateDemo}
-                    className="h-8 px-3.5 rounded bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    className="h-8 px-3.5 rounded bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Simular Tráfego</span>

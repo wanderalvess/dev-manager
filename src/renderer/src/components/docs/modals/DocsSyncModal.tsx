@@ -64,7 +64,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
     {/* Cabeçalho do Modal com identidade clara de Cockpit */}
     <div className="p-4 border-b border-border/80 flex items-center justify-between bg-muted/40 shrink-0">
       <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+        <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-2xs">
           <Radio className="w-4 h-4 animate-pulse" />
         </div>
         <div>
@@ -108,7 +108,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
             type="button"
             onClick={() => onSyncNow()}
             disabled={isSyncing || !hasIndex || syncTargets.filter((t) => t.enabled).length === 0}
-            className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer active:scale-95"
+            className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer active:scale-95"
           >
             <Send className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
             <span>{isSyncing ? 'Transmitindo...' : 'Sincronizar Habilitados'}</span>

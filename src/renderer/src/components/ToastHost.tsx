@@ -51,7 +51,7 @@ export const ToastHost: React.FC = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm">
+    <div className="fixed bottom-4 right-4 z-100 flex flex-col gap-2 max-w-sm">
       {toasts.map((toast) => (
         <div
           key={toast.id}
@@ -70,7 +70,7 @@ export const ToastHost: React.FC = () => {
           ) : (
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           )}
-          <span className="flex-1 break-words whitespace-pre-line">{toast.message}</span>
+          <span className="flex-1 wrap-break-word whitespace-pre-line">{toast.message}</span>
           <button
             type="button"
             onClick={() => dismiss(toast.id)}

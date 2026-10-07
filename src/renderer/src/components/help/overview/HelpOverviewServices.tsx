@@ -37,7 +37,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   onOpen,
   copy
 }) => (
-  <div className={`p-4 rounded-xl bg-card/60 border border-border ${hoverBorderClass} transition-all space-y-3 flex flex-col justify-between shadow-xs`}>
+  <div className={`p-4 rounded-xl bg-card/60 border border-border ${hoverBorderClass} transition-all space-y-3 flex flex-col justify-between shadow-2xs`}>
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-foreground block">

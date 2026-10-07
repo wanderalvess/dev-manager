@@ -45,7 +45,7 @@ export const KarafWarningBanner: React.FC<KarafWarningBannerProps> = ({
             type="button"
             onClick={onStartKaraf}
             disabled={isStartingKaraf}
-            className="px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+            className="px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
             title="Disparar inicialização do Apache Karaf embedded em segundo plano"
           >
             <Play className="w-3 h-3 fill-current" />

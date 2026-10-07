@@ -36,7 +36,7 @@ export const MarkdownReaderToolbar: React.FC<MarkdownReaderToolbarProps> = ({
           placeholder="Buscar palavras no documento..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-background border border-border/80 rounded-xl pl-8 pr-3 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          className="w-full bg-background border border-border/80 rounded-xl pl-8 pr-3 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary"
         />
         {searchTerm && (
           <button

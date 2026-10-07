@@ -34,7 +34,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
       {/* UAC / Permissão */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Elevação UAC (Windows):
         </span>
@@ -54,7 +54,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Sistema Operacional */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Sistema Operacional:
         </span>
@@ -67,7 +67,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Memória RAM */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <div className="flex items-center justify-between">
           <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
             Memória RAM do Sistema:
@@ -94,7 +94,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Versão Electron & Chromium */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Runtimes Desktop:
         </span>
@@ -105,7 +105,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Versão Node & V8 */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Motor JavaScript:
         </span>
@@ -116,7 +116,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Hostname */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Nome da Máquina (Host):
         </span>
@@ -136,7 +136,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       )}
 
       {/* Notas de Versão / Changelog */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border flex items-center justify-between gap-2 shadow-xs">
+      <div className="p-3.5 rounded-xl bg-card/60 border border-border flex items-center justify-between gap-2 shadow-2xs">
         <div className="min-w-0">
           <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
             Notas de Versão

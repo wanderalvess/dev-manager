@@ -95,7 +95,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
             <button
               type="button"
               onClick={() => onAskLlm(query)}
-              className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Gerar Resposta com IA</span>

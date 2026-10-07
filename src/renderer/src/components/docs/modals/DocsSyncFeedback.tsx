@@ -12,7 +12,7 @@ export const DocsSyncFeedback: React.FC<DocsSyncFeedbackProps> = ({ isSyncing, s
   <>
     {/* Barra de Progresso com Pulso e Indicadores Precisos */}
     {isSyncing && syncProgress && (
-      <div className="p-4 rounded-xl bg-primary/5 border border-primary/25 space-y-2.5 shadow-xs">
+      <div className="p-4 rounded-xl bg-primary/5 border border-primary/25 space-y-2.5 shadow-2xs">
         <div className="flex items-center justify-between text-xs">
           <span className="font-bold text-primary flex items-center gap-2">
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
@@ -39,7 +39,7 @@ export const DocsSyncFeedback: React.FC<DocsSyncFeedbackProps> = ({ isSyncing, s
         {syncResults.map((res, i) => (
           <div
             key={i}
-            className={`p-3.5 rounded-xl border text-xs flex items-start gap-3 shadow-xs ${
+            className={`p-3.5 rounded-xl border text-xs flex items-start gap-3 shadow-2xs ${
               res.success
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
                 : 'bg-destructive/10 border-destructive/30 text-destructive'

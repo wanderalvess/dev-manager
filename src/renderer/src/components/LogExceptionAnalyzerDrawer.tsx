@@ -178,7 +178,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
               placeholder="Buscar por código (ex: ORA-00942), texto ou diagnóstico..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-muted/20 border border-border rounded-md pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors font-mono"
+              className="w-full bg-muted/20 border border-border rounded-md pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:border-primary transition-colors font-mono"
             />
           </div>
         </div>

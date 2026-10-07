@@ -152,9 +152,9 @@ export const Header: React.FC<HeaderProps> = ({
           type="button"
           data-tour="help"
           onClick={() => setActiveTab('help')}
-          className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 ${
+          className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 shrink-0 ${
             activeTab === 'help'
-              ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+              ? 'bg-primary text-primary-foreground border-primary shadow-2xs'
               : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
           }`}
           title="Central de Ajuda, FAQ e Diagnósticos (Alt+9)"
@@ -166,9 +166,9 @@ export const Header: React.FC<HeaderProps> = ({
           type="button"
           data-tour="settings"
           onClick={() => setActiveTab('settings')}
-          className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0 ${
+          className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 shrink-0 ${
             activeTab === 'settings'
-              ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+              ? 'bg-primary text-primary-foreground border-primary shadow-2xs'
               : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
           }`}
           title="Configurações do Sistema e Portas"
@@ -181,7 +181,7 @@ export const Header: React.FC<HeaderProps> = ({
           data-tour="refresh"
           onClick={onRefreshAll}
           disabled={isRefreshing}
-          className="h-9 w-9 text-muted-foreground hover:text-foreground bg-card/50 hover:bg-card border border-border/60 hover:border-border rounded-lg flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 shrink-0"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground bg-card/50 hover:bg-card border border-border/60 hover:border-border rounded-lg flex items-center justify-center transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 shrink-0"
           title="Recarregar status de serviços, portas e repositórios"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />

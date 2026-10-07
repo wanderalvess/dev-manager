@@ -32,7 +32,7 @@ export const ApmTraceWaterfall: React.FC<ApmTraceWaterfallProps> = ({
       ))}
     </div>
     {activeSpan && (
-      <div className="mt-3 p-3 rounded-lg border border-border bg-card flex flex-col gap-2 font-mono text-xs shadow-xs">
+      <div className="mt-3 p-3 rounded-lg border border-border bg-card flex flex-col gap-2 font-mono text-xs shadow-2xs">
         <div className="flex items-center justify-between border-b border-border/50 pb-2">
           <div className="flex items-center gap-2">
             <span className="font-bold text-foreground">{activeSpan.name}</span>
@@ -73,7 +73,7 @@ export const ApmTraceWaterfall: React.FC<ApmTraceWaterfallProps> = ({
         )}
         {(activeSpan.statusMessage || activeSpan.exception) && (
           <div className="p-2.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-300 text-[11px] flex items-start justify-between gap-2">
-            <span className="break-words min-w-0">
+            <span className="wrap-break-word min-w-0">
               <strong>Erro:</strong>{' '}
               {activeSpan.statusMessage || [activeSpan.exception?.type, activeSpan.exception?.message].filter(Boolean).join(': ')}
             </span>

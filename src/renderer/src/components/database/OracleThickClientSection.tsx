@@ -44,7 +44,7 @@ export const OracleThickClientSection: React.FC<OracleThickClientSectionProps> =
               setEditingConn({ ...editingConn, oracleClientPath: e.target.value })
             }
             placeholder="Ex: C:\oracle\instantclient_19_25"
-            className="w-full bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+            className="w-full bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
           />
         </div>
       )}

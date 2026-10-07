@@ -77,7 +77,7 @@ export const LogLine: React.FC<LogLineProps> = ({
         const matches = isCaseSensitive ? part === q : part.toLowerCase() === q.toLowerCase();
         if (matches) {
           return (
-            <mark key={pIdx} className="bg-amber-400 text-slate-950 px-1 py-0.2 rounded-xs font-bold not-italic shadow-xs">
+            <mark key={pIdx} className="bg-amber-400 text-slate-950 px-1 py-0.2 rounded-xs font-bold not-italic shadow-2xs">
               {part}
             </mark>
           );

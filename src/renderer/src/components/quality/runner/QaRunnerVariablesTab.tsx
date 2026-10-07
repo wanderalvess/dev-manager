@@ -36,7 +36,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
               value={newVarKey}
               onChange={(e) => onChangeNewVarKey(e.target.value)}
               placeholder="codFilial"
-              className="w-full bg-card border border-border rounded pl-5 pr-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full bg-card border border-border rounded pl-5 pr-2 py-1 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
           </div>
           <input
@@ -44,7 +44,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
             value={newVarVal}
             onChange={(e) => onChangeNewVarVal(e.target.value)}
             placeholder="Valor"
-            className="flex-1 bg-card border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="flex-1 bg-card border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
           <button
             type="button"
@@ -82,7 +82,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
                   const val = e.target.value;
                   setVariables((prev) => ({ ...prev, [k]: val }));
                 }}
-                className="bg-background border border-border rounded px-2 py-0.5 text-xs font-mono text-foreground flex-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="bg-background border border-border rounded px-2 py-0.5 text-xs font-mono text-foreground flex-1 focus:outline-hidden focus:ring-1 focus:ring-primary"
               />
               <button
                 type="button"

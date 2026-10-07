@@ -7,7 +7,7 @@ interface TautSpecsTabProps {
 }
 
 export const TautSpecsTab: React.FC<TautSpecsTabProps> = ({ specs }) => (
-  <div className="rounded-xl bg-card border border-border shadow-xs p-4 space-y-3">
+  <div className="rounded-xl bg-card border border-border shadow-2xs p-4 space-y-3">
     <div className="flex items-center justify-between">
       <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
         Arquivos de Teste no Cypress ({specs.length} arquivos)

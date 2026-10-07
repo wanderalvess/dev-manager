@@ -100,7 +100,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
           <button
             type="button"
             onClick={onRestartTour}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
             title="Reabrir o tour guiado de boas-vindas"
           >
             <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -112,7 +112,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
           <button
             type="button"
             onClick={onResetPageTours}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
             title="Reativa os tutoriais rápidos de cada tela (Banco, Rotinas, Deploy, Containers, Git...)"
           >
             <Compass className="w-3.5 h-3.5 text-primary" />

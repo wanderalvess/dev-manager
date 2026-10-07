@@ -15,7 +15,7 @@ interface GitTaskBranchModalProps {
 }
 
 const INPUT_CLASS =
-  'w-full bg-background border border-border rounded-md px-2 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary';
+  'w-full bg-background border border-border rounded-md px-2 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary';
 
 export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project, task, copiedKey, onCopy }) => (
   <Modal
@@ -134,7 +134,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
             value={task.taskBranchTitle}
             onChange={(e) => task.setTaskBranchTitle(e.target.value)}
             placeholder="Ex: Ajustes na rotina de faturamento"
-            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary placeholder:text-muted-foreground/50"
+            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary placeholder:text-muted-foreground/50"
           />
         </div>
       </div>

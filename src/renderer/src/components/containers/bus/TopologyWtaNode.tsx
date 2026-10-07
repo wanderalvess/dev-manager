@@ -13,7 +13,7 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
   <div
     className={`bg-muted/30 dark:bg-muted/15 border rounded-lg p-3 flex flex-col justify-between space-y-2 relative transition ${
       node.running
-        ? 'border-cyan-500/40 hover:border-cyan-500/60 shadow-xs'
+        ? 'border-cyan-500/40 hover:border-cyan-500/60 shadow-2xs'
         : 'border-border/80 opacity-75 hover:opacity-100'
     }`}
   >

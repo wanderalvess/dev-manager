@@ -37,7 +37,7 @@ export const StepCommandFields: React.FC<StepCommandFieldsProps> = ({
         value={step.command || ''}
         onChange={(e) => onUpdate({ command: e.target.value })}
         placeholder="Ex: .\gradlew.bat bootRun, npm run dev, docker start banco-re, bats\_run-api.bat"
-        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
 
@@ -59,7 +59,7 @@ export const StepCommandFields: React.FC<StepCommandFieldsProps> = ({
         value={step.cwd || ''}
         onChange={(e) => onUpdate({ cwd: e.target.value })}
         placeholder="Ex: C:\projetos\minha-api ou .\minha-api"
-        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
 
@@ -71,7 +71,7 @@ export const StepCommandFields: React.FC<StepCommandFieldsProps> = ({
         <select
           value={step.launchMode || 'wt'}
           onChange={(e) => onUpdate({ launchMode: e.target.value as 'wt' | 'cmd' | 'background' })}
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         >
           <option value="wt">Windows Terminal (Abas agrupadas)</option>
           <option value="cmd">Janela CMD Externa independente</option>
@@ -90,7 +90,7 @@ export const StepCommandFields: React.FC<StepCommandFieldsProps> = ({
             onUpdate({ port: e.target.value ? parseInt(e.target.value, 10) : undefined })
           }
           placeholder="Ex: 8787, 8080, 8888, 3000..."
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>

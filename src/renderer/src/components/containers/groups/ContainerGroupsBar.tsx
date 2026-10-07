@@ -45,7 +45,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   return (
-    <div className="mx-4 mt-3 p-3 bg-card/75 border border-border/80 rounded-2xl shadow-xs transition-all">
+    <div className="mx-4 mt-3 p-3 bg-card/75 border border-border/80 rounded-2xl shadow-2xs transition-all">
       {/* Topo do Painel de Grupos */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">
@@ -104,7 +104,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
               <button
                 type="button"
                 onClick={onCreateGroup}
-                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold transition cursor-pointer shrink-0 shadow-xs hover:bg-primary/90"
+                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold transition cursor-pointer shrink-0 shadow-2xs hover:bg-primary/90"
               >
                 + Criar Primeiro Grupo
               </button>
@@ -230,7 +230,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                         onClick={() => onStartGroup(env)}
                         disabled={sequenceProgress.running}
                         title={`Subir todos os containers de "${env.name}" em sequência`}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50 active:scale-98"
                       >
                         {isGroupRunningNow ? (
                           <RotateCw className="w-3 h-3 animate-spin" />

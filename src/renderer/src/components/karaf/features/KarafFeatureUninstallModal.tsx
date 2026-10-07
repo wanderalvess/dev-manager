@@ -96,7 +96,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
           type="button"
           onClick={onConfirm}
           disabled={isProcessing}
-          className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-rose-600 hover:bg-rose-500 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+          className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-rose-600 hover:bg-rose-500 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
         >
           {isProcessing ? (
             <>

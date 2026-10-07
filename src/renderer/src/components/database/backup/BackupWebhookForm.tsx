@@ -38,7 +38,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
           placeholder="Ex: Slack #backups-winthor"
           value={editingWebhook.name || ''}
           onChange={(e) => onChange({ ...editingWebhook, name: e.target.value })}
-          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         />
       </div>
       <div className="space-y-1">
@@ -46,7 +46,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
         <select
           value={editingWebhook.method || 'POST'}
           onChange={(e) => onChange({ ...editingWebhook, method: e.target.value as 'POST' | 'PUT' })}
-          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         >
           <option value="POST">POST</option>
           <option value="PUT">PUT</option>
@@ -62,7 +62,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
         placeholder="https://hooks.slack.com/services/..."
         value={editingWebhook.endpointUrl || ''}
         onChange={(e) => onChange({ ...editingWebhook, endpointUrl: e.target.value })}
-        className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+        className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-hidden focus:border-primary"
       />
     </div>
 
@@ -76,7 +76,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
             platform: e.target.value as 'generic' | 'slack' | 'discord' | 'teams'
           })
         }
-        className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+        className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
       >
         <option value="generic">Genérico (Payload JSON padrão)</option>
         <option value="slack">Slack</option>
@@ -93,7 +93,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
           placeholder="Authorization (opcional)"
           value={editingWebhook.authHeader || ''}
           onChange={(e) => onChange({ ...editingWebhook, authHeader: e.target.value })}
-          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-hidden focus:border-primary"
         />
       </div>
       <div className="space-y-1">
@@ -103,7 +103,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
           placeholder="Bearer ... (opcional)"
           value={editingWebhook.authValue || ''}
           onChange={(e) => onChange({ ...editingWebhook, authValue: e.target.value })}
-          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-mono text-foreground focus:outline-hidden focus:border-primary"
         />
       </div>
     </div>
@@ -130,7 +130,7 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
 
     <button
       type="submit"
-      className="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-xs shadow-xs cursor-pointer"
+      className="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition text-xs shadow-2xs cursor-pointer"
     >
       Salvar Webhook
     </button>

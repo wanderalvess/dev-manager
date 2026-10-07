@@ -32,7 +32,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
             type="text"
             value={step.title}
             onChange={(e) => onChange({ ...step, title: e.target.value })}
-            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
         </div>
         <div>
@@ -44,7 +44,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
             value={step.tableName || ''}
             onChange={(e) => onChange({ ...step, tableName: e.target.value.toUpperCase() })}
             placeholder="ex: PCNFSAID, PCPEDC, PCMOV"
-            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-mono uppercase text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-mono uppercase text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
         </div>
       </div>
@@ -65,7 +65,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
           value={step.query}
           onChange={(e) => onChange({ ...step, query: e.target.value })}
           rows={6}
-          className="w-full bg-background border border-border rounded-md p-2.5 font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+          className="w-full bg-background border border-border rounded-md p-2.5 font-mono text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-relaxed"
           spellCheck={false}
         />
       </div>

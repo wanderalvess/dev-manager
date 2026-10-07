@@ -30,7 +30,7 @@ export const TerminalCommandInput: React.FC<TerminalCommandInputProps> = ({
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={onKeyDown}
       placeholder={placeholder}
-      className="flex-1 bg-transparent border-none text-xs text-slate-200 font-mono focus:outline-none placeholder-slate-600"
+      className="flex-1 bg-transparent border-none text-xs text-slate-200 font-mono focus:outline-hidden placeholder-slate-600"
     />
     <button
       type="submit"

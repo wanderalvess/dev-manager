@@ -36,7 +36,7 @@ interface DeployHeaderProps {
 }
 
 const toolbarBtn =
-  'px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border text-foreground shadow-xs cursor-pointer';
+  'px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border text-foreground shadow-2xs cursor-pointer';
 
 export const DeployHeader: React.FC<DeployHeaderProps> = ({
   profiles,
@@ -90,7 +90,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
           value={activeProfileId}
           onChange={(e) => onSelectProfile(e.target.value)}
           disabled={isDeploying}
-          className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary transition-colors font-mono max-w-[220px]"
+          className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:border-primary transition-colors font-mono max-w-[220px]"
         >
           {profiles.map((p) => (
             <option key={p.id} value={p.id}>
@@ -171,7 +171,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
           <button
             type="button"
             onClick={onAbort}
-            className="px-4 py-2 rounded-lg font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-rose-600 hover:bg-rose-700 text-white shadow-xs cursor-pointer"
+            className="px-4 py-2 rounded-lg font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-rose-600 hover:bg-rose-700 text-white shadow-2xs cursor-pointer"
             title="Interromper execução do perfil imediatamente"
           >
             <Square className="w-3.5 h-3.5 fill-current" />
@@ -182,7 +182,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
             data-tour="run-active-profile"
             onClick={onRun}
             disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
-            className="px-5 py-2 rounded-lg font-semibold text-xs flex items-center space-x-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-xs cursor-pointer disabled:opacity-40"
+            className="px-5 py-2 rounded-lg font-semibold text-xs flex items-center space-x-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-2xs cursor-pointer disabled:opacity-40"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>Executar Perfil</span>

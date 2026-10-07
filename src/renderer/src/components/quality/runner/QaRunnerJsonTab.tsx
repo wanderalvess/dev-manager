@@ -59,7 +59,7 @@ export const QaRunnerJsonTab: React.FC<QaRunnerJsonTabProps> = ({
         value={rawJson}
         onChange={(e) => onChangeJson(e.target.value)}
         placeholder='{\n  "codFilial": "1",\n  "numCupom": 4387,\n  "vlTotal": 768.7,\n  ...\n}'
-        className="flex-1 w-full bg-background border border-border rounded-md p-2.5 font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none leading-relaxed"
+        className="flex-1 w-full bg-background border border-border rounded-md p-2.5 font-mono text-[11px] text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary resize-none leading-relaxed"
         spellCheck={false}
       />
     </div>

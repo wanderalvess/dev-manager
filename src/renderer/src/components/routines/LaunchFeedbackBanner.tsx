@@ -53,7 +53,7 @@ export const LaunchFeedbackBanner: React.FC<LaunchFeedbackBannerProps> = ({
                 type="button"
                 onClick={onStartKaraf}
                 disabled={isStartingKaraf}
-                className="px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                className="px-2.5 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
               >
                 <Play className="w-3 h-3 fill-current" />
                 <span>{isStartingKaraf ? 'Iniciando Karaf...' : 'Iniciar Karaf Agora'}</span>

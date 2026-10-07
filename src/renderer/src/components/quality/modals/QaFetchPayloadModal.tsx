@@ -75,7 +75,7 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
                 onClick={() => setActiveTab('oracle')}
                 className={`px-3 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'oracle'
-                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -87,7 +87,7 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
                 onClick={() => setActiveTab('api')}
                 className={`px-3 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'api'
-                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >

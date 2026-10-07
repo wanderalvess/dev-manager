@@ -173,7 +173,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                 type="button"
                 onClick={() => onExecuteMatchedProfile(diagnostic.matchedProfileId || diagnostic.matchedProfileName!)}
                 disabled={isBusy}
-                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-40"
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all duration-150 cursor-pointer disabled:opacity-40"
                 title={`Disparar imediatamente o perfil de deploy "${diagnostic.matchedProfileName}" para construir e registrar a versão necessária no Karaf`}
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
@@ -189,7 +189,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                 type="button"
                 onClick={onInstallReleaseFeature}
                 disabled={isBusy}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-100 font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-40"
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-100 font-semibold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-40"
                 title="Adicionar repositório e instalar a release remota via comandos Karaf (feature:repo-add e feature:install)"
               >
                 <Download className="w-3.5 h-3.5 text-sky-400" />

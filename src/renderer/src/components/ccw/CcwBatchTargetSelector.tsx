@@ -11,7 +11,7 @@ interface CcwBatchTargetSelectorProps {
 const cardClass = (selected: boolean) =>
   `p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
     selected
-      ? 'bg-primary/10 border-primary/80 ring-1 ring-primary/40 text-foreground shadow-xs'
+      ? 'bg-primary/10 border-primary/80 ring-1 ring-primary/40 text-foreground shadow-2xs'
       : 'bg-card border-border/80 hover:border-primary/40 text-muted-foreground'
   }`;
 

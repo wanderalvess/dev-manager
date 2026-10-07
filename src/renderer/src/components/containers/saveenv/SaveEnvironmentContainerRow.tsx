@@ -28,7 +28,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
   return (
     <div
       className={`p-2.5 flex items-center justify-between gap-2 transition ${
-        isSelected ? 'bg-primary/[0.04]' : 'hover:bg-muted/30'
+        isSelected ? 'bg-primary/4' : 'hover:bg-muted/30'
       }`}
     >
       {/* Checkbox, Ordem e Nome */}
@@ -87,7 +87,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
               max="300"
               value={slot.delay}
               onChange={(e) => onUpdateDelay(container.cleanName, parseInt(e.target.value, 10))}
-              className="w-12 bg-background border border-border rounded px-1 text-center text-xs font-mono font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-12 bg-background border border-border rounded px-1 text-center text-xs font-mono font-bold text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
             <span className="text-muted-foreground text-2xs">s</span>
           </div>

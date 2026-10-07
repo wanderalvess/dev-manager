@@ -35,7 +35,7 @@ export const BindVariableRow: React.FC<BindVariableRowProps> = ({
       <select
         value={item.type}
         onChange={(e) => onChangeType(idx, e.target.value as BindInputState['type'])}
-        className="bg-card border border-border text-foreground text-xs rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
+        className="bg-card border border-border text-foreground text-xs rounded px-2 py-1.5 focus:outline-hidden focus:ring-1 focus:ring-primary shrink-0"
         title="Tipo de Dado"
       >
         <option value="auto">Auto (Texto/Número)</option>
@@ -61,7 +61,7 @@ export const BindVariableRow: React.FC<BindVariableRowProps> = ({
           placeholder={getBindValuePlaceholder(item)}
           value={item.value}
           onChange={(e) => onChangeValue(idx, e.target.value)}
-          className="flex-1 bg-background border border-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+          className="flex-1 bg-background border border-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
         />
       )}
 

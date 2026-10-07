@@ -16,7 +16,7 @@ export const DirsIdeNameField: React.FC<DirsIdeNameFieldProps> = ({ settings, on
         type="text"
         value={settings.ideName || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors"
+        className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors"
         placeholder={`Padrão automático: "${detectIdeInfo(settings.intellijPath).name}"`}
       />
     </div>

@@ -19,13 +19,13 @@ export const QaTemplateAssertionRow: React.FC<QaTemplateAssertionRowProps> = ({
       value={ass.column}
       onChange={(e) => onChange({ ...ass, column: e.target.value.toUpperCase() })}
       placeholder="COLUNA"
-      className="bg-card border border-border rounded px-2 py-1 text-xs font-mono font-semibold text-foreground w-36 uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+      className="bg-card border border-border rounded px-2 py-1 text-xs font-mono font-semibold text-foreground w-36 uppercase focus:outline-hidden focus:ring-1 focus:ring-primary"
     />
 
     <select
       value={ass.expectedType}
       onChange={(e) => onChange({ ...ass, expectedType: e.target.value as any })}
-      className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+      className="bg-card border border-border rounded px-2 py-1 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
     >
       <option value="jsonPath">JSONPath (do JSON)</option>
       <option value="literal">Literal (Fixo)</option>
@@ -41,7 +41,7 @@ export const QaTemplateAssertionRow: React.FC<QaTemplateAssertionRowProps> = ({
         value={ass.expectedValue || ''}
         onChange={(e) => onChange({ ...ass, expectedValue: e.target.value })}
         placeholder={ass.expectedType === 'jsonPath' ? '$.vlTotal' : 'Valor esperado'}
-        className="bg-card border border-border rounded px-2 py-1 text-xs font-mono text-foreground flex-1 min-w-[150px] focus:outline-none focus:ring-1 focus:ring-primary"
+        className="bg-card border border-border rounded px-2 py-1 text-xs font-mono text-foreground flex-1 min-w-[150px] focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     )}
 

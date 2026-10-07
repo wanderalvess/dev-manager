@@ -15,9 +15,9 @@ interface RunnerEditorModalProps {
 
 const labelClass = 'block text-[11px] font-mono text-muted-foreground mb-1 uppercase tracking-wider';
 const monoInputClass =
-  'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary/80';
+  'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary/80';
 const textInputClass =
-  'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground focus:outline-none focus:border-primary/80';
+  'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground focus:outline-hidden focus:border-primary/80';
 
 export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
   runner,
@@ -71,7 +71,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
               const type = e.target.value as TestRunnerType;
               onChange({ ...runner, type, commandArgs: getDefaultCommandArgs(type) });
             }}
-            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-foreground focus:outline-none focus:border-primary/80 font-mono text-xs cursor-pointer"
+            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-foreground focus:outline-hidden focus:border-primary/80 font-mono text-xs cursor-pointer"
           >
             <option value="maven">Maven (JUnit / Karaf)</option>
             <option value="playwright">Playwright E2E</option>
@@ -183,7 +183,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
       <button
         type="button"
         onClick={onSave}
-        className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition cursor-pointer shadow-xs active:scale-95"
+        className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-95"
       >
         Salvar Runner
       </button>

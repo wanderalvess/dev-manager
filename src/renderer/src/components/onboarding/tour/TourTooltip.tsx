@@ -67,7 +67,7 @@ export const TourTooltip: React.FC<TourTooltipProps> = ({
           <button
             type="button"
             onClick={isLast ? onFinish : onNext}
-            className="h-7 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition flex items-center gap-1 cursor-pointer shadow-xs"
+            className="h-7 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition flex items-center gap-1 cursor-pointer shadow-2xs"
           >
             {isLast ? 'Concluir' : 'Próximo'}
             {!isLast && <ChevronRight className="w-3.5 h-3.5" />}

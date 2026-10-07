@@ -83,7 +83,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
               type="button"
               onClick={() => onRestore(entry)}
               disabled={isRestoring || isDeleting}
-              className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs animate-pulse"
+              className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs animate-pulse"
               title="Confirmar restauração desta versão"
             >
               <RotateCcw className="w-3 h-3" />
@@ -117,7 +117,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
               type="button"
               onClick={() => onDelete(entry)}
               disabled={isRestoring || isDeleting}
-              className="px-2 py-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+              className="px-2 py-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
               title="Confirmar exclusão definitiva do backup"
             >
               <Trash2 className="w-3 h-3" />

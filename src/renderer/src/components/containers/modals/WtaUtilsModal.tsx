@@ -41,7 +41,7 @@ export const WtaUtilsModal: React.FC<WtaUtilsModalProps> = ({
 
       <WtaUtilsTabs activeTab={state.activeTab} onSelect={state.setActiveTab} />
 
-      <div className="flex-1 overflow-auto p-5 space-y-4 [scrollbar-width:thin]">
+      <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
         {state.activeTab === 'access' && (
           <WtaAccessTab
             port={extractWtaPort(container.ports)}

@@ -68,7 +68,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
         <button
           data-tour="doc-settings-button"
           onClick={onOpenSettings}
-          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
           title="Configurar pastas locais, projetos Git, Confluence, Jira e Assistente IA"
         >
           <Settings className="w-3.5 h-3.5 text-primary" />
@@ -80,7 +80,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
 
         <button
           onClick={onOpenSync}
-          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
           title="Gerenciar e enviar documentos vetorizados para APIs externas (ex: Espaço Ágil)"
         >
           <Send className="w-3.5 h-3.5 text-primary" />
@@ -91,7 +91,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
           data-tour="reindex-button"
           onClick={onReindex}
           disabled={isIndexing}
-          className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-60 cursor-pointer active:scale-95"
+          className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer active:scale-95"
           title="Escanear projetos e (re)gerar o índice de busca"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isIndexing ? 'animate-spin' : ''}`} />

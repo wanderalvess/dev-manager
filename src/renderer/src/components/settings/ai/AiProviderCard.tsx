@@ -37,7 +37,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
   <div
     className={`p-4 rounded-xl border transition-all flex flex-col justify-between space-y-3.5 ${
       isActive
-        ? 'border-primary/60 bg-card shadow-sm ring-1 ring-primary/20'
+        ? 'border-primary/60 bg-card shadow-xs ring-1 ring-primary/20'
         : 'border-border bg-card hover:border-border/80'
     } ${!provider.enabled ? 'opacity-55' : ''}`}
   >

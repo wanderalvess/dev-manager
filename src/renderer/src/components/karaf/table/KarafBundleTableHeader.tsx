@@ -12,7 +12,7 @@ export const KarafBundleTableHeader: React.FC<KarafBundleTableHeaderProps> = ({
   selectedCount,
   onSelectAllVisible
 }) => (
-  <thead className="sticky top-0 z-20 shadow-xs">
+  <thead className="sticky top-0 z-20 shadow-2xs">
     <tr className="bg-muted">
       <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left w-12 border-b border-border select-none">
         <input

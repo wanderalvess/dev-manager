@@ -56,7 +56,7 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
               onClick={() => onSelectSource(src.id)}
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1.5 ${
                 isSelected
-                  ? 'bg-card text-foreground shadow-xs font-bold border border-border'
+                  ? 'bg-card text-foreground shadow-2xs font-bold border border-border'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
               }`}
               title={src.filePath}

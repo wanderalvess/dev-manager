@@ -71,7 +71,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
           value={newSnapshotLabel}
           onChange={(e) => setNewSnapshotLabel(e.target.value)}
           placeholder="Rótulo do snapshot (ex: Pré-deploy v1.4.2)..."
-          className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+          className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleCreateSnapshot();
           }}

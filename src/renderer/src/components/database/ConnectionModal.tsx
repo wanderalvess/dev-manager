@@ -112,7 +112,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               value={editingConn.name || ''}
               onChange={(e) => setEditingConn({ ...editingConn, name: e.target.value })}
               placeholder="Ex: Oracle Produção"
-              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
+              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary"
             />
           </div>
 
@@ -134,7 +134,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                 value={editingConn.host || ''}
                 onChange={(e) => setEditingConn({ ...editingConn, host: e.target.value })}
                 placeholder="localhost ou IP do servidor"
-                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono"
               />
             </div>
             <div>
@@ -144,7 +144,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                 required
                 value={editingConn.port || ''}
                 onChange={(e) => setEditingConn({ ...editingConn, port: Number(e.target.value) })}
-                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono"
               />
             </div>
           </div>
@@ -160,7 +160,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               value={editingConn.database || ''}
               onChange={(e) => setEditingConn({ ...editingConn, database: e.target.value })}
               placeholder={editingConn.type === 'oracle' ? 'Ex: XEPDB1 ou ORCL' : 'Ex: dev_db'}
-              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono"
             />
           </div>
 
@@ -284,7 +284,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition shadow-sm cursor-pointer"
+                className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition shadow-xs cursor-pointer"
               >
                 Salvar
               </button>

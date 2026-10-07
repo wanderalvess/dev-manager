@@ -63,7 +63,7 @@ export const LogsFooter: React.FC<LogsFooterProps> = ({
         <select
           value={initialLinesCount}
           onChange={(e) => onInitialLinesChange(Number(e.target.value))}
-          className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 text-2xs focus:outline-none"
+          className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 text-2xs focus:outline-hidden"
         >
           <option value={100}>100 linhas</option>
           <option value={300}>300 linhas</option>

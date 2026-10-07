@@ -14,7 +14,7 @@ export const TopologyWshNode: React.FC<TopologyWshNodeProps> = ({ node, containe
   <div
     className={`bg-muted/30 dark:bg-muted/15 border rounded-lg p-3 flex flex-col justify-between space-y-2 relative transition ${
       node.running
-        ? 'border-violet-500/40 hover:border-violet-500/60 shadow-xs'
+        ? 'border-violet-500/40 hover:border-violet-500/60 shadow-2xs'
         : 'border-border/80 opacity-75 hover:opacity-100'
     }`}
   >

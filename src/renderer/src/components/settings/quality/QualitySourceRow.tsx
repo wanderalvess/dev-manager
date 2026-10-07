@@ -30,7 +30,7 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
     <div
       className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isCurrentActive
-          ? 'bg-card border-primary/40 shadow-xs'
+          ? 'bg-card border-primary/40 shadow-2xs'
           : 'bg-card/50 border-border opacity-70 hover:opacity-100'
       }`}
     >

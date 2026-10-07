@@ -46,7 +46,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
         onClick={() => onChangeTab('updates')}
         className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded transition-all ${
           activeTab === 'updates'
-            ? 'bg-card text-foreground shadow-sm'
+            ? 'bg-card text-foreground shadow-xs'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -61,7 +61,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
         onClick={() => onChangeTab('installs')}
         className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded transition-all ${
           activeTab === 'installs'
-            ? 'bg-card text-foreground shadow-sm'
+            ? 'bg-card text-foreground shadow-xs'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -83,7 +83,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
           value={searchQuery}
           onChange={(e) => onChangeSearch(e.target.value)}
           placeholder="Buscar por rotina, nome ou módulo..."
-          className="w-full pl-8 pr-7 py-1 text-xs bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full pl-8 pr-7 py-1 text-xs bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
         {searchQuery ? (
           <button
@@ -102,7 +102,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
       <select
         value={typeFilter}
         onChange={(e) => onChangeType(e.target.value)}
-        className="px-2.5 py-1 text-xs bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="px-2.5 py-1 text-xs bg-background border border-input rounded-md text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       >
         <option value="ALL">Todos os Tipos</option>
         <option value="ROTINA">Apenas Rotinas</option>
@@ -113,7 +113,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
       <select
         value={versionFilter}
         onChange={(e) => onChangeVersion(e.target.value)}
-        className="px-2.5 py-1 text-xs bg-background border border-input rounded-md text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+        className="px-2.5 py-1 text-xs bg-background border border-input rounded-md text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
         title="Filtrar por linha ou família de versão (ex: 1.39, 1.38, 0.39)"
       >
         <option value="ALL">Todas as Versões</option>
@@ -142,7 +142,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
           onClick={() => onChangeStatus('ALL')}
           className={`px-2 py-0.5 rounded transition-all ${
             statusFilter === 'ALL'
-              ? 'bg-card text-foreground font-medium shadow-sm'
+              ? 'bg-card text-foreground font-medium shadow-xs'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
