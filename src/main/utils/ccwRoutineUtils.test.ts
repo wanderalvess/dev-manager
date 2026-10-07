@@ -109,7 +109,7 @@ describe('ccwRoutineUtils', () => {
       const backup = createBackupFilePath(original);
       expect(backup).toContain('PCSIS132_');
       expect(backup.endsWith('.bak')).toBe(true);
-      expect(path.dirname(backup)).toBe('C:\\Winthor\\Prod\\MOD-001');
+      expect(path.win32.dirname(backup)).toBe('C:\\Winthor\\Prod\\MOD-001');
     });
   });
 
