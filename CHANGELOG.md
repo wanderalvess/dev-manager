@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **DB Studio — edição do grid em tabela sem chave primária**: em Oracle e PostgreSQL a consulta `SELECT * FROM <tabela>` é refeita trazendo `ROWID`/`ctid` (oculto no grid, na busca e na exportação) e UPDATE/DELETE passam a usar `WHERE ROWID = :p`/`ctid = :p`. Linhas duplicadas, BLOB, datas e números grandes deixam de impedir a alteração. No PostgreSQL só para tabelas comuns (views e partições seguem pelo fallback). MySQL sem PK continua localizando por todas as colunas, agora com aviso.
+
 ## [1.35.0] - 2026-10-06
 ### Adicionado
 - **Instalador — telas opcionais**: depois da escolha da pasta, o assistente mostra duas telas em português que podem ser puladas com **Avançar** (e não aparecem em atualizações automáticas). **Oracle Instant Client**: explica quando é necessário (Oracle 11g ou anterior e backup com expdp/impdp), traz os links de download e do Visual C++ Redistributable, sugere a pasta `C:\oracle` (com opção de criá-la) e diz onde informar o caminho no app. **Assistente de IA**: chave de API (BYOK) ou modelo local com o Ollama. O `instalar-extras.cmd` e o LEIA-ME continuam como alternativa.
