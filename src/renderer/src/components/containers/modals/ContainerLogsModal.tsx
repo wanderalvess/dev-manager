@@ -9,6 +9,7 @@ import {
   RotateCw
 } from 'lucide-react';
 import type { DockerContainerInfo } from '../../../../../shared/types';
+import { Modal } from '../../ui/Modal';
 
 export interface ContainerLogsModalProps {
   container: DockerContainerInfo;
@@ -58,8 +59,13 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
   }, [logs, logSearchQuery]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in"
+      closeOnBackdrop={false}
+    >
         {/* Header do Modal */}
         <div className="px-4 py-3 bg-card border-b border-border/80 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -184,7 +190,6 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
             filteredLogs
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

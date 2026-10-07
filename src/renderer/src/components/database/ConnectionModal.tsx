@@ -10,6 +10,7 @@ import { DatabaseConnectionConfig, DatabaseType, OracleTnsEntry } from '../../..
 import { OracleTnsSelector } from './OracleTnsSelector';
 import { OracleThickClientSection } from './OracleThickClientSection';
 import { ConnectionCredentialsSection } from './ConnectionCredentialsSection';
+import { Modal } from '../ui/Modal';
 
 export interface ConnectionModalProps {
   isOpen: boolean;
@@ -50,8 +51,14 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col max-h-[90vh]"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
           <div className="flex items-center space-x-2">
             <Database className="w-4 h-4 text-primary" />
@@ -284,7 +291,6 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
             </div>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };

@@ -9,6 +9,7 @@ import {
   RotateCw
 } from 'lucide-react';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { Modal } from '../../ui/Modal';
 
 export interface SmartErrorInfo {
   title: string;
@@ -42,8 +43,14 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
   if (!smartError) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-5 animate-fade-in space-y-4">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-5 animate-fade-in space-y-4"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
         <div className="flex items-start space-x-3.5">
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
@@ -197,7 +204,6 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
             Fechar
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

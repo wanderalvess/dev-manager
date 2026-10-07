@@ -278,4 +278,4 @@ Não use `window.confirm`/`alert`. Confirmar uma ação é `await requestConfirm
 ([components/ui/confirmService.ts](src/renderer/src/components/ui/confirmService.ts), funciona em hooks e fora de componentes, o
 `ConfirmHost` fica em `AppGlobalModals`); aviso que precisa ser lido é `showNotice`; feedback rápido é `showToast`. Modal novo parte de
 [components/ui/Modal.tsx](src/renderer/src/components/ui/Modal.tsx) (portal, Esc, foco preso, ARIA) em vez de repetir `fixed inset-0`;
-os ~65 modais antigos que ainda fazem isso à mão migram quando forem tocados.
+49 modais já usam o `Modal` (modo `bare`, que só dá o comportamento e mantém o layout do próprio modal). Ainda fazem `fixed inset-0` à mão, por terem comportamento próprio: `BindVariablesModal`, `SaveSnippetModal`, `TableSpecModal`, `QualityAddItemModal`, `LogExceptionAnalyzerDrawer`, `MarkdownReader`, `QuickLauncherModal` e o onboarding; e os menus com clique-fora (candidatos a um `Popover`). Editores e formulários nascem com `closeOnEscape={false}` e `closeOnBackdrop={false}` para não descartar o que foi digitado.
