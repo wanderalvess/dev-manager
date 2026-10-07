@@ -119,7 +119,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
     }
   );
 
-  const stateView = ResultsGridStates({ queryResult, isExecuting });
+  const stateView = ResultsGridStates({ queryResult, isExecuting, tableName: editableTableName, connection });
   if (stateView || !queryResult) return stateView;
 
   const rowsToRender = isVirtual
