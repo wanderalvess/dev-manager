@@ -136,6 +136,7 @@ export const DatabaseWorkspace: React.FC<DatabaseWorkspaceProps> = ({
             onApplyPending={mutations.applyPending}
             onDiscardPending={mutations.discardPending}
             onUnstageInsert={mutations.unstageInsertRow}
+            connection={connection}
           />
         );
       case 'explain':

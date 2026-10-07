@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { DatabaseConnectionConfig, DatabaseType, SqlSnippet } from '../../../../../shared/types';
 import { SqlSnippetsMenu } from './SqlSnippetsMenu';
+import { formatConnectionTarget } from '../../../utils/emptyResultHint';
 
 interface SqlEditorToolbarProps {
   sql: string;
@@ -67,8 +68,8 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         <div className="flex items-center space-x-2">
           {getDbBadge(activeConnection.type)}
           <span className="text-xs font-bold text-foreground">{activeConnection.name}</span>
-          <span className="text-[11px] text-muted-foreground font-mono">
-            ({activeConnection.user}@{activeConnection.database || activeConnection.host})
+          <span className="text-[11px] text-muted-foreground font-mono" title={`Usuário: ${activeConnection.user}`} data-testid="connection-target">
+            {formatConnectionTarget(activeConnection)}
           </span>
         </div>
       ) : (
