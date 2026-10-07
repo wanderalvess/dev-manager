@@ -13,7 +13,7 @@ export type RowEstimateState =
 export function buildEmptyResultHint(state: RowEstimateState): string | null {
   if (state.status === 'loading') return null;
   if (state.status === 'error' || state.estimate === undefined || !Number.isFinite(state.estimate)) {
-    return 'Não foi possível obter a estimativa do catálogo; a tabela parece vazia.';
+    return 'Não foi possível obter a estimativa de linhas do catálogo.';
   }
   if (state.estimate > 0) {
     return `A tabela tem aprox. ${state.estimate.toLocaleString('pt-BR')} linhas (estimativa do catálogo), mas a consulta voltou vazia. Verifique segurança por linha, permissão de leitura ou o WHERE.`;

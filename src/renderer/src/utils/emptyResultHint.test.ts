@@ -20,9 +20,12 @@ describe('buildEmptyResultHint', () => {
     expect(t).toMatch(/WHERE/);
   });
 
-  it('estimativa indisponível ou erro: tabela parece vazia', () => {
-    expect(buildEmptyResultHint({ status: 'done', estimate: undefined })).toContain('parece vazia');
-    expect(buildEmptyResultHint({ status: 'error' })).toContain('parece vazia');
+  it('estimativa indisponível ou erro: texto neutro, sem afirmar que a tabela está vazia', () => {
+    for (const state of [{ status: 'done', estimate: undefined }, { status: 'error' }] as const) {
+      const t = buildEmptyResultHint(state);
+      expect(t).toContain('Não foi possível obter a estimativa');
+      expect(t).not.toContain('parece vazia');
+    }
   });
 });
 
