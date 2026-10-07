@@ -345,7 +345,8 @@ describe('ApmService', () => {
     const err = await apmService.ingestOtlpBody(bomb, 'application/json', 'gzip').catch((e) => e);
     expect(err).toBeInstanceOf(ApmIngestError);
     expect(err.statusCode).toBe(413);
-  });
+    // Comprime e descomprime dezenas de MB: com a suíte inteira rodando em paralelo estourava os 5 s padrão
+  }, 30_000);
 
   describe('receptor HTTP (porta dinâmica)', () => {
     let service: ApmService;
