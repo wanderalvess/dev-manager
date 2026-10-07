@@ -62,11 +62,17 @@ compartilhar a mesma instância com credenciais distintas.
 - **main/services/** — toda a lógica de negócio (Config, Karaf, Database, Docker, Deploy,
   GitAzure, Routines, DocsIndex, Windows, Wsl, Network, Backup/BackupScheduler, LogWatcher,
   Llm, AutoUpdate, Notification, etc.), cada uma com `.test.ts` co-localizado.
-- **main/ipc/registerIpc.ts** — único ponto de registro de `ipcMain.handle`; apenas repassa
-  para os services, sem lógica própria.
+- **main/ipc/registerIpc.ts** — chama um `registerXxxHandlers(ctx)` por assunto, em
+  `main/ipc/handlers/*Handlers.ts` (system, environment, karaf, database, containers, wsl...);
+  `ctx` (`IpcContext`, em `ipcContext.ts`) traz a janela e os services. Canal novo vai no
+  arquivo do seu assunto (o prefixo do canal diz qual é); os handlers só repassam para os
+  services, sem lógica própria. Não existe mais um registro único gigante.
 - **preload/index.ts** — `contextBridge.exposeInMainWorld` expõe a API tipada (`electronAPI`).
-- **renderer/src/services/apiBridge.ts** — wrapper tipado sobre `window.electronAPI`, usado
-  pelas páginas/componentes em vez de chamar `electronAPI` direto.
+- **renderer/src/services/apiBridge.ts** — no modo Web/Docker instala `window.electronAPI`
+  compondo os adaptadores REST/WebSocket de `services/webBridge/*.ts` (um por assunto, cada um
+  `satisfies Partial<ElectronAPI>`; o `tsc` falha se faltar algum método do preload). Também
+  exporta `api`, um proxy tipado sobre `window.electronAPI`. Método novo no preload exige o
+  adaptador correspondente no `webBridge` do mesmo assunto.
 - **shared/types.ts** — fonte única de tipos compartilhados entre main/preload/renderer/
   server/mcp. Qualquer tipo usado em mais de uma camada vive aqui, não duplicado.
   - **Atenção à profundidade de imports**: componentes em subpastas de 3º nível do renderer
@@ -176,7 +182,7 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
 **Regra mandatória do projeto: nenhum arquivo de código novo ou alterado deve ultrapassar 300 linhas.**
 
 > Dívida conhecida (arquivos que ainda passam do teto e devem ser decompostos ao serem tocados, não de uma vez):
-> `src/mcp/index.ts`, `src/shared/types.ts`, `src/server/index.ts`, `renderer/services/apiBridge.ts`, `src/main/ipc/registerIpc.ts`,
+> `src/mcp/index.ts`, `src/shared/types.ts`, `src/server/index.ts`, `src/preload/index.ts`,
 > `helpData.tsx` e os serviços `RoutinesService`, `WindowsService`, `BackupService`, `WslService`, `ConfigService`.
 > O `npm run check:file-size` só avisa. Não acrescente código novo nesses arquivos sem extrair o que for novo para um módulo próprio.
 
