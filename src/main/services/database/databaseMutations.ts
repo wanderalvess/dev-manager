@@ -1,6 +1,7 @@
 import type { DatabaseConnectionConfig, QueryResult } from '../../../shared/types';
 import { isValidSqlIdentifier, isValidSqlTableName } from '../../utils/security';
 import { buildEqualityWhereClause, mutationValidationError } from '../../utils/databaseSqlUtils';
+import { ROW_ID_COLUMN, isValidRowIdValue, supportsRowId } from '../../../shared/rowIdentity';
 import type { DatabaseContext } from './databaseContext';
 
 /** Executa o SQL da mutação. Padrão: conexão compartilhada (auto-commit); com sessão, a da aba do editor. */
@@ -13,6 +14,40 @@ const runMutation = (
   binds: Record<string, any>,
   exec?: MutationExecutor
 ): Promise<QueryResult> => (exec ? exec(sql, binds) : ctx.executeQuery(config, sql, 1, binds));
+
+type WhereResult = { clause: string; nextIndex: number } | { error: QueryResult };
+
+/**
+ * WHERE de UPDATE/DELETE. Com a chave reservada `__ROWID__` identifica a linha pela pseudo-coluna
+ * (Oracle ROWID, PostgreSQL ctid) e rejeita qualquer outra condição junto; senão, igualdade por coluna.
+ */
+function buildMutationWhere(
+  config: DatabaseConnectionConfig,
+  where: Record<string, any>,
+  binds: Record<string, any>,
+  startIndex: number
+): WhereResult {
+  const keys = Object.keys(where);
+  if (!keys.includes(ROW_ID_COLUMN)) {
+    for (const col of keys) {
+      if (!isValidSqlIdentifier(col)) return { error: mutationValidationError(`Nome de coluna inválido: "${col}".`) };
+    }
+    return buildEqualityWhereClause(where, binds, startIndex);
+  }
+  if (keys.length !== 1) {
+    return { error: mutationValidationError('Identificação por ROWID/ctid não pode ser combinada com outras colunas.') };
+  }
+  if (!supportsRowId(config.type)) {
+    return { error: mutationValidationError(`O banco ${config.type} não suporta identificação de linha por pseudo-coluna.`) };
+  }
+  const value = where[ROW_ID_COLUMN];
+  if (!isValidRowIdValue(config.type, value)) {
+    return { error: mutationValidationError('Identificador de linha (ROWID/ctid) inválido ou ausente.') };
+  }
+  const key = `p${startIndex}`;
+  binds[key] = value;
+  return { clause: `${config.type === 'oracle' ? 'ROWID' : 'ctid'} = :${key}`, nextIndex: startIndex + 1 };
+}
 
 /**
  * Insere uma linha em `tableName` a partir do editor de dados do DB Studio. Nomes de tabela
@@ -74,7 +109,7 @@ export async function updateRow(
   if (whereColumns.length === 0) {
     return mutationValidationError('Condição WHERE vazia — atualização bloqueada por segurança.');
   }
-  for (const col of [...setColumns, ...whereColumns]) {
+  for (const col of setColumns) {
     if (!isValidSqlIdentifier(col)) {
       return mutationValidationError(`Nome de coluna inválido: "${col}".`);
     }
@@ -89,9 +124,10 @@ export async function updateRow(
       return `${col} = :${key}`;
     })
     .join(', ');
-  const { clause: whereClause } = buildEqualityWhereClause(where, binds, idx);
+  const built = buildMutationWhere(config, where, binds, idx);
+  if ('error' in built) return built.error;
 
-  const sql = `UPDATE ${tableName} SET ${setClause} WHERE ${whereClause}`;
+  const sql = `UPDATE ${tableName} SET ${setClause} WHERE ${built.clause}`;
   return runMutation(ctx, config, sql, binds, exec);
 }
 
@@ -113,15 +149,11 @@ export async function deleteRow(
   if (whereColumns.length === 0) {
     return mutationValidationError('Condição WHERE vazia — exclusão bloqueada por segurança.');
   }
-  for (const col of whereColumns) {
-    if (!isValidSqlIdentifier(col)) {
-      return mutationValidationError(`Nome de coluna inválido: "${col}".`);
-    }
-  }
 
   const binds: Record<string, any> = {};
-  const { clause: whereClause } = buildEqualityWhereClause(where, binds, 0);
+  const built = buildMutationWhere(config, where, binds, 0);
+  if ('error' in built) return built.error;
 
-  const sql = `DELETE FROM ${tableName} WHERE ${whereClause}`;
+  const sql = `DELETE FROM ${tableName} WHERE ${built.clause}`;
   return runMutation(ctx, config, sql, binds, exec);
 }

@@ -48,7 +48,7 @@ export function useDatabaseRowMutations({
     setPendingState(next);
   }, []);
 
-  const keyColumns = useMemo(() => (editableTable ? getRowKeyColumns(editableTable.columns) : []), [editableTable]);
+  const keyColumns = useMemo(() => (editableTable ? getRowKeyColumns(editableTable.columns, editableTable.identity === 'rowid') : []), [editableTable]);
 
   const stageInsertRow = (values: Record<string, any>) => setPending(stageInsert(pendingRef.current, values));
   const unstageInsertRow = (index: number) => setPending(removeInsert(pendingRef.current, index));
