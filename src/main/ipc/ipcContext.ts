@@ -1,0 +1,52 @@
+import type { BrowserWindow } from 'electron';
+import type { WindowsService } from '../services/WindowsService';
+import type { KarafService } from '../services/KarafService';
+import type { GitAzureService } from '../services/GitAzureService';
+import type { RoutinesService } from '../services/RoutinesService';
+import type { ConfigService } from '../services/ConfigService';
+import type { DocsIndexService } from '../services/DocsIndexService';
+import type { DatabaseService } from '../services/DatabaseService';
+import type { BackupService } from '../services/BackupService';
+import type { BackupSchedulerService } from '../services/BackupSchedulerService';
+import type { DockerService } from '../services/DockerService';
+import type { NetworkService } from '../services/NetworkService';
+import type { DeployService } from '../services/DeployService';
+import type { LogWatcherService } from '../services/LogWatcherService';
+import type { KarafLogPersistenceService } from '../services/KarafLogPersistenceService';
+import type { AutoUpdateService } from '../services/AutoUpdateService';
+import type { LlmService } from '../services/LlmService';
+import type { Routine801Service } from '../services/Routine801Service';
+import type { ApmService } from '../services/ApmService';
+import type { OracleTracerCaptureService } from '../services/OracleTracerCaptureService';
+import type { QaRegressionService } from '../services/QaRegressionService';
+import type { TestRunnerService } from '../services/TestRunnerService';
+import type { TautAutomationService } from '../services/TautAutomationService';
+import type { QaPayloadService } from '../services/QaPayloadService';
+
+/** Tudo que um grupo de handlers IPC pode precisar: a janela principal e os serviços do app. */
+export interface IpcContext {
+  mainWindow: BrowserWindow;
+  windowsService: WindowsService;
+  karafService: KarafService;
+  gitAzureService: GitAzureService;
+  routinesService: RoutinesService;
+  configService: ConfigService;
+  docsIndexService: DocsIndexService;
+  databaseService: DatabaseService;
+  backupService: BackupService;
+  backupSchedulerService: BackupSchedulerService;
+  dockerService: DockerService;
+  networkService: NetworkService;
+  deployService: DeployService;
+  logWatcherService: LogWatcherService;
+  karafLogPersistenceService: KarafLogPersistenceService;
+  autoUpdateService?: AutoUpdateService;
+  llmService: LlmService;
+  routine801Service: Routine801Service;
+  apmService: ApmService;
+  oracleTracerCaptureService: OracleTracerCaptureService;
+  qaRegressionService: QaRegressionService;
+  testRunnerService: TestRunnerService;
+  tautAutomationService: TautAutomationService;
+  qaPayloadService: QaPayloadService;
+}
