@@ -11,7 +11,7 @@ interface DirsWinthorStartPanelProps {
 }
 
 const INPUT_CLASS =
-  'w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary';
+  'w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary';
 
 export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
   settings,
@@ -19,7 +19,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
   showWtaPassword,
   setShowWtaPassword
 }) => (
-  <div className="bg-card border border-border/80 rounded-xl p-3.5 space-y-3 shadow-sm">
+  <div className="bg-card border border-border/80 rounded-xl p-3.5 space-y-3 shadow-xs">
     <div className="flex items-center justify-between">
       <div>
         <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
@@ -37,7 +37,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
           onChange={(e) => setField('winthorStartEnabled', e.target.checked)}
           className="sr-only peer"
         />
-        <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+        <div className="w-9 h-5 bg-muted peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
       </label>
     </div>
 
@@ -130,7 +130,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
           rows={2}
           value={settings.winthorStartDefaultPayload || ''}
           onChange={(e) => setField('winthorStartDefaultPayload', e.target.value)}
-          className="w-full bg-muted/40 border border-border rounded-lg p-2 text-foreground font-mono text-[11px] focus:outline-none focus:border-primary resize-none"
+          className="w-full bg-muted/40 border border-border rounded-lg p-2 text-foreground font-mono text-[11px] focus:outline-hidden focus:border-primary resize-none"
           placeholder='{"m":"...","u":"...","p":"...","t":"...","s":"..."}'
         />
         <p className="text-2xs text-muted-foreground mt-0.5">

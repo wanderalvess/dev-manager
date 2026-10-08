@@ -36,7 +36,7 @@ export const ContainersDaemonAlert: React.FC<ContainersDaemonAlertProps> = ({
             type="button"
             onClick={() => onStartDockerDaemon(selectedDistro)}
             disabled={isStartingDaemon}
-            className="flex items-center gap-1.5 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow-xs disabled:opacity-50 active:scale-98"
+            className="flex items-center gap-1.5 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow-2xs disabled:opacity-50 active:scale-98"
           >
             {isStartingDaemon ? (
               <RotateCw className="w-3 h-3 animate-spin" />

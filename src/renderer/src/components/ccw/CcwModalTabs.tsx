@@ -31,7 +31,7 @@ export const CcwModalTabs: React.FC<CcwModalTabsProps> = ({ activeTab, onSelect 
           onClick={() => onSelect(id)}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === id
-              ? 'bg-card text-foreground shadow-xs border border-border/80'
+              ? 'bg-card text-foreground shadow-2xs border border-border/80'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/30 border border-transparent'
           }`}
         >

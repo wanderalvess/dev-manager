@@ -49,13 +49,13 @@ export const DirsPathField: React.FC<DirsPathFieldProps> = ({
         data-tour={inputTourId}
         value={inputValue}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+        className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
         placeholder={placeholder}
       />
       <button
         type="button"
         onClick={onBrowse}
-        className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+        className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-xs"
         title={browseTitle}
       >
         {browseIcon}

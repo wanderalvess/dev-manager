@@ -46,7 +46,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             <span className="text-2xs uppercase tracking-wider text-muted-foreground font-sans font-medium">OTLP</span>
           </button>
 
-          <div className="h-4 w-[1px] bg-border shrink-0" />
+          <div className="h-4 w-px bg-border shrink-0" />
 
           {/* Chips de Métricas Essenciais */}
           <div className="flex items-center gap-2.5 font-mono text-[11px] shrink-0 tabular-nums">
@@ -175,7 +175,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             type="button"
             onClick={onGenerateDemo}
             title="Simula requisições das APIs do WinThor, consultas Oracle e falhas para teste"
-            className="h-7 px-2.5 rounded border border-border bg-card hover:bg-muted text-foreground text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-xs"
+            className="h-7 px-2.5 rounded border border-border bg-card hover:bg-muted text-foreground text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
           >
             <Sparkles className="w-3 h-3 text-primary" />
             <span className="hidden sm:inline">Simular Tráfego</span>

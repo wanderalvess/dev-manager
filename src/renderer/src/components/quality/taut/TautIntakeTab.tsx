@@ -27,7 +27,7 @@ export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
   copiedKey,
   onCopy
 }) => (
-  <div className="rounded-xl bg-card border border-border shadow-xs p-4 space-y-4">
+  <div className="rounded-xl bg-card border border-border shadow-2xs p-4 space-y-4">
     <div className="space-y-1">
       <div className="flex items-center space-x-2">
         <Sparkles className="w-4 h-4 text-amber-400" />
@@ -48,7 +48,7 @@ export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
           value={csvFileName}
           onChange={(e) => onCsvFileNameChange(e.target.value)}
           placeholder="ex: Insumo/pedido.csv ou pedido.csv"
-          className="w-full pl-9 pr-3 py-2 rounded-lg bg-background border border-border text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full pl-9 pr-3 py-2 rounded-lg bg-background border border-border text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
 

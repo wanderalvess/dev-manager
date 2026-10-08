@@ -51,7 +51,7 @@ export const DeployDiagBundleTab: React.FC<DeployDiagBundleTabProps> = ({
           value={bundleId}
           onChange={(e) => onBundleIdChange(e.target.value.replace(/\D/g, ''))}
           placeholder="Ex: 185"
-          className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-none focus:border-primary transition"
+          className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-hidden focus:border-primary transition"
         />
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
           <DeployDiagActionButton

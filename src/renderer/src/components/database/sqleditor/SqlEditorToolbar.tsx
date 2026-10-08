@@ -95,7 +95,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         type="button"
         onClick={() => onOpenCreateSnippet()}
         disabled={!sql.trim()}
-        className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-semibold text-foreground transition shadow-xs disabled:opacity-50 cursor-pointer"
+        className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-semibold text-foreground transition shadow-2xs disabled:opacity-50 cursor-pointer"
         title="Salvar consulta atual do editor nas minhas consultas"
       >
         <BookmarkPlus className="w-3.5 h-3.5 text-amber-500" />
@@ -108,7 +108,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         data-tour="backup-button"
         onClick={onOpenBackupModal}
         disabled={!activeConnection}
-        className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-xs disabled:opacity-50 cursor-pointer"
+        className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-2xs disabled:opacity-50 cursor-pointer"
         title="Fazer backup do banco de dados conectado"
       >
         <HardDriveDownload className="w-3.5 h-3.5 text-sky-400" />
@@ -119,7 +119,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
       <button
         type="button"
         onClick={toggleMaximize}
-        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer ${
+        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           isMaximizedActual
             ? 'bg-primary/20 text-primary border border-primary/40'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
@@ -147,7 +147,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
       <button
         type="button"
         onClick={onOpenBindModal}
-        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer ${
+        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           detectedVariables.length > 0
             ? 'bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/40 text-violet-400'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
@@ -172,7 +172,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         type="button"
         onClick={onExplainPlan}
         disabled={isExplaining || isExecuting || !activeConnection}
-        className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold shadow-xs transition disabled:opacity-50 cursor-pointer"
+        className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold shadow-2xs transition disabled:opacity-50 cursor-pointer"
         title="Explicar plano de execução da consulta selecionada (Oracle, Postgres, MySQL)"
       >
         <Zap className={`w-3.5 h-3.5 ${isExplaining ? 'animate-spin' : ''}`} />
@@ -185,7 +185,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         <select
           value={maxRows}
           onChange={(e) => setMaxRows(Number(e.target.value))}
-          className="bg-card border border-border/70 rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:border-primary"
+          className="bg-card border border-border/70 rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         >
           <option value={50}>50</option>
           <option value={100}>100</option>
@@ -202,7 +202,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         type="button"
         onClick={onExecuteScript}
         disabled={isExecuting || !activeConnection}
-        className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-semibold text-foreground transition shadow-xs disabled:opacity-50 cursor-pointer"
+        className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-semibold text-foreground transition shadow-2xs disabled:opacity-50 cursor-pointer"
         title="Executar todos os comandos do editor em sequência, parando no primeiro erro (F5)"
       >
         <ListVideo className="w-3.5 h-3.5 text-emerald-500" />
@@ -214,7 +214,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         data-tour="execute-sql-button"
         onClick={() => onExecuteSql()}
         disabled={isExecuting || !activeConnection}
-        className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
+        className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-xs transition disabled:opacity-50 cursor-pointer"
       >
         {isExecuting ? (
           <>

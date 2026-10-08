@@ -23,7 +23,7 @@ export const DeployMavenFields: React.FC<DeployMavenFieldsProps> = ({
         onChange={(e) => {
           if (e.target.value) onUpdate({ projectPath: e.target.value });
         }}
-        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
       >
         <option value="">-- Selecionar projeto --</option>
         {projects.map((p) => (
@@ -51,7 +51,7 @@ export const DeployMavenFields: React.FC<DeployMavenFieldsProps> = ({
         value={step.projectPath || ''}
         onChange={(e) => onUpdate({ projectPath: e.target.value })}
         placeholder="Ex: C:\projetos\meu-servico"
-        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
     <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground">

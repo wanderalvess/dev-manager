@@ -15,7 +15,7 @@ export const DocsResultCard: React.FC<DocsResultCardProps> = ({
   onOpenInEditor,
   onOpenInFolder
 }) => (
-  <div className="cockpit-card rounded-2xl p-4 border border-border shadow-sm space-y-2">
+  <div className="cockpit-card rounded-2xl p-4 border border-border shadow-xs space-y-2">
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-2xs font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/80 shrink-0">

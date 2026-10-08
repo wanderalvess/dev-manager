@@ -43,7 +43,7 @@ export const ResultsGridHeader: React.FC<ResultsGridHeaderProps> = ({
   activeColumnMenu,
   setActiveColumnMenu
 }) => (
-  <thead className="bg-slate-100 dark:bg-[#181F2E] sticky top-0 z-10 border-b border-border shadow-xs">
+  <thead className="bg-slate-100 dark:bg-[#181F2E] sticky top-0 z-10 border-b border-border shadow-2xs">
     <tr>
       <th className="px-2.5 py-2 text-center text-2xs font-bold text-muted-foreground uppercase border-b border-r border-border/50 w-12 bg-slate-100 dark:bg-[#181F2E] select-none">
         #

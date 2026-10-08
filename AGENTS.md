@@ -62,11 +62,17 @@ compartilhar a mesma instância com credenciais distintas.
 - **main/services/** — toda a lógica de negócio (Config, Karaf, Database, Docker, Deploy,
   GitAzure, Routines, DocsIndex, Windows, Wsl, Network, Backup/BackupScheduler, LogWatcher,
   Llm, AutoUpdate, Notification, etc.), cada uma com `.test.ts` co-localizado.
-- **main/ipc/registerIpc.ts** — único ponto de registro de `ipcMain.handle`; apenas repassa
-  para os services, sem lógica própria.
+- **main/ipc/registerIpc.ts** — chama um `registerXxxHandlers(ctx)` por assunto, em
+  `main/ipc/handlers/*Handlers.ts` (system, environment, karaf, database, containers, wsl...);
+  `ctx` (`IpcContext`, em `ipcContext.ts`) traz a janela e os services. Canal novo vai no
+  arquivo do seu assunto (o prefixo do canal diz qual é); os handlers só repassam para os
+  services, sem lógica própria. Não existe mais um registro único gigante.
 - **preload/index.ts** — `contextBridge.exposeInMainWorld` expõe a API tipada (`electronAPI`).
-- **renderer/src/services/apiBridge.ts** — wrapper tipado sobre `window.electronAPI`, usado
-  pelas páginas/componentes em vez de chamar `electronAPI` direto.
+- **renderer/src/services/apiBridge.ts** — no modo Web/Docker instala `window.electronAPI`
+  compondo os adaptadores REST/WebSocket de `services/webBridge/*.ts` (um por assunto, cada um
+  `satisfies Partial<ElectronAPI>`; o `tsc` falha se faltar algum método do preload). Também
+  exporta `api`, um proxy tipado sobre `window.electronAPI`. Método novo no preload exige o
+  adaptador correspondente no `webBridge` do mesmo assunto.
 - **shared/types.ts** — fonte única de tipos compartilhados entre main/preload/renderer/
   server/mcp. Qualquer tipo usado em mais de uma camada vive aqui, não duplicado.
   - **Atenção à profundidade de imports**: componentes em subpastas de 3º nível do renderer
@@ -139,6 +145,13 @@ usada pelas rotas REST, passada via query string (não basta validar o header `O
 cliente não-browser simplesmente não envia). `apiBridge.ts` já lê a key do `localStorage` e
 anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
 
+**Alerta aceito do `npm audit` — `dompurify` ≤3.4.15 (via `monaco-editor`)**: o Monaco 0.57.0 fixa
+`dompurify@3.4.15` e embute uma cópia própria em `esm/vs/base/browser/dompurify/`, que é a que roda;
+um `overrides` só trocaria o pacote npm sem uso. Os dois XSS valem para o modo `IN_PLACE`, que o
+`domSanitize.js` do Monaco não usa (só `RETURN_DOM_FRAGMENT`), e o app não importa `dompurify`. Não
+use `npm audit fix --force` (faz downgrade para o Monaco 0.56.0). Reavaliar ao subir o `monaco-editor`
+para uma versão que embuta `dompurify` ≥3.4.16.
+
 ## Build e tooling
 
 - `npm run build` = `tsc && vite build` — o typecheck é um gate antes do bundle; não pule.
@@ -176,7 +189,7 @@ anexa na conexão — qualquer novo client WS precisa fazer o mesmo.
 **Regra mandatória do projeto: nenhum arquivo de código novo ou alterado deve ultrapassar 300 linhas.**
 
 > Dívida conhecida (arquivos que ainda passam do teto e devem ser decompostos ao serem tocados, não de uma vez):
-> `src/mcp/index.ts`, `src/shared/types.ts`, `src/server/index.ts`, `renderer/services/apiBridge.ts`, `src/main/ipc/registerIpc.ts`,
+> `src/mcp/index.ts`, `src/shared/types.ts`, `src/server/index.ts`, `src/preload/index.ts`,
 > `helpData.tsx` e os serviços `RoutinesService`, `WindowsService`, `BackupService`, `WslService`, `ConfigService`.
 > O `npm run check:file-size` só avisa. Não acrescente código novo nesses arquivos sem extrair o que for novo para um módulo próprio.
 
@@ -278,4 +291,4 @@ Não use `window.confirm`/`alert`. Confirmar uma ação é `await requestConfirm
 ([components/ui/confirmService.ts](src/renderer/src/components/ui/confirmService.ts), funciona em hooks e fora de componentes, o
 `ConfirmHost` fica em `AppGlobalModals`); aviso que precisa ser lido é `showNotice`; feedback rápido é `showToast`. Modal novo parte de
 [components/ui/Modal.tsx](src/renderer/src/components/ui/Modal.tsx) (portal, Esc, foco preso, ARIA) em vez de repetir `fixed inset-0`;
-os ~65 modais antigos que ainda fazem isso à mão migram quando forem tocados.
+49 modais já usam o `Modal` (modo `bare`, que só dá o comportamento e mantém o layout do próprio modal). Ainda fazem `fixed inset-0` à mão, por terem comportamento próprio: `BindVariablesModal`, `SaveSnippetModal`, `TableSpecModal`, `QualityAddItemModal`, `LogExceptionAnalyzerDrawer`, `MarkdownReader`, `QuickLauncherModal` e o onboarding; e os menus com clique-fora (candidatos a um `Popover`). Editores e formulários nascem com `closeOnEscape={false}` e `closeOnBackdrop={false}` para não descartar o que foi digitado.

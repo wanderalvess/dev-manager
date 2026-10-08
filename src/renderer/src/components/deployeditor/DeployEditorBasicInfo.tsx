@@ -23,7 +23,7 @@ export const DeployEditorBasicInfo: React.FC<DeployEditorBasicInfoProps> = ({
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         placeholder="Ex: Deploy Karaf OSGi, Deploy Container Produção..."
-        className="w-full bg-input/50 border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-input/50 border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
     <div>
@@ -35,7 +35,7 @@ export const DeployEditorBasicInfo: React.FC<DeployEditorBasicInfoProps> = ({
         value={description}
         onChange={(e) => onDescriptionChange(e.target.value)}
         placeholder="Ex: Build + install no Karaf local, Build + push + restart do container..."
-        className="w-full bg-input/50 border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-input/50 border border-border rounded-xl px-3.5 py-2 text-sm text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
   </div>

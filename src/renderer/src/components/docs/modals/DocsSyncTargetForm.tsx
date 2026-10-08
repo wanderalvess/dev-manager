@@ -12,11 +12,11 @@ interface DocsSyncTargetFormProps {
 }
 
 const INPUT_BASE =
-  'w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
+  'w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary';
 
 const modeButtonClass = (active: boolean) =>
   `p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
-    active ? 'bg-primary/10 border-primary shadow-xs' : 'bg-background/60 border-border hover:border-primary/40'
+    active ? 'bg-primary/10 border-primary shadow-2xs' : 'bg-background/60 border-border hover:border-primary/40'
   }`;
 
 export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
@@ -28,7 +28,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
   const setMode = (syncMode: SyncMode) => onChange({ ...editingTarget, syncMode });
 
   return (
-    <form onSubmit={onSubmit} className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3.5 shadow-xs">
+    <form onSubmit={onSubmit} className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3.5 shadow-2xs">
       <div className="flex items-center justify-between border-b border-primary/15 pb-2.5">
         <h5 className="text-xs font-bold text-foreground">
           {editingTarget.id ? 'Editar Destino de API' : 'Novo Destino de API'}
@@ -179,7 +179,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
         </button>
         <button
           type="submit"
-          className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-sm cursor-pointer transition active:scale-95"
+          className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs cursor-pointer transition active:scale-95"
         >
           Salvar Destino
         </button>

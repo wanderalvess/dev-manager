@@ -42,7 +42,7 @@ export const HelpPageHeader: React.FC<HelpPageHeaderProps> = ({
           placeholder="Pesquisar ajuda, comandos, FAQ, portas..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-card/70 border border-border hover:border-primary/40 focus:border-primary rounded-xl pl-9 pr-8 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none transition-all font-sans shadow-inner"
+          className="w-full bg-card/70 border border-border hover:border-primary/40 focus:border-primary rounded-xl pl-9 pr-8 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden transition-all font-sans shadow-inner"
         />
         {searchQuery && (
           <button

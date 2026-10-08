@@ -17,7 +17,7 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
   wslIpFeedback
 }) => (
   <div className="flex items-center space-x-3.5">
-    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0 shadow-xs">
+    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0 shadow-2xs">
       <Box className="w-5 h-5" />
     </div>
     <div>

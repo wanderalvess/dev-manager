@@ -29,7 +29,7 @@ export const ApmErrorSpans: React.FC<{
             </button>
           </div>
           {(exceptionHeadline || span.statusMessage) && (
-            <div className="text-[11px] text-rose-800 dark:text-rose-300 break-words select-text">
+            <div className="text-[11px] text-rose-800 dark:text-rose-300 wrap-break-word select-text">
               {exceptionHeadline || span.statusMessage}
             </div>
           )}

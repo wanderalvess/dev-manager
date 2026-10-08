@@ -38,7 +38,7 @@ export const QualityTabHeader: React.FC<QualityTabHeaderProps> = ({ activeSource
     <button
       type="button"
       onClick={onAddManual}
-      className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+      className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
     >
       <Plus className="w-4 h-4" />
       <span>Adicionar Fonte Manual</span>

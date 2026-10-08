@@ -9,6 +9,7 @@ import {
   RotateCw
 } from 'lucide-react';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { Modal } from '../../ui/Modal';
 
 export interface SmartErrorInfo {
   title: string;
@@ -42,8 +43,14 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
   if (!smartError) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-5 animate-fade-in space-y-4">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-5 animate-fade-in space-y-4"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
         <div className="flex items-start space-x-3.5">
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
@@ -116,7 +123,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
         {/* Detalhes Técnicos do Erro */}
         <div className="space-y-1.5">
           <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Detalhes técnicos:</span>
-          <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-[11px] font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed [scrollbar-width:thin]">
+          <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-[11px] font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed scrollbar-thin">
             {smartError.message}
           </pre>
         </div>
@@ -145,7 +152,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
               <button
                 type="button"
                 onClick={() => onOpenWslTerminal(smartError.distroName)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
               >
                 <Terminal className="w-3.5 h-3.5" />
                 <span>Abrir Terminal WSL</span>
@@ -164,7 +171,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                 type="button"
                 onClick={() => onStartDaemon(smartError.distroName)}
                 disabled={isStartingDaemon}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
               >
                 {isStartingDaemon ? (
                   <RotateCw className="w-3.5 h-3.5 animate-spin" />
@@ -184,7 +191,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                 onClose();
                 if (retry) await retry();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition shadow-xs cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition shadow-2xs cursor-pointer"
             >
               Tentar Novamente
             </button>
@@ -197,7 +204,6 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
             Fechar
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

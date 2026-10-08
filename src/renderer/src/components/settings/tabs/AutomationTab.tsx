@@ -149,7 +149,7 @@ export const AutomationTab: React.FC<AutomationTabProps> = ({
                 key={prof.id}
                 className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
                   isActive
-                    ? 'border-primary/50 bg-primary/10 shadow-sm'
+                    ? 'border-primary/50 bg-primary/10 shadow-xs'
                     : 'border-border bg-card/60'
                 }`}
               >

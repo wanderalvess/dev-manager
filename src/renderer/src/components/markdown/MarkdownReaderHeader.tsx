@@ -24,7 +24,7 @@ interface MarkdownReaderHeaderProps {
 
 const modeButtonClass = (active: boolean) =>
   `px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-    active ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+    active ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'
   }`;
 
 export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
@@ -48,7 +48,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
 }) => (
   <header className="px-5 py-2.5 border-b border-border/80 bg-muted/40 flex items-center justify-between gap-4 shrink-0">
     <div className="flex items-center gap-3 min-w-0">
-      <div className="p-2 rounded-2xl bg-primary/10 border border-primary/25 text-primary shrink-0 shadow-xs">
+      <div className="p-2 rounded-2xl bg-primary/10 border border-primary/25 text-primary shrink-0 shadow-2xs">
         <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
       <div className="min-w-0">
@@ -91,7 +91,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
           onClick={onToggleToc}
           className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
             isTocOpen
-              ? 'bg-primary/15 border-primary text-primary shadow-xs'
+              ? 'bg-primary/15 border-primary text-primary shadow-2xs'
               : 'bg-card border-border hover:bg-muted text-foreground'
           }`}
           title="Sumário de tópicos do documento"

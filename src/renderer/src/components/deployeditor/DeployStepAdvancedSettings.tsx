@@ -51,7 +51,7 @@ export const DeployStepAdvancedSettings: React.FC<DeployStepAdvancedSettingsProp
           value={step.timeoutSeconds ?? ''}
           onChange={(e) => onUpdate({ timeoutSeconds: parseOptionalInt(e.target.value) })}
           placeholder="Sem limite de tempo (padrão)"
-          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>

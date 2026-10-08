@@ -45,13 +45,13 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.pgDumpPath || ''}
                   onChange={(e) => setSettings({ ...settings, pgDumpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\PostgreSQL\17\bin\pg_dump.exe"
                 />
                 <button
                   type="button"
                   onClick={() => handleBrowseFile('pgDumpPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
@@ -69,13 +69,13 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.expdpPath || ''}
                   onChange={(e) => setSettings({ ...settings, expdpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                   placeholder="Ex: C:\oracle\instantclient\expdp.exe"
                 />
                 <button
                   type="button"
                   onClick={() => handleBrowseFile('expdpPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-rose-500" />
@@ -93,13 +93,13 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.mysqldumpPath || ''}
                   onChange={(e) => setSettings({ ...settings, mysqldumpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
                 />
                 <button
                   type="button"
                   onClick={() => handleBrowseFile('mysqldumpPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
@@ -128,13 +128,13 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.psqlPath || ''}
                   onChange={(e) => setSettings({ ...settings, psqlPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\PostgreSQL\17\bin\psql.exe"
                 />
                 <button
                   type="button"
                   onClick={() => handleBrowseFile('psqlPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
@@ -152,13 +152,13 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.impdpPath || ''}
                   onChange={(e) => setSettings({ ...settings, impdpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                   placeholder="Ex: C:\oracle\instantclient\impdp.exe"
                 />
                 <button
                   type="button"
                   onClick={() => handleBrowseFile('impdpPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-rose-500" />
@@ -176,13 +176,13 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.mysqlPath || ''}
                   onChange={(e) => setSettings({ ...settings, mysqlPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
                 />
                 <button
                   type="button"
                   onClick={() => handleBrowseFile('mysqlPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm"
+                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
@@ -213,13 +213,13 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                 type="text"
                 value={settings.oracleTnsnamesPath || ''}
                 onChange={(e) => setSettings({ ...settings, oracleTnsnamesPath: e.target.value })}
-                className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition-colors shadow-sm"
+                className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
                 placeholder="Ex: C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora"
               />
               <button
                 type="button"
                 onClick={() => handleBrowseFile('oracleTnsnamesPath')}
-                className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-sm cursor-pointer"
+                className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs cursor-pointer"
                 title="Selecionar arquivo tnsnames.ora"
               >
                 <FolderOpen className="w-3.5 h-3.5 text-orange-500" />

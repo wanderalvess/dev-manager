@@ -18,7 +18,7 @@ const COUNT_BADGE = 'text-2xs font-mono px-1.5 py-0.2 rounded-full bg-muted text
 const tabClass = (active: boolean, activeBorder: string) =>
   `${BASE_TAB} ${
     active
-      ? `${activeBorder} text-foreground bg-card shadow-xs`
+      ? `${activeBorder} text-foreground bg-card shadow-2xs`
       : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-card/40'
   }`;
 

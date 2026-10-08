@@ -70,7 +70,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           onClick={() => onChangeExecuteVia('karaf_cli')}
           className={`px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
             executeVia === 'karaf_cli'
-              ? 'bg-card text-foreground shadow-xs font-semibold'
+              ? 'bg-card text-foreground shadow-2xs font-semibold'
               : 'text-muted-foreground hover:text-foreground'
           }`}
           title="Executa via Apache Karaf CLI (client.bat) com comandos OSGi em tempo real"
@@ -82,7 +82,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           onClick={() => onChangeExecuteVia('api')}
           className={`px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
             executeVia === 'api'
-              ? 'bg-card text-foreground shadow-xs font-semibold'
+              ? 'bg-card text-foreground shadow-2xs font-semibold'
               : 'text-muted-foreground hover:text-foreground'
           }`}
           title="Executa via API REST do WTA (/winthor/ferramenta/servidor/v1/sistema/instala-com-dependencias)"

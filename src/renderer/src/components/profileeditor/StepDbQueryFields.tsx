@@ -20,7 +20,7 @@ export const StepDbQueryFields: React.FC<StepDbQueryFieldsProps> = ({
       <select
         value={step.dbConnectionId || ''}
         onChange={(e) => onUpdate({ dbConnectionId: e.target.value })}
-        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       >
         <option value="">Selecione uma conexão salva...</option>
         {dbConnections.map((conn) => (
@@ -45,7 +45,7 @@ export const StepDbQueryFields: React.FC<StepDbQueryFieldsProps> = ({
         onChange={(e) => onUpdate({ sql: e.target.value })}
         rows={5}
         placeholder={`UPDATE tb_parametro SET valor = '{{localIp}}' WHERE parametro LIKE 'IP';`}
-        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
       <p className="text-2xs text-muted-foreground mt-1">
         Placeholders disponíveis: <code className="font-mono">{'{{localIp}}'}</code> (IP local da

@@ -3,6 +3,7 @@ import { Check, Copy, Terminal, X } from 'lucide-react';
 import type { ApmReceiverPortChangeResult, ObservabilityOverview } from '../../../../shared/types';
 import { DEFAULT_APM_SERVICE_NAME } from '../../../../shared/types';
 import type { buildApmSetupSnippets } from '../../utils/apmUiUtils';
+import { Modal } from '../ui/Modal';
 
 export interface ApmSetupModalProps {
   isOpen: boolean;
@@ -47,8 +48,15 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
 
   if (!isOpen) return null;
   return (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden font-sans">
+        <Modal
+          open
+          onClose={onClose}
+          bare
+          panelClassName="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden font-sans"
+          closeOnBackdrop={false}
+          closeOnEscape={false}
+          ariaLabel="Como Conectar no Receptor OpenTelemetry (APM)"
+        >
             {/* Modal Header */}
             <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-muted/20">
               <div className="flex items-center gap-2">
@@ -259,7 +267,6 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                 Entendi
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
   );
 };

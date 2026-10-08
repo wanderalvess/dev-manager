@@ -102,9 +102,9 @@ export const ThemeToggle: React.FC = () => {
       {/* Botão Acionador */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`h-9 flex items-center space-x-2 px-2.5 rounded-lg border transition-all duration-200 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer ${
+        className={`h-9 flex items-center space-x-2 px-2.5 rounded-lg border transition-all duration-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-primary/40 cursor-pointer ${
           isOpen
-            ? 'bg-primary/15 border-primary/40 text-primary shadow-sm'
+            ? 'bg-primary/15 border-primary/40 text-primary shadow-xs'
             : 'bg-card/70 hover:bg-card border-border/70 hover:border-border text-foreground'
         }`}
         title="Personalizar Tema e Aparência"
@@ -158,7 +158,7 @@ export const ThemeToggle: React.FC = () => {
                 onClick={() => setMode('light')}
                 className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
                   mode === 'light'
-                    ? 'bg-card text-amber-600 shadow-sm border border-border/80 font-bold'
+                    ? 'bg-card text-amber-600 shadow-xs border border-border/80 font-bold'
                     : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
                 }`}
               >
@@ -171,7 +171,7 @@ export const ThemeToggle: React.FC = () => {
                 onClick={() => setMode('dark')}
                 className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
                   mode === 'dark'
-                    ? 'bg-card text-blue-400 shadow-sm border border-border/80 font-bold'
+                    ? 'bg-card text-blue-400 shadow-xs border border-border/80 font-bold'
                     : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
                 }`}
               >
@@ -200,7 +200,7 @@ export const ThemeToggle: React.FC = () => {
                     }}
                     className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all border ${
                       isSelected
-                        ? 'bg-primary/10 border-primary/40 shadow-sm'
+                        ? 'bg-primary/10 border-primary/40 shadow-xs'
                         : 'bg-muted/30 hover:bg-muted/70 border-transparent hover:border-border/60'
                     }`}
                   >

@@ -78,7 +78,7 @@ export function getFaqList({
           <p>
             O Windows exige permissões de <strong className="text-foreground">Administrador</strong> para gerenciar e interromper serviços do sistema e processos em segundo plano.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como resolver:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>Feche o Hub Manager.</li>
@@ -99,13 +99,13 @@ export function getFaqList({
           <p>
             O script de inicialização do servidor ativa automaticamente o modo de depuração remota Java na porta <strong className="text-foreground font-mono">:{debugPort}</strong> via JDWP (<code className="font-mono text-primary font-semibold">transport=dt_socket,server=y,suspend=n,address={debugPort}</code>).
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Passo a passo no IntelliJ IDEA:</span>
             <ol className="list-decimal pl-4 space-y-1.5">
               <li>No IntelliJ, vá no menu superior em <strong className="text-foreground">Run &gt; Edit Configurations...</strong></li>
               <li>Clique no botão <strong className="text-foreground">+</strong> e adicione uma configuração do tipo <strong className="text-foreground">Remote JVM Debug</strong>.</li>
               <li>Defina o Host como <code className="font-mono text-primary font-semibold">localhost</code> e a Porta como <code className="font-mono text-primary font-semibold">{debugPort}</code>.</li>
-              <li>Clique em <strong className="text-foreground">Apply</strong> e inicie o Debug (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Shift+F9</kbd>). Seus breakpoints nos bundles Maven serão acionados instantaneamente!</li>
+              <li>Clique em <strong className="text-foreground">Apply</strong> e inicie o Debug (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Shift+F9</kbd>). Seus breakpoints nos bundles Maven serão acionados instantaneamente!</li>
             </ol>
           </div>
         </div>
@@ -121,7 +121,7 @@ export function getFaqList({
           <p>
             Isso ocorre quando a pasta raiz do Apache Karaf nas <strong className="text-foreground">Configurações</strong> não corresponde ao diretório onde o Karaf está instalado no seu computador.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Solução:</span>
             <p>
               Verifique se o arquivo <code className="font-mono text-primary font-semibold">bin\\client.bat</code> existe dentro da pasta configurada para o Apache Karaf.
@@ -129,7 +129,7 @@ export function getFaqList({
             {onNavigate && (
               <button
                 onClick={() => onNavigate('settings')}
-                className="mt-1 px-3 py-1.5 bg-primary text-primary-foreground font-semibold rounded-lg text-[11px] flex items-center gap-1.5 hover:opacity-90 transition-opacity shadow-sm"
+                className="mt-1 px-3 py-1.5 bg-primary text-primary-foreground font-semibold rounded-lg text-[11px] flex items-center gap-1.5 hover:opacity-90 transition-opacity shadow-xs"
               >
                 <Settings className="w-3.5 h-3.5" />
                 <span>Abrir Configurações para Ajustar Caminho</span>
@@ -149,7 +149,7 @@ export function getFaqList({
           <p>
             No ecossistema OSGi/Karaf, quando um bundle importa um pacote ou serviço Java (<code className="font-mono text-primary font-semibold">osgi.wiring.package</code>) fornecido por outro módulo ou feature, o container só consegue ativar a feature se esse fornecedor já estiver instalado e ativo na versão exigida.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Diagnóstico Inteligente do Hub Manager:</span>
             <p>
               Ao detectar esse erro, o Hub Manager analisa automaticamente a árvore causal da falha, extrai o pacote e a faixa de versão requerida e correlaciona com o <code className="font-mono text-primary font-semibold">pom.xml</code> do projeto.
@@ -179,7 +179,7 @@ export function getFaqList({
           <p>
             O Apache Karaf roda sobre uma Java Virtual Machine (JVM). Durante compilações volumosas ou múltiplos deploys de bundles OSGi sem reinício, o consumo de memória Heap e Metaspace pode crescer até causar um <strong className="text-rose-500 font-bold">java.lang.OutOfMemoryError (OOM)</strong>, travando os serviços.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Recursos do Monitor de Memória JVM:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -193,7 +193,7 @@ export function getFaqList({
               </li>
             </ul>
             <p className="pt-1 text-[11px]">
-              Acesse o monitor pelo botão <strong className="text-foreground">"Memória JVM"</strong> no cabeçalho da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Alt+4</kbd>).
+              Acesse o monitor pelo botão <strong className="text-foreground">"Memória JVM"</strong> no cabeçalho da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Alt+4</kbd>).
             </p>
           </div>
         </div>
@@ -209,7 +209,7 @@ export function getFaqList({
           <p>
             O Hub Manager suporta nativamente tanto o Karaf instalado no Windows quanto virtualizado dentro do WSL 2:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Configuração Passo a Passo:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -239,7 +239,7 @@ export function getFaqList({
           <p>
             No Apache Karaf, features são grupos lógicos de bundles e dependências declarados em arquivos XML distribuídos via Maven.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Gerenciador de Features &amp; Repositórios:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -250,7 +250,7 @@ export function getFaqList({
               </li>
             </ul>
             <p className="pt-1 text-[11px]">
-              Acesse pelo botão <strong className="text-foreground">"Features Karaf"</strong> na barra de ferramentas da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Alt+4</kbd>).
+              Acesse pelo botão <strong className="text-foreground">"Features Karaf"</strong> na barra de ferramentas da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Alt+4</kbd>).
             </p>
           </div>
         </div>
@@ -266,7 +266,7 @@ export function getFaqList({
           <p>
             O módulo de Logs conta com um analisador contínuo de exceções projetado especificamente para o ecossistema WinThor e Apache Karaf:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Classificação Automática de Falhas:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -299,7 +299,7 @@ export function getFaqList({
           <p>
             Quando uma porta está com indicador ativo, significa que um processo no Windows (como o Portal Web, Karaf SSH, Tomcat, Java ou serviço local) está escutando nela.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Portas 100% Customizáveis:</span>
             <p>
               Você pode alterar a porta do Portal Web Local (ex: <code className="font-mono text-primary font-bold">{webPort}</code>), a porta SSH do Karaf e adicionar ou remover qualquer porta TCP na aba <strong className="text-foreground">Configurações &gt; Portas de Rede Monitoradas</strong>.
@@ -327,7 +327,7 @@ export function getFaqList({
           <p>
             O Hub Manager inspeciona o arquivo de configuração do Git (<code className="font-mono text-primary font-semibold">.git/config</code>) de cada repositório, identifica a URL do Azure DevOps (organização, projeto e repositório) e a branch em que você está trabalhando no momento.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
             <p>
               Ao clicar em <strong className="text-foreground">"Abrir Criação de Pull Request no Azure DevOps"</strong>, seu navegador padrão é aberto diretamente na URL de criação de PR já com o <em>Source Branch</em> (sua branch) e o <em>Target Branch</em> (ex: <code className="font-mono text-primary font-bold">develop</code>) pré-configurados.
             </p>
@@ -361,7 +361,7 @@ export function getFaqList({
           <p>
             Nada disso é obrigatório para usar o Hub Manager: cada item só libera uma funcionalidade. Se a pasta do release já trouxer os arquivos, rode o <code className="font-mono text-primary font-semibold">instalar-extras.cmd</code> que está nela: ele instala o modelo do RAG e extrai o Instant Client em <code className="font-mono text-primary">C:\\oracle</code>.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div className="space-y-1">
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Modelo do RAG (busca semântica):</span>
               <p>
@@ -424,7 +424,7 @@ export function getFaqList({
           <p>
             A inicialização de rotinas pelo <strong className="text-foreground">WinThor Start</strong> depende da geração de parâmetros de autenticação e sessão pelo portal <strong className="text-foreground">WinThor Anywhere (WTA)</strong>, que roda dentro do container <strong className="text-foreground">Apache Karaf</strong> (na porta padrão <code className="font-mono text-primary font-bold">8889</code>).
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como funciona o fluxo de autenticação:</span>
             <ol className="list-decimal pl-4 space-y-1.5">
               <li>
@@ -454,7 +454,7 @@ export function getFaqList({
           <p>
             O Hub Manager se integra diretamente à <strong className="text-foreground">Central de Controle do WinThor (CCW)</strong> em <code className="font-mono text-primary">centraldecontrole.pcinformatica.com.br</code> para baixar e atualizar rotinas sem precisar abrir o navegador nem descompactar arquivos manualmente.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como utilizar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -487,7 +487,7 @@ export function getFaqList({
           <p>
             O Hub Manager oferece gestão completa do ciclo de vida das rotinas WinThor no disco local:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-xs">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
                 1. Histórico de Versões &amp; Rollback em 1 Clique (.bak)
@@ -526,7 +526,7 @@ export function getFaqList({
           <p>
             No Windows, o host <code className="font-mono text-primary font-bold">localhost</code> pode ser resolvido prioritariamente para o endereço IPv6 (<code className="font-mono text-primary">::1</code>), enquanto a JVM do Apache Karaf / WTA normalmente se vincula apenas à interface IPv4 (<code className="font-mono text-primary">127.0.0.1:8889</code>).
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como o Hub Manager trata e como resolver:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -571,7 +571,7 @@ export function getFaqList({
           <p>
             O Hub Manager pode ser empacotado em executáveis nativos do Windows (<code className="font-mono text-primary font-bold">.exe</code>) através do script configurado com o Electron Builder.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Comando para compilar e gerar na pasta release/:</span>
             <div className="flex items-center justify-between p-2 rounded-lg bg-muted font-mono text-[11px] text-primary border border-border/60">
               <code>npm run build:electron</code>
@@ -612,7 +612,7 @@ export function getFaqList({
           <p>
             O Hub <strong className="text-foreground">Git &amp; Azure DevOps</strong> centraliza o ciclo de vida do código antes do commit e agiliza a abertura de branches padronizadas vinculadas a tarefas:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-xs">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
                 1. Visualizador de Diff &amp; Ação "Abrir na IDE"
@@ -649,7 +649,7 @@ export function getFaqList({
           <p>
             A aba <strong className="text-foreground">Documentação</strong> é a central de busca inteligente do Hub Manager. Ela indexa manuais, diagnósticos de projetos, mapeamentos de rotinas e contratos de API REST (<code className="font-mono text-primary">.md, .txt, .pdf, .docx</code>), permitindo encontrar informações técnicas em segundos.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Busca Vetorizada (Embeddings) vs. Ctrl+F:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -673,7 +673,7 @@ export function getFaqList({
           <p>
             O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">166 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">O que a IA consegue realizar por você:</span>
               <ul className="list-disc pl-4 space-y-1 mb-2">
@@ -744,7 +744,7 @@ export function getFaqList({
           <p>
             Você pode conectar o servidor MCP do Hub Manager ao <strong className="text-foreground">IntelliJ IDEA</strong> tanto pelo <strong className="text-foreground">GitHub Copilot Chat</strong> (modo Agent) quanto pelo <strong className="text-foreground">JetBrains AI Assistant</strong> ou pelo plugin <strong className="text-foreground">Continue</strong>.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 1: GitHub Copilot no IntelliJ IDEA</span>
               <p className="mb-2">
@@ -793,7 +793,7 @@ export function getFaqList({
             <div className="pt-2 border-t border-border/50">
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 2: JetBrains AI Assistant (Nativo - 2025.1+)</span>
               <ol className="list-decimal pl-4 space-y-1 text-[11px]">
-                <li>No IntelliJ IDEA, abra as configurações: <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Ctrl+Alt+S</kbd>.</li>
+                <li>No IntelliJ IDEA, abra as configurações: <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Ctrl+Alt+S</kbd>.</li>
                 <li>Navegue até <strong className="text-foreground">Tools &gt; AI Assistant &gt; Model Context Protocol (MCP)</strong>.</li>
                 <li>Clique no botão <strong className="text-foreground">+</strong> (Add Server):
                   <ul className="list-disc pl-4 mt-1 space-y-0.5">
@@ -828,7 +828,7 @@ export function getFaqList({
           <p>
             No <strong className="text-foreground">Visual Studio Code (VS Code)</strong>, você pode utilizar o servidor MCP do Hub Manager tanto com o <strong className="text-foreground">GitHub Copilot Chat</strong> (no modo <em>Agent</em>) quanto com extensões agênticas como <strong className="text-foreground">Cline</strong>, <strong className="text-foreground">Roo Code</strong> ou <strong className="text-foreground">Continue</strong>.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Método 1: GitHub Copilot Chat (Arquivo .vscode/mcp.json)</span>
               <p className="mb-2">
@@ -882,7 +882,7 @@ export function getFaqList({
             <div className="pt-2 border-t border-border/50">
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Como acionar no GitHub Copilot Chat do VS Code:</span>
               <ol className="list-decimal pl-4 space-y-1 text-[11px]">
-                <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Ctrl+Alt+I</kbd>).</li>
+                <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Ctrl+Alt+I</kbd>).</li>
                 <li>Selecione o modo <strong className="text-foreground">Agent</strong> (ou digite <code className="font-mono text-primary">@agent</code> no campo de mensagem).</li>
                 <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 166 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
                 <li>Envie sua solicitação diretamente (ex.: <em>"Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."</em>).</li>
@@ -921,7 +921,7 @@ export function getFaqList({
           <p>
             Com o MCP conectado no IntelliJ IDEA, VS Code (Copilot/Cline) ou Claude Code, você pode solicitar o ciclo completo de build Maven e publicação de features OSGi no Apache Karaf em uma única frase em linguagem natural.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">Exemplo de Prompt Recomendado (Testado e Aprovado):</span>
               <div className="flex items-center justify-between p-2.5 rounded-lg bg-primary/10 border border-primary/30 text-foreground font-medium text-xs">
@@ -979,7 +979,7 @@ export function getFaqList({
           <p>
             A <strong className="text-foreground">Central de Backup &amp; Restauração</strong> (aba Banco de Dados) suporta os utilitários nativos de exportação do Oracle, PostgreSQL e MySQL, além de um modo flexível de <strong className="text-foreground">Comando Personalizado</strong>.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Destaques Oracle:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -1003,7 +1003,7 @@ export function getFaqList({
           <p>
             Clique numa tabela na barra lateral do Database Studio para abrir um <code className="font-mono text-primary">SELECT * FROM</code> simples — quando o resultado vem exatamente desse tipo de consulta (uma única tabela, sem JOIN/agregação), a grade de resultados exibe o selo <strong className="text-foreground">"Editável"</strong> e passa a funcionar como uma planilha:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <ul className="list-disc pl-4 space-y-1">
               <li><strong className="text-foreground">Nova linha:</strong> botão na barra da grade abre uma linha em branco no topo — preencha e confirme (✓) para inserir.</li>
               <li><strong className="text-foreground">Editar célula:</strong> duplo-clique no valor, digite o novo valor e pressione Enter (ou clique fora para confirmar). Digite <code className="font-mono text-primary">[NULL]</code> para gravar nulo.</li>
@@ -1026,7 +1026,7 @@ export function getFaqList({
           <p>
             A aba <strong className="text-foreground">Statement Tracer</strong> do Database Studio acompanha a atividade do Oracle consultando <code className="font-mono text-primary">v$session</code> e <code className="font-mono text-primary">v$sql</code> em intervalos. Serve para descobrir que SQL uma rotina ou API rodou sem precisar ligar trace no servidor.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Passo a passo:</span>
             <ol className="list-decimal pl-4 space-y-1">
               <li>Selecione uma conexão <strong className="text-foreground">Oracle</strong> na barra lateral do Banco de Dados e abra a aba <strong className="text-foreground">Statement Tracer</strong>.</li>
@@ -1051,7 +1051,7 @@ export function getFaqList({
           <p>
             O <strong className="text-foreground">Statement Tracer</strong> do Hub Manager agora captura automaticamente os valores dos parâmetros passados nas instruções SQL (<code className="font-mono text-primary">v$sql_bind_capture</code>), eliminando a necessidade de habilitar <code className="font-mono text-primary font-bold">log:set trace root</code> no Karaf ou depender de utilitários externos como o <em>Statement Tracer for Oracle (OraTracer.exe)</em>.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2.5 shadow-xs">
             <div>
               <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary mb-1">
                 Por que evitar o "log:set trace root" no Karaf?
@@ -1085,7 +1085,7 @@ export function getFaqList({
           <p>
             O Hub Manager traz um receptor <strong className="text-foreground">OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> embutido, que escuta por padrão na porta <code className="font-mono text-primary font-semibold">4318</code>. Os spans recebidos alimentam o <strong className="text-foreground">Dashboard</strong> (vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries lentas) e o <strong className="text-foreground">Traces Explorer</strong> (waterfall, atributos, SQL, stacktrace e divisão do tempo entre banco, chamadas externas e aplicação). Métricas e logs OTLP não são coletados, só traces.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Karaf iniciado pelo Cockpit:</span>
             <p>
               Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf e ative a opção <strong className="text-foreground">"Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf"</strong> em <strong className="text-foreground">Configurações → Apache Karaf</strong> ou em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong> — desligado por padrão, para não poluir o log do Karaf nem adicionar overhead quando você não estiver inspecionando traces. Com a opção ligada, o agente é anexado e exporta para a porta configurada a cada start pelo Hub Manager. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto na mesma tela.
@@ -1125,7 +1125,7 @@ export function getFaqList({
           <p>
             O <strong className="text-foreground">Traces Explorer</strong> decompõe automaticamente cada requisição em uma régua de tempo visual dividida em 3 camadas semânticas essenciais:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Régua de Tempo Visual (Time Budget):</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -1156,7 +1156,7 @@ export function getFaqList({
           <p>
             Quando o serviço local <strong className="text-foreground">WinThor Start</strong> (<code className="font-mono text-primary">http://localhost:9195</code>) está ativo, o Catálogo de Rotinas abre executáveis (<code className="font-mono text-primary">.EXE</code>, <code className="font-mono text-primary">.PC</code>) por ele, já com contexto autenticado e sem precisar do menu do WinThor aberto. O badge no topo do Catálogo mostra se o serviço está disponível.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <ul className="list-disc pl-4 space-y-1">
               <li>
                 <strong className="text-foreground">Login no WTA:</strong> o Hub Manager se autentica no portal WinThor Anywhere para obter token, matrícula e dados de banco da sessão.
@@ -1185,7 +1185,7 @@ export function getFaqList({
           <p>
             No Windows, o erro <code className="font-mono text-primary font-semibold">spawn EFTYPE</code> (código do sistema <code className="font-mono text-primary">ERROR_BAD_EXE_FORMAT</code>) ocorria quando um processo era invocado via chamada direta da API do sistema sem shell em situações onde o executável exigia elevação UAC (Administrador), continha travas temporárias de antivírus ou quando havia concorrência prematura com o WinThor Start.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Melhorias implementadas:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
@@ -1212,7 +1212,7 @@ export function getFaqList({
           <p>
             Não. Senhas de banco, senha do Karaf, token pessoal do Azure DevOps (PAT), tokens do Confluence/Jira, API keys de provedores de IA e credenciais de webhooks ficam <strong className="text-foreground">criptografados (AES-256-GCM)</strong> no <code className="font-mono text-primary">config.json</code>.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
             <p>
               A chave é gerada na primeira execução e fica no arquivo <code className="font-mono text-primary">.secrets.key</code>, ao lado do <code className="font-mono text-primary">config.json</code>. <strong className="text-foreground">Copiar o config.json para outra máquina sem essa chave faz os segredos serem perdidos</strong>: será preciso digitá-los de novo.
             </p>
@@ -1233,7 +1233,7 @@ export function getFaqList({
           <p>
             Para comandos Karaf (<code className="font-mono text-primary font-semibold">feature:repo-add</code>, <code className="font-mono text-primary font-semibold">feature:install</code>, <code className="font-mono text-primary font-semibold">bundle:*</code>), o Hub Manager valida previamente se o contêiner OSGi está rodando e escutando na porta SSH (padrão <code className="font-mono text-primary font-semibold">8101</code>).
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
             <p>
               O script oficial <code className="font-mono text-primary">client.bat</code> do Windows frequentemente retorna código de saída <code className="font-mono text-primary">0</code> mesmo ao exibir a mensagem de erro <code className="font-mono text-primary">"Failed to get the session."</code> quando o Karaf não está ativo.
             </p>
@@ -1257,7 +1257,7 @@ export function getFaqList({
           <p>
             O Hub Manager traz um modal interativo de <strong className="text-foreground">Novidades da Versão</strong> que é exibido automaticamente após uma atualização e pode ser reaberto a qualquer momento.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como acessar e navegar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -1290,7 +1290,7 @@ export function getFaqList({
           <p>
             O módulo <strong className="text-foreground">Qualidade &amp; Homologação (QA Hub)</strong> marca a expansão do Hub Manager além do desenvolvimento puro, fornecendo um cockpit dedicado para analistas de qualidade (QA) e donos de produto (PO).
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Principais recursos da 1ª etapa:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -1320,7 +1320,7 @@ export function getFaqList({
           <p>
             As fontes externas de casos de teste, planos de homologação e defeitos são configuradas na aba <strong className="text-foreground">Qualidade &amp; QA</strong> das Configurações do Cockpit.
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como configurar e conectar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -1353,7 +1353,7 @@ export function getFaqList({
           <p>
             O gerenciador de <strong className="text-foreground">Containers (Docker)</strong> permite agrupar múltiplos containers em conjuntos nomeados (ex.: <em>"Stack Backend"</em>, <em>"Bancos de Dados"</em>, <em>"Serviços de Mensageria"</em>) para inicialização ou parada sequencial com apenas um clique:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como criar e gerenciar grupos:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -1383,7 +1383,7 @@ export function getFaqList({
           <p>
             O <strong className="text-foreground">Validador Regressivo (QA Studio)</strong> automatiza a conferência de dados gravados nas tabelas do WinThor após transações via PDV ou APIs de integração:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Fluxo de Trabalho:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -1419,7 +1419,7 @@ export function getFaqList({
           <p>
             Os <strong className="text-foreground">Templates de Regressivo</strong> são especificações declarativas em formato <code className="font-mono text-primary font-bold">.json</code> que automatizam a conferência de dados gravados nas tabelas do WinThor após rotinas, operações de PDV ou integrações via API:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Estrutura &amp; Uso Prático:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -1461,7 +1461,7 @@ export function getFaqList({
           <p>
             O <strong className="text-foreground">Hub Manager</strong> integra com o seu projeto de testes Cypress (pasta definida em <strong className="text-foreground">Configurações &gt; Diretórios &amp; IDE</strong> ou detectada automaticamente: <code className="font-mono text-primary font-bold">taut*</code>, <code className="font-mono text-primary font-bold">cypress-tests</code>, <code className="font-mono text-primary font-bold">cypress</code> ou <code className="font-mono text-primary font-bold">e2e-tests</code>) na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Recursos Integrados:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
@@ -1494,14 +1494,14 @@ export function getFaqList({
           <p>
             O Hub Manager permite importar aliases e configurações de rede diretamente de um arquivo <strong className="text-foreground font-mono">tnsnames.ora</strong> para acelerar a criação de conexões Oracle:
           </p>
-          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-sm">
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Como configurar e usar:</span>
             <ol className="list-decimal pl-4 space-y-1.5">
               <li>
                 <strong className="text-foreground">Configurações do App:</strong> Em <strong>Configurações &gt; Backup &amp; Banco de Dados</strong>, preencha o campo <em>"Arquivo de Configuração (tnsnames.ora)"</em> com o caminho do arquivo (ex.: <code className="font-mono text-primary font-semibold">C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora</code>).
               </li>
               <li>
-                <strong className="text-foreground">Modal Nova Conexão:</strong> No DB Studio (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-xs">Alt+2</kbd>), clique em <strong>+ Nova Conexão</strong> e selecione o tipo <strong>Oracle</strong>.
+                <strong className="text-foreground">Modal Nova Conexão:</strong> No DB Studio (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Alt+2</kbd>), clique em <strong>+ Nova Conexão</strong> e selecione o tipo <strong>Oracle</strong>.
               </li>
               <li>
                 <strong className="text-foreground">Seletor TNS Integrado:</strong> O painel <em>"Buscar no tnsnames.ora"</em> lista todas as entradas encontradas no arquivo com Host, Porta e Service Name/SID. Basta selecionar um alias no dropdown para preencher o formulário na hora.

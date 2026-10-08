@@ -109,7 +109,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
           <select
             value={method}
             onChange={(e) => setMethod(e.target.value as 'GET' | 'POST')}
-            className="bg-card border border-border rounded px-2.5 py-1.5 font-mono text-foreground font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer shrink-0"
+            className="bg-card border border-border rounded px-2.5 py-1.5 font-mono text-foreground font-semibold focus:outline-hidden focus:ring-1 focus:ring-primary cursor-pointer shrink-0"
           >
             <option value="GET">GET</option>
             <option value="POST">POST</option>
@@ -119,7 +119,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="http://localhost:8080/api/v1/pedidos/12345"
-            className="flex-1 bg-card border border-border rounded px-3 py-1.5 font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="flex-1 bg-card border border-border rounded px-3 py-1.5 font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             autoFocus
           />
           <button
@@ -148,7 +148,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
           value={jsonPath}
           onChange={(e) => setJsonPath(e.target.value)}
           placeholder="Ex: data.pedido ou response.items[0]"
-          className="w-full bg-card border border-border rounded px-3 py-1.5 font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border rounded px-3 py-1.5 font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
 
@@ -163,7 +163,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
           onChange={(e) => setHeadersText(e.target.value)}
           rows={3}
           placeholder='{"Authorization": "Bearer ...", "x-api-key": "..."}'
-          className="w-full bg-card border border-border rounded p-2.5 font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary leading-tight resize-none"
+          className="w-full bg-card border border-border rounded p-2.5 font-mono text-[11px] text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-tight resize-none"
         />
       </div>
 
@@ -178,7 +178,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
             onChange={(e) => setBodyText(e.target.value)}
             rows={3}
             placeholder='{"codFilial": "1", "data": "2026-10-02"}'
-            className="w-full bg-card border border-border rounded p-2.5 font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary leading-tight resize-none"
+            className="w-full bg-card border border-border rounded p-2.5 font-mono text-[11px] text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-tight resize-none"
           />
         </div>
       )}

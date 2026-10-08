@@ -54,7 +54,7 @@ export const BindVariablesModal: React.FC<BindVariablesModalProps> = ({
 
         {/* Lista de Campos de Parâmetros */}
         <form onSubmit={onConfirmExecute} className="space-y-4">
-          <div className="max-h-80 overflow-y-auto pr-1 space-y-2 [scrollbar-width:thin]">
+          <div className="max-h-80 overflow-y-auto pr-1 space-y-2 scrollbar-thin">
             {!hasBinds ? (
               <BindEmptyState />
             ) : (

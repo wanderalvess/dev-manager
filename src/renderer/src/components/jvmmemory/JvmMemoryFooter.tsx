@@ -38,7 +38,7 @@ export const JvmMemoryFooter: React.FC<JvmMemoryFooterProps> = ({
         <select
           value={refreshIntervalSec}
           onChange={(e) => onRefreshIntervalChange(Number(e.target.value))}
-          className="bg-card border border-border rounded px-2 py-0.5 text-xs text-foreground font-mono focus:outline-none"
+          className="bg-card border border-border rounded px-2 py-0.5 text-xs text-foreground font-mono focus:outline-hidden"
         >
           <option value={2}>2s</option>
           <option value={3}>3s</option>

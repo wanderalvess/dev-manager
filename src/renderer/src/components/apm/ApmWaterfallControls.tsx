@@ -20,15 +20,15 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
           type="button"
           onClick={() => onTierFilterChange('ALL')}
           className={`px-2 py-0.5 rounded text-2xs font-semibold cursor-pointer transition ${
-            tierFilter === 'ALL' ? 'bg-primary text-primary-foreground shadow-xs' : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            tierFilter === 'ALL' ? 'bg-primary text-primary-foreground shadow-2xs' : 'bg-card border border-border text-muted-foreground hover:text-foreground'
           }`}
         >
           Todas ({details?.spans.length || 0})
         </button>
         {([
-          { tier: 'http', label: '🌐 HTTP', count: timeBudget?.httpSpansCount, duration: timeBudget?.httpMs, active: 'bg-sky-500 text-white shadow-xs', inactive: 'bg-sky-500/10 border border-sky-500/30 text-sky-700 dark:text-sky-400 hover:bg-sky-500/20' },
-          { tier: 'java', label: '☕ Java', count: timeBudget?.javaSpansCount, duration: timeBudget?.javaMs, active: 'bg-purple-600 text-white shadow-xs', inactive: 'bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400 hover:bg-purple-500/20' },
-          { tier: 'jdbc', label: '🗄️ JDBC', count: timeBudget?.jdbcSpansCount, duration: timeBudget?.jdbcMs, active: 'bg-amber-500 text-white shadow-xs', inactive: 'bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20' }
+          { tier: 'http', label: '🌐 HTTP', count: timeBudget?.httpSpansCount, duration: timeBudget?.httpMs, active: 'bg-sky-500 text-white shadow-2xs', inactive: 'bg-sky-500/10 border border-sky-500/30 text-sky-700 dark:text-sky-400 hover:bg-sky-500/20' },
+          { tier: 'java', label: '☕ Java', count: timeBudget?.javaSpansCount, duration: timeBudget?.javaMs, active: 'bg-purple-600 text-white shadow-2xs', inactive: 'bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400 hover:bg-purple-500/20' },
+          { tier: 'jdbc', label: '🗄️ JDBC', count: timeBudget?.jdbcSpansCount, duration: timeBudget?.jdbcMs, active: 'bg-amber-500 text-white shadow-2xs', inactive: 'bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20' }
         ] as const).map(({ tier, label, count, duration, active, inactive }) => (
           <button
             key={tier}
@@ -56,7 +56,7 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
         <span>{Math.round((details?.summary.durationMs || 100) * 0.75)}ms</span>
         <span className="font-bold text-foreground">{details?.summary.durationMs}ms</span>
       </div>
-      <div className="w-full h-2 rounded-full bg-muted/70 overflow-hidden flex shadow-xs">
+      <div className="w-full h-2 rounded-full bg-muted/70 overflow-hidden flex shadow-2xs">
         {timeBudget && <>
           {timeBudget.httpPct > 0 && <div style={{ width: `${timeBudget.httpPct}%` }} className="bg-sky-500 h-full" title={`Requisição HTTP: ${timeBudget.httpMs}ms (${timeBudget.httpPct}%)`} />}
           {timeBudget.javaPct > 0 && <div style={{ width: `${timeBudget.javaPct}%` }} className="bg-purple-500 h-full" title={`Processamento Java: ${timeBudget.javaMs}ms (${timeBudget.javaPct}%)`} />}

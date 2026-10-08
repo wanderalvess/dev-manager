@@ -93,7 +93,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
             value={customBackupCommand}
             onChange={(e) => setCustomBackupCommand(e.target.value)}
             placeholder='Ex: exp {user}/{password}@{connectString} file="{filePath}" log="{logPath}" owner={user}'
-            className="w-full bg-slate-950 text-slate-100 p-3.5 font-mono text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-sky-500/50 resize-y min-h-[85px] border-b border-slate-800/80"
+            className="w-full bg-slate-950 text-slate-100 p-3.5 font-mono text-xs leading-relaxed focus:outline-hidden focus:ring-1 focus:ring-sky-500/50 resize-y min-h-[85px] border-b border-slate-800/80"
           />
         </div>
 

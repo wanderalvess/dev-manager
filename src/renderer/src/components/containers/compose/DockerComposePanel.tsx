@@ -62,7 +62,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
 }) => {
   return (
     <div
-      className="mx-4 mt-3 p-3 bg-card/60 backdrop-blur border border-border/70 rounded-xl shrink-0 space-y-2.5 shadow-2xs"
+      className="mx-4 mt-3 p-3 bg-card/60 backdrop-blur-sm border border-border/70 rounded-xl shrink-0 space-y-2.5 shadow-2xs"
       data-tour="compose-panel"
     >
       <div className="flex items-center justify-between">
@@ -85,7 +85,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
                   if (e.target.value) setComposeFilePath(e.target.value);
                 }}
                 value=""
-                className="bg-muted/70 text-foreground text-2xs border border-border/70 rounded px-1.5 py-0.5 cursor-pointer focus:outline-none max-w-[140px] truncate"
+                className="bg-muted/70 text-foreground text-2xs border border-border/70 rounded px-1.5 py-0.5 cursor-pointer focus:outline-hidden max-w-[140px] truncate"
               >
                 <option value="">Selecionar recente...</option>
                 {recentComposeFiles.map((file, idx) => (
@@ -114,7 +114,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
             value={composeFilePath}
             onChange={(e) => setComposeFilePath(e.target.value)}
             placeholder="Caminho do docker-compose.yml"
-            className="flex-1 min-w-[220px] bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs placeholder:text-muted-foreground/60"
+            className="flex-1 min-w-[220px] bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary shadow-2xs placeholder:text-muted-foreground/60"
           />
           <button
             onClick={onSelectComposeFile}
@@ -127,7 +127,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
             value={composeProfile}
             onChange={(e) => setComposeProfile(e.target.value)}
             placeholder="Profile (opcional)"
-            className="w-32 bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs placeholder:text-muted-foreground/60"
+            className="w-32 bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary shadow-2xs placeholder:text-muted-foreground/60"
           />
 
           <label className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer select-none px-1">

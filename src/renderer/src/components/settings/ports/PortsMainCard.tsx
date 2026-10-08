@@ -38,7 +38,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="number"
             value={settings.webPort ?? 8889}
             onChange={(e) => setSettings({ ...settings, webPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="8889"
           />
         </div>
@@ -49,7 +49,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="text"
             value={webPathToInput(settings.webPath)}
             onChange={(e) => setSettings({ ...settings, webPath: normalizeWebPath(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="web"
           />
         </div>
@@ -74,7 +74,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="number"
             value={settings.karafSshPort ?? 8101}
             onChange={(e) => setSettings({ ...settings, karafSshPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="8101"
           />
         </div>
@@ -99,7 +99,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="number"
             value={settings.karafDebugPort ?? 5005}
             onChange={(e) => setSettings({ ...settings, karafDebugPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="5005"
           />
         </div>

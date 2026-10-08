@@ -20,7 +20,7 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
   onHoverBucket
 }) => {
   return (
-    <div className="p-4 rounded-xl bg-card border border-border shadow-xs flex flex-col gap-3">
+    <div className="p-4 rounded-xl bg-card border border-border shadow-2xs flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />

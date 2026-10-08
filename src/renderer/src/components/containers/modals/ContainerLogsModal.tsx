@@ -9,6 +9,7 @@ import {
   RotateCw
 } from 'lucide-react';
 import type { DockerContainerInfo } from '../../../../../shared/types';
+import { Modal } from '../../ui/Modal';
 
 export interface ContainerLogsModalProps {
   container: DockerContainerInfo;
@@ -58,8 +59,13 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
   }, [logs, logSearchQuery]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in"
+      closeOnBackdrop={false}
+    >
         {/* Header do Modal */}
         <div className="px-4 py-3 bg-card border-b border-border/80 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -84,7 +90,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
                 value={logSearchQuery}
                 onChange={(e) => setLogSearchQuery(e.target.value)}
                 placeholder="Filtrar linhas..."
-                className="bg-muted/70 border border-border/80 rounded-lg pl-6 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary w-28 md:w-36 font-mono text-2xs"
+                className="bg-muted/70 border border-border/80 rounded-lg pl-6 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary w-28 md:w-36 font-mono text-2xs"
               />
             </div>
 
@@ -135,7 +141,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
             <select
               value={logLines}
               onChange={(e) => onSetLogLines(Number(e.target.value))}
-              className="bg-muted/70 border border-border/80 rounded-lg px-2 py-1 text-xs text-foreground focus:outline-none font-medium cursor-pointer"
+              className="bg-muted/70 border border-border/80 rounded-lg px-2 py-1 text-xs text-foreground focus:outline-hidden font-medium cursor-pointer"
             >
               <option value={100}>100 linhas</option>
               <option value={200}>200 linhas</option>
@@ -171,7 +177,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
 
         {/* Conteúdo dos Logs */}
         <div
-          className={`flex-1 bg-[#090D14] p-4 overflow-auto font-mono text-[11px] text-zinc-200 select-text leading-relaxed [scrollbar-width:thin] ${
+          className={`flex-1 bg-[#090D14] p-4 overflow-auto font-mono text-[11px] text-zinc-200 select-text leading-relaxed scrollbar-thin ${
             isLogWrap ? 'whitespace-pre-wrap' : 'whitespace-pre overflow-x-auto'
           }`}
         >
@@ -184,7 +190,6 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
             filteredLogs
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

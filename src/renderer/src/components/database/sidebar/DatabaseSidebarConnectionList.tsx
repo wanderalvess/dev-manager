@@ -41,7 +41,7 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
             onClick={() => setActiveConnectionId(conn.id)}
             className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition text-xs border ${
               isActive
-                ? 'bg-primary/15 border-primary/40 text-foreground font-semibold shadow-xs'
+                ? 'bg-primary/15 border-primary/40 text-foreground font-semibold shadow-2xs'
                 : 'bg-card/40 border-transparent hover:bg-card hover:border-border text-muted-foreground'
             }`}
           >

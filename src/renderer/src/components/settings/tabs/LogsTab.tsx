@@ -54,7 +54,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
             <button
               type="button"
               onClick={handleAddLogSource}
-              className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-sm"
+              className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-colors shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Adicionar Fonte de Log</span>

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { DockerContainerInspect } from '../../../../../shared/types';
 import { flattenPortBindings } from '../../../utils/dockerContainerUtils';
+import { Modal } from '../../ui/Modal';
 
 export interface ContainerInspectModalProps {
   inspectingContainer: DockerContainerInspect | null;
@@ -31,8 +32,13 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
   if (!inspectingContainer) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
+      closeOnBackdrop={false}
+    >
         {/* Header do Modal */}
         <div className="px-5 py-3.5 border-b border-border/80 flex items-center justify-between bg-card/60 shrink-0">
           <div className="flex items-center space-x-3">
@@ -110,7 +116,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
         </div>
 
         {/* Conteúdo da Aba */}
-        <div className="flex-1 overflow-auto p-5 space-y-4 [scrollbar-width:thin]">
+        <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
           {/* TAB 1: GERAL */}
           {inspectTab === 'general' && (
             <div className="space-y-3">
@@ -236,11 +242,11 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                   value={envSearchFilter}
                   onChange={(e) => setEnvSearchFilter(e.target.value)}
                   placeholder="Filtrar variáveis de ambiente..."
-                  className="w-full bg-background border border-border/80 rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+                  className="w-full bg-background border border-border/80 rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
                 />
               </div>
 
-              <div className="space-y-1.5 max-h-96 overflow-auto [scrollbar-width:thin]">
+              <div className="space-y-1.5 max-h-96 overflow-auto scrollbar-thin">
                 {inspectingContainer.env
                   .filter((e) => e.toLowerCase().includes(envSearchFilter.toLowerCase()))
                   .map((envStr, idx) => {
@@ -285,7 +291,6 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
             Fechar
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

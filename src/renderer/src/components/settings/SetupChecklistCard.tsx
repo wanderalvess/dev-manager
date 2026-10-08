@@ -14,7 +14,7 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({
   if (pendingCount <= 0) return null;
 
   return (
-    <div className="px-4 py-3 rounded-xl bg-card border border-border/80 shadow-sm shrink-0 space-y-2">
+    <div className="px-4 py-3 rounded-xl bg-card border border-border/80 shadow-xs shrink-0 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
           <ListChecks className="w-3.5 h-3.5 text-primary" />

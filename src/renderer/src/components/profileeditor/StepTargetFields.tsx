@@ -21,7 +21,7 @@ export const StepTargetFields: React.FC<StepTargetFieldsProps> = ({ step, onUpda
             onUpdate({ port: e.target.value ? parseInt(e.target.value, 10) : undefined })
           }
           placeholder="Ex: 8080, 3000..."
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     )}
@@ -36,7 +36,7 @@ export const StepTargetFields: React.FC<StepTargetFieldsProps> = ({ step, onUpda
           value={step.targetName || ''}
           onChange={(e) => onUpdate({ targetName: e.target.value })}
           placeholder="Ex: CoreService.API, AppServer, Spooler... (se vazio, usa o Nome da Etapa)"
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
         />
         <p className="text-2xs text-muted-foreground mt-1">
           Identificador do serviço registrado no Windows (como visto em services.msc ou net start).
@@ -54,7 +54,7 @@ export const StepTargetFields: React.FC<StepTargetFieldsProps> = ({ step, onUpda
           value={step.targetName || ''}
           onChange={(e) => onUpdate({ targetName: e.target.value })}
           placeholder="Ex: pdvsyncclientservicocontrole.exe, node.exe... (se vazio, usa o Nome da Etapa)"
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
         />
         <p className="text-2xs text-muted-foreground mt-1">
           Nome do processo que será encerrado via taskkill /F /IM.
@@ -72,7 +72,7 @@ export const StepTargetFields: React.FC<StepTargetFieldsProps> = ({ step, onUpda
           value={step.browserUrl || ''}
           onChange={(e) => onUpdate({ browserUrl: e.target.value })}
           placeholder="Ex: http://localhost:3000 ou http://localhost:8889/web"
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     )}

@@ -84,7 +84,7 @@ export const ResultsGridRow: React.FC<ResultsGridRowProps> = ({
                 }
               }}
               title={`Valor especial "${NULL_SIGIL}" grava NULL na coluna`}
-              className="w-full px-1.5 py-0.5 text-xs bg-background border border-sky-500 rounded font-mono focus:outline-none"
+              className="w-full px-1.5 py-0.5 text-xs bg-background border border-sky-500 rounded font-mono focus:outline-hidden"
             />
           </td>
         );

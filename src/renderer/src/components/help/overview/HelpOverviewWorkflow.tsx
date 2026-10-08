@@ -20,7 +20,7 @@ export const HelpOverviewWorkflow: React.FC<HelpOverviewWorkflowProps> = ({ debu
       {HELP_OVERVIEW_STEPS.map((step) => (
         <div
           key={step.number}
-          className={`p-4 rounded-xl bg-card/60 border ${step.cardClass} transition-all duration-200 flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md`}
+          className={`p-4 rounded-xl bg-card/60 border ${step.cardClass} transition-all duration-200 flex flex-col justify-between space-y-3 group shadow-xs hover:shadow-md`}
         >
           <div className="space-y-2">
             <div className="flex items-center justify-between">

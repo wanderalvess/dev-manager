@@ -29,7 +29,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
   return (
     <div className="flex-1 flex flex-col p-6 items-center justify-center select-text bg-background">
-      <div className="w-full max-w-xl flex flex-col gap-4 p-5 rounded-xl border border-border bg-card shadow-xs">
+      <div className="w-full max-w-xl flex flex-col gap-4 p-5 rounded-xl border border-border bg-card shadow-2xs">
         {/* Header de Instrumento */}
         <div className="flex items-center justify-between border-b border-border/80 pb-3">
           <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
             <button
               type="button"
               onClick={onGenerateDemo}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               Simular Tráfego de Demonstração

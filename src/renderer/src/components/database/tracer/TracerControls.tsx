@@ -60,7 +60,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
       onChange={(e) => onIntervalChange(Number(e.target.value))}
       disabled={state.isCapturing}
       title="Intervalo entre consultas ao Oracle (v$session/v$sql são views leves, mas quanto menor o intervalo, mais carga)"
-      className="px-2 py-1.5 bg-card border border-border/70 rounded-lg text-xs disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-primary"
+      className="px-2 py-1.5 bg-card border border-border/70 rounded-lg text-xs disabled:opacity-50 focus:outline-hidden focus:ring-1 focus:ring-primary"
     >
       {INTERVAL_OPTIONS.map((opt) => (
         <option key={opt.value} value={opt.value}>
@@ -75,7 +75,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
       onChange={(e) => onSchemaFilterChange(e.target.value)}
       disabled={state.isCapturing}
       placeholder="Filtrar por schema/username..."
-      className="px-2.5 py-1.5 bg-card border border-border/70 rounded-lg text-xs w-48 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-primary"
+      className="px-2.5 py-1.5 bg-card border border-border/70 rounded-lg text-xs w-48 disabled:opacity-50 focus:outline-hidden focus:ring-1 focus:ring-primary"
     />
     <input
       type="text"
@@ -83,7 +83,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
       onChange={(e) => onTextFilterChange(e.target.value)}
       disabled={state.isCapturing}
       placeholder="Filtrar por texto na SQL..."
-      className="px-2.5 py-1.5 bg-card border border-border/70 rounded-lg text-xs w-52 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-primary"
+      className="px-2.5 py-1.5 bg-card border border-border/70 rounded-lg text-xs w-52 disabled:opacity-50 focus:outline-hidden focus:ring-1 focus:ring-primary"
     />
 
     <button

@@ -62,7 +62,7 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
           type="button"
           onClick={() => { setActivePreset('ALL'); setLatencyBracket('ALL'); }}
           className={`h-6 px-2 rounded border text-[11px] font-medium cursor-pointer transition ${
-            activePreset === 'ALL' && latencyBracket === 'ALL' ? 'bg-primary text-primary-foreground border-primary font-semibold shadow-xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
+            activePreset === 'ALL' && latencyBracket === 'ALL' ? 'bg-primary text-primary-foreground border-primary font-semibold shadow-2xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
           }`}
         >
           Todos ({rawTraceCount})
@@ -75,7 +75,7 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
             title={preset.title}
             className={`h-6 px-2 rounded border text-[11px] font-medium cursor-pointer transition ${
               activePreset === preset.value
-                ? `${preset.activeClass} font-semibold shadow-xs`
+                ? `${preset.activeClass} font-semibold shadow-2xs`
                 : `bg-card border-border text-muted-foreground ${preset.hoverClass}`
             }`}
           >
@@ -87,7 +87,7 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
           onClick={() => setSortOrder((previous) => previous === 'time' ? 'duration' : 'time')}
           title={sortOrder === 'time' ? 'Ordenando por horário mais recente. Clique para ordenar pelos mais lentos.' : 'Ordenando por duração (mais lentos primeiro). Clique para ordenar por horário.'}
           className={`h-6 px-2 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition ${
-            sortOrder === 'duration' ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-bold shadow-xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
+            sortOrder === 'duration' ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-bold shadow-2xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
           }`}
         >
           <ArrowUpDown className="w-3 h-3 text-amber-500" />

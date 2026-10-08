@@ -33,4 +33,6 @@ export interface CellContextMenuState {
 export interface EditableTableState {
   name: string;
   columns: TableColumnInfo[];
+  /** Como cada linha é localizada no UPDATE/DELETE: PK, pseudo-coluna ROWID/ctid ou todas as colunas (sem PK). */
+  identity: 'pk' | 'rowid' | 'all-columns';
 }

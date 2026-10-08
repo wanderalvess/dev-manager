@@ -42,7 +42,7 @@ export const ExecutionResultBanner: React.FC<ExecutionResultBannerProps> = ({ re
       <button
         type="button"
         onClick={() => onSync(result.runnerId, result)}
-        className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-100 flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95"
+        className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-100 flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
       >
         <Sparkles className="w-3.5 h-3.5 text-amber-400" />
         <span>Sincronizar Matriz</span>

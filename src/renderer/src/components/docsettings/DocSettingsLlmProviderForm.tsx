@@ -17,7 +17,7 @@ interface DocSettingsLlmProviderFormProps {
 }
 
 const INPUT_BASE =
-  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
+  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary';
 
 export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProps> = ({
   editing,
@@ -35,7 +35,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
   return (
     <form
       onSubmit={onSubmit}
-      className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3.5 shadow-xs animate-in fade-in-0"
+      className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3.5 shadow-2xs animate-in fade-in-0"
     >
       <div className="flex items-center justify-between border-b border-primary/15 pb-2.5">
         <h5 className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -63,7 +63,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
                 onClick={() => onSelectPreset(preset)}
                 className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-primary/15 border-primary text-primary font-bold shadow-xs'
+                    ? 'bg-primary/15 border-primary text-primary font-bold shadow-2xs'
                     : 'bg-background/80 border-border text-foreground hover:border-primary/40'
                 }`}
               >
@@ -109,7 +109,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
               onClick={() => setEditing({ ...editing, model: mod })}
               className={`text-2xs font-mono px-2 py-0.5 rounded-lg border cursor-pointer transition ${
                 editing.model === mod
-                  ? 'bg-primary text-primary-foreground border-primary font-bold shadow-xs'
+                  ? 'bg-primary text-primary-foreground border-primary font-bold shadow-2xs'
                   : 'bg-background hover:bg-muted text-foreground border-border'
               }`}
             >
@@ -151,7 +151,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
               }
               value={editing.apiKey || ''}
               onChange={(e) => setEditing({ ...editing, apiKey: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl pl-3 pr-10 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full bg-background border border-border rounded-xl pl-3 pr-10 py-2 text-xs font-mono text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
             <button
               type="button"
@@ -217,7 +217,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
           value={editing.systemPrompt || ''}
           onChange={(e) => setEditing({ ...editing, systemPrompt: e.target.value })}
           placeholder="Instruções para orientar o assistente sobre o domínio do projeto..."
-          className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
+          className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
         />
       </div>
 
@@ -244,7 +244,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
           </button>
           <button
             type="submit"
-            className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs cursor-pointer transition active:scale-95"
+            className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-2xs cursor-pointer transition active:scale-95"
           >
             Salvar Provedor
           </button>

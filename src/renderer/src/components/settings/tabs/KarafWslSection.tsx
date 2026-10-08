@@ -57,7 +57,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
             onClick={() => setSettings({ ...settings, karafEnvironment: 'local' })}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               !isWsl
-                ? 'bg-card text-foreground shadow-xs border border-border'
+                ? 'bg-card text-foreground shadow-2xs border border-border'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -69,7 +69,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
             onClick={() => setSettings({ ...settings, karafEnvironment: 'wsl' })}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               isWsl
-                ? 'bg-card text-primary shadow-xs border border-border font-bold'
+                ? 'bg-card text-primary shadow-2xs border border-border font-bold'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -100,7 +100,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
               <select id="karaf-wsl-section-1"
                 value={settings.karafWslDistro || ''}
                 onChange={(e) => setSettings({ ...settings, karafWslDistro: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary text-xs"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary text-xs"
               >
                 <option value="">Selecione uma distribuição instalada...</option>
                 {distros.map((d) => (
@@ -114,7 +114,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
                 type="text"
                 value={settings.karafWslDistro || ''}
                 onChange={(e) => setSettings({ ...settings, karafWslDistro: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary text-xs"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary text-xs"
                 placeholder="Ex: Ubuntu, Debian"
               />
             )}

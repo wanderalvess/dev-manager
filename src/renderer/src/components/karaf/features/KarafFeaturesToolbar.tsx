@@ -138,7 +138,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
           onClick={onToggleInstallDrawer}
           className={`px-3 py-1.5 rounded-lg font-mono font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
             isInstallDrawerOpen
-              ? 'bg-indigo-600 text-white shadow-xs'
+              ? 'bg-indigo-600 text-white shadow-2xs'
               : 'bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
           }`}
           title="Abrir painel de instalação de feature"

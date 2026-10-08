@@ -44,7 +44,7 @@ export const BackupTabNav: React.FC<BackupTabNavProps> = ({
             onClick={() => onChange(tab.id)}
             className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               isActive
-                ? 'bg-background text-foreground shadow-xs border border-border/80 font-bold'
+                ? 'bg-background text-foreground shadow-2xs border border-border/80 font-bold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
             }`}
           >

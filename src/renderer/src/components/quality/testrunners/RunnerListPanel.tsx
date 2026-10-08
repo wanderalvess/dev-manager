@@ -48,7 +48,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
       <button
         type="button"
         onClick={onCreate}
-        className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95"
+        className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
       >
         <Plus className="w-3.5 h-3.5" />
         <span>Criar Runner</span>

@@ -36,7 +36,7 @@ interface SettingsPageProps {
   onNavigate?: (tab: string) => void;
 }
 
-const BANNER_BASE = 'px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 shadow-sm shrink-0';
+const BANNER_BASE = 'px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 shadow-xs shrink-0';
 
 /**
  * Orquestra a tela de Configurações: o estado e as regras vivem nos hooks de `hooks/settings`, cada aba fica em

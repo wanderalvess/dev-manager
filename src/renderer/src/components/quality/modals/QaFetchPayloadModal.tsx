@@ -4,6 +4,7 @@ import { QaCorePayloadItem } from '../../../../../shared/types';
 import { showToast } from '../../ToastHost';
 import { QaOraclePayloadTab } from './QaOraclePayloadTab';
 import { QaApiPayloadTab } from './QaApiPayloadTab';
+import { Modal } from '../../ui/Modal';
 
 interface QaFetchPayloadModalProps {
   isOpen: boolean;
@@ -53,8 +54,15 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="flex flex-col w-full max-w-4xl h-[620px] bg-card border border-border rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="flex flex-col w-full max-w-4xl h-[620px] bg-card border border-border rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+      ariaLabel="Obter Payload de Entrada"
+    >
         {/* Cabeçalho com Abas Principais */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/40">
           <div className="flex items-center gap-3">
@@ -67,7 +75,7 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
                 onClick={() => setActiveTab('oracle')}
                 className={`px-3 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'oracle'
-                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -79,7 +87,7 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
                 onClick={() => setActiveTab('api')}
                 className={`px-3 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   activeTab === 'api'
-                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -163,7 +171,6 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

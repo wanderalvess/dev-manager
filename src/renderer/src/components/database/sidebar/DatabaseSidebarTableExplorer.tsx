@@ -71,7 +71,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
             value={objectType}
             onChange={(e) => onObjectTypeChange(e.target.value as ExplorerObjectType)}
             aria-label="Tipo de objeto"
-            className="min-w-0 bg-transparent text-[11px] font-bold text-muted-foreground uppercase focus:outline-none cursor-pointer"
+            className="min-w-0 bg-transparent text-[11px] font-bold text-muted-foreground uppercase focus:outline-hidden cursor-pointer"
           >
             {EXPLORER_TYPE_OPTIONS.map((o) => {
               const n = countOf(o.type);
@@ -103,7 +103,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
             onChange={(e) => setTableFilter(e.target.value)}
             placeholder={`Filtrar ${typeLabel.toLowerCase()}...`}
             aria-label={`Filtrar ${typeLabel.toLowerCase()}`}
-            className="w-full bg-background border border-border/70 rounded-md pl-7 pr-2 py-1 text-xs focus:outline-none focus:border-primary text-foreground"
+            className="w-full bg-background border border-border/70 rounded-md pl-7 pr-2 py-1 text-xs focus:outline-hidden focus:border-primary text-foreground"
           />
         </div>
       </div>

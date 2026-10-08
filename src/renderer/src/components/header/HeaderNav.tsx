@@ -40,7 +40,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 title={`Tema: ${group.title} (Clique para alternar rotinas)`}
                 className={`h-9 px-2 xl:px-2.5 2xl:px-3 rounded-lg text-xs font-semibold transition-all select-none border cursor-pointer flex items-center space-x-1.5 whitespace-nowrap ${
                   isGroupActive
-                    ? 'bg-card text-foreground border-primary/50 shadow-xs'
+                    ? 'bg-card text-foreground border-primary/50 shadow-2xs'
                     : 'bg-card/50 hover:bg-card text-muted-foreground hover:text-foreground border-border/60 hover:border-border'
                 }`}
               >
@@ -84,7 +84,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all cursor-pointer ${
                             isItemActive
-                              ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                              ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
                               : 'hover:bg-muted text-foreground'
                           }`}
                         >
@@ -132,7 +132,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         <button
           type="button"
           onClick={() => setOpenMenu(openMenu === 'compact' ? null : 'compact')}
-          className="h-9 flex items-center space-x-2 px-2.5 sm:px-3 rounded-lg text-xs font-semibold bg-card border border-primary/40 text-foreground shadow-xs cursor-pointer whitespace-nowrap"
+          className="h-9 flex items-center space-x-2 px-2.5 sm:px-3 rounded-lg text-xs font-semibold bg-card border border-primary/40 text-foreground shadow-2xs cursor-pointer whitespace-nowrap"
         >
           <ActiveIcon className="w-3.5 h-3.5 text-primary shrink-0" />
           <span>

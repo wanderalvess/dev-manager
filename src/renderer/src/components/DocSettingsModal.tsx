@@ -18,6 +18,7 @@ import { DocSettingsFooter } from './docsettings/DocSettingsFooter';
 import { DocSettingsFoldersTab } from './docsettings/DocSettingsFoldersTab';
 import { DocSettingsSourcesTab } from './docsettings/DocSettingsSourcesTab';
 import { DocSettingsLlmTab } from './docsettings/DocSettingsLlmTab';
+import { Modal } from './ui/Modal';
 
 interface DocSettingsModalProps {
   isOpen: boolean;
@@ -70,87 +71,92 @@ export const DocSettingsModal: React.FC<DocSettingsModalProps> = (props) => {
   const sourcesCount = confluenceSources.length + jiraSources.length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-0 duration-150">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[86vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
-        <DocSettingsHeader onClose={onClose} />
-        <DocSettingsTabs
-          activeTab={activeTab}
-          onChange={setActiveTab}
-          foldersCount={docFolders.length}
-          sourcesCount={sourcesCount}
-          activeProvider={activeProvider}
-        />
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[86vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
+      <DocSettingsHeader onClose={onClose} />
+      <DocSettingsTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        foldersCount={docFolders.length}
+        sourcesCount={sourcesCount}
+        activeProvider={activeProvider}
+      />
 
-        <div className="p-5 overflow-y-auto space-y-4">
-          {activeTab === 'folders' && (
-            <DocSettingsFoldersTab
-              status={props.status}
-              onOpenModelHelp={props.onOpenModelHelp}
-              docFolders={docFolders}
-              indexProjectsDocs={props.indexProjectsDocs}
-              autoReindexOnChange={props.autoReindexOnChange}
-              isAddingFolder={props.isAddingFolder ?? false}
-              copiedFolderPath={folderActions.copiedFolderPath}
-              onToggleIndexProjects={props.onToggleIndexProjects}
-              onToggleAutoReindex={props.onToggleAutoReindex}
-              onAddFolder={props.onAddFolder}
-              onRemoveFolder={props.onRemoveFolder}
-              onCopyPath={folderActions.handleCopyFolderPath}
-              onOpenInExplorer={folderActions.handleOpenFolderInExplorer}
-            />
-          )}
+      <div className="p-5 overflow-y-auto space-y-4">
+        {activeTab === 'folders' && (
+          <DocSettingsFoldersTab
+            status={props.status}
+            onOpenModelHelp={props.onOpenModelHelp}
+            docFolders={docFolders}
+            indexProjectsDocs={props.indexProjectsDocs}
+            autoReindexOnChange={props.autoReindexOnChange}
+            isAddingFolder={props.isAddingFolder ?? false}
+            copiedFolderPath={folderActions.copiedFolderPath}
+            onToggleIndexProjects={props.onToggleIndexProjects}
+            onToggleAutoReindex={props.onToggleAutoReindex}
+            onAddFolder={props.onAddFolder}
+            onRemoveFolder={props.onRemoveFolder}
+            onCopyPath={folderActions.handleCopyFolderPath}
+            onOpenInExplorer={folderActions.handleOpenFolderInExplorer}
+          />
+        )}
 
-          {activeTab === 'sources' && (
-            <DocSettingsSourcesTab
-              confluenceSources={confluenceSources}
-              editingConfluenceSource={atlassian.editingConfluenceSource}
-              setEditingConfluenceSource={atlassian.setEditingConfluenceSource}
-              isTestingConfluenceId={atlassian.isTestingConfluenceId}
-              confluenceTestResults={atlassian.confluenceTestResults}
-              onSubmitConfluence={atlassian.handleSaveConfluence}
-              onTestConfluence={atlassian.handleTestConfluence}
-              onDeleteConfluenceSource={props.onDeleteConfluenceSource}
-              onToggleConfluenceEnabled={props.onToggleConfluenceEnabled}
-              jiraSources={jiraSources}
-              editingJiraSource={atlassian.editingJiraSource}
-              setEditingJiraSource={atlassian.setEditingJiraSource}
-              isTestingJiraId={atlassian.isTestingJiraId}
-              jiraTestResults={atlassian.jiraTestResults}
-              onSubmitJira={atlassian.handleSaveJira}
-              onTestJira={atlassian.handleTestJira}
-              onDeleteJiraSource={props.onDeleteJiraSource}
-              onToggleJiraEnabled={props.onToggleJiraEnabled}
-            />
-          )}
+        {activeTab === 'sources' && (
+          <DocSettingsSourcesTab
+            confluenceSources={confluenceSources}
+            editingConfluenceSource={atlassian.editingConfluenceSource}
+            setEditingConfluenceSource={atlassian.setEditingConfluenceSource}
+            isTestingConfluenceId={atlassian.isTestingConfluenceId}
+            confluenceTestResults={atlassian.confluenceTestResults}
+            onSubmitConfluence={atlassian.handleSaveConfluence}
+            onTestConfluence={atlassian.handleTestConfluence}
+            onDeleteConfluenceSource={props.onDeleteConfluenceSource}
+            onToggleConfluenceEnabled={props.onToggleConfluenceEnabled}
+            jiraSources={jiraSources}
+            editingJiraSource={atlassian.editingJiraSource}
+            setEditingJiraSource={atlassian.setEditingJiraSource}
+            isTestingJiraId={atlassian.isTestingJiraId}
+            jiraTestResults={atlassian.jiraTestResults}
+            onSubmitJira={atlassian.handleSaveJira}
+            onTestJira={atlassian.handleTestJira}
+            onDeleteJiraSource={props.onDeleteJiraSource}
+            onToggleJiraEnabled={props.onToggleJiraEnabled}
+          />
+        )}
 
-          {activeTab === 'llm' && (
-            <DocSettingsLlmTab
-              llmProviders={llmProviders}
-              activeLlmProviderId={activeLlmProviderId}
-              editingLlmProvider={llm.editingLlmProvider}
-              setEditingLlmProvider={llm.setEditingLlmProvider}
-              showApiKey={llm.showApiKey}
-              setShowApiKey={llm.setShowApiKey}
-              isTestingLlm={llm.isTestingLlm}
-              llmTestResult={llm.llmTestResult}
-              llmSaveSuccess={llm.llmSaveSuccess}
-              onStartNew={llm.handleStartNewLlmProvider}
-              onSelectPreset={llm.handleSelectPreset}
-              onSubmit={llm.handleSaveLlm}
-              onTest={llm.handleTestLlm}
-              onDeleteLlmProvider={props.onDeleteLlmProvider}
-              onSetActiveLlmProvider={props.onSetActiveLlmProvider}
-            />
-          )}
-        </div>
-
-        <DocSettingsFooter
-          onClose={onClose}
-          foldersCount={docFolders.length}
-          sourcesCount={sourcesCount}
-          activeProvider={activeProvider}
-        />
+        {activeTab === 'llm' && (
+          <DocSettingsLlmTab
+            llmProviders={llmProviders}
+            activeLlmProviderId={activeLlmProviderId}
+            editingLlmProvider={llm.editingLlmProvider}
+            setEditingLlmProvider={llm.setEditingLlmProvider}
+            showApiKey={llm.showApiKey}
+            setShowApiKey={llm.setShowApiKey}
+            isTestingLlm={llm.isTestingLlm}
+            llmTestResult={llm.llmTestResult}
+            llmSaveSuccess={llm.llmSaveSuccess}
+            onStartNew={llm.handleStartNewLlmProvider}
+            onSelectPreset={llm.handleSelectPreset}
+            onSubmit={llm.handleSaveLlm}
+            onTest={llm.handleTestLlm}
+            onDeleteLlmProvider={props.onDeleteLlmProvider}
+            onSetActiveLlmProvider={props.onSetActiveLlmProvider}
+          />
+        )}
       </div>
-    </div>
+
+      <DocSettingsFooter
+        onClose={onClose}
+        foldersCount={docFolders.length}
+        sourcesCount={sourcesCount}
+        activeProvider={activeProvider}
+      />
+    </Modal>
   );
 };

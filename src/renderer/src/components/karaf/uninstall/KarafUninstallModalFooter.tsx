@@ -27,7 +27,7 @@ export const KarafUninstallModalFooter: React.FC<KarafUninstallModalFooterProps>
       type="button"
       onClick={onConfirm}
       disabled={confirmDisabled}
-      className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-75 disabled:cursor-wait rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+      className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-75 disabled:cursor-wait rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
     >
       {isUninstalling ? (
         <>

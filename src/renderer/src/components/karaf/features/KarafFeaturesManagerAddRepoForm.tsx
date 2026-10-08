@@ -42,7 +42,7 @@ export const KarafFeaturesManagerAddRepoForm: React.FC<KarafFeaturesManagerAddRe
         placeholder="mvn:br.com.totvs.winthor/features/1.0.0/xml/features"
         value={newRepoUrl}
         onChange={(e) => onUrlChange(e.target.value)}
-        className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+        className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-xs font-mono text-foreground focus:outline-hidden focus:border-primary"
         autoFocus
       />
     </div>

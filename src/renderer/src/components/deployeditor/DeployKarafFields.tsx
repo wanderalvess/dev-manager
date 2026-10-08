@@ -31,7 +31,7 @@ export const DeployKarafCommandFields: React.FC<DeployKarafCommandFieldsProps> =
         onChange={(e) => onUpdate({ command: e.target.value })}
         rows={2}
         placeholder='Ex: feature:repo-add mvn:com.empresa/meu-servico/1.0.0/xml/features'
-        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+        className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary resize-none"
       />
     </div>
     <div className="bg-muted/30 border border-border/60 rounded-lg p-3 space-y-2">
@@ -41,7 +41,7 @@ export const DeployKarafCommandFields: React.FC<DeployKarafCommandFieldsProps> =
       <select
         value={suggestProjectPath}
         onChange={(e) => onSuggestProjectPathChange(e.target.value)}
-        className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+        className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
       >
         <option value="">-- Selecionar projeto --</option>
         {projects.map((p) => (
@@ -89,7 +89,7 @@ export const DeployKarafBundleFields: React.FC<DeployKarafBundleFieldsProps> = (
       <select
         value={step.bundleAction || 'reinstall'}
         onChange={(e) => onUpdate({ bundleAction: e.target.value as DeployStep['bundleAction'] })}
-        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       >
         <option value="reinstall">Reinstalar (bundle:update + refresh + start)</option>
         <option value="install">Instalar Novo (bundle:install)</option>
@@ -111,7 +111,7 @@ export const DeployKarafBundleFields: React.FC<DeployKarafBundleFieldsProps> = (
           value={step.bundleId || ''}
           onChange={(e) => onUpdate({ bundleId: e.target.value })}
           placeholder="Ex: 154"
-          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     )}
@@ -126,7 +126,7 @@ export const DeployKarafBundleFields: React.FC<DeployKarafBundleFieldsProps> = (
           value={step.bundleLocation || ''}
           onChange={(e) => onUpdate({ bundleLocation: e.target.value })}
           placeholder="mvn:com.minhaempresa/meu-modulo/1.0.0 ou file:/..."
-          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     )}

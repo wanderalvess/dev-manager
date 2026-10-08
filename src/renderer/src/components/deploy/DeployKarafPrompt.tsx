@@ -35,7 +35,7 @@ export const DeployKarafPrompt: React.FC<DeployKarafPromptProps> = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder="feature:uninstall -r winthor-integracao-varejo/versao"
-          className="w-full pl-6 pr-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-none focus:border-primary transition"
+          className="w-full pl-6 pr-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-hidden focus:border-primary transition"
         />
       </div>
       <button

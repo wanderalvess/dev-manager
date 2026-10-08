@@ -78,7 +78,7 @@ export const QaRunnerResultHeader: React.FC<QaRunnerResultHeaderProps> = ({
             value={issueKey}
             onChange={(e) => onChangeIssueKey(e.target.value)}
             placeholder="PROJ-123"
-            className="bg-transparent border-none text-foreground font-mono font-bold text-xs focus:outline-none w-28 uppercase"
+            className="bg-transparent border-none text-foreground font-mono font-bold text-xs focus:outline-hidden w-28 uppercase"
             title="Chave da issue no Jira (ex: PROJ-123)"
           />
         </div>

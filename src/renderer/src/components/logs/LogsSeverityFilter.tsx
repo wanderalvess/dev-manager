@@ -18,7 +18,7 @@ export const LogsSeverityFilter: React.FC<LogsSeverityFilterProps> = ({
     <button
       onClick={() => onChange('ALL')}
       className={`px-2 py-0.5 rounded-md transition-colors ${
-        levelFilter === 'ALL' ? 'bg-card text-foreground font-bold shadow-xs' : 'text-muted-foreground hover:text-foreground'
+        levelFilter === 'ALL' ? 'bg-card text-foreground font-bold shadow-2xs' : 'text-muted-foreground hover:text-foreground'
       }`}
     >
       Todos ({totalLines})

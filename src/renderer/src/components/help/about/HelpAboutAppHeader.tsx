@@ -35,7 +35,7 @@ export const HelpAboutAppHeader: React.FC<HelpAboutAppHeaderProps> = ({
 
     <button
       onClick={handleCopyDiagnostic}
-      className="px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer shrink-0"
+      className="px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer shrink-0"
       title="Copiar relatório completo de diagnóstico para a área de transferência"
     >
       {copiedDiag ? (

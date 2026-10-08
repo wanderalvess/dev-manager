@@ -105,12 +105,11 @@ describe('ccwRoutineUtils', () => {
 
   describe('createBackupFilePath', () => {
     it('gera nome de backup preservando o diretório e com extensão .bak', () => {
-      const dir = path.join('C:', 'Winthor', 'Prod', 'MOD-001');
-      const original = path.join(dir, 'PCSIS132.EXE');
+      const original = 'C:\\Winthor\\Prod\\MOD-001\\PCSIS132.EXE';
       const backup = createBackupFilePath(original);
       expect(backup).toContain('PCSIS132_');
       expect(backup.endsWith('.bak')).toBe(true);
-      expect(path.dirname(backup)).toBe(dir);
+      expect(path.win32.dirname(backup)).toBe('C:\\Winthor\\Prod\\MOD-001');
     });
   });
 

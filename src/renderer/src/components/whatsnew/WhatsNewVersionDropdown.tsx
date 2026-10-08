@@ -30,7 +30,7 @@ export const WhatsNewVersionDropdown: React.FC<WhatsNewVersionDropdownProps> = (
         placeholder="Buscar versão (ex: 1.22)..."
         value={dropdownSearch}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full bg-muted/50 border border-border/80 rounded-xl pl-7 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+        className="w-full bg-muted/50 border border-border/80 rounded-xl pl-7 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-primary"
         autoFocus
       />
     </div>

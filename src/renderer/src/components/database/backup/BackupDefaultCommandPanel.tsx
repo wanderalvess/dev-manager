@@ -32,7 +32,7 @@ export const BackupDefaultCommandPanel: React.FC<BackupDefaultCommandPanelProps>
             value={backupOracleDirectory}
             onChange={(e) => setBackupOracleDirectory(e.target.value)}
             placeholder="DATA_PUMP_DIR"
-            className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+            className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
           />
           <p className="text-2xs text-muted-foreground">
             Nome do objeto DIRECTORY registrado no Oracle (ex: <code>DATA_PUMP_DIR</code>). O schema exportado é o usuário da conexão (<code>{activeConnection.user}</code>).

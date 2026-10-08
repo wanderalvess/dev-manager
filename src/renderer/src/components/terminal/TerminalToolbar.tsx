@@ -82,7 +82,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
           placeholder="Filtrar logs..."
           value={searchFilter}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="bg-[#080d17] border border-slate-700 hover:border-slate-500 rounded-lg pl-7 pr-2 py-1 text-[11px] text-slate-100 placeholder-slate-400 focus:outline-none focus:border-primary font-mono w-28 md:w-36 transition-colors"
+          className="bg-[#080d17] border border-slate-700 hover:border-slate-500 rounded-lg pl-7 pr-2 py-1 text-[11px] text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-primary font-mono w-28 md:w-36 transition-colors"
         />
       </div>
 
@@ -92,7 +92,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
           onClick={() => onFilterTypeChange('all')}
           className={`px-2 py-0.5 rounded text-2xs font-semibold transition-colors ${
             filterType === 'all'
-              ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+              ? 'bg-primary text-primary-foreground font-bold shadow-xs'
               : 'text-slate-300 hover:text-white hover:bg-slate-800'
           }`}
         >
@@ -102,7 +102,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
           onClick={() => onFilterTypeChange('error')}
           className={`px-2 py-0.5 rounded text-2xs font-semibold transition-colors ${
             filterType === 'error'
-              ? 'bg-rose-600 text-white font-bold shadow-sm'
+              ? 'bg-rose-600 text-white font-bold shadow-xs'
               : 'text-slate-300 hover:text-rose-300 hover:bg-rose-950/40'
           }`}
         >

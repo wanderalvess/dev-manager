@@ -21,7 +21,7 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
   onCopy,
   onClear
 }) => (
-  <div className="lg:col-span-7 flex flex-col h-[520px] rounded-xl bg-card border border-border shadow-xs overflow-hidden">
+  <div className="lg:col-span-7 flex flex-col h-[520px] rounded-xl bg-card border border-border shadow-2xs overflow-hidden">
     {/* Header do Terminal */}
     <div className="px-3 py-2 bg-muted/60 border-b border-border/60 flex items-center justify-between shrink-0">
       <div className="flex items-center space-x-2">

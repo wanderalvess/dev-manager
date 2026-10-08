@@ -119,7 +119,7 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
       type="button"
       onClick={onStart}
       disabled={isRunning}
-      className="w-full py-2.5 px-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm shadow-primary/25 disabled:opacity-50"
+      className="w-full py-2.5 px-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs shadow-primary/25 disabled:opacity-50"
     >
       {isRunning ? (
         <>

@@ -30,7 +30,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
           value={health.schema}
           onChange={(e) => health.setSchema(e.target.value)}
           placeholder="Ex: LOCAL (vazio = todos)"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary font-mono uppercase"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-primary font-mono uppercase"
         />
       </div>
       <div>
@@ -39,7 +39,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
           type="text"
           value={health.user}
           onChange={(e) => health.setUser(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
         />
       </div>
       <div>
@@ -48,7 +48,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
           type="password"
           value={health.pass}
           onChange={(e) => health.setPass(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>
@@ -67,7 +67,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
       <button
         onClick={() => health.run(true)}
         disabled={health.isRunning}
-        className="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         <Wrench className="w-3.5 h-3.5" />
         <span>Diagnosticar e Corrigir (--fix)</span>

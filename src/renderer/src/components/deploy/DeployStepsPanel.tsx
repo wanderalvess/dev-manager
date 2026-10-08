@@ -35,7 +35,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
   const isBusy = isDeploying || runningStepId !== null || isDiagRunning !== null;
 
   return (
-    <div className="cockpit-panel rounded-xl p-3.5 space-y-2.5 border border-border/80 shadow-xs" data-tour="steps-list-panel">
+    <div className="cockpit-panel rounded-xl p-3.5 space-y-2.5 border border-border/80 shadow-2xs" data-tour="steps-list-panel">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Etapas ({activeProfile?.steps?.length || 0})

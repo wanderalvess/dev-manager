@@ -97,7 +97,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
           <select
             value={selectedAlias || ''}
             onChange={handleChange}
-            className="w-full bg-background border border-border/80 hover:border-primary/50 rounded-md p-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition cursor-pointer"
+            className="w-full bg-background border border-border/80 hover:border-primary/50 rounded-md p-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition cursor-pointer"
           >
             <option value="">-- Selecione uma conexão TNS ({entries.length} encontradas) --</option>
             {entries.map((item) => {

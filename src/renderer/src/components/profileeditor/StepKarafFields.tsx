@@ -24,7 +24,7 @@ export const StepKarafFields: React.FC<StepKarafFieldsProps> = ({
           onChange={(e) =>
             onUpdate({ launchMode: e.target.value as 'wt' | 'cmd' | 'embedded' })
           }
-          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         >
           <option value="wt">Windows Terminal (Abas agrupadas)</option>
           <option value="cmd">Janela CMD Externa independente</option>
@@ -46,7 +46,7 @@ export const StepKarafFields: React.FC<StepKarafFieldsProps> = ({
             onUpdate({ port: e.target.value ? parseInt(e.target.value, 10) : undefined })
           }
           placeholder={`Ex: 5005, 5006, 5050... (Padrão: ${globalDebugPort})`}
-          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>
