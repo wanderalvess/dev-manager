@@ -43,7 +43,7 @@ export const KarafFeaturesLogDrawer: React.FC<KarafFeaturesLogDrawerProps> = ({
 
       <pre
         ref={logContainerRef}
-        className="p-3 text-[11px] font-mono whitespace-pre-wrap break-all overflow-y-auto leading-relaxed select-text"
+        className="p-3 text-2xs font-mono whitespace-pre-wrap break-all overflow-y-auto leading-relaxed select-text"
       >
         {logs}
       </pre>

@@ -59,11 +59,11 @@ export const KarafBundleHeader: React.FC<KarafBundleHeaderProps> = ({
             <ListTree className="w-5 h-5" />
           </div>
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <h3 className="text-base font-bold text-foreground tracking-tight">Gerenciador de Bundles OSGi</h3>
+            <h3 className="text-sm font-semibold text-foreground tracking-tight">Gerenciador de Bundles OSGi</h3>
 
             {/* Status do Karaf */}
             <span
-              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold border ${statusInfo.badgeClass}`}
+              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-mono font-semibold border ${statusInfo.badgeClass}`}
               title={statusInfo.description}
             >
               {karafStatus === 'STARTING' ? (
@@ -75,7 +75,7 @@ export const KarafBundleHeader: React.FC<KarafBundleHeaderProps> = ({
             </span>
 
             {/* Telemetria Compacta de Bundles */}
-            <div className="inline-flex items-center divide-x divide-border/60 bg-muted/40 border border-border/70 rounded-md text-[11px] font-mono text-muted-foreground">
+            <div className="inline-flex items-center divide-x divide-border/60 bg-muted/40 border border-border/70 rounded-md text-2xs font-mono text-muted-foreground">
               <span className="px-2 py-0.5 font-semibold text-foreground">
                 <strong className="text-foreground">{stats.total}</strong> bundles
               </span>

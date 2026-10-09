@@ -19,7 +19,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* Card Semáforo de Liberação */}
-      <div className="lg:col-span-1 p-5 rounded-2xl bg-card border border-border shadow-xs space-y-4">
+      <div className="lg:col-span-1 p-5 rounded-xl bg-card border border-border shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <h3 className="text-sm font-black text-foreground">Semáforo de Liberação</h3>
           <span className="text-2xs font-mono text-muted-foreground">Critérios PO</span>
@@ -38,7 +38,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
         </div>
 
         <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-2 text-xs">
-          <div className="font-bold text-foreground text-[11px] uppercase tracking-wider">Recomendações para o PO:</div>
+          <div className="font-bold text-foreground text-2xs uppercase tracking-wider">Recomendações para o PO:</div>
           <ul className="space-y-1 text-muted-foreground list-disc pl-4">
             <li>Validar os critérios de aceite junto às áreas de negócio.</li>
             <li>Conferir logs de homologação na aba <strong className="text-foreground">Logs</strong> antes da subida.</li>
@@ -48,7 +48,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
       </div>
 
       {/* Checklist de Homologação */}
-      <div className="lg:col-span-2 p-5 rounded-2xl bg-card border border-border shadow-xs space-y-4">
+      <div className="lg:col-span-2 p-5 rounded-xl bg-card border border-border shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <h3 className="text-sm font-black text-foreground">Distribuição e Cobertura</h3>
           <span className="text-2xs font-mono text-muted-foreground">{metrics.total} itens mapeados</span>
@@ -101,7 +101,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
                   <div style={{ width: getProgressWidth(cat.blocked, cat.total) }} className="bg-amber-500 h-full" />
                   <div style={{ width: getProgressWidth(cat.failed, cat.total) }} className="bg-rose-500 h-full" />
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-2xs text-muted-foreground">
                   {cat.total === 0
                     ? 'Nenhum cenário cadastrado nesta categoria na Matriz de Validação.'
                     : `${cat.pending} pendente(s) · ${cat.inProgress} em teste · ${cat.failed} falha(s) · ${cat.blocked} bloqueado(s)`}

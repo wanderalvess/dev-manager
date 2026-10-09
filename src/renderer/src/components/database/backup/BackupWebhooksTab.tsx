@@ -28,10 +28,10 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
   onTest
 }) => (
   <div className="space-y-4 animate-fade-in">
-    <div className="flex items-center justify-between p-3.5 bg-muted/40 border border-border/70 rounded-xl">
+    <div className="flex items-center justify-between p-3 bg-muted/40 border border-border/70 rounded-xl">
       <div>
         <span className="font-bold text-foreground text-xs">Webhooks de Notificação</span>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Disparados ao concluir backups, restaurações ou drills (manual ou agendado).
         </p>
       </div>
@@ -48,13 +48,13 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
       <div className="text-center py-10 text-muted-foreground bg-muted/20 border border-border/60 rounded-xl space-y-1">
         <Webhook className="w-8 h-8 mx-auto opacity-40 text-muted-foreground mb-2" />
         <p className="font-semibold text-xs text-foreground">Nenhum webhook configurado</p>
-        <p className="text-[11px]">Configure canais no Slack, Discord, Microsoft Teams ou HTTP genérico.</p>
+        <p className="text-2xs">Configure canais no Slack, Discord, Microsoft Teams ou HTTP genérico.</p>
       </div>
     )}
 
     <div className="space-y-2">
       {backupWebhooks.map((w) => (
-        <div key={w.id} className="p-3.5 bg-background/70 border border-border/70 rounded-xl space-y-2 shadow-2xs">
+        <div key={w.id} className="p-3 bg-background/70 border border-border/70 rounded-xl space-y-2 shadow-2xs">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
                 type="button"
                 onClick={() => setEditingWebhook(w)}
                 className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
-                title="Editar"
+                title="Editar" aria-label="Editar"
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
@@ -106,7 +106,7 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
                 type="button"
                 onClick={() => onDelete(w.id)}
                 className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition cursor-pointer"
-                title="Remover"
+                title="Remover" aria-label="Remover"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

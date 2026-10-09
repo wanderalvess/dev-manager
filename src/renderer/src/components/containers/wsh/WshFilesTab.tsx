@@ -19,7 +19,7 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
   onOpenOptFolder
 }) => (
   <div className="space-y-4">
-    <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div className="flex items-start gap-3">
         <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0 mt-0.5">
           <FolderOpen className="w-4 h-4" />
@@ -47,7 +47,7 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
         <button
           onClick={onLoadPrereqs}
           disabled={isLoadingPrereqs}
-          className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+          className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
         >
           <RotateCw className={`w-3 h-3 ${isLoadingPrereqs ? 'animate-spin text-primary' : ''}`} />
           <span>Reverificar</span>
@@ -59,7 +59,7 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
         return (
           <div
             key={prereq.file}
-            className={`p-3.5 rounded-xl border flex items-start justify-between gap-3 transition ${visual.cardClass}`}
+            className={`p-3 rounded-xl border flex items-start justify-between gap-3 transition ${visual.cardClass}`}
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-2xs text-muted-foreground leading-relaxed">
                 {prereq.description}
               </p>
             </div>
@@ -83,7 +83,7 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
             {!prereq.exists && (
               <button
                 onClick={onOpenOptFolder}
-                className="px-2.5 py-1 bg-card hover:bg-muted border border-border/80 text-foreground rounded-lg text-[11px] font-semibold transition cursor-pointer shrink-0"
+                className="px-2.5 py-1 bg-card hover:bg-muted border border-border/80 text-foreground rounded-lg text-2xs font-semibold transition cursor-pointer shrink-0"
               >
                 Copiar para cá
               </button>

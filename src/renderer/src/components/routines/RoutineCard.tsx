@@ -74,7 +74,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
                 type="button"
                 onClick={onRollback}
                 className="p-1 rounded text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
-                title="Histórico de versões e rollback (.bak) desta rotina"
+                title="Histórico de versões e rollback (.bak) desta rotina" aria-label="Histórico de versões e rollback (.bak) desta rotina"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -84,7 +84,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
                 type="button"
                 onClick={onUpdateCcw}
                 className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                title="Baixar/atualizar esta rotina da Central de Controle (CCW)"
+                title="Baixar/atualizar esta rotina da Central de Controle (CCW)" aria-label="Baixar/atualizar esta rotina da Central de Controle (CCW)"
               >
                 <DownloadCloud className="w-3.5 h-3.5" />
               </button>
@@ -94,7 +94,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
               data-tour="favoritar-rotina"
               onClick={onToggleFavorite}
               className="p-1 rounded text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
-              title={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+              title={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'} aria-label={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
             >
               <Star
                 className={`w-3.5 h-3.5 transition-transform active:scale-125 ${
@@ -135,7 +135,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
             ? 'bg-primary/20 text-primary border border-primary/40 animate-pulse cursor-wait'
             : 'bg-muted/40 hover:bg-primary text-foreground hover:text-primary-foreground border border-border/80 hover:border-primary shadow-2xs'
         }`}
-        title="Executar esta rotina no Windows"
+        title="Executar esta rotina no Windows" aria-label="Executar esta rotina no Windows"
       >
         {isRunning ? (
           <>

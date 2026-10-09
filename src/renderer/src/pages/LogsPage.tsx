@@ -4,7 +4,7 @@ import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { LOGS_TOUR_STEPS, LOGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/logsTour';
 import { LogExceptionAnalyzerDrawer } from '../components/LogExceptionAnalyzerDrawer';
-import { analyzeLogLine } from '../utils/logAnalyzerUtils';
+import { analyzeLogLine } from '../../../shared/logAnalyzerUtils';
 import {
   LogLevelFilter,
   filterLogLines,
@@ -151,6 +151,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
 
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden text-foreground">
+      <h1 className="sr-only">Logs em Tempo Real</h1>
       <LogsHeader
         sources={sources}
         activeSource={activeSource}

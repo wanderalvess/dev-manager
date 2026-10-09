@@ -26,7 +26,7 @@ export const QaTemplatesManagerHeader: React.FC<QaTemplatesManagerHeaderProps> =
         type="button"
         onClick={onBack}
         className="p-1.5 rounded-md bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border transition-colors cursor-pointer"
-        title="Voltar para a Execução de Testes"
+        title="Voltar para a Execução de Testes" aria-label="Voltar para a Execução de Testes"
       >
         <ArrowLeft className="w-4 h-4" />
       </button>
@@ -36,7 +36,7 @@ export const QaTemplatesManagerHeader: React.FC<QaTemplatesManagerHeaderProps> =
           <span>Gerenciador de Cenários &amp; Templates de Regressivo</span>
         </h2>
         {templatesDir && (
-          <p className="text-[11px] text-muted-foreground font-mono flex items-center gap-1.5">
+          <p className="text-2xs text-muted-foreground font-mono flex items-center gap-1.5">
             <FolderOpen className="w-3.5 h-3.5 text-muted-foreground" />
             <span>Pasta dedicada: {templatesDir}</span>
           </p>

@@ -36,7 +36,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
         {/* Header do Modal */}
@@ -53,7 +53,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                 </span>
                 {getStateBadge(inspectingContainer.state.status)}
               </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5 truncate max-w-lg font-mono">
+              <p className="text-2xs text-muted-foreground mt-0.5 truncate max-w-lg font-mono">
                 {inspectingContainer.image}
               </p>
             </div>
@@ -222,7 +222,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                       </span>
                       <span className="text-2xs text-muted-foreground">{m.mode || 'default'}</span>
                     </div>
-                    <div className="font-mono text-[11px] space-y-1 select-all">
+                    <div className="font-mono text-2xs space-y-1 select-all">
                       <div><span className="text-muted-foreground font-sans">Host:</span> <span className="text-foreground">{m.source}</span></div>
                       <div><span className="text-muted-foreground font-sans">Destino:</span> <span className="text-sky-600 dark:text-sky-400">{m.destination}</span></div>
                     </div>

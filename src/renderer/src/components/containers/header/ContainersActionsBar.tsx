@@ -109,7 +109,7 @@ export const ContainersActionsBar: React.FC<ContainersActionsBarProps> = ({
     <button
       onClick={onRefreshData}
       disabled={isLoading}
-      title="Atualizar lista de containers"
+      title="Atualizar lista de containers" aria-label="Atualizar lista de containers"
       className="p-1.5 bg-card hover:bg-muted border border-border/80 text-muted-foreground hover:text-foreground rounded-lg text-xs transition shadow-2xs disabled:opacity-50 cursor-pointer"
     >
       <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />

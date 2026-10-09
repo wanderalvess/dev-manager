@@ -4,7 +4,6 @@ import { QualityPageTabs } from '../components/quality/page/QualityPageTabs';
 import { QualityMetricsStrip } from '../components/quality/page/QualityMetricsStrip';
 import { QualityMatrixPanel } from '../components/quality/page/QualityMatrixPanel';
 import { QualityReadinessPanel } from '../components/quality/page/QualityReadinessPanel';
-import { QualityRoadmapPanel } from '../components/quality/page/QualityRoadmapPanel';
 import { QualityAddItemModal } from '../components/quality/page/QualityAddItemModal';
 import { useQualityPageSettings } from '../hooks/quality/page/useQualityPageSettings';
 import { useQualityValidation } from '../hooks/quality/page/useQualityValidation';
@@ -17,7 +16,7 @@ interface QualityPageProps {
   isActive?: boolean;
 }
 
-// Homologação: matriz de cenários, prontidão da release e roadmap. TAUT, Test Runners e Validador
+// Homologação: matriz de cenários, e prontidão da release. TAUT, Test Runners e Validador
 // Regressivo têm página própria (QualityTautPage, QualityRunnersPage, QualityRegressionPage).
 export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVersion }) => {
   const [tabMode, setTabMode] = useState<QualityTabMode>('matrix');
@@ -80,7 +79,6 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVe
 
         {tabMode === 'readiness' && <QualityReadinessPanel metrics={metrics} items={items} />}
 
-        {tabMode === 'roadmap' && <QualityRoadmapPanel />}
       </div>
 
       {addForm.isAddModalOpen && (

@@ -30,7 +30,7 @@ export const KarafSnapshotDiffPanel: React.FC<KarafSnapshotDiffPanelProps> = ({
             <span className="text-xs font-mono text-purple-400 font-bold">{selectedSnapshot.label}</span>
             <span className="text-2xs text-muted-foreground ml-2">({selectedSnapshot.createdAt})</span>
           </div>
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-2xs text-muted-foreground font-mono">
             Snapshot: {selectedSnapshot.bundleCount} | Atual: {currentCount}
           </span>
         </div>

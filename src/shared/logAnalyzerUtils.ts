@@ -1,4 +1,4 @@
-import { LogExceptionMatch, LogAnalysisSummary } from '../../../shared/types';
+import { LogExceptionMatch, LogAnalysisSummary } from './types';
 
 /**
  * Catálogo de diagnósticos para erros conhecidos de banco Oracle (ORA-XXXXX).
@@ -145,6 +145,7 @@ export function analyzeLogLine(line: string, lineIndex: number): LogExceptionMat
 
   // 3. NullPointerException (NPE)
   if (/NullPointerException/i.test(line)) {
+    // Tenta identificar classe/método se estiver na mesma linha
     const classMatch = line.match(/at\s+([a-zA-Z0-9_$.]+)\.([a-zA-Z0-9_$]+)\(/);
     const context = classMatch ? ` em ${classMatch[1]}.${classMatch[2]}()` : '';
 
@@ -266,5 +267,3 @@ export function analyzeLogText(textOrLines: string | string[]): LogAnalysisSumma
     matches
   };
 }
-
-export { ORA_CATALOG };

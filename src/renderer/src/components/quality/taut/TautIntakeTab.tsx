@@ -16,7 +16,7 @@ const copyButtonClass =
   'px-2 py-1 rounded bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground text-xs flex items-center gap-1 transition cursor-pointer';
 
 const preClass =
-  'p-3 rounded-lg bg-[#0B0F17] text-slate-200 font-mono text-[11px] leading-relaxed overflow-x-auto whitespace-pre-wrap border border-border/50';
+  'p-3 rounded-lg bg-[#0B0F17] text-slate-200 font-mono text-2xs leading-relaxed overflow-x-auto whitespace-pre-wrap border border-border/50';
 
 export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
   csvFileName,
@@ -73,7 +73,7 @@ export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
               <XCircle className="w-4 h-4" />
               <span>Bloqueantes Identificados (Impedem Implementação):</span>
             </div>
-            <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+            <ul className="list-disc list-inside space-y-0.5 text-2xs">
               {intakeResult.checklistBlockers.map((b, i) => (
                 <li key={i}>{b}</li>
               ))}
@@ -87,7 +87,7 @@ export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
               <AlertTriangle className="w-4 h-4" />
               <span>Avisos de Atenção:</span>
             </div>
-            <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+            <ul className="list-disc list-inside space-y-0.5 text-2xs">
               {intakeResult.checklistWarnings.map((w, i) => (
                 <li key={i}>{w}</li>
               ))}

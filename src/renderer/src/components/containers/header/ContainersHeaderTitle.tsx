@@ -22,12 +22,12 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
     </div>
     <div>
       <div className="flex items-center space-x-2.5">
-        <h2 className="text-base font-bold text-foreground tracking-tight">Containers & WSL</h2>
+        <h1 className="text-lg font-bold text-foreground tracking-tight">Containers & WSL</h1>
         <button
           type="button"
           onClick={onOpenTour}
           className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
-          title="Rever o tour guiado desta página"
+          title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
         >
           <Compass className="w-3.5 h-3.5" />
         </button>
@@ -47,7 +47,7 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
                 >
                   <Network className="w-3 h-3 text-sky-500" />
                   <span>{daemonStatus.wslIp}</span>
-                  <Copy className="w-2.5 h-2.5 opacity-70" />
+                  <Copy className="w-3 h-3 opacity-70" />
                   {wslIpFeedback === 'wsl-ip' && (
                     <span className="text-2xs font-bold text-emerald-500 ml-0.5">Copiado!</span>
                   )}
@@ -60,7 +60,7 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
             </span>
           ))}
       </div>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-2xs text-muted-foreground">
         Orquestração de microsserviços, distros WSL2 e isolamento de runtime
       </p>
     </div>

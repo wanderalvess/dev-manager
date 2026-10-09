@@ -82,7 +82,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </>
       }
     >
-      {details ? <div className="pb-2 text-[11px] text-muted-foreground font-mono bg-muted p-2 rounded border border-border/50 break-all">{details}</div> : null}
+      {details ? <div className="pb-2 text-2xs text-muted-foreground font-mono bg-muted p-2 rounded border border-border/50 break-all">{details}</div> : null}
     </Modal>
   );
 };

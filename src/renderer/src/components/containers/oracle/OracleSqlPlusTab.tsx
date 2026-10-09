@@ -8,7 +8,7 @@ interface OracleSqlPlusTabProps {
 
 export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
   <div className="space-y-4">
-    <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-3.5 flex items-start gap-3">
+    <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-3 flex items-start gap-3">
       <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0 mt-0.5">
         <Terminal className="w-4 h-4" />
       </div>
@@ -20,7 +20,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Usuário de Acesso</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Usuário de Acesso</label>
         <input
           type="text"
           value={sql.user}
@@ -31,7 +31,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
         <p className="text-2xs text-muted-foreground mt-1">Conexão como <span className="font-mono text-foreground font-semibold">sys</span> eleva automaticamente para AS SYSDBA.</p>
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Senha</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Senha</label>
         <input
           type="password"
           value={sql.pass}

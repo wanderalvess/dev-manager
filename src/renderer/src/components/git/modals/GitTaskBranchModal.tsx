@@ -35,7 +35,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
         </div>
         <div>
           <h3 className="text-xs font-semibold text-foreground tracking-tight">Criar Branch por Tarefa</h3>
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-2xs text-muted-foreground font-mono">
             {project.name} [{project.currentBranch}]
           </span>
         </div>
@@ -53,7 +53,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
     {/* Modal Body */}
     <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
       {task.taskBranchError && (
-        <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+        <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>{task.taskBranchError}</span>
         </div>
@@ -141,7 +141,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
 
       {/* Preview da Branch Gerada estilo Terminal */}
       <div className="p-3 bg-muted/20 border border-border/60 rounded-lg space-y-1.5">
-        <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+        <div className="flex items-center justify-between text-2xs font-mono text-muted-foreground">
           <span className="uppercase tracking-wider font-semibold text-2xs">Branch Destino</span>
           <span className="text-2xs text-muted-foreground/60">checkout &amp; switch</span>
         </div>
@@ -165,7 +165,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
           )}
         </div>
         {!task.taskBranchValidation.valid && (
-          <p className="text-[11px] text-rose-500 font-medium">{task.taskBranchValidation.error}</p>
+          <p className="text-2xs text-rose-500 font-medium">{task.taskBranchValidation.error}</p>
         )}
       </div>
     </div>

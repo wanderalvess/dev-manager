@@ -28,7 +28,7 @@ export const KarafBundleErrorBanner: React.FC<KarafBundleErrorBannerProps> = ({
           type="button"
           onClick={onLaunchKarafDebug}
           disabled={isStartingKaraf}
-          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-2xs"
+          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-2xs rounded-lg transition flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-2xs"
         >
           <Play className="w-3 h-3 fill-current" />
           <span>Subir Karaf Agora</span>
@@ -37,7 +37,7 @@ export const KarafBundleErrorBanner: React.FC<KarafBundleErrorBannerProps> = ({
       <button
         type="button"
         onClick={onDismiss}
-        className="hover:underline font-bold text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+        className="hover:underline font-bold text-2xs text-muted-foreground hover:text-foreground cursor-pointer"
       >
         Fechar
       </button>

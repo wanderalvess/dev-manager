@@ -49,7 +49,7 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
       </button>
 
       {missingFileTag && (
-        <p className="text-[11px] text-amber-500 flex items-center justify-center gap-1.5">
+        <p className="text-2xs text-amber-500 flex items-center justify-center gap-1.5">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>Para iniciar o backup personalizado, inclua a tag <code>{'{filePath}'}</code> ou <code>{'{fileName}'}</code> no comando.</span>
         </p>
@@ -66,7 +66,7 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
             <div className="min-w-0 flex-1">
               <span className="break-all text-xs">{backupResult.message}</span>
               {backupResult.success && backupResult.sizeBytes !== undefined && (
-                <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono opacity-90 mt-1.5">
+                <div className="flex flex-wrap items-center gap-3 text-2xs font-mono opacity-90 mt-1.5">
                   <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30">
                     Tamanho: {formatBytes(backupResult.sizeBytes)}
                   </span>

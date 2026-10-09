@@ -20,7 +20,7 @@ export const KarafInlineDiagModal: React.FC<KarafInlineDiagModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
@@ -32,7 +32,7 @@ export const KarafInlineDiagModal: React.FC<KarafInlineDiagModalProps> = ({
             <h4 className="text-sm font-bold text-foreground">
               Diagnóstico OSGi (bundle:diag [{bundle.id}])
             </h4>
-            <p className="text-[11px] text-muted-foreground truncate max-w-md">
+            <p className="text-2xs text-muted-foreground truncate max-w-md">
               {bundle.name}
             </p>
           </div>

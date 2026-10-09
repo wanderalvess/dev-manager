@@ -26,7 +26,7 @@ export const ResultsGridNewRow: React.FC<ResultsGridNewRowProps> = ({
           type="button"
           onClick={onConfirm}
           disabled={isMutatingRow}
-          title="Confirmar inserção (Enter)"
+          title="Confirmar inserção (Enter)" aria-label="Confirmar inserção (Enter)"
           className="p-0.5 rounded text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 cursor-pointer disabled:opacity-50"
         >
           <Check className="w-3.5 h-3.5" />
@@ -34,7 +34,7 @@ export const ResultsGridNewRow: React.FC<ResultsGridNewRowProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          title="Cancelar (Esc)"
+          title="Cancelar (Esc)" aria-label="Cancelar (Esc)"
           className="p-0.5 rounded text-muted-foreground hover:bg-muted cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />

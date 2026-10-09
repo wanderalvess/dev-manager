@@ -29,7 +29,7 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
       {history.length > 0 && (
         <button
           onClick={onClearHistory}
-          className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer"
+          className="text-2xs text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer"
         >
           <Trash2 className="w-3 h-3" /> Limpar Histórico
         </button>
@@ -88,7 +88,7 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
               </button>
             </div>
           </div>
-          <pre className="text-[11px] font-mono text-emerald-300 bg-[#0B0F17] p-2 rounded truncate whitespace-pre-wrap max-h-16 overflow-hidden">
+          <pre className="text-2xs font-mono text-emerald-300 bg-[#0B0F17] p-2 rounded truncate whitespace-pre-wrap max-h-16 overflow-hidden">
             {item.sql}
           </pre>
           {item.error && (

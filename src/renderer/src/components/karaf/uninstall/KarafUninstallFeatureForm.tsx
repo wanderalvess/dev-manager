@@ -21,7 +21,7 @@ export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps>
   onNameChange,
   onVersionChange
 }) => (
-  <div className="p-3.5 bg-muted/20 border border-border rounded-xl space-y-3">
+  <div className="p-3 bg-muted/20 border border-border rounded-xl space-y-3">
     <div className="flex items-center justify-between">
       <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
         <Sparkles className="w-3.5 h-3.5 text-amber-400" />

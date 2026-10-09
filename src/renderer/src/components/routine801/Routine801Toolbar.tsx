@@ -129,7 +129,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
         <button
           type="button"
           onClick={onSelectAllFiltered}
-          className="px-2 py-0.5 text-[11px] font-mono rounded border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          className="px-2 py-0.5 text-2xs font-mono rounded border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
           title={`Selecionar todos os ${filteredCount} artefato(s) da versão ${versionFilter}.x`}
         >
           + Selecionar {filteredCount} da v{versionFilter}.x
@@ -137,7 +137,7 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
       )}
 
       {/* Segmented Controls de Canal (P / H) */}
-      <div className="inline-flex p-0.5 rounded-md bg-muted/50 border border-border text-[11px] font-mono">
+      <div className="inline-flex p-0.5 rounded-md bg-muted/50 border border-border text-2xs font-mono">
         <button
           onClick={() => onChangeStatus('ALL')}
           className={`px-2 py-0.5 rounded transition-all ${

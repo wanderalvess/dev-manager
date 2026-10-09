@@ -5,6 +5,7 @@ import type {
   DbObjectType,
   TableDetails
 } from '../../../../../shared/types';
+import { Modal } from '../../ui/Modal';
 import { ColumnsTab, ConstraintsTab, DdlTab, IndexesTab, TriggersTab } from './TableSpecTabs';
 
 export interface SpecTarget {
@@ -87,15 +88,6 @@ export const TableSpecModal: React.FC<TableSpecModalProps> = ({ target, connecti
     };
   }, [tab, current, connection, ddl, ddlError]);
 
-  useEffect(() => {
-    if (!target) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [target, onClose]);
-
   const openRelated = useCallback((name: string) => {
     setStack((prev) => [...prev, { name, type: 'TABLE' }]);
   }, []);
@@ -115,13 +107,13 @@ export const TableSpecModal: React.FC<TableSpecModalProps> = ({ target, connecti
   const fullName = details?.owner ? `${details.owner}.${details.name}` : current.name;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Especificação de ${current.name}`}
-        className="bg-card w-full max-w-4xl h-[80vh] rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden"
-      >
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      ariaLabel={`Especificação de ${current.name}`}
+      panelClassName="bg-card w-full max-w-4xl h-[80vh] rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden"
+    >
         <div className="px-4 py-3 border-b border-border flex items-start justify-between gap-3 shrink-0">
           <div className="min-w-0 flex items-start gap-2.5">
             {stack.length > 1 && (
@@ -225,7 +217,6 @@ export const TableSpecModal: React.FC<TableSpecModalProps> = ({ target, connecti
             <TriggersTab details={details} />
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

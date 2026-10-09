@@ -136,9 +136,9 @@ export async function stopEmbeddedKaraf(ctx: KarafContext): Promise<boolean> {
     ctx.embeddedKarafProcess = null;
     return true;
   } catch {
-    ctx.embeddedKarafProcess?.kill();
+    const killed = ctx.embeddedKarafProcess?.kill() ?? true;
     ctx.embeddedKarafProcess = null;
-    return true;
+    return killed;
   }
 }
 

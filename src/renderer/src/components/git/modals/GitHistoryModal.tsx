@@ -26,7 +26,7 @@ export const GitHistoryModal: React.FC<GitHistoryModalProps> = ({
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in"
+    panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in"
     closeOnBackdrop={false}
   >
     <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
@@ -34,7 +34,7 @@ export const GitHistoryModal: React.FC<GitHistoryModalProps> = ({
         <Clock className="w-5 h-5 text-blue-400" />
         <div>
           <h3 className="text-sm font-bold text-foreground">Histórico de Commits - {project.name}</h3>
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-2xs text-muted-foreground font-mono">
             Últimos commits da branch {project.currentBranch}
           </span>
         </div>

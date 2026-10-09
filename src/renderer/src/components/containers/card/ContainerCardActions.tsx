@@ -112,7 +112,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
       <button
         onClick={() => onInspectContainer(container)}
         disabled={isLoadingInspect}
-        title="Inspecionar Detalhes (docker inspect)"
+        title="Inspecionar Detalhes (docker inspect)" aria-label="Inspecionar Detalhes (docker inspect)"
         className="p-1.5 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 rounded-lg transition cursor-pointer active:scale-95"
       >
         <Info className="w-3.5 h-3.5 text-primary" />
@@ -143,7 +143,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
           <button
             onClick={() => onContainerAction(container, 'restart')}
             disabled={Boolean(isLoadingAction)}
-            title="Reiniciar Container"
+            title="Reiniciar Container" aria-label="Reiniciar Container"
             className="p-1.5 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 rounded-lg transition disabled:opacity-50 cursor-pointer active:scale-98"
           >
             <RotateCw
@@ -189,7 +189,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
       <button
         onClick={() => onContainerAction(container, 'remove')}
         disabled={Boolean(isLoadingAction)}
-        title="Remover Container"
+        title="Remover Container" aria-label="Remover Container"
         className="p-1.5 hover:text-rose-400 text-muted-foreground rounded-lg hover:bg-rose-500/10 transition cursor-pointer"
       >
         <Trash2 className="w-3.5 h-3.5" />

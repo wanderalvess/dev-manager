@@ -63,7 +63,7 @@ export const LogsConsoleControls: React.FC<LogsConsoleControlsProps> = ({
           ? 'bg-primary/15 text-primary border-primary/40'
           : 'bg-muted/70 text-muted-foreground border-border/70 hover:text-foreground'
       }`}
-      title={wordWrap ? 'Desativar quebra de linhas (Wrap)' : 'Ativar quebra de linhas (Wrap)'}
+      title={wordWrap ? 'Desativar quebra de linhas (Wrap)' : 'Ativar quebra de linhas (Wrap)'} aria-label={wordWrap ? 'Desativar quebra de linhas (Wrap)' : 'Ativar quebra de linhas (Wrap)'}
     >
       <WrapText className="w-3.5 h-3.5" />
     </button>
@@ -72,7 +72,7 @@ export const LogsConsoleControls: React.FC<LogsConsoleControlsProps> = ({
     <button
       onClick={onClearScreen}
       className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted border border-border/50 transition-colors"
-      title="Limpar tela atual (Ctrl+L)"
+      title="Limpar tela atual (Ctrl+L)" aria-label="Limpar tela atual (Ctrl+L)"
     >
       <RotateCcw className="w-3.5 h-3.5" />
     </button>
@@ -91,7 +91,7 @@ export const LogsConsoleControls: React.FC<LogsConsoleControlsProps> = ({
     <button
       onClick={onExport}
       className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted border border-border/50 transition-colors"
-      title="Exportar arquivo .txt com linhas filtradas"
+      title="Exportar arquivo .txt com linhas filtradas" aria-label="Exportar arquivo .txt com linhas filtradas"
     >
       <Download className="w-3.5 h-3.5" />
     </button>

@@ -35,15 +35,15 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       <div className="space-y-1">
         <div className="flex items-center space-x-2">
           <Zap className="w-5 h-5 text-emerald-400" />
-          <h2 className="text-sm sm:text-base font-bold text-foreground">
+          <h2 className="text-sm font-semibold text-foreground">
             Testes Automatizados (Cypress / TAUT) — Automação de API &amp; Integração
           </h2>
           {projectStatus?.exists ? (
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               Online
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
               Não Localizado
             </span>
           )}
@@ -82,7 +82,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
           onClick={onReload}
           disabled={loading}
           className="p-2 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/70 transition cursor-pointer"
-          title="Recarregar integridade do projeto"
+          title="Recarregar integridade do projeto" aria-label="Recarregar integridade do projeto"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -141,7 +141,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
         <span className="text-2xs text-muted-foreground">Banco Oracle (.env)</span>
         <div className="font-semibold text-foreground truncate" title={projectStatus?.envVariables?.oracleConnectString || 'Não configurado'}>
           {projectStatus?.envVariables?.hasOracleConnectString ? (
-            <span className="text-emerald-400 font-mono text-[11px]">
+            <span className="text-emerald-400 font-mono text-2xs">
               {projectStatus.envVariables.oracleConnectString}
             </span>
           ) : (
@@ -153,7 +153,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5">
         <span className="text-2xs text-muted-foreground">URL Base WTA (.env)</span>
         <div className="font-semibold text-foreground truncate" title={projectStatus?.envVariables?.baseUrl || 'Não configurado'}>
-          <span className="font-mono text-[11px] text-foreground">
+          <span className="font-mono text-2xs text-foreground">
             {projectStatus?.envVariables?.baseUrl || 'http://localhost:8889'}
           </span>
         </div>

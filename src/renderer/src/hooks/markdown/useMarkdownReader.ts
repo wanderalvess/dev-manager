@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { parseMarkdownBlocks } from '../../utils/markdownReaderParser';
 import { computeReadingStats, extractHeadings } from '../../utils/markdownReaderToc';
 
@@ -7,7 +7,7 @@ export type MarkdownFontSize = 'sm' | 'base' | 'lg';
 
 const COPY_FEEDBACK_MS = 2000;
 
-export const useMarkdownReader = (content: string, onClose: () => void) => {
+export const useMarkdownReader = (content: string) => {
   const [viewMode, setViewMode] = useState<MarkdownViewMode>('formatted');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [fontSizeLevel, setFontSizeLevel] = useState<MarkdownFontSize>('base');
@@ -15,17 +15,6 @@ export const useMarkdownReader = (content: string, onClose: () => void) => {
   const [isTocOpen, setIsTocOpen] = useState<boolean>(false);
   const [copiedAll, setCopiedAll] = useState<boolean>(false);
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
-
-  // Fecha com ESC
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
   const stats = useMemo(() => computeReadingStats(content), [content]);
   const headings = useMemo(() => extractHeadings(content), [content]);

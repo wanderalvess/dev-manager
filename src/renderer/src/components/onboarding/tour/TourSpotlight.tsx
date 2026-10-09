@@ -10,7 +10,7 @@ export const TourSpotlight: React.FC<TourSpotlightProps> = ({ rect }) => (
   <div className="fixed inset-0" onClick={(e) => e.stopPropagation()}>
     {rect ? (
       <div
-        className="fixed rounded-2xl border-2 border-primary pointer-events-none transition-all duration-200 ease-out shadow-lg"
+        className="fixed rounded-xl border-2 border-primary pointer-events-none transition-all duration-200 ease-out shadow-lg"
         style={{
           boxShadow: '0 0 0 9999px rgba(0,0,0,0.72)',
           top: Math.round(rect.top - TOUR_RING_PADDING),

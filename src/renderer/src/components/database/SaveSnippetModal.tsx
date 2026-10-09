@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookmarkPlus } from 'lucide-react';
+import { Modal } from '../ui/Modal';
 
 export interface SaveSnippetModalProps {
   isOpen: boolean;
@@ -30,16 +31,14 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
   setSnippetSql,
   onSave
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onClose();
-      }}
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      bare
+      closeOnBackdrop={false}
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in flex flex-col font-sans"
     >
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in flex flex-col font-sans">
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
           <div className="flex items-center space-x-2">
             <BookmarkPlus className="w-4 h-4 text-amber-500" />
@@ -122,7 +121,6 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };

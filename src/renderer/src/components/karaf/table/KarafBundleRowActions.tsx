@@ -45,8 +45,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
           type="button"
           onClick={() => onOneClickRebuild(b)}
           disabled={isRebuilding || isRowLoading}
-          title="Recompilar projeto Maven (clean install) e atualizar bundle no Karaf em 1 clique"
-          className="p-1.5 rounded-md text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 cursor-pointer"
+          title="Recompilar projeto Maven (clean install) e atualizar bundle no Karaf em 1 clique" aria-label="Recompilar projeto Maven (clean install) e atualizar bundle no Karaf em 1 clique"
+          className="p-1.5 rounded-md text-primary hover:bg-primary/10 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <Hammer className={`w-3.5 h-3.5 ${isRebuilding ? 'animate-spin' : ''}`} />
         </button>
@@ -57,8 +57,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
         type="button"
         onClick={() => onBasicAction('refresh', b.id)}
         disabled={isRowLoading}
-        title="Atualizar fiações OSGi do bundle (bundle:refresh)"
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
+        title="Atualizar fiações OSGi do bundle (bundle:refresh)" aria-label="Atualizar fiações OSGi do bundle (bundle:refresh)"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
       >
         <RotateCw className="w-3.5 h-3.5" />
       </button>
@@ -68,8 +68,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
         type="button"
         onClick={() => onOpenReinstall(b)}
         disabled={isRowLoading}
-        title="Reinstalar bundle (update + refresh)"
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
+        title="Reinstalar bundle (update + refresh)" aria-label="Reinstalar bundle (update + refresh)"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
       >
         <RotateCcw className="w-3.5 h-3.5" />
       </button>
@@ -79,8 +79,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
         type="button"
         onClick={() => onOpenInstall(b)}
         disabled={isRowLoading}
-        title="Instalar outra versão ou atualizar"
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
+        title="Instalar outra versão ou atualizar" aria-label="Instalar outra versão ou atualizar"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
       >
         <ArrowUpCircle className="w-3.5 h-3.5" />
       </button>
@@ -90,8 +90,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
         type="button"
         onClick={() => onOpenDetails(b)}
         disabled={isRowLoading}
-        title="Inspecionar dependências e manifesto"
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 cursor-pointer"
+        title="Inspecionar dependências e manifesto" aria-label="Inspecionar dependências e manifesto"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Info className="w-3.5 h-3.5" />
       </button>
@@ -102,8 +102,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
           type="button"
           onClick={() => onBasicAction('resolve', b.id)}
           disabled={isRowLoading}
-          title="Forçar resolução de dependências OSGi (bundle:resolve)"
-          className="p-1.5 rounded-md text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-40 cursor-pointer"
+          title="Forçar resolução de dependências OSGi (bundle:resolve)" aria-label="Forçar resolução de dependências OSGi (bundle:resolve)"
+          className="p-1.5 rounded-md text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <Wrench className="w-3.5 h-3.5" />
         </button>
@@ -115,8 +115,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
           type="button"
           onClick={() => onBasicAction('stop', b.id)}
           disabled={isRowLoading}
-          title="Parar bundle"
-          className="p-1.5 rounded-md text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-40 cursor-pointer"
+          title="Parar bundle" aria-label="Parar bundle"
+          className="p-1.5 rounded-md text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <Square className="w-3.5 h-3.5 fill-current" />
         </button>
@@ -125,8 +125,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
           type="button"
           onClick={() => onBasicAction('start', b.id)}
           disabled={isRowLoading}
-          title="Iniciar bundle"
-          className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors disabled:opacity-40 cursor-pointer"
+          title="Iniciar bundle" aria-label="Iniciar bundle"
+          className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
         </button>
@@ -137,8 +137,8 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
         type="button"
         onClick={() => onOpenUninstall(b)}
         disabled={isRowLoading}
-        title="Desinstalar bundle com verificação de dependências"
-        className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors disabled:opacity-40 cursor-pointer"
+        title="Desinstalar bundle com verificação de dependências" aria-label="Desinstalar bundle com verificação de dependências"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

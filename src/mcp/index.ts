@@ -45,7 +45,7 @@ import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
 import { buildCompactTraceDetails } from '../main/utils/apmUtils';
-import * as cron from 'node-cron';
+import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupConfigUtils';
 import { isValidIdentifier, isSafeLocalPath, isSafeKarafCommand, isSafeUrl } from '../main/utils/security';
 import { analyzeExplainPlan } from '../main/services/explainAnalyzer';
 import { isReadOnlySql } from '../shared/sqlSplitUtils';
@@ -700,7 +700,8 @@ const KarafCredentialsSchema = z.object({
   port: z.number().int().optional()
 });
 
-const BundleActionSchema = z.enum(['start', 'stop', 'restart', 'uninstall', 'refresh', 'resolve']);
+// 'uninstall' fica de fora de propósito: é destrutivo e tem tool própria (karaf_uninstall_bundle)
+const BundleActionSchema = z.enum(['start', 'stop', 'restart', 'refresh', 'resolve']);
 
 server.registerTool(
   'karaf_list_bundles',
@@ -757,7 +758,7 @@ server.registerTool(
   {
     title: 'Gerenciar ciclo de vida do bundle',
     description:
-      'Executa start, stop, restart, uninstall, refresh ou resolve em um bundle pelo ID. "resolve" força o framework OSGi a tentar resolver novamente um bundle travado em Installed (dependência ausente).',
+      'Executa start, stop, restart, refresh ou resolve em um bundle pelo ID (para desinstalar use karaf_uninstall_bundle). "resolve" força o framework OSGi a tentar resolver novamente um bundle travado em Installed (dependência ausente).',
     inputSchema: { action: BundleActionSchema, bundleId: z.string(), credentials: KarafCredentialsSchema.optional() }
   },
   async ({ action, bundleId, credentials }) => ok(await karafService.manageBundle(action, bundleId, credentials))
@@ -853,108 +854,11 @@ server.registerTool(
     }
   },
   async ({ credentials }) => {
-    const bundles = await karafService.listBundlesParsed(credentials);
-    if (!bundles || bundles.length === 0) {
+    const report = await karafService.detectWiringConflicts(credentials);
+    if (!report) {
       return fail('Não foi possível listar os bundles do Karaf. Verifique se o Karaf está em execução e as credenciais SSH/porta.');
     }
-
-    // 1. Bundles não-ativos
-    const nonActiveBundles = bundles.filter((b) => b.state !== 'Active');
-
-    // 2. Colisões de versão (mesmo symbolicName ou name com múltiplas instâncias)
-    const bySymbolicName = new Map<string, typeof bundles>();
-    for (const b of bundles) {
-      const key = (b.symbolicName || b.name || '').trim();
-      if (!key || key.startsWith('Bundle ')) continue;
-      if (!bySymbolicName.has(key)) {
-        bySymbolicName.set(key, []);
-      }
-      bySymbolicName.get(key)!.push(b);
-    }
-
-    const duplicateBundles = Array.from(bySymbolicName.entries())
-      .filter(([_, list]) => list.length > 1)
-      .map(([name, list]) => ({
-        symbolicName: name,
-        instances: list.map((b) => ({ id: b.id, version: b.version, state: b.state })),
-        hasMultipleActive: list.filter((b) => b.state === 'Active').length > 1
-      }));
-
-    // Coletar diagnóstico para os primeiros bundles não ativos (máx 5 para evitar overhead de comando SSH)
-    const unresolvedDetails: Array<{ id: string; name: string; state: string; diag?: string }> = [];
-    for (const b of nonActiveBundles.slice(0, 5)) {
-      let diagText: string | undefined;
-      try {
-        const diagRes = await karafService.executeKarafCommand(`bundle:diag ${b.id}`, () => {}, credentials);
-        if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
-          diagText = diagRes.stdout.trim();
-        }
-      } catch {
-        // fallback silencioso se diag falhar
-      }
-      unresolvedDetails.push({
-        id: b.id,
-        name: b.symbolicName || b.name,
-        state: b.state,
-        diag: diagText
-      });
-    }
-
-    const conflicts: Array<{
-      severity: 'high' | 'medium' | 'low';
-      title: string;
-      description: string;
-      recommendation: string;
-      bundleIds: string[];
-    }> = [];
-
-    // Gerar conflitos para versões duplicadas ativas
-    for (const dup of duplicateBundles) {
-      if (dup.hasMultipleActive) {
-        conflicts.push({
-          severity: 'high',
-          title: `Múltiplas versões ativas de ${dup.symbolicName}`,
-          description: `O bundle '${dup.symbolicName}' possui ${dup.instances.length} versões instaladas sendo mais de uma no estado 'Active'. Isso pode causar ClassCastException ou conflito de export/import package OSGi.`,
-          recommendation: `Desinstale a versão obsoleta com 'bundle:uninstall <ID>' ou use a ferramenta 'karaf_uninstall_bundle'.`,
-          bundleIds: dup.instances.map((i) => i.id)
-        });
-      } else {
-        conflicts.push({
-          severity: 'medium',
-          title: `Múltiplas instâncias instaladas de ${dup.symbolicName}`,
-          description: `Existem ${dup.instances.length} versões registradas (${dup.instances.map((i) => `${i.version} [${i.state}]`).join(', ')}).`,
-          recommendation: `Verifique se as versões inativas são necessárias ou remova-as para economizar memória e evitar ambiguidades.`,
-          bundleIds: dup.instances.map((i) => i.id)
-        });
-      }
-    }
-
-    // Gerar conflitos para bundles em estado Installed ou Resolved
-    for (const b of nonActiveBundles) {
-      conflicts.push({
-        severity: b.state === 'Installed' || b.state === 'Resolved' ? 'medium' : 'low',
-        title: `Bundle ${b.id} (${b.symbolicName || b.name}) em estado '${b.state}'`,
-        description: `O bundle não está ativo no runtime OSGi.`,
-        recommendation: `Execute 'bundle:diag ${b.id}' para verificar dependências ausentes (Unsatisfied Requirements) ou 'bundle:start ${b.id}' para iniciá-lo.`,
-        bundleIds: [b.id]
-      });
-    }
-
-    const healthy = conflicts.filter((c) => c.severity === 'high').length === 0 && nonActiveBundles.length === 0;
-
-    return ok({
-      healthy,
-      summary: {
-        totalBundles: bundles.length,
-        activeBundles: bundles.filter((b) => b.state === 'Active').length,
-        nonActiveBundlesCount: nonActiveBundles.length,
-        duplicateSymbolicNamesCount: duplicateBundles.length,
-        highSeverityConflicts: conflicts.filter((c) => c.severity === 'high').length
-      },
-      conflicts,
-      unresolvedDiagnostics: unresolvedDetails,
-      duplicates: duplicateBundles
-    });
+    return ok(report);
   }
 );
 
@@ -1079,19 +983,9 @@ server.registerTool(
   { title: 'Status dos Containers', description: 'Verifica se o motor de containers (Docker ou Podman) está instalado e em execução.' },
   async () => ok(await dockerService.checkDockerStatus())
 );
-server.registerTool(
-  'container_status',
-  { title: 'Status dos Containers', description: 'Verifica se o motor de containers (Docker ou Podman) está instalado e em execução.' },
-  async () => ok(await dockerService.checkDockerStatus())
-);
 
 server.registerTool(
   'docker_list_containers',
-  { title: 'Listar containers', description: 'Lista todos os containers locais (em execução e parados) via Docker ou Podman.' },
-  async () => ok(await dockerService.listContainers())
-);
-server.registerTool(
-  'container_list',
   { title: 'Listar containers', description: 'Lista todos os containers locais (em execução e parados) via Docker ou Podman.' },
   async () => ok(await dockerService.listContainers())
 );
@@ -1111,39 +1005,9 @@ server.registerTool(
     }
   }
 );
-server.registerTool(
-  'container_start',
-  {
-    title: 'Iniciar container',
-    description: 'Inicia um container existente pelo ID ou nome.',
-    inputSchema: { containerId: z.string() }
-  },
-  async ({ containerId }) => {
-    try {
-      return ok({ success: await dockerService.startContainer(containerId) });
-    } catch (err: any) {
-      return fail(err.message || 'Falha ao iniciar container');
-    }
-  }
-);
 
 server.registerTool(
   'docker_stop_container',
-  {
-    title: 'Parar container',
-    description: 'Para um container em execução pelo ID ou nome.',
-    inputSchema: { containerId: z.string() }
-  },
-  async ({ containerId }) => {
-    try {
-      return ok({ success: await dockerService.stopContainer(containerId) });
-    } catch (err: any) {
-      return fail(err.message || 'Falha ao parar container');
-    }
-  }
-);
-server.registerTool(
-  'container_stop',
   {
     title: 'Parar container',
     description: 'Para um container em execução pelo ID ou nome.',
@@ -1178,17 +1042,6 @@ server.registerTool(
     return ok(await dockerService.startContainerSequence(containers));
   }
 );
-server.registerTool(
-  'container_start_sequence',
-  {
-    title: 'Subir grupo de containers',
-    description: 'Inicia uma lista ou grupo de containers em ordem com delays opcionais entre eles.',
-    inputSchema: startSequenceSchema
-  },
-  async ({ containers }) => {
-    return ok(await dockerService.startContainerSequence(containers));
-  }
-);
 
 const stopSequenceSchema = {
   containers: z.array(z.string()).describe('Lista de nomes ou IDs de containers a parar')
@@ -1205,35 +1058,9 @@ server.registerTool(
     return ok(await dockerService.stopContainerSequence(containers));
   }
 );
-server.registerTool(
-  'container_stop_sequence',
-  {
-    title: 'Parar grupo de containers',
-    description: 'Para uma lista ou grupo de containers em sequência.',
-    inputSchema: stopSequenceSchema
-  },
-  async ({ containers }) => {
-    return ok(await dockerService.stopContainerSequence(containers));
-  }
-);
 
 server.registerTool(
   'docker_restart_container',
-  {
-    title: 'Reiniciar container',
-    description: 'Reinicia um container pelo ID ou nome.',
-    inputSchema: { containerId: z.string() }
-  },
-  async ({ containerId }) => {
-    try {
-      return ok({ success: await dockerService.restartContainer(containerId) });
-    } catch (err: any) {
-      return fail(err.message || 'Falha ao reiniciar container');
-    }
-  }
-);
-server.registerTool(
-  'container_restart',
   {
     title: 'Reiniciar container',
     description: 'Reinicia um container pelo ID ou nome.',
@@ -1263,21 +1090,6 @@ server.registerTool(
     }
   }
 );
-server.registerTool(
-  'container_logs',
-  {
-    title: 'Logs do container',
-    description: 'Retorna as últimas linhas de log de um container.',
-    inputSchema: { containerId: z.string(), lines: z.number().int().optional() }
-  },
-  async ({ containerId, lines }) => {
-    try {
-      return ok({ logs: await dockerService.getContainerLogs(containerId, lines) });
-    } catch (err: any) {
-      return fail(err.message || 'Falha ao obter logs do container');
-    }
-  }
-);
 
 server.registerTool(
   'docker_remove_container',
@@ -1294,32 +1106,9 @@ server.registerTool(
     }
   }
 );
-server.registerTool(
-  'container_remove',
-  {
-    title: 'Remover container',
-    description: 'Remove forçadamente um container pelo ID ou nome (irreversível).',
-    inputSchema: { containerId: z.string() }
-  },
-  async ({ containerId }) => {
-    try {
-      return ok({ success: await dockerService.removeContainer(containerId) });
-    } catch (err: any) {
-      return fail(err.message || 'Falha ao remover container');
-    }
-  }
-);
 
 server.registerTool(
   'docker_get_stats',
-  {
-    title: 'Estatísticas dos containers',
-    description: 'Retorna estatísticas de uso de CPU, memória e rede dos containers ativos (Docker ou Podman).'
-  },
-  async () => ok(await dockerService.getContainerStats())
-);
-server.registerTool(
-  'container_get_stats',
   {
     title: 'Estatísticas dos containers',
     description: 'Retorna estatísticas de uso de CPU, memória e rede dos containers ativos (Docker ou Podman).'
@@ -1345,11 +1134,6 @@ server.registerTool(
   { title: 'Subir docker-compose', description: 'Sobe os serviços definidos em um docker-compose.yml (equivalente a docker compose up -d).', inputSchema: composeUpSchema },
   runComposeUp
 );
-server.registerTool(
-  'container_compose_up',
-  { title: 'Subir docker-compose', description: 'Sobe os serviços definidos em um docker-compose.yml (equivalente a docker compose up -d).', inputSchema: composeUpSchema },
-  runComposeUp
-);
 
 const composeDownSchema = { composeFilePath: z.string(), profile: z.string().optional() };
 const runComposeDown = async ({ composeFilePath, profile }: { composeFilePath: string; profile?: string }) => {
@@ -1365,11 +1149,6 @@ server.registerTool(
   { title: 'Derrubar docker-compose', description: 'Derruba os serviços definidos em um docker-compose.yml (equivalente a docker compose down).', inputSchema: composeDownSchema },
   runComposeDown
 );
-server.registerTool(
-  'container_compose_down',
-  { title: 'Derrubar docker-compose', description: 'Derruba os serviços definidos em um docker-compose.yml (equivalente a docker compose down).', inputSchema: composeDownSchema },
-  runComposeDown
-);
 
 const composeStatusSchema = { composeFilePath: z.string(), profile: z.string().optional() };
 const runComposeStatus = async ({ composeFilePath, profile }: { composeFilePath: string; profile?: string }) => {
@@ -1378,11 +1157,6 @@ const runComposeStatus = async ({ composeFilePath, profile }: { composeFilePath:
 };
 server.registerTool(
   'docker_compose_status',
-  { title: 'Status do docker-compose', description: 'Lista o status dos serviços de um docker-compose.yml (equivalente a docker compose ps).', inputSchema: composeStatusSchema },
-  runComposeStatus
-);
-server.registerTool(
-  'container_compose_status',
   { title: 'Status do docker-compose', description: 'Lista o status dos serviços de um docker-compose.yml (equivalente a docker compose ps).', inputSchema: composeStatusSchema },
   runComposeStatus
 );
@@ -2453,18 +2227,10 @@ server.registerTool(
   },
   async (input) => {
     const config = input as BackupConfig;
-    if (!isSafeLocalPath(config.destinationFolder)) return fail('Pasta de destino inválida ou remota não permitida.');
-    if (config.cronExpression && !cron.validate(config.cronExpression)) return fail('Expressão cron inválida.');
-    if (config.restoreDrillCronExpression && !cron.validate(config.restoreDrillCronExpression)) {
-      return fail('Expressão cron de restore drill inválida.');
-    }
+    const invalid = validateBackupConfig(config, { requireLocalDestination: true });
+    if (invalid) return fail(invalid);
 
-    const settings = configService.getSettings();
-    const existing = settings.backupConfigs || [];
-    const previous = existing.find((b) => b.connectionId === config.connectionId);
-    const merged: BackupConfig = { ...previous, ...config };
-    const updated = [merged, ...existing.filter((b) => b.connectionId !== config.connectionId)];
-    configService.saveSettings({ backupConfigs: updated });
+    configService.saveSettings({ backupConfigs: mergeBackupConfig(configService.getSettings().backupConfigs || [], config) });
 
     return ok({
       success: true,

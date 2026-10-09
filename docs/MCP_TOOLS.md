@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **166 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **153 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -74,10 +74,11 @@ Domínio completo para interagir com o Karaf, inspecionar logs, diagnosticar con
 ---
 
 ## 4. Docker e Containers (Podman)
-Ferramentas para manipular a stack do Docker. As ferramentas funcionam para chamadas que começam com `docker_...` ou `container_...`.
+Ferramentas para manipular a stack do Docker. As ferramentas funcionam para chamadas que começam com `docker_...`.
 
 *   **`docker_status` / `docker_list_containers` / `docker_get_stats`**: Lista containers locais em execução e seu consumo.
 *   **`docker_start_container` / `docker_stop_container` / `docker_restart_container` / `docker_remove_container`**: Gerencia o ciclo de vida dos containers.
+*   **`docker_start_sequence` / `docker_stop_sequence`**: Sobe ou derruba uma lista de containers em ordem, com atraso opcional entre eles.
 *   **`docker_get_container_logs`**: Traz logs de um container específico para diagnóstico.
 *   **`docker_compose_up` / `docker_compose_down` / `docker_compose_status`**: Gerencia pilhas complexas de Docker Compose (ex. bancos de dados locais).
 
@@ -276,7 +277,7 @@ Integração com o projeto de testes automatizados Cypress (**TAUT**), localizad
 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
-*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `container_remove`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (85 das 166) são registradas. As demais nem aparecem para o cliente.
+*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (80 das 153) são registradas. As demais nem aparecem para o cliente.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).

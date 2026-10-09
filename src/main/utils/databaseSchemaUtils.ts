@@ -182,6 +182,7 @@ export function mapPgConstraints(rows: Row[]): TableConstraintDetail[] {
         columns,
         refTable: text(r.ref_table),
         refColumns: text(r.ref_columns) ? String(r.ref_columns).split(',').map((c) => c.trim()) : undefined,
+        onDelete: kind === 'FOREIGN KEY' ? /\bON DELETE (CASCADE|SET NULL|SET DEFAULT|RESTRICT)\b/i.exec(String(r.definition ?? ''))?.[1]?.toUpperCase() ?? 'NO ACTION' : undefined,
         condition: kind === 'CHECK' ? text(r.definition) : undefined,
         definition: text(r.definition),
         status: r.convalidated === false || r.convalidated === 'f' ? 'NOT VALID' : 'VALID'

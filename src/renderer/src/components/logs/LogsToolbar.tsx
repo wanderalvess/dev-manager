@@ -58,19 +58,19 @@ export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
 
     {/* Navegador Rápido de Erros (Signature Element) */}
     {props.errorCount > 0 && (
-      <div className="flex items-center space-x-1 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-lg text-rose-300 text-[11px] font-mono">
+      <div className="flex items-center space-x-1 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-lg text-rose-300 text-2xs font-mono">
         <span className="font-bold mr-1">Erros: {props.errorCount}</span>
         <button
           onClick={() => props.onNavigateErrors('prev')}
           className="p-0.5 hover:bg-rose-500/20 rounded transition-colors"
-          title="Ir para o erro anterior"
+          title="Ir para o erro anterior" aria-label="Ir para o erro anterior"
         >
           <ChevronUp className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => props.onNavigateErrors('next')}
           className="p-0.5 hover:bg-rose-500/20 rounded transition-colors"
-          title="Ir para o próximo erro"
+          title="Ir para o próximo erro" aria-label="Ir para o próximo erro"
         >
           <ChevronDown className="w-3.5 h-3.5" />
         </button>

@@ -51,7 +51,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card dark:bg-slate-900 border border-border rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden animate-fade-in relative"
+      panelClassName="bg-card dark:bg-slate-900 border border-border rounded-xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden animate-fade-in relative"
       closeOnBackdrop={false}
     >
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/70 shrink-0">
@@ -61,7 +61,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-bold text-foreground">Log do Karaf</h4>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Log interno real do container (log:display / Pax Logging) — funciona também contra Karaf remoto.
             </p>
           </div>
@@ -116,7 +116,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
             <span>Lendo log:display via client.bat...</span>
           </div>
         ) : filteredKarafLog ? (
-          <pre className="text-[11px] font-mono whitespace-pre text-slate-200 overflow-x-auto min-w-full selection:bg-slate-800">{filteredKarafLog}</pre>
+          <pre className="text-2xs font-mono whitespace-pre text-slate-200 overflow-x-auto min-w-full selection:bg-slate-800">{filteredKarafLog}</pre>
         ) : karafLog ? (
           <p className="text-xs text-slate-400 text-center py-8">
             Nenhuma linha corresponde ao filtro "{logSearch}".

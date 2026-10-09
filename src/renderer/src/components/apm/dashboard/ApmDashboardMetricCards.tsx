@@ -27,9 +27,9 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
       {/* Card 1: Throughput (Vazão RPM) */}
-      <div className="p-3.5 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between relative overflow-hidden">
+      <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between relative overflow-hidden">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
+          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
             <Activity className="w-3.5 h-3.5 text-sky-500" />
             Vazão (Throughput)
           </span>
@@ -63,9 +63,9 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       </div>
 
       {/* Card 2: Latência Percentil (p95) */}
-      <div className="p-3.5 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
+      <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
+          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
             <Clock className="w-3.5 h-3.5 text-indigo-500" />
             Latência (p95)
           </span>
@@ -99,7 +99,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           </div>
 
           {/* Escala Visual de Percentis */}
-          <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden mt-3 relative">
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-3 relative">
             <div
               className="bg-indigo-500 h-full rounded-full transition-all duration-500"
               style={{ width: `${getP95BarWidthPct(overview.p95LatencyMs, overview.p99LatencyMs)}%` }}
@@ -115,9 +115,9 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       </div>
 
       {/* Card 3: Confiabilidade & Taxa de Erros */}
-      <div className="p-3.5 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
+      <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
+          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
             <AlertCircle
               className={`w-3.5 h-3.5 ${
                 overview.errorRate > 0 ? 'text-rose-500' : 'text-emerald-500'
@@ -147,7 +147,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           </div>
 
           {/* Indicador de Falhas */}
-          <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden mt-3">
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-3">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 overview.errorRate > 0 ? 'bg-rose-500' : 'bg-emerald-500'
@@ -165,9 +165,9 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       </div>
 
       {/* Card 4: Perfil de Carga (Oracle vs JVM) */}
-      <div className="p-3.5 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
+      <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
+          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
             <Database className="w-3.5 h-3.5 text-amber-500" />
             Tempo em Banco (Oracle)
           </span>
@@ -183,7 +183,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           </div>
 
           {/* Barra de Proporção: Banco vs Java */}
-          <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden mt-3 flex">
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-3 flex">
             <div
               className="bg-amber-500 h-full transition-all duration-500"
               style={{ width: `${Math.min(100, overview.dbTimePercentage)}%` }}

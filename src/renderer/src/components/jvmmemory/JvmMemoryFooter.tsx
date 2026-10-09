@@ -31,7 +31,7 @@ export const JvmMemoryFooter: React.FC<JvmMemoryFooterProps> = ({
           onChange={(e) => onAutoRefreshChange(e.target.checked)}
           className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5"
         />
-        <span className="font-mono text-[11px]">Auto-refresh</span>
+        <span className="font-mono text-2xs">Auto-refresh</span>
       </label>
 
       {autoRefresh && (
@@ -52,7 +52,7 @@ export const JvmMemoryFooter: React.FC<JvmMemoryFooterProps> = ({
       <button
         onClick={onTriggerGc}
         disabled={isGcRunning}
-        className="px-3 py-1.5 rounded-md text-xs font-semibold font-mono flex items-center space-x-1.5 transition-colors bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 cursor-pointer disabled:opacity-40"
+        className="px-3 py-1.5 rounded-md text-xs font-semibold font-mono flex items-center space-x-1.5 transition-colors bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 cursor-pointer disabled:opacity-50"
         title="Disparar execução de System.gc() na JVM do Karaf"
       >
         <Trash2 className={`w-3.5 h-3.5 ${isGcRunning ? 'animate-spin' : ''}`} />

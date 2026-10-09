@@ -18,7 +18,7 @@ export const InfrScriptsTab: React.FC<InfrScriptsTabProps> = ({
 }) => (
   <div className="space-y-4">
     <div className="p-3 bg-muted/30 border border-border/80 rounded-xl space-y-2">
-      <label className="text-[11px] font-semibold text-muted-foreground block">
+      <label className="text-2xs font-semibold text-muted-foreground block">
         Caminho do repositório INFR-Docker
       </label>
       <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export const InfrScriptsTab: React.FC<InfrScriptsTabProps> = ({
                 {s.exists ? 'Disponível' : 'Não Encontrado'}
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground">{s.description}</p>
+            <p className="text-2xs text-muted-foreground">{s.description}</p>
             <div className="text-2xs font-mono text-muted-foreground/80 truncate">{s.path}</div>
           </div>
         </div>

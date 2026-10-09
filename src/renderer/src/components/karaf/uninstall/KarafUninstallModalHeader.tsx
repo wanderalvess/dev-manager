@@ -13,7 +13,7 @@ export const KarafUninstallModalHeader: React.FC<KarafUninstallModalHeaderProps>
       </div>
       <div>
         <h4 className="text-sm font-bold text-foreground">Confirmar Desinstalação do Bundle</h4>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Verificação prévia de impacto e fiação de dependências OSGi
         </p>
       </div>

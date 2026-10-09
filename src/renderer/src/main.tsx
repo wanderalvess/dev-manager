@@ -39,7 +39,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
       return (
         <div className="h-screen w-screen bg-[#080c14] text-white flex flex-col items-center justify-center p-6 select-text">
-          <div className="max-w-xl w-full bg-[#111928] border border-red-500/40 rounded-2xl p-6 shadow-2xl space-y-4">
+          <div className="max-w-xl w-full bg-[#111928] border border-red-500/40 rounded-xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center space-x-3 text-rose-400">
               <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

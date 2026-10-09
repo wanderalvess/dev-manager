@@ -33,7 +33,7 @@ export const AiProviderList: React.FC<AiProviderListProps> = ({
           <Activity className="w-3.5 h-3.5 text-primary" />
           Motores Configurados ({providers.length})
         </span>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-2xs text-muted-foreground">
           O motor selecionado é consultado pelo Copilot de Documentação e MCP.
         </span>
       </div>

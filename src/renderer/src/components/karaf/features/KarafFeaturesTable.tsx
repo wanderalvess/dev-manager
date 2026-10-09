@@ -32,7 +32,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
   if (features.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center p-6 space-y-2">
-        <div className="p-3 rounded-2xl bg-muted/40 border border-border text-muted-foreground mb-1">
+        <div className="p-3 rounded-xl bg-muted/40 border border-border text-muted-foreground mb-1">
           <Layers className="w-8 h-8 opacity-40" />
         </div>
         <p className="text-sm font-bold text-foreground">Nenhuma feature encontrada</p>
@@ -57,7 +57,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
             <th className="py-2.5 px-4 text-right">Ação</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border/50 font-mono text-[11px]">
+        <tbody className="divide-y divide-border/50 font-mono text-2xs">
           {features.map((feat) => {
             const isBusy = actionInProgress === feat.name;
             const isCopied = copiedKey === feat.name;
@@ -82,7 +82,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                       type="button"
                       onClick={() => copy(feat.name)}
                       className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-foreground transition-opacity cursor-pointer"
-                      title="Copiar nome da feature"
+                      title="Copiar nome da feature" aria-label="Copiar nome da feature"
                     >
                       {isCopied ? (
                         <Check className="w-3 h-3 text-emerald-400" />
@@ -94,7 +94,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                     {/* Tag WinThor */}
                     {feat.isWinthor && (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-2xs font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25 uppercase tracking-wider">
-                        <ShieldCheck className="w-2.5 h-2.5" />
+                        <ShieldCheck className="w-3 h-3" />
                         WinThor
                       </span>
                     )}
@@ -159,7 +159,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                     type="button"
                     onClick={() => onRequestUninstall(feat)}
                     disabled={isBusy}
-                    className="px-2.5 py-1 rounded-md font-mono font-semibold text-[11px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/25 transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-40"
+                    className="px-2.5 py-1 rounded-md font-mono font-semibold text-2xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/25 transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                     title={`Desinstalar "${feat.name}" com feature:uninstall -r`}
                   >
                     {isBusy ? (

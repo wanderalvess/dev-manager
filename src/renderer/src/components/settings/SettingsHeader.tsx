@@ -39,7 +39,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
         <Settings className="w-4 h-4" />
       </div>
       <div>
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
           Configurações do Ambiente &amp; Diretórios
           <button
             type="button"
@@ -50,8 +50,8 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
           >
             <HelpCircle className="w-3.5 h-3.5" />
           </button>
-        </h2>
-        <p className="text-[11px] text-muted-foreground">
+        </h1>
+        <p className="text-2xs text-muted-foreground">
           Configure os diretórios base, serviços Windows, processos de encerramento, portas e preferências de automação.
         </p>
       </div>

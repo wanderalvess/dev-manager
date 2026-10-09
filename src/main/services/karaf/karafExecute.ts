@@ -126,7 +126,8 @@ function buildLogDisplayFallback(settings: AppSettings, command: string, onChunk
   }
   const emptyNote = `[INFO] O buffer de logs em memória do Karaf está vazio no momento (nenhum registro recente).\r\n`;
   onChunk(emptyNote);
-  return { code: 0, stdout: emptyNote, stderr: '' };
+  // A nota vai só para o terminal: como stdout, getKarafLog/analyze_log tratariam o aviso como log real
+  return { code: 0, stdout: '', stderr: '' };
 }
 
 export async function executeKarafCommand(

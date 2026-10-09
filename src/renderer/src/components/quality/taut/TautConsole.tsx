@@ -55,7 +55,7 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
           type="button"
           onClick={onClear}
           disabled={!activeOutput}
-          className="text-2xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition cursor-pointer disabled:opacity-40"
+          className="text-2xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition cursor-pointer disabled:opacity-50"
         >
           Limpar
         </button>
@@ -65,7 +65,7 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
     {/* Corpo do Terminal com Log em Streaming */}
     <div
       ref={terminalRef}
-      className="flex-1 p-3 font-mono text-[11px] leading-relaxed bg-[#0B0F17] text-slate-200 overflow-y-auto select-text whitespace-pre-wrap"
+      className="flex-1 p-3 font-mono text-2xs leading-relaxed bg-[#0B0F17] text-slate-200 overflow-y-auto select-text whitespace-pre-wrap"
     >
       {activeOutput ? (
         activeOutput

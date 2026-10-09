@@ -109,7 +109,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
               {/* Canal [P] Produção / [H] Homologação */}
               <td className="py-2 px-2 text-center whitespace-nowrap">
                 <span
-                  className={`inline-flex items-center justify-center w-6 h-5 text-[11px] font-mono font-bold rounded border ${
+                  className={`inline-flex items-center justify-center w-6 h-5 text-2xs font-mono font-bold rounded border ${
                     isLiberado
                       ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/35'
                       : 'bg-amber-500/15 text-amber-400 border-amber-500/35'
@@ -137,7 +137,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
               <td className="py-2 px-3">
                 <div className="flex items-center gap-1.5 font-medium">
                   {item.codigoRotina > 0 && (
-                    <span className="font-mono text-[11px] font-bold text-primary shrink-0">
+                    <span className="font-mono text-2xs font-bold text-primary shrink-0">
                       {item.codigoRotina}
                     </span>
                   )}
@@ -151,12 +151,12 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
               </td>
 
               {/* Nome da Feature OSGi */}
-              <td className="py-2 px-3 font-mono text-[11px] text-muted-foreground select-all">
+              <td className="py-2 px-3 font-mono text-2xs text-muted-foreground select-all">
                 <span className="truncate max-w-[260px] inline-block">{item.nome}</span>
               </td>
 
               {/* Versão */}
-              <td className="py-2 px-3 font-mono text-[11px] whitespace-nowrap tabular-nums">
+              <td className="py-2 px-3 font-mono text-2xs whitespace-nowrap tabular-nums">
                 {item.versaoAnterior ? (
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground/70 line-through">{item.versaoAnterior}</span>
@@ -174,7 +174,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
                   <button
                     onClick={() => onInspect(item)}
                     className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    title="Inspecionar metadados Maven e dependências"
+                    title="Inspecionar metadados Maven e dependências" aria-label="Inspecionar metadados Maven e dependências"
                   >
                     <Info className="w-3.5 h-3.5" />
                   </button>

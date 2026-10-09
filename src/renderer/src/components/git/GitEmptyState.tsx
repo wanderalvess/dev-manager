@@ -16,7 +16,7 @@ export const GitEmptyState: React.FC<GitEmptyStateProps> = ({ hasProjects, onNav
   }
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-8 text-center cockpit-panel rounded-2xl border border-border space-y-3">
+    <div className="h-full flex flex-col items-center justify-center p-8 text-center cockpit-panel rounded-xl border border-border space-y-3">
       <FolderOpen className="w-10 h-10 text-primary/50" />
       <div>
         <h4 className="text-sm font-bold text-foreground">Nenhum repositório Git encontrado</h4>

@@ -46,7 +46,7 @@ export const ContainerBatchBar: React.FC<ContainerBatchBarProps> = ({
         <span className="h-4 w-px bg-border" />
 
         <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-          <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-mono">
+          <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-2xs font-mono">
             {selectedCount}
           </span>
           <span>{selectedCount === 1 ? 'container selecionado' : 'containers selecionados'}</span>
@@ -76,10 +76,10 @@ export const ContainerBatchBar: React.FC<ContainerBatchBarProps> = ({
           onClick={onBatchStop}
           disabled={isExecutingBatch}
           title="Parar todos os containers selecionados"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-100 rounded-lg text-xs font-semibold shadow-2xs transition cursor-pointer disabled:opacity-50 active:scale-98"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-muted hover:bg-muted/70 text-foreground rounded-lg text-xs font-semibold shadow-2xs transition cursor-pointer disabled:opacity-50 active:scale-98"
         >
           {isExecutingBatch && batchActionType === 'stop' ? (
-            <RotateCw className="w-3.5 h-3.5 animate-spin text-zinc-300" />
+            <RotateCw className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
           ) : (
             <Square className="w-3.5 h-3.5 fill-current" />
           )}
@@ -115,7 +115,7 @@ export const ContainerBatchBar: React.FC<ContainerBatchBarProps> = ({
           type="button"
           onClick={onClearSelection}
           disabled={isExecutingBatch}
-          title="Limpar seleção"
+          title="Limpar seleção" aria-label="Limpar seleção"
           className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
         >
           <X className="w-4 h-4" />

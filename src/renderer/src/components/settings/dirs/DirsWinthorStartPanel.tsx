@@ -19,7 +19,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
   showWtaPassword,
   setShowWtaPassword
 }) => (
-  <div className="bg-card border border-border/80 rounded-xl p-3.5 space-y-3 shadow-xs">
+  <div className="bg-card border border-border/80 rounded-xl p-3 space-y-3 shadow-xs">
     <div className="flex items-center justify-between">
       <div>
         <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
@@ -43,7 +43,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
       <div>
-        <label htmlFor="dirs-winthor-start-panel-1" className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-1" className="block text-2xs font-semibold text-foreground mb-1">
           Porta do WinThor Start:
         </label>
         <input id="dirs-winthor-start-panel-1"
@@ -55,7 +55,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
         />
       </div>
       <div>
-        <label htmlFor="dirs-winthor-start-panel-2" className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-2" className="block text-2xs font-semibold text-foreground mb-1">
           URL do Portal WTA:
         </label>
         <input id="dirs-winthor-start-panel-2"
@@ -70,7 +70,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
       <div id="field-wtaLogin">
-        <label htmlFor="dirs-winthor-start-panel-3" className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-3" className="block text-2xs font-semibold text-foreground mb-1">
           Usuário WTA (Login Automático):
         </label>
         <input id="dirs-winthor-start-panel-3"
@@ -82,7 +82,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
         />
       </div>
       <div id="field-wtaPassword">
-        <label htmlFor="dirs-winthor-start-panel-4" className="block text-[11px] font-semibold text-foreground mb-1 flex items-center justify-between">
+        <label htmlFor="dirs-winthor-start-panel-4" className="block text-2xs font-semibold text-foreground mb-1 flex items-center justify-between">
           <span>Senha / Hash WTA:</span>
           <button
             type="button"
@@ -105,7 +105,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
 
     <div className="space-y-2 pt-1 border-t border-border/40">
       <div id="field-wtaAuthToken">
-        <label htmlFor="dirs-winthor-start-panel-5" className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-5" className="block text-2xs font-semibold text-foreground mb-1">
           Cookie de Autenticação WTA (<code>suukie</code>):
         </label>
         <input id="dirs-winthor-start-panel-5"
@@ -123,14 +123,14 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
       </div>
 
       <div>
-        <label htmlFor="dirs-winthor-start-panel-6" className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-winthor-start-panel-6" className="block text-2xs font-semibold text-foreground mb-1">
           Payload de Fallback (JSON com <code>m, u, p, t, s</code>):
         </label>
         <textarea id="dirs-winthor-start-panel-6"
           rows={2}
           value={settings.winthorStartDefaultPayload || ''}
           onChange={(e) => setField('winthorStartDefaultPayload', e.target.value)}
-          className="w-full bg-muted/40 border border-border rounded-lg p-2 text-foreground font-mono text-[11px] focus:outline-hidden focus:border-primary resize-none"
+          className="w-full bg-muted/40 border border-border rounded-lg p-2 text-foreground font-mono text-2xs focus:outline-hidden focus:border-primary resize-none"
           placeholder='{"m":"...","u":"...","p":"...","t":"...","s":"..."}'
         />
         <p className="text-2xs text-muted-foreground mt-0.5">

@@ -24,7 +24,7 @@ export const KarafDetailsModal: React.FC<KarafDetailsModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[86vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[86vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
       {/* Header */}
@@ -37,7 +37,7 @@ export const KarafDetailsModal: React.FC<KarafDetailsModalProps> = ({
             <h4 className="text-sm font-bold text-foreground">
               [{target.id}] {target.name}
             </h4>
-            <p className="text-[11px] text-muted-foreground font-mono">
+            <p className="text-2xs text-muted-foreground font-mono">
               Versão: {target.version} · Estado: {target.state}
             </p>
           </div>

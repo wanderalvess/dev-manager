@@ -42,7 +42,7 @@ export const CcwRollbackTab: React.FC<CcwRollbackTabProps> = ({
       <span className="text-xs font-bold text-foreground block">
         Gerenciador de Rollback de Rotinas (.bak)
       </span>
-      <span className="text-[11px] text-muted-foreground block">
+      <span className="text-2xs text-muted-foreground block">
         Restaure versões anteriores criadas automaticamente antes de atualizações ou substituições de executáveis.
       </span>
     </div>
@@ -98,7 +98,7 @@ export const CcwRollbackTab: React.FC<CcwRollbackTabProps> = ({
             ? `Nenhum backup (.bak) encontrado para "${rollbackRoutine}"`
             : 'Informe o código da rotina e clique em "Buscar Backups"'}
         </div>
-        <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
+        <p className="text-2xs text-muted-foreground max-w-sm mx-auto">
           Cópias .bak são criadas automaticamente sempre que uma rotina é atualizada pela CCW ou substituída localmente.
         </p>
       </div>

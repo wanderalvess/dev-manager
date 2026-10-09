@@ -59,7 +59,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
       <button
         onClick={onClose}
         className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
-        title="Fechar painel (Esc)"
+        title="Fechar painel (Esc)" aria-label="Fechar painel (Esc)"
       >
         <X className="w-4 h-4" />
       </button>
@@ -90,13 +90,13 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
           )}
           {feature.descricao}
         </h3>
-        <div className="text-[11px] font-mono text-muted-foreground mt-0.5 select-all">
+        <div className="text-2xs font-mono text-muted-foreground mt-0.5 select-all">
           {feature.nome}
         </div>
       </div>
 
       {/* Bloco de Versão */}
-      <div className="p-2.5 rounded-md border border-border bg-muted/30 font-mono text-[11px] space-y-2">
+      <div className="p-2.5 rounded-md border border-border bg-muted/30 font-mono text-2xs space-y-2">
         <div className="text-muted-foreground text-2xs uppercase tracking-wider">
           Versão do Artefato
         </div>
@@ -142,7 +142,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
       {/* Coordenadas Maven (GAV) */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-medium text-muted-foreground">Coordenadas Maven</span>
+          <span className="text-2xs font-medium text-muted-foreground">Coordenadas Maven</span>
           {repo && (
             <CopyButton
               copied={copiedKey === 'gav'}
@@ -169,7 +169,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
       {repo?.featureMavenUrl && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-muted-foreground">Repositório de Features</span>
+            <span className="text-2xs font-medium text-muted-foreground">Repositório de Features</span>
             <CopyButton
               copied={copiedKey === 'mvnUrl'}
               label="Copiar URL"
@@ -187,7 +187,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
       {commands && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-muted-foreground">Comandos Karaf CLI</span>
+            <span className="text-2xs font-medium text-muted-foreground">Comandos Karaf CLI</span>
             <CopyButton
               copied={copiedKey === 'cli'}
               label="Copiar Comandos"
@@ -205,13 +205,13 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
       {/* Dependências Requeridas */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-medium text-muted-foreground">
+          <span className="text-2xs font-medium text-muted-foreground">
             Dependências Declaradas ({feature.dependencias?.length || 0})
           </span>
         </div>
 
         {!feature.dependencias || feature.dependencias.length === 0 ? (
-          <div className="p-2.5 rounded border border-border bg-muted/20 text-muted-foreground text-[11px] italic">
+          <div className="p-2.5 rounded border border-border bg-muted/20 text-muted-foreground text-2xs italic">
             Nenhuma dependência externa explícita informada pela API da 801. O Karaf resolverá dependências OSGi em cascata.
           </div>
         ) : (

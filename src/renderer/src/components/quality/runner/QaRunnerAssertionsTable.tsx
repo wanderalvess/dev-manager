@@ -31,7 +31,7 @@ export const QaRunnerAssertionsTable: React.FC<QaRunnerAssertionsTableProps> = (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-xs border-collapse">
         <thead>
-          <tr className="border-b border-border text-[11px] font-mono text-muted-foreground uppercase">
+          <tr className="border-b border-border text-2xs font-mono text-muted-foreground uppercase">
             <th className="py-1 px-2 w-48">Coluna / Campo</th>
             <th className="py-1 px-2 w-40">Esperado</th>
             <th className="py-1 px-2 w-40">Retornado no Banco</th>
@@ -39,7 +39,7 @@ export const QaRunnerAssertionsTable: React.FC<QaRunnerAssertionsTableProps> = (
             <th className="py-1 px-2">Detalhes / Motivo</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border/40 font-mono text-[11px]">
+        <tbody className="divide-y divide-border/40 font-mono text-2xs">
           {step.assertions.map((ass) => (
             <tr key={ass.assertionId} className={getAssertionRowClass(ass.status)}>
               <td className="py-1.5 px-2 font-semibold text-foreground">{ass.column}</td>
@@ -52,7 +52,7 @@ export const QaRunnerAssertionsTable: React.FC<QaRunnerAssertionsTableProps> = (
                   {getAssertionBadgeLabel(ass.status)}
                 </span>
               </td>
-              <td className="py-1.5 px-2 text-[11px] font-sans text-muted-foreground">
+              <td className="py-1.5 px-2 text-2xs font-sans text-muted-foreground">
                 {ass.message || '—'}
               </td>
             </tr>

@@ -20,7 +20,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
       type="button"
       onClick={() => setIsOpen((previous) => !previous)}
       title="Detecção automática de gargalos e chamadas lentas"
-      className={`h-6 px-2 rounded border text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition ${
+      className={`h-6 px-2 rounded border text-2xs font-medium flex items-center gap-1.5 cursor-pointer transition ${
         isOpen || activePreset === 'SLOW_QUERIES' || activePreset === 'SLOW_ENDPOINTS'
           ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-semibold'
           : 'bg-card border-border text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400'
@@ -72,7 +72,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
                     onPresetChange('SLOW_ENDPOINTS');
                     setIsOpen(false);
                   }}
-                  className="w-full text-left p-1.5 rounded bg-muted/30 hover:bg-muted border border-border/60 flex items-center justify-between text-[11px] font-mono cursor-pointer transition"
+                  className="w-full text-left p-1.5 rounded bg-muted/30 hover:bg-muted border border-border/60 flex items-center justify-between text-2xs font-mono cursor-pointer transition"
                 >
                   <span className="truncate max-w-[180px] text-foreground">
                     <strong className="text-primary">{endpoint.method}</strong> {endpoint.route}
@@ -91,7 +91,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
               onSortChange('duration');
               setIsOpen(false);
             }}
-            className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-medium cursor-pointer"
+            className="text-2xs text-amber-600 dark:text-amber-400 hover:underline font-medium cursor-pointer"
           >
             Filtrar Queries Lentas &rarr;
           </button>
@@ -102,7 +102,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
               onSortChange('duration');
               setIsOpen(false);
             }}
-            className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+            className="text-2xs text-primary hover:underline font-medium cursor-pointer"
           >
             Ver Todos os Lentos &rarr;
           </button>

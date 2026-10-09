@@ -53,7 +53,7 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({
           <h3 className="text-xs font-semibold text-foreground tracking-tight">
             Diff de Alterações · {project.name}
           </h3>
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-2xs text-muted-foreground font-mono">
             {files.length} arquivo(s) modificado(s) em relação a HEAD
           </span>
         </div>
@@ -74,7 +74,7 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({
           type="button"
           onClick={() => onCopyDiff(diffText)}
           disabled={!diffText || isLoading}
-          className="px-2.5 py-1 bg-card hover:bg-muted border border-border text-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
+          className="px-2.5 py-1 bg-card hover:bg-muted border border-border text-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
           title="Copiar diff unificado para a área de transferência"
         >
           {copiedKey === diffText ? (

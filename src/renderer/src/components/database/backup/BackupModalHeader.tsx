@@ -35,7 +35,7 @@ export const BackupModalHeader: React.FC<BackupModalHeaderProps> = ({ activeConn
           </span>
           {getDbBadge(activeConnection.type)}
         </div>
-        <p className="text-[11px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
+        <p className="text-2xs text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
           <span>{activeConnection.user}@{activeConnection.host}:{activeConnection.port || getDefaultDbPort(activeConnection.type)}</span>
           <span className="text-border">/</span>
@@ -47,7 +47,7 @@ export const BackupModalHeader: React.FC<BackupModalHeaderProps> = ({ activeConn
       type="button"
       onClick={onClose}
       className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-muted/80 transition-colors cursor-pointer"
-      title="Fechar"
+      title="Fechar" aria-label="Fechar"
     >
       <X className="w-4 h-4" />
     </button>

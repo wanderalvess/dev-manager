@@ -38,8 +38,8 @@ const RuntimeTag: React.FC<ContainerCardKinds> = ({ isOracle, isWta, isWsh }) =>
     );
   }
   return (
-    <span className="px-2 py-0.5 rounded bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30 text-2xs font-mono font-bold flex items-center gap-1.5">
-      <Box className="w-3 h-3 text-slate-400" />
+    <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/30 text-2xs font-mono font-bold flex items-center gap-1.5">
+      <Box className="w-3 h-3 text-muted-foreground" />
       DOCKER
     </span>
   );
@@ -95,7 +95,7 @@ export const ContainerCardTitleRow: React.FC<ContainerCardTitleRowProps> = ({
               className="inline-flex items-center gap-1 text-2xs font-mono px-2 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 transition cursor-pointer"
             >
               <span>{p.hostPort}→{p.containerPort}</span>
-              <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+              <ExternalLink className="w-3 h-3 opacity-70" />
             </a>
           ))
         ) : container.ports ? (

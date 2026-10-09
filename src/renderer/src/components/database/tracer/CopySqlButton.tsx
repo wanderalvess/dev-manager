@@ -13,7 +13,7 @@ export const CopySqlButton: React.FC<{ sql: string; keyId: string; onCopy: (text
       e.stopPropagation();
       onCopy(sql, keyId);
     }}
-    title="Copiar texto"
+    title="Copiar texto" aria-label="Copiar texto"
     className="text-muted-foreground hover:text-primary transition cursor-pointer shrink-0"
   >
     {copiedKey === keyId ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}

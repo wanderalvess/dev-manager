@@ -24,58 +24,6 @@ export interface QualityMetrics {
   readinessScore: number;
 }
 
-export interface QualityRoadmapItem {
-  id: string;
-  title: string;
-  description: string;
-  targetRole: 'QA' | 'PO' | 'Ambos';
-  status: 'planned' | 'in_progress' | 'ready';
-  tag: string;
-}
-
-export const ROADMAP_PLANNED_ITEMS: QualityRoadmapItem[] = [
-  {
-    id: 'road-dash',
-    title: 'Dashboard de Indicadores & Prontidão',
-    description: 'Painel executivo com métricas de cobertura de testes, taxa de aprovação e semáforo de liberação de versão para POs.',
-    targetRole: 'PO',
-    status: 'ready',
-    tag: 'Fase 1'
-  },
-  {
-    id: 'road-matrix',
-    title: 'Matriz de Validação & Homologação',
-    description: 'Checklist interativo de cenários de teste vinculados às rotinas Delphi (.exe/.pc) e serviços Karaf com filtros ágeis.',
-    targetRole: 'QA',
-    status: 'ready',
-    tag: 'Fase 1'
-  },
-  {
-    id: 'road-evidence',
-    title: 'Central de Evidências & Abertura de Bugs',
-    description: 'Captura assistida de passos reproduzíveis, extração rápida de logs com falha e exportação de cards para Jira e Azure DevOps.',
-    targetRole: 'QA',
-    status: 'planned',
-    tag: 'Fase 2'
-  },
-  {
-    id: 'road-automation',
-    title: 'Automação & Execução de Testes E2E',
-    description: 'Disparo de runners de testes automatizados (Cypress, Playwright e scripts de smoke test) diretamente do cockpit.',
-    targetRole: 'Ambos',
-    status: 'ready',
-    tag: 'Fase 2'
-  },
-  {
-    id: 'road-mock-data',
-    title: 'Gerador de Massa de Testes com IA',
-    description: 'Criação e higienização rápida de dados de teste (clientes, títulos, notas e pedidos) com consultas de apoio ao DB Studio.',
-    targetRole: 'QA',
-    status: 'planned',
-    tag: 'Fase 3'
-  }
-];
-
 // Cenários-modelo: todos nascem "pendente", pois nenhum foi verificado de fato.
 export function getDefaultValidationItems(): QualityValidationItem[] {
   return [

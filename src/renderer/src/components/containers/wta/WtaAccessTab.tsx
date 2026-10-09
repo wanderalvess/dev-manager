@@ -17,7 +17,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
   return (
     <div className="space-y-4">
       {/* Banner Explicativo */}
-      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3.5 flex items-start gap-3">
+      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 flex items-start gap-3">
         <div className="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5">
           <Globe className="w-4 h-4" />
         </div>
@@ -31,7 +31,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
 
       {/* Links dos Portais */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="p-3.5 bg-card border border-border/80 rounded-xl space-y-2">
+        <div className="p-3 bg-card border border-border/80 rounded-xl space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Globe className="w-3.5 h-3.5 text-cyan-500" />
@@ -54,7 +54,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
           </button>
         </div>
 
-        <div className="p-3.5 bg-card border border-border/80 rounded-xl space-y-2">
+        <div className="p-3 bg-card border border-border/80 rounded-xl space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Wrench className="w-3.5 h-3.5 text-amber-500" />

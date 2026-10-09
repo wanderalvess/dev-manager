@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EscapeToClose } from '../ui/EscapeToClose';
 import {
   RotateCw,
   Square,
@@ -64,7 +65,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
           onClick={onStopKaraf}
           disabled={isStoppingKaraf}
           className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-rose-500/10 border border-border hover:border-rose-500/30 text-rose-600 dark:text-rose-400 cursor-pointer shadow-2xs disabled:opacity-50"
-          title="Encerrar a execução do container Apache Karaf"
+          title="Encerrar a execução do container Apache Karaf" aria-label="Encerrar a execução do container Apache Karaf"
         >
           {isStoppingKaraf ? (
             <>
@@ -86,7 +87,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
               onClick={onLaunchKarafDebug}
               disabled={isStartingKaraf}
               className="h-[30px] px-3 py-1.5 font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer disabled:opacity-50"
-              title="Iniciar o Apache Karaf em modo Debug com JDWP (:5005) em terminal"
+              title="Iniciar o Apache Karaf em modo Debug com JDWP (:5005) em terminal" aria-label="Iniciar o Apache Karaf em modo Debug com JDWP (:5005) em terminal"
             >
               {isStartingKaraf ? (
                 <>
@@ -105,7 +106,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
               onClick={() => setIsKarafStartMenuOpen((prev) => !prev)}
               disabled={isStartingKaraf}
               className="h-[30px] px-1.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white border-l border-emerald-500 cursor-pointer disabled:opacity-50"
-              title="Mais opções de inicialização do Karaf"
+              title="Mais opções de inicialização do Karaf" aria-label="Mais opções de inicialização do Karaf"
             >
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
@@ -117,6 +118,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
                 className="fixed inset-0 z-30"
                 onClick={() => setIsKarafStartMenuOpen(false)}
               />
+              <EscapeToClose onEscape={() => setIsKarafStartMenuOpen(false)} />
               <div className="absolute right-0 mt-1 w-60 bg-card border border-border rounded-lg shadow-xl z-40 py-1 text-xs">
                 <button
                   type="button"
@@ -170,6 +172,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
               className="fixed inset-0 z-30"
               onClick={() => setIsExportMenuOpen(false)}
             />
+            <EscapeToClose onEscape={() => setIsExportMenuOpen(false)} />
             <div className="absolute right-0 mt-1 w-44 bg-card border border-border rounded-lg shadow-xl z-40 py-1 text-xs">
               <button
                 type="button"
@@ -268,7 +271,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
         onClick={onRefresh}
         disabled={isLoading}
         className="h-[30px] w-[30px] flex items-center justify-center bg-card hover:bg-muted border border-border rounded-md text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer shadow-2xs"
-        title="Atualizar lista de bundles"
+        title="Atualizar lista de bundles" aria-label="Atualizar lista de bundles"
       >
         <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />
       </button>

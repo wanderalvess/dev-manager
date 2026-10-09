@@ -63,7 +63,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
         {/* Header do Modal */}
@@ -177,7 +177,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
 
         {/* Conteúdo dos Logs */}
         <div
-          className={`flex-1 bg-[#090D14] p-4 overflow-auto font-mono text-[11px] text-zinc-200 select-text leading-relaxed scrollbar-thin ${
+          className={`flex-1 bg-[#090D14] p-4 overflow-auto font-mono text-2xs text-zinc-200 select-text leading-relaxed scrollbar-thin ${
             isLogWrap ? 'whitespace-pre-wrap' : 'whitespace-pre overflow-x-auto'
           }`}
         >

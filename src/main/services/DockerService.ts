@@ -253,5 +253,3 @@ export class DockerService {
     return oracle.execOracleDataPump(this.ctx, params);
   }
 }
-
-export const ContainerService = DockerService;

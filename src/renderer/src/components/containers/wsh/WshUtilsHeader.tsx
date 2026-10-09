@@ -19,7 +19,7 @@ export const WshUtilsHeader: React.FC<WshUtilsHeaderProps> = ({ containerName, o
             Winthor Smart Hub
           </span>
         </h3>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Criptografia MD5 de senha, checagem de pré-requisitos em /opt e suporte à Rotina 2650
         </p>
       </div>

@@ -17,7 +17,7 @@ interface DocSettingsLlmProviderFormProps {
 }
 
 const INPUT_BASE =
-  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary';
+  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/20 focus:border-primary';
 
 export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProps> = ({
   editing,
@@ -52,7 +52,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-[11px] font-bold text-foreground">Provedores Recomendados</label>
+        <label className="text-2xs font-bold text-foreground">Provedores Recomendados</label>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
           {PROVIDER_PRESETS.map((preset) => {
             const isSelected = (editing.provider || 'openai') === preset.type;
@@ -76,7 +76,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-[11px] font-bold text-foreground">Nome Identificador</label>
+          <label className="text-2xs font-bold text-foreground">Nome Identificador</label>
           <input
             type="text"
             required
@@ -87,7 +87,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] font-bold text-foreground">Nome do Modelo (Model ID)</label>
+          <label className="text-2xs font-bold text-foreground">Nome do Modelo (Model ID)</label>
           <input
             type="text"
             required
@@ -121,7 +121,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
 
       <div className="space-y-2.5">
         <div className="space-y-1">
-          <label className="text-[11px] font-bold text-foreground flex items-center justify-between">
+          <label className="text-2xs font-bold text-foreground flex items-center justify-between">
             <span>URL Base da API (Endpoint)</span>
             <span className="text-2xs text-muted-foreground font-normal">
               {editing.provider === 'ollama' ? 'Padrão local Ollama' : 'Compatível com OpenAI'}
@@ -138,7 +138,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
 
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold text-foreground">Chave de API / Token</label>
+            <label className="text-2xs font-bold text-foreground">Chave de API / Token</label>
             <span className="text-2xs text-muted-foreground">
               {editing.provider === 'ollama' ? 'Opcional para Ollama local' : 'Fica salva localmente nas configurações'}
             </span>
@@ -151,13 +151,13 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
               }
               value={editing.apiKey || ''}
               onChange={(e) => setEditing({ ...editing, apiKey: e.target.value })}
-              className="w-full bg-background border border-border rounded-xl pl-3 pr-10 py-2 text-xs font-mono text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full bg-background border border-border rounded-xl pl-3 pr-10 py-2 text-xs font-mono text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/20 focus:border-primary"
             />
             <button
               type="button"
               onClick={() => setShowApiKey(!showApiKey)}
               className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
-              title={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
+              title={showApiKey ? 'Ocultar chave' : 'Mostrar chave'} aria-label={showApiKey ? 'Ocultar chave' : 'Mostrar chave'}
             >
               {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
@@ -168,7 +168,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold text-foreground">Temperatura</label>
+            <label className="text-2xs font-bold text-foreground">Temperatura</label>
             <span className="text-2xs font-mono text-primary font-bold">{editing.temperature ?? 0.3}</span>
           </div>
           <input
@@ -188,7 +188,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
         </div>
 
         <div className="space-y-1">
-          <label className="text-[11px] font-bold text-foreground">Limite Máximo de Tokens</label>
+          <label className="text-2xs font-bold text-foreground">Limite Máximo de Tokens</label>
           <input
             type="number"
             min={256}
@@ -203,7 +203,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
 
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <label className="text-[11px] font-bold text-foreground">Instruções de Sistema (RAG Context)</label>
+          <label className="text-2xs font-bold text-foreground">Instruções de Sistema (RAG Context)</label>
           <button
             type="button"
             onClick={() => setEditing({ ...editing, systemPrompt: DEFAULT_SYSTEM_PROMPT })}
@@ -217,7 +217,7 @@ export const DocSettingsLlmProviderForm: React.FC<DocSettingsLlmProviderFormProp
           value={editing.systemPrompt || ''}
           onChange={(e) => setEditing({ ...editing, systemPrompt: e.target.value })}
           placeholder="Instruções para orientar o assistente sobre o domínio do projeto..."
-          className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
+          className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/20 focus:border-primary resize-y"
         />
       </div>
 

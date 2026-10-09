@@ -17,23 +17,13 @@ export function createContainersApi({ apiFetch, wsManager }: BridgeDeps) {
     getDockerStatus: async (): Promise<DockerDaemonStatus> => {
       return apiFetch('/api/docker/status');
     },
-    getContainerStatus: async (): Promise<DockerDaemonStatus> => {
-      return apiFetch('/api/containers/status');
-    },
 
     listDockerContainers: async (): Promise<DockerContainerInfo[]> => {
       return apiFetch('/api/docker/containers');
     },
-    listContainers: async (): Promise<DockerContainerInfo[]> => {
-      return apiFetch('/api/containers');
-    },
 
     startDockerContainer: async (containerId: string): Promise<boolean> => {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/start`, { method: 'POST' });
-      return res.success;
-    },
-    startContainer: async (containerId: string): Promise<boolean> => {
-      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/start`, { method: 'POST' });
       return res.success;
     },
 
@@ -41,17 +31,9 @@ export function createContainersApi({ apiFetch, wsManager }: BridgeDeps) {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/stop`, { method: 'POST' });
       return res.success;
     },
-    stopContainer: async (containerId: string): Promise<boolean> => {
-      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/stop`, { method: 'POST' });
-      return res.success;
-    },
 
     restartDockerContainer: async (containerId: string): Promise<boolean> => {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/restart`, { method: 'POST' });
-      return res.success;
-    },
-    restartContainer: async (containerId: string): Promise<boolean> => {
-      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/restart`, { method: 'POST' });
       return res.success;
     },
 
@@ -59,30 +41,15 @@ export function createContainersApi({ apiFetch, wsManager }: BridgeDeps) {
       const res = await apiFetch<{ logs: string }>(`/api/docker/containers/${containerId}/logs?lines=${lines || 200}`);
       return res.logs;
     },
-    getContainerLogs: async (containerId: string, lines?: number): Promise<string> => {
-      const res = await apiFetch<{ logs: string }>(`/api/containers/${containerId}/logs?lines=${lines || 200}`);
-      return res.logs;
-    },
 
     removeDockerContainer: async (containerId: string): Promise<boolean> => {
       const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}`, { method: 'DELETE' });
-      return res.success;
-    },
-    removeContainer: async (containerId: string): Promise<boolean> => {
-      const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}`, { method: 'DELETE' });
       return res.success;
     },
 
     getDockerContainerStats: async (): Promise<DockerContainerStats[]> => {
       try {
         return await apiFetch<DockerContainerStats[]>('/api/docker/stats');
-      } catch {
-        return [];
-      }
-    },
-    getContainerStats: async (): Promise<DockerContainerStats[]> => {
-      try {
-        return await apiFetch<DockerContainerStats[]>('/api/containers/stats');
       } catch {
         return [];
       }
@@ -99,17 +66,6 @@ export function createContainersApi({ apiFetch, wsManager }: BridgeDeps) {
         return false;
       }
     },
-    openContainerTerminal: async (containerId: string, shell?: string): Promise<boolean> => {
-      try {
-        const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/terminal`, {
-          method: 'POST',
-          body: JSON.stringify({ shell })
-        });
-        return res.success;
-      } catch {
-        return false;
-      }
-    },
 
     inspectDockerContainer: async (containerId: string): Promise<DockerContainerInspect | null> => {
       try {
@@ -118,25 +74,10 @@ export function createContainersApi({ apiFetch, wsManager }: BridgeDeps) {
         return null;
       }
     },
-    inspectContainer: async (containerId: string): Promise<DockerContainerInspect | null> => {
-      try {
-        return await apiFetch<DockerContainerInspect>(`/api/containers/${containerId}/inspect`);
-      } catch {
-        return null;
-      }
-    },
 
     pauseDockerContainer: async (containerId: string): Promise<boolean> => {
       try {
         const res = await apiFetch<{ success: boolean }>(`/api/docker/containers/${containerId}/pause`, { method: 'POST' });
-        return res.success;
-      } catch {
-        return false;
-      }
-    },
-    pauseContainer: async (containerId: string): Promise<boolean> => {
-      try {
-        const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/pause`, { method: 'POST' });
         return res.success;
       } catch {
         return false;
@@ -151,25 +92,10 @@ export function createContainersApi({ apiFetch, wsManager }: BridgeDeps) {
         return false;
       }
     },
-    unpauseContainer: async (containerId: string): Promise<boolean> => {
-      try {
-        const res = await apiFetch<{ success: boolean }>(`/api/containers/${containerId}/unpause`, { method: 'POST' });
-        return res.success;
-      } catch {
-        return false;
-      }
-    },
 
     pruneDockerContainers: async (): Promise<{ success: boolean; output: string }> => {
       try {
         return await apiFetch<{ success: boolean; output: string }>('/api/docker/containers/prune', { method: 'POST' });
-      } catch (err: any) {
-        return { success: false, output: err.message };
-      }
-    },
-    pruneContainers: async (): Promise<{ success: boolean; output: string }> => {
-      try {
-        return await apiFetch<{ success: boolean; output: string }>('/api/containers/prune', { method: 'POST' });
       } catch (err: any) {
         return { success: false, output: err.message };
       }

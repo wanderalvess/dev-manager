@@ -53,7 +53,7 @@ const parseInlineMarkdown = (str: string): React.ReactNode => {
           className="text-primary hover:underline font-semibold inline-flex items-center gap-0.5 mx-0.5"
         >
           {label}
-          <ExternalLink className="w-2.5 h-2.5 inline opacity-70" />
+          <ExternalLink className="w-3 h-3 inline opacity-70" />
         </a>
       );
     }

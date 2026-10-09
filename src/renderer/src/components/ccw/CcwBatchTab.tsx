@@ -44,7 +44,7 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
       <span className="text-xs font-bold text-foreground block">
         Atualização em Lote de Rotinas (Batch Download)
       </span>
-      <span className="text-[11px] text-muted-foreground block">
+      <span className="text-2xs text-muted-foreground block">
         Baixe e atualize automaticamente um grupo de rotinas com criação prévia de cópias .bak.
       </span>
     </div>
@@ -159,7 +159,7 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
           )}
           <span>{summary.message}</span>
         </div>
-        <div className="text-[11px] font-mono text-muted-foreground pl-6">
+        <div className="text-2xs font-mono text-muted-foreground pl-6">
           Total: <b className="text-foreground">{summary.totalRoutines ?? summary.total}</b> | Sucessos:{' '}
           <b className="text-emerald-500">{summary.successfulDownloads ?? summary.completed}</b> | Falhas:{' '}
           <b className={(summary.failedDownloads ?? summary.failed ?? 0) > 0 ? 'text-destructive' : 'text-foreground'}>

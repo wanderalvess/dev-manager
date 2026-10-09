@@ -34,7 +34,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Nome da Distro a Criar
         </label>
         <input
@@ -47,7 +47,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
       </div>
 
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Diretório de Instalação (VHDX)
         </label>
         <input
@@ -61,7 +61,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
     </div>
 
     <div>
-      <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+      <label className="text-2xs font-semibold text-muted-foreground block mb-1">
         Caminho do Arquivo .tar
       </label>
       <input

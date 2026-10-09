@@ -24,16 +24,6 @@ export interface BindInputState {
 }
 
 /**
- * Remove comentários (-- e /* *\/) e literais de string ('...') para análise sintática limpa
- */
-export function stripCommentsAndLiterals(sql: string): string {
-  return sql
-    .replace(/\/\*[\s\S]*?\*\//g, ' ') // comentários de bloco /* ... */
-    .replace(/--[^\r\n]*/g, ' ')       // comentários de linha -- ...
-    .replace(/'(?:''|[^'])*'/g, "''");  // literais entre aspas simples '...'
-}
-
-/**
  * Extrai informações detalhadas de todas as variáveis e parâmetros encontrados no SQL,
  * identificando o prefixo utilizado (:PARAM, &PARAM, &&PARAM, @PARAM, ${PARAM}, #{PARAM}).
  */

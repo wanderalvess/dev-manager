@@ -51,7 +51,7 @@ export const KarafJvmMemoryModal: React.FC<KarafJvmMemoryModalProps> = ({ isOpen
             <span className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-primary" /> Curva de Consumo de Heap
             </span>
-            <div className="text-[11px] font-mono tabular-nums text-muted-foreground flex items-center gap-3">
+            <div className="text-2xs font-mono tabular-nums text-muted-foreground flex items-center gap-3">
               <span>
                 Usado: <strong className="text-foreground">{metrics?.heapUsedMb ?? 0} MB</strong>
               </span>

@@ -33,7 +33,7 @@ export const DeployStepAdvancedSettings: React.FC<DeployStepAdvancedSettingsProp
           <span className="text-foreground font-semibold flex items-center gap-1.5">
             Tolerar falha nesta etapa (continueOnError)
           </span>
-          <span className="text-[11px] text-muted-foreground block">
+          <span className="text-2xs text-muted-foreground block">
             Se ativado, um código de erro ou falha nesta etapa emitirá um aviso no log mas não interromperá as próximas etapas.
           </span>
         </div>
@@ -58,7 +58,7 @@ export const DeployStepAdvancedSettings: React.FC<DeployStepAdvancedSettingsProp
 
     {/* Dica de Variáveis Dinâmicas */}
     <div className="bg-muted/20 border border-border/60 rounded-lg p-2.5">
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground mb-1.5">
+      <div className="flex items-center gap-1.5 text-2xs font-semibold text-muted-foreground mb-1.5">
         <Sparkles className="w-3 h-3 text-primary" /> Variáveis dinâmicas para comandos e caminhos:
       </div>
       <div className="flex flex-wrap gap-1.5">

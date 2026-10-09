@@ -9,7 +9,7 @@ export const InspectRowButton: React.FC<{ onInspect: () => void }> = ({ onInspec
       onInspect();
     }}
     className="p-1 text-muted-foreground hover:text-sky-400 transition cursor-pointer rounded hover:bg-muted/40"
-    title="Inspecionar parâmetros e SQL interpolado"
+    title="Inspecionar parâmetros e SQL interpolado" aria-label="Inspecionar parâmetros e SQL interpolado"
   >
     <Sliders className="w-3.5 h-3.5" />
   </button>

@@ -45,13 +45,13 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
       {/* Card: Serviços Windows Monitorados */}
       <div className="lg:col-span-7 space-y-4 flex flex-col" id="field-services">
-        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
               <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                 <Server className="w-4 h-4 text-primary" /> Serviços Windows Monitorados
               </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-2xs text-muted-foreground mt-0.5">
                 Serviços gerenciados pelo painel com suporte a parada e início automatizados.
               </p>
             </div>
@@ -96,7 +96,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
                     className={`p-1 rounded text-xs transition-colors ${
                       srv.enabled ? 'text-emerald-500' : 'text-muted-foreground'
                     }`}
-                    title={srv.enabled ? 'Clique para Desativar Monitoramento' : 'Clique para Ativar'}
+                    title={srv.enabled ? 'Clique para Desativar Monitoramento' : 'Clique para Ativar'} aria-label={srv.enabled ? 'Clique para Desativar Monitoramento' : 'Clique para Ativar'}
                   >
                     {srv.enabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
                   </button>
@@ -122,14 +122,14 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
                     type="button"
                     onClick={() => handleRemoveService(index)}
                     className="p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
-                    title="Remover Serviço"
+                    title="Remover Serviço" aria-label="Remover Serviço"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Checkboxes de Automação Padrão */}
-                <div className="flex items-center space-x-4 pl-9 text-[11px] text-muted-foreground">
+                <div className="flex items-center space-x-4 pl-9 text-2xs text-muted-foreground">
                   <label className="flex items-center space-x-1.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -158,13 +158,13 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
 
       {/* Card: Processos Conflitantes (Encerramento de Travas) */}
       <div className="lg:col-span-5 space-y-4 flex flex-col" id="field-processes">
-        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
               <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                 <Flame className="w-4 h-4 text-rose-500" /> Processos Conflitantes (Kill)
               </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-2xs text-muted-foreground mt-0.5">
                 Processos finalizados para liberação de portas e arquivos.
               </p>
             </div>
@@ -208,7 +208,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
                   className={`p-1 rounded text-xs transition-colors ${
                     proc.enabled ? 'text-emerald-500' : 'text-muted-foreground'
                   }`}
-                  title={proc.enabled ? 'Clique para Desativar' : 'Clique para Ativar'}
+                  title={proc.enabled ? 'Clique para Desativar' : 'Clique para Ativar'} aria-label={proc.enabled ? 'Clique para Desativar' : 'Clique para Ativar'}
                 >
                   {proc.enabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
                 </button>
@@ -234,7 +234,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
                   type="button"
                   onClick={() => handleRemoveProcess(index)}
                   className="p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
-                  title="Remover Processo"
+                  title="Remover Processo" aria-label="Remover Processo"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

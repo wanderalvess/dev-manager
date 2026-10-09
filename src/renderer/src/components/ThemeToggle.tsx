@@ -102,7 +102,7 @@ export const ThemeToggle: React.FC = () => {
       {/* Botão Acionador */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`h-9 flex items-center space-x-2 px-2.5 rounded-lg border transition-all duration-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-primary/40 cursor-pointer ${
+        className={`h-9 flex items-center space-x-2 px-2.5 rounded-lg border transition-all duration-200 text-xs font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer ${
           isOpen
             ? 'bg-primary/15 border-primary/40 text-primary shadow-xs'
             : 'bg-card/70 hover:bg-card border-border/70 hover:border-border text-foreground'
@@ -149,7 +149,7 @@ export const ThemeToggle: React.FC = () => {
 
           {/* Seção 1: Modo de Exibição */}
           <div className="mb-3">
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+            <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
               Modo de Exibição
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-muted/60 rounded-lg border border-border/40">
@@ -183,7 +183,7 @@ export const ThemeToggle: React.FC = () => {
 
           {/* Seção 2: Estilo Visual */}
           <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+            <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
               Estilo Visual
             </label>
             <div className="space-y-1.5">

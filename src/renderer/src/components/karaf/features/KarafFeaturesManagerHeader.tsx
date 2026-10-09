@@ -1,9 +1,10 @@
 import React from 'react';
-import { Boxes, RefreshCw, X, FolderGit2, Package } from 'lucide-react';
+import { Boxes, RefreshCw, X, FolderGit2, Package, CheckCircle2 } from 'lucide-react';
 import type { KarafFeaturesManagerTab } from '../../../hooks/karaf/useKarafFeaturesManager';
 
 interface KarafFeaturesManagerHeaderProps {
   activeTab: KarafFeaturesManagerTab;
+  installedCount: number;
   featuresCount: number;
   reposCount: number;
   isLoading: boolean;
@@ -22,6 +23,7 @@ const COUNT_BADGE =
 
 export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProps> = ({
   activeTab,
+  installedCount,
   featuresCount,
   reposCount,
   isLoading,
@@ -42,7 +44,7 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
               KARAF OSGi :8101
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+          <p className="text-2xs text-muted-foreground font-mono mt-0.5">
             Gerenciamento de repositórios XML e provisionamento de bundles do ecossistema WinThor.
           </p>
         </div>
@@ -53,14 +55,14 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
           onClick={onReload}
           disabled={isLoading}
           className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted border border-border/50 transition-colors cursor-pointer"
-          title="Recarregar dados do Karaf"
+          title="Recarregar dados do Karaf" aria-label="Recarregar dados do Karaf"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
         <button
           onClick={onClose}
           className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors cursor-pointer"
-          title="Fechar (ESC)"
+          title="Fechar (ESC)" aria-label="Fechar (ESC)"
         >
           <X className="w-4 h-4" />
         </button>
@@ -69,9 +71,15 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
 
     {/* Abas */}
     <div className="flex items-center px-5 space-x-2 border-t border-border/40 text-xs">
+      <button onClick={() => onChangeTab('installed')} className={tabClass(activeTab === 'installed')}>
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        <span>Instaladas</span>
+        <span className={COUNT_BADGE}>{installedCount}</span>
+      </button>
+
       <button onClick={() => onChangeTab('features')} className={tabClass(activeTab === 'features')}>
         <Package className="w-3.5 h-3.5" />
-        <span>Features</span>
+        <span>Catálogo</span>
         <span className={COUNT_BADGE}>{featuresCount}</span>
       </button>
 

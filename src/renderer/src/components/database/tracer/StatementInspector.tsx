@@ -18,7 +18,7 @@ export const StatementInspector: React.FC<{
     item.interpolatedSql || (binds.length > 0 ? interpolateOracleSqlWithBinds(item.sqlText, binds) : undefined);
 
   return (
-    <div className="cockpit-panel rounded-2xl p-4 border border-sky-500/30 bg-card/90 shadow-xl space-y-3 transition-all animate-fadeIn">
+    <div className="cockpit-panel rounded-xl p-4 border border-sky-500/30 bg-card/90 shadow-xl space-y-3 transition-all animate-fadeIn">
       {/* Cabeçalho do Inspetor */}
       <div className="flex items-center justify-between pb-2 border-b border-border/70">
         <div className="flex items-center gap-2 flex-wrap">
@@ -26,7 +26,7 @@ export const StatementInspector: React.FC<{
           <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
             <span>Inspeção de Binds & SQL Executável</span>
           </h4>
-          <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/30 font-bold">
+          <span className="font-mono text-2xs px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/30 font-bold">
             SQL_ID: {item.sqlId || '-'}
           </span>
           {item.username && (
@@ -53,7 +53,7 @@ export const StatementInspector: React.FC<{
           type="button"
           onClick={onClose}
           className="p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition cursor-pointer"
-          title="Fechar painel de inspeção"
+          title="Fechar painel de inspeção" aria-label="Fechar painel de inspeção"
         >
           <X className="w-4 h-4" />
         </button>
@@ -76,7 +76,7 @@ export const StatementInspector: React.FC<{
             type="button"
             onClick={() => onFetchBinds(item.sqlId, item.sqlText)}
             disabled={isFetchingBinds}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 border border-sky-500/30 rounded-lg transition cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-2xs font-semibold text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 border border-sky-500/30 rounded-lg transition cursor-pointer disabled:opacity-50"
             title="Consultar novamente a view v$sql_bind_capture no banco"
           >
             <RefreshCw className={`w-3 h-3 ${isFetchingBinds ? 'animate-spin' : ''}`} />
@@ -134,14 +134,14 @@ export const StatementInspector: React.FC<{
           </div>
         </div>
 
-        <div className="bg-[#0B0F17] border border-border/80 rounded-xl p-3 max-h-48 overflow-y-auto font-mono text-[11px] text-emerald-300 leading-relaxed whitespace-pre-wrap select-text shadow-inner">
+        <div className="bg-[#0B0F17] border border-border/80 rounded-xl p-3 max-h-48 overflow-y-auto font-mono text-2xs text-emerald-300 leading-relaxed whitespace-pre-wrap select-text shadow-inner">
           {interpolatedSql || item.sqlText}
         </div>
       </div>
 
       {/* SQL Original com Placeholders se foi interpolado */}
       {interpolatedSql && interpolatedSql !== item.sqlText && (
-        <details className="text-[11px] text-muted-foreground group">
+        <details className="text-2xs text-muted-foreground group">
           <summary className="cursor-pointer hover:text-foreground font-semibold py-1">
             Ver SQL Original com Placeholders (:1, :param, ?)
           </summary>

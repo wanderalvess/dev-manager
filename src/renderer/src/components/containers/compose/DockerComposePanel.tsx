@@ -78,7 +78,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
 
         <div className="flex items-center gap-2">
           {recentComposeFiles.length > 0 && (
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-2xs text-muted-foreground">
               <span className="hidden sm:inline">Recentes:</span>
               <select
                 onChange={(e) => {
@@ -100,7 +100,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
           <button
             type="button"
             onClick={() => setIsComposeExpanded((prev) => !prev)}
-            className="text-[11px] text-primary hover:underline cursor-pointer flex items-center gap-1 font-semibold"
+            className="text-2xs text-primary hover:underline cursor-pointer flex items-center gap-1 font-semibold"
           >
             {isComposeExpanded ? 'Recolher Opções' : 'Configurar Compose'}
           </button>
@@ -130,7 +130,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
             className="w-32 bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary shadow-2xs placeholder:text-muted-foreground/60"
           />
 
-          <label className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer select-none px-1">
+          <label className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground cursor-pointer select-none px-1">
             <input
               type="checkbox"
               checked={composeBuild}
@@ -140,7 +140,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
             <span>--build</span>
           </label>
 
-          <label className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer select-none px-1">
+          <label className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground cursor-pointer select-none px-1">
             <input
               type="checkbox"
               checked={composeVolumes}

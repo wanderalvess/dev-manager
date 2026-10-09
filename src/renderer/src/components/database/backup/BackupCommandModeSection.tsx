@@ -21,7 +21,7 @@ export const BackupCommandModeSection: React.FC<BackupCommandModeSectionProps> =
             <Terminal className="w-4 h-4 text-sky-500" />
             <span>Modo de Execução do Comando</span>
           </span>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-2xs text-muted-foreground mt-0.5">
             Escolha o modo padrão assistido ou customize comandos e parâmetros para compatibilidade com versões específicas do banco.
           </p>
         </div>

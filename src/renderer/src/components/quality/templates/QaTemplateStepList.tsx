@@ -56,7 +56,7 @@ export const QaTemplateStepList: React.FC<QaTemplateStepListProps> = ({
               onRemove(idx);
             }}
             className="text-muted-foreground hover:text-red-500 p-1 cursor-pointer transition-colors"
-            title="Excluir passo"
+            title="Excluir passo" aria-label="Excluir passo"
           >
             <Trash2 className="w-3 h-3" />
           </button>
