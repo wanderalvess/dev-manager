@@ -5,7 +5,8 @@ import type {
   QueryResult,
   TableColumnInfo
 } from '../../../../shared/types';
-import { parseSingleTableSelect } from '../../utils/databaseMutationUtils';
+import { attachRowIds, lacksPrimaryKey, parseSingleTableSelect } from '../../utils/databaseMutationUtils';
+import { buildRowIdSelect } from '../../../../shared/rowIdentity';
 import type { EditableTableState, ExecutionHistoryItem, ResultTab } from '../../utils/dbPageTypes';
 import { useDatabaseBinds } from './useDatabaseBinds';
 import { useDatabaseHistory } from './useDatabaseHistory';
@@ -81,6 +82,21 @@ export function useDatabaseQuery({
   // Última consulta executada com sucesso, para "carregar mais" repetir com um limite maior
   const lastRun = useRef<{ sql: string; binds?: Record<string, any> } | null>(null);
 
+  /**
+   * Oracle: ROWID existe em toda tabela (em view a consulta reescrita falha e cai no fallback). PostgreSQL: ctid só serve
+   * em tabela comum (relkind 'r'); a checagem prévia evita errar um SELECT dentro da transação manual, o que a abortaria.
+   */
+  const canUseRowId = async (table: string): Promise<boolean> => {
+    if (activeConnection?.type === 'oracle') return true;
+    if (activeConnection?.type !== 'postgres') return false;
+    try {
+      const probe = await tx.execute(`SELECT relkind FROM pg_class WHERE oid = to_regclass('${table}')`, 1);
+      return probe.success && probe.rows[0]?.relkind === 'r';
+    } catch {
+      return false;
+    }
+  };
+
   const handleExecuteSql = async (
     customSql?: string,
     overrideBinds?: Record<string, any>,
@@ -119,14 +135,15 @@ export function useDatabaseQuery({
     view.handleClearAllFilters();
 
     try {
-      const res = await tx.execute(cleanSql, limitOverride ?? maxRows, overrideBinds);
-      setQueryResult(res);
+      const rowLimit = limitOverride ?? maxRows;
+      let res = await tx.execute(cleanSql, rowLimit, overrideBinds);
       if (res.success && res.isQuery) lastRun.current = { sql: cleanSql, binds: overrideBinds };
 
       // Detecta se o resultado veio de um SELECT * FROM <tabela única> — só nesse caso a grid
       // consegue editar/inserir/excluir linhas com segurança (sabe de qual tabela e, com sorte,
       // qual é a chave primária de cada linha).
       const editableTableName = res.success && res.isQuery ? parseSingleTableSelect(cleanSql) : null;
+      let nextEditable: EditableTableState | null = null;
       if (editableTableName) {
         let cols = tableColumns[editableTableName];
         if (!cols && window.electronAPI?.getDbTableColumns) {
@@ -139,10 +156,27 @@ export function useDatabaseQuery({
             cols = [];
           }
         }
-        setEditableTable({ name: editableTableName, columns: cols || [] });
-      } else {
-        setEditableTable(null);
+        cols = cols || [];
+        nextEditable = { name: editableTableName, columns: cols, identity: lacksPrimaryKey(cols) ? 'all-columns' : 'pk' };
+
+        // Sem PK: busca de novo trazendo ROWID/ctid (oculto) para localizar cada linha com exatidão
+        if (nextEditable.identity === 'all-columns' && (await canUseRowId(editableTableName))) {
+          const withRowId = buildRowIdSelect(cleanSql, editableTableName, activeConnection.type);
+          const rowIdRes = withRowId ? await tx.execute(withRowId, rowLimit, overrideBinds) : null;
+          if (rowIdRes?.success && rowIdRes.isQuery) {
+            res = attachRowIds(rowIdRes);
+            nextEditable.identity = 'rowid';
+          }
+        }
+        if (nextEditable.identity === 'all-columns') {
+          showToast(
+            'Tabela sem chave primária: as linhas são localizadas por todas as colunas. Duplicatas ou valores formatados (datas, BLOB, números grandes) podem impedir a alteração.',
+            'info'
+          );
+        }
       }
+      setQueryResult(res);
+      setEditableTable(nextEditable);
 
       const historyItem: ExecutionHistoryItem = {
         id: `hist_${Date.now()}`,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { analyzeLogLine } from '../../utils/logAnalyzerUtils';
+import { analyzeLogLine } from '../../../../shared/logAnalyzerUtils';
 import { getLogRowKind, isStackTraceLine, isSystemNoticeLine, escapeRegExp } from '../../utils/logsFilterUtils';
 
 export type LogFontSize = 'xs' | 'sm' | 'base';
@@ -17,7 +17,7 @@ interface LogLineProps {
 }
 
 const FONT_CLASSES: Record<LogFontSize, string> = {
-  xs: 'text-[11px] leading-[19px]',
+  xs: 'text-2xs leading-[19px]',
   sm: 'text-xs leading-[22px]',
   base: 'text-sm leading-[26px]'
 };
@@ -77,7 +77,7 @@ export const LogLine: React.FC<LogLineProps> = ({
         const matches = isCaseSensitive ? part === q : part.toLowerCase() === q.toLowerCase();
         if (matches) {
           return (
-            <mark key={pIdx} className="bg-amber-400 text-slate-950 px-1 py-0.2 rounded-xs font-bold not-italic shadow-xs">
+            <mark key={pIdx} className="bg-amber-400 text-slate-950 px-1 py-0.2 rounded-xs font-bold not-italic shadow-2xs">
               {part}
             </mark>
           );

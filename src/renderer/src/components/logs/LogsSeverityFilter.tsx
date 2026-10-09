@@ -14,11 +14,11 @@ export const LogsSeverityFilter: React.FC<LogsSeverityFilterProps> = ({
   levelCounts,
   onChange
 }) => (
-  <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-[11px] font-medium" data-tour="filtro-severidade">
+  <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-2xs font-medium" data-tour="filtro-severidade">
     <button
       onClick={() => onChange('ALL')}
       className={`px-2 py-0.5 rounded-md transition-colors ${
-        levelFilter === 'ALL' ? 'bg-card text-foreground font-bold shadow-xs' : 'text-muted-foreground hover:text-foreground'
+        levelFilter === 'ALL' ? 'bg-card text-foreground font-bold shadow-2xs' : 'text-muted-foreground hover:text-foreground'
       }`}
     >
       Todos ({totalLines})

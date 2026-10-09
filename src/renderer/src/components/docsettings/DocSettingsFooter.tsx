@@ -15,7 +15,7 @@ export const DocSettingsFooter: React.FC<DocSettingsFooterProps> = ({
   activeProvider
 }) => (
   <div className="p-3.5 px-5 border-t border-border bg-muted/25 flex items-center justify-between shrink-0">
-    <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono">
+    <div className="flex items-center gap-2 text-2xs text-muted-foreground font-mono">
       <span className="w-2 h-2 rounded-full bg-emerald-500" />
       <span className="hidden sm:inline">
         {foldersCount} {foldersCount === 1 ? 'pasta local' : 'pastas locais'} · {sourcesCount} integrações Atlassian
@@ -37,7 +37,7 @@ export const DocSettingsFooter: React.FC<DocSettingsFooterProps> = ({
       <button
         type="button"
         onClick={onClose}
-        className="px-4 py-1.5 text-xs font-bold text-primary-foreground bg-primary hover:bg-primary/90 rounded-xl transition cursor-pointer shadow-xs active:scale-95"
+        className="px-4 py-1.5 text-xs font-bold text-primary-foreground bg-primary hover:bg-primary/90 rounded-xl transition cursor-pointer shadow-2xs active:scale-95"
       >
         Concluir
       </button>

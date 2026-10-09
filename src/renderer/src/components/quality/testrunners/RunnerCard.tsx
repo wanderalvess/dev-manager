@@ -26,7 +26,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
     <div
       className={`p-3 rounded-xl border transition-all ${
         isRunning
-          ? 'border-primary/80 bg-primary/5 shadow-xs ring-1 ring-primary/20'
+          ? 'border-primary/80 bg-primary/5 shadow-2xs ring-1 ring-primary/20'
           : 'border-border/70 bg-card hover:border-border hover:bg-card/90'
       }`}
     >
@@ -47,7 +47,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
               </span>
             </div>
             {runner.description && (
-              <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5" title={runner.description}>
+              <p className="text-2xs text-muted-foreground line-clamp-1 mt-0.5" title={runner.description}>
                 {runner.description}
               </p>
             )}
@@ -59,7 +59,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
             type="button"
             onClick={() => onEdit(runner)}
             className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/80 transition cursor-pointer"
-            title="Editar runner"
+            title="Editar runner" aria-label="Editar runner"
           >
             <Edit2 className="w-3 h-3" />
           </button>
@@ -67,7 +67,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
             type="button"
             onClick={() => onDelete(runner.id, runner.name)}
             className="p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
-            title="Excluir runner"
+            title="Excluir runner" aria-label="Excluir runner"
           >
             <Trash2 className="w-3 h-3" />
           </button>
@@ -75,7 +75,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
       </div>
 
       {/* Detalhes do comando e diretório */}
-      <div className="mt-2.5 pt-2 border-t border-border/40 text-[11px] space-y-1 font-mono text-muted-foreground">
+      <div className="mt-2.5 pt-2 border-t border-border/40 text-2xs space-y-1 font-mono text-muted-foreground">
         <div className="flex items-center gap-1.5 truncate">
           <FolderOpen className="w-3 h-3 text-muted-foreground shrink-0" />
           <span className="truncate opacity-80" title={runner.workingDir}>
@@ -102,7 +102,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
           type="button"
           disabled={runningRunnerId !== null}
           onClick={() => onExecute(runner)}
-          className={`w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98 ${
+          className={`w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-98 ${
             isRunning
               ? 'bg-primary/15 text-primary border border-primary/30 cursor-not-allowed'
               : 'bg-primary hover:bg-primary/90 text-primary-foreground'

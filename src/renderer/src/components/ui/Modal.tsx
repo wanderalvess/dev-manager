@@ -1,9 +1,19 @@
 import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { hasOpenEscapeLayer } from './EscapeToClose';
 import { FOCUSABLE_SELECTOR, nextFocusIndex } from '../../utils/focusTrapUtils';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+/** Alinhamento do painel: centro (padrão), topo (paleta de comandos) ou encostado à direita (drawer lateral). */
+export type ModalPlacement = 'center' | 'top' | 'right';
+
+const PLACEMENT_CLASS: Record<ModalPlacement, string> = {
+  center: 'items-center justify-center p-4',
+  top: 'items-start justify-center pt-20 px-4',
+  right: 'items-stretch justify-end'
+};
+
 export type ModalTone = 'default' | 'danger' | 'warning';
 
 const SIZE_CLASS: Record<ModalSize, string> = {
@@ -16,8 +26,8 @@ const SIZE_CLASS: Record<ModalSize, string> = {
 
 const TONE_BORDER: Record<ModalTone, string> = {
   default: 'border-border',
-  danger: 'border-rose-500/40',
-  warning: 'border-amber-500/40'
+  danger: 'border-danger/40',
+  warning: 'border-warning/40'
 };
 
 /** Pilha de modais abertos: o Esc fecha só o de cima (um modal pode abrir outro por cima). */
@@ -41,6 +51,20 @@ export interface ModalProps {
   role?: 'dialog' | 'alertdialog';
   /** Quando o modal precisa ficar acima de outras camadas. */
   zIndexClass?: string;
+  /** Esc fecha? Padrão: o mesmo de `dismissible`. Falso em editores, para não descartar o que foi digitado. */
+  closeOnEscape?: boolean;
+  /** Clique no fundo fecha? Padrão: o mesmo de `dismissible`. */
+  closeOnBackdrop?: boolean;
+  /**
+   * Modo "casca": o modal só dá o comportamento (portal, fundo, Esc, foco, ARIA) e entrega `children` direto dentro
+   * de um painel estilizado por `panelClassName`. Serve para os modais com layout próprio (cabeçalho, abas, rodapé).
+   */
+  bare?: boolean;
+  panelClassName?: string;
+  /** Nome acessível do diálogo quando não há `title` (modo `bare`). */
+  ariaLabel?: string;
+  /** Onde o painel fica na tela. Padrão: `center`. */
+  placement?: ModalPlacement;
 }
 
 /**
@@ -60,11 +84,21 @@ export const Modal: React.FC<ModalProps> = ({
   footer,
   dismissible = true,
   role = 'dialog',
-  zIndexClass = 'z-50'
+  zIndexClass = 'z-50',
+  closeOnEscape = dismissible,
+  closeOnBackdrop = dismissible,
+  bare = false,
+  panelClassName = '',
+  ariaLabel,
+  placement = 'center'
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const closeOnEscapeRef = useRef(closeOnEscape);
+  closeOnEscapeRef.current = closeOnEscape;
+  const ariaLabelRef = useRef(ariaLabel);
+  ariaLabelRef.current = ariaLabel;
   const titleId = useId();
   const descriptionId = useId();
 
@@ -74,15 +108,27 @@ export const Modal: React.FC<ModalProps> = ({
     openModals.push(token);
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const panel = panelRef.current;
+    // Modo `bare` sem nome explícito: usa o primeiro título do conteúdo como nome acessível do diálogo
+    if (panel && bare && !ariaLabelRef.current && !panel.hasAttribute('aria-labelledby')) {
+      const heading = panel.querySelector<HTMLElement>('h1, h2, h3, h4');
+      if (heading) {
+        if (!heading.id) heading.id = titleId;
+        panel.setAttribute('aria-labelledby', heading.id);
+      }
+    }
+    // Um campo com autoFocus (aplicado na montagem, antes deste efeito) já tem o foco: não o tira dele
+    const alreadyFocused = !!panel && panel.contains(document.activeElement) && document.activeElement !== panel;
 
     const focusables = () => (panel ? Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)) : []);
     // Foco inicial: o campo marcado com data-autofocus ou o primeiro item; sem itens, o próprio painel
     const initial = panel?.querySelector<HTMLElement>('[data-autofocus]') ?? focusables()[0] ?? panel;
-    initial?.focus();
+    if (!alreadyFocused) initial?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (openModals[openModals.length - 1] !== token) return;
-      if (e.key === 'Escape' && dismissible) {
+      // Um menu aberto dentro do diálogo fecha primeiro: deixa o Esc seguir para o EscapeToClose dele
+      if (e.key === 'Escape' && hasOpenEscapeLayer()) return;
+      if (e.key === 'Escape' && closeOnEscapeRef.current) {
         e.stopPropagation();
         onCloseRef.current();
         return;
@@ -110,7 +156,7 @@ export const Modal: React.FC<ModalProps> = ({
       if (at >= 0) openModals.splice(at, 1);
       if (previouslyFocused && document.contains(previouslyFocused)) previouslyFocused.focus();
     };
-  }, [open, dismissible]);
+  }, [open, bare, titleId]);
 
   if (!open) return null;
 
@@ -118,28 +164,34 @@ export const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs`}
+      className={`fixed inset-0 ${zIndexClass} flex ${PLACEMENT_CLASS[placement]} bg-black/60 backdrop-blur-xs`}
       onMouseDown={(e) => {
-        if (dismissible && e.target === e.currentTarget) onClose();
+        if (closeOnBackdrop && e.target === e.currentTarget) onClose();
       }}
     >
       <div
         ref={panelRef}
         role={role}
         aria-modal="true"
+        aria-label={ariaLabel}
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
-        className={`bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-2xl w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-none animate-fade-in`}
+        className={
+          bare
+            ? `${panelClassName} outline-hidden`
+            : `bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-2xl w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-hidden animate-fade-in`
+        }
       >
-        {hasHeader && (
+        {bare && children}
+        {!bare && hasHeader && (
           <div className="flex items-start gap-3 px-5 pt-5 pb-3 shrink-0">
             {icon && <div className="shrink-0">{icon}</div>}
             <div className="flex-1 min-w-0">
               {title && (
-                <h3 id={titleId} className="text-sm font-bold text-foreground">
+                <h2 id={titleId} className="text-sm font-bold text-foreground">
                   {title}
-                </h3>
+                </h2>
               )}
               {description && (
                 <p id={descriptionId} className="text-xs text-muted-foreground mt-1 whitespace-pre-line">
@@ -159,8 +211,8 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
         )}
-        {children !== undefined && children !== null && <div className="px-5 py-2 overflow-auto min-h-0">{children}</div>}
-        {footer && <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-border shrink-0">{footer}</div>}
+        {!bare && children !== undefined && children !== null && <div className="px-5 py-2 overflow-auto min-h-0">{children}</div>}
+        {!bare && footer && <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-border shrink-0">{footer}</div>}
       </div>
     </div>,
     document.body

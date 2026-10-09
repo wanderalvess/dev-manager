@@ -13,7 +13,7 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
   <div
     className={`bg-muted/30 dark:bg-muted/15 border rounded-lg p-3 flex flex-col justify-between space-y-2 relative transition ${
       node.running
-        ? 'border-cyan-500/40 hover:border-cyan-500/60 shadow-xs'
+        ? 'border-cyan-500/40 hover:border-cyan-500/60 shadow-2xs'
         : 'border-border/80 opacity-75 hover:opacity-100'
     }`}
   >
@@ -48,7 +48,7 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
           className="px-1.5 py-0.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 rounded border border-cyan-500/30 font-semibold cursor-pointer transition flex items-center gap-1"
         >
           <span>Abrir Portal</span>
-          <ExternalLink className="w-2.5 h-2.5" />
+          <ExternalLink className="w-3 h-3" />
         </button>
       ) : (
         <span className="text-muted-foreground text-2xs font-mono">Porta 8080</span>

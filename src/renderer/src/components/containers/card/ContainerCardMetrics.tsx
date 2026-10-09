@@ -13,7 +13,7 @@ interface ContainerCardMetricsProps {
 /** Linha 2: imagem/status e medidores de CPU e memória. */
 export const ContainerCardMetrics: React.FC<ContainerCardMetricsProps> = ({ container, stats, isRunning }) => (
   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 text-xs bg-muted/40 p-2.5 rounded-lg border border-border/70 font-mono">
-    <div className="text-[11px] text-muted-foreground truncate max-w-lg flex items-center gap-1.5">
+    <div className="text-2xs text-muted-foreground truncate max-w-lg flex items-center gap-1.5">
       <span className="text-muted-foreground/60 select-none">IMG:</span>
       <span className="text-foreground/90 truncate">{container.image}</span>
       <span className="text-muted-foreground/40 hidden sm:inline">•</span>

@@ -19,6 +19,7 @@ import {
 } from '../qaTemplatesHelpData';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { showToast } from '../../ToastHost';
+import { Modal } from '../../ui/Modal';
 
 interface QaRegressionTemplatesHelpModalProps {
   isOpen: boolean;
@@ -52,8 +53,13 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      closeOnBackdrop={false}
+    >
         {/* Top Header */}
         <div className="px-5 py-3.5 border-b border-border bg-card/80 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -149,12 +155,12 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                     key={s.step}
                     className="p-3 rounded-lg border border-border bg-card/60 flex items-start gap-3"
                   >
-                    <span className="w-5 h-5 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center shrink-0 font-mono text-[11px] mt-0.5">
+                    <span className="w-5 h-5 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center shrink-0 font-mono text-2xs mt-0.5">
                       {s.step}
                     </span>
                     <div>
                       <h4 className="font-bold text-foreground text-xs">{s.title}</h4>
-                      <p className="text-muted-foreground mt-0.5 leading-relaxed text-[11px]">
+                      <p className="text-muted-foreground mt-0.5 leading-relaxed text-2xs">
                         {s.description}
                       </p>
                     </div>
@@ -186,7 +192,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                         tipo: {a.type}
                       </code>
                     </div>
-                    <p className="text-muted-foreground text-[11px] leading-relaxed">
+                    <p className="text-muted-foreground text-2xs leading-relaxed">
                       {a.description}
                     </p>
                     <div className="pt-1 flex items-center gap-2 font-mono text-2xs text-muted-foreground">
@@ -211,7 +217,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground text-xs">Exportar o Template Ativo</h4>
-                    <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed">
+                    <p className="text-muted-foreground text-2xs mt-1 leading-relaxed">
                       Na barra superior do <strong>Validador Regressivo</strong> ou durante a edição de um template no Gerenciador, clique em <strong>"Exportar Template"</strong> para fazer o download imediato do arquivo <code className="font-mono text-primary font-semibold">.json</code>. Esse arquivo contém todos os passos, queries SQL, binds padrão e asserções.
                     </p>
                   </div>
@@ -223,7 +229,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground text-xs">Exportar Todos (Backup em Lote)</h4>
-                    <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed">
+                    <p className="text-muted-foreground text-2xs mt-1 leading-relaxed">
                       No Gerenciador de Templates, use o botão <strong>"Exportar Todos"</strong> para gerar um arquivo único de backup contendo todos os cenários da equipe. É perfeito para versionar no Git do projeto ou restaurar o ambiente.
                     </p>
                   </div>
@@ -235,7 +241,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground text-xs">Importar Template JSON</h4>
-                    <p className="text-muted-foreground text-[11px] mt-1 leading-relaxed">
+                    <p className="text-muted-foreground text-2xs mt-1 leading-relaxed">
                       Recebeu um template de outro colega ou baixou do repositório? Clique em <strong>"Importar JSON"</strong> no Gerenciador de Templates para adicioná-lo instantaneamente à sua suíte de validação local.
                     </p>
                   </div>
@@ -266,7 +272,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
               </div>
 
               <div className="rounded-lg border border-border bg-background p-3 overflow-x-auto max-h-72">
-                <pre className="font-mono text-[11px] text-foreground leading-relaxed">
+                <pre className="font-mono text-2xs text-foreground leading-relaxed">
                   {SAMPLE_TEMPLATE_JSON}
                 </pre>
               </div>
@@ -276,7 +282,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
 
         {/* Rodapé com Fechar */}
         <div className="px-5 py-3 border-t border-border bg-card/80 flex items-center justify-between shrink-0">
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-2xs text-muted-foreground font-mono">
             Hub Manager · Módulo de Qualidade &amp; Regressivo
           </span>
           <button
@@ -287,7 +293,6 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
             Entendi, fechar
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

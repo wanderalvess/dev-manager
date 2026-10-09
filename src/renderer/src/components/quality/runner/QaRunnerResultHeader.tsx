@@ -72,13 +72,13 @@ export const QaRunnerResultHeader: React.FC<QaRunnerResultHeaderProps> = ({
       {/* Ações de Evidência para Jira */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center bg-background border border-border rounded-md px-2 py-1 text-xs">
-          <span className="text-muted-foreground mr-1.5 font-mono text-[11px]">Issue:</span>
+          <span className="text-muted-foreground mr-1.5 font-mono text-2xs">Issue:</span>
           <input
             type="text"
             value={issueKey}
             onChange={(e) => onChangeIssueKey(e.target.value)}
             placeholder="PROJ-123"
-            className="bg-transparent border-none text-foreground font-mono font-bold text-xs focus:outline-none w-28 uppercase"
+            className="bg-transparent border-none text-foreground font-mono font-bold text-xs focus:outline-hidden w-28 uppercase"
             title="Chave da issue no Jira (ex: PROJ-123)"
           />
         </div>

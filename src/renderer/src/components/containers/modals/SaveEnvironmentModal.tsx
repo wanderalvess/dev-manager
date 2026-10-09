@@ -7,6 +7,7 @@ import { SaveEnvironmentPresets } from '../saveenv/SaveEnvironmentPresets';
 import { SaveEnvironmentContainerList } from '../saveenv/SaveEnvironmentContainerList';
 import { SaveEnvironmentSummary } from '../saveenv/SaveEnvironmentSummary';
 import { SaveEnvironmentFooter } from '../saveenv/SaveEnvironmentFooter';
+import { Modal } from '../../ui/Modal';
 
 export interface SaveEnvironmentModalProps {
   isOpen: boolean;
@@ -40,49 +41,54 @@ export const SaveEnvironmentModal: React.FC<SaveEnvironmentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in overflow-hidden">
-        <SaveEnvironmentHeader
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in overflow-hidden"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
+      <SaveEnvironmentHeader
+        color={state.color}
+        isEditing={state.isEditing}
+        environmentName={editingEnvironment?.name}
+      />
+
+      {/* Corpo com Scroll */}
+      <div className="p-4 overflow-y-auto space-y-4 flex-1">
+        <SaveEnvironmentNameColor
+          name={state.name}
           color={state.color}
-          isEditing={state.isEditing}
-          environmentName={editingEnvironment?.name}
+          onNameChange={state.setName}
+          onColorChange={state.setColor}
         />
-
-        {/* Corpo com Scroll */}
-        <div className="p-4 overflow-y-auto space-y-4 flex-1">
-          <SaveEnvironmentNameColor
-            name={state.name}
-            color={state.color}
-            onNameChange={state.setName}
-            onColorChange={state.setColor}
-          />
-          <SaveEnvironmentPresets
-            cleanContainers={state.cleanContainers}
-            selectedCount={state.selectedSlots.length}
-            onApplyPreset={state.handleApplyPreset}
-          />
-          <SaveEnvironmentContainerList
-            totalCount={state.cleanContainers.length}
-            filteredContainers={state.filteredAvailableContainers}
-            selectedSlots={state.selectedSlots}
-            color={state.color}
-            searchFilter={state.searchFilter}
-            onSearchChange={state.setSearchFilter}
-            getSlotIndex={state.getContainerSlotIndex}
-            onToggle={state.handleToggleContainer}
-            onUpdateDelay={state.handleUpdateDelay}
-            onMove={state.handleMoveSlot}
-          />
-          <SaveEnvironmentSummary slots={state.selectedSlots} />
-        </div>
-
-        <SaveEnvironmentFooter
-          isEditing={state.isEditing}
-          canSave={Boolean(state.name.trim()) && state.selectedSlots.length > 0}
-          onCancel={onClose}
-          onSave={state.handleSave}
+        <SaveEnvironmentPresets
+          cleanContainers={state.cleanContainers}
+          selectedCount={state.selectedSlots.length}
+          onApplyPreset={state.handleApplyPreset}
         />
+        <SaveEnvironmentContainerList
+          totalCount={state.cleanContainers.length}
+          filteredContainers={state.filteredAvailableContainers}
+          selectedSlots={state.selectedSlots}
+          color={state.color}
+          searchFilter={state.searchFilter}
+          onSearchChange={state.setSearchFilter}
+          getSlotIndex={state.getContainerSlotIndex}
+          onToggle={state.handleToggleContainer}
+          onUpdateDelay={state.handleUpdateDelay}
+          onMove={state.handleMoveSlot}
+        />
+        <SaveEnvironmentSummary slots={state.selectedSlots} />
       </div>
-    </div>
+
+      <SaveEnvironmentFooter
+        isEditing={state.isEditing}
+        canSave={Boolean(state.name.trim()) && state.selectedSlots.length > 0}
+        onCancel={onClose}
+        onSave={state.handleSave}
+      />
+    </Modal>
   );
 };

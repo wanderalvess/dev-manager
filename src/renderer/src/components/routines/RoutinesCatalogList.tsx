@@ -68,7 +68,7 @@ export const RoutinesCatalogList: React.FC<RoutinesCatalogListProps> = ({
             <FolderOpen className="w-8 h-8 text-muted-foreground/60 mb-0.5" />
             <div>
               <h4 className="text-xs font-bold text-foreground">Nenhuma rotina encontrada</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5 max-w-md font-mono">
+              <p className="text-2xs text-muted-foreground mt-0.5 max-w-md font-mono">
                 Verifique se o diretório de rotinas está configurado corretamente nas Configurações ou clique em "Atualizar Catálogo".
               </p>
             </div>

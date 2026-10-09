@@ -69,7 +69,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
               type="button"
               onClick={() => onSearchChange('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
-              title="Limpar busca"
+              title="Limpar busca" aria-label="Limpar busca"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -128,7 +128,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
       {/* Ações: Instalar Feature & Recarregar */}
       <div className="flex items-center gap-2">
         {searchQuery && (
-          <span className="text-[11px] font-mono text-muted-foreground mr-1 tabular-nums">
+          <span className="text-2xs font-mono text-muted-foreground mr-1 tabular-nums">
             {filteredCount} {filteredCount === 1 ? 'resultado' : 'resultados'}
           </span>
         )}
@@ -138,7 +138,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
           onClick={onToggleInstallDrawer}
           className={`px-3 py-1.5 rounded-lg font-mono font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
             isInstallDrawerOpen
-              ? 'bg-indigo-600 text-white shadow-xs'
+              ? 'bg-indigo-600 text-white shadow-2xs'
               : 'bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
           }`}
           title="Abrir painel de instalação de feature"
@@ -152,7 +152,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
           onClick={onRefresh}
           disabled={isLoading}
           className="p-1.5 rounded-lg font-mono text-xs bg-muted hover:bg-muted/80 border border-border text-foreground transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-50"
-          title="Recarregar features instaladas"
+          title="Recarregar features instaladas" aria-label="Recarregar features instaladas"
         >
           <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />
         </button>

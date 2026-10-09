@@ -289,8 +289,6 @@ export interface ElectronAPI {
   testLlmConnection: (config: LlmProviderConfig) => Promise<LlmTestResult>;
   llmChat: (request: LlmChatRequest) => Promise<LlmChatResponse>;
   askDocsWithAi: (request: LlmRagQueryRequest) => Promise<LlmRagQueryResponse>;
-  askLlm?: (request: LlmRagQueryRequest, providerConfig?: LlmProviderConfig) => Promise<LlmRagQueryResponse>;
-  chatLlm?: (request: LlmChatRequest, providerConfig?: LlmProviderConfig) => Promise<LlmChatResponse>;
 
   // Banco de Dados (Oracle, MySQL, Postgres)
   testDbConnection: (config: DatabaseConnectionConfig) => Promise<{ success: boolean; message: string; version?: string }>;
@@ -409,21 +407,6 @@ export interface ElectronAPI {
   dockerComposeStatus: (composeFilePath: string, profile?: string) => Promise<ComposeServiceStatus[]>;
   onDockerComposeLogChunk: (callback: (chunk: string) => void) => () => void;
 
-  // Métodos genéricos de containers
-  getContainerStatus?: () => Promise<DockerDaemonStatus>;
-  listContainers?: () => Promise<DockerContainerInfo[]>;
-  startContainer?: (containerId: string) => Promise<boolean>;
-  stopContainer?: (containerId: string) => Promise<boolean>;
-  restartContainer?: (containerId: string) => Promise<boolean>;
-  pauseContainer?: (containerId: string) => Promise<boolean>;
-  unpauseContainer?: (containerId: string) => Promise<boolean>;
-  inspectContainer?: (containerId: string) => Promise<DockerContainerInspect | null>;
-  pruneContainers?: () => Promise<{ success: boolean; output: string }>;
-  getContainerLogs?: (containerId: string, lines?: number) => Promise<string>;
-  removeContainer?: (containerId: string) => Promise<boolean>;
-  getContainerStats?: () => Promise<DockerContainerStats[]>;
-  openContainerTerminal?: (containerId: string, shell?: string) => Promise<boolean>;
-
   // Rede & Detecção de IPs (Local e WSL)
   getNetworkIps: () => Promise<NetworkIpInfo>;
   checkHttpHealth: (url: string, timeoutMs?: number) => Promise<HttpHealthResult>;
@@ -456,7 +439,6 @@ export interface ElectronAPI {
   getApmServices: () => Promise<ServiceMetricsSummary[]>;
   getApmReceiverStatus: () => Promise<ApmReceiverStatus>;
   clearApmTraces: () => Promise<{ success: boolean }>;
-  generateApmDemo: () => Promise<{ generatedSpans: number; generatedTraces: number }>;
   changeApmReceiverPort: (port: number) => Promise<ApmReceiverPortChangeResult>;
   onApmNewTrace: (callback: (trace: TraceSummary) => void) => () => void;
 }

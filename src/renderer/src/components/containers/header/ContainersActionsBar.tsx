@@ -37,7 +37,7 @@ export const ContainersActionsBar: React.FC<ContainersActionsBarProps> = ({
       onClick={onStartWinThorSequence}
       disabled={sequenceRunning || containersCount === 0}
       title="Inicia sequencialmente Oracle XE -> WTA -> WSH"
-      className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-bold transition shadow-sm disabled:opacity-50 cursor-pointer active:scale-98"
+      className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer active:scale-98"
     >
       {sequenceRunning ? (
         <RotateCw className="w-3.5 h-3.5 animate-spin" />
@@ -72,7 +72,7 @@ export const ContainersActionsBar: React.FC<ContainersActionsBarProps> = ({
     <button
       onClick={onOpenInfrModal}
       title="Assistente de Bootstrap INFR-Docker (Setup Oracle XE, WTA, WSH)"
-      className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/80 text-foreground rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer active:scale-95"
+      className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/80 text-foreground rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer active:scale-95"
     >
       <Sliders className="w-3.5 h-3.5 text-orange-500" />
       <span className="hidden lg:inline">Assistente INFR</span>
@@ -83,7 +83,7 @@ export const ContainersActionsBar: React.FC<ContainersActionsBarProps> = ({
       type="button"
       onClick={onToggleTopologyBus}
       title={showTopologyBus ? 'Ocultar barramento de topologia WinThor' : 'Exibir barramento de topologia WinThor'}
-      className={`flex items-center space-x-1.5 px-2.5 py-1.5 border rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer active:scale-95 ${
+      className={`flex items-center space-x-1.5 px-2.5 py-1.5 border rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer active:scale-95 ${
         showTopologyBus
           ? 'bg-primary/10 text-primary border-primary/30'
           : 'bg-card hover:bg-muted text-muted-foreground border-border/80'
@@ -101,7 +101,7 @@ export const ContainersActionsBar: React.FC<ContainersActionsBarProps> = ({
         value={filter}
         onChange={(e) => onFilterChange(e.target.value)}
         placeholder="Buscar..."
-        className="bg-card border border-border/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary w-36 transition"
+        className="bg-card border border-border/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary w-36 transition"
       />
     </div>
 
@@ -109,7 +109,7 @@ export const ContainersActionsBar: React.FC<ContainersActionsBarProps> = ({
     <button
       onClick={onRefreshData}
       disabled={isLoading}
-      title="Atualizar lista de containers"
+      title="Atualizar lista de containers" aria-label="Atualizar lista de containers"
       className="p-1.5 bg-card hover:bg-muted border border-border/80 text-muted-foreground hover:text-foreground rounded-lg text-xs transition shadow-2xs disabled:opacity-50 cursor-pointer"
     >
       <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-primary' : ''}`} />

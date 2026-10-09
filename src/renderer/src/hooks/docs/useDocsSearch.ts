@@ -25,7 +25,7 @@ export function useDocsSearch(activeLlmProvider: LlmProviderConfig | undefined) 
       setLlmError('Nenhum provedor de IA/LLM está ativo. Configure sua chave (BYOK) na aba IA & Modelos LLM das Configurações.');
       return;
     }
-    const askFn = window.electronAPI?.askDocsWithAi || window.electronAPI?.askLlm;
+    const askFn = window.electronAPI?.askDocsWithAi;
     if (!askFn) return;
     setIsAskingLlm(true);
     setLlmError(null);

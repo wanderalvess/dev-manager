@@ -12,7 +12,7 @@ interface QualitySourceFormProps {
 }
 
 const TEXT_INPUT =
-  'w-full px-3 py-1.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-primary';
+  'w-full px-3 py-1.5 bg-background border border-border rounded-lg text-foreground focus:outline-hidden focus:border-primary';
 
 export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
   source,
@@ -123,13 +123,13 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
             value={source.apiToken || ''}
             onChange={(e) => onChange({ ...source, apiToken: e.target.value })}
             placeholder={source.hasApiToken ? 'Deixe em branco para manter o token atual' : 'Cole seu token de autenticação'}
-            className="w-full pl-3 pr-9 py-1.5 bg-background border border-border rounded-lg text-foreground font-mono focus:outline-none focus:border-primary"
+            className="w-full pl-3 pr-9 py-1.5 bg-background border border-border rounded-lg text-foreground font-mono focus:outline-hidden focus:border-primary"
           />
           <button
             type="button"
             onClick={() => onToggleShowToken(!showToken)}
             className="absolute right-2.5 top-2 text-muted-foreground hover:text-foreground cursor-pointer"
-            title={showToken ? 'Ocultar token' : 'Revelar token'}
+            title={showToken ? 'Ocultar token' : 'Revelar token'} aria-label={showToken ? 'Ocultar token' : 'Revelar token'}
           >
             {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -159,7 +159,7 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
       <button
         type="button"
         onClick={onSave}
-        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition shadow-xs cursor-pointer"
+        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition shadow-2xs cursor-pointer"
       >
         <Save className="w-3.5 h-3.5" />
         <span>Salvar Fonte de Teste</span>

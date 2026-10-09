@@ -4,7 +4,14 @@ import {
   UpdateBundleVersionRequest
 } from '../../../shared/types';
 import { isSafeKarafCommand } from '../../utils/security';
-import { ChunkHandler, KarafActionResult, KarafContext, KarafCredentials } from './karafContext';
+import { ChunkHandler, KarafActionResult, KarafContext, KarafCredentials, noopChunk } from './karafContext';
+
+/** Mantém mvn:/file:/http(s): como estão e converte caminho local em file:/. */
+export function normalizeBundleLocation(location: string): string {
+  const loc = location.trim();
+  if (/^(mvn|file|https?):/.test(loc)) return loc;
+  return `file:/${loc.replace(/\\/g, '/')}`;
+}
 
 /**
  * Instala um novo bundle no Karaf a partir de coordenada Maven ou arquivo local.
@@ -13,16 +20,11 @@ export async function installBundle(
   ctx: KarafContext,
   request: InstallBundleRequest,
   onChunk: ChunkHandler
-): Promise<{ success: boolean; bundleId?: string; state?: string; diag?: string; output: string }> {
-  let loc = (request.location || '').trim();
-  if (!loc) {
+): Promise<{ success: boolean; bundleId?: string; diag?: string; output: string }> {
+  if (!(request.location || '').trim()) {
     return { success: false, output: 'Localização ou coordenada do bundle não informada.' };
   }
-
-  // Normaliza caminhos de arquivo locais no Windows para file:/
-  if (!loc.startsWith('mvn:') && !loc.startsWith('file:') && !loc.startsWith('http:') && !loc.startsWith('https:')) {
-    loc = `file:/${loc.replace(/\\/g, '/')}`;
-  }
+  const loc = normalizeBundleLocation(request.location);
 
   const flag = request.startImmediately !== false ? '-s ' : '';
   const cmd = `bundle:install ${flag}"${loc}"`;
@@ -52,8 +54,8 @@ export async function installBundle(
 
   let diag: string | undefined;
   if (newId) {
-    await ctx.executeKarafCommand(`bundle:refresh ${newId}`, () => {}, request.credentials);
-    const diagRes = await ctx.executeKarafCommand(`bundle:diag ${newId}`, () => {}, request.credentials);
+    await ctx.executeKarafCommand(`bundle:refresh ${newId}`, noopChunk, request.credentials);
+    const diagRes = await ctx.executeKarafCommand(`bundle:diag ${newId}`, noopChunk, request.credentials);
     if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
       diag = diagRes.stdout.trim();
     }
@@ -105,6 +107,43 @@ export async function uninstallBundle(
 }
 
 /**
+ * `bundle:update` seguido de refresh e start. Só é sucesso se o update e o start passarem: um bundle
+ * atualizado que não inicia não pode ser reportado como reinstalado.
+ */
+async function updateRefreshAndStart(
+  ctx: KarafContext,
+  bundleId: string,
+  location: string | undefined,
+  credentials: KarafCredentials | undefined,
+  onChunk: ChunkHandler
+): Promise<KarafActionResult> {
+  let output = '';
+  const run = (cmd: string) =>
+    ctx.executeKarafCommand(
+      cmd,
+      (chunk) => {
+        output += chunk;
+        onChunk(chunk);
+      },
+      credentials
+    );
+
+  const updateRes = await run(location ? `bundle:update ${bundleId} "${location}"` : `bundle:update ${bundleId}`);
+  if (updateRes.code !== 0) {
+    return { success: false, output: output || updateRes.stderr || 'Falha no bundle:update' };
+  }
+
+  onChunk('\r\nAtualizando fiações (bundle:refresh) e iniciando bundle...\r\n');
+  await run(`bundle:refresh ${bundleId}`);
+  const startRes = await run(`bundle:start ${bundleId}`);
+  if (startRes.code !== 0) {
+    const reason = startRes.stderr || 'bundle:start falhou';
+    return { success: false, output: `${output}\nBundle atualizado, mas não iniciou: ${reason}`.trim() };
+  }
+  return { success: true, output };
+}
+
+/**
  * Reinstala / atualiza um bundle no runtime OSGi.
  * Opcionalmente executa mvn clean install previamente e recarrega o bundle via bundle:update.
  */
@@ -112,63 +151,32 @@ export async function reinstallBundle(
   ctx: KarafContext,
   request: ReinstallBundleRequest,
   onChunk: ChunkHandler
-): Promise<{ success: boolean; state?: string; diag?: string; output: string }> {
+): Promise<{ success: boolean; diag?: string; output: string }> {
   const cleanId = request.bundleId.trim();
   if (!/^\d+$/.test(cleanId)) {
     return { success: false, output: 'ID do bundle inválido.' };
   }
 
-  // 1. Compilação Maven opcional se solicitado
   if (request.rebuild && request.projectPath) {
-    onChunk(`\r\n[1/3] Compilando projeto Maven antes de reinstalar...\r\n`);
+    onChunk('\r\nCompilando projeto Maven antes de reinstalar...\r\n');
     const buildRes = await ctx.runMavenBuild(request.projectPath, true, onChunk);
     if (buildRes.code !== 0) {
       return { success: false, output: 'Falha na compilação Maven prévia. Reinstalação cancelada.' };
     }
   }
 
-  // 2. Atualização do bundle via Karaf
-  onChunk(`\r\n[2/3] Atualizando bundle ${cleanId} no container OSGi...\r\n`);
-  let updateCmd = `bundle:update ${cleanId}`;
-  if (request.location && request.location.trim()) {
-    let loc = request.location.trim();
-    if (!loc.startsWith('mvn:') && !loc.startsWith('file:') && !loc.startsWith('http:')) {
-      loc = `file:/${loc.replace(/\\/g, '/')}`;
-    }
-    updateCmd = `bundle:update ${cleanId} "${loc}"`;
-  }
+  onChunk(`\r\nAtualizando bundle ${cleanId} no container OSGi...\r\n`);
+  const location = request.location?.trim() ? normalizeBundleLocation(request.location) : undefined;
+  const result = await updateRefreshAndStart(ctx, cleanId, location, request.credentials, onChunk);
 
-  let output = '';
-  const updateRes = await ctx.executeKarafCommand(
-    updateCmd,
-    (chunk) => {
-      output += chunk;
-      onChunk(chunk);
-    },
-    request.credentials
-  );
-
-  if (updateRes.code !== 0) {
-    return { success: false, output: output || updateRes.stderr || 'Falha no bundle:update' };
-  }
-
-  // 3. Atualizar fiações e garantir inicialização
-  onChunk(`\r\n[3/3] Atualizando fiações (bundle:refresh) e iniciando bundle...\r\n`);
-  await ctx.executeKarafCommand(`bundle:refresh ${cleanId}`, onChunk, request.credentials);
-  await ctx.executeKarafCommand(`bundle:start ${cleanId}`, onChunk, request.credentials);
-
-  // Checagem de diagnóstico
   let diag: string | undefined;
-  const diagRes = await ctx.executeKarafCommand(`bundle:diag ${cleanId}`, () => {}, request.credentials);
-  if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
-    diag = diagRes.stdout.trim();
+  if (result.success) {
+    const diagRes = await ctx.executeKarafCommand(`bundle:diag ${cleanId}`, noopChunk, request.credentials);
+    if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
+      diag = diagRes.stdout.trim();
+    }
   }
-
-  return {
-    success: true,
-    diag,
-    output
-  };
+  return { ...result, diag };
 }
 
 /**
@@ -183,40 +191,14 @@ export async function updateBundleVersion(
   if (!/^\d+$/.test(cleanId)) {
     return { success: false, output: 'ID do bundle inválido.' };
   }
-
-  let target = request.newVersionOrLocation.trim();
-  if (!target) {
+  if (!request.newVersionOrLocation.trim()) {
     return { success: false, output: 'Nova versão ou localização não informada.' };
   }
-
-  if (!target.startsWith('mvn:') && !target.startsWith('file:') && !target.startsWith('http:')) {
-    target = `file:/${target.replace(/\\/g, '/')}`;
-  }
-
-  const cmd = `bundle:update ${cleanId} "${target}"`;
-  let output = '';
-  const res = await ctx.executeKarafCommand(
-    cmd,
-    (chunk) => {
-      output += chunk;
-      onChunk(chunk);
-    },
-    request.credentials
+  return updateRefreshAndStart(
+    ctx,
+    cleanId,
+    normalizeBundleLocation(request.newVersionOrLocation),
+    request.credentials,
+    onChunk
   );
-
-  if (res.code === 0) {
-    await ctx.executeKarafCommand(`bundle:refresh ${cleanId}`, (chunk) => {
-      output += chunk;
-      onChunk(chunk);
-    }, request.credentials);
-    await ctx.executeKarafCommand(`bundle:start ${cleanId}`, (chunk) => {
-      output += chunk;
-      onChunk(chunk);
-    }, request.credentials);
-  }
-
-  return {
-    success: res.code === 0,
-    output: output || res.stdout || res.stderr
-  };
 }

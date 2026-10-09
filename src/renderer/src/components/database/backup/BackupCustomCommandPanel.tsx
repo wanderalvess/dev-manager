@@ -36,7 +36,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
             </div>
-            <span className="text-slate-400 font-mono text-[11px] font-semibold flex items-center gap-1 ml-1">
+            <span className="text-slate-400 font-mono text-2xs font-semibold flex items-center gap-1 ml-1">
               <Terminal className="w-3.5 h-3.5 text-sky-400" />
               <span>Console do Comando de Backup</span>
             </span>
@@ -59,7 +59,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
               type="button"
               onClick={() => setShowPasswordInCommandPreview((prev) => !prev)}
               className="flex items-center gap-1 px-2 py-0.5 text-2xs font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition cursor-pointer"
-              title={showPasswordInCommandPreview ? 'Ocultar senha' : 'Exibir senha real'}
+              title={showPasswordInCommandPreview ? 'Ocultar senha' : 'Exibir senha real'} aria-label={showPasswordInCommandPreview ? 'Ocultar senha' : 'Exibir senha real'}
             >
               {showPasswordInCommandPreview ? (
                 <>
@@ -93,12 +93,12 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
             value={customBackupCommand}
             onChange={(e) => setCustomBackupCommand(e.target.value)}
             placeholder='Ex: exp {user}/{password}@{connectString} file="{filePath}" log="{logPath}" owner={user}'
-            className="w-full bg-slate-950 text-slate-100 p-3.5 font-mono text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-sky-500/50 resize-y min-h-[85px] border-b border-slate-800/80"
+            className="w-full bg-slate-950 text-slate-100 p-3.5 font-mono text-xs leading-relaxed focus:outline-hidden focus:ring-1 focus:ring-sky-500/50 resize-y min-h-[85px] border-b border-slate-800/80"
           />
         </div>
 
         {/* Live Preview Console Output */}
-        <div className="p-3 bg-slate-900/60 font-mono text-[11px] leading-relaxed">
+        <div className="p-3 bg-slate-900/60 font-mono text-2xs leading-relaxed">
           <div className="flex items-center justify-between text-2xs text-slate-500 uppercase tracking-wider mb-1 select-none">
             <span>Visualização com Parâmetros Reais (Passados Diretamente ao Executável)</span>
             <span className="text-2xs text-slate-500 font-mono">execFile sem shell</span>

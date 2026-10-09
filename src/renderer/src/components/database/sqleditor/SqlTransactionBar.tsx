@@ -17,7 +17,7 @@ interface SqlTransactionBarProps extends SqlTransactionControls {
   isExecuting: boolean;
 }
 
-const SEGMENT = 'px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer';
+const SEGMENT = 'px-2.5 py-1 text-2xs font-semibold transition-colors cursor-pointer';
 
 /** Controle de transação do editor: auto-commit ou manual, commit (F11), rollback (F12) e cancelar consulta. */
 export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
@@ -65,7 +65,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
       {manual ? (
         <>
           <span
-            className={`text-[11px] font-mono ${pending > 0 ? 'text-amber-500 font-semibold' : 'text-muted-foreground'}`}
+            className={`text-2xs font-mono ${pending > 0 ? 'text-amber-500 font-semibold' : 'text-muted-foreground'}`}
             aria-live="polite"
           >
             {describePending(state)}
@@ -74,7 +74,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
             type="button"
             onClick={onCommit}
             disabled={pending === 0 || isExecuting}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold disabled:opacity-40 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-2xs font-bold disabled:opacity-50 cursor-pointer"
             title="Confirmar as alterações pendentes (F11)"
           >
             <CheckCheck className="w-3.5 h-3.5" />
@@ -85,7 +85,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
             type="button"
             onClick={onRollback}
             disabled={pending === 0 || isExecuting}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-foreground text-[11px] font-bold disabled:opacity-40 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-foreground text-2xs font-bold disabled:opacity-50 cursor-pointer"
             title="Desfazer as alterações pendentes (F12)"
           >
             <Undo2 className="w-3.5 h-3.5 text-amber-500" />
@@ -99,14 +99,14 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
           )}
         </>
       ) : (
-        <span className="text-[11px] text-muted-foreground">Cada comando é confirmado na hora.</span>
+        <span className="text-2xs text-muted-foreground">Cada comando é confirmado na hora.</span>
       )}
 
       {isExecuting && (
         <button
           type="button"
           onClick={onCancel}
-          className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold cursor-pointer"
+          className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-600 hover:bg-rose-500 text-white text-2xs font-bold cursor-pointer"
           title="Interromper a consulta em andamento"
         >
           <XOctagon className="w-3.5 h-3.5" />

@@ -24,14 +24,14 @@ export const QaTemplateEditorBar: React.FC<QaTemplateEditorBarProps> = ({
         value={template.name}
         onChange={(e) => onChange({ ...template, name: e.target.value })}
         placeholder="Nome do Cenário"
-        className="bg-background border border-border rounded-md px-2.5 py-1 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-72"
+        className="bg-background border border-border rounded-md px-2.5 py-1 text-xs font-semibold text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary w-72"
       />
       <input
         type="text"
         value={template.category || ''}
         onChange={(e) => onChange({ ...template, category: e.target.value })}
         placeholder="Categoria (ex: Vendas PDV)"
-        className="bg-background border border-border rounded-md px-2.5 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-40"
+        className="bg-background border border-border rounded-md px-2.5 py-1 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary w-40"
       />
     </div>
 

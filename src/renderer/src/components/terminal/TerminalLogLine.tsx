@@ -13,13 +13,13 @@ interface TerminalLogLineProps {
 
 export const TerminalLogLine: React.FC<TerminalLogLineProps> = ({ log, index, wordWrap }) => {
   const widthClass = wordWrap ? 'w-full min-w-0' : 'w-fit min-w-full';
-  const textWrapClass = wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre';
+  const textWrapClass = wordWrap ? 'whitespace-pre-wrap wrap-break-word' : 'whitespace-pre';
 
   if (typeof log === 'string') {
     const color = getTerminalStringLogColor(log);
     return (
       <div
-        className={`flex items-start space-x-2 font-mono text-[11px] leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${widthClass}`}
+        className={`flex items-start space-x-2 font-mono text-2xs leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${widthClass}`}
       >
         <span className="text-slate-600 select-none w-6 text-right text-2xs shrink-0 font-mono opacity-60">
           {index + 1}
@@ -33,7 +33,7 @@ export const TerminalLogLine: React.FC<TerminalLogLineProps> = ({ log, index, wo
 
   return (
     <div
-      className={`flex items-start space-x-2 font-mono text-[11px] py-0.5 leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${widthClass}`}
+      className={`flex items-start space-x-2 font-mono text-2xs py-0.5 leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${widthClass}`}
     >
       <span className="text-slate-600 select-none w-6 text-right text-2xs shrink-0 font-mono opacity-60">
         {index + 1}

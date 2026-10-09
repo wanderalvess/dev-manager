@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { TableColumnInfo } from '../../../shared/types';
+import type { QueryResult, TableColumnInfo } from '../../../shared/types';
+import { buildCsvContent, buildJsonContent } from './databaseExportUtils';
+import { processQueryRows } from './databaseResultsUtils';
 import {
+  attachRowIds,
   getRowKeyColumns,
+  lacksPrimaryKey,
   parseSingleTableSelect,
   isNullSigil,
   looksNumericType,
@@ -89,5 +93,52 @@ describe('buildEmptyRowDraft / draftToInsertValues', () => {
     ];
     const draft = { ID: '42', NOME: 'Ana', OBS: '' };
     expect(draftToInsertValues(draft, columns)).toEqual({ ID: 42, NOME: 'Ana' });
+  });
+});
+
+describe('ROWID/ctid sem PK', () => {
+  const noPk = [makeColumn({ name: 'NOME' }), makeColumn({ name: 'EMAIL' })];
+
+  it('getRowKeyColumns prefere PK, depois ROWID, depois todas as colunas', () => {
+    expect(getRowKeyColumns(noPk, true)).toEqual(['__ROWID__']);
+    expect(getRowKeyColumns([makeColumn({ name: 'ID', isPrimaryKey: true })], true)).toEqual(['ID']);
+    expect(getRowKeyColumns(noPk)).toEqual(['NOME', 'EMAIL']);
+  });
+
+  it('lacksPrimaryKey ignora tabela de colunas desconhecidas', () => {
+    expect(lacksPrimaryKey(noPk)).toBe(true);
+    expect(lacksPrimaryKey([])).toBe(false);
+    expect(lacksPrimaryKey([makeColumn({ name: 'ID', isPrimaryKey: true })])).toBe(false);
+  });
+
+  it('o ROWID não aparece no grid, na busca, no CSV nem no JSON, mas continua legível por linha', () => {
+    const raw: QueryResult = {
+      success: true,
+      isQuery: true,
+      columns: ['__ROWID__', 'NOME', 'EMAIL'],
+      rows: [{ __ROWID__: 'AAAR3sAAEAAAACXAAA', NOME: 'Ana', EMAIL: 'a@x.com' }],
+      rowCount: 1,
+      executionTimeMs: 1
+    };
+    const res = attachRowIds(raw);
+
+    expect(res.columns).toEqual(['NOME', 'EMAIL']);
+    expect(Object.keys(res.rows[0])).toEqual(['NOME', 'EMAIL']);
+    expect(JSON.stringify(res.rows[0])).not.toContain('AAAR3s');
+    expect(res.rows[0].__ROWID__).toBe('AAAR3sAAEAAAACXAAA');
+
+    // grid: busca global por parte do ROWID não acha a linha; ordenação mantém a referência da linha
+    expect(processQueryRows(res, { searchTerm: 'AAAR3s' })).toHaveLength(0);
+    expect(processQueryRows(res, { searchTerm: 'Ana' })[0].__ROWID__).toBe('AAAR3sAAEAAAACXAAA');
+
+    // exportação
+    expect(buildCsvContent(res.columns, res.rows)).not.toContain('ROWID');
+    expect(buildCsvContent(res.columns, res.rows)).not.toContain('AAAR3s');
+    expect(buildJsonContent(res.columns, res.rows)).not.toContain('AAAR3s');
+  });
+
+  it('resultado sem a pseudo-coluna passa intacto', () => {
+    const res: QueryResult = { success: true, isQuery: true, columns: ['A'], rows: [{ A: 1 }], rowCount: 1, executionTimeMs: 1 };
+    expect(attachRowIds(res)).toBe(res);
   });
 });

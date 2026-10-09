@@ -31,7 +31,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
         <button
           type="button"
           onClick={() => setShowAddForm(true)}
-          className="flex items-center space-x-1 px-2.5 py-1 rounded bg-card hover:bg-muted border border-border text-foreground font-semibold text-[11px] transition cursor-pointer"
+          className="flex items-center space-x-1 px-2.5 py-1 rounded bg-card hover:bg-muted border border-border text-foreground font-semibold text-2xs transition cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 text-primary" />
           <span>Adicionar Variável Manual</span>
@@ -41,7 +41,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
           <select
             value={newVarPrefix}
             onChange={(e) => setNewVarPrefix(e.target.value as SqlVariablePrefix)}
-            className="bg-card border border-border text-foreground text-xs rounded px-1.5 py-1 font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+            className="bg-card border border-border text-foreground text-xs rounded px-1.5 py-1 font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
           >
             <option value=":">:</option>
             <option value="&">&</option>
@@ -55,7 +55,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
             placeholder="NOME_VARIAVEL"
             value={newVarName}
             onChange={(e) => setNewVarName(e.target.value.toUpperCase())}
-            className="w-36 bg-background border border-border rounded px-2 py-1 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-36 bg-background border border-border rounded px-2 py-1 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
             autoFocus
           />
           <button
@@ -80,7 +80,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
       <button
         type="button"
         onClick={onClearAllValues}
-        className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition cursor-pointer"
+        className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition cursor-pointer"
         title="Limpar todos os campos preenchidos"
       >
         <RotateCcw className="w-3 h-3" />

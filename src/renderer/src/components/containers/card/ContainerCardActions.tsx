@@ -62,7 +62,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenOracleTools(container)}
           title="Ferramentas Especializadas Oracle (db_health, SQL*Plus, Data Pump, TNS)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-sm"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Database className="w-3.5 h-3.5 text-orange-500" />
           <span>Ferramentas Oracle</span>
@@ -77,7 +77,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
             onCopyText(getOracleTnsConfig(port), `tns-${container.id}`);
           }}
           title="Copiar bloco de conexão do tnsnames.ora para este container"
-          className="flex items-center space-x-1 px-2 py-1.5 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-95 shadow-sm"
+          className="flex items-center space-x-1 px-2 py-1.5 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Network className="w-3 h-3 text-orange-400" />
           <span>{copyFeedback === `tns-${container.id}` ? 'TNS Copiado!' : 'Copiar TNS'}</span>
@@ -88,7 +88,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenWtaTools(container)}
           title="Utilitários WTA (Portal, Instalador, Console Karaf, Modo Desenvolvedor)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-sm"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Globe className="w-3.5 h-3.5 text-cyan-500" />
           <span>Utilitários WTA</span>
@@ -99,7 +99,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenWshTools(container)}
           title="Utilitários Especializados WSH (Gerador MD5, Checagem de /opt, Rotina 2650)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-sm"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Key className="w-3.5 h-3.5 text-violet-500" />
           <span>Utilitários WSH</span>
@@ -112,7 +112,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
       <button
         onClick={() => onInspectContainer(container)}
         disabled={isLoadingInspect}
-        title="Inspecionar Detalhes (docker inspect)"
+        title="Inspecionar Detalhes (docker inspect)" aria-label="Inspecionar Detalhes (docker inspect)"
         className="p-1.5 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 rounded-lg transition cursor-pointer active:scale-95"
       >
         <Info className="w-3.5 h-3.5 text-primary" />
@@ -143,7 +143,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
           <button
             onClick={() => onContainerAction(container, 'restart')}
             disabled={Boolean(isLoadingAction)}
-            title="Reiniciar Container"
+            title="Reiniciar Container" aria-label="Reiniciar Container"
             className="p-1.5 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 rounded-lg transition disabled:opacity-50 cursor-pointer active:scale-98"
           >
             <RotateCw
@@ -189,7 +189,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
       <button
         onClick={() => onContainerAction(container, 'remove')}
         disabled={Boolean(isLoadingAction)}
-        title="Remover Container"
+        title="Remover Container" aria-label="Remover Container"
         className="p-1.5 hover:text-rose-400 text-muted-foreground rounded-lg hover:bg-rose-500/10 transition cursor-pointer"
       >
         <Trash2 className="w-3.5 h-3.5" />

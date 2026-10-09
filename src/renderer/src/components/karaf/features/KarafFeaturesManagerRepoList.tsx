@@ -36,7 +36,7 @@ export const KarafFeaturesManagerRepoList: React.FC<KarafFeaturesManagerRepoList
           >
             <div className="flex items-center space-x-2.5 min-w-0 flex-1">
               <span
-                className={`w-2 h-2 rounded-full shrink-0 ${repo.isWinThor ? 'bg-primary' : 'bg-slate-500'}`}
+                className={`w-2 h-2 rounded-full shrink-0 ${repo.isWinThor ? 'bg-primary' : 'bg-muted-foreground'}`}
               />
 
               <div className="min-w-0 flex-1">
@@ -62,8 +62,8 @@ export const KarafFeaturesManagerRepoList: React.FC<KarafFeaturesManagerRepoList
               <button
                 onClick={() => onRefresh(repo.name || repo.url)}
                 disabled={isBusy}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted border border-border/40 transition-colors cursor-pointer disabled:opacity-40"
-                title="Recarregar repositório (feature:repo-refresh)"
+                className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted border border-border/40 transition-colors cursor-pointer disabled:opacity-50"
+                title="Recarregar repositório (feature:repo-refresh)" aria-label="Recarregar repositório (feature:repo-refresh)"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${actionInProgress === `refresh_${repo.name}` ? 'animate-spin' : ''}`}
@@ -73,8 +73,8 @@ export const KarafFeaturesManagerRepoList: React.FC<KarafFeaturesManagerRepoList
               <button
                 onClick={() => onRemove(repo)}
                 disabled={isBusy}
-                className="p-1.5 text-rose-400 hover:text-rose-300 rounded-md hover:bg-rose-500/10 border border-border/40 hover:border-rose-500/30 transition-colors cursor-pointer disabled:opacity-40"
-                title="Remover repositório do Karaf"
+                className="p-1.5 text-rose-400 hover:text-rose-300 rounded-md hover:bg-rose-500/10 border border-border/40 hover:border-rose-500/30 transition-colors cursor-pointer disabled:opacity-50"
+                title="Remover repositório do Karaf" aria-label="Remover repositório do Karaf"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

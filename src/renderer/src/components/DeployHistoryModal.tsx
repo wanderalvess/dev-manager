@@ -12,6 +12,7 @@ import {
   History
 } from 'lucide-react';
 import { DeployProfileHistoryEntry } from '../../../shared/types';
+import { Modal } from './ui/Modal';
 
 interface DeployHistoryModalProps {
   isOpen: boolean;
@@ -49,8 +50,13 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden"
+      closeOnBackdrop={false}
+    >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
           <div className="flex items-center gap-3">
@@ -82,17 +88,17 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
         {totalRuns > 0 && (
           <div className="px-6 py-3 border-b border-border bg-background grid grid-cols-3 gap-4 text-center">
             <div className="bg-muted/30 border border-border/60 rounded-xl p-2">
-              <span className="text-[11px] text-muted-foreground block">Total Execuções</span>
+              <span className="text-2xs text-muted-foreground block">Total Execuções</span>
               <span className="text-base font-bold font-mono text-foreground">{totalRuns}</span>
             </div>
             <div className="bg-muted/30 border border-border/60 rounded-xl p-2">
-              <span className="text-[11px] text-muted-foreground block">Taxa de Sucesso</span>
+              <span className="text-2xs text-muted-foreground block">Taxa de Sucesso</span>
               <span className={`text-base font-bold font-mono ${successRate >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>
                 {successRate}%
               </span>
             </div>
             <div className="bg-muted/30 border border-border/60 rounded-xl p-2">
-              <span className="text-[11px] text-muted-foreground block">Com Sucesso / Falhas</span>
+              <span className="text-2xs text-muted-foreground block">Com Sucesso / Falhas</span>
               <span className="text-base font-bold font-mono text-foreground">
                 <span className="text-emerald-500">{successRuns}</span> / <span className="text-rose-500">{totalRuns - successRuns}</span>
               </span>
@@ -163,7 +169,7 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                             {entry.success ? 'Sucesso' : entry.aborted ? 'Cancelado' : 'Falhou'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground font-mono">
+                        <div className="flex items-center gap-3 mt-1 text-2xs text-muted-foreground font-mono">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {dateFormatted}
@@ -187,7 +193,7 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                   {isExpanded && (
                     <div className="px-4 pb-3 pt-1 border-t border-border/50 bg-muted/10 space-y-2 text-xs">
                       {entry.error && (
-                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-2 text-rose-600 dark:text-rose-300 text-[11px] font-mono break-all">
+                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-2 text-rose-600 dark:text-rose-300 text-2xs font-mono break-all">
                           {entry.error}
                         </div>
                       )}
@@ -199,7 +205,7 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                         {(entry.stepResults || []).map((step, sIdx) => (
                           <div
                             key={`${step.stepId}-${sIdx}`}
-                            className="flex items-center justify-between p-2 rounded-lg bg-card border border-border/50 text-[11px]"
+                            className="flex items-center justify-between p-2 rounded-lg bg-card border border-border/50 text-2xs"
                           >
                             <div className="flex items-center gap-2 truncate">
                               {step.success ? (
@@ -255,7 +261,6 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
             Fechar
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

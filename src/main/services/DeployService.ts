@@ -183,6 +183,20 @@ export class DeployService {
           return { code: res.success ? 0 : 1, stderr: res.success ? undefined : res.output };
         }
 
+        if (action === 'update') {
+          if (!bundleId || !location) {
+            const err = `[ERRO] Etapa "${step.name}": ID do bundle e nova versão/localização são obrigatórios para atualização.
+`;
+            onChunk(err);
+            return { code: 1, stderr: err };
+          }
+          const res = await this.karafService.updateBundleVersion(
+            { bundleId, newVersionOrLocation: location },
+            onChunk
+          );
+          return { code: res.success ? 0 : 1, stderr: res.success ? undefined : res.output };
+        }
+
         if (action === 'uninstall') {
           if (!bundleId) {
             const err = `[ERRO] Etapa "${step.name}": ID do bundle não informado para desinstalação.\r\n`;
@@ -199,8 +213,7 @@ export class DeployService {
           onChunk(err);
           return { code: 1, stderr: err };
         }
-        const bAction = (action === 'refresh' || action === 'start' || action === 'stop' ? action : 'restart') as any;
-        const res = await this.karafService.manageBundle(bAction, bundleId);
+        const res = await this.karafService.manageBundle(action, bundleId);
         onChunk(res.output + '\r\n');
         return { code: res.success ? 0 : 1, stderr: res.success ? undefined : res.output };
       }

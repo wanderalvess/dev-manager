@@ -34,13 +34,13 @@ export const LogsSearchControls: React.FC<LogsSearchControlsProps> = ({
         value={filterText}
         onChange={(e) => onFilterTextChange(e.target.value)}
         placeholder="Buscar (Ctrl+F)..."
-        className="w-full pl-8 pr-7 py-1 bg-background border border-border/80 rounded-lg text-xs font-mono focus:outline-none focus:border-primary transition-colors"
+        className="w-full pl-8 pr-7 py-1 bg-background border border-border/80 rounded-lg text-xs font-mono focus:outline-hidden focus:border-primary transition-colors"
       />
       {filterText && (
         <button
           onClick={() => onFilterTextChange('')}
           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          title="Limpar busca"
+          title="Limpar busca" aria-label="Limpar busca"
         >
           <X className="w-3.5 h-3.5" />
         </button>

@@ -87,7 +87,7 @@ export const ContainersHeader: React.FC<ContainersHeaderProps> = ({
     <>
       {/* Topo / Header da Página */}
       <header
-        className="px-4 py-3 bg-card/85 backdrop-blur border-b border-border/80 flex flex-wrap items-center justify-between gap-3 shrink-0"
+        className="px-4 py-3 bg-card/85 backdrop-blur-sm border-b border-border/80 flex flex-wrap items-center justify-between gap-3 shrink-0"
         data-tour="page-header"
       >
         <ContainersHeaderTitle

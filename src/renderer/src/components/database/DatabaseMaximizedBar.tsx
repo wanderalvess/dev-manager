@@ -9,14 +9,14 @@ export const DatabaseMaximizedBar: React.FC<DatabaseMaximizedBarProps> = ({ onRe
     <div className="flex items-center space-x-2">
       <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
       <span className="font-semibold text-foreground">Modo Maximizado / Foco Ativo</span>
-      <span className="text-[11px] text-muted-foreground">
+      <span className="text-2xs text-muted-foreground">
         (O editor SQL está ocupando toda a tela para você visualizar queries grandes)
       </span>
     </div>
     <button
       type="button"
       onClick={onRestore}
-      className="px-3 py-1 bg-card hover:bg-muted border border-border rounded-lg text-primary hover:text-primary-foreground hover:bg-primary font-bold transition cursor-pointer text-xs shadow-xs"
+      className="px-3 py-1 bg-card hover:bg-muted border border-border rounded-lg text-primary hover:text-primary-foreground hover:bg-primary font-bold transition cursor-pointer text-xs shadow-2xs"
     >
       Restaurar Painel de Resultados
     </button>

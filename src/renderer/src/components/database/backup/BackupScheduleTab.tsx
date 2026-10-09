@@ -48,7 +48,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
           <select
             value={backupCron}
             onChange={(e) => setBackupCron(e.target.value)}
-            className="flex-1 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+            className="flex-1 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
           >
             <option value="">Sem agendamento (somente manual)</option>
             <option value="0 * * * *">A cada hora (0 * * * *)</option>
@@ -64,7 +64,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
             value={backupCron}
             onChange={(e) => setBackupCron(e.target.value)}
             placeholder="cron: 0 2 * * *"
-            className="w-full sm:w-44 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+            className="w-full sm:w-44 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
           />
         </div>
 
@@ -84,7 +84,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
         <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
           <SlidersHorizontal className="w-4 h-4 text-primary" /> Política de Retenção de Backups
         </span>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Os arquivos mais antigos são limpos automaticamente após cada execução conforme as regras abaixo:
         </p>
 
@@ -98,7 +98,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
                 value={backupRetentionCount}
                 onChange={(e) => setBackupRetentionCount(e.target.value)}
                 placeholder="Ilimitado"
-                className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+                className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
               />
               <span className="text-muted-foreground shrink-0 text-xs">arquivos</span>
             </div>
@@ -113,7 +113,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
                 value={backupRetentionDays}
                 onChange={(e) => setBackupRetentionDays(e.target.value)}
                 placeholder="Sem limite"
-                className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+                className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
               />
               <span className="text-muted-foreground shrink-0 text-xs">dias</span>
             </div>
@@ -125,7 +125,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
         <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
           <FlaskConical className="w-4 h-4 text-cyan-500" /> Restore Drill Automático (Teste Periódico)
         </span>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Restaura automaticamente o backup mais recente gerado contra uma base de teste descartável (scratch) para certificar a integridade dos dados.
         </p>
 
@@ -134,7 +134,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
             <select
               value={drillCron}
               onChange={(e) => setDrillCron(e.target.value)}
-              className="flex-1 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+              className="flex-1 bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
             >
               <option value="">Sem drill agendado</option>
               <option value="0 4 * * *">Diário às 04:00</option>
@@ -159,7 +159,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
             <select
               value={drillScratchConnectionId}
               onChange={(e) => setDrillScratchConnectionId(e.target.value)}
-              className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-none focus:border-primary text-xs"
+              className="w-full bg-background border border-border/80 rounded-lg p-2 text-foreground focus:outline-hidden focus:border-primary text-xs"
             >
               <option value="">Conexão scratch...</option>
               {connections.map((c) => (
@@ -183,7 +183,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
       </button>
 
       {scheduleSaveResult && (
-        <div className={`p-3.5 rounded-xl border text-xs ${backupResultToneClass(scheduleSaveResult.success)}`}>
+        <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(scheduleSaveResult.success)}`}>
           {scheduleSaveResult.message}
         </div>
       )}

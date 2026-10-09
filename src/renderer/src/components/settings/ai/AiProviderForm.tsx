@@ -23,7 +23,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
   onToggleShowKey,
   onSave
 }) => (
-  <div className="p-5 rounded-2xl border border-primary/40 bg-card shadow-2xl space-y-4 animate-in fade-in-0">
+  <div className="p-5 rounded-xl border border-primary/40 bg-card shadow-2xl space-y-4 animate-in fade-in-0">
     <div className="flex items-center justify-between pb-2 border-b border-border">
       <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
         <Sliders className="w-4 h-4 text-primary" />
@@ -47,7 +47,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           value={provider.name || ''}
           onChange={(e) => onChange({ ...provider, name: e.target.value })}
           placeholder="Ex: OpenAI Produtivo, Ollama Local"
-          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary shadow-2xs"
+          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground text-xs focus:outline-hidden focus:border-primary shadow-2xs"
         />
       </div>
 
@@ -57,7 +57,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
         <select id="ai-provider-form-2"
           value={provider.provider || 'openai'}
           onChange={(e) => onChange(switchProviderType(provider, e.target.value as LlmProviderType))}
-          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary shadow-2xs cursor-pointer"
+          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground text-xs focus:outline-hidden focus:border-primary shadow-2xs cursor-pointer"
         >
           <option value="openai">OpenAI / Compatível (OpenAI, Groq, DeepSeek)</option>
           <option value="gemini">Google Gemini (REST nativo v1beta)</option>
@@ -76,7 +76,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           value={provider.baseUrl || ''}
           onChange={(e) => onChange({ ...provider, baseUrl: e.target.value })}
           placeholder="Ex: https://api.openai.com/v1 ou http://localhost:11434/v1"
-          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary shadow-2xs"
+          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary shadow-2xs"
         />
       </div>
 
@@ -88,7 +88,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           value={provider.model || ''}
           onChange={(e) => onChange({ ...provider, model: e.target.value })}
           placeholder="Ex: gpt-4o-mini, gemini-2.0-flash, claude-3-5-sonnet, llama3.2"
-          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary shadow-2xs"
+          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary shadow-2xs"
         />
       </div>
 
@@ -108,13 +108,13 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
             value={provider.apiKey || ''}
             onChange={(e) => onChange({ ...provider, apiKey: e.target.value })}
             placeholder="sk-..., AIzaSy..., ou deixe em branco para Ollama"
-            className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-none focus:border-primary shadow-2xs"
+            className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary shadow-2xs"
           />
           <button
             type="button"
             onClick={() => onToggleShowKey(!showKey)}
             className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-muted-foreground hover:text-foreground shadow-2xs cursor-pointer"
-            title={showKey ? 'Ocultar chave' : 'Mostrar chave'}
+            title={showKey ? 'Ocultar chave' : 'Mostrar chave'} aria-label={showKey ? 'Ocultar chave' : 'Mostrar chave'}
           >
             {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -152,7 +152,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           max="180"
           value={(provider.timeoutMs ?? 30000) / 1000}
           onChange={(e) => onChange({ ...provider, timeoutMs: secondsToTimeoutMs(Number(e.target.value)) })}
-          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary shadow-2xs"
+          className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary shadow-2xs"
         />
       </div>
     </div>

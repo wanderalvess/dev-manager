@@ -91,7 +91,7 @@ export const ProfileEditorStepDetails: React.FC<ProfileEditorStepDetailsProps> =
             value={step.name}
             onChange={(e) => onUpdate({ name: e.target.value })}
             placeholder="Ex: Docker Postgres, SSO Auth, Gateway, API Backend..."
-            className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -125,7 +125,7 @@ export const ProfileEditorStepDetails: React.FC<ProfileEditorStepDetailsProps> =
               onChange={(e) =>
                 onUpdate({ delayAfterSeconds: parseInt(e.target.value || '0', 10) })
               }
-              className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
             <p className="text-2xs text-muted-foreground mt-1">
               Tempo de espera antes de chamar o próximo passo na esteira.

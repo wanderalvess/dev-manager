@@ -42,7 +42,7 @@ export const StepCardsPanel: React.FC<StepCardsPanelProps> = ({
   onRestart,
   onToggleService
 }) => (
-  <div className="cockpit-panel rounded-2xl p-4 flex flex-col border border-border space-y-3" data-tour="step-cards-panel">
+  <div className="cockpit-panel rounded-xl p-4 flex flex-col border border-border space-y-3" data-tour="step-cards-panel">
     <div className="flex items-center justify-between border-b border-border/60 pb-2">
       <div className="flex items-center space-x-2">
         <Zap className="w-4 h-4 text-primary" />

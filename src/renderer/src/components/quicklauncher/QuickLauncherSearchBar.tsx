@@ -23,7 +23,7 @@ export const QuickLauncherSearchBar: React.FC<QuickLauncherSearchBarProps> = ({
       value={search}
       onChange={(e) => onSearchChange(e.target.value)}
       placeholder="Digite o número da rotina, nome do projeto ou ação..."
-      className="w-full bg-transparent text-sm text-foreground font-sans placeholder:text-muted-foreground focus:outline-none"
+      className="w-full bg-transparent text-sm text-foreground font-sans placeholder:text-muted-foreground focus:outline-hidden"
     />
     {search && (
       <button

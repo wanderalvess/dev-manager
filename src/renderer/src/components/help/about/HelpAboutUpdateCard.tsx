@@ -14,12 +14,12 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
   updateStatus,
   handleCheckForUpdates
 }) => (
-  <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-xs">
+  <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
     <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
       Versão do Aplicativo:
     </span>
     <div className="flex items-center justify-between gap-2">
-      <span className="font-mono text-foreground text-[11px]">
+      <span className="font-mono text-foreground text-2xs">
         v{appInfo?.appVersion || '...'}
         {updateStatus?.status === 'available' && (
           <span className="ml-1.5 text-emerald-500 font-bold">→ v{updateStatus.version}</span>

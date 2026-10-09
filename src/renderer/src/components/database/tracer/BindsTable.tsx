@@ -20,7 +20,7 @@ export const BindsTable: React.FC<{
 
   return (
     <div className="border border-border/70 rounded-xl overflow-hidden bg-card/60">
-      <table className="w-full text-[11px] font-mono">
+      <table className="w-full text-2xs font-mono">
         <thead className="bg-card/90 text-muted-foreground border-b border-border/70">
           <tr className="text-left">
             <th className="px-3 py-1.5 font-semibold w-12 text-center">Pos</th>

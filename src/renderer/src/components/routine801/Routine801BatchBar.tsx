@@ -37,13 +37,13 @@ export const Routine801BatchBar: React.FC<Routine801BatchBarProps> = ({
 
       {/* Opção para forçar versão específica na seleção em lote */}
       <div className="flex items-center gap-1.5 border-l border-border/80 pl-3">
-        <span className="text-muted-foreground text-[11px] whitespace-nowrap">Versão Alvo:</span>
+        <span className="text-muted-foreground text-2xs whitespace-nowrap">Versão Alvo:</span>
         <input
           type="text"
           value={batchVersionOverride}
           onChange={(e) => onChangeVersionOverride(e.target.value)}
           placeholder="Original ou ex: 1.38.0.0"
-          className="px-2 py-0.5 text-xs bg-background border border-input rounded text-foreground font-mono placeholder:text-muted-foreground/60 w-36 focus:outline-none focus:ring-1 focus:ring-primary"
+          className="px-2 py-0.5 text-xs bg-background border border-input rounded text-foreground font-mono placeholder:text-muted-foreground/60 w-36 focus:outline-hidden focus:ring-1 focus:ring-primary"
           title="Se informado, sobrescreve a versão de todos os itens selecionados ao executar"
         />
       </div>
@@ -63,7 +63,7 @@ export const Routine801BatchBar: React.FC<Routine801BatchBarProps> = ({
       <button
         onClick={onInstall}
         disabled={isExecuting}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm transition-colors ${
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-colors ${
           activeTab === 'updates'
             ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
             : 'bg-primary hover:opacity-90 text-primary-foreground'

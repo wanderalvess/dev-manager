@@ -27,7 +27,7 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
       step.enabled === false
         ? 'border-border/40 bg-muted/20 opacity-50'
         : isRunning
-        ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-sm'
+        ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-xs'
         : status?.status === 'completed'
         ? 'border-emerald-500/40 bg-emerald-500/5'
         : status?.status === 'failed'
@@ -63,7 +63,7 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
         )}
         {executionTimeMs !== undefined && (
           <span className="text-2xs font-mono font-medium text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded-full flex items-center gap-1">
-            <Clock className="w-2.5 h-2.5" />
+            <Clock className="w-3 h-3" />
             {(executionTimeMs / 1000).toFixed(1)}s
           </span>
         )}
@@ -78,7 +78,7 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
       className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
         isRunning
           ? 'bg-primary text-primary-foreground border-primary animate-pulse'
-          : 'bg-card hover:bg-primary/15 text-primary border-border hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed'
+          : 'bg-card hover:bg-primary/15 text-primary border-border hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed'
       }`}
       title={isRunning ? 'Executando esta etapa...' : `Executar somente esta etapa (${step.name})`}
     >

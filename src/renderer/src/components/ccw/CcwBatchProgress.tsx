@@ -18,7 +18,7 @@ export const CcwBatchProgress: React.FC<CcwBatchProgressProps> = ({ progressList
           <Activity className="w-3.5 h-3.5 text-primary" />
           <span>Telemetria do Download ({percent}%)</span>
         </div>
-        <span className="text-[11px] font-mono text-muted-foreground">
+        <span className="text-2xs font-mono text-muted-foreground">
           {completed + failed} de {total} processadas
         </span>
       </div>

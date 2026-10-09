@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EscapeToClose } from '../ui/EscapeToClose';
 import { ChevronDown, Copy, Download, Plus, Upload } from 'lucide-react';
 
 interface DeployProfileMenuProps {
@@ -30,25 +31,26 @@ export const DeployProfileMenu: React.FC<DeployProfileMenuProps> = ({
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors flex items-center gap-1 cursor-pointer"
-        title="Mais opções de perfil"
+        title="Mais opções de perfil" aria-label="Mais opções de perfil"
       >
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <EscapeToClose onEscape={() => setIsOpen(false)} />
           <div className="absolute right-0 mt-1 w-52 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-border/50">
             <div className="py-1">
               <button onClick={run(onNew)} className={itemClass}>
                 <Plus className="w-3.5 h-3.5 text-primary" /> Novo Perfil
               </button>
-              <button onClick={run(onDuplicate)} disabled={!hasActiveProfile} className={`${itemClass} disabled:opacity-40`}>
+              <button onClick={run(onDuplicate)} disabled={!hasActiveProfile} className={`${itemClass} disabled:opacity-50`}>
                 <Copy className="w-3.5 h-3.5 text-primary" /> Duplicar Perfil
               </button>
             </div>
 
             <div className="py-1">
-              <button onClick={run(onExport)} disabled={!hasActiveProfile} className={`${itemClass} disabled:opacity-40`}>
+              <button onClick={run(onExport)} disabled={!hasActiveProfile} className={`${itemClass} disabled:opacity-50`}>
                 <Download className="w-3.5 h-3.5 text-emerald-500" /> Exportar Perfil (.json)
               </button>
               <button onClick={run(onImport)} className={itemClass}>

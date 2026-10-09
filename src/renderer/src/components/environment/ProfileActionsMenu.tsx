@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EscapeToClose } from '../ui/EscapeToClose';
 import { Square, RefreshCw, SlidersHorizontal, ChevronDown } from 'lucide-react';
 
 interface ProfileActionsMenuProps {
@@ -23,7 +24,7 @@ export const ProfileActionsMenu: React.FC<ProfileActionsMenuProps> = ({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         disabled={isRunningProfile}
-        className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-card hover:bg-muted text-foreground border border-border shadow-sm"
+        className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all bg-card hover:bg-muted text-foreground border border-border shadow-xs"
         title="Ações do perfil: parar ou reiniciar toda a esteira"
       >
         <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
@@ -34,6 +35,7 @@ export const ProfileActionsMenu: React.FC<ProfileActionsMenuProps> = ({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <EscapeToClose onEscape={() => setIsOpen(false)} />
           <div className="absolute right-0 mt-2 w-60 origin-top-right rounded-xl bg-card border border-border shadow-2xl p-1.5 z-50 flex flex-col space-y-1">
             <button
               type="button"

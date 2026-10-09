@@ -8,7 +8,7 @@ interface InfrWshTabProps {
 
 export const InfrWshTab: React.FC<InfrWshTabProps> = ({ isExecuting, onRun }) => (
   <div className="space-y-4">
-    <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3.5 flex items-start gap-3">
+    <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3 flex items-start gap-3">
       <div className="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0 mt-0.5">
         <Key className="w-4 h-4" />
       </div>
@@ -28,7 +28,7 @@ export const InfrWshTab: React.FC<InfrWshTabProps> = ({ isExecuting, onRun }) =>
       <button
         onClick={onRun}
         disabled={isExecuting}
-        className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {isExecuting ? (
           <RotateCw className="w-4 h-4 animate-spin" />

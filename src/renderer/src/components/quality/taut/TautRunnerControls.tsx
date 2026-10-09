@@ -35,7 +35,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
 }) => (
   <div className="lg:col-span-5 space-y-4">
     {/* Meta Tags (Esteira, Crítico, Regressão, Contrato) */}
-    <div className="p-3.5 rounded-xl bg-card border border-border shadow-xs space-y-2.5">
+    <div className="p-3 rounded-xl bg-card border border-border shadow-2xs space-y-2.5">
       <label className="text-xs font-bold text-foreground flex items-center justify-between">
         <span>Filtro de Meta-Tags (@cypress/grep)</span>
         <span className="text-2xs text-muted-foreground font-normal">Clique para alternar</span>
@@ -63,7 +63,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
     </div>
 
     {/* Módulos do WinThor */}
-    <div className="p-3.5 rounded-xl bg-card border border-border shadow-xs space-y-2.5">
+    <div className="p-3 rounded-xl bg-card border border-border shadow-2xs space-y-2.5">
       <label className="text-xs font-bold text-foreground flex items-center justify-between">
         <span>Módulos de Negócio (Serviços WTA)</span>
         <span className="text-2xs text-muted-foreground font-normal">Selecione para focar</span>
@@ -77,9 +77,9 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
               key={mod.id}
               type="button"
               onClick={() => onToggleTag(mod.id)}
-              className={`px-2 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer border ${
+              className={`px-2 py-1 rounded-lg text-2xs font-medium transition cursor-pointer border ${
                 isSelected
-                  ? 'bg-primary text-primary-foreground font-bold border-primary shadow-xs'
+                  ? 'bg-primary text-primary-foreground font-bold border-primary shadow-2xs'
                   : 'bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted hover:text-foreground'
               }`}
               title={`Tag: ${mod.id} (${mod.group})`}
@@ -92,7 +92,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
     </div>
 
     {/* Parâmetros Avançados de Execução */}
-    <div className="p-3.5 rounded-xl bg-card border border-border shadow-xs space-y-3">
+    <div className="p-3 rounded-xl bg-card border border-border shadow-2xs space-y-3">
       <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
         <Sliders className="w-3.5 h-3.5 text-primary" />
         <span>Parâmetros de Execução</span>
@@ -100,29 +100,29 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
 
       <div className="space-y-2 text-xs">
         <div>
-          <label className="text-[11px] text-muted-foreground">Filtro de Tags Combinado:</label>
+          <label className="text-2xs text-muted-foreground">Filtro de Tags Combinado:</label>
           <input
             type="text"
             value={effectiveTagsString}
             onChange={(e) => onCustomTagChange(e.target.value)}
             placeholder="ex: critico,winthor-pedido-venda,-develop"
-            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary mt-1"
+            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary mt-1"
           />
         </div>
 
         <div>
-          <label className="text-[11px] text-muted-foreground">Filtro de Arquivo Spec (Opcional):</label>
+          <label className="text-2xs text-muted-foreground">Filtro de Arquivo Spec (Opcional):</label>
           <input
             type="text"
             value={customSpecInput}
             onChange={(e) => onCustomSpecChange(e.target.value)}
             placeholder="cypress/e2e/api/Pedido/**/*"
-            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-none focus:ring-1 focus:ring-primary mt-1"
+            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary mt-1"
           />
         </div>
 
         <div className="flex items-center justify-between pt-1">
-          <span className="text-[11px] text-muted-foreground">Modo de URL (API_URL_MODE):</span>
+          <span className="text-2xs text-muted-foreground">Modo de URL (API_URL_MODE):</span>
           <div className="flex items-center space-x-1">
             <button
               type="button"

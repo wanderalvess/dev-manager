@@ -2,6 +2,7 @@ import React from 'react';
 import { GitBranch, X, AlertCircle, Plus, Search } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../../shared/types';
 import { buildBranchEntries } from '../../../utils/gitViewUtils';
+import { Modal } from '../../ui/Modal';
 
 interface GitBranchModalProps {
   project: GitProjectInfo;
@@ -29,8 +30,14 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
   const { entries, total } = buildBranchEntries(project.branches, project.remoteBranches, branchFilter);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-fade-in">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-fade-in"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
           <div className="flex items-center space-x-2">
             <GitBranch className="w-5 h-5 text-emerald-500" />
@@ -48,7 +55,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
 
         <div className="p-4 space-y-4">
           {branchError && (
-            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
               <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>{branchError}</span>
             </div>
@@ -65,7 +72,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                 value={newBranchName}
                 onChange={(e) => onNewBranchNameChange(e.target.value)}
                 placeholder="ex: feature/rotina-1400"
-                className="flex-1 bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
+                className="flex-1 bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary"
               />
               <button
                 type="button"
@@ -92,13 +99,13 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                   onChange={(e) => onBranchFilterChange(e.target.value)}
                   placeholder="Filtrar..."
                   aria-label="Filtrar branches"
-                  className="w-36 bg-background border border-border rounded-lg pl-6 pr-2 py-1 text-[11px] text-foreground font-mono focus:outline-none focus:border-primary"
+                  className="w-36 bg-background border border-border rounded-lg pl-6 pr-2 py-1 text-2xs text-foreground font-mono focus:outline-hidden focus:border-primary"
                 />
               </div>
             </div>
             <div className="max-h-48 overflow-y-auto space-y-1">
               {entries.length === 0 && (
-                <p className="text-[11px] text-muted-foreground text-center py-3">Nenhuma branch encontrada.</p>
+                <p className="text-2xs text-muted-foreground text-center py-3">Nenhuma branch encontrada.</p>
               )}
               {entries.map(({ name, remote }) => {
                 const isCurrent = !remote && name === project.currentBranch;
@@ -133,7 +140,6 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

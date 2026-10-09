@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
+import { Modal } from './ui/Modal';
 import { useMarkdownReader } from '../hooks/markdown/useMarkdownReader';
 import { MarkdownBlocks } from './markdown/MarkdownBlocks';
 import { MarkdownReaderHeader } from './markdown/MarkdownReaderHeader';
@@ -41,18 +42,20 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
   bannerExtra,
   footerExtra
 }) => {
-  const reader = useMarkdownReader(content, onClose);
+  const reader = useMarkdownReader(content);
   const { viewMode, headings, isTocOpen } = reader;
 
   return (
-    <div
-      className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 transition-all duration-300 animate-in fade-in-0`}
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      closeOnBackdrop={false}
+      ariaLabel={title || 'Leitor de documento'}
+      panelClassName={`bg-card border border-border/80 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
+        reader.isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-5xl h-[90vh] rounded-3xl'
+      }`}
     >
-      <div
-        className={`bg-card border border-border/80 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
-          reader.isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-5xl h-[90vh] rounded-3xl'
-        }`}
-      >
         <MarkdownReaderHeader
           title={title}
           filePath={filePath}
@@ -102,7 +105,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
                 <span className="text-xs font-bold uppercase tracking-widest text-primary">Carregando documento...</span>
               </div>
             ) : viewMode === 'raw' ? (
-              <div className="font-mono text-xs leading-relaxed text-foreground bg-muted/20 p-5 rounded-2xl border border-border/80 select-text whitespace-pre-wrap">
+              <div className="font-mono text-xs leading-relaxed text-foreground bg-muted/20 p-5 rounded-xl border border-border/80 select-text whitespace-pre-wrap">
                 {content || '(Arquivo vazio)'}
               </div>
             ) : (
@@ -127,7 +130,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
         </div>
 
         <footer className="px-5 py-2.5 border-t border-border/80 bg-muted/30 flex items-center justify-between text-xs shrink-0">
-          <div className="text-muted-foreground flex items-center gap-2 text-[11px]">
+          <div className="text-muted-foreground flex items-center gap-2 text-2xs">
             <span className="font-bold text-foreground">Dica:</span> Pressione <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Esc</kbd> para fechar o leitor.
           </div>
           <div className="flex items-center gap-2">
@@ -135,13 +138,12 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-bold transition cursor-pointer active:scale-95 shadow-xs"
+              className="px-4 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-bold transition cursor-pointer active:scale-95 shadow-2xs"
             >
               Concluir Leitura
             </button>
           </div>
         </footer>
-      </div>
-    </div>
+    </Modal>
   );
 };

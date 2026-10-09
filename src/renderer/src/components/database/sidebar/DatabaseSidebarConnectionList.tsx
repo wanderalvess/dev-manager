@@ -41,7 +41,7 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
             onClick={() => setActiveConnectionId(conn.id)}
             className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition text-xs border ${
               isActive
-                ? 'bg-primary/15 border-primary/40 text-foreground font-semibold shadow-xs'
+                ? 'bg-primary/15 border-primary/40 text-foreground font-semibold shadow-2xs'
                 : 'bg-card/40 border-transparent hover:bg-card hover:border-border text-muted-foreground'
             }`}
           >
@@ -60,7 +60,7 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
                   e.stopPropagation();
                   onOpenEditModal(conn);
                 }}
-                title="Editar Conexão"
+                title="Editar Conexão" aria-label="Editar Conexão"
                 className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition cursor-pointer"
               >
                 <Edit2 className="w-3 h-3" />
@@ -70,7 +70,7 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
                   e.stopPropagation();
                   onDeleteConnection(conn.id);
                 }}
-                title="Excluir Conexão"
+                title="Excluir Conexão" aria-label="Excluir Conexão"
                 className="p-1 hover:text-red-400 text-muted-foreground rounded hover:bg-muted/50 transition cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />

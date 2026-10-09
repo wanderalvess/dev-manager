@@ -39,7 +39,7 @@ export const StepCard: React.FC<StepCardProps> = ({
 
   return (
     <div
-      className={`p-3 bg-card border rounded-xl flex flex-col gap-2 transition-all shadow-sm ${
+      className={`p-3 bg-card border rounded-xl flex flex-col gap-2 transition-all shadow-xs ${
         step.enabled === false
           ? 'opacity-50 border-border/40 bg-muted/20'
           : isPortActive || (srvFound && srvFound.state === 'RUNNING')

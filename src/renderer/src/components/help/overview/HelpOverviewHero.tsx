@@ -37,7 +37,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
   onResetPageTours,
   setActiveCategory
 }) => (
-  <div className="cockpit-panel rounded-2xl p-5 sm:p-6 border border-border shadow-xl relative overflow-hidden">
+  <div className="cockpit-panel rounded-xl p-5 sm:p-6 border border-border shadow-xl relative overflow-hidden">
     <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
       <div className="space-y-2.5 max-w-2xl">
         <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -58,7 +58,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
           )}
         </div>
 
-        <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+        <h3 className="text-sm font-semibold text-foreground tracking-tight">
           Bem-vindo ao Hub Manager 🚀
         </h3>
         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -67,15 +67,15 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
 
         {/* Chips de Informações Chave */}
         <div className="flex items-center gap-2 pt-1 flex-wrap text-xs">
-          <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-[11px] font-mono text-muted-foreground flex items-center gap-1.5">
+          <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-2xs font-mono text-muted-foreground flex items-center gap-1.5">
             <Globe className="w-3 h-3 text-primary" />
             <span>Web: <strong className="text-foreground">:{webPort}</strong></span>
           </div>
-          <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-[11px] font-mono text-muted-foreground flex items-center gap-1.5">
+          <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-2xs font-mono text-muted-foreground flex items-center gap-1.5">
             <Terminal className="w-3 h-3 text-cyan-400" />
             <span>SSH Karaf: <strong className="text-foreground">:{sshPort}</strong></span>
           </div>
-          <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-[11px] font-mono text-muted-foreground flex items-center gap-1.5">
+          <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-2xs font-mono text-muted-foreground flex items-center gap-1.5">
             <Zap className="w-3 h-3 text-amber-400" />
             <span>JVM Debug: <strong className="text-foreground">:{debugPort}</strong></span>
           </div>
@@ -100,7 +100,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
           <button
             type="button"
             onClick={onRestartTour}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
             title="Reabrir o tour guiado de boas-vindas"
           >
             <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -112,7 +112,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
           <button
             type="button"
             onClick={onResetPageTours}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/80 hover:bg-card text-foreground border border-border hover:border-primary/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
             title="Reativa os tutoriais rápidos de cada tela (Banco, Rotinas, Deploy, Containers, Git...)"
           >
             <Compass className="w-3.5 h-3.5 text-primary" />

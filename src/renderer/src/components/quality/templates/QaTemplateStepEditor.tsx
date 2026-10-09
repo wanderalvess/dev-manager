@@ -25,18 +25,18 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
     <div className="flex-1 p-4 overflow-y-auto space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+          <label className="text-2xs font-semibold text-muted-foreground block mb-1">
             Título do Passo:
           </label>
           <input
             type="text"
             value={step.title}
             onChange={(e) => onChange({ ...step, title: e.target.value })}
-            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+          <label className="text-2xs font-semibold text-muted-foreground block mb-1">
             Tabela Principal WinThor:
           </label>
           <input
@@ -44,7 +44,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
             value={step.tableName || ''}
             onChange={(e) => onChange({ ...step, tableName: e.target.value.toUpperCase() })}
             placeholder="ex: PCNFSAID, PCPEDC, PCMOV"
-            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-mono uppercase text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-mono uppercase text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
         </div>
       </div>
@@ -52,7 +52,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
       {/* Editor SQL da Query */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-[11px] font-semibold text-muted-foreground">
+          <label className="text-2xs font-semibold text-muted-foreground">
             Comando SQL (suporta :binds como :codFilial, :numCupom):
           </label>
           {detectedBinds.length > 0 && (
@@ -65,7 +65,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
           value={step.query}
           onChange={(e) => onChange({ ...step, query: e.target.value })}
           rows={6}
-          className="w-full bg-background border border-border rounded-md p-2.5 font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+          className="w-full bg-background border border-border rounded-md p-2.5 font-mono text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-relaxed"
           spellCheck={false}
         />
       </div>

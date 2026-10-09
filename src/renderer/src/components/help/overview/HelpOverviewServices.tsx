@@ -37,7 +37,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   onOpen,
   copy
 }) => (
-  <div className={`p-4 rounded-xl bg-card/60 border border-border ${hoverBorderClass} transition-all space-y-3 flex flex-col justify-between shadow-xs`}>
+  <div className={`p-4 rounded-xl bg-card/60 border border-border ${hoverBorderClass} transition-all space-y-3 flex flex-col justify-between shadow-2xs`}>
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-foreground block">
@@ -47,7 +47,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           {badge}
         </span>
       </div>
-      <p className="text-[11px] font-mono text-muted-foreground truncate" title={displayTitle}>
+      <p className="text-2xs font-mono text-muted-foreground truncate" title={displayTitle}>
         {displayText}
       </p>
     </div>
@@ -55,7 +55,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     <div className="flex items-center gap-2 pt-1">
       <button
         onClick={onOpen}
-        className={`${copy ? 'flex-1' : 'w-full'} py-1.5 px-2 ${openClass} rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer`}
+        className={`${copy ? 'flex-1' : 'w-full'} py-1.5 px-2 ${openClass} rounded-lg text-2xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer`}
       >
         <ExternalLink className="w-3.5 h-3.5" />
         <span>{openLabel}</span>
@@ -64,7 +64,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <button
           onClick={() => copy.onCopy(copy.text, copy.copyKey)}
           className="p-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition cursor-pointer"
-          title="Copiar URL"
+          title="Copiar URL" aria-label="Copiar URL"
         >
           {copy.copiedItem === copy.copyKey ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
@@ -81,7 +81,7 @@ export const HelpOverviewServices: React.FC<HelpOverviewServicesProps> = ({
   copyToClipboard,
   copiedItem
 }) => (
-  <div className="cockpit-panel rounded-2xl p-5 border border-border shadow-xl space-y-3.5">
+  <div className="cockpit-panel rounded-xl p-5 border border-border shadow-xl space-y-3.5">
     <HelpOverviewSectionHeader
       icon={Compass}
       title="Serviços Locais & Portais Externos"

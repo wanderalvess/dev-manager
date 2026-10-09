@@ -44,7 +44,7 @@ export const ColumnsTab: React.FC<{ details: TableDetails }> = ({ details }) => 
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filtrar colunas por nome, tipo ou comentário..."
           aria-label="Filtrar colunas"
-          className="w-full pl-8 pr-3 py-1.5 text-xs bg-background border border-border/70 rounded-md focus:outline-none focus:border-primary text-foreground"
+          className="w-full pl-8 pr-3 py-1.5 text-xs bg-background border border-border/70 rounded-md focus:outline-hidden focus:border-primary text-foreground"
         />
       </div>
       <table className="w-full text-xs">
@@ -241,13 +241,13 @@ export const DdlTab: React.FC<DdlTabProps> = ({ ddl, loading, error }) => {
       <button
         type="button"
         onClick={copy}
-        className="absolute right-3 top-3 flex items-center gap-1 px-2 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-[11px] font-semibold text-foreground cursor-pointer"
+        className="absolute right-3 top-3 flex items-center gap-1 px-2 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-2xs font-semibold text-foreground cursor-pointer"
         title="Copiar o DDL para a área de transferência"
       >
         {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
         <span>{copied ? 'Copiado' : 'Copiar DDL'}</span>
       </button>
-      <pre className="p-4 pr-32 text-xs font-mono text-emerald-300 bg-[#0B0F17] whitespace-pre-wrap break-words select-text">{ddl}</pre>
+      <pre className="p-4 pr-32 text-xs font-mono text-emerald-300 bg-[#0B0F17] whitespace-pre-wrap wrap-break-word select-text">{ddl}</pre>
     </div>
   );
 };

@@ -29,14 +29,14 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
           placeholder="Buscar rotina por número ou nome..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-xl pl-9 pr-9 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-border/80 rounded-xl pl-9 pr-9 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
         {searchTerm && (
           <button
             type="button"
             onClick={() => onSearchChange('')}
             className="absolute right-3 top-2 text-muted-foreground hover:text-foreground cursor-pointer"
-            title="Limpar busca"
+            title="Limpar busca" aria-label="Limpar busca"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -48,7 +48,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
         <select
           value={selectedModule}
           onChange={(e) => onModuleChange(e.target.value)}
-          className="bg-card border border-border/80 rounded-xl px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono cursor-pointer shadow-2xs"
+          className="bg-card border border-border/80 rounded-xl px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono cursor-pointer shadow-2xs"
         >
           {modules.map((m) => (
             <option key={m} value={m} className="bg-card text-foreground">
@@ -74,7 +74,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
       )}
     </div>
 
-    <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground shrink-0">
+    <div className="flex items-center gap-2 text-2xs font-mono text-muted-foreground shrink-0">
       <span>
         Exibindo <b className="text-foreground">{filteredCount}</b> de{' '}
         <b className="text-foreground">{routinesCount}</b> rotinas

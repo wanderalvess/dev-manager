@@ -12,7 +12,7 @@ interface OracleHealthTabProps {
 
 export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copiedKey, onCopy }) => (
   <div className="space-y-4">
-    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3.5 flex items-start gap-3">
+    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 flex items-start gap-3">
       <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
         <Shield className="w-4 h-4" />
       </div>
@@ -24,31 +24,31 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Filtro de Schema (opcional)</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Filtro de Schema (opcional)</label>
         <input
           type="text"
           value={health.schema}
           onChange={(e) => health.setSchema(e.target.value)}
           placeholder="Ex: LOCAL (vazio = todos)"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary font-mono uppercase"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-primary font-mono uppercase"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Usuário DBA</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Usuário DBA</label>
         <input
           type="text"
           value={health.user}
           onChange={(e) => health.setUser(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Senha DBA</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Senha DBA</label>
         <input
           type="password"
           value={health.pass}
           onChange={(e) => health.setPass(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>
@@ -67,7 +67,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
       <button
         onClick={() => health.run(true)}
         disabled={health.isRunning}
-        className="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         <Wrench className="w-3.5 h-3.5" />
         <span>Diagnosticar e Corrigir (--fix)</span>

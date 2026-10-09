@@ -13,7 +13,7 @@ export const ApmErrorSpans: React.FC<{
       const exceptionHeadline = [span.exception?.type, span.exception?.message].filter(Boolean).join(': ');
       return (
         <div key={span.spanId} className="p-3 rounded-lg border border-rose-500/30 bg-rose-500/10 dark:border-rose-800/60 dark:bg-rose-950/30 flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2 text-[11px] text-rose-800 dark:text-rose-300 font-bold">
+          <div className="flex items-center justify-between gap-2 text-2xs text-rose-800 dark:text-rose-300 font-bold">
             <span className="flex items-center gap-1.5 min-w-0">
               <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
               <span className="truncate" title={span.name}>{span.name}</span>
@@ -29,7 +29,7 @@ export const ApmErrorSpans: React.FC<{
             </button>
           </div>
           {(exceptionHeadline || span.statusMessage) && (
-            <div className="text-[11px] text-rose-800 dark:text-rose-300 break-words select-text">
+            <div className="text-2xs text-rose-800 dark:text-rose-300 wrap-break-word select-text">
               {exceptionHeadline || span.statusMessage}
             </div>
           )}
@@ -39,7 +39,7 @@ export const ApmErrorSpans: React.FC<{
             </pre>
           ) : (
             !exceptionHeadline && !span.statusMessage && (
-              <pre className="p-2.5 rounded bg-card border border-rose-500/30 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-[11px] whitespace-pre-wrap leading-relaxed">
+              <pre className="p-2.5 rounded bg-card border border-rose-500/30 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-2xs whitespace-pre-wrap leading-relaxed">
                 {span.httpStatusCode ? `HTTP ${span.httpStatusCode} sem mensagem de erro` : 'Erro sem mensagem explícita'}
               </pre>
             )

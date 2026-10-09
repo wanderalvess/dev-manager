@@ -36,7 +36,7 @@ export const MarkdownReaderToolbar: React.FC<MarkdownReaderToolbarProps> = ({
           placeholder="Buscar palavras no documento..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-background border border-border/80 rounded-xl pl-8 pr-3 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          className="w-full bg-background border border-border/80 rounded-xl pl-8 pr-3 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary"
         />
         {searchTerm && (
           <button
@@ -57,7 +57,7 @@ export const MarkdownReaderToolbar: React.FC<MarkdownReaderToolbarProps> = ({
               key={opt.level}
               type="button"
               onClick={() => onFontSizeChange(opt.level)}
-              className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${
+              className={`px-2 py-0.5 rounded-lg text-2xs font-bold transition ${
                 fontSizeLevel === opt.level ? 'bg-primary text-primary-foreground font-black' : 'text-muted-foreground hover:text-foreground'
               }`}
               title={opt.title}
@@ -70,7 +70,7 @@ export const MarkdownReaderToolbar: React.FC<MarkdownReaderToolbarProps> = ({
     </div>
 
     {/* Badges de Metadados de Leitura Humana */}
-    <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium">
+    <div className="flex items-center gap-3 text-2xs text-muted-foreground font-medium">
       <span className="flex items-center gap-1">
         <Clock className="w-3.5 h-3.5 text-primary" />
         <span>~{stats.readTimeMinutes} min de leitura</span>

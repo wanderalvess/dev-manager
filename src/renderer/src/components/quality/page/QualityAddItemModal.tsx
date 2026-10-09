@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Modal } from '../../ui/Modal';
 import type { ValidationCategory } from '../../../utils/qualityPageUtils';
 
 interface QualityAddItemModalProps {
@@ -28,22 +29,15 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
   onClose,
   isEditing = false
 }) => {
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
-
   return (
-  <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}
-      className="bg-card w-full max-w-md rounded-lg border border-border shadow-xl p-5 space-y-4"
-    >
+  <Modal
+    open
+    onClose={onClose}
+    bare
+    closeOnBackdrop={false}
+    ariaLabel={isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}
+    panelClassName="bg-card w-full max-w-md rounded-lg border border-border shadow-xl p-5 space-y-4"
+  >
       <div className="flex items-center justify-between pb-2 border-b border-border">
         <h3 className="text-sm font-semibold text-foreground">{isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}</h3>
         <button
@@ -62,10 +56,11 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
           <input
             type="text"
             required
+            data-autofocus
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="Ex: Validar emissão de nota com desconto..."
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary"
           />
         </div>
 
@@ -77,7 +72,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
             value={target}
             onChange={(e) => onTargetChange(e.target.value)}
             placeholder="Ex: Rotina 1402, Karaf, API de Pagamento..."
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary"
           />
         </div>
 
@@ -86,7 +81,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
           <select
             value={category}
             onChange={(e) => onCategoryChange(e.target.value as ValidationCategory)}
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary cursor-pointer"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary cursor-pointer"
           >
             <option value="routine">Rotina Delphi</option>
             <option value="service">Serviço / Karaf</option>
@@ -102,7 +97,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
             value={notes}
             onChange={(e) => onNotesChange(e.target.value)}
             placeholder="Descreva os passos essenciais ou o resultado esperado..."
-            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:border-primary resize-none"
+            className="w-full px-3 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-hidden focus:border-primary resize-none"
           />
         </div>
 
@@ -122,7 +117,6 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
           </button>
         </div>
       </form>
-    </div>
-  </div>
+  </Modal>
   );
 };

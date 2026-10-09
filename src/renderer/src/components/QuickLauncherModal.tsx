@@ -1,4 +1,5 @@
 import React from 'react';
+import { Modal } from './ui/Modal';
 import { GitProjectInfo } from '../../../shared/types';
 import { useQuickLauncher } from '../hooks/quicklauncher/useQuickLauncher';
 import { QuickLauncherSearchBar } from './quicklauncher/QuickLauncherSearchBar';
@@ -31,18 +32,16 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
     handleKeyDown
   } = useQuickLauncher({ isOpen, onClose, onNavigate, projects, onRefreshAll });
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-20 px-4 animate-in fade-in duration-200"
-      onClick={onClose}
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      bare
+      placement="top"
+      ariaLabel="Paleta de comandos"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[75vh]"
     >
-      <div
-        className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[75vh]"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={handleKeyDown}
-      >
+      <div className="contents" onKeyDown={handleKeyDown}>
         <QuickLauncherSearchBar search={search} onSearchChange={setSearch} inputRef={inputRef} />
         <QuickLauncherList
           items={filteredItems}
@@ -53,6 +52,6 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
         />
         <QuickLauncherFooter resultCount={filteredItems.length} />
       </div>
-    </div>
+    </Modal>
   );
 };

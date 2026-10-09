@@ -9,13 +9,13 @@ interface PortsMainCardProps {
 }
 
 export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSettings }) => (
-  <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+  <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
     <div className="flex items-center justify-between pb-1 border-b border-border/60">
       <div>
         <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
           <Globe className="w-4 h-4 text-primary" /> Portas Principais de Integração
         </h3>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Portas-chave utilizadas pelo Portal Web, Karaf client.bat e JVM Debug.
         </p>
       </div>
@@ -23,7 +23,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
       {/* Porta Web Local */}
-      <div className="bg-card border border-border hover:border-primary/40 rounded-xl p-3.5 space-y-2 transition-all">
+      <div className="bg-card border border-border hover:border-primary/40 rounded-xl p-3 space-y-2 transition-all">
         <div className="flex items-center justify-between">
           <label htmlFor="ports-main-card-1" className="font-bold text-foreground flex items-center gap-1.5">
             <Globe className="w-3.5 h-3.5 text-primary" /> Porta do Portal Web Local:
@@ -38,7 +38,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="number"
             value={settings.webPort ?? 8889}
             onChange={(e) => setSettings({ ...settings, webPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="8889"
           />
         </div>
@@ -49,7 +49,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="text"
             value={webPathToInput(settings.webPath)}
             onChange={(e) => setSettings({ ...settings, webPath: normalizeWebPath(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="web"
           />
         </div>
@@ -59,7 +59,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
       </div>
 
       {/* Porta SSH do Apache Karaf */}
-      <div className="bg-card border border-border hover:border-amber-500/40 rounded-xl p-3.5 space-y-2 transition-all">
+      <div className="bg-card border border-border hover:border-amber-500/40 rounded-xl p-3 space-y-2 transition-all">
         <div className="flex items-center justify-between">
           <label htmlFor="ports-main-card-2" className="font-bold text-foreground flex items-center gap-1.5">
             <Terminal className="w-3.5 h-3.5 text-amber-500" /> Porta SSH Karaf (client.bat):
@@ -74,7 +74,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="number"
             value={settings.karafSshPort ?? 8101}
             onChange={(e) => setSettings({ ...settings, karafSshPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="8101"
           />
         </div>
@@ -84,7 +84,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
       </div>
 
       {/* Porta Remote Debug Java */}
-      <div className="bg-card border border-border hover:border-emerald-500/40 rounded-xl p-3.5 space-y-2 transition-all">
+      <div className="bg-card border border-border hover:border-emerald-500/40 rounded-xl p-3 space-y-2 transition-all">
         <div className="flex items-center justify-between">
           <label htmlFor="ports-main-card-3" className="font-bold text-foreground flex items-center gap-1.5">
             <Code2 className="w-3.5 h-3.5 text-emerald-500" /> Porta Debug JVM (Java):
@@ -99,7 +99,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
             type="number"
             value={settings.karafDebugPort ?? 5005}
             onChange={(e) => setSettings({ ...settings, karafDebugPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
             placeholder="5005"
           />
         </div>

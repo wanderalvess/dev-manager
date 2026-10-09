@@ -11,16 +11,16 @@ export interface ApmLatencySpectrumProps {
 
 export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum, selected, onToggle, onClear }) => (
   <div
-    className={`hidden xl:flex items-center gap-2 px-2.5 py-0.5 rounded border text-[11px] font-mono shrink-0 transition ${
+    className={`hidden xl:flex items-center gap-2 px-2.5 py-0.5 rounded border text-2xs font-mono shrink-0 transition ${
       selected !== 'ALL' ? 'bg-primary/10 border-primary/50 text-foreground ring-1 ring-primary/40' : 'bg-muted/20 border-border/60 text-muted-foreground'
     }`}
     title="Clique em uma faixa de latência para filtrar a tabela"
   >
     <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
-      <Filter className="w-2.5 h-2.5" />
+      <Filter className="w-3 h-3" />
       <span>Espectro:</span>
     </span>
-    <div className="w-28 h-2.5 rounded-full bg-muted/60 overflow-hidden flex cursor-pointer p-[1px] gap-0.5">
+    <div className="w-28 h-2.5 rounded-full bg-muted/60 overflow-hidden flex cursor-pointer p-px gap-0.5">
       {([
         { bracket: 'FAST', pct: spectrum.fastPct, count: spectrum.fast, label: '< 100ms', active: 'bg-emerald-400 ring-2 ring-emerald-300', idle: 'bg-emerald-500/80 hover:bg-emerald-400' },
         { bracket: 'NORMAL', pct: spectrum.normalPct, count: spectrum.normal, label: '100 - 400ms', active: 'bg-sky-400 ring-2 ring-sky-300', idle: 'bg-sky-500/80 hover:bg-sky-400' },

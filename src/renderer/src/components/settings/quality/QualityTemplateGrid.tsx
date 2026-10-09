@@ -8,7 +8,7 @@ interface QualityTemplateGridProps {
 
 export const QualityTemplateGrid: React.FC<QualityTemplateGridProps> = ({ onApplyTemplate }) => (
   <div className="space-y-2">
-    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+    <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block">
       Conexões Pré-Configuradas &amp; Templates Rápidos:
     </span>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">

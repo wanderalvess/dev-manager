@@ -37,7 +37,7 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
               {/* Pip de status */}
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
-                  isInstalled ? 'bg-emerald-500 shadow-xs' : 'bg-muted-foreground/30'
+                  isInstalled ? 'bg-emerald-500 shadow-2xs' : 'bg-muted-foreground/30'
                 }`}
                 title={isInstalled ? 'Feature instalada' : 'Feature disponível'}
               />
@@ -76,7 +76,7 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
               <button
                 onClick={() => onToggleInstall(feat)}
                 disabled={isBusy}
-                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-40 ${
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-50 ${
                   isInstalled
                     ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30'
                     : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'

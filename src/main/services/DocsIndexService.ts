@@ -11,7 +11,7 @@ import {
   DocSyncResult,
   DocSyncTargetConfig
 } from '../../shared/types';
-import chokidar, { FSWatcher } from 'chokidar';
+import { watch, type FSWatcher } from 'chokidar';
 import { ConfigService, getAppDataDir } from './ConfigService';
 import { GitAzureService } from './GitAzureService';
 import { DocSource } from './docSources/DocSource';
@@ -237,12 +237,14 @@ export class DocsIndexService {
     const roots = await this.getWatchRoots();
     if (roots.length === 0) return;
 
-    const ignoredDirGlobs = Array.from(IGNORED_DIR_NAMES).map((name) => `**/${name}/**`);
-
     for (const root of roots) {
-      const watcher = chokidar.watch(root, {
+      // chokidar 4+ não aceita globs em `ignored`: filtra por segmento do caminho relativo à raiz
+      // (a própria raiz pode estar dentro de uma pasta chamada "build" ou "dist").
+      const isIgnoredPath = (filePath: string) =>
+        path.relative(root, filePath).split(path.sep).some((segment) => IGNORED_DIR_NAMES.has(segment));
+      const watcher = watch(root, {
         ignoreInitial: true,
-        ignored: ignoredDirGlobs,
+        ignored: isIgnoredPath,
         depth: 20
       });
       const handleChange = (filePath: string) => {

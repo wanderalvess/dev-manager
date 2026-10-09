@@ -28,7 +28,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
   return (
     <div
       className={`p-2.5 flex items-center justify-between gap-2 transition ${
-        isSelected ? 'bg-primary/[0.04]' : 'hover:bg-muted/30'
+        isSelected ? 'bg-primary/4' : 'hover:bg-muted/30'
       }`}
     >
       {/* Checkbox, Ordem e Nome */}
@@ -78,7 +78,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
       {isSelected && slot && (
         <div className="flex items-center gap-1.5 shrink-0 bg-card p-1 rounded-lg border border-border/70 shadow-2xs">
           {/* Delay de inicialização em segundos */}
-          <div className="flex items-center gap-1 text-[11px] px-1.5 py-0.5" title="Delay de warm-up antes de iniciar o próximo container">
+          <div className="flex items-center gap-1 text-2xs px-1.5 py-0.5" title="Delay de warm-up antes de iniciar o próximo container">
             <Clock className="w-3 h-3 text-muted-foreground" />
             <span className="text-muted-foreground text-2xs">Delay:</span>
             <input
@@ -87,7 +87,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
               max="300"
               value={slot.delay}
               onChange={(e) => onUpdateDelay(container.cleanName, parseInt(e.target.value, 10))}
-              className="w-12 bg-background border border-border rounded px-1 text-center text-xs font-mono font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-12 bg-background border border-border rounded px-1 text-center text-xs font-mono font-bold text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
             <span className="text-muted-foreground text-2xs">s</span>
           </div>
@@ -98,8 +98,8 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
               type="button"
               onClick={() => onMove(slotIndex, 'up')}
               disabled={slotIndex === 0}
-              title="Subir na fila de inicialização"
-              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 cursor-pointer"
+              title="Subir na fila de inicialização" aria-label="Subir na fila de inicialização"
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 cursor-pointer"
             >
               <ArrowUp className="w-3 h-3" />
             </button>
@@ -107,8 +107,8 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
               type="button"
               onClick={() => onMove(slotIndex, 'down')}
               disabled={slotIndex === slotCount - 1}
-              title="Descer na fila de inicialização"
-              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 cursor-pointer"
+              title="Descer na fila de inicialização" aria-label="Descer na fila de inicialização"
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 cursor-pointer"
             >
               <ArrowDown className="w-3 h-3" />
             </button>

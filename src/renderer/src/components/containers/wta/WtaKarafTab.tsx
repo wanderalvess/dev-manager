@@ -21,7 +21,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
             <Terminal className="w-4 h-4 text-cyan-500" />
             <span>Console Interativo Karaf Client</span>
           </h4>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-2xs text-muted-foreground mt-0.5">
             Abre terminal interativo executando <code className="text-foreground font-mono">/opt/pcsist/apache-karaf/bin/client</code> dentro do container
           </p>
         </div>
@@ -29,7 +29,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
         <button
           onClick={() => onOpenKarafClient?.(containerNames)}
           disabled={isOpeningKarafClient}
-          className="flex items-center space-x-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+          className="flex items-center space-x-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
         >
           <Terminal className="w-3.5 h-3.5" />
           <span>{isOpeningKarafClient ? 'Abrindo Console...' : 'Abrir Console Karaf'}</span>
@@ -71,7 +71,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
     </div>
 
     {/* Comandos Úteis */}
-    <div className="p-3.5 bg-[#090D14] rounded-xl border border-border/60 text-xs font-mono text-emerald-400 space-y-1">
+    <div className="p-3 bg-[#090D14] rounded-xl border border-border/60 text-xs font-mono text-emerald-400 space-y-1">
       <div className="text-muted-foreground text-2xs font-sans font-semibold mb-1">
         Comandos frequentes no console Karaf:
       </div>

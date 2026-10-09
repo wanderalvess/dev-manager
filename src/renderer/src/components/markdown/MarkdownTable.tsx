@@ -8,13 +8,13 @@ interface MarkdownTableProps {
 }
 
 export const MarkdownTable: React.FC<MarkdownTableProps> = ({ header, rows, searchTerm }) => (
-  <div className="my-5 rounded-2xl border border-border/80 overflow-hidden shadow-xs">
+  <div className="my-5 rounded-xl border border-border/80 overflow-hidden shadow-2xs">
     <div className="overflow-x-auto">
       <table className="w-full text-left text-xs border-collapse">
         <thead>
           <tr className="bg-muted/70 border-b border-border text-foreground font-bold">
             {header.map((hc, hIdx) => (
-              <th key={hIdx} className="px-4 py-3 font-bold uppercase tracking-wider text-[11px]">
+              <th key={hIdx} className="px-4 py-3 font-bold uppercase tracking-wider text-2xs">
                 <MarkdownInline text={hc} searchTerm={searchTerm} />
               </th>
             ))}

@@ -30,7 +30,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
   const [copiedLlmAnswer, setCopiedLlmAnswer] = useState<boolean>(false);
 
   return (
-    <div className="cockpit-card rounded-2xl p-4.5 border border-primary/40 bg-card shadow-md space-y-3.5">
+    <div className="cockpit-card rounded-xl p-4.5 border border-primary/40 bg-card shadow-md space-y-3.5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="relative w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
@@ -65,7 +65,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
                   setTimeout(() => setCopiedLlmAnswer(false), 2000);
                 }}
                 className="px-3 py-1.5 rounded-xl bg-card hover:bg-muted text-foreground border border-border hover:border-border/80 transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                title="Copiar síntese gerada"
+                title="Copiar síntese gerada" aria-label="Copiar síntese gerada"
               >
                 {copiedLlmAnswer ? (
                   <>
@@ -95,7 +95,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
             <button
               type="button"
               onClick={() => onAskLlm(query)}
-              className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="px-3.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Gerar Resposta com IA</span>
@@ -115,7 +115,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
               RAG Vector Search
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-2xs text-muted-foreground">
             Analisando trechos indexados para responder "{query.trim()}"...
           </p>
           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -125,7 +125,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
       )}
 
       {llmError && !isAskingLlm && (
-        <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/25 text-xs space-y-2 font-mono">
+        <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/25 text-xs space-y-2 font-mono">
           <div className="flex items-center justify-between text-destructive font-semibold">
             <span className="flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -136,7 +136,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
                 <button
                   type="button"
                   onClick={onNavigateToSettings}
-                  className="text-foreground/90 hover:text-foreground text-[11px] font-semibold flex items-center gap-1 cursor-pointer font-sans"
+                  className="text-foreground/90 hover:text-foreground text-2xs font-semibold flex items-center gap-1 cursor-pointer font-sans"
                 >
                   <Settings className="w-3 h-3" />
                   <span>Configurar Motor</span>
@@ -145,13 +145,13 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
               <button
                 type="button"
                 onClick={() => onAskLlm(query)}
-                className="text-primary hover:underline text-[11px] font-semibold cursor-pointer font-sans"
+                className="text-primary hover:underline text-2xs font-semibold cursor-pointer font-sans"
               >
                 Tentar de novo
               </button>
             </div>
           </div>
-          <p className="text-[11px] text-destructive/80 break-all">{llmError}</p>
+          <p className="text-2xs text-destructive/80 break-all">{llmError}</p>
         </div>
       )}
 

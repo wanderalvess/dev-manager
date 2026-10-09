@@ -29,7 +29,7 @@ export const KarafBundleTableToolbar: React.FC<KarafBundleTableToolbarProps> = (
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder="Pesquisar por ID, nome do bundle, versão ou symbolic name... (Atalho: /)"
-        className="w-full bg-background border border-border rounded-md pl-9 pr-12 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono transition"
+        className="w-full bg-background border border-border rounded-md pl-9 pr-12 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary font-mono transition"
       />
       <div className="absolute right-2.5 top-1.5 text-2xs font-mono text-muted-foreground bg-muted/60 px-1 py-0.2 rounded border border-border/60 pointer-events-none">
         /

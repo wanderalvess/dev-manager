@@ -46,7 +46,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
         value={selectedDistro}
         onChange={(e) => onSelectDistro(e.target.value)}
         disabled={isSwitchingDistro}
-        className="bg-transparent text-foreground font-semibold text-xs focus:outline-none cursor-pointer pr-1"
+        className="bg-transparent text-foreground font-semibold text-xs focus:outline-hidden cursor-pointer pr-1"
       >
         <option value="" className="bg-card text-foreground">
           Windows Host (Nativo)
@@ -65,7 +65,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             type="button"
             onClick={() => onOpenWslTerminal()}
             disabled={isOpeningWslTerminal}
-            title={`Abrir terminal WSL na distro ${selectedDistro}`}
+            title={`Abrir terminal WSL na distro ${selectedDistro}`} aria-label={`Abrir terminal WSL na distro ${selectedDistro}`}
             className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
           >
             <Terminal className="w-3 h-3 text-sky-500" />
@@ -74,7 +74,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             type="button"
             onClick={() => onTerminateDistro()}
             disabled={isTerminatingDistro}
-            title={`Desligar distro ${selectedDistro} (wsl --terminate)`}
+            title={`Desligar distro ${selectedDistro} (wsl --terminate)`} aria-label={`Desligar distro ${selectedDistro} (wsl --terminate)`}
             className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
           >
             <Power className={`w-3 h-3 ${isTerminatingDistro ? 'animate-spin text-rose-500' : ''}`} />
@@ -84,7 +84,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
     </div>
 
     {/* Separador vertical sutil */}
-    {environments.length > 0 && <div className="h-4 w-[1px] bg-border/80" />}
+    {environments.length > 0 && <div className="h-4 w-px bg-border/80" />}
 
     {/* Seletor de Ambientes */}
     {environments.length > 0 && (
@@ -101,7 +101,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             if (found) onStartEnvironment(found);
           }}
           disabled={sequenceRunning}
-          className="bg-transparent text-foreground font-semibold text-xs focus:outline-none cursor-pointer pr-1"
+          className="bg-transparent text-foreground font-semibold text-xs focus:outline-hidden cursor-pointer pr-1"
         >
           <option value="" className="bg-card text-foreground">
             Escolher...
@@ -120,7 +120,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
               if (found) onDeleteEnvironmentClick(found);
             }}
             disabled={sequenceRunning}
-            title="Excluir grupo salvo"
+            title="Excluir grupo salvo" aria-label="Excluir grupo salvo"
             className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer disabled:opacity-50"
           >
             <Trash2 className="w-3 h-3" />

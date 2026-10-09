@@ -66,7 +66,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
         />
 
         {/* Diretórios e Executáveis Locais */}
-        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
               <Folder className="w-3.5 h-3.5 text-primary" /> Diretórios e Executáveis Locais
@@ -223,7 +223,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
                 value={settings.tautKeyPrefix || ''}
                 onChange={(e) => setField('tautKeyPrefix', e.target.value)}
                 placeholder="Ex: PROJ-T (Vazio: aceita qualquer chave no formato ABC-T123)"
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>

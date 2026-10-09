@@ -32,7 +32,7 @@ export const HelpAboutTab: React.FC<HelpAboutTabProps> = ({
   return (
     <div className="space-y-4">
       {/* Informações da Aplicação & Banner */}
-      <div className="cockpit-panel rounded-2xl p-5 sm:p-6 border border-border space-y-4 shadow-md">
+      <div className="cockpit-panel rounded-xl p-5 sm:p-6 border border-border space-y-4 shadow-md">
         <HelpAboutAppHeader
           appInfo={appInfo}
           copiedDiag={copiedDiag}

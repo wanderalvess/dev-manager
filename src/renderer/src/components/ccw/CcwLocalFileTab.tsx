@@ -46,7 +46,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
         <button
           type="button"
           onClick={onSelectFile}
-          className="px-3 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-bold text-foreground transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer"
+          className="px-3 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-bold text-foreground transition-all flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
         >
           <FolderOpen className="w-4 h-4 text-muted-foreground" />
           <span>Procurar...</span>
@@ -67,7 +67,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
           placeholder="Ex: PCSIS132 (auto-detectado se vazio)"
           value={localRoutineName}
           onChange={(e) => onLocalRoutineNameChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
       </div>
 
@@ -80,7 +80,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
           placeholder="Auto-detectar (ex: MOD-001)"
           value={localTargetModule}
           onChange={(e) => onLocalTargetModuleChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
       </div>
     </div>
@@ -100,13 +100,13 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
     </div>
 
     <div className="pt-3 border-t border-border/80 flex items-center justify-between gap-3">
-      <span className="text-[11px] text-muted-foreground font-mono">
+      <span className="text-2xs text-muted-foreground font-mono">
         Destino: {appPath || DEFAULT_CCW_APP_PATH}
       </span>
       <button
         type="submit"
         disabled={isSubmitting || !localFilePath.trim()}
-        className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+        className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
       >
         {isSubmitting ? (
           <>

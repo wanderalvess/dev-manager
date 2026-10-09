@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Layers, Pause, Play, Sparkles, Terminal, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Layers, Pause, Play, Terminal, Trash2 } from 'lucide-react';
 import type { ObservabilityOverview } from '../../../../shared/types';
 
 export interface ApmHeaderProps {
@@ -10,14 +10,13 @@ export interface ApmHeaderProps {
   onViewModeChange: (mode: 'dashboard' | 'traces') => void;
   isRecording: boolean;
   onToggleRecording: () => void;
-  onGenerateDemo: () => void;
   onClear: () => void;
   onOpenSetup: () => void;
 }
 
 export const ApmHeader: React.FC<ApmHeaderProps> = ({
   overview, receiverPort, traceCount, viewMode, onViewModeChange, isRecording,
-  onToggleRecording, onGenerateDemo, onClear, onOpenSetup
+  onToggleRecording, onClear, onOpenSetup
 }) => (
       <header className="h-11 px-3 border-b border-border bg-card/75 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0 text-xs">
         {/* Lado Esquerdo: Status do Receptor & Métricas Chave */}
@@ -26,7 +25,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenSetup}
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-mono shrink-0 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-2xs font-mono shrink-0 cursor-pointer ${
               overview?.receiverStatus.listening
                 ? 'bg-emerald-500/15 dark:bg-emerald-950/30 border-emerald-500/30 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400'
                 : 'bg-rose-500/15 dark:bg-rose-950/30 border-rose-500/30 dark:border-rose-800/60 text-rose-700 dark:text-rose-400'
@@ -46,10 +45,10 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             <span className="text-2xs uppercase tracking-wider text-muted-foreground font-sans font-medium">OTLP</span>
           </button>
 
-          <div className="h-4 w-[1px] bg-border shrink-0" />
+          <div className="h-4 w-px bg-border shrink-0" />
 
           {/* Chips de Métricas Essenciais */}
-          <div className="flex items-center gap-2.5 font-mono text-[11px] shrink-0 tabular-nums">
+          <div className="flex items-center gap-2.5 font-mono text-2xs shrink-0 tabular-nums">
             <span className="text-muted-foreground">
               RPS:{' '}
               <strong className="text-foreground">{overview?.requestsPerSecond.toFixed(1) || '0.0'}</strong>
@@ -103,7 +102,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
         </div>
 
         {/* Centro: Alternador de Visualização (Dashboard vs Traces Explorer) */}
-        <div className="flex items-center p-0.5 rounded-lg bg-neutral-200/60 dark:bg-neutral-800/60 border border-border/50 text-[11px] font-medium shrink-0">
+        <div className="flex items-center p-0.5 rounded-lg bg-muted/60 border border-border/50 text-2xs font-medium shrink-0">
           <button
             type="button"
             onClick={() => onViewModeChange('dashboard')}
@@ -149,8 +148,8 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
           <button
             type="button"
             onClick={() => onToggleRecording()}
-            title={isRecording ? 'Pausar captura em tempo real' : 'Retomar captura em tempo real'}
-            className={`h-7 px-2.5 rounded border text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+            title={isRecording ? 'Pausar captura em tempo real' : 'Retomar captura em tempo real'} aria-label={isRecording ? 'Pausar captura em tempo real' : 'Retomar captura em tempo real'}
+            className={`h-7 px-2.5 rounded border text-2xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
               isRecording
                 ? 'bg-rose-500/15 dark:bg-rose-950/40 border-rose-500/30 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 dark:hover:bg-rose-900/40'
                 : 'bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -170,22 +169,11 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             )}
           </button>
 
-          {/* Botão Simular Tráfego */}
-          <button
-            type="button"
-            onClick={onGenerateDemo}
-            title="Simula requisições das APIs do WinThor, consultas Oracle e falhas para teste"
-            className="h-7 px-2.5 rounded border border-border bg-card hover:bg-muted text-foreground text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-xs"
-          >
-            <Sparkles className="w-3 h-3 text-primary" />
-            <span className="hidden sm:inline">Simular Tráfego</span>
-          </button>
-
           {/* Limpar */}
           <button
             type="button"
             onClick={onClear}
-            title="Limpar todos os traces coletados em memória"
+            title="Limpar todos os traces coletados em memória" aria-label="Limpar todos os traces coletados em memória"
             className="h-7 px-2 rounded border border-border bg-card hover:bg-muted text-muted-foreground hover:text-rose-400 cursor-pointer transition"
           >
             <Trash2 className="w-3 h-3" />
@@ -196,7 +184,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             type="button"
             onClick={onOpenSetup}
             title="Instruções para conectar o Karaf ou outras aplicações no receptor OpenTelemetry"
-            className="h-7 px-2.5 rounded border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition"
+            className="h-7 px-2.5 rounded border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary text-2xs font-semibold flex items-center gap-1 cursor-pointer transition"
           >
             <Terminal className="w-3 h-3" />
             <span>Como Conectar</span>

@@ -15,7 +15,7 @@ export const DocsResultCard: React.FC<DocsResultCardProps> = ({
   onOpenInEditor,
   onOpenInFolder
 }) => (
-  <div className="cockpit-card rounded-2xl p-4 border border-border shadow-sm space-y-2">
+  <div className="cockpit-card rounded-xl p-4 border border-border shadow-xs space-y-2">
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-2xs font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-foreground border border-border/80 shrink-0">
@@ -32,7 +32,7 @@ export const DocsResultCard: React.FC<DocsResultCardProps> = ({
         </span>
         <button
           onClick={() => onOpenPreview(result.chunk.entryId, result.chunk.entryTitle)}
-          className="px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+          className="px-2 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center gap-1 text-2xs font-medium cursor-pointer"
           title="Ler documento formatado"
         >
           <BookOpen className="w-3.5 h-3.5 text-primary" />
@@ -40,7 +40,7 @@ export const DocsResultCard: React.FC<DocsResultCardProps> = ({
         </button>
         <button
           onClick={() => onOpenInEditor(result.chunk.entryId)}
-          className="px-2 py-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+          className="px-2 py-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex items-center gap-1 text-2xs font-medium cursor-pointer"
           title="Abrir arquivo no editor padrão do sistema / VS Code"
         >
           <ExternalLink className="w-3.5 h-3.5" />
@@ -49,7 +49,7 @@ export const DocsResultCard: React.FC<DocsResultCardProps> = ({
         <button
           onClick={() => onOpenInFolder(result.chunk.entryId)}
           className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          title="Revelar na pasta"
+          title="Revelar na pasta" aria-label="Revelar na pasta"
         >
           <FolderOpen className="w-3.5 h-3.5" />
         </button>

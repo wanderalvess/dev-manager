@@ -15,7 +15,7 @@ interface DocSettingsConfluenceSectionProps {
 }
 
 const INPUT_BASE =
-  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
+  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/20 focus:border-primary';
 
 export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSectionProps> = ({
   sources,
@@ -28,14 +28,14 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
   onDelete,
   onToggleEnabled
 }) => (
-  <div className="p-3.5 rounded-xl border border-border/80 bg-card space-y-3 shadow-xs">
+  <div className="p-3 rounded-xl border border-border/80 bg-card space-y-3 shadow-2xs">
     <div className="flex items-center justify-between gap-3">
       <div>
         <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-sky-500" />
           <span>Espaços Confluence</span>
         </h4>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Páginas do Confluence indexadas como documentação local para busca.
         </p>
       </div>
@@ -53,7 +53,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
       <div className="text-center py-5 border border-dashed border-border rounded-xl bg-muted/20">
         <Globe className="w-6 h-6 mx-auto text-sky-500/50 mb-1" />
         <p className="text-xs font-semibold text-foreground">Nenhum espaço Confluence configurado</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Conecte sua wiki técnica da Atlassian para indexar páginas e especificações.
         </p>
       </div>
@@ -120,7 +120,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
     )}
 
     {editing && (
-      <form onSubmit={onSubmit} className="mt-2 p-3.5 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5">
+      <form onSubmit={onSubmit} className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-foreground">
             {editing.id ? 'Editar Espaço Confluence' : 'Novo Espaço Confluence'}
@@ -128,7 +128,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
           <button
             type="button"
             onClick={() => setEditing(null)}
-            className="text-[11px] text-muted-foreground hover:text-foreground transition cursor-pointer"
+            className="text-2xs text-muted-foreground hover:text-foreground transition cursor-pointer"
           >
             Cancelar
           </button>
@@ -193,7 +193,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
         <div className="flex justify-end gap-2 pt-1">
           <button
             type="submit"
-            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition text-xs cursor-pointer shadow-xs active:scale-95"
+            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition text-xs cursor-pointer shadow-2xs active:scale-95"
           >
             Salvar Espaço Confluence
           </button>

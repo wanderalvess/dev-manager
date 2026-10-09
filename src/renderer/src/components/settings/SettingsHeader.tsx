@@ -33,13 +33,13 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
   savedSuccess,
   onSave
 }) => (
-  <div className="cockpit-panel rounded-xl p-4 shadow-sm border border-border flex flex-wrap items-center justify-between gap-3">
+  <div className="cockpit-panel rounded-xl p-4 shadow-xs border border-border flex flex-wrap items-center justify-between gap-3">
     <div className="flex items-center space-x-3">
       <div className="p-2 rounded-lg bg-muted border border-border/80 text-muted-foreground shrink-0">
         <Settings className="w-4 h-4" />
       </div>
       <div>
-        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
           Configurações do Ambiente &amp; Diretórios
           <button
             type="button"
@@ -50,8 +50,8 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
           >
             <HelpCircle className="w-3.5 h-3.5" />
           </button>
-        </h2>
-        <p className="text-[11px] text-muted-foreground">
+        </h1>
+        <p className="text-2xs text-muted-foreground">
           Configure os diretórios base, serviços Windows, processos de encerramento, portas e preferências de automação.
         </p>
       </div>
@@ -111,7 +111,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
           onClick={onSave}
           disabled={isSaving}
           aria-busy={isSaving}
-          className="px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs rounded-lg shadow-sm transition-colors flex items-center space-x-2 disabled:opacity-60"
+          className="px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs rounded-lg shadow-xs transition-colors flex items-center space-x-2 disabled:opacity-60"
         >
           {savedSuccess ? (
             <>

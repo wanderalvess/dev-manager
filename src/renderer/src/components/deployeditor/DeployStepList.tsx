@@ -49,12 +49,12 @@ export const DeployStepList: React.FC<DeployStepListProps> = ({
               onClick={() => onSelect(idx)}
               className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                 isSelected
-                  ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary/40'
+                  ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40'
                   : 'border-border/60 bg-card hover:bg-muted/40'
               }`}
             >
               <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
-                <span className="w-6 h-6 flex items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+                <span className="w-6 h-6 flex items-center justify-center rounded-lg bg-muted text-2xs font-bold text-muted-foreground shrink-0">
                   {idx + 1}
                 </span>
                 <div className="truncate">
@@ -67,8 +67,8 @@ export const DeployStepList: React.FC<DeployStepListProps> = ({
                   type="button"
                   onClick={() => onMove(idx, 'up')}
                   disabled={idx === 0}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded disabled:opacity-30"
-                  title="Mover para cima"
+                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded disabled:opacity-50"
+                  title="Mover para cima" aria-label="Mover para cima"
                 >
                   <ChevronUp className="w-3.5 h-3.5" />
                 </button>
@@ -76,8 +76,8 @@ export const DeployStepList: React.FC<DeployStepListProps> = ({
                   type="button"
                   onClick={() => onMove(idx, 'down')}
                   disabled={idx === steps.length - 1}
-                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded disabled:opacity-30"
-                  title="Mover para baixo"
+                  className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded disabled:opacity-50"
+                  title="Mover para baixo" aria-label="Mover para baixo"
                 >
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
@@ -85,7 +85,7 @@ export const DeployStepList: React.FC<DeployStepListProps> = ({
                   type="button"
                   onClick={() => onDuplicate(idx)}
                   className="p-1 hover:bg-muted text-muted-foreground hover:text-foreground rounded"
-                  title="Duplicar etapa"
+                  title="Duplicar etapa" aria-label="Duplicar etapa"
                 >
                   <Copy className="w-3.5 h-3.5" />
                 </button>
@@ -93,7 +93,7 @@ export const DeployStepList: React.FC<DeployStepListProps> = ({
                   type="button"
                   onClick={() => onRemove(idx)}
                   className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded"
-                  title="Remover etapa"
+                  title="Remover etapa" aria-label="Remover etapa"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

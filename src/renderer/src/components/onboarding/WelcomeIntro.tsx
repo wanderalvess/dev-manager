@@ -3,6 +3,7 @@ import { ChevronRight, ChevronLeft, Sun, Moon, Check } from 'lucide-react';
 import { WELCOME_STEPS, WELCOME_STORAGE_KEY } from './welcomeSteps';
 import { AppLogo } from '../AppLogo';
 import { useTheme } from '../../context/ThemeContext';
+import { Modal } from '../ui/Modal';
 
 interface WelcomeIntroProps {
   isOpen: boolean;
@@ -33,16 +34,14 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') finish();
-      else if (e.key === 'ArrowRight') goNext();
+      // Esc é tratado pelo Modal (onClose = finish)
+      if (e.key === 'ArrowRight') goNext();
       else if (e.key === 'ArrowLeft') goPrev();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, stepIndex]);
-
-  if (!isOpen) return null;
 
   const step = WELCOME_STEPS[stepIndex];
   const isFirst = stepIndex === 0;
@@ -74,10 +73,14 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
   const slideClass = directionRef.current === 1 ? 'animate-welcome-in-next' : 'animate-welcome-in-prev';
 
   return (
-    <div
-      className="fixed inset-0 z-[10002] bg-background overflow-hidden select-none animate-welcome-overlay"
-      role="dialog"
-      aria-modal="true"
+    <Modal
+      open={isOpen}
+      onClose={finish}
+      bare
+      closeOnBackdrop={false}
+      zIndexClass="z-10002"
+      ariaLabel="Introdução ao Hub Manager"
+      panelClassName="fixed inset-0 bg-background overflow-hidden select-none animate-welcome-overlay"
     >
       {/* Grade de precisão técnica */}
       <div
@@ -109,7 +112,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
         <button
           type="button"
           onClick={finish}
-          className="h-8 px-3 rounded-lg text-xs font-semibold border border-border/70 text-muted-foreground hover:text-foreground hover:border-border bg-card/60 backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+          className="h-8 px-3 rounded-lg text-xs font-semibold border border-border/70 text-muted-foreground hover:text-foreground hover:border-border bg-card/60 backdrop-blur-xs transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
         >
           Pular introdução
         </button>
@@ -126,12 +129,12 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
               <AppLogo size="lg" />
             </div>
           ) : (
-            <div className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary animate-welcome-icon">
+            <div className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary animate-welcome-icon">
               <Icon className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-primary">{step.eyebrow}</span>
+            <span className="text-2xs font-bold uppercase tracking-widest text-primary">{step.eyebrow}</span>
             <h1 className="mt-1.5 text-3xl sm:text-4xl font-extrabold leading-tight text-foreground">
               {step.title} <span className="text-primary">{step.highlight}</span>
             </h1>
@@ -154,18 +157,18 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
                       <Sun className="w-4 h-4" />
                     </div>
                     {mode === 'light' ? (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-full border border-primary/30">
-                        <Check className="w-3 h-3 stroke-[3]" /> Selecionado
+                      <span className="flex items-center gap-1 text-2xs font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-full border border-primary/30">
+                        <Check className="w-3 h-3 stroke-3" /> Selecionado
                       </span>
                     ) : (
                       <span className="text-2xs font-medium text-muted-foreground px-1.5 py-0.5 rounded bg-muted/60">Padrão</span>
                     )}
                   </div>
                   <div className="font-bold text-xs sm:text-sm text-foreground">Modo Claro</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">Visual clássico e limpo para o dia a dia</div>
+                  <div className="text-2xs text-muted-foreground mt-0.5 leading-snug">Visual clássico e limpo para o dia a dia</div>
 
                   {/* Preview Mini UI */}
-                  <div className="mt-3 p-2 rounded-lg bg-[#f8fafc] border border-slate-200/90 space-y-1.5 pointer-events-none shadow-xs">
+                  <div className="mt-3 p-2 rounded-lg bg-[#f8fafc] border border-slate-200/90 space-y-1.5 pointer-events-none shadow-2xs">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-orange-500" />
                       <div className="h-1.5 w-10 bg-slate-300 rounded-full" />
@@ -190,16 +193,16 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
                       <Moon className="w-4 h-4" />
                     </div>
                     {mode === 'dark' && (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-full border border-primary/30">
-                        <Check className="w-3 h-3 stroke-[3]" /> Selecionado
+                      <span className="flex items-center gap-1 text-2xs font-bold text-primary bg-primary/15 px-2 py-0.5 rounded-full border border-primary/30">
+                        <Check className="w-3 h-3 stroke-3" /> Selecionado
                       </span>
                     )}
                   </div>
                   <div className="font-bold text-xs sm:text-sm text-foreground">Modo Escuro</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">Confortável para os olhos e pouca luz</div>
+                  <div className="text-2xs text-muted-foreground mt-0.5 leading-snug">Confortável para os olhos e pouca luz</div>
 
                   {/* Preview Mini UI */}
-                  <div className="mt-3 p-2 rounded-lg bg-[#0b0f19] border border-slate-700/90 space-y-1.5 pointer-events-none shadow-xs">
+                  <div className="mt-3 p-2 rounded-lg bg-[#0b0f19] border border-slate-700/90 space-y-1.5 pointer-events-none shadow-2xs">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-orange-500" />
                       <div className="h-1.5 w-10 bg-slate-600 rounded-full" />
@@ -216,7 +219,7 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
 
       {/* Navegação inferior */}
       <div className="absolute bottom-0 inset-x-0 flex items-center justify-between gap-3 p-5 sm:p-6">
-        <span className="text-[11px] font-mono text-muted-foreground">
+        <span className="text-2xs font-mono text-muted-foreground">
           {WELCOME_STEPS.length > 1 ? `${stepIndex + 1} de ${WELCOME_STEPS.length}` : ''}
         </span>
         <div className="flex items-center gap-2">
@@ -233,13 +236,13 @@ export const WelcomeIntro: React.FC<WelcomeIntroProps> = ({ isOpen, onFinish }) 
           <button
             type="button"
             onClick={goNext}
-            className="h-9 px-4 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-sm group"
+            className="h-9 px-4 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-xs group"
           >
             {isLast ? 'Começar' : 'Avançar'}
             <ChevronRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

@@ -12,7 +12,7 @@ export const QUALITY_STORAGE_KEY_VALIDATION = 'devManager:quality:validationItem
 export const QUALITY_STORAGE_KEY_RELEASE = 'devManager:quality:releaseVersion';
 export const QUALITY_DEFAULT_RELEASE = '';
 
-export type QualityTabMode = 'matrix' | 'readiness' | 'roadmap';
+export type QualityTabMode = 'matrix' | 'readiness';
 
 // Release gravada pelas versões anteriores como valor padrão (nunca digitada pelo usuário)
 const LEGACY_DEFAULT_RELEASE = 'v1.24.0';

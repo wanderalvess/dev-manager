@@ -21,7 +21,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
   onOpenInDbStudio
 }) => {
   return (
-    <div className="p-4 rounded-xl bg-card border border-border shadow-xs flex flex-col gap-3">
+    <div className="p-4 rounded-xl bg-card border border-border shadow-2xs flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Flame className="w-4 h-4 text-amber-500" />
@@ -29,7 +29,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
             Top Slow Queries (Oracle / Banco)
           </h4>
         </div>
-        <span className="text-[11px] text-muted-foreground font-mono">
+        <span className="text-2xs text-muted-foreground font-mono">
           Ranking de lentidão
         </span>
       </div>
@@ -45,7 +45,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
             return (
               <div
                 key={`${sq.statement.slice(0, 40)}-${i}`}
-                className="py-2.5 flex flex-col gap-1.5 group hover:bg-neutral-100/50 dark:hover:bg-neutral-900/50 -mx-2 px-2 rounded-lg transition-colors"
+                className="py-2.5 flex flex-col gap-1.5 group hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -60,7 +60,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                     >
                       {severity === 'critical' ? 'Crítica' : severity === 'slow' ? 'Lenta' : 'Normal'}
                     </span>
-                    <span className="text-[11px] font-mono text-muted-foreground">
+                    <span className="text-2xs font-mono text-muted-foreground">
                       {sq.executionCount}x exec | máx: <strong className="text-foreground">{sq.maxDurationMs}ms</strong> | méd: {sq.avgDurationMs}ms
                     </span>
                   </div>
@@ -94,8 +94,8 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                       <button
                         type="button"
                         onClick={() => onSelectTrace(sq.sampleTraceId)}
-                        title="Ver trace com esta query no Waterfall"
-                        className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-800 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        title="Ver trace com esta query no Waterfall" aria-label="Ver trace com esta query no Waterfall"
+                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       >
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
@@ -104,7 +104,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                 </div>
 
                 {/* Preview da Instrução SQL com Realce de Palavras-Chave e Tabelas WinThor (PC*) */}
-                <div className="p-2 rounded bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800/80 font-mono text-[11px] overflow-x-auto whitespace-pre leading-relaxed no-scrollbar">
+                <div className="p-2 rounded bg-muted border border-border/80 font-mono text-2xs overflow-x-auto whitespace-pre leading-relaxed no-scrollbar">
                   {tokens.map((tok, tIdx) => {
                     if (tok.isKeyword) {
                       return (

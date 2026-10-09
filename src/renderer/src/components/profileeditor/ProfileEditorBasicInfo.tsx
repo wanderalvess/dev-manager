@@ -23,7 +23,7 @@ export const ProfileEditorBasicInfo: React.FC<ProfileEditorBasicInfoProps> = ({
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         placeholder="Ex: Minha Stack, Frontend + Backend..."
-        className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
     <div>
@@ -35,7 +35,7 @@ export const ProfileEditorBasicInfo: React.FC<ProfileEditorBasicInfoProps> = ({
         value={description}
         onChange={(e) => onDescriptionChange(e.target.value)}
         placeholder="Ex: PostgreSQL, SSO na 8787, Gateway 8080, API 8888, App 3000..."
-        className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
     </div>
   </div>

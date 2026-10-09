@@ -28,7 +28,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
     <div className="space-y-4">
       {/* Cards de Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="p-4 rounded-xl bg-card border border-border shadow-xs space-y-1">
+        <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-1">
           <span className="text-xs text-muted-foreground">Total de Cenários no Zephyr</span>
           <div className="text-2xl font-extrabold text-foreground font-mono">
             {coverageReport?.totalScenarios || 0}
@@ -36,7 +36,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
           <p className="text-2xs text-muted-foreground">Extraídos dos arquivos .csv em /Insumo</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-card border border-border shadow-xs space-y-1">
+        <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-1">
           <span className="text-xs text-muted-foreground">Cenários Automatizados</span>
           <div className="text-2xl font-extrabold text-emerald-400 font-mono flex items-center gap-2">
             <span>{coverageReport?.automatedCount || 0}</span>
@@ -45,7 +45,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
           <p className="text-2xs text-emerald-500/80">Cobertos em arquivos .cy.ts</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-card border border-border shadow-xs space-y-1">
+        <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-1">
           <span className="text-xs text-muted-foreground">Cenários Pendentes</span>
           <div className="text-2xl font-extrabold text-amber-400 font-mono flex items-center gap-2">
             <span>{coverageReport?.pendingCount || 0}</span>
@@ -54,7 +54,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
           <p className="text-2xs text-amber-500/80">Aguardando implementação</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-card border border-border shadow-xs space-y-1">
+        <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-1">
           <span className="text-xs text-muted-foreground">Índice de Cobertura</span>
           <div className="text-2xl font-extrabold text-primary font-mono">
             {coverageReport?.coveragePercentage || 0}%
@@ -69,7 +69,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
       </div>
 
       {/* Tabela de Cenários com Busca e Filtros */}
-      <div className="rounded-xl bg-card border border-border shadow-xs overflow-hidden space-y-3 p-4">
+      <div className="rounded-xl bg-card border border-border shadow-2xs overflow-hidden space-y-3 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md w-full">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -78,7 +78,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
               value={coverageSearch}
               onChange={(e) => setCoverageSearch(e.target.value)}
               placeholder="Filtrar por ID (ex.: PROJ-T123) ou arquivo..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-background border border-border text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -162,7 +162,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="py-2 px-3 font-mono text-[11px] text-muted-foreground truncate max-w-md">
+                    <td className="py-2 px-3 font-mono text-2xs text-muted-foreground truncate max-w-md">
                       {item.filePath ? (
                         <span className="text-foreground">{item.filePath}</span>
                       ) : (

@@ -19,14 +19,14 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
   setNewEnvironmentProfileLabel,
   handleSaveCurrentAsEnvironmentProfile
 }) => (
-  <div className="cockpit-panel rounded-2xl p-5 space-y-3 shadow-xl border border-border">
+  <div className="cockpit-panel rounded-xl p-5 space-y-3 shadow-xl border border-border">
     <div className="flex items-center justify-between pb-1 border-b border-border/60">
       <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
         <Layers className="w-3.5 h-3.5 text-primary" /> Perfis de Ambiente
       </h3>
       <span className="text-2xs text-muted-foreground font-mono">Presets de paths/portas</span>
     </div>
-    <p className="text-[11px] text-muted-foreground -mt-1">
+    <p className="text-2xs text-muted-foreground -mt-1">
       Salve o estado atual dos diretórios e portas abaixo como um preset nomeado, e alterne entre eles com um clique — útil pra quem trabalha com múltiplos clientes/ambientes na mesma máquina.
     </p>
 
@@ -80,7 +80,7 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
         value={newEnvironmentProfileLabel}
         onChange={(e) => setNewEnvironmentProfileLabel(e.target.value)}
         placeholder="Rótulo do novo perfil (ex: Cliente A)..."
-        className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+        className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();

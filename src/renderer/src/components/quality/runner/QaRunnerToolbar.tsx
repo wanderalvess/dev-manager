@@ -55,7 +55,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
             <select
               value={selectedConnectionId}
               onChange={(e) => onSelectConnection(e.target.value)}
-              className="bg-background border border-border text-foreground text-xs rounded-md px-2.5 py-1.5 font-medium focus:outline-none focus:ring-1 focus:ring-primary min-w-[180px]"
+              className="bg-background border border-border text-foreground text-xs rounded-md px-2.5 py-1.5 font-medium focus:outline-hidden focus:ring-1 focus:ring-primary min-w-[180px]"
             >
               {dbConnections.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -89,7 +89,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
           <select
             value={selectedTemplateId}
             onChange={(e) => onSelectTemplate(e.target.value)}
-            className="bg-background border border-border text-foreground text-xs rounded-md px-2.5 py-1.5 font-medium focus:outline-none focus:ring-1 focus:ring-primary flex-1 max-w-md truncate"
+            className="bg-background border border-border text-foreground text-xs rounded-md px-2.5 py-1.5 font-medium focus:outline-hidden focus:ring-1 focus:ring-primary flex-1 max-w-md truncate"
           >
             {templates.map((t) => (
               <option key={t.id} value={t.id}>
@@ -137,7 +137,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
           type="button"
           onClick={onRun}
           disabled={isRunning || !selectedConnectionId || !selectedTemplate}
-          className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
         >
           {isRunning ? (
             <>
@@ -155,7 +155,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
 
       {/* Descrição do Template Ativo */}
       {selectedTemplate?.description && (
-        <p className="text-[11px] text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5 font-mono">
+        <p className="text-2xs text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5 font-mono">
           {selectedTemplate.description}
         </p>
       )}

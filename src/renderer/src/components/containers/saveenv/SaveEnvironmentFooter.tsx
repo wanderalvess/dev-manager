@@ -25,7 +25,7 @@ export const SaveEnvironmentFooter: React.FC<SaveEnvironmentFooterProps> = ({
       type="button"
       onClick={onSave}
       disabled={!canSave}
-      className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+      className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50 active:scale-98"
     >
       {isEditing ? 'Salvar Alterações' : 'Criar Grupo'}
     </button>

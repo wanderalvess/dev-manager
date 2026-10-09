@@ -29,7 +29,7 @@ export const JvmMemoryHeader: React.FC<JvmMemoryHeaderProps> = ({ metrics, isNea
             />
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+        <p className="text-2xs text-muted-foreground font-mono mt-0.5">
           Heap, Metaspace e monitoramento contínuo de OutOfMemoryError.
         </p>
       </div>
@@ -38,7 +38,7 @@ export const JvmMemoryHeader: React.FC<JvmMemoryHeaderProps> = ({ metrics, isNea
     <button
       onClick={onClose}
       className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors cursor-pointer"
-      title="Fechar (ESC)"
+      title="Fechar (ESC)" aria-label="Fechar (ESC)"
     >
       <X className="w-4 h-4" />
     </button>

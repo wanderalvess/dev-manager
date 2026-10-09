@@ -28,10 +28,10 @@ export const LogsFooter: React.FC<LogsFooterProps> = ({
   onFontSizeChange,
   onInitialLinesChange
 }) => (
-  <div className="bg-[#080D18] border-t border-slate-800/80 px-3.5 py-1 flex items-center justify-between text-[11px] text-slate-400 font-mono shrink-0 select-none">
+  <div className="bg-card border-t border-border/80 px-3.5 py-1 flex items-center justify-between text-2xs text-muted-foreground font-mono shrink-0 select-none">
     <div className="flex items-center space-x-3">
       <span>
-        Linhas: <strong className="text-slate-200">{visibleCount}</strong> / {totalCount}
+        Linhas: <strong className="text-foreground">{visibleCount}</strong> / {totalCount}
       </span>
       {filterText && (
         <span className="text-amber-400 truncate max-w-xs">
@@ -49,7 +49,7 @@ export const LogsFooter: React.FC<LogsFooterProps> = ({
             key={size}
             onClick={() => onFontSizeChange(size)}
             className={`px-1.5 py-0.5 rounded text-2xs ${
-              fontSize === size ? 'bg-slate-700 text-white font-bold' : 'hover:text-white'
+              fontSize === size ? 'bg-muted text-white font-bold' : 'hover:text-foreground'
             }`}
           >
             {label}
@@ -58,12 +58,12 @@ export const LogsFooter: React.FC<LogsFooterProps> = ({
       </div>
 
       {/* Carga Inicial de Linhas */}
-      <div className="flex items-center space-x-1 border-l border-slate-800 pl-3">
+      <div className="flex items-center space-x-1 border-l border-border pl-3">
         <span>Buffer inicial:</span>
         <select
           value={initialLinesCount}
           onChange={(e) => onInitialLinesChange(Number(e.target.value))}
-          className="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 text-2xs focus:outline-none"
+          className="bg-card border border-border rounded px-1.5 py-0.5 text-muted-foreground text-2xs focus:outline-hidden"
         >
           <option value={100}>100 linhas</option>
           <option value={300}>300 linhas</option>

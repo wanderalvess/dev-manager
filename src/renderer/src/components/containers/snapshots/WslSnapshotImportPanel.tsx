@@ -14,7 +14,7 @@ interface WslSnapshotImportPanelProps {
 }
 
 const INPUT_CLASS =
-  'w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary';
+  'w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary';
 
 export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
   name,
@@ -34,7 +34,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Nome da Distro a Criar
         </label>
         <input
@@ -47,7 +47,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
       </div>
 
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Diretório de Instalação (VHDX)
         </label>
         <input
@@ -61,7 +61,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
     </div>
 
     <div>
-      <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+      <label className="text-2xs font-semibold text-muted-foreground block mb-1">
         Caminho do Arquivo .tar
       </label>
       <input
@@ -81,7 +81,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
       <button
         onClick={onImport}
         disabled={importing || !canImportSnapshot(tarPath, name)}
-        className="flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {importing ? (
           <RotateCw className="w-3.5 h-3.5 animate-spin" />

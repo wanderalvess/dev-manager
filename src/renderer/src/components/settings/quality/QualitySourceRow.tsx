@@ -30,7 +30,7 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
     <div
       className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isCurrentActive
-          ? 'bg-card border-primary/40 shadow-xs'
+          ? 'bg-card border-primary/40 shadow-2xs'
           : 'bg-card/50 border-border opacity-70 hover:opacity-100'
       }`}
     >
@@ -49,10 +49,10 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
             </span>
           )}
         </div>
-        <div className="text-[11px] font-mono text-muted-foreground truncate">{source.baseUrl}</div>
+        <div className="text-2xs font-mono text-muted-foreground truncate">{source.baseUrl}</div>
         {testResult && (
           <div
-            className={`text-[11px] font-medium flex items-center gap-1 ${
+            className={`text-2xs font-medium flex items-center gap-1 ${
               testResult.success ? 'text-emerald-500' : 'text-rose-500'
             }`}
           >
@@ -99,7 +99,7 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
           type="button"
           onClick={() => onDelete(source.id)}
           className="p-1.5 text-muted-foreground hover:text-rose-500 rounded-lg hover:bg-muted transition cursor-pointer"
-          title="Excluir fonte"
+          title="Excluir fonte" aria-label="Excluir fonte"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

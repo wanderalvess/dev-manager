@@ -17,7 +17,7 @@ interface DeployDiagnosticsPanelProps {
 const tabClass = (active: boolean) =>
   `flex-1 py-1.5 px-2 rounded-md font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
     active
-      ? 'bg-card text-foreground font-semibold shadow-xs border border-border/60'
+      ? 'bg-card text-foreground font-semibold shadow-2xs border border-border/60'
       : 'text-muted-foreground hover:text-foreground'
   }`;
 
@@ -34,7 +34,7 @@ export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
   const prompt = useKarafCommandPrompt({ isBlocked: disabled, onRun: onRunDiagnostic });
 
   return (
-    <div className="cockpit-panel rounded-xl p-3.5 space-y-3 border border-border/80 shadow-xs">
+    <div className="cockpit-panel rounded-xl p-3 space-y-3 border border-border/80 shadow-2xs">
       <div className="flex items-center justify-between">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos OSGi (client.bat)

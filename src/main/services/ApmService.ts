@@ -35,8 +35,7 @@ import {
   aggregateEndpointMetrics,
   aggregateSlowQueries,
   computeDatabaseTimeRatio,
-  aggregateTimeSeriesBuckets,
-  generateMockTraces
+  aggregateTimeSeriesBuckets
 } from '../utils/apmUtils';
 
 const gunzipAsync = promisify(zlib.gunzip);
@@ -652,17 +651,5 @@ export class ApmService {
     this.totalIngestedSpansCount = 0;
     this.totalIngestedTracesCount = 0;
     this.droppedSpansCount = 0;
-  }
-
-  /**
-   * Gera e ingere um lote de dados de demonstração realistas.
-   */
-  public generateDemoData(): { generatedSpans: number; generatedTraces: number } {
-    const mockSpans = generateMockTraces();
-    const res = this.ingestSpans(mockSpans);
-    return {
-      generatedSpans: res.ingestedSpans,
-      generatedTraces: res.updatedTraces
-    };
   }
 }

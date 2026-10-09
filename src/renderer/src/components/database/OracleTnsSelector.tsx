@@ -67,7 +67,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
   return (
     <div className="p-2.5 rounded-lg border border-border/70 bg-muted/20 space-y-2">
       <div className="flex items-center justify-between">
-        <label className="font-bold text-foreground flex items-center gap-1.5 text-[11px]">
+        <label className="font-bold text-foreground flex items-center gap-1.5 text-2xs">
           <Network className="w-3.5 h-3.5 text-orange-500" />
           <span>Buscar no tnsnames.ora</span>
         </label>
@@ -77,7 +77,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
             onClick={() => loadTnsEntries(filePath || undefined)}
             disabled={loading}
             className="p-1 text-muted-foreground hover:text-foreground rounded transition cursor-pointer disabled:opacity-50"
-            title="Recarregar tnsnames.ora"
+            title="Recarregar tnsnames.ora" aria-label="Recarregar tnsnames.ora"
           >
             <RotateCw className={`w-3 h-3 ${loading ? 'animate-spin text-primary' : ''}`} />
           </button>
@@ -85,7 +85,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
             type="button"
             onClick={handleBrowseFile}
             className="p-1 text-muted-foreground hover:text-foreground rounded transition cursor-pointer"
-            title="Selecionar outro arquivo tnsnames.ora"
+            title="Selecionar outro arquivo tnsnames.ora" aria-label="Selecionar outro arquivo tnsnames.ora"
           >
             <FolderOpen className="w-3 h-3 text-orange-500" />
           </button>
@@ -97,7 +97,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
           <select
             value={selectedAlias || ''}
             onChange={handleChange}
-            className="w-full bg-background border border-border/80 hover:border-primary/50 rounded-md p-1.5 text-foreground font-mono text-xs focus:outline-none focus:border-primary transition cursor-pointer"
+            className="w-full bg-background border border-border/80 hover:border-primary/50 rounded-md p-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition cursor-pointer"
           >
             <option value="">-- Selecione uma conexão TNS ({entries.length} encontradas) --</option>
             {entries.map((item) => {
@@ -120,7 +120,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
           )}
         </div>
       ) : (
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground bg-background/50 p-2 rounded border border-border/50">
+        <div className="flex items-center justify-between text-2xs text-muted-foreground bg-background/50 p-2 rounded border border-border/50">
           <div className="flex items-center gap-1.5 min-w-0">
             {error ? (
               <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />

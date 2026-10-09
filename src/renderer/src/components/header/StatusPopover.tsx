@@ -30,7 +30,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`h-9 px-2 sm:px-2.5 rounded-lg border transition-all flex items-center space-x-1 sm:space-x-1.5 text-xs select-none cursor-pointer ${
           isOpen
-            ? 'bg-card text-foreground border-primary/50 shadow-xs font-semibold'
+            ? 'bg-card text-foreground border-primary/50 shadow-2xs font-semibold'
             : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
         }`}
         title="Clique para ver IPs da máquina (LAN/WSL) e uso de CPU/RAM"
@@ -108,7 +108,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
                 )}
               </div>
             ) : (
-              <p className="text-[11px] text-muted-foreground italic">Detectando interfaces de rede...</p>
+              <p className="text-2xs text-muted-foreground italic">Detectando interfaces de rede...</p>
             )}
           </div>
 
@@ -162,7 +162,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
                   </div>
 
                   {/* Uptime */}
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40 font-mono">
+                  <div className="flex items-center justify-between text-2xs text-muted-foreground pt-1 border-t border-border/40 font-mono">
                     <span className="font-sans">Uptime SO:</span>
                     <span className="text-foreground font-semibold">{uptimeHours}h {uptimeMinutes}m</span>
                   </div>
@@ -170,7 +170,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
               </div>
             );
           })() : (
-            <p className="text-[11px] text-muted-foreground italic">Coletando métricas do sistema...</p>
+            <p className="text-2xs text-muted-foreground italic">Coletando métricas do sistema...</p>
           )}
 
           {/* Atalho para Diagnósticos */}

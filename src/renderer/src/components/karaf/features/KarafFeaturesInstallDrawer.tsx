@@ -55,7 +55,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
             type="button"
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
-            title="Fechar formulário"
+            title="Fechar formulário" aria-label="Fechar formulário"
           >
             <X className="w-4 h-4" />
           </button>
@@ -110,7 +110,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
 
         {/* Rodapé com Prévia do Comando e Botões */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/40">
-          <div className="flex items-center space-x-1.5 text-[11px] font-mono text-muted-foreground">
+          <div className="flex items-center space-x-1.5 text-2xs font-mono text-muted-foreground">
             <ChevronRight className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
             <span>Comando:</span>
             <code className="text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
@@ -130,7 +130,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
             <button
               type="submit"
               disabled={!featureName.trim() || isInstalling}
-              className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+              className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               {isInstalling ? (
                 <>

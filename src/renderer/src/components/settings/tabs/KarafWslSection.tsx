@@ -39,13 +39,13 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
   const isWsl = settings.karafEnvironment === 'wsl';
 
   return (
-    <div id="field-karafWsl" className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+    <div id="field-karafWsl" className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
         <div>
           <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
             <Terminal className="w-4 h-4 text-primary" /> Ambiente de Execução do Karaf
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-2xs text-muted-foreground mt-0.5">
             Defina o runtime do contêiner OSGi: execução nativa no host Windows ou isolada no subsistema Linux (WSL 2).
           </p>
         </div>
@@ -57,7 +57,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
             onClick={() => setSettings({ ...settings, karafEnvironment: 'local' })}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               !isWsl
-                ? 'bg-card text-foreground shadow-xs border border-border'
+                ? 'bg-card text-foreground shadow-2xs border border-border'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -69,7 +69,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
             onClick={() => setSettings({ ...settings, karafEnvironment: 'wsl' })}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               isWsl
-                ? 'bg-card text-primary shadow-xs border border-border font-bold'
+                ? 'bg-card text-primary shadow-2xs border border-border font-bold'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -100,7 +100,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
               <select id="karaf-wsl-section-1"
                 value={settings.karafWslDistro || ''}
                 onChange={(e) => setSettings({ ...settings, karafWslDistro: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary text-xs"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary text-xs"
               >
                 <option value="">Selecione uma distribuição instalada...</option>
                 {distros.map((d) => (
@@ -114,7 +114,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
                 type="text"
                 value={settings.karafWslDistro || ''}
                 onChange={(e) => setSettings({ ...settings, karafWslDistro: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-primary text-xs"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary text-xs"
                 placeholder="Ex: Ubuntu, Debian"
               />
             )}
@@ -123,11 +123,11 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
             </p>
           </div>
 
-          <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-1.5 flex flex-col justify-center">
+          <div className="rounded-xl border border-border/80 bg-muted/20 p-3 space-y-1.5 flex flex-col justify-center">
             <span className="font-bold text-foreground flex items-center gap-1.5 text-xs">
               <Network className="w-3.5 h-3.5 text-primary shrink-0" /> Integração de Rede Localhost
             </span>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-2xs text-muted-foreground leading-relaxed">
               O Hub Manager conecta na porta SSH (<code className="font-mono text-foreground">{settings.karafSshPort ?? 8101}</code>) e JDWP (<code className="font-mono text-foreground">{settings.karafDebugPort ?? 5005}</code>). Para conexões instantâneas sem NAT, configure <code className="font-mono text-foreground">[wsl2] networkingMode=mirrored</code> no <code className="font-mono text-foreground">%USERPROFILE%\.wslconfig</code>.
             </p>
           </div>

@@ -24,7 +24,7 @@ interface MarkdownReaderHeaderProps {
 
 const modeButtonClass = (active: boolean) =>
   `px-3 py-1 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-    active ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+    active ? 'bg-primary text-primary-foreground shadow-2xs' : 'text-muted-foreground hover:text-foreground'
   }`;
 
 export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
@@ -48,12 +48,12 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
 }) => (
   <header className="px-5 py-2.5 border-b border-border/80 bg-muted/40 flex items-center justify-between gap-4 shrink-0">
     <div className="flex items-center gap-3 min-w-0">
-      <div className="p-2 rounded-2xl bg-primary/10 border border-primary/25 text-primary shrink-0 shadow-xs">
+      <div className="p-2 rounded-xl bg-primary/10 border border-primary/25 text-primary shrink-0 shadow-2xs">
         <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="text-sm md:text-base font-bold text-foreground truncate tracking-tight">{title}</h3>
+          <h3 className="text-sm font-semibold text-foreground truncate tracking-tight">{title}</h3>
           {!hideBadge && (
             <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-2xs font-mono font-bold uppercase shrink-0">
               Markdown
@@ -61,7 +61,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
           )}
           {headerLeftExtra}
         </div>
-        <p className="text-[11px] text-muted-foreground font-mono truncate max-w-lg" title={filePath}>
+        <p className="text-2xs text-muted-foreground font-mono truncate max-w-lg" title={filePath}>
           {filePath}
         </p>
       </div>
@@ -91,7 +91,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
           onClick={onToggleToc}
           className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
             isTocOpen
-              ? 'bg-primary/15 border-primary text-primary shadow-xs'
+              ? 'bg-primary/15 border-primary text-primary shadow-2xs'
               : 'bg-card border-border hover:bg-muted text-foreground'
           }`}
           title="Sumário de tópicos do documento"
@@ -119,7 +119,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
           type="button"
           onClick={() => onOpenInEditor(filePath)}
           className="p-2 rounded-xl bg-card hover:bg-muted border border-border text-foreground transition-colors cursor-pointer"
-          title="Abrir no editor de código configurado"
+          title="Abrir no editor de código configurado" aria-label="Abrir no editor de código configurado"
         >
           <ExternalLink className="w-4 h-4" />
         </button>
@@ -130,7 +130,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
           type="button"
           onClick={() => onOpenInFolder(filePath)}
           className="p-2 rounded-xl bg-card hover:bg-muted border border-border text-foreground transition-colors cursor-pointer"
-          title="Revelar no Windows Explorer"
+          title="Revelar no Windows Explorer" aria-label="Revelar no Windows Explorer"
         >
           <FolderOpen className="w-4 h-4" />
         </button>
@@ -140,7 +140,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
         type="button"
         onClick={onToggleFullscreen}
         className="p-2 rounded-xl bg-card hover:bg-muted border border-border text-foreground transition-colors cursor-pointer"
-        title={isFullscreen ? 'Reduzir janela' : 'Modo tela cheia'}
+        title={isFullscreen ? 'Reduzir janela' : 'Modo tela cheia'} aria-label={isFullscreen ? 'Reduzir janela' : 'Modo tela cheia'}
       >
         {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
       </button>
@@ -149,7 +149,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
         type="button"
         onClick={onClose}
         className="p-2 rounded-xl hover:bg-destructive/15 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-        title="Fechar (Esc)"
+        title="Fechar (Esc)" aria-label="Fechar (Esc)"
       >
         <X className="w-4 h-4" />
       </button>

@@ -28,13 +28,13 @@ export const OracleThickClientSection: React.FC<OracleThickClientSectionProps> =
         />
         <span>Modo Thick / Suporte a Oracle 11g (Instant Client)</span>
       </label>
-      <p className="text-[11px] text-muted-foreground leading-relaxed pl-5">
+      <p className="text-2xs text-muted-foreground leading-relaxed pl-5">
         Obrigatório para Oracle 11g e anteriores para evitar o erro{' '}
         <span className="font-mono text-foreground font-semibold">NJS-138</span>. Requer bibliotecas nativas de 64 bits da Oracle.
       </p>
       {isThickActive && (
         <div className="pl-5 pt-1 space-y-1">
-          <label className="block text-[11px] font-medium text-foreground">
+          <label className="block text-2xs font-medium text-foreground">
             Diretório do Oracle Instant Client (opcional se estiver no PATH):
           </label>
           <input
@@ -44,7 +44,7 @@ export const OracleThickClientSection: React.FC<OracleThickClientSectionProps> =
               setEditingConn({ ...editingConn, oracleClientPath: e.target.value })
             }
             placeholder="Ex: C:\oracle\instantclient_19_25"
-            className="w-full bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-none focus:border-primary font-mono text-xs"
+            className="w-full bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
           />
         </div>
       )}

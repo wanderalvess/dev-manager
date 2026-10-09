@@ -34,14 +34,14 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
   onReindex,
   onOpenModelHelp
 }) => (
-  <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
+  <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border shrink-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center space-x-3">
         <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
           <FileSearch className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+          <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
             Documentação
             {hasIndex && status && (
               <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
@@ -53,12 +53,12 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
               type="button"
               onClick={onOpenTour}
               className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
-              title="Rever o tour guiado desta página"
+              title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
             >
               <Sparkles className="w-3.5 h-3.5" />
             </button>
-          </h2>
-          <p className="text-[11px] text-muted-foreground">
+          </h1>
+          <p className="text-2xs text-muted-foreground">
             Busca semântica local (RAG) sobre o README/docs dos projetos e das pastas adicionais configuradas.
           </p>
         </div>
@@ -68,7 +68,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
         <button
           data-tour="doc-settings-button"
           onClick={onOpenSettings}
-          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
           title="Configurar pastas locais, projetos Git, Confluence, Jira e Assistente IA"
         >
           <Settings className="w-3.5 h-3.5 text-primary" />
@@ -80,7 +80,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
 
         <button
           onClick={onOpenSync}
-          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
+          className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border/80 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
           title="Gerenciar e enviar documentos vetorizados para APIs externas (ex: Espaço Ágil)"
         >
           <Send className="w-3.5 h-3.5 text-primary" />
@@ -91,7 +91,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
           data-tour="reindex-button"
           onClick={onReindex}
           disabled={isIndexing}
-          className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-60 cursor-pointer active:scale-95"
+          className="px-3 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer active:scale-95"
           title="Escanear projetos e (re)gerar o índice de busca"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isIndexing ? 'animate-spin' : ''}`} />
@@ -120,7 +120,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
         <button
           type="button"
           onClick={onOpenModelHelp}
-          className="text-[11px] underline hover:no-underline font-semibold shrink-0 cursor-pointer"
+          className="text-2xs underline hover:no-underline font-semibold shrink-0 cursor-pointer"
         >
           Como instalar modelo offline
         </button>
@@ -128,7 +128,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
     )}
 
     {!status?.modelDownloaded && !status?.isTextOnly && (
-      <div className="mt-3 pt-3 border-t border-border/60 flex items-start justify-between gap-2 text-[11px] text-amber-600 dark:text-amber-400">
+      <div className="mt-3 pt-3 border-t border-border/60 flex items-start justify-between gap-2 text-2xs text-amber-600 dark:text-amber-400">
         <div className="flex items-start gap-2">
           <Download className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>
@@ -138,7 +138,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
         <button
           type="button"
           onClick={onOpenModelHelp}
-          className="text-[11px] underline hover:no-underline font-semibold shrink-0 cursor-pointer"
+          className="text-2xs underline hover:no-underline font-semibold shrink-0 cursor-pointer"
         >
           Instalação manual
         </button>

@@ -1,6 +1,111 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  /* Status semântico: use estes em código novo (bg-success/10, text-warning, border-danger/40...). */
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-danger: hsl(var(--danger));
+  --color-info: hsl(var(--info));
+
+  /*
+    "Aviso" no app é sempre amber-*. O âmbar padrão do Tailwind (matiz ~38) é quase o laranja do primary do tema
+    Cockpit (matiz 24): aba ativa e alerta ficavam iguais. Remapeia a rampa amber para a rampa amarela (matiz ~45),
+    sem tocar em nenhuma classe existente.
+  */
+  --color-amber-200: #fef08a;
+  --color-amber-300: #fde047;
+  --color-amber-400: #facc15;
+  --color-amber-500: #eab308;
+  --color-amber-600: #ca8a04;
+  --color-amber-700: #a16207;
+  --color-amber-800: #854d0e;
+  --color-amber-900: #713f12;
+  --color-amber-950: #422006;
+
+  --color-brand-50: #f0f7ff;
+  --color-brand-100: #e0effe;
+  --color-brand-500: #0066cc;
+  --color-brand-600: #0052a3;
+  --color-brand-700: #003d7a;
+  --color-brand-900: #001e3d;
+
+  --color-karaf-500: #e65100;
+  --color-karaf-600: #bf360c;
+
+  /* Mesma pilha do Tailwind 3 (a 4.x padrão começa por -apple-system). */
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  :root,
+  .light {
+    --success: 160 84% 26%;
+    --warning: 41 96% 32%;
+    --danger: 347 77% 40%;
+    --info: 201 96% 32%;
+  }
+
+  .dark {
+    --success: 158 64% 52%;
+    --warning: 45 93% 47%;
+    --danger: 349 89% 62%;
+    --info: 199 89% 60%;
+  }
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 @layer base {
   /* ========================================================================= */
@@ -11,8 +116,8 @@
   .light.theme-default,
   html.theme-default:not(.dark),
   .theme-default:not(.dark) {
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --app-font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --app-font-mono: 'JetBrains Mono', monospace;
 
     /* Base Cockpit Âmbar Light (Warm Industrial Parchment & Aerospace Amber) */
     --background: 32 30% 93%;
@@ -263,22 +368,38 @@
   }
 
   body {
-    font-family: var(--font-sans);
+    font-family: var(--app-font-sans);
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
 
   code, pre, .font-mono {
-    font-family: var(--font-mono);
+    font-family: var(--app-font-mono);
     font-feature-settings: 'tnum' 1, 'zero' 1;
   }
 }
 
-/* Transições universais suaves entre temas */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  transition-duration: 200ms;
+/*
+ * Transições universais suaves entre temas. Fica em @layer base: no Tailwind 4 CSS sem camada vence
+ * as utilities (transition-*, duration-*), o que não acontecia no 3.
+ */
+@layer base {
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    transition-duration: 200ms;
+  }
+
+  /* Compat Tailwind 3: botões mantêm cursor de ponteiro e placeholders o cinza antigo. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
 }
 
 /* Painéis e superfícies Cockpit dinâmicas */
@@ -470,7 +591,7 @@
   color: #047857;
 }
 .light .text-amber-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
-  color: #b45309;
+  color: #a16207;
 }
 .light .text-cyan-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
   color: #0e7490;
@@ -494,7 +615,7 @@
   color: #047857;
 }
 .light .text-amber-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
-  color: #b45309;
+  color: #a16207;
 }
 .light .text-cyan-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
   color: #0e7490;
@@ -507,4 +628,25 @@
 }
 .light .text-rose-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
   color: #be123c;
+}
+
+/* Foco de teclado visível em todo o app (só aparece em navegação por Tab, não no clique do mouse). */
+@layer base {
+  :focus-visible:not(input, textarea, select) {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Respeita a preferência do sistema por menos movimento (spinners e pulses ficam estáticos). */
+@media (prefers-reduced-motion: reduce) {
+  /* Spinners e pulses continuam: são indicador de carregamento/ao vivo, não decoração. */
+  *:not(.animate-spin, .animate-pulse),
+  *:not(.animate-spin, .animate-pulse)::before,
+  *:not(.animate-spin, .animate-pulse)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

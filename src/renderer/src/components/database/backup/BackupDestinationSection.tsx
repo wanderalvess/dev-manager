@@ -38,7 +38,7 @@ export const BackupDestinationSection: React.FC<BackupDestinationSectionProps> =
           value={backupFolder}
           onChange={(e) => setBackupFolder(e.target.value)}
           placeholder="Ex: C:\Backups\WinThor"
-          className="flex-1 bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-primary font-mono text-xs shadow-2xs"
+          className="flex-1 bg-background border border-border/80 rounded-lg px-3 py-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs shadow-2xs"
         />
         <button
           type="button"
@@ -52,13 +52,13 @@ export const BackupDestinationSection: React.FC<BackupDestinationSectionProps> =
       </div>
 
       {activeConnection.type === 'oracle' ? (
-        <p className="text-[11px] text-muted-foreground leading-normal">
+        <p className="text-2xs text-muted-foreground leading-normal">
           {useCustomBackupCommand
             ? 'Esta pasta resolverá as variáveis {filePath} e {folder}. Utilizando exp clássico, os arquivos são salvos diretamente neste caminho da sua máquina.'
             : 'O utilitário expdp salva os arquivos no servidor Oracle. O caminho da pasta aqui deve coincidir com o local físico do DIRECTORY abaixo.'}
         </p>
       ) : (
-        <p className="text-[11px] text-muted-foreground leading-normal">
+        <p className="text-2xs text-muted-foreground leading-normal">
           O arquivo de backup gerado pelo utilitário ({activeConnection.type === 'mysql' ? 'mysqldump' : 'pg_dump'}) será gravado nesta pasta local.
         </p>
       )}

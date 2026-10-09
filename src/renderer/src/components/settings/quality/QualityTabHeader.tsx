@@ -12,7 +12,7 @@ export const QualityTabHeader: React.FC<QualityTabHeaderProps> = ({ activeSource
   <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
     <div className="space-y-1">
       <div className="flex items-center gap-2.5">
-        <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <CheckCheck className="w-5 h-5 text-primary" />
           Fontes de Informação de Qualidade &amp; Testes (QA / PO)
         </h3>
@@ -38,7 +38,7 @@ export const QualityTabHeader: React.FC<QualityTabHeaderProps> = ({ activeSource
     <button
       type="button"
       onClick={onAddManual}
-      className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+      className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
     >
       <Plus className="w-4 h-4" />
       <span>Adicionar Fonte Manual</span>

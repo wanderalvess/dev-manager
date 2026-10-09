@@ -159,7 +159,7 @@ function createWindow() {
     console.warn('[ApmService] Falha ao iniciar receptor OTLP no boot:', err);
   });
 
-  registerIpcHandlers(
+  registerIpcHandlers({
     mainWindow,
     windowsService,
     karafService,
@@ -184,7 +184,7 @@ function createWindow() {
     testRunnerService,
     tautAutomationService,
     qaPayloadService
-  );
+  });
 
   backupSchedulerService.rescheduleAll();
   // Ao sair, não deixa para trás o Karaf embutido (processo filho), os agendamentos de backup nem a porta OTLP

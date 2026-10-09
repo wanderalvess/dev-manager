@@ -58,7 +58,7 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
       key={container.id}
       className={`relative overflow-hidden rounded-xl border transition-all duration-200 ${
         isSelected
-          ? 'border-primary ring-2 ring-primary/40 bg-primary/[0.04] shadow-md'
+          ? 'border-primary ring-2 ring-primary/40 bg-primary/4 shadow-md'
           : isRunning
           ? isOracle
             ? 'border-orange-500/35 bg-card shadow-[0_2px_14px_rgba(234,88,12,0.06)]'
@@ -66,7 +66,7 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
             ? 'border-cyan-500/35 bg-card shadow-[0_2px_14px_rgba(6,182,212,0.06)]'
             : isWsh
             ? 'border-violet-500/35 bg-card shadow-[0_2px_14px_rgba(139,92,246,0.06)]'
-            : 'border-border/80 bg-card shadow-sm hover:border-primary/40'
+            : 'border-border/80 bg-card shadow-xs hover:border-primary/40'
           : 'border-border/60 bg-card opacity-80 hover:opacity-100'
       }`}
     >
@@ -77,7 +77,7 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
             ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]'
             : container.state === 'paused'
             ? 'bg-amber-500'
-            : 'bg-zinc-400 dark:bg-zinc-700'
+            : 'bg-muted-foreground dark:bg-muted'
         }`}
       />
 

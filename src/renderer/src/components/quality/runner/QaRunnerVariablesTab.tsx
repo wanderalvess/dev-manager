@@ -25,7 +25,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
     <div className="flex-1 p-3 overflow-y-auto space-y-3">
       {/* Formulário Inline para Adicionar Binds */}
       <div className="p-2 rounded-md border border-border bg-background/50 space-y-2">
-        <span className="text-[11px] font-semibold text-muted-foreground block">
+        <span className="text-2xs font-semibold text-muted-foreground block">
           Adicionar Parâmetro de Bind:
         </span>
         <div className="flex items-center gap-1.5">
@@ -36,7 +36,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
               value={newVarKey}
               onChange={(e) => onChangeNewVarKey(e.target.value)}
               placeholder="codFilial"
-              className="w-full bg-card border border-border rounded pl-5 pr-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full bg-card border border-border rounded pl-5 pr-2 py-1 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
           </div>
           <input
@@ -44,7 +44,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
             value={newVarVal}
             onChange={(e) => onChangeNewVarVal(e.target.value)}
             placeholder="Valor"
-            className="flex-1 bg-card border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="flex-1 bg-card border border-border rounded px-2 py-1 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
           />
           <button
             type="button"
@@ -56,8 +56,8 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
               }
             }}
             disabled={!newVarKey.trim()}
-            className="px-2 py-1 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-40 cursor-pointer"
-            title="Adicionar variável"
+            className="px-2 py-1 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+            title="Adicionar variável" aria-label="Adicionar variável"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -82,7 +82,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
                   const val = e.target.value;
                   setVariables((prev) => ({ ...prev, [k]: val }));
                 }}
-                className="bg-background border border-border rounded px-2 py-0.5 text-xs font-mono text-foreground flex-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                className="bg-background border border-border rounded px-2 py-0.5 text-xs font-mono text-foreground flex-1 focus:outline-hidden focus:ring-1 focus:ring-primary"
               />
               <button
                 type="button"
@@ -94,7 +94,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
                   });
                 }}
                 className="text-muted-foreground hover:text-red-500 p-1 cursor-pointer transition-colors"
-                title="Remover variável"
+                title="Remover variável" aria-label="Remover variável"
               >
                 <Trash2 className="w-3 h-3" />
               </button>

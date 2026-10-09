@@ -18,13 +18,13 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
   onUpdatePort,
   onRemovePort
 }) => (
-  <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
+  <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
     <div className="flex items-center justify-between pb-1 border-b border-border/60">
       <div>
         <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
           <Radio className="w-4 h-4 text-primary" /> Lista Geral de Portas TCP Monitoradas
         </h3>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Portas consultadas em tempo real na barra de status do painel de ambiente.
         </p>
       </div>
@@ -33,7 +33,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
         <button
           type="button"
           onClick={onReset}
-          className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
+          className="px-2.5 py-1 bg-card hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
           title="Restaurar portas padrão (:8889, :8101, :5005, :1521)"
         >
           <RotateCcw className="w-3 h-3" />
@@ -43,7 +43,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
         <button
           type="button"
           onClick={() => onAddPort()}
-          className="px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+          className="px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Adicionar Porta</span>
@@ -68,7 +68,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
             className={`p-1 rounded text-xs transition-colors ${
               portCfg.enabled ? 'text-emerald-500' : 'text-muted-foreground'
             }`}
-            title={portCfg.enabled ? 'Clique para Desativar' : 'Clique para Ativar'}
+            title={portCfg.enabled ? 'Clique para Desativar' : 'Clique para Ativar'} aria-label={portCfg.enabled ? 'Clique para Desativar' : 'Clique para Ativar'}
           >
             {portCfg.enabled ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
           </button>
@@ -82,7 +82,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
                 type="number"
                 value={portCfg.port || ''}
                 onChange={(e) => onUpdatePort(index, 'port', e.target.value)}
-                className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-none"
+                className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
                 placeholder="8889"
               />
             </div>
@@ -95,7 +95,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
               type="text"
               value={portCfg.label}
               onChange={(e) => onUpdatePort(index, 'label', e.target.value)}
-              className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary"
+              className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
               placeholder="Descrição do serviço (ex: Portal Web, Banco de Dados...)"
             />
           </div>
@@ -105,7 +105,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
             type="button"
             onClick={() => onRemovePort(index)}
             className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
-            title="Remover Porta da Lista"
+            title="Remover Porta da Lista" aria-label="Remover Porta da Lista"
           >
             <Trash2 className="w-4 h-4" />
           </button>

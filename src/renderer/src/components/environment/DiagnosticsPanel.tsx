@@ -31,7 +31,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
   const runningProcessesCount = processes.filter((p) => p.isRunning).length;
 
   return (
-    <div className="cockpit-panel rounded-2xl p-3 border border-border flex flex-col space-y-2">
+    <div className="cockpit-panel rounded-xl p-3 border border-border flex flex-col space-y-2">
       <button
         type="button"
         onClick={() => setShowDiagnostics(!showDiagnostics)}
@@ -48,7 +48,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
         <div className="space-y-3 pt-2 border-t border-border/50 animate-fade-in">
           {/* Ações Rápidas de Parada de Serviços */}
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[11px] text-muted-foreground font-mono">
+            <span className="text-2xs text-muted-foreground font-mono">
               {runningServicesCount} rodando • {runningProcessesCount} travas
             </span>
             <div className="flex items-center space-x-1.5">
@@ -124,7 +124,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     key={p.name}
                     className="p-1.5 bg-card/40 border border-border/40 rounded flex items-center justify-between text-xs"
                   >
-                    <span className="text-[11px] truncate text-foreground">{p.displayName || p.name}</span>
+                    <span className="text-2xs truncate text-foreground">{p.displayName || p.name}</span>
                     {p.isRunning ? (
                       <button
                         onClick={() => onKillProcess(p.name)}

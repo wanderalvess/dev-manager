@@ -21,7 +21,7 @@ export const WhatsNewVersionDropdown: React.FC<WhatsNewVersionDropdownProps> = (
   onSelectVersion,
   onClose
 }) => (
-  <div className="absolute top-full mt-1.5 left-0 w-72 bg-card border border-border/90 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150 flex flex-col">
+  <div className="absolute top-full mt-1.5 left-0 w-72 bg-card border border-border/90 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150 flex flex-col">
     {/* Campo de Busca Rápida no Dropdown */}
     <div className="relative mb-1.5">
       <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -30,7 +30,7 @@ export const WhatsNewVersionDropdown: React.FC<WhatsNewVersionDropdownProps> = (
         placeholder="Buscar versão (ex: 1.22)..."
         value={dropdownSearch}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full bg-muted/50 border border-border/80 rounded-xl pl-7 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+        className="w-full bg-muted/50 border border-border/80 rounded-xl pl-7 pr-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-primary"
         autoFocus
       />
     </div>

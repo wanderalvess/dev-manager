@@ -3,6 +3,7 @@ import { Check, Copy, Terminal, X } from 'lucide-react';
 import type { ApmReceiverPortChangeResult, ObservabilityOverview } from '../../../../shared/types';
 import { DEFAULT_APM_SERVICE_NAME } from '../../../../shared/types';
 import type { buildApmSetupSnippets } from '../../utils/apmUiUtils';
+import { Modal } from '../ui/Modal';
 
 export interface ApmSetupModalProps {
   isOpen: boolean;
@@ -47,8 +48,15 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
 
   if (!isOpen) return null;
   return (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden font-sans">
+        <Modal
+          open
+          onClose={onClose}
+          bare
+          panelClassName="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden font-sans"
+          closeOnBackdrop={false}
+          closeOnEscape={false}
+          ariaLabel="Como Conectar no Receptor OpenTelemetry (APM)"
+        >
             {/* Modal Header */}
             <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-muted/20">
               <div className="flex items-center gap-2">
@@ -123,11 +131,11 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                   type="button"
                   onClick={applyReceiverPort}
                   disabled={isChangingPort}
-                  className="h-7 px-3 rounded bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-wait cursor-pointer transition"
+                  className="h-7 px-3 rounded bg-primary text-primary-foreground text-2xs font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-wait cursor-pointer transition"
                 >
                   {isChangingPort ? 'Aplicando…' : 'Aplicar'}
                 </button>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   O Karaf iniciado pelo Hub Manager passa a exportar para esta porta no próximo start.
                 </span>
               </div>
@@ -152,11 +160,11 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                   type="button"
                   onClick={() => onApplyServiceName(serviceNameDraft)}
                   disabled={isSavingServiceName}
-                  className="h-7 px-3 rounded bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-wait cursor-pointer transition"
+                  className="h-7 px-3 rounded bg-primary text-primary-foreground text-2xs font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-wait cursor-pointer transition"
                 >
                   {isSavingServiceName ? 'Salvando…' : 'Aplicar'}
                 </button>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   Identifica esta aplicação no APM (<code className="font-mono">otel.service.name</code>); use o nome do seu sistema.
                 </span>
               </div>
@@ -199,7 +207,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                     Coloque o arquivo <code className="text-foreground font-mono">opentelemetry-javaagent.jar</code> dentro da pasta <code className="text-foreground font-mono">bin</code> do seu Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> acima — o Hub Manager passa a anexar o agente sozinho ao iniciar pelo Cockpit. Para scripts externos (<code className="text-foreground font-mono">winthor.bat</code>), use:
                   </p>
                   <div className="relative">
-                    <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-emerald-400 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                    <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-emerald-400 text-2xs overflow-x-auto whitespace-pre-wrap leading-relaxed">
                       {setupSnippets.karafDisplay}
                     </pre>
                     <button
@@ -221,7 +229,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                     Teste o envio de um span diretamente via linha de comando:
                   </p>
                   <div className="relative">
-                    <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-sky-300 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                    <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-sky-300 text-2xs overflow-x-auto whitespace-pre-wrap leading-relaxed">
                       {setupSnippets.curlDisplay}
                     </pre>
                     <button
@@ -242,7 +250,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                   <p className="text-muted-foreground font-sans text-xs">
                     Com a biblioteca oficial <code className="text-foreground">@opentelemetry/sdk-node</code>:
                   </p>
-                  <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-amber-300 text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
+                  <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-amber-300 text-2xs overflow-x-auto whitespace-pre-wrap leading-relaxed">
                     {setupSnippets.nodeDisplay}
                   </pre>
                 </div>
@@ -259,7 +267,6 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                 Entendi
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
   );
 };

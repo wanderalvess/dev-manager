@@ -38,7 +38,7 @@ export const QaTemplateStepList: React.FC<QaTemplateStepListProps> = ({
           onClick={() => onSelect(idx)}
           className={`p-2.5 rounded-md text-xs cursor-pointer border transition-colors flex items-center justify-between ${
             activeStepIndex === idx
-              ? 'bg-card border-primary/40 border-l-2 border-l-primary text-foreground font-semibold shadow-xs'
+              ? 'bg-card border-primary/40 border-l-2 border-l-primary text-foreground font-semibold shadow-2xs'
               : 'bg-card/50 border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
@@ -56,7 +56,7 @@ export const QaTemplateStepList: React.FC<QaTemplateStepListProps> = ({
               onRemove(idx);
             }}
             className="text-muted-foreground hover:text-red-500 p-1 cursor-pointer transition-colors"
-            title="Excluir passo"
+            title="Excluir passo" aria-label="Excluir passo"
           >
             <Trash2 className="w-3 h-3" />
           </button>

@@ -44,7 +44,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           {connectionHealth && (
             <button
               onClick={onToggleConfig}
-              className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-mono rounded border transition-colors hover:border-border"
+              className="flex items-center gap-1.5 px-2 py-0.5 text-2xs font-mono rounded border transition-colors hover:border-border"
               title="Clique para gerenciar a URL de conexão"
             >
               <span
@@ -70,7 +70,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           onClick={() => onChangeExecuteVia('karaf_cli')}
           className={`px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
             executeVia === 'karaf_cli'
-              ? 'bg-card text-foreground shadow-xs font-semibold'
+              ? 'bg-card text-foreground shadow-2xs font-semibold'
               : 'text-muted-foreground hover:text-foreground'
           }`}
           title="Executa via Apache Karaf CLI (client.bat) com comandos OSGi em tempo real"
@@ -82,7 +82,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           onClick={() => onChangeExecuteVia('api')}
           className={`px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
             executeVia === 'api'
-              ? 'bg-card text-foreground shadow-xs font-semibold'
+              ? 'bg-card text-foreground shadow-2xs font-semibold'
               : 'text-muted-foreground hover:text-foreground'
           }`}
           title="Executa via API REST do WTA (/winthor/ferramenta/servidor/v1/sistema/instala-com-dependencias)"
@@ -126,7 +126,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
       <button
         onClick={onClose}
         className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors ml-1"
-        title="Fechar (Esc)"
+        title="Fechar (Esc)" aria-label="Fechar (Esc)"
       >
         <X className="w-4 h-4" />
       </button>

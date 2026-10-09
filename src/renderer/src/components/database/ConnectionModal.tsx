@@ -10,6 +10,7 @@ import { DatabaseConnectionConfig, DatabaseType, OracleTnsEntry } from '../../..
 import { OracleTnsSelector } from './OracleTnsSelector';
 import { OracleThickClientSection } from './OracleThickClientSection';
 import { ConnectionCredentialsSection } from './ConnectionCredentialsSection';
+import { Modal } from '../ui/Modal';
 
 export interface ConnectionModalProps {
   isOpen: boolean;
@@ -50,8 +51,14 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col max-h-[90vh]">
+    <Modal
+      open
+      onClose={onClose}
+      bare
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col max-h-[90vh]"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
+    >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
           <div className="flex items-center space-x-2">
             <Database className="w-4 h-4 text-primary" />
@@ -105,7 +112,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               value={editingConn.name || ''}
               onChange={(e) => setEditingConn({ ...editingConn, name: e.target.value })}
               placeholder="Ex: Oracle Produção"
-              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary"
+              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary"
             />
           </div>
 
@@ -127,7 +134,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                 value={editingConn.host || ''}
                 onChange={(e) => setEditingConn({ ...editingConn, host: e.target.value })}
                 placeholder="localhost ou IP do servidor"
-                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono"
               />
             </div>
             <div>
@@ -137,7 +144,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
                 required
                 value={editingConn.port || ''}
                 onChange={(e) => setEditingConn({ ...editingConn, port: Number(e.target.value) })}
-                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+                className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono"
               />
             </div>
           </div>
@@ -153,7 +160,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               value={editingConn.database || ''}
               onChange={(e) => setEditingConn({ ...editingConn, database: e.target.value })}
               placeholder={editingConn.type === 'oracle' ? 'Ex: XEPDB1 ou ORCL' : 'Ex: dev_db'}
-              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-none focus:border-primary font-mono"
+              className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono"
             />
           </div>
 
@@ -229,7 +236,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
           {/* Feedback de Teste de Conexão */}
           {testResult && (
             <div
-              className={`p-3 rounded-xl text-[11px] border ${
+              className={`p-3 rounded-xl text-2xs border ${
                 testResult.success
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
                   : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
@@ -277,14 +284,13 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition shadow-sm cursor-pointer"
+                className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition shadow-xs cursor-pointer"
               >
                 Salvar
               </button>
             </div>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };

@@ -73,7 +73,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
             value={objectType}
             onChange={(e) => onObjectTypeChange(e.target.value as ExplorerObjectType)}
             aria-label="Tipo de objeto"
-            className="min-w-0 bg-transparent text-[11px] font-bold text-muted-foreground uppercase focus:outline-none cursor-pointer"
+            className="min-w-0 bg-transparent text-2xs font-bold text-muted-foreground uppercase focus:outline-hidden cursor-pointer"
           >
             {EXPLORER_TYPE_OPTIONS.map((o) => {
               const n = countOf(o.type);
@@ -89,7 +89,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
         <button
           onClick={showingTables ? onFetchTables : onFetchObjects}
           disabled={(showingTables ? isLoadingTables : isLoadingObjects) || !activeConnection}
-          title={showingTables ? 'Recarregar lista de tabelas' : `Recarregar ${typeLabel.toLowerCase()}`}
+          title={showingTables ? 'Recarregar lista de tabelas' : `Recarregar ${typeLabel.toLowerCase()}`} aria-label={showingTables ? 'Recarregar lista de tabelas' : `Recarregar ${typeLabel.toLowerCase()}`}
           className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition disabled:opacity-50 cursor-pointer"
         >
           <RotateCw className={`w-3 h-3 ${(showingTables ? isLoadingTables : isLoadingObjects) ? 'animate-spin text-primary' : ''}`} />
@@ -105,19 +105,19 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
             onChange={(e) => setTableFilter(e.target.value)}
             placeholder={`Filtrar ${typeLabel.toLowerCase()}...`}
             aria-label={`Filtrar ${typeLabel.toLowerCase()}`}
-            className="w-full bg-background border border-border/70 rounded-md pl-7 pr-2 py-1 text-xs focus:outline-none focus:border-primary text-foreground"
+            className="w-full bg-background border border-border/70 rounded-md pl-7 pr-2 py-1 text-xs focus:outline-hidden focus:border-primary text-foreground"
           />
         </div>
       </div>
 
-      <div onScroll={handleTablesScroll} className="flex-1 overflow-y-auto p-1 space-y-0.5 font-mono text-[11px]">
+      <div onScroll={handleTablesScroll} className="flex-1 overflow-y-auto p-1 space-y-0.5 font-mono text-2xs">
         {!showingTables ? (
           isLoadingObjects ? (
             <div className="p-4 text-center text-xs text-primary flex items-center justify-center gap-1.5">
               <RotateCw className="w-3 h-3 animate-spin" /> Carregando {typeLabel.toLowerCase()}...
             </div>
           ) : objectsOfType.length === 0 ? (
-            <div className="p-4 text-center text-[11px] text-muted-foreground">
+            <div className="p-4 text-center text-2xs text-muted-foreground">
               {tableFilter ? 'Nada encontrado com esse filtro.' : `Nenhum item em ${typeLabel.toLowerCase()}.`}
             </div>
           ) : (
@@ -159,10 +159,10 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
               </div>
             ) : (
               <div>
-                <p className="text-[11px]">Nenhuma tabela listada.</p>
+                <p className="text-2xs">Nenhuma tabela listada.</p>
                 <button
                   onClick={onFetchTables}
-                  className="mt-1.5 text-[11px] text-primary font-bold hover:underline cursor-pointer"
+                  className="mt-1.5 text-2xs text-primary font-bold hover:underline cursor-pointer"
                 >
                   Buscar Tabelas
                 </button>

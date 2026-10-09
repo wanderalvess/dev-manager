@@ -18,7 +18,7 @@ export const WslSnapshotsHeader: React.FC<WslSnapshotsHeaderProps> = ({ onClose 
             WSL2 Backup & Restore
           </span>
         </h3>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Importação de distros a partir de snapshots .tar (ex: ubuntu2604-winthor-26-07-22.tar) e exportação de backups
         </p>
       </div>

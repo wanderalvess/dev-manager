@@ -57,7 +57,7 @@ const NodeRow: React.FC<{ node: PlanNode; expanded: boolean; onToggle: () => voi
           ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-3 shrink-0 font-mono text-[11px] text-muted-foreground">
+        <div className="hidden md:flex items-center gap-3 shrink-0 font-mono text-2xs text-muted-foreground">
           {node.rows && <span title="Linhas estimadas">{node.rows} lin</span>}
           {node.time && <span title="Tempo">{node.time}</span>}
         </div>
@@ -74,9 +74,9 @@ const NodeRow: React.FC<{ node: PlanNode; expanded: boolean; onToggle: () => voi
       </div>
 
       {expanded && hasDetails && (
-        <div className="pb-1.5 text-[11px] font-mono text-muted-foreground space-y-0.5" style={{ paddingLeft: `${34 + node.depth * 18}px` }}>
+        <div className="pb-1.5 text-2xs font-mono text-muted-foreground space-y-0.5" style={{ paddingLeft: `${34 + node.depth * 18}px` }}>
           {node.details.map((d, i) => (
-            <div key={i} className="break-words pr-3">
+            <div key={i} className="wrap-break-word pr-3">
               {d}
             </div>
           ))}

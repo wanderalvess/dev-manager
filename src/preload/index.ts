@@ -435,11 +435,6 @@ const electronAPI = {
     ipcRenderer.invoke('llm:chat', request),
   askDocsWithAi: (request: LlmRagQueryRequest): Promise<LlmRagQueryResponse> =>
     ipcRenderer.invoke('llm:ask-with-docs', request),
-  // Aliases de compatibilidade
-  askLlm: (request: LlmRagQueryRequest, providerConfig?: LlmProviderConfig): Promise<LlmRagQueryResponse> =>
-    ipcRenderer.invoke('llm:ask-with-docs', request, providerConfig),
-  chatLlm: (request: LlmChatRequest, providerConfig?: LlmProviderConfig): Promise<LlmChatResponse> =>
-    ipcRenderer.invoke('llm:chat', request, providerConfig),
   openDocFile: (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> =>
     ipcRenderer.invoke('docs:open-file', filePath, mode),
   readDocContent: (filePath: string): Promise<string | null> =>
@@ -682,26 +677,6 @@ const electronAPI = {
     };
   },
 
-  // Métodos genéricos de containers
-  getContainerStatus: (): Promise<DockerDaemonStatus> => ipcRenderer.invoke('container:get-status'),
-  listContainers: (): Promise<DockerContainerInfo[]> => ipcRenderer.invoke('container:list-containers'),
-  startContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:start', containerId),
-  stopContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:stop', containerId),
-  restartContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:restart', containerId),
-  pauseContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:pause', containerId),
-  unpauseContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:unpause', containerId),
-  inspectContainer: (containerId: string): Promise<DockerContainerInspect | null> =>
-    ipcRenderer.invoke('container:inspect', containerId),
-  pruneContainers: (): Promise<{ success: boolean; output: string }> =>
-    ipcRenderer.invoke('container:prune'),
-  getContainerLogs: (containerId: string, lines?: number): Promise<string> =>
-    ipcRenderer.invoke('container:logs', containerId, lines),
-  removeContainer: (containerId: string): Promise<boolean> => ipcRenderer.invoke('container:remove', containerId),
-  getContainerStats: (): Promise<DockerContainerStats[]> =>
-    ipcRenderer.invoke('container:get-stats'),
-  openContainerTerminal: (containerId: string, shell?: string): Promise<boolean> =>
-    ipcRenderer.invoke('container:open-terminal', containerId, shell),
-
   // Rede & Detecção de IPs (Local e WSL)
   getNetworkIps: (): Promise<NetworkIpInfo> => ipcRenderer.invoke('network:get-ips'),
   checkHttpHealth: (url: string, timeoutMs?: number): Promise<HttpHealthResult> =>
@@ -757,8 +732,6 @@ const electronAPI = {
     ipcRenderer.invoke('apm:get-receiver-status'),
   clearApmTraces: (): Promise<{ success: boolean }> =>
     ipcRenderer.invoke('apm:clear'),
-  generateApmDemo: (): Promise<{ generatedSpans: number; generatedTraces: number }> =>
-    ipcRenderer.invoke('apm:generate-demo'),
   changeApmReceiverPort: (port: number): Promise<ApmReceiverPortChangeResult> =>
     ipcRenderer.invoke('apm:change-receiver-port', port),
   onApmNewTrace: (callback: (trace: TraceSummary) => void) => {

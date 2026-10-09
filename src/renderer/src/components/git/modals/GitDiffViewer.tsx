@@ -30,7 +30,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ isLoading, error, 
         <p>Nenhuma alteração detectada para este arquivo.</p>
       </div>
     ) : (
-      <div className="flex-1 overflow-auto font-mono text-[12px] leading-5 select-text">
+      <div className="flex-1 overflow-auto font-mono text-xs leading-5 select-text">
         {hiddenCount > 0 && (
           <div className="m-2 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-sans text-xs">
             Diff extenso: exibindo as primeiras {MAX_RENDERED_DIFF_LINES} linhas ({hiddenCount} ocultas).
@@ -42,7 +42,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ isLoading, error, 
             const { rowClass, gutterClass } = classifyDiffLine(line);
             return (
               <div key={idx} className={`flex items-start ${rowClass} ${gutterClass} px-2 py-0.2`}>
-                <span className="w-10 shrink-0 text-right pr-3 select-none text-[11px] text-muted-foreground/40 font-mono">
+                <span className="w-10 shrink-0 text-right pr-3 select-none text-2xs text-muted-foreground/40 font-mono">
                   {idx + 1}
                 </span>
                 <span className="whitespace-pre overflow-x-auto flex-1 font-mono">{line || ' '}</span>

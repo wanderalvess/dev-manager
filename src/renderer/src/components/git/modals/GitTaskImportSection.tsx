@@ -33,7 +33,7 @@ export const GitTaskImportSection: React.FC<GitTaskImportSectionProps> = ({
         value={rawInput}
         onChange={(e) => onRawInputChange(e.target.value)}
         placeholder="URL do Azure/Jira ou 'SRE-1234 Ajustes no faturamento'"
-        className="flex-1 bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:border-primary placeholder:text-muted-foreground/50"
+        className="flex-1 bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary placeholder:text-muted-foreground/50"
       />
       <button
         type="button"

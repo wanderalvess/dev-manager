@@ -35,7 +35,7 @@ export const OracleOutputTerminal: React.FC<OracleOutputTerminalProps> = ({
         </span>
       )}
     </div>
-    <pre className="bg-[#090D14] p-4 text-[11px] font-mono text-emerald-400 overflow-auto max-h-72 whitespace-pre-wrap leading-relaxed select-text [scrollbar-width:thin]">
+    <pre className="bg-[#090D14] p-4 text-2xs font-mono text-emerald-400 overflow-auto max-h-72 whitespace-pre-wrap leading-relaxed select-text scrollbar-thin">
       {output}
     </pre>
   </div>

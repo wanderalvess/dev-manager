@@ -41,7 +41,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
             }
           }}
           placeholder="Buscar em Configurações (ex: senha, porta, cookie, backup, api key)..."
-          className="w-full bg-card border border-border rounded-xl pl-9 pr-9 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary shadow-sm"
+          className="w-full bg-card border border-border rounded-xl pl-9 pr-9 py-2.5 text-xs text-foreground focus:outline-hidden focus:border-primary shadow-xs"
         />
         {query && (
           <button
@@ -51,7 +51,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
               onOpenChange(false);
             }}
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            title="Limpar busca"
+            title="Limpar busca" aria-label="Limpar busca"
           >
             <X className="w-3.5 h-3.5" />
           </button>

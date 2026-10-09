@@ -80,7 +80,7 @@ export const QuickLauncherList: React.FC<QuickLauncherListProps> = ({
                 </div>
                 {item.subtitle && (
                   <p
-                    className={`text-[11px] truncate ${
+                    className={`text-2xs truncate ${
                       isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
                     }`}
                   >

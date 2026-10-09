@@ -345,7 +345,8 @@ describe('ApmService', () => {
     const err = await apmService.ingestOtlpBody(bomb, 'application/json', 'gzip').catch((e) => e);
     expect(err).toBeInstanceOf(ApmIngestError);
     expect(err.statusCode).toBe(413);
-  });
+    // Comprime e descomprime dezenas de MB: com a suíte inteira rodando em paralelo estourava os 5 s padrão
+  }, 30_000);
 
   describe('receptor HTTP (porta dinâmica)', () => {
     let service: ApmService;
@@ -421,10 +422,8 @@ describe('ApmService', () => {
     expect(tinyService.getReceiverStatus().maxBufferSize).toBe(500);
   });
 
-  it('gera dados simulados de demonstração e limpa buffer com clear', () => {
-    const demo = apmService.generateDemoData();
-    expect(demo.generatedTraces).toBeGreaterThan(0);
-    expect(demo.generatedSpans).toBeGreaterThan(0);
+  it('limpa o buffer com clear', () => {
+    apmService.ingestSpans([makeSpan({ traceId: 't-clear', spanId: 's1', parentSpanId: undefined })]);
 
     const overview = apmService.getOverview();
     expect(overview.totalTraces).toBeGreaterThan(0);

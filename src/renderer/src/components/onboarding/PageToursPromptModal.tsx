@@ -3,6 +3,7 @@ import { Compass, CheckCircle2, ArrowRight } from 'lucide-react';
 import { AppLogo } from '../AppLogo';
 import { PAGE_TOURS_PREF_KEY } from './usePageTour';
 import { showToast } from '../ToastHost';
+import { Modal } from '../ui/Modal';
 
 interface PageToursPromptModalProps {
   isOpen: boolean;
@@ -10,8 +11,6 @@ interface PageToursPromptModalProps {
 }
 
 export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOpen, onSelectChoice }) => {
-  if (!isOpen) return null;
-
   const handleChoose = (enabled: boolean) => {
     try {
       window.localStorage.setItem(PAGE_TOURS_PREF_KEY, enabled ? 'true' : 'false');
@@ -29,12 +28,14 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[10001] bg-black/75 backdrop-blur-xs flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
+    <Modal
+      open={isOpen}
+      onClose={() => undefined}
+      dismissible={false}
+      bare
+      zIndexClass="z-10001"
+      panelClassName="bg-card text-card-foreground border border-border/80 rounded-xl shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200"
     >
-      <div className="bg-card text-card-foreground border border-border/80 rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center space-x-3">
           <AppLogo size="md" />
           <div>
@@ -61,14 +62,14 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
             className="w-full text-left p-3.5 rounded-xl border border-primary/40 hover:border-primary bg-primary/5 hover:bg-primary/10 transition flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center space-x-3 min-w-0 pr-2">
-              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-2xs">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
                   Sim, ver tutoriais em cada tela
                 </div>
-                <div className="text-[11px] text-muted-foreground truncate">
+                <div className="text-2xs text-muted-foreground truncate">
                   Aparecerá automaticamente na 1ª visita a cada módulo
                 </div>
               </div>
@@ -90,14 +91,13 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
                 <div className="text-xs font-semibold text-foreground">
                   Pular e explorar sozinho
                 </div>
-                <div className="text-[11px] text-muted-foreground truncate">
+                <div className="text-2xs text-muted-foreground truncate">
                   Sem interrupções; você pode rever na Central de Ajuda
                 </div>
               </div>
             </div>
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

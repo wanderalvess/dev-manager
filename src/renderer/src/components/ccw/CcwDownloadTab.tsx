@@ -49,7 +49,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
           placeholder="Ex: 132, PCSIS132, PC1406, PCINFTAB"
           value={routineInput}
           onChange={(e) => onRoutineInputChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
         {normalized.baseName && (
           <p className="text-2xs text-muted-foreground font-mono">
@@ -66,7 +66,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
         <select
           value={winthorVersion}
           onChange={(e) => onWinthorVersionChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs cursor-pointer"
+          className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs cursor-pointer"
         >
           <option value="30">30 (Padrão)</option>
           <option value="31">31</option>
@@ -86,7 +86,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
           placeholder="Auto-detectar (ex: MOD-001, Raiz)"
           value={targetModule}
           onChange={(e) => onTargetModuleChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
         <p className="text-2xs text-muted-foreground">
           Se vazio, o Hub Manager detecta automaticamente se a rotina já existe em alguma subpasta ou calcula pelo código.
@@ -102,7 +102,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
           placeholder="Deixe em branco para usar URL oficial da CCW"
           value={customDownloadUrl}
           onChange={(e) => onCustomDownloadUrlChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
         />
         <p className="text-2xs text-muted-foreground truncate" title={estimatedDownloadUrl}>
           URL padrão: {estimatedDownloadUrl || 'https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/...'}
@@ -125,13 +125,13 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
     </div>
 
     <div className="pt-3 border-t border-border/80 flex items-center justify-between gap-3">
-      <span className="text-[11px] text-muted-foreground font-mono">
+      <span className="text-2xs text-muted-foreground font-mono">
         Destino: {appPath || DEFAULT_CCW_APP_PATH}
       </span>
       <button
         type="submit"
         disabled={isSubmitting || !routineInput.trim()}
-        className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+        className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
       >
         {isSubmitting ? (
           <>

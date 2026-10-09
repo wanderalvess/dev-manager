@@ -35,7 +35,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
   onCopy
 }) => (
   <div className="space-y-4">
-    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div className="flex items-start gap-3">
         <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
           <FileText className="w-4 h-4" />
@@ -61,7 +61,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-[11px] font-semibold text-muted-foreground block">Arquivo Dump (.dmp)</label>
+          <label className="text-2xs font-semibold text-muted-foreground block">Arquivo Dump (.dmp)</label>
           <button
             type="button"
             onClick={onRefreshDumps}
@@ -69,7 +69,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
             className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer transition"
             title="Atualizar lista de dumps encontrados em /opt/dumps"
           >
-            <RotateCw className={`w-2.5 h-2.5 ${isLoadingDumps ? 'animate-spin text-primary' : ''}`} />
+            <RotateCw className={`w-3 h-3 ${isLoadingDumps ? 'animate-spin text-primary' : ''}`} />
             <span>{isLoadingDumps ? 'Buscando...' : 'Atualizar Dumps'}</span>
           </button>
         </div>
@@ -81,7 +81,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
               onChange={(e) => {
                 if (e.target.value) dp.setDumpfile(e.target.value);
               }}
-              className="w-full bg-muted/40 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full bg-muted/40 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
             >
               <option value="" disabled>Selecionar dump de /opt/dumps ({availableDumps.length} detectados)...</option>
               {availableDumps.map((d) => (
@@ -98,7 +98,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           value={dp.dumpfile}
           onChange={(e) => dp.setDumpfile(e.target.value)}
           placeholder="ex: backup.dmp"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
         <p className="text-2xs text-muted-foreground mt-1">
           Pasta WSL: <code className="font-mono text-foreground font-semibold">/opt/dumps</code> ↔ Container: <code className="font-mono text-foreground">/home/oracle/dumps</code>.
@@ -106,7 +106,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
       </div>
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-[11px] font-semibold text-muted-foreground block">CODCLIPC (Cliente WinThor)</label>
+          <label className="text-2xs font-semibold text-muted-foreground block">CODCLIPC (Cliente WinThor)</label>
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -131,45 +131,45 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           value={dp.codclipc}
           onChange={(e) => dp.setCodclipc(e.target.value)}
           placeholder="-999"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Schema de Origem</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Schema de Origem</label>
         <input
           type="text"
           value={dp.schemaOrig}
           onChange={(e) => dp.setSchemaOrig(e.target.value)}
           placeholder="LOCAL"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground uppercase focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Schema de Destino (opcional - Remap)</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Schema de Destino (opcional - Remap)</label>
         <input
           type="text"
           value={dp.schemaDest}
           onChange={(e) => dp.setSchemaDest(e.target.value)}
           placeholder="Vazio = substitui schema de origem"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground uppercase focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Usuário DBA</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Usuário DBA</label>
         <input
           type="text"
           value={dp.user}
           onChange={(e) => dp.setUser(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Senha</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Senha</label>
         <input
           type="password"
           value={dp.pass}
           onChange={(e) => dp.setPass(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
         />
       </div>
     </div>
@@ -178,7 +178,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
       <button
         onClick={dp.run}
         disabled={dp.isRunning || !dp.dumpfile || !dp.schemaOrig}
-        className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {dp.isRunning ? (
           <RotateCw className="w-4 h-4 animate-spin" />

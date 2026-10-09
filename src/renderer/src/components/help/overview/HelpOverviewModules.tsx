@@ -8,7 +8,7 @@ interface HelpOverviewModulesProps {
 }
 
 export const HelpOverviewModules: React.FC<HelpOverviewModulesProps> = ({ onNavigate }) => (
-  <div className="cockpit-panel rounded-2xl p-5 border border-border shadow-xl space-y-3.5">
+  <div className="cockpit-panel rounded-xl p-5 border border-border shadow-xl space-y-3.5">
     <HelpOverviewSectionHeader
       icon={Boxes}
       title="Ecossistema & Módulos do Sistema"
@@ -22,7 +22,7 @@ export const HelpOverviewModules: React.FC<HelpOverviewModulesProps> = ({ onNavi
           <div
             key={mod.navTarget}
             onClick={() => onNavigate?.(mod.navTarget)}
-            className={`p-3.5 rounded-xl bg-card/60 border border-border ${mod.hoverBorderClass} transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-xs`}
+            className={`p-3 rounded-xl bg-card/60 border border-border ${mod.hoverBorderClass} transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-2xs`}
           >
             <div className="space-y-1 min-w-0">
               <div className="flex items-center gap-1.5">
@@ -31,7 +31,7 @@ export const HelpOverviewModules: React.FC<HelpOverviewModulesProps> = ({ onNavi
                   {mod.title}
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground line-clamp-2">
+              <p className="text-2xs text-muted-foreground line-clamp-2">
                 {mod.description}
               </p>
             </div>

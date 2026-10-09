@@ -69,14 +69,14 @@ export const QaRunnerResultFilters: React.FC<QaRunnerResultFiltersProps> = ({
             value={resultSearch}
             onChange={(e) => onChangeSearch(e.target.value)}
             placeholder="Filtrar por tabela ou coluna..."
-            className="bg-background border border-border rounded-md pl-8 pr-2.5 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-48 font-mono"
+            className="bg-background border border-border rounded-md pl-8 pr-2.5 py-1 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary w-48 font-mono"
           />
         </div>
 
         <button
           type="button"
           onClick={onExpandAll}
-          className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          className="text-2xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
         >
           Expandir
         </button>
@@ -84,7 +84,7 @@ export const QaRunnerResultFilters: React.FC<QaRunnerResultFiltersProps> = ({
         <button
           type="button"
           onClick={onCollapseAll}
-          className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          className="text-2xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
         >
           Recolher
         </button>

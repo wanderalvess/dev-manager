@@ -45,7 +45,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   return (
-    <div className="mx-4 mt-3 p-3 bg-card/75 border border-border/80 rounded-2xl shadow-xs transition-all">
+    <div className="mx-4 mt-3 p-3 bg-card/75 border border-border/80 rounded-xl shadow-2xs transition-all">
       {/* Topo do Painel de Grupos */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">
@@ -59,7 +59,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                 {environments.length} {environments.length === 1 ? 'grupo' : 'grupos'}
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Agrupe containers relacionados para subir ou parar todos em sequência com um único clique
             </p>
           </div>
@@ -82,7 +82,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-              title={isExpanded ? 'Recolher painel de grupos' : 'Expandir painel de grupos'}
+              title={isExpanded ? 'Recolher painel de grupos' : 'Expandir painel de grupos'} aria-label={isExpanded ? 'Recolher painel de grupos' : 'Expandir painel de grupos'}
             >
               {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
@@ -97,14 +97,14 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
             <div className="py-4 px-3 border border-dashed border-border/70 rounded-xl bg-muted/20 text-center flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-left">
                 <p className="text-xs font-semibold text-foreground">Nenhum grupo configurado</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-2xs text-muted-foreground mt-0.5">
                   Organize seus containers em grupos (ex: Microserviços, Stack Financeiro, Bancos) para subi-los juntos rapidamente.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onCreateGroup}
-                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold transition cursor-pointer shrink-0 shadow-xs hover:bg-primary/90"
+                className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold transition cursor-pointer shrink-0 shadow-2xs hover:bg-primary/90"
               >
                 + Criar Primeiro Grupo
               </button>
@@ -158,7 +158,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                                     ? 'bg-emerald-500 animate-pulse'
                                     : status.running > 0
                                     ? 'bg-amber-500'
-                                    : 'bg-zinc-400 dark:bg-zinc-600'
+                                    : 'bg-muted-foreground'
                                 }`}
                               />
                               <span>
@@ -178,7 +178,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                             type="button"
                             onClick={() => onEditGroup(env)}
                             disabled={sequenceProgress.running}
-                            title="Editar grupo (alterar containers, ordem ou delays)"
+                            title="Editar grupo (alterar containers, ordem ou delays)" aria-label="Editar grupo (alterar containers, ordem ou delays)"
                             className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer disabled:opacity-50"
                           >
                             <Pencil className="w-3 h-3" />
@@ -187,7 +187,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                             type="button"
                             onClick={() => onDeleteGroup(env)}
                             disabled={sequenceProgress.running}
-                            title="Excluir este grupo"
+                            title="Excluir este grupo" aria-label="Excluir este grupo"
                             className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer disabled:opacity-50"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -230,7 +230,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                         onClick={() => onStartGroup(env)}
                         disabled={sequenceProgress.running}
                         title={`Subir todos os containers de "${env.name}" em sequência`}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50 active:scale-98"
                       >
                         {isGroupRunningNow ? (
                           <RotateCw className="w-3 h-3 animate-spin" />
@@ -245,7 +245,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                         onClick={() => onStopGroup(env)}
                         disabled={sequenceProgress.running || status.running === 0}
                         title={`Parar todos os containers de "${env.name}"`}
-                        className="flex items-center justify-center gap-1 py-1.5 px-2.5 bg-card hover:bg-zinc-800 hover:text-white border border-border/80 rounded-lg text-xs font-semibold text-muted-foreground transition cursor-pointer disabled:opacity-40 active:scale-98"
+                        className="flex items-center justify-center gap-1 py-1.5 px-2.5 bg-card hover:bg-muted hover:text-foreground border border-border/80 rounded-lg text-xs font-semibold text-muted-foreground transition cursor-pointer disabled:opacity-50 active:scale-98"
                       >
                         <Square className="w-3 h-3" />
                         <span>Parar</span>
