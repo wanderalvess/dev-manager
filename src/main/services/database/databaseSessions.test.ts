@@ -213,6 +213,18 @@ describe('cancelamento e execução simultânea', () => {
     expect(manager.getState(s.sessionId).running).toBe(false);
   });
 
+  it('o estado devolvido pelo execute já vem com running=false (sucesso e erro)', async () => {
+    const h = oracleHandle();
+    h.conn.execute.mockResolvedValueOnce({ rows: [], metaData: [{ name: 'ID' }] }).mockRejectedValueOnce(new Error('ORA-00942'));
+    const { manager } = makeManager({ oracle: h });
+    const s = await manager.open(cfg('oracle'));
+    const ok = await manager.execute(s.sessionId, 'SELECT * FROM t');
+    expect(ok.session.running).toBe(false);
+    const bad = await manager.execute(s.sessionId, 'SELECT * FROM nope');
+    expect(bad.success).toBe(false);
+    expect(bad.session.running).toBe(false);
+  });
+
   it('cancelar sem consulta em andamento não faz nada', async () => {
     const h = oracleHandle();
     const { manager } = makeManager({ oracle: h });

@@ -16,7 +16,30 @@ e DBeaver (modo de transação auto/manual, padrão manual em conexões de produ
 | 4 Resultados | feito: exportar xlsx/csv-br/csv/json, carregar mais, edição em lote, plano em árvore (Oracle/PostgreSQL). Virtualização já existia. Pendente: ROWID para tabelas sem PK |
 | 5 Opcional | não iniciada |
 
-**Validação:** tudo testado com drivers simulados e na interface com API simulada. Falta validar contra Oracle, PostgreSQL e MySQL reais.
+**Validação:** drivers simulados e interface com API simulada, mais o roteiro real abaixo.
+
+### Validação real (2026-10-07)
+Roteiros opt-in (variáveis de ambiente, senha nunca em arquivo; só criam objetos `dm_validation_*`):
+`databaseReal.oracle|postgres|mysql.integration.test.ts`, contra containers Docker descartáveis.
+
+| Banco / versão | Resultado |
+|---|---|
+| Oracle Free 23ai (Thin) | 9/9 |
+| PostgreSQL 17, 16 e 10 | 10/10 em cada |
+| MySQL 8.4 e 5.7 | 8/8 em cada |
+
+Cobertura: a `truncated`, b modo manual (rollback, commit, commit implícito do DDL no Oracle/MySQL, DDL transacional no PG, voltar a auto-commit confirma), c cancelar, d PL/SQL / `DO $$` / `CREATE PROCEDURE`, e SAVEPOINT por comando (PG), f descrever tabela e DDL, g plano (árvore no Oracle/PG, texto no MySQL), h edição em lote em auto-commit e manual, i duas sessões independentes (no mesmo servidor).
+
+Correções feitas a partir da validação:
+- `executeInSession` devolvia `session.running = true` mesmo após terminar (estado montado antes do `finally`).
+- PostgreSQL: `onDelete` das FKs nunca era preenchido; agora sai da definição (`NO ACTION` por padrão).
+
+Compatibilidade de catálogo: PostgreSQL 10 (sem `prokind`/`indnkeyatts`) e MySQL 5.7 funcionaram sem mudanças em `databaseSchemaInfo.ts`.
+
+Notas:
+- Cancelar PL/SQL em `DBMS_SESSION.SLEEP` (Oracle Thin): `break()` retorna na hora, mas o servidor só devolve ORA-01013 quando o sleep termina. Observado atrás do NAT do Docker Desktop; provável perda do break fora de banda, não confirmado. SELECT pesado cancela em ~1,5 s. O teste c2 exige só que o erro chegue e a sessão siga utilizável.
+- MySQL: `KILL QUERY` em `SELECT SLEEP(60)` devolve 1 sem erro (comportamento do servidor); a sessão segue utilizável.
+- Não validado: Oracle 11g/12c (exige Thick + Instant Client), `DBMS_METADATA` sem permissão no schema de outro usuário, SSL/TLS, túnel SSH.
 
 ## Fase 0: bugs (antes de qualquer feature)
 | # | Problema | Correção |
