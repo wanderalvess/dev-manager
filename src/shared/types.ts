@@ -1435,12 +1435,6 @@ export interface WslActionResult {
   error?: string;
 }
 
-// Aliases semânticos para compatibilidade genérica de containers
-export type ContainerInfo = DockerContainerInfo;
-export type ContainerDaemonStatus = DockerDaemonStatus;
-export type ContainerStats = DockerContainerStats;
-export type ContainerInspect = DockerContainerInspect;
-
 export interface OracleMaintenanceResult {
   success: boolean;
   output: string;

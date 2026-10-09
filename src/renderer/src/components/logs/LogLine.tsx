@@ -1,5 +1,5 @@
 import React from 'react';
-import { analyzeLogLine } from '../../utils/logAnalyzerUtils';
+import { analyzeLogLine } from '../../../../shared/logAnalyzerUtils';
 import { getLogRowKind, isStackTraceLine, isSystemNoticeLine, escapeRegExp } from '../../utils/logsFilterUtils';
 
 export type LogFontSize = 'xs' | 'sm' | 'base';
@@ -17,7 +17,7 @@ interface LogLineProps {
 }
 
 const FONT_CLASSES: Record<LogFontSize, string> = {
-  xs: 'text-[11px] leading-[19px]',
+  xs: 'text-2xs leading-[19px]',
   sm: 'text-xs leading-[22px]',
   base: 'text-sm leading-[26px]'
 };

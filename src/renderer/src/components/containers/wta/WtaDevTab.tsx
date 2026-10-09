@@ -9,7 +9,7 @@ interface WtaDevTabProps {
 
 export const WtaDevTab: React.FC<WtaDevTabProps> = ({ copiedKey, onCopy }) => (
   <div className="space-y-4">
-    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3.5 flex items-start gap-3">
+    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 flex items-start gap-3">
       <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
         <HardDrive className="w-4 h-4" />
       </div>
@@ -21,7 +21,7 @@ export const WtaDevTab: React.FC<WtaDevTabProps> = ({ copiedKey, onCopy }) => (
       </div>
     </div>
 
-    <div className="p-3.5 bg-card border border-border/80 rounded-xl space-y-2">
+    <div className="p-3 bg-card border border-border/80 rounded-xl space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-foreground">Variáveis do arquivo wta.env (Modelo Oficial)</span>
         <button

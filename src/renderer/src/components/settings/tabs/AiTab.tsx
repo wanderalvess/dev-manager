@@ -45,7 +45,7 @@ export const AiTab: React.FC<AiTabProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-ai">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
-        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border bg-card">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border bg-card">
           <AiTabHeader
             activeProvider={findActiveLlmProvider(settings.llmProviders, settings.activeLlmProviderId)}
             onNewProvider={() => setEditingLlmProvider(createNewLlmProviderDraft(Date.now()))}

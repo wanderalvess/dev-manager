@@ -31,10 +31,6 @@ export function registerApmHandlers(ctx: IpcContext): void {
     return { success: true };
   });
 
-  ipcMain.handle('apm:generate-demo', async () => {
-    return apmService.generateDemoData();
-  });
-
   ipcMain.handle('apm:change-receiver-port', async (_, port: number) => {
     return apmService.changeReceiverPort(port);
   });

@@ -42,7 +42,7 @@ export const QaRunnerIdleState: React.FC<QaRunnerIdleStateProps> = ({
           type="button"
           onClick={onRun}
           disabled={!canRun}
-          className="w-full py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-40"
+          className="w-full py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
           <span>Executar Bateria de Testes</span>

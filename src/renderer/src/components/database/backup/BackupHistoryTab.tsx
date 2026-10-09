@@ -21,7 +21,7 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
   onRefresh
 }) => (
   <div className="space-y-3 animate-fade-in">
-    <div className="flex items-center justify-between p-3.5 bg-muted/40 border border-border/70 rounded-xl">
+    <div className="flex items-center justify-between p-3 bg-muted/40 border border-border/70 rounded-xl">
       <span className="font-bold text-foreground text-xs">Histórico de Execuções</span>
       <div className="flex items-center gap-2">
         <button
@@ -39,7 +39,7 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
           onClick={onRefresh}
           disabled={isLoadingBackupHistory}
           className="p-1.5 hover:text-foreground text-muted-foreground rounded-lg hover:bg-muted transition disabled:opacity-50 cursor-pointer"
-          title="Recarregar histórico"
+          title="Recarregar histórico" aria-label="Recarregar histórico"
         >
           <RotateCw className={`w-3.5 h-3.5 ${isLoadingBackupHistory ? 'animate-spin text-primary' : ''}`} />
         </button>
@@ -50,7 +50,7 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
       <div className="text-center py-10 text-muted-foreground bg-muted/20 border border-border/60 rounded-xl space-y-1">
         <History className="w-8 h-8 mx-auto opacity-40 text-muted-foreground mb-2" />
         <p className="font-semibold text-xs text-foreground">Nenhuma execução registrada</p>
-        <p className="text-[11px]">As rotinas manuais ou agendadas serão registradas aqui.</p>
+        <p className="text-2xs">As rotinas manuais ou agendadas serão registradas aqui.</p>
       </div>
     ) : (
       <div className="space-y-2 max-h-[50vh] overflow-y-auto">
@@ -74,12 +74,12 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
                 </span>
               </span>
 
-              <span className="text-[11px] text-muted-foreground font-mono">
+              <span className="text-2xs text-muted-foreground font-mono">
                 {new Date(h.startedAt).toLocaleString()}
               </span>
             </div>
 
-            <p className="text-[11px] text-muted-foreground mt-1.5 truncate" title={h.message}>
+            <p className="text-2xs text-muted-foreground mt-1.5 truncate" title={h.message}>
               {h.message}
             </p>
 

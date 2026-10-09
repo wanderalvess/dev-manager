@@ -44,7 +44,7 @@ export const ContainerTopologyBus: React.FC<ContainerTopologyBusProps> = ({
   if (!showTopologyBus) return null;
 
   return (
-    <div className="mx-4 mt-3 bg-card border border-border/80 rounded-xl p-3.5 shadow-xs space-y-3">
+    <div className="mx-4 mt-3 bg-card border border-border/80 rounded-xl p-3 shadow-xs space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-2.5">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -63,7 +63,7 @@ export const ContainerTopologyBus: React.FC<ContainerTopologyBusProps> = ({
             type="button"
             onClick={onClose}
             className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-            title="Ocultar Barramento de Topologia"
+            title="Ocultar Barramento de Topologia" aria-label="Ocultar Barramento de Topologia"
           >
             <X className="w-3.5 h-3.5" />
           </button>

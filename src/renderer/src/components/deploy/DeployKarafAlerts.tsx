@@ -24,14 +24,14 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
         <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
         <div className="flex-1">
           <span className="font-bold block">Executável client.bat não localizado</span>
-          <span className="text-[11px] text-muted-foreground block mt-0.5">
+          <span className="text-2xs text-muted-foreground block mt-0.5">
             Não foi possível encontrar <code className="font-mono text-foreground">{karafPath}\bin\client.bat</code>. Isso só afeta etapas do tipo Karaf.
           </span>
           {onNavigateToSettings && (
             <button
               type="button"
               onClick={onNavigateToSettings}
-              className="mt-2 px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 rounded-md text-[11px] font-semibold text-rose-700 dark:text-rose-200 flex items-center gap-1 transition-all"
+              className="mt-2 px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 rounded-md text-2xs font-semibold text-rose-700 dark:text-rose-200 flex items-center gap-1 transition-all"
             >
               <Settings className="w-3 h-3" />
               <span>Ajustar Diretório nas Configurações</span>
@@ -46,14 +46,14 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
         <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
         <div className="flex-1">
           <span className="font-bold block">Karaf / OSGi offline</span>
-          <span className="text-[11px] text-muted-foreground block mt-0.5">
+          <span className="text-2xs text-muted-foreground block mt-0.5">
             O contêiner Karaf não está rodando (porta SSH inacessível). As etapas OSGi deste perfil falharão se ele não for iniciado.
           </span>
           <button
             type="button"
             onClick={onStartKaraf}
             disabled={isStartingKaraf}
-            className="mt-2 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-md text-[11px] font-semibold text-amber-700 dark:text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+            className="mt-2 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-md text-2xs font-semibold text-amber-700 dark:text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
           >
             <Play className={`w-3 h-3 ${isStartingKaraf ? 'animate-spin' : ''}`} />
             <span>{isStartingKaraf ? 'Iniciando Karaf...' : 'Iniciar Karaf Embutido'}</span>

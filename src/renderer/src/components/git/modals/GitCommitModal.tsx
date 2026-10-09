@@ -33,7 +33,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
+    panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
     closeOnBackdrop={false}
     closeOnEscape={false}
     ariaLabel="Commit & Push Rápido"
@@ -43,7 +43,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
         <UploadCloud className="w-5 h-5 text-emerald-500" />
         <div>
           <h3 className="text-sm font-bold text-foreground">Commit & Push Rápido</h3>
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-2xs text-muted-foreground font-mono">
             {project.name} [{project.currentBranch}]
           </span>
         </div>
@@ -60,7 +60,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
 
     <div className="p-4 space-y-3">
       {commitError && (
-        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>{commitError}</span>
         </div>
@@ -79,7 +79,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
       </div>
 
       {/* git add -A inclui arquivos não rastreados: listar evita subir um .env ou build por engano */}
-      <div className="text-[11px] text-muted-foreground bg-muted/30 rounded-xl border border-border/60 overflow-hidden">
+      <div className="text-2xs text-muted-foreground bg-muted/30 rounded-xl border border-border/60 overflow-hidden">
         <div className="flex items-center justify-between p-2.5 border-b border-border/60">
           <span>
             {isLoadingFiles
@@ -97,7 +97,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
                   key={file.path}
                   type="button"
                   onClick={() => onInspectFile(file.path)}
-                  className="w-full text-left flex items-center justify-between gap-2 px-1.5 py-1 rounded-md font-mono text-[11px] text-foreground hover:bg-muted/70 transition cursor-pointer"
+                  className="w-full text-left flex items-center justify-between gap-2 px-1.5 py-1 rounded-md font-mono text-2xs text-foreground hover:bg-muted/70 transition cursor-pointer"
                   title={`Clique para inspecionar o diff de ${file.path}`}
                 >
                   <div className="flex items-center gap-2 truncate">

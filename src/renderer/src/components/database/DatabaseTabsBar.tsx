@@ -82,7 +82,7 @@ export const DatabaseTabsBar: React.FC<DatabaseTabsBarProps> = ({ tabs, activeId
       disabled={!canAdd}
       title={canAdd ? 'Nova aba de consulta na conexão selecionada' : 'Limite de abas atingido'}
       aria-label="Nova aba de consulta"
-      className="mb-0.5 p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-40 cursor-pointer shrink-0"
+      className="mb-0.5 p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 cursor-pointer shrink-0"
     >
       <Plus className="w-3.5 h-3.5" />
     </button>

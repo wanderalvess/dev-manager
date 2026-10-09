@@ -11,7 +11,7 @@ export const DocsModelHelpModal: React.FC<DocsModelHelpModalProps> = ({ onClose 
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
+    panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
     closeOnBackdrop={false}
   >
     <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
@@ -49,7 +49,7 @@ export const DocsModelHelpModal: React.FC<DocsModelHelpModalProps> = ({ onClose 
         </li>
         <li>
           No Windows Explorer, acesse a pasta:
-          <div className="bg-muted p-2 rounded-lg font-mono text-[11px] text-foreground mt-1 select-all break-all border border-border/70">
+          <div className="bg-muted p-2 rounded-lg font-mono text-2xs text-foreground mt-1 select-all break-all border border-border/70">
             %APPDATA%\dev-manager\models\fast-all-MiniLM-L6-v2
           </div>
         </li>

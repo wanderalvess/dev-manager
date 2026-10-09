@@ -57,7 +57,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
         <button
           type="button"
           onClick={() => setIsExpanded((previous) => !previous)}
-          title={isExpanded ? 'Restaurar para painel lateral' : 'Expandir para visualização completa'}
+          title={isExpanded ? 'Restaurar para painel lateral' : 'Expandir para visualização completa'} aria-label={isExpanded ? 'Restaurar para painel lateral' : 'Expandir para visualização completa'}
           className="h-6 w-6 rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition"
         >
           {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -74,14 +74,14 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
         <button
           type="button"
           onClick={onClose}
-          title="Fechar painel (Esc)"
+          title="Fechar painel (Esc)" aria-label="Fechar painel (Esc)"
           className="h-6 w-6 rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition"
         >
           <X className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
-    <div className="px-3.5 py-1.5 border-b border-border/60 bg-background/50 flex items-center justify-between text-[11px] font-mono text-muted-foreground shrink-0 tabular-nums">
+    <div className="px-3.5 py-1.5 border-b border-border/60 bg-background/50 flex items-center justify-between text-2xs font-mono text-muted-foreground shrink-0 tabular-nums">
       <div className="flex items-center gap-3">
         <span>Status: <strong className={getStatusBadgeClass(details?.summary.httpStatusCode, details?.summary.hasError)}>
           {details?.summary.httpStatusCode || (details?.summary.hasError ? 'ERR' : 'OK')}
@@ -106,7 +106,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
       <button
         type="button"
         onClick={() => setDetailTab('waterfall')}
-        className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+        className={`h-full px-2.5 text-2xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
           visibleTab === 'waterfall' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -115,7 +115,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
       <button
         type="button"
         onClick={() => setDetailTab('attributes')}
-        className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+        className={`h-full px-2.5 text-2xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
           visibleTab === 'attributes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -125,7 +125,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
         <button
           type="button"
           onClick={() => setDetailTab('sql')}
-          className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+          className={`h-full px-2.5 text-2xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
             visibleTab === 'sql' ? 'border-sky-500 text-sky-700 dark:border-sky-400 dark:text-sky-400 font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -136,7 +136,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
         <button
           type="button"
           onClick={() => setDetailTab('error')}
-          className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+          className={`h-full px-2.5 text-2xs font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
             visibleTab === 'error' ? 'border-rose-500 text-rose-700 dark:border-rose-400 dark:text-rose-400 font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >

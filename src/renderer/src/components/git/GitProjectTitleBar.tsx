@@ -16,11 +16,11 @@ export const GitProjectTitleBar: React.FC<GitProjectTitleBarProps> = ({
 }) => (
   <div className="flex items-start justify-between">
     <div>
-      <h3 className="text-base font-extrabold text-foreground flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <FolderGit2 className="w-5 h-5 text-primary" />
         {project.name}
       </h3>
-      <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{project.path}</p>
+      <p className="text-2xs text-muted-foreground font-mono mt-0.5">{project.path}</p>
     </div>
 
     {project.webUrl && (

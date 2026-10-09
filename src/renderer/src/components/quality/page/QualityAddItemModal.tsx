@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Modal } from '../../ui/Modal';
 import type { ValidationCategory } from '../../../utils/qualityPageUtils';
 
 interface QualityAddItemModalProps {
@@ -28,22 +29,15 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
   onClose,
   isEditing = false
 }) => {
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
-
   return (
-  <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}
-      className="bg-card w-full max-w-md rounded-lg border border-border shadow-xl p-5 space-y-4"
-    >
+  <Modal
+    open
+    onClose={onClose}
+    bare
+    closeOnBackdrop={false}
+    ariaLabel={isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}
+    panelClassName="bg-card w-full max-w-md rounded-lg border border-border shadow-xl p-5 space-y-4"
+  >
       <div className="flex items-center justify-between pb-2 border-b border-border">
         <h3 className="text-sm font-semibold text-foreground">{isEditing ? 'Editar Cenário de Teste' : 'Novo Cenário de Teste'}</h3>
         <button
@@ -62,6 +56,7 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
           <input
             type="text"
             required
+            data-autofocus
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="Ex: Validar emissão de nota com desconto..."
@@ -122,7 +117,6 @@ export const QualityAddItemModal: React.FC<QualityAddItemModalProps> = ({
           </button>
         </div>
       </form>
-    </div>
-  </div>
+  </Modal>
   );
 };

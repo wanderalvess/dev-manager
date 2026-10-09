@@ -21,13 +21,13 @@ export const KarafTab: React.FC<KarafTabProps> = ({
       <div className="lg:col-span-12 space-y-4 flex flex-col">
         <KarafWslSection settings={settings} setSettings={setSettings} />
 
-        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
               <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
                 <KeyRound className="w-3.5 h-3.5 text-amber-500" /> Credenciais &amp; Autenticação do Apache Karaf
               </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-2xs text-muted-foreground mt-0.5">
                 Utilizado para autenticação no <code className="font-mono text-amber-500">client.bat</code> (OSGi) e comandos SSH remotos.
               </p>
             </div>
@@ -113,7 +113,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
 
           {/* Telemetria e APM (OpenTelemetry) */}
           <div className="pt-2 border-t border-border/60" id="field-apmInstrumentation">
-            <label className="flex items-start gap-3 p-3.5 rounded-xl border border-border bg-card/60 hover:bg-card transition-colors cursor-pointer">
+            <label className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card/60 hover:bg-card transition-colors cursor-pointer">
               <input
                 type="checkbox"
                 checked={!!settings.apmInstrumentationEnabled}
@@ -124,10 +124,10 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 <span className="font-semibold text-foreground text-xs flex items-center gap-1.5">
                   <Activity className="w-3.5 h-3.5 text-primary" /> Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf
                 </span>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <p className="text-2xs text-muted-foreground leading-relaxed">
                   Quando marcado, o Cockpit anexa automaticamente o agente <code className="font-mono text-foreground font-semibold">opentelemetry-javaagent.jar</code> (se presente na pasta <code className="font-mono text-foreground">{settings.karafPath ? `${settings.karafPath}\\bin` : 'bin'}</code>) para rastrear requisições HTTP, JDBC e erros na tela <strong>APM &amp; Traces</strong>.
                 </p>
-                <p className="text-[11px] text-muted-foreground/80">
+                <p className="text-2xs text-muted-foreground/80">
                   <strong className="text-foreground">Recomendação:</strong> Deixe desmarcado quando não precisar capturar traces. O agente OpenTelemetry adiciona tempo na inicialização da JVM e gera logs adicionais de telemetria.
                 </p>
               </div>
@@ -135,11 +135,11 @@ export const KarafTab: React.FC<KarafTabProps> = ({
           </div>
 
           {/* Box Informativo de Uso */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 text-xs text-foreground space-y-1">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-foreground space-y-1">
             <span className="font-bold text-amber-600 dark:text-amber-400 block flex items-center gap-1.5">
               <Terminal className="w-4 h-4" /> Uso das Credenciais Karaf no Sistema
             </span>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-2xs text-muted-foreground leading-relaxed">
               Estas credenciais são enviadas automaticamente ao script <code className="font-mono text-foreground">{settings.karafPath}\bin\client.bat</code> durante as operações de deploy na aba <strong>Deploy OSGi Karaf</strong> e execução de diagnósticos (<code>feature:list</code>, <code>bundle:list</code>, <code>log:display</code>).
             </p>
           </div>

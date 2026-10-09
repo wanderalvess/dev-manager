@@ -22,7 +22,7 @@ export const SqlEditorStatusBar: React.FC<SqlEditorStatusBarProps> = ({
   onZoomIn,
   onZoomOut
 }) => (
-  <div className="px-3 py-1 bg-[#090D14] border-b border-border/70 flex items-center justify-between text-[11px] text-muted-foreground select-none shrink-0 font-sans">
+  <div className="px-3 py-1 bg-[#090D14] border-b border-border/70 flex items-center justify-between text-2xs text-muted-foreground select-none shrink-0 font-sans">
     <div className="flex items-center space-x-3">
       <span className="font-mono text-muted-foreground/80">
         Ln <strong className="text-foreground">{metrics.currentLine}</strong>, Col{' '}
@@ -42,7 +42,7 @@ export const SqlEditorStatusBar: React.FC<SqlEditorStatusBarProps> = ({
         type="button"
         onClick={onFormatSql}
         disabled={!sql.trim()}
-        className="flex items-center space-x-1 px-2 py-0.5 rounded hover:bg-muted/70 text-muted-foreground hover:text-foreground transition disabled:opacity-40 cursor-pointer"
+        className="flex items-center space-x-1 px-2 py-0.5 rounded hover:bg-muted/70 text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
         title="Formatar SQL (adicionar quebras e indentação em cláusulas principais)"
       >
         <AlignLeft className="w-3 h-3 text-amber-500" />

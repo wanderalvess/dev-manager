@@ -22,7 +22,7 @@ export const KarafInstallModalHeader: React.FC<KarafInstallModalHeaderProps> = (
             ? `Atualizar Versão: [${updatingTargetBundle.id}] ${updatingTargetBundle.name}`
             : 'Instalar Bundle / Outra Versão'}
         </h4>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           {updatingTargetBundle
             ? 'Atualização in-place no Karaf (bundle:update) preservando ID e reconectando fiações'
             : 'Implantação de componentes OSGi com verificação prévia de colisão e dependências'}

@@ -15,7 +15,7 @@ interface DocsIndexProgressBarProps {
 
 export const DocsIndexProgressBar: React.FC<DocsIndexProgressBarProps> = ({ progress }) => (
   <div className="mt-3 pt-3 border-t border-border/60 space-y-1.5">
-    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+    <div className="flex items-center justify-between text-2xs text-muted-foreground">
       <span>{PHASE_LABELS[progress.phase]}</span>
       {progress.total > 0 && (
         <span className="font-mono">

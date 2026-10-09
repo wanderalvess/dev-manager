@@ -44,8 +44,8 @@ export const WhatsNewHeaderControls: React.FC<WhatsNewHeaderControlsProps> = ({
       type="button"
       onClick={onGoOlder}
       disabled={!hasOlderVersion}
-      className="p-1 rounded-lg border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
-      title="Ver versão anterior mais antiga (Alt + Seta Esquerda)"
+      className="p-1 rounded-lg border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition cursor-pointer"
+      title="Ver versão anterior mais antiga (Alt + Seta Esquerda)" aria-label="Ver versão anterior mais antiga (Alt + Seta Esquerda)"
     >
       <ChevronLeft className="w-3.5 h-3.5" />
     </button>
@@ -82,8 +82,8 @@ export const WhatsNewHeaderControls: React.FC<WhatsNewHeaderControlsProps> = ({
       type="button"
       onClick={onGoNewer}
       disabled={!hasNewerVersion}
-      className="p-1 rounded-lg border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
-      title="Ver versão seguinte mais recente (Alt + Seta Direita)"
+      className="p-1 rounded-lg border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:pointer-events-none transition cursor-pointer"
+      title="Ver versão seguinte mais recente (Alt + Seta Direita)" aria-label="Ver versão seguinte mais recente (Alt + Seta Direita)"
     >
       <ChevronRight className="w-3.5 h-3.5" />
     </button>

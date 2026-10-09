@@ -422,10 +422,8 @@ describe('ApmService', () => {
     expect(tinyService.getReceiverStatus().maxBufferSize).toBe(500);
   });
 
-  it('gera dados simulados de demonstração e limpa buffer com clear', () => {
-    const demo = apmService.generateDemoData();
-    expect(demo.generatedTraces).toBeGreaterThan(0);
-    expect(demo.generatedSpans).toBeGreaterThan(0);
+  it('limpa o buffer com clear', () => {
+    apmService.ingestSpans([makeSpan({ traceId: 't-clear', spanId: 's1', parentSpanId: undefined })]);
 
     const overview = apmService.getOverview();
     expect(overview.totalTraces).toBeGreaterThan(0);

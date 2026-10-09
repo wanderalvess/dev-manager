@@ -62,7 +62,7 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
         {detailsTab === 'tree' && <KarafDetailsTreeTab target={target} bundleDetails={bundleDetails} />}
 
         {detailsTab === 'exports' && (
-          <div className="space-y-1 max-h-full font-mono text-[11px]">
+          <div className="space-y-1 max-h-full font-mono text-2xs">
             {bundleDetails.exportedPackages.length === 0 ? (
               <p className="text-xs text-muted-foreground py-6 text-center">Nenhum pacote exportado.</p>
             ) : (
@@ -76,7 +76,7 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
         )}
 
         {detailsTab === 'imports' && (
-          <div className="space-y-1 max-h-full font-mono text-[11px]">
+          <div className="space-y-1 max-h-full font-mono text-2xs">
             {bundleDetails.importedPackages.length === 0 ? (
               <p className="text-xs text-muted-foreground py-6 text-center">Nenhum pacote importado.</p>
             ) : (
@@ -90,7 +90,7 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
         )}
 
         {detailsTab === 'headers' && (
-          <div className="space-y-1.5 font-mono text-[11px]">
+          <div className="space-y-1.5 font-mono text-2xs">
             {Object.entries(bundleDetails.rawHeaders || {}).map(([key, value]) => (
               <div key={key} className="p-2 rounded-lg bg-muted/20 border border-border/50">
                 <span className="font-bold text-primary block">{key}:</span>

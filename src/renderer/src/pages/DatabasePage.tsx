@@ -174,6 +174,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
 
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
+      <h1 className="sr-only">Banco de Dados</h1>
       {conn.settings && conn.connections.length === 0 && (
         <DatabaseFirstUseBanner
           onOpenCreateModal={conn.handleOpenCreateModal}

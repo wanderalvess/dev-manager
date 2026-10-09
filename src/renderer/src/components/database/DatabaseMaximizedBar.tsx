@@ -9,7 +9,7 @@ export const DatabaseMaximizedBar: React.FC<DatabaseMaximizedBarProps> = ({ onRe
     <div className="flex items-center space-x-2">
       <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
       <span className="font-semibold text-foreground">Modo Maximizado / Foco Ativo</span>
-      <span className="text-[11px] text-muted-foreground">
+      <span className="text-2xs text-muted-foreground">
         (O editor SQL está ocupando toda a tela para você visualizar queries grandes)
       </span>
     </div>

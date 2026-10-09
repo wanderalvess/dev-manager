@@ -20,7 +20,7 @@ export const DatabaseExplainPanel: React.FC<DatabaseExplainPanelProps> = ({ expl
       <div className="text-center py-12 text-muted-foreground text-xs space-y-2">
         <Zap className="w-8 h-8 mx-auto opacity-30 text-amber-500" />
         <p className="font-semibold text-foreground">Nenhum Explain Plan gerado ainda.</p>
-        <span className="text-[11px] opacity-70">
+        <span className="text-2xs opacity-70">
           Clique no botão "Explain Plan" na barra superior para inspecionar o plano de execução da query.
         </span>
       </div>
@@ -30,7 +30,7 @@ export const DatabaseExplainPanel: React.FC<DatabaseExplainPanelProps> = ({ expl
           <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
           <span>Falha ao gerar Explain Plan:</span>
         </div>
-        <pre className="font-mono text-[11px] whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-rose-700 dark:text-rose-300 mt-2">
+        <pre className="font-mono text-2xs whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-rose-700 dark:text-rose-300 mt-2">
           {explainResult.error}
         </pre>
       </div>
@@ -50,7 +50,7 @@ export const DatabaseExplainPanel: React.FC<DatabaseExplainPanelProps> = ({ expl
                     type="button"
                     aria-pressed={view === v}
                     onClick={() => setView(v)}
-                    className={`px-2.5 py-0.5 text-[11px] font-semibold cursor-pointer ${view === v ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:text-foreground'}`}
+                    className={`px-2.5 py-0.5 text-2xs font-semibold cursor-pointer ${view === v ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:text-foreground'}`}
                   >
                     {v === 'tree' ? 'Árvore' : 'Texto'}
                   </button>
@@ -65,8 +65,8 @@ export const DatabaseExplainPanel: React.FC<DatabaseExplainPanelProps> = ({ expl
         {showTree && plan ? (
           <ExplainTree plan={plan} />
         ) : (
-          <div className="bg-[#0B0F17] border border-border/80 rounded-xl p-3.5 overflow-x-auto shadow-inner">
-            <pre className="text-[11px] leading-relaxed font-mono text-amber-300/90 whitespace-pre">
+          <div className="bg-[#0B0F17] border border-border/80 rounded-xl p-3 overflow-x-auto shadow-inner">
+            <pre className="text-2xs leading-relaxed font-mono text-amber-300/90 whitespace-pre">
               {explainResult.planLines.length > 0
                 ? explainResult.planLines.join('\n')
                 : 'Nenhuma linha retornada pelo plano de execução.'}

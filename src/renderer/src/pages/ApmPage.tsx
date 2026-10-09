@@ -54,7 +54,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
   const {
     overview, rawTraces, selectedTraceId, traceDetails, selectedSpanId, setSelectedSpanId,
     isRecording, setIsRecording, openTrace, closeTrace, handleSelectTrace,
-    handleGenerateDemo, handleClear
+    handleClear
   } = controller;
   const { handleApplyReceiverPort, handleApplyServiceName, handleToggleInstrumentation } = settings;
 
@@ -138,6 +138,7 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
 
   return (
     <div className="h-full w-full flex flex-col bg-background text-foreground select-none overflow-hidden font-sans">
+      <h1 className="sr-only">APM &amp; Traces</h1>
       <ApmHeader
         overview={overview}
         receiverPort={receiverPort}
@@ -146,7 +147,6 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
         onViewModeChange={setViewMode}
         isRecording={isRecording}
         onToggleRecording={() => setIsRecording(!isRecording)}
-        onGenerateDemo={handleGenerateDemo}
         onClear={handleClear}
         onOpenSetup={openSetupModal}
       />
@@ -157,7 +157,6 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
           onFilterBySlowQuery={(queryOrTable) => { setSearchText(queryOrTable); setActivePreset('SLOW_QUERIES'); setViewMode('traces'); }}
           onSelectTrace={(traceId) => { openTrace(traceId); setViewMode('traces'); }}
           onNavigateToDatabase={onNavigateToDatabase}
-          onGenerateDemo={handleGenerateDemo}
           onOpenSetup={openSetupModal}
         />
       ) : (
@@ -189,7 +188,6 @@ export const ApmPage: React.FC<ApmPageProps> = ({ isActive = true, onNavigateToD
               maxListDuration={maxListDuration}
               setupSnippets={setupSnippets}
               onSelectTrace={handleSelectTrace}
-              onGenerateDemo={handleGenerateDemo}
               onOpenSetup={openSetupModal}
               onResetFilters={resetFilters}
             />

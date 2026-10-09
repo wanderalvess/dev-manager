@@ -67,7 +67,7 @@ export const KarafFeaturesManagerAddRepoForm: React.FC<KarafFeaturesManagerAddRe
         <button
           type="submit"
           disabled={!newRepoUrl.trim() || isSubmitting}
-          className="px-3.5 py-1 rounded-md text-xs font-mono font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-40"
+          className="px-3.5 py-1 rounded-md text-xs font-mono font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50"
         >
           {isSubmitting ? 'Registrando...' : 'Registrar'}
         </button>

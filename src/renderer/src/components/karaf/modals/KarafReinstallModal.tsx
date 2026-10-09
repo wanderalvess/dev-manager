@@ -92,7 +92,7 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -103,7 +103,7 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-bold text-foreground">Confirmar Reinstalação do Bundle</h4>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Recarrega a compilação local, atualiza fiações e reinicia o componente
             </p>
           </div>
@@ -138,7 +138,7 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
                 ? `${reinstallDepCheck.dependentBundles.length} bundle(s) clientes serão temporariamente reconectados.`
                 : 'Nenhum bundle cliente ativo dependente no momento.'}
             </span>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               O Karaf executará <code className="font-mono text-foreground">bundle:update</code> seguido de{' '}
               <code className="font-mono text-foreground">bundle:refresh</code> e{' '}
               <code className="font-mono text-foreground">bundle:start</code>.
@@ -168,7 +168,7 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
 
         {/* Log ao vivo do bundle:update + bundle:refresh + bundle:start */}
         {reinstallLog && (
-          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
+          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-2xs text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
             {reinstallLog}
           </div>
         )}

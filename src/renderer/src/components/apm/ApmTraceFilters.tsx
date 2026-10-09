@@ -61,7 +61,7 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
         <button
           type="button"
           onClick={() => { setActivePreset('ALL'); setLatencyBracket('ALL'); }}
-          className={`h-6 px-2 rounded border text-[11px] font-medium cursor-pointer transition ${
+          className={`h-6 px-2 rounded border text-2xs font-medium cursor-pointer transition ${
             activePreset === 'ALL' && latencyBracket === 'ALL' ? 'bg-primary text-primary-foreground border-primary font-semibold shadow-2xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -73,7 +73,7 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
             type="button"
             onClick={() => setActivePreset((previous) => previous === preset.value ? 'ALL' : preset.value)}
             title={preset.title}
-            className={`h-6 px-2 rounded border text-[11px] font-medium cursor-pointer transition ${
+            className={`h-6 px-2 rounded border text-2xs font-medium cursor-pointer transition ${
               activePreset === preset.value
                 ? `${preset.activeClass} font-semibold shadow-2xs`
                 : `bg-card border-border text-muted-foreground ${preset.hoverClass}`
@@ -86,7 +86,7 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
           type="button"
           onClick={() => setSortOrder((previous) => previous === 'time' ? 'duration' : 'time')}
           title={sortOrder === 'time' ? 'Ordenando por horário mais recente. Clique para ordenar pelos mais lentos.' : 'Ordenando por duração (mais lentos primeiro). Clique para ordenar por horário.'}
-          className={`h-6 px-2 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition ${
+          className={`h-6 px-2 rounded border text-2xs font-mono flex items-center gap-1 cursor-pointer transition ${
             sortOrder === 'duration' ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-bold shadow-2xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -110,11 +110,11 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
         onClear={() => setLatencyBracket('ALL')}
       />
       <div className="flex items-center gap-1.5 shrink-0">
-        <span className="text-[11px] text-muted-foreground hidden md:inline">Serviço:</span>
+        <span className="text-2xs text-muted-foreground hidden md:inline">Serviço:</span>
         <select
           value={selectedService}
           onChange={(event) => setSelectedService(event.target.value)}
-          className="h-7 px-2 bg-background border border-border rounded text-[11px] font-mono text-foreground focus:outline-hidden focus:border-primary cursor-pointer"
+          className="h-7 px-2 bg-background border border-border rounded text-2xs font-mono text-foreground focus:outline-hidden focus:border-primary cursor-pointer"
         >
           <option value="ALL">Todos os Serviços</option>
           {serviceOptions.map((service) => <option key={service} value={service}>{service}</option>)}

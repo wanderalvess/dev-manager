@@ -45,7 +45,7 @@ export const SaveEnvironmentModal: React.FC<SaveEnvironmentModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in overflow-hidden"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in overflow-hidden"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >

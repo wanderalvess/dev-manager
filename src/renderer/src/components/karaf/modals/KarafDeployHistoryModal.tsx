@@ -47,7 +47,7 @@ export const KarafDeployHistoryModal: React.FC<KarafDeployHistoryModalProps> = (
       open
       onClose={onClose}
       bare
-      panelClassName="bg-[#0c1017] border border-slate-800 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in text-slate-100 font-sans"
+      panelClassName="bg-card border border-border rounded-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in text-foreground font-sans"
       closeOnBackdrop={false}
     >
       <KarafDeployHistoryHeader

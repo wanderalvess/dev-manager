@@ -31,7 +31,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
         <button
           type="button"
           onClick={() => setShowAddForm(true)}
-          className="flex items-center space-x-1 px-2.5 py-1 rounded bg-card hover:bg-muted border border-border text-foreground font-semibold text-[11px] transition cursor-pointer"
+          className="flex items-center space-x-1 px-2.5 py-1 rounded bg-card hover:bg-muted border border-border text-foreground font-semibold text-2xs transition cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 text-primary" />
           <span>Adicionar Variável Manual</span>
@@ -80,7 +80,7 @@ export const BindQuickActions: React.FC<BindQuickActionsProps> = ({
       <button
         type="button"
         onClick={onClearAllValues}
-        className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition cursor-pointer"
+        className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition cursor-pointer"
         title="Limpar todos os campos preenchidos"
       >
         <RotateCcw className="w-3 h-3" />

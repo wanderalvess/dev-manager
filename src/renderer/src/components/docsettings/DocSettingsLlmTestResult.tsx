@@ -22,7 +22,7 @@ export const DocSettingsLlmTestResult: React.FC<{ result: LlmTestResult }> = ({ 
           <span className="ml-2 text-2xs font-mono font-normal opacity-80">({result.latencyMs}ms)</span>
         )}
       </div>
-      <p className="text-[11px] mt-0.5">{result.message}</p>
+      <p className="text-2xs mt-0.5">{result.message}</p>
     </div>
   </div>
 );

@@ -75,7 +75,7 @@ export const DocSettingsModal: React.FC<DocSettingsModalProps> = (props) => {
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl max-h-[86vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl max-h-[86vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >

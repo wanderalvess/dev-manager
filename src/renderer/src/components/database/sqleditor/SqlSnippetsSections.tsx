@@ -32,7 +32,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
       </div>
 
       {filteredCustomSnippets.length === 0 ? (
-        <div className="p-3 text-center bg-muted/20 border border-dashed border-border rounded-lg text-muted-foreground text-[11px] space-y-1.5">
+        <div className="p-3 text-center bg-muted/20 border border-dashed border-border rounded-lg text-muted-foreground text-2xs space-y-1.5">
           <p>
             {savedQuerySearch
               ? 'Nenhuma consulta salva encontrada para a busca.'
@@ -45,7 +45,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                 onCloseMenu();
                 onOpenCreateSnippet();
               }}
-              className="text-primary hover:underline font-bold text-[11px] block mx-auto cursor-pointer"
+              className="text-primary hover:underline font-bold text-2xs block mx-auto cursor-pointer"
             >
               + Salvar consulta atual do editor
             </button>
@@ -80,7 +80,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                     type="button"
                     onClick={(e) => onExecuteSnippetDirectly(s, e)}
                     className="p-1 rounded bg-emerald-600/15 hover:bg-emerald-600 text-emerald-500 hover:text-white transition cursor-pointer"
-                    title="Executar imediatamente"
+                    title="Executar imediatamente" aria-label="Executar imediatamente"
                   >
                     <Play className="w-3 h-3 fill-current" />
                   </button>
@@ -88,7 +88,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                     type="button"
                     onClick={() => onSelectSnippet(s)}
                     className="p-1 rounded bg-primary/15 hover:bg-primary text-primary hover:text-primary-foreground transition cursor-pointer"
-                    title="Carregar no editor"
+                    title="Carregar no editor" aria-label="Carregar no editor"
                   >
                     <FileCode className="w-3 h-3" />
                   </button>
@@ -99,7 +99,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                       onEditSnippet(s, e);
                     }}
                     className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-                    title="Editar consulta salva"
+                    title="Editar consulta salva" aria-label="Editar consulta salva"
                   >
                     <Edit2 className="w-3 h-3" />
                   </button>
@@ -107,7 +107,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                     type="button"
                     onClick={(e) => onDeleteSnippet(s.id, e)}
                     className="p-1 rounded text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
-                    title="Excluir consulta"
+                    title="Excluir consulta" aria-label="Excluir consulta"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -137,7 +137,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
           >
             <div className="min-w-0 flex-1 mr-2">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[11px] group-hover:text-primary truncate">{s.title}</span>
+                <span className="font-bold text-2xs group-hover:text-primary truncate">{s.title}</span>
                 <span className="text-2xs px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-mono shrink-0">
                   {s.category.split('-')[0].trim()}
                 </span>
@@ -152,7 +152,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
               type="button"
               onClick={(e) => onExecuteSnippetDirectly(s, e)}
               className="p-1 rounded hover:bg-emerald-600/20 text-emerald-500 transition shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
-              title="Executar imediatamente"
+              title="Executar imediatamente" aria-label="Executar imediatamente"
             >
               <Play className="w-3 h-3 fill-current" />
             </button>

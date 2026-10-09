@@ -30,7 +30,7 @@ export const AiMarkdownViewer: React.FC<AiMarkdownViewerProps> = ({ content, cla
         return (
           <code
             key={index}
-            className="px-1.5 py-0.5 mx-0.5 rounded-md bg-primary/10 border border-primary/25 text-primary font-mono text-[11px] font-semibold inline-block"
+            className="px-1.5 py-0.5 mx-0.5 rounded-md bg-primary/10 border border-primary/25 text-primary font-mono text-2xs font-semibold inline-block"
           >
             {part.slice(1, -1)}
           </code>
@@ -77,7 +77,7 @@ export const AiMarkdownViewer: React.FC<AiMarkdownViewerProps> = ({ content, cla
             className="text-primary hover:underline font-semibold inline-flex items-center gap-0.5 mx-0.5"
           >
             {label}
-            <ExternalLink className="w-2.5 h-2.5 inline opacity-70" />
+            <ExternalLink className="w-3 h-3 inline opacity-70" />
           </a>
         );
       }
@@ -126,7 +126,7 @@ export const AiMarkdownViewer: React.FC<AiMarkdownViewerProps> = ({ content, cla
             key={`code-${currentCodeIdx}`}
             className="my-3 rounded-xl border border-border/80 overflow-hidden bg-slate-950 text-slate-100 shadow-md"
           >
-            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800 text-[11px] font-mono select-none">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800 text-2xs font-mono select-none">
               <div className="flex items-center gap-1.5">
                 <Terminal className="w-3.5 h-3.5 text-primary" />
                 <span className="px-1.5 py-0.2 rounded bg-slate-800 text-cyan-400 font-bold uppercase tracking-wider text-2xs">
@@ -146,7 +146,7 @@ export const AiMarkdownViewer: React.FC<AiMarkdownViewerProps> = ({ content, cla
                 <span>{isCopied ? 'Copiado!' : 'Copiar'}</span>
               </button>
             </div>
-            <div className="p-3.5 overflow-x-auto font-mono text-[11px] leading-relaxed text-slate-200 selection:bg-primary/30">
+            <div className="p-3.5 overflow-x-auto font-mono text-2xs leading-relaxed text-slate-200 selection:bg-primary/30">
               <pre>
                 <code>{fullCode}</code>
               </pre>
@@ -175,7 +175,7 @@ export const AiMarkdownViewer: React.FC<AiMarkdownViewerProps> = ({ content, cla
           );
         } else {
           nodes.push(
-            <h5 key={hKey} className="text-[11px] font-bold text-foreground mt-2.5 mb-1 flex items-center gap-1">
+            <h5 key={hKey} className="text-2xs font-bold text-foreground mt-2.5 mb-1 flex items-center gap-1">
               <span>{renderInline(text)}</span>
             </h5>
           );

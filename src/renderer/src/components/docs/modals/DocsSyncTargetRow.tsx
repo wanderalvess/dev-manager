@@ -21,7 +21,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
   onEdit,
   onDelete
 }) => (
-  <div className="p-3.5 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-all flex items-center justify-between gap-3 text-xs shadow-2xs">
+  <div className="p-3 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-all flex items-center justify-between gap-3 text-xs shadow-2xs">
     <div className="flex items-start gap-3 min-w-0 flex-1">
       <input
         type="checkbox"
@@ -52,7 +52,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
               : 'Artigos + Chunks'}
           </span>
         </div>
-        <div className="font-mono text-[11px] text-muted-foreground truncate" title={target.endpointUrl}>
+        <div className="font-mono text-2xs text-muted-foreground truncate" title={target.endpointUrl}>
           {target.endpointUrl}
         </div>
         <div className="text-2xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
@@ -83,7 +83,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
         type="button"
         onClick={() => onEdit(target)}
         className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
-        title="Editar configuração"
+        title="Editar configuração" aria-label="Editar configuração"
       >
         <Settings className="w-3.5 h-3.5" />
       </button>
@@ -91,7 +91,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
         type="button"
         onClick={() => onDelete(target.id)}
         className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive/70 hover:text-destructive transition cursor-pointer"
-        title="Remover destino"
+        title="Remover destino" aria-label="Remover destino"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

@@ -1,9 +1,19 @@
 import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { hasOpenEscapeLayer } from './EscapeToClose';
 import { FOCUSABLE_SELECTOR, nextFocusIndex } from '../../utils/focusTrapUtils';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+/** Alinhamento do painel: centro (padrão), topo (paleta de comandos) ou encostado à direita (drawer lateral). */
+export type ModalPlacement = 'center' | 'top' | 'right';
+
+const PLACEMENT_CLASS: Record<ModalPlacement, string> = {
+  center: 'items-center justify-center p-4',
+  top: 'items-start justify-center pt-20 px-4',
+  right: 'items-stretch justify-end'
+};
+
 export type ModalTone = 'default' | 'danger' | 'warning';
 
 const SIZE_CLASS: Record<ModalSize, string> = {
@@ -16,8 +26,8 @@ const SIZE_CLASS: Record<ModalSize, string> = {
 
 const TONE_BORDER: Record<ModalTone, string> = {
   default: 'border-border',
-  danger: 'border-rose-500/40',
-  warning: 'border-amber-500/40'
+  danger: 'border-danger/40',
+  warning: 'border-warning/40'
 };
 
 /** Pilha de modais abertos: o Esc fecha só o de cima (um modal pode abrir outro por cima). */
@@ -53,6 +63,8 @@ export interface ModalProps {
   panelClassName?: string;
   /** Nome acessível do diálogo quando não há `title` (modo `bare`). */
   ariaLabel?: string;
+  /** Onde o painel fica na tela. Padrão: `center`. */
+  placement?: ModalPlacement;
 }
 
 /**
@@ -77,11 +89,16 @@ export const Modal: React.FC<ModalProps> = ({
   closeOnBackdrop = dismissible,
   bare = false,
   panelClassName = '',
-  ariaLabel
+  ariaLabel,
+  placement = 'center'
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const closeOnEscapeRef = useRef(closeOnEscape);
+  closeOnEscapeRef.current = closeOnEscape;
+  const ariaLabelRef = useRef(ariaLabel);
+  ariaLabelRef.current = ariaLabel;
   const titleId = useId();
   const descriptionId = useId();
 
@@ -92,7 +109,7 @@ export const Modal: React.FC<ModalProps> = ({
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const panel = panelRef.current;
     // Modo `bare` sem nome explícito: usa o primeiro título do conteúdo como nome acessível do diálogo
-    if (panel && bare && !ariaLabel && !panel.hasAttribute('aria-labelledby')) {
+    if (panel && bare && !ariaLabelRef.current && !panel.hasAttribute('aria-labelledby')) {
       const heading = panel.querySelector<HTMLElement>('h1, h2, h3, h4');
       if (heading) {
         if (!heading.id) heading.id = titleId;
@@ -109,7 +126,9 @@ export const Modal: React.FC<ModalProps> = ({
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (openModals[openModals.length - 1] !== token) return;
-      if (e.key === 'Escape' && closeOnEscape) {
+      // Um menu aberto dentro do diálogo fecha primeiro: deixa o Esc seguir para o EscapeToClose dele
+      if (e.key === 'Escape' && hasOpenEscapeLayer()) return;
+      if (e.key === 'Escape' && closeOnEscapeRef.current) {
         e.stopPropagation();
         onCloseRef.current();
         return;
@@ -137,7 +156,7 @@ export const Modal: React.FC<ModalProps> = ({
       if (at >= 0) openModals.splice(at, 1);
       if (previouslyFocused && document.contains(previouslyFocused)) previouslyFocused.focus();
     };
-  }, [open, closeOnEscape, bare, ariaLabel, titleId]);
+  }, [open, bare, titleId]);
 
   if (!open) return null;
 
@@ -145,7 +164,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div
-      className={`fixed inset-0 ${zIndexClass} flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs`}
+      className={`fixed inset-0 ${zIndexClass} flex ${PLACEMENT_CLASS[placement]} bg-black/60 backdrop-blur-xs`}
       onMouseDown={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) onClose();
       }}
@@ -170,9 +189,9 @@ export const Modal: React.FC<ModalProps> = ({
             {icon && <div className="shrink-0">{icon}</div>}
             <div className="flex-1 min-w-0">
               {title && (
-                <h3 id={titleId} className="text-sm font-bold text-foreground">
+                <h2 id={titleId} className="text-sm font-bold text-foreground">
                   {title}
-                </h3>
+                </h2>
               )}
               {description && (
                 <p id={descriptionId} className="text-xs text-muted-foreground mt-1 whitespace-pre-line">

@@ -6,6 +6,7 @@ import {
 import { parseBundleListOutput } from '../../utils/karafListParsers';
 import { parseCapabilitiesWiredBundles, parseClauseList, parseManifestHeaders } from '../../utils/karafManifestUtils';
 import type { KarafContext, KarafCredentials } from './karafContext';
+import { noopChunk } from './karafContext';
 
 /**
  * Executa 'bundle:list -s' e retorna a lista de bundles OSGi estruturada.
@@ -14,8 +15,7 @@ export async function listBundlesParsed(
   ctx: KarafContext,
   credentials?: KarafCredentials
 ): Promise<KarafBundleInfo[]> {
-  const dummyChunk = () => {};
-  const res = await ctx.executeKarafCommand('bundle:list -s', dummyChunk, credentials);
+  const res = await ctx.executeKarafCommand('bundle:list -s', noopChunk, credentials);
   if (res.code !== 0 || !res.stdout) return [];
 
   return parseBundleListOutput(res.stdout);
@@ -33,9 +33,8 @@ export async function getBundleDetails(
   const cleanId = bundleId.trim();
   if (!/^\d+$/.test(cleanId)) return null;
 
-  const dummyChunk = () => {};
-  const headersRes = await ctx.executeKarafCommand(`bundle:headers ${cleanId}`, dummyChunk, credentials);
-  const capsRes = await ctx.executeKarafCommand(`bundle:capabilities ${cleanId}`, dummyChunk, credentials);
+  const headersRes = await ctx.executeKarafCommand(`bundle:headers ${cleanId}`, noopChunk, credentials);
+  const capsRes = await ctx.executeKarafCommand(`bundle:capabilities ${cleanId}`, noopChunk, credentials);
 
   const rawHeaders = parseManifestHeaders(headersRes.stdout);
   const dependentBundles = parseCapabilitiesWiredBundles(capsRes.stdout);
@@ -51,7 +50,7 @@ export async function getBundleDetails(
 
   // Diagnóstico se o bundle estiver em estado não-ativo ou se diag estiver disponível
   let diag: string | undefined;
-  const diagRes = await ctx.executeKarafCommand(`bundle:diag ${cleanId}`, dummyChunk, credentials);
+  const diagRes = await ctx.executeKarafCommand(`bundle:diag ${cleanId}`, noopChunk, credentials);
   if (diagRes.stdout && diagRes.stdout.trim().length > 0) {
     diag = diagRes.stdout.trim();
   }

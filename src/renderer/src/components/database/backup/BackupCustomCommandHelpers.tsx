@@ -10,7 +10,7 @@ import {
 } from '../../../utils/backupModalUtils';
 
 const TAG_BUTTON_CLASS =
-  'px-2 py-0.5 rounded-md font-mono text-[11px] bg-background border border-border text-foreground hover:bg-muted transition shadow-2xs cursor-pointer';
+  'px-2 py-0.5 rounded-md font-mono text-2xs bg-background border border-border text-foreground hover:bg-muted transition shadow-2xs cursor-pointer';
 
 interface BackupCommandPresetsProps {
   type: DatabaseType;
@@ -32,7 +32,7 @@ export const BackupCommandPresets: React.FC<BackupCommandPresetsProps> = ({ type
           key={preset.label}
           type="button"
           onClick={() => onSelect(preset.command)}
-          className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-[11px] font-mono border border-border/70 transition shadow-2xs hover:border-primary/50 cursor-pointer"
+          className="px-2.5 py-1.5 bg-muted/80 hover:bg-muted text-foreground rounded-lg text-2xs font-mono border border-border/70 transition shadow-2xs hover:border-primary/50 cursor-pointer"
           title={preset.title}
         >
           {preset.label}
@@ -66,7 +66,7 @@ export const BackupVariableChips: React.FC<BackupVariableChipsProps> = ({ onInse
             key={item.tag}
             type="button"
             onClick={() => onInsert((prev) => appendCommandTag(prev, item.tag))}
-            className={`px-2 py-0.5 rounded-md font-mono text-[11px] border transition flex items-center gap-1 shadow-2xs cursor-pointer ${
+            className={`px-2 py-0.5 rounded-md font-mono text-2xs border transition flex items-center gap-1 shadow-2xs cursor-pointer ${
               item.req
                 ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 font-semibold'
                 : 'bg-background border-border text-foreground hover:bg-muted'

@@ -38,7 +38,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -50,7 +50,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-bold text-foreground">Snapshots & Comparativo de Estado (Diff)</h4>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Grave fotos do estado dos bundles e visualize mudanças de versão, novos componentes ou alterações de estado pós-deploy.
             </p>
           </div>

@@ -109,7 +109,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
                   <button
                     type="button"
                     onClick={onLoadMore}
-                    className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 text-[11px] font-bold cursor-pointer"
+                    className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 text-2xs font-bold cursor-pointer"
                     title={`Executar de novo trazendo até ${nextLimit} linhas`}
                   >
                     Carregar mais (até {nextLimit})

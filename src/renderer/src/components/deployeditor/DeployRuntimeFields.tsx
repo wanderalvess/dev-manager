@@ -31,7 +31,7 @@ export const DeployCommandFields: React.FC<StepFieldsProps> = ({
         <button
           type="button"
           onClick={() => onSelectDirectory('cwd')}
-          className="text-[11px] text-primary hover:underline flex items-center gap-1"
+          className="text-2xs text-primary hover:underline flex items-center gap-1"
         >
           <FolderOpen className="w-3 h-3" /> Procurar Pasta
         </button>
@@ -121,7 +121,7 @@ export const DeployHealthcheckFields: React.FC<RuntimeFieldsProps> = ({ step, on
         />
       </div>
     </div>
-    <p className="text-[11px] text-muted-foreground">
+    <p className="text-2xs text-muted-foreground">
       Realiza requisições periódicas a cada 2 segundos até o endpoint responder com o código esperado ou esgotar as tentativas.
     </p>
   </div>
@@ -154,7 +154,7 @@ export const DeployServiceFields: React.FC<RuntimeFieldsProps> = ({ step, onUpda
         placeholder="Ex: OracleServiceXE, postgresql-x64-15, Winthor-Karaf"
         className="w-full font-mono bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       />
-      <p className="text-[11px] text-muted-foreground mt-1">
+      <p className="text-2xs text-muted-foreground mt-1">
         Nome de identificação do serviço no Windows (conforme exibido em services.msc).
       </p>
     </div>

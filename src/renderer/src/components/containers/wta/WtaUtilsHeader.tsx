@@ -19,7 +19,7 @@ export const WtaUtilsHeader: React.FC<WtaUtilsHeaderProps> = ({ containerName, o
             Apache Karaf
           </span>
         </h3>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Portal Web, Instalador, Console Karaf (/opt/pcsist) e Modo Desenvolvedor
         </p>
       </div>

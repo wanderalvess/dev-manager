@@ -34,7 +34,7 @@ export const KarafUninstallModal: React.FC<KarafUninstallModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -64,7 +64,7 @@ export const KarafUninstallModal: React.FC<KarafUninstallModalProps> = ({
 
         {/* Log ao vivo do bundle:uninstall + bundle:refresh */}
         {state.uninstallLog && (
-          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
+          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-2xs text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
             {state.uninstallLog}
           </div>
         )}

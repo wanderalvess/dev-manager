@@ -189,7 +189,7 @@ export class DatabaseSessionManager {
       }
 
       this.trackTransaction(s, kind, result, manual);
-      return { ...result, session: this.stateOf(s) };
+      return { ...result, session: { ...this.stateOf(s), running: false } };
     } catch (err) {
       if (isConnectionLostError(err)) {
         const lost = s.pendingStatements > 0 || s.inTx;
@@ -209,7 +209,7 @@ export class DatabaseSessionManager {
           // a conexão pode ter caído; o próximo comando acusa
         }
       }
-      return fail(await this.ctx.formatErrorMessage(err, s.config));
+      return { ...fail(await this.ctx.formatErrorMessage(err, s.config)), session: { ...this.stateOf(s), running: false } };
     } finally {
       s.running = false;
       s.lastUsed = Date.now();
