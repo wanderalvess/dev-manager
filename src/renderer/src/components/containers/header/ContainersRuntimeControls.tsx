@@ -65,7 +65,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             type="button"
             onClick={() => onOpenWslTerminal()}
             disabled={isOpeningWslTerminal}
-            title={`Abrir terminal WSL na distro ${selectedDistro}`}
+            title={`Abrir terminal WSL na distro ${selectedDistro}`} aria-label={`Abrir terminal WSL na distro ${selectedDistro}`}
             className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
           >
             <Terminal className="w-3 h-3 text-sky-500" />
@@ -74,7 +74,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             type="button"
             onClick={() => onTerminateDistro()}
             disabled={isTerminatingDistro}
-            title={`Desligar distro ${selectedDistro} (wsl --terminate)`}
+            title={`Desligar distro ${selectedDistro} (wsl --terminate)`} aria-label={`Desligar distro ${selectedDistro} (wsl --terminate)`}
             className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
           >
             <Power className={`w-3 h-3 ${isTerminatingDistro ? 'animate-spin text-rose-500' : ''}`} />
@@ -120,7 +120,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
               if (found) onDeleteEnvironmentClick(found);
             }}
             disabled={sequenceRunning}
-            title="Excluir grupo salvo"
+            title="Excluir grupo salvo" aria-label="Excluir grupo salvo"
             className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer disabled:opacity-50"
           >
             <Trash2 className="w-3 h-3" />

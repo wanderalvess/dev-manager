@@ -36,7 +36,7 @@ export const KarafFeaturesModal: React.FC<KarafFeaturesModalProps> = ({ isOpen, 
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden"
+      panelClassName="relative w-full max-w-5xl bg-card border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       closeOnBackdrop={false}
       closeOnEscape={!installed.uninstallTarget}
       ariaLabel="Gerenciador de features e repositórios"

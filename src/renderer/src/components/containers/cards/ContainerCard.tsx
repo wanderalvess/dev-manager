@@ -77,7 +77,7 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
             ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]'
             : container.state === 'paused'
             ? 'bg-amber-500'
-            : 'bg-zinc-400 dark:bg-zinc-700'
+            : 'bg-muted-foreground dark:bg-muted'
         }`}
       />
 

@@ -35,7 +35,7 @@ export const DocsCatalog: React.FC<DocsCatalogProps> = ({
           placeholder="Filtrar documentos por nome..."
           value={fileFilter}
           onChange={(e) => onFileFilterChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl pl-8 pr-7 py-1.5 text-[11px] text-foreground placeholder-muted-foreground focus:outline-hidden focus:border-primary"
+          className="w-full bg-card border border-border rounded-xl pl-8 pr-7 py-1.5 text-2xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:border-primary"
         />
         {fileFilter && (
           <button
@@ -50,7 +50,7 @@ export const DocsCatalog: React.FC<DocsCatalogProps> = ({
     </div>
 
     {files.length === 0 ? (
-      <div className="cockpit-panel rounded-2xl p-8 text-center border border-border">
+      <div className="cockpit-panel rounded-xl p-8 text-center border border-border">
         <p className="text-xs text-muted-foreground">Nenhum documento encontrado com esse filtro.</p>
       </div>
     ) : (

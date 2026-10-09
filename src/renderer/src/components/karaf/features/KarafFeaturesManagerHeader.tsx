@@ -44,7 +44,7 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
               KARAF OSGi :8101
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+          <p className="text-2xs text-muted-foreground font-mono mt-0.5">
             Gerenciamento de repositórios XML e provisionamento de bundles do ecossistema WinThor.
           </p>
         </div>
@@ -55,14 +55,14 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
           onClick={onReload}
           disabled={isLoading}
           className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted border border-border/50 transition-colors cursor-pointer"
-          title="Recarregar dados do Karaf"
+          title="Recarregar dados do Karaf" aria-label="Recarregar dados do Karaf"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
         <button
           onClick={onClose}
           className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors cursor-pointer"
-          title="Fechar (ESC)"
+          title="Fechar (ESC)" aria-label="Fechar (ESC)"
         >
           <X className="w-4 h-4" />
         </button>

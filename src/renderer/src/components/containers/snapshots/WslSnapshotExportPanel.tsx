@@ -34,7 +34,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Distro de Origem
         </label>
         <select
@@ -52,7 +52,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
       </div>
 
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">
           Caminho do .tar de Destino
         </label>
         <input

@@ -24,7 +24,7 @@ export const ResultsGridCellContent: React.FC<ResultsGridCellContentProps> = ({ 
     case 'boolean':
       return <span className="text-amber-700 dark:text-amber-400 font-mono font-semibold">{formatCellValue(value, kind)}</span>;
     case 'object':
-      return <span className="text-teal-700 dark:text-teal-300 font-mono text-[11px]">{formatCellValue(value, kind)}</span>;
+      return <span className="text-teal-700 dark:text-teal-300 font-mono text-2xs">{formatCellValue(value, kind)}</span>;
     default:
       return <span className="text-slate-800 dark:text-slate-100 font-mono">{formatCellValue(value, kind)}</span>;
   }

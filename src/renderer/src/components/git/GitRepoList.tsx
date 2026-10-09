@@ -19,7 +19,7 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
   onSearchChange,
   onSelect
 }) => (
-  <div className="lg:col-span-4 flex flex-col space-y-3 cockpit-panel rounded-2xl p-3.5 overflow-hidden border border-border">
+  <div className="lg:col-span-4 flex flex-col space-y-3 cockpit-panel rounded-xl p-3 overflow-hidden border border-border">
     {/* Busca */}
     <div className="relative">
       <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
@@ -69,7 +69,7 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-1.5 mt-1.5 text-[11px] text-muted-foreground truncate">
+            <div className="flex items-center space-x-1.5 mt-1.5 text-2xs text-muted-foreground truncate">
               <GitBranch className="w-3 h-3 text-emerald-500 shrink-0" />
               <span className="truncate font-mono text-emerald-600 dark:text-emerald-300 font-medium">
                 {p.currentBranch}

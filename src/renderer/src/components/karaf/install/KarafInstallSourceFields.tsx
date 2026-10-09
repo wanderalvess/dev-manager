@@ -68,7 +68,7 @@ export const KarafInstallSourceFields: React.FC<KarafInstallSourceFieldsProps> =
           />
         </div>
 
-        <div className="text-[11px] text-muted-foreground font-mono bg-muted/30 p-2 rounded-lg truncate">
+        <div className="text-2xs text-muted-foreground font-mono bg-muted/30 p-2 rounded-lg truncate">
           URL Calculada: <span className="text-foreground">{computedLocation}</span>
         </div>
       </div>
@@ -112,7 +112,7 @@ export const KarafInstallSourceFields: React.FC<KarafInstallSourceFieldsProps> =
           <button
             type="button"
             onClick={onSelectFile}
-            className="text-[11px] text-primary hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-2xs text-primary hover:underline flex items-center gap-1 cursor-pointer"
           >
             <FolderOpen className="w-3 h-3" /> Selecionar Arquivo .JAR
           </button>

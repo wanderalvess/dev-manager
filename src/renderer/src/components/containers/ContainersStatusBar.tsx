@@ -23,10 +23,10 @@ export const ContainersStatusBar: React.FC<ContainersStatusBarProps> = ({
         <strong className="text-foreground font-semibold">{runningCount}</strong> rodando
       </span>
       <span className="flex items-center gap-1.5 font-medium">
-        <span className="w-2 h-2 rounded-full bg-zinc-500" />
+        <span className="w-2 h-2 rounded-full bg-muted-foreground" />
         <strong className="text-foreground font-semibold">{stoppedCount}</strong> parados
       </span>
-      <span className="text-[11px] text-muted-foreground/80">
+      <span className="text-2xs text-muted-foreground/80">
         Total: <strong className="text-foreground font-semibold">{totalCount}</strong>
       </span>
     </div>

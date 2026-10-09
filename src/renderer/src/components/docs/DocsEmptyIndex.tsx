@@ -7,7 +7,7 @@ interface DocsEmptyIndexProps {
 }
 
 export const DocsEmptyIndex: React.FC<DocsEmptyIndexProps> = ({ hasFolders, onNavigateToSettings }) => (
-  <div className="cockpit-panel rounded-2xl p-10 text-center flex flex-col items-center justify-center space-y-3 border border-border">
+  <div className="cockpit-panel rounded-xl p-10 text-center flex flex-col items-center justify-center space-y-3 border border-border">
     <FolderOpen className="w-10 h-10 text-primary/50" />
     <div>
       <h4 className="text-sm font-bold text-foreground">Nenhum índice de documentação gerado ainda</h4>

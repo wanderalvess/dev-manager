@@ -42,7 +42,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
             {runners.length}
           </span>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5">Pipelines de teste locais com captura de saída</p>
+        <p className="text-2xs text-muted-foreground mt-0.5">Pipelines de teste locais com captura de saída</p>
       </div>
 
       <button
@@ -66,7 +66,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
             key={preset.name}
             type="button"
             onClick={() => onAddPreset(preset)}
-            className="px-2 py-1 rounded bg-background hover:bg-muted border border-border/70 text-[11px] font-mono text-foreground flex items-center gap-1.5 transition cursor-pointer hover:border-primary/50 shadow-2xs"
+            className="px-2 py-1 rounded bg-background hover:bg-muted border border-border/70 text-2xs font-mono text-foreground flex items-center gap-1.5 transition cursor-pointer hover:border-primary/50 shadow-2xs"
             title={preset.description}
           >
             {TYPE_ICONS[preset.type]}
@@ -87,7 +87,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
         <div className="text-center p-6 border border-dashed border-border/80 rounded-xl bg-card/20">
           <Terminal className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-40" />
           <p className="text-xs font-bold text-foreground">Nenhum runner cadastrado</p>
-          <p className="text-[11px] text-muted-foreground mt-1 max-w-xs mx-auto">
+          <p className="text-2xs text-muted-foreground mt-1 max-w-xs mx-auto">
             Adicione um executor acima ou use um dos modelos rápidos para começar.
           </p>
         </div>

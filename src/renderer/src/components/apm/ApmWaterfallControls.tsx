@@ -14,7 +14,7 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
 }) => (
   <div className="p-2.5 bg-muted/40 rounded-lg border border-border flex flex-col gap-2 select-none">
     <div className="flex items-center justify-between gap-2 flex-wrap">
-      <div className="flex items-center gap-1 text-[11px] font-mono">
+      <div className="flex items-center gap-1 text-2xs font-mono">
         <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground mr-1">Camada:</span>
         <button
           type="button"

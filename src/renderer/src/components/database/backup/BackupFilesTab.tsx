@@ -62,7 +62,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
           onClick={onRefresh}
           disabled={!backupFolder.trim() || isLoadingBackupFiles}
           className="p-1.5 hover:text-foreground text-muted-foreground rounded-lg hover:bg-muted transition disabled:opacity-50 cursor-pointer"
-          title="Recarregar arquivos"
+          title="Recarregar arquivos" aria-label="Recarregar arquivos"
         >
           <RotateCw className={`w-4 h-4 ${isLoadingBackupFiles ? 'animate-spin text-primary' : ''}`} />
         </button>
@@ -70,13 +70,13 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
     </div>
 
     {restoreResult && (
-      <div className={`p-3.5 rounded-xl border text-xs ${backupResultToneClass(restoreResult.success)}`}>
+      <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(restoreResult.success)}`}>
         {restoreResult.message}
       </div>
     )}
 
     {drillResult && (
-      <div className={`p-3.5 rounded-xl border text-xs ${backupResultToneClass(drillResult.success)}`}>
+      <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(drillResult.success)}`}>
         {drillResult.message}
         {drillResult.success && drillResult.checksumSha256 && (
           <p className="text-2xs font-mono opacity-80 mt-1 truncate">
@@ -90,14 +90,14 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
       <div className="text-center py-10 text-muted-foreground bg-muted/20 border border-border/60 rounded-xl space-y-1">
         <FileArchive className="w-8 h-8 mx-auto opacity-40 text-muted-foreground mb-2" />
         <p className="font-semibold text-xs text-foreground">Nenhum arquivo de backup encontrado</p>
-        <p className="text-[11px]">Nenhum arquivo (.dmp, .sql, .dump) foi localizado na pasta de destino selecionada.</p>
+        <p className="text-2xs">Nenhum arquivo (.dmp, .sql, .dump) foi localizado na pasta de destino selecionada.</p>
       </div>
     ) : (
       <div className="space-y-2 max-h-[50vh] overflow-y-auto">
         {backupFiles.map((f) => (
           <div
             key={f.filePath}
-            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-background/70 border border-border/70 rounded-xl gap-2 hover:border-border transition shadow-2xs"
+            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-background/70 border border-border/70 rounded-xl gap-2 hover:border-border transition shadow-2xs"
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
                   {f.fileName.split('.').pop()}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-mono mt-1">
+              <div className="flex items-center gap-3 text-2xs text-muted-foreground font-mono mt-1">
                 <span>{formatBytes(f.sizeBytes)}</span>
                 <span>·</span>
                 <span>{new Date(f.createdAt).toLocaleString()}</span>

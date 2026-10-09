@@ -14,7 +14,7 @@ export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResul
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-xs space-y-3">
         <RotateCw className="w-8 h-8 animate-spin text-primary opacity-80" />
         <p className="font-semibold text-foreground text-sm">Executando consulta no banco de dados...</p>
-        <span className="text-[11px] opacity-70">Aguardando resposta do servidor...</span>
+        <span className="text-2xs opacity-70">Aguardando resposta do servidor...</span>
       </div>
     );
   }
@@ -24,7 +24,7 @@ export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResul
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-xs space-y-2">
         <Terminal className="w-8 h-8 opacity-40" />
         <p>Execute uma consulta ou comando SQL para visualizar os resultados aqui.</p>
-        <span className="text-[11px] opacity-60">Dica: use Ctrl+Enter para executar direto do editor.</span>
+        <span className="text-2xs opacity-60">Dica: use Ctrl+Enter para executar direto do editor.</span>
       </div>
     );
   }
@@ -36,7 +36,7 @@ export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResul
           <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
           <span>Falha na execução do SQL:</span>
         </div>
-        <pre className="font-mono text-[11px] whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-rose-700 dark:text-rose-300 mt-2">
+        <pre className="font-mono text-2xs whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-rose-700 dark:text-rose-300 mt-2">
           {queryResult.error}
         </pre>
       </div>
@@ -55,7 +55,7 @@ export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResul
             ? `${queryResult.affectedRows} linha(s) afetada(s) no banco de dados.`
             : 'Comando processado sem retorno de linhas.'}
         </p>
-        <span className="text-[11px] font-mono text-muted-foreground mt-2">
+        <span className="text-2xs font-mono text-muted-foreground mt-2">
           Tempo decorrido: {queryResult.executionTimeMs} ms
         </span>
       </div>

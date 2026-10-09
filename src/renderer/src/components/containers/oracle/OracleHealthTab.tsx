@@ -12,7 +12,7 @@ interface OracleHealthTabProps {
 
 export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copiedKey, onCopy }) => (
   <div className="space-y-4">
-    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3.5 flex items-start gap-3">
+    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 flex items-start gap-3">
       <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
         <Shield className="w-4 h-4" />
       </div>
@@ -24,7 +24,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Filtro de Schema (opcional)</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Filtro de Schema (opcional)</label>
         <input
           type="text"
           value={health.schema}
@@ -34,7 +34,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Usuário DBA</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Usuário DBA</label>
         <input
           type="text"
           value={health.user}
@@ -43,7 +43,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Senha DBA</label>
+        <label className="text-2xs font-semibold text-muted-foreground block mb-1">Senha DBA</label>
         <input
           type="password"
           value={health.pass}

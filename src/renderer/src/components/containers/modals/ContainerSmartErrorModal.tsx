@@ -47,7 +47,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg p-5 animate-fade-in space-y-4"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg p-5 animate-fade-in space-y-4"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -86,7 +86,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Para utilizá-la com containers, instale o pacote oficial via terminal WSL:
                 </p>
-                <div className="flex items-center justify-between p-2 bg-[#090D14] rounded-lg border border-border/70 font-mono text-[11px] text-amber-400">
+                <div className="flex items-center justify-between p-2 bg-[#090D14] rounded-lg border border-border/70 font-mono text-2xs text-amber-400">
                   <span className="select-all">sudo apt update && sudo apt install -y docker.io</span>
                   <button
                     type="button"
@@ -123,7 +123,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
         {/* Detalhes Técnicos do Erro */}
         <div className="space-y-1.5">
           <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Detalhes técnicos:</span>
-          <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-[11px] font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed scrollbar-thin">
+          <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-2xs font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed scrollbar-thin">
             {smartError.message}
           </pre>
         </div>

@@ -185,7 +185,7 @@ export class DeployService {
 
         if (action === 'update') {
           if (!bundleId || !location) {
-            const err = `[ERRO] Etapa "${step.name}": ID do bundle e nova versão/localização são obrigatórios para atualização.
+            const err = `[ERRO] Etapa "${step.name}": ID do bundle e nova versão/localização são obrigatórios para atualização.
 `;
             onChunk(err);
             return { code: 1, stderr: err };

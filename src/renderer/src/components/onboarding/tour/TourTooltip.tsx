@@ -30,7 +30,7 @@ export const TourTooltip: React.FC<TourTooltipProps> = ({
     <div
       ref={tooltipRef}
       style={style}
-      className="animate-tour-fade bg-card text-card-foreground rounded-2xl border border-border shadow-2xl p-4 space-y-3"
+      className="animate-tour-fade bg-card text-card-foreground rounded-xl border border-border shadow-2xl p-4 space-y-3"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5 text-primary">
@@ -41,7 +41,7 @@ export const TourTooltip: React.FC<TourTooltipProps> = ({
           type="button"
           onClick={onFinish}
           className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition shrink-0 cursor-pointer"
-          title="Pular tour"
+          title="Pular tour" aria-label="Pular tour"
         >
           <X className="w-4 h-4" />
         </button>

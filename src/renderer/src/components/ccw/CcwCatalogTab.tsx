@@ -31,7 +31,7 @@ export const CcwCatalogTab: React.FC<CcwCatalogTabProps> = ({
     <div className="p-3 rounded-xl bg-card border border-border/80 flex items-center justify-between gap-3">
       <div className="space-y-0.5">
         <span className="text-xs font-bold text-foreground block">Portal Central de Controle</span>
-        <span className="text-[11px] text-muted-foreground block">
+        <span className="text-2xs text-muted-foreground block">
           Acesse a árvore de rotinas diretamente no navegador web da PC Informática:
         </span>
       </div>

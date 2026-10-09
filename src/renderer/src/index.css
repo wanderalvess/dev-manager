@@ -30,6 +30,27 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
+  /* Status semântico: use estes em código novo (bg-success/10, text-warning, border-danger/40...). */
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-danger: hsl(var(--danger));
+  --color-info: hsl(var(--info));
+
+  /*
+    "Aviso" no app é sempre amber-*. O âmbar padrão do Tailwind (matiz ~38) é quase o laranja do primary do tema
+    Cockpit (matiz 24): aba ativa e alerta ficavam iguais. Remapeia a rampa amber para a rampa amarela (matiz ~45),
+    sem tocar em nenhuma classe existente.
+  */
+  --color-amber-200: #fef08a;
+  --color-amber-300: #fde047;
+  --color-amber-400: #facc15;
+  --color-amber-500: #eab308;
+  --color-amber-600: #ca8a04;
+  --color-amber-700: #a16207;
+  --color-amber-800: #854d0e;
+  --color-amber-900: #713f12;
+  --color-amber-950: #422006;
+
   --color-brand-50: #f0f7ff;
   --color-brand-100: #e0effe;
   --color-brand-500: #0066cc;
@@ -59,6 +80,23 @@
   If we ever want to remove these styles, we need to add an explicit border
   color utility to any element that depends on these defaults.
 */
+@layer base {
+  :root,
+  .light {
+    --success: 160 84% 26%;
+    --warning: 41 96% 32%;
+    --danger: 347 77% 40%;
+    --info: 201 96% 32%;
+  }
+
+  .dark {
+    --success: 158 64% 52%;
+    --warning: 45 93% 47%;
+    --danger: 349 89% 62%;
+    --info: 199 89% 60%;
+  }
+}
+
 @layer base {
   *,
   ::after,
@@ -553,7 +591,7 @@
   color: #047857;
 }
 .light .text-amber-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
-  color: #b45309;
+  color: #a16207;
 }
 .light .text-cyan-500:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
   color: #0e7490;
@@ -577,7 +615,7 @@
   color: #047857;
 }
 .light .text-amber-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
-  color: #b45309;
+  color: #a16207;
 }
 .light .text-cyan-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
   color: #0e7490;
@@ -590,4 +628,25 @@
 }
 .light .text-rose-600:not(:is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-gray-9"], [class*="bg-neutral-9"], [class*="bg-[#"], [class*="bg-card-dark"]) *) {
   color: #be123c;
+}
+
+/* Foco de teclado visível em todo o app (só aparece em navegação por Tab, não no clique do mouse). */
+@layer base {
+  :focus-visible:not(input, textarea, select) {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Respeita a preferência do sistema por menos movimento (spinners e pulses ficam estáticos). */
+@media (prefers-reduced-motion: reduce) {
+  /* Spinners e pulses continuam: são indicador de carregamento/ao vivo, não decoração. */
+  *:not(.animate-spin, .animate-pulse),
+  *:not(.animate-spin, .animate-pulse)::before,
+  *:not(.animate-spin, .animate-pulse)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

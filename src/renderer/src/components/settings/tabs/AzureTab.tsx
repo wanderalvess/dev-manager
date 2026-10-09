@@ -22,13 +22,13 @@ export const AzureTab: React.FC<AzureTabProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-azure">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
-        <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
               <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                 <GitBranch className="w-4 h-4 text-blue-500" /> Configurações do Git & Azure DevOps
               </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-2xs text-muted-foreground mt-0.5">
                 Parâmetros para criação automatizada de Pull Requests e rastreamento de repositórios.
               </p>
             </div>
@@ -140,11 +140,11 @@ export const AzureTab: React.FC<AzureTabProps> = ({
           </div>
 
           {/* Box Informativo de Integração Azure */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3.5 text-xs text-foreground space-y-1">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 text-xs text-foreground space-y-1">
             <span className="font-bold text-blue-600 dark:text-blue-400 block flex items-center gap-1.5">
               <GitBranch className="w-4 h-4" /> Integração com o Azure DevOps (dev.azure.com)
             </span>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-2xs text-muted-foreground leading-relaxed">
               O painel lê automaticamente as configurações dos repositórios localizados em seu computador (identificando a organização, projeto e nome do repositório no Azure DevOps). Ao clicar para abrir um Pull Request, a URL é montada com o <code>sourceRef</code> (sua branch local) e o <code>targetRef</code> (a branch padrão configurada acima).
             </p>
           </div>

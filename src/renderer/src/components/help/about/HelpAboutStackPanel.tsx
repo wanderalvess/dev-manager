@@ -17,7 +17,7 @@ const STACK_ITEMS: { label: string; colorClass: string }[] = [
 
 /** Tecnologias utilizadas */
 export const HelpAboutStackPanel: React.FC = () => (
-  <div className="cockpit-panel rounded-2xl p-5 border border-border space-y-3 shadow-md">
+  <div className="cockpit-panel rounded-xl p-5 border border-border space-y-3 shadow-md">
     <div className="text-xs font-extrabold uppercase tracking-wider text-foreground flex items-center gap-1.5">
       <Code2 className="w-4 h-4 text-primary" />
       <span>Stack Tecnológica do Painel</span>

@@ -70,7 +70,7 @@ export const BindVariableRow: React.FC<BindVariableRowProps> = ({
         type="button"
         onClick={() => onRemove(idx)}
         className="p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 rounded transition cursor-pointer"
-        title="Remover esta variável"
+        title="Remover esta variável" aria-label="Remover esta variável"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

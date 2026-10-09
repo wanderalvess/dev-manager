@@ -28,9 +28,9 @@ export const ExecutionResultBanner: React.FC<ExecutionResultBannerProps> = ({ re
           <span className="text-2xs px-1.5 py-0.2 rounded border border-current font-semibold">
             {result.status.toUpperCase()}
           </span>
-          <span className="text-[11px] opacity-75">({formatDurationSeconds(result.durationMs)})</span>
+          <span className="text-2xs opacity-75">({formatDurationSeconds(result.durationMs)})</span>
         </div>
-        <div className="text-[11px] opacity-90 mt-0.5">
+        <div className="text-2xs opacity-90 mt-0.5">
           Total: {result.totalTests} | Aprovados: {result.passedCount} | Falhas: {result.failedCount} | Pulados:{' '}
           {result.skippedCount}
         </div>
@@ -42,7 +42,7 @@ export const ExecutionResultBanner: React.FC<ExecutionResultBannerProps> = ({ re
       <button
         type="button"
         onClick={() => onSync(result.runnerId, result)}
-        className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-100 flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
+        className="px-3 py-1.5 rounded-lg bg-card hover:bg-muted border border-border text-xs font-semibold text-foreground flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
       >
         <Sparkles className="w-3.5 h-3.5 text-amber-400" />
         <span>Sincronizar Matriz</span>

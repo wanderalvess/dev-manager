@@ -202,7 +202,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                       value={item.status}
                       aria-label={`Status de ${item.title}`}
                       onChange={(e) => onStatusChange(item.id, e.target.value as ValidationItemStatus)}
-                      className={`px-2 py-1 rounded text-[11px] font-bold border cursor-pointer focus:outline-hidden ${getStatusSelectClass(item.status)}`}
+                      className={`px-2 py-1 rounded text-2xs font-bold border cursor-pointer focus:outline-hidden ${getStatusSelectClass(item.status)}`}
                     >
                       <option value="pending">⚪ Pendente</option>
                       <option value="in_progress">⏳ Em Teste</option>
@@ -214,7 +214,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
 
                   <td className="px-4 py-3 font-semibold text-foreground min-w-56">{item.title}</td>
 
-                  <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground">
+                  <td className="px-4 py-3 font-mono text-2xs text-muted-foreground">
                     {item.targetName}
                   </td>
 
@@ -228,7 +228,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                     {item.notes || '—'}
                   </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap text-muted-foreground font-mono text-[11px]">
+                  <td className="px-4 py-3 whitespace-nowrap text-muted-foreground font-mono text-2xs">
                     {item.updatedAt ? new Date(item.updatedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                   </td>
 

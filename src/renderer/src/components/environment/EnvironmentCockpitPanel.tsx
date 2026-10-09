@@ -66,7 +66,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
   const isRunDisabled = isRunningProfile || !activeProfile?.steps || activeProfile.steps.length === 0;
 
   return (
-    <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border flex flex-col space-y-3.5 shrink-0">
+    <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border flex flex-col space-y-3.5 shrink-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
@@ -74,9 +74,9 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
           </div>
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 className="text-base font-bold text-foreground">
+              <h1 className="text-lg font-bold text-foreground">
                 Preparação de Ambiente &amp; Workflows
-              </h2>
+              </h1>
 
               <div className="relative inline-block" data-tour="profile-selector">
                 <select
@@ -99,7 +99,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-2xs text-muted-foreground mt-0.5">
               {activeProfile?.description || 'Ambiente 100% configurável sem nomes fixos. Suba projetos e libere portas em sequência.'}
             </p>
           </div>
@@ -145,7 +145,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
             type="button"
             onClick={onOpenTour}
             className="h-9 w-9 rounded-xl border border-border/60 hover:border-primary/40 text-muted-foreground hover:text-primary transition flex items-center justify-center shrink-0 cursor-pointer"
-            title="Rever o tour guiado desta página"
+            title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
           >
             <Sparkles className="w-4 h-4" />
           </button>

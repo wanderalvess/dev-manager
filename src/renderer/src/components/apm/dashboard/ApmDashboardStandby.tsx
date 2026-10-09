@@ -37,7 +37,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
               )}
               <span
                 className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  receiverState === 'listening' ? 'bg-emerald-500' : receiverState === 'down' ? 'bg-rose-500' : 'bg-neutral-400'
+                  receiverState === 'listening' ? 'bg-emerald-500' : receiverState === 'down' ? 'bg-rose-500' : 'bg-muted-foreground'
                 }`}
               />
             </span>
@@ -85,7 +85,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
         {/* Teste Rápido / Chamada */}
         <div className="flex flex-col gap-2 p-3 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-200 text-xs">
-          <div className="flex items-center justify-between text-[11px] text-neutral-400">
+          <div className="flex items-center justify-between text-2xs text-neutral-400">
             <span className="flex items-center gap-1.5 font-mono">
               <Terminal className="w-3.5 h-3.5 text-sky-400" />
               Disparo de Teste Rápido (PowerShell):
@@ -109,7 +109,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
         {/* Ações de Inicialização */}
         <div className="flex items-center justify-between pt-1">
-          <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+          <div className="text-2xs text-muted-foreground flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             <span>Dica: ligue "Anexar o agente automaticamente" em Como Conectar para o Karaf exportar sozinho.</span>
           </div>

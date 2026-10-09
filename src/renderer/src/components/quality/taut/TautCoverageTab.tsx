@@ -162,7 +162,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="py-2 px-3 font-mono text-[11px] text-muted-foreground truncate max-w-md">
+                    <td className="py-2 px-3 font-mono text-2xs text-muted-foreground truncate max-w-md">
                       {item.filePath ? (
                         <span className="text-foreground">{item.filePath}</span>
                       ) : (

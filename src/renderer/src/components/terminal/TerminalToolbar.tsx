@@ -82,7 +82,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
           placeholder="Filtrar logs..."
           value={searchFilter}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="bg-[#080d17] border border-slate-700 hover:border-slate-500 rounded-lg pl-7 pr-2 py-1 text-[11px] text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-primary font-mono w-28 md:w-36 transition-colors"
+          className="bg-[#080d17] border border-slate-700 hover:border-slate-500 rounded-lg pl-7 pr-2 py-1 text-2xs text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-primary font-mono w-28 md:w-36 transition-colors"
         />
       </div>
 
@@ -119,7 +119,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
               ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
               : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
           }`}
-          title={isMaximized ? 'Restaurar tamanho normal do console' : 'Maximizar console (largura e altura total)'}
+          title={isMaximized ? 'Restaurar tamanho normal do console' : 'Maximizar console (largura e altura total)'} aria-label={isMaximized ? 'Restaurar tamanho normal do console' : 'Maximizar console (largura e altura total)'}
         >
           {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
         </button>
@@ -132,7 +132,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
             ? 'bg-primary/20 border-primary/50 text-primary font-bold'
             : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
         }`}
-        title={wordWrap ? 'Quebra de Linha Ativa (clique para modo tabela / scroll horizontal)' : 'Quebra de Linha Desativada (modo colunas / tabela Karaf preservado)'}
+        title={wordWrap ? 'Quebra de Linha Ativa (clique para modo tabela / scroll horizontal)' : 'Quebra de Linha Desativada (modo colunas / tabela Karaf preservado)'} aria-label={wordWrap ? 'Quebra de Linha Ativa (clique para modo tabela / scroll horizontal)' : 'Quebra de Linha Desativada (modo colunas / tabela Karaf preservado)'}
       >
         {wordWrap ? <WrapText className="w-3.5 h-3.5" /> : <AlignLeft className="w-3.5 h-3.5" />}
       </button>
@@ -144,7 +144,7 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
             ? 'bg-primary/20 border-primary/50 text-primary font-bold'
             : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
         }`}
-        title={autoScroll ? 'Auto-rolagem Ativa' : 'Auto-rolagem Pausada'}
+        title={autoScroll ? 'Auto-rolagem Ativa' : 'Auto-rolagem Pausada'} aria-label={autoScroll ? 'Auto-rolagem Ativa' : 'Auto-rolagem Pausada'}
       >
         <ArrowDown className="w-3.5 h-3.5" />
       </button>
@@ -152,8 +152,8 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
       <button
         onClick={onCopy}
         disabled={!hasLogs}
-        className="p-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg text-xs transition-colors disabled:opacity-30 cursor-pointer"
-        title="Copiar Conteúdo do Console"
+        className="p-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg text-xs transition-colors disabled:opacity-50 cursor-pointer"
+        title="Copiar Conteúdo do Console" aria-label="Copiar Conteúdo do Console"
       >
         {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
       </button>
@@ -161,8 +161,8 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
       <button
         onClick={onClear}
         disabled={!hasLogs}
-        className="p-1.5 text-slate-300 hover:text-rose-300 bg-slate-800 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-500/50 rounded-lg text-xs transition-colors disabled:opacity-30 cursor-pointer"
-        title="Limpar Console"
+        className="p-1.5 text-slate-300 hover:text-rose-300 bg-slate-800 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-500/50 rounded-lg text-xs transition-colors disabled:opacity-50 cursor-pointer"
+        title="Limpar Console" aria-label="Limpar Console"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

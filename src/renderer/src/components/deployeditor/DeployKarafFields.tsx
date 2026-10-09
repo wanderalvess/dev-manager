@@ -35,7 +35,7 @@ export const DeployKarafCommandFields: React.FC<DeployKarafCommandFieldsProps> =
       />
     </div>
     <div className="bg-muted/30 border border-border/60 rounded-lg p-3 space-y-2">
-      <p className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+      <p className="text-2xs font-semibold text-muted-foreground flex items-center gap-1.5">
         <Sparkles className="w-3.5 h-3.5 text-primary" /> Sugerir comando a partir de um pom.xml
       </p>
       <select
@@ -55,7 +55,7 @@ export const DeployKarafCommandFields: React.FC<DeployKarafCommandFieldsProps> =
           type="button"
           disabled={!suggestProjectPath || isSuggesting}
           onClick={() => onSuggestFromPom('repo')}
-          className="flex-1 px-2 py-1.5 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-40 transition-colors"
+          className="flex-1 px-2 py-1.5 bg-card hover:bg-muted border border-border rounded-lg text-2xs font-semibold text-foreground disabled:opacity-50 transition-colors"
         >
           Preencher com repo-add
         </button>
@@ -63,7 +63,7 @@ export const DeployKarafCommandFields: React.FC<DeployKarafCommandFieldsProps> =
           type="button"
           disabled={!suggestProjectPath || isSuggesting}
           onClick={() => onSuggestFromPom('install')}
-          className="flex-1 px-2 py-1.5 bg-card hover:bg-muted border border-border rounded-lg text-[11px] font-semibold text-foreground disabled:opacity-40 transition-colors"
+          className="flex-1 px-2 py-1.5 bg-card hover:bg-muted border border-border rounded-lg text-2xs font-semibold text-foreground disabled:opacity-50 transition-colors"
         >
           Preencher com install
         </button>

@@ -36,7 +36,7 @@ export const DatabaseSidebarTableItem: React.FC<DatabaseSidebarTableItemProps> =
         <button
           type="button"
           onClick={(e) => onToggleTableExpand(tbl, e)}
-          title={isExpanded ? 'Recolher colunas' : 'Inspecionar colunas'}
+          title={isExpanded ? 'Recolher colunas' : 'Inspecionar colunas'} aria-label={isExpanded ? 'Recolher colunas' : 'Inspecionar colunas'}
           className="p-0.5 rounded hover:bg-card text-muted-foreground hover:text-primary transition shrink-0 cursor-pointer"
         >
           {isExpanded ? (

@@ -1,4 +1,5 @@
 import React from 'react';
+import { EscapeToClose } from '../../ui/EscapeToClose';
 import { Filter, Copy, Trash2, Pencil } from 'lucide-react';
 import { clampContextMenuPosition, formatFilterValueLabel } from '../../../utils/resultsGridUtils';
 
@@ -36,6 +37,7 @@ export const ResultsGridContextMenu: React.FC<ResultsGridContextMenuProps> = ({
 }) => (
   <>
     <div className="fixed inset-0 z-40 cursor-default" onClick={onClose} />
+    <EscapeToClose onEscape={onClose} />
     <div
       style={clampContextMenuPosition(menu.x, menu.y, window.innerWidth, window.innerHeight)}
       className="fixed z-50 w-60 bg-popover text-popover-foreground rounded-lg shadow-2xl border border-border p-1.5 text-xs font-sans animate-fade-in space-y-1"

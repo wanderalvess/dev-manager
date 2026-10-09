@@ -30,7 +30,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
 }) => {
   return (
     <div className="space-y-4 flex flex-col flex-1" id="field-logs">
-      <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
+      <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
           <div>
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
@@ -70,7 +70,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label htmlFor={`logs-tab-1-${idx}`} className="text-[11px] font-bold text-foreground block">Nome de Exibição</label>
+                  <label htmlFor={`logs-tab-1-${idx}`} className="text-2xs font-bold text-foreground block">Nome de Exibição</label>
                   <input id={`logs-tab-1-${idx}`}
                     type="text"
                     value={src.name || ''}
@@ -82,7 +82,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
 
                 <div className="space-y-1 md:col-span-2">
                   <div className="flex items-center justify-between">
-                    <label htmlFor={`logs-tab-2-${idx}`} className="text-[11px] font-bold text-foreground block">Caminho do Arquivo de Log (.log, .out, .txt)</label>
+                    <label htmlFor={`logs-tab-2-${idx}`} className="text-2xs font-bold text-foreground block">Caminho do Arquivo de Log (.log, .out, .txt)</label>
                     <span className="text-2xs text-muted-foreground font-mono">Windows Local</span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -107,7 +107,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
 
               <div className="flex flex-wrap items-center justify-between pt-1 gap-2">
                 <div className="flex items-center space-x-2">
-                  <label htmlFor={`logs-tab-3-${idx}`} className="text-[11px] font-semibold text-muted-foreground">Codificação:</label>
+                  <label htmlFor={`logs-tab-3-${idx}`} className="text-2xs font-semibold text-muted-foreground">Codificação:</label>
                   <select id={`logs-tab-3-${idx}`}
                     value={src.encoding || 'utf-8'}
                     onChange={(e) => handleUpdateLogSource(idx, 'encoding', e.target.value)}
@@ -132,7 +132,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
           ))}
         </div>
 
-        <div className="bg-muted/30 border border-border/50 rounded-xl p-3.5 text-xs text-muted-foreground space-y-1">
+        <div className="bg-muted/30 border border-border/50 rounded-xl p-3 text-xs text-muted-foreground space-y-1">
           <span className="font-bold text-foreground flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-primary" /> Dica de Produtividade
           </span>

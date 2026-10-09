@@ -9,7 +9,7 @@ interface DirsIdeNameFieldProps {
 export const DirsIdeNameField: React.FC<DirsIdeNameFieldProps> = ({ settings, onChange }) => (
   <div className="md:col-span-2 pt-1">
     <div className="bg-muted/40 border border-border/80 rounded-xl p-3 space-y-1">
-      <label htmlFor="dirs-ide-name-field-1" className="block text-[11px] font-bold text-foreground">
+      <label htmlFor="dirs-ide-name-field-1" className="block text-2xs font-bold text-foreground">
         Rótulo de Exibição da IDE (Opcional):
       </label>
       <input id="dirs-ide-name-field-1"

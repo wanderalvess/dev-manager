@@ -155,7 +155,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
 
       {/* Descrição do Template Ativo */}
       {selectedTemplate?.description && (
-        <p className="text-[11px] text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5 font-mono">
+        <p className="text-2xs text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5 font-mono">
           {selectedTemplate.description}
         </p>
       )}

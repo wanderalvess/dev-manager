@@ -16,7 +16,7 @@ export const ApmSqlSpans: React.FC<ApmSqlSpansProps> = ({
   <div className="flex flex-col gap-3 font-mono text-xs">
     {spans.filter((span) => !!span.dbStatement).map((span, index) => (
       <div key={span.spanId} className="p-3 rounded-lg border border-border bg-card flex flex-col gap-2">
-        <div className="flex items-center justify-between text-[11px]">
+        <div className="flex items-center justify-between text-2xs">
           <span className="font-semibold text-sky-700 dark:text-sky-400 flex items-center gap-1.5">
             <Database className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" /> Query #{index + 1} ({span.durationMs}ms)
           </span>
@@ -44,7 +44,7 @@ export const ApmSqlSpans: React.FC<ApmSqlSpansProps> = ({
             )}
           </div>
         </div>
-        <pre className="p-2.5 rounded bg-background border border-border text-foreground text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
+        <pre className="p-2.5 rounded bg-background border border-border text-foreground text-2xs overflow-x-auto whitespace-pre-wrap leading-relaxed">
           {splitSqlTokens(span.dbStatement!).map((token, tokenIndex) => (
             <span key={tokenIndex} className={token.isKeyword ? 'text-sky-700 dark:text-sky-400 font-bold' : 'text-foreground'}>
               {token.text}

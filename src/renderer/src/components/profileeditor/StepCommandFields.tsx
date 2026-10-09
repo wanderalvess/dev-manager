@@ -27,7 +27,7 @@ export const StepCommandFields: React.FC<StepCommandFieldsProps> = ({
         <button
           type="button"
           onClick={onSelectFile}
-          className="text-[11px] text-primary hover:underline flex items-center gap-1"
+          className="text-2xs text-primary hover:underline flex items-center gap-1"
         >
           <FolderOpen className="w-3 h-3" /> Selecionar arquivo .bat/.cmd
         </button>
@@ -49,7 +49,7 @@ export const StepCommandFields: React.FC<StepCommandFieldsProps> = ({
         <button
           type="button"
           onClick={onSelectDirectory}
-          className="text-[11px] text-primary hover:underline flex items-center gap-1"
+          className="text-2xs text-primary hover:underline flex items-center gap-1"
         >
           <FolderOpen className="w-3 h-3" /> Procurar Pasta
         </button>

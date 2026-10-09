@@ -10,7 +10,7 @@ export const SaveEnvironmentSummary: React.FC<SaveEnvironmentSummaryProps> = ({ 
 
   return (
     <div className="p-3 bg-muted/40 rounded-xl border border-border/60 text-xs space-y-1.5">
-      <div className="flex items-center justify-between font-bold text-foreground text-[11px]">
+      <div className="flex items-center justify-between font-bold text-foreground text-2xs">
         <span>Ordem de subida do grupo:</span>
         <span className="text-muted-foreground font-normal">{slots.length} containers em sequência</span>
       </div>

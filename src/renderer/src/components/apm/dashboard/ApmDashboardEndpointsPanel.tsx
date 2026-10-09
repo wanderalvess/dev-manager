@@ -63,7 +63,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
           {endpoints.slice(0, 5).map((ep, i) => (
             <div
               key={`${ep.serviceName}-${ep.method}-${ep.route}-${i}`}
-              className="py-2.5 flex items-center justify-between gap-3 group hover:bg-neutral-100/50 dark:hover:bg-neutral-900/50 -mx-2 px-2 rounded-lg transition-colors"
+              className="py-2.5 flex items-center justify-between gap-3 group hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span
@@ -106,8 +106,8 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
                   <button
                     type="button"
                     onClick={() => onFilterByEndpoint(ep.route)}
-                    title="Filtrar traces deste endpoint no Traces Explorer"
-                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-800 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    title="Filtrar traces deste endpoint no Traces Explorer" aria-label="Filtrar traces deste endpoint no Traces Explorer"
+                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>

@@ -84,7 +84,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
       {/* Atalhos para Ecossistema de Testes */}
       {onNavigate && (
         <div className="hidden xl:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
-          <span className="text-[11px] font-mono">Atalhos:</span>
+          <span className="text-2xs font-mono">Atalhos:</span>
           <button
             type="button"
             onClick={() => onNavigate('routines')}

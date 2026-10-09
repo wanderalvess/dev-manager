@@ -27,7 +27,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
           <div className="flex-1 overflow-auto">
             {displayedTraces.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3 shadow-inner">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3 shadow-inner">
                   <Activity className="w-7 h-7 radar-live" />
                 </div>
                 <h3 className="text-sm font-bold text-foreground mb-1">
@@ -37,7 +37,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                   {rawTraces.length === 0 ? (
                     <>
                       Envie spans OTLP/HTTP para{' '}
-                      <code className="px-1.5 py-0.5 rounded bg-muted border border-border text-foreground font-mono text-[11px]">
+                      <code className="px-1.5 py-0.5 rounded bg-muted border border-border text-foreground font-mono text-2xs">
                         {setupSnippets.tracesUrl}
                       </code>
                     </>
@@ -69,7 +69,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
               </div>
             ) : (
               <table className="w-full border-collapse text-left font-mono text-xs tabular-nums">
-                <thead className="sticky top-0 z-10 bg-card border-b border-border text-[11px] text-muted-foreground uppercase tracking-wider">
+                <thead className="sticky top-0 z-10 bg-card border-b border-border text-2xs text-muted-foreground uppercase tracking-wider">
                   <tr>
                     <th className="py-2 px-3 w-16 text-center">Status</th>
                     <th className="py-2 px-2.5 w-16">Método</th>
@@ -138,7 +138,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                         </td>
 
                         {/* Serviço */}
-                        <td className="py-1.5 px-2.5 text-muted-foreground truncate hidden lg:table-cell text-[11px]">
+                        <td className="py-1.5 px-2.5 text-muted-foreground truncate hidden lg:table-cell text-2xs">
                           {trace.serviceName}
                         </td>
 
@@ -174,12 +174,12 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                         </td>
 
                         {/* Qtd Spans */}
-                        <td className="py-1.5 px-2.5 text-center text-muted-foreground hidden md:table-cell text-[11px]">
+                        <td className="py-1.5 px-2.5 text-center text-muted-foreground hidden md:table-cell text-2xs">
                           {trace.spanCount}
                         </td>
 
                         {/* Horário */}
-                        <td className="py-1.5 px-3 text-right text-muted-foreground text-[11px]">
+                        <td className="py-1.5 px-3 text-right text-muted-foreground text-2xs">
                           {new Date(trace.startTimeUnixMs).toLocaleTimeString('pt-BR', {
                             hour: '2-digit',
                             minute: '2-digit',

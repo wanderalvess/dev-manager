@@ -6,6 +6,7 @@ import { NetworkIpInfo, SystemMetrics } from '../../../shared/types';
 import { HeaderNav } from './header/HeaderNav';
 import { StatusPopover } from './header/StatusPopover';
 import { QuickSearchButton } from './header/QuickSearchButton';
+import { IconButton } from './ui/IconButton';
 
 interface HeaderProps {
   activeTab: string;
@@ -98,20 +99,20 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   return (
-    <header className="bg-card/95 border-b border-border/80 px-2.5 sm:px-3 lg:px-4 py-2 flex items-center justify-between shadow-md relative z-30 backdrop-blur-md transition-colors duration-300 gap-1.5 sm:gap-2.5 xl:gap-3.5 shrink-0 h-14 w-full">
+    <header className="bg-card/95 border-b border-border/80 px-2.5 sm:px-3 lg:px-4 py-2 flex items-center justify-between shadow-md relative z-30 backdrop-blur-md transition-colors duration-300 gap-2.5 shrink-0 h-14 w-full">
       {/* 1. Identidade do Aplicativo (Esquerda) */}
-      <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
+      <div className="flex items-center gap-2.5 shrink-0">
         <AppLogo size="sm" showStatusDot />
 
         <div className="flex flex-col">
-          <div className="flex items-center space-x-1.5">
-            <h1 className="text-xs sm:text-sm font-extrabold tracking-tight text-foreground font-sans flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <div className="text-sm font-extrabold tracking-tight text-foreground font-sans flex items-center gap-1">
               Hub <span className="text-primary font-bold">Manager</span>
-            </h1>
+            </div>
             <button
               type="button"
               onClick={onOpenWhatsNew}
-              className="text-2xs sm:text-2xs px-1.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-mono font-bold border border-primary/30 hover:border-primary/50 transition cursor-pointer active:scale-95"
+              className="text-2xs px-1.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-mono font-bold border border-primary/30 hover:border-primary/50 transition cursor-pointer active:scale-95"
               title="Clique para ver as novidades desta versão e versões anteriores"
             >
               v{appVersion || '...'}
@@ -136,7 +137,7 @@ export const Header: React.FC<HeaderProps> = ({
       <QuickSearchButton onOpenQuickLauncher={onOpenQuickLauncher} />
 
       {/* 4. Ações da Direita: Status do Sistema, Tema, Central de Ajuda, Configurações e Atualizar */}
-      <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         <StatusPopover
           networkIps={networkIps}
           systemMetrics={systemMetrics}
@@ -148,44 +149,29 @@ export const Header: React.FC<HeaderProps> = ({
 
         <ThemeToggle />
 
-        <button
-          type="button"
+        <IconButton
           data-tour="help"
           onClick={() => setActiveTab('help')}
-          className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 shrink-0 ${
-            activeTab === 'help'
-              ? 'bg-primary text-primary-foreground border-primary shadow-2xs'
-              : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
-          }`}
-          title="Central de Ajuda, FAQ e Diagnósticos (Alt+9)"
-        >
-          <HelpCircle className="w-4 h-4" />
-        </button>
+          tone={activeTab === 'help' ? 'active' : 'neutral'}
+          label="Central de Ajuda, FAQ e Diagnósticos (Alt+9)"
+          icon={<HelpCircle className="w-4 h-4" />}
+        />
 
-        <button
-          type="button"
+        <IconButton
           data-tour="settings"
           onClick={() => setActiveTab('settings')}
-          className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 shrink-0 ${
-            activeTab === 'settings'
-              ? 'bg-primary text-primary-foreground border-primary shadow-2xs'
-              : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
-          }`}
-          title="Configurações do Sistema e Portas"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
+          tone={activeTab === 'settings' ? 'active' : 'neutral'}
+          label="Configurações do Sistema e Portas"
+          icon={<Settings className="w-4 h-4" />}
+        />
 
-        <button
-          type="button"
+        <IconButton
           data-tour="refresh"
           onClick={onRefreshAll}
           disabled={isRefreshing}
-          className="h-9 w-9 text-muted-foreground hover:text-foreground bg-card/50 hover:bg-card border border-border/60 hover:border-border rounded-lg flex items-center justify-center transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-primary/40 shrink-0"
-          title="Recarregar status de serviços, portas e repositórios"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
-        </button>
+          label="Recarregar status de serviços, portas e repositórios"
+          icon={<RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />}
+        />
       </div>
     </header>
   );

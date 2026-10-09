@@ -13,7 +13,7 @@ interface RunnerEditorModalProps {
   onSave: () => void;
 }
 
-const labelClass = 'block text-[11px] font-mono text-muted-foreground mb-1 uppercase tracking-wider';
+const labelClass = 'block text-2xs font-mono text-muted-foreground mb-1 uppercase tracking-wider';
 const monoInputClass =
   'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary/80';
 const textInputClass =
@@ -136,7 +136,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
         <label className={labelClass}>Vincular Cenários da Matriz:</label>
         <div className="max-h-28 overflow-y-auto border border-border/70 rounded-lg p-2 bg-background/50 space-y-1">
           {validationItems.length === 0 ? (
-            <span className="text-muted-foreground text-[11px] font-mono">
+            <span className="text-muted-foreground text-2xs font-mono">
               Nenhum cenário cadastrado na Matriz de Validação.
             </span>
           ) : (
@@ -145,7 +145,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
               return (
                 <label
                   key={valItem.id}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-muted/60 p-1 rounded text-[11px]"
+                  className="flex items-center gap-2 cursor-pointer hover:bg-muted/60 p-1 rounded text-2xs"
                 >
                   <input
                     type="checkbox"

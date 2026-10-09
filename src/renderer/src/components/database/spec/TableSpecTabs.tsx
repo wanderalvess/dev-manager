@@ -241,7 +241,7 @@ export const DdlTab: React.FC<DdlTabProps> = ({ ddl, loading, error }) => {
       <button
         type="button"
         onClick={copy}
-        className="absolute right-3 top-3 flex items-center gap-1 px-2 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-[11px] font-semibold text-foreground cursor-pointer"
+        className="absolute right-3 top-3 flex items-center gap-1 px-2 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-2xs font-semibold text-foreground cursor-pointer"
         title="Copiar o DDL para a área de transferência"
       >
         {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}

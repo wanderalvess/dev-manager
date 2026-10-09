@@ -15,16 +15,16 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
   const { copy: copyIp, copiedKey: copiedIp } = useCopyToClipboard();
 
   return (
-    <div className="cockpit-panel rounded-2xl p-3 border border-border flex flex-col space-y-2">
+    <div className="cockpit-panel rounded-xl p-3 border border-border flex flex-col space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
           <Wifi className="w-3.5 h-3.5 text-primary" />
           <span>Endereços IP e Conectividade de Rede</span>
         </div>
         <button
           type="button"
           onClick={onRefresh}
-          title="Atualizar IPs de rede"
+          title="Atualizar IPs de rede" aria-label="Atualizar IPs de rede"
           className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition cursor-pointer"
         >
           <RefreshCw className="w-3 h-3" />

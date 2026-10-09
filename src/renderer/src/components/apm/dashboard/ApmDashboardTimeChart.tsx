@@ -28,7 +28,7 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
             Volume & Latência nos Últimos 15 Minutos
           </h4>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-mono">
+        <div className="flex items-center gap-3 text-2xs text-muted-foreground font-mono">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500" /> Sucesso (2xx/3xx)
           </span>
@@ -85,7 +85,7 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
               >
                 {/* Tooltip flutuante ao passar o mouse */}
                 {isHovered && total > 0 && (
-                  <div className="absolute bottom-full mb-3 z-30 px-3 py-2 rounded-lg bg-neutral-900 text-neutral-100 text-[11px] shadow-xl border border-neutral-800 whitespace-nowrap pointer-events-none">
+                  <div className="absolute bottom-full mb-3 z-30 px-3 py-2 rounded-lg bg-neutral-900 text-neutral-100 text-2xs shadow-xl border border-neutral-800 whitespace-nowrap pointer-events-none">
                     <div className="font-semibold font-mono text-emerald-400 mb-1 flex items-center justify-between gap-3">
                       <span>Minuto {bucket.label}</span>
                       <span className="text-neutral-400 text-2xs">{total} requisições</span>
@@ -103,7 +103,7 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
                 <div
                   className={`w-full rounded-t-xs overflow-hidden flex flex-col justify-end transition-all ${
                     isHovered ? 'ring-2 ring-primary ring-offset-1 ring-offset-card' : ''
-                  } ${total === 0 ? 'bg-neutral-200/50 dark:bg-neutral-800/40 h-1' : ''}`}
+                  } ${total === 0 ? 'bg-muted/50 h-1' : ''}`}
                   style={total > 0 ? { height: `${heightPct}%` } : undefined}
                 >
                   {total > 0 && (

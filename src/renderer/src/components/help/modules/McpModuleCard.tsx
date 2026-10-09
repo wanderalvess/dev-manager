@@ -18,7 +18,7 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
       <div className="mt-3 flex items-center justify-between p-2 rounded-xl bg-muted/60 border border-border/60">
         <div className="flex items-center gap-1.5 min-w-0">
           <Terminal className="w-3.5 h-3.5 text-primary shrink-0" />
-          <code className="font-mono text-[11px] text-primary truncate">npm run mcp</code>
+          <code className="font-mono text-2xs text-primary truncate">npm run mcp</code>
         </div>
         <button
           onClick={() => copyToClipboard('npm run mcp', 'cmd-mcp-module')}
@@ -41,8 +41,8 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
     </ModuleBullets>
 
     <div className="p-2.5 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-inner">
-      <span className="font-bold text-foreground block text-[11px] uppercase tracking-wider text-primary">Exemplo de Prompt no IntelliJ / VS Code Copilot:</span>
-      <p className="font-mono text-[11px] text-foreground bg-muted/80 p-2 rounded-lg border border-border/50">
+      <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Exemplo de Prompt no IntelliJ / VS Code Copilot:</span>
+      <p className="font-mono text-2xs text-foreground bg-muted/80 p-2 rounded-lg border border-border/50">
         "Execute os testes críticos de Pedido do projeto TAUT e analise a cobertura de testes do Zephyr."
       </p>
     </div>

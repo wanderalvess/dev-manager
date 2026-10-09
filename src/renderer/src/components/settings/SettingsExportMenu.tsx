@@ -1,4 +1,5 @@
 import React from 'react';
+import { EscapeToClose } from '../ui/EscapeToClose';
 import { ChevronDown, Download, ShieldCheck } from 'lucide-react';
 
 interface SettingsExportMenuProps {
@@ -29,6 +30,7 @@ export const SettingsExportMenu: React.FC<SettingsExportMenuProps> = ({ isOpen, 
     {isOpen && (
       <>
         <div className="fixed inset-0 z-40" onClick={onClose} />
+        <EscapeToClose onEscape={onClose} />
         <div role="menu" className="absolute right-0 mt-2 w-72 origin-top-right rounded-lg bg-card border border-border shadow-xl p-1.5 z-50 flex flex-col space-y-1">
           <button type="button" role="menuitem" onClick={() => onExport(true)} className={ITEM_CLASS}>
             <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
