@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { FilterX } from 'lucide-react';
-import { QueryResult, TableColumnInfo } from '../../../../shared/types';
+import { DatabaseConnectionConfig, QueryResult, TableColumnInfo } from '../../../../shared/types';
 import { useVirtualScroll } from '../../hooks/useVirtualScroll';
 import { useResultsGridEditing } from '../../hooks/database/useResultsGridEditing';
 import { RESULTS_GRID_ROW_HEIGHT, computeBottomSpacerHeight } from '../../utils/resultsGridUtils';
@@ -10,6 +10,7 @@ import { ResultsGridHeader } from './grid/ResultsGridHeader';
 import { ResultsGridNewRow } from './grid/ResultsGridNewRow';
 import { ResultsGridRow } from './grid/ResultsGridRow';
 import { ResultsGridContextMenu } from './grid/ResultsGridContextMenu';
+import { EmptyResultNotice } from './grid/EmptyResultNotice';
 import { X } from 'lucide-react';
 import { EMPTY_PENDING, isRowDeleted, pendingCount as countPending, pendingValuesOf, type PendingChanges } from '../../utils/gridPendingChanges';
 
@@ -59,6 +60,8 @@ export interface ResultsDataGridProps {
   onApplyPending?: () => void;
   onDiscardPending?: () => void;
   onUnstageInsert?: (index: number) => void;
+  /** Conexão da aba; usada para estimar as linhas da tabela quando o resultado vem vazio. */
+  connection?: DatabaseConnectionConfig | null;
 }
 
 export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
@@ -92,7 +95,8 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
   keyColumns = [],
   onApplyPending,
   onDiscardPending,
-  onUnstageInsert
+  onUnstageInsert,
+  connection = null
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const isEditable = Boolean(editableTableName && onUpdateCell && onInsertRow && onDeleteRow);
@@ -115,7 +119,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
     }
   );
 
-  const stateView = ResultsGridStates({ queryResult, isExecuting });
+  const stateView = ResultsGridStates({ queryResult, isExecuting, tableName: editableTableName, connection });
   if (stateView || !queryResult) return stateView;
 
   const rowsToRender = isVirtual
@@ -195,14 +199,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                 <td colSpan={columnCount} className="py-12 text-center text-muted-foreground text-xs font-sans">
                   {queryResult.rows.length === 0 ? (
                     // A consulta rodou, mas o banco não devolveu linhas (tabela vazia, WHERE sem correspondência ou sem permissão de leitura)
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <FilterX className="w-8 h-8 opacity-30 text-sky-500" />
-                      <p className="font-semibold text-foreground">A consulta foi executada, mas não retornou nenhuma linha.</p>
-                      <span className="text-2xs opacity-70 max-w-md">
-                        A tabela pode estar vazia, o WHERE pode não ter correspondência, ou o usuário da conexão pode não ter
-                        permissão de leitura nas linhas (por exemplo, políticas de segurança por linha).
-                      </span>
-                    </div>
+                    <EmptyResultNotice tableName={editableTableName} connection={connection} />
                   ) : (
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <FilterX className="w-8 h-8 opacity-30 text-amber-500" />

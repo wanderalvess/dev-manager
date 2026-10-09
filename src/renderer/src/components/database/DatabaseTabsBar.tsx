@@ -3,6 +3,7 @@ import { Plus, X } from 'lucide-react';
 import type { DatabaseConnectionConfig, DatabaseType } from '../../../../shared/types';
 import type { QueryTab } from '../../utils/queryTabsUtils';
 import type { WorkspaceStatus } from './DatabaseWorkspace';
+import { formatConnectionTarget } from '../../utils/emptyResultHint';
 
 const TYPE_DOT: Record<DatabaseType, string> = {
   oracle: 'bg-rose-500',
@@ -49,7 +50,7 @@ export const DatabaseTabsBar: React.FC<DatabaseTabsBarProps> = ({ tabs, activeId
                 onSelect(tab.id);
               }
             }}
-            title={`${conn?.name ?? 'Conexão removida'} · ${tab.title}${pending ? ' (alterações pendentes)' : ''}`}
+            title={`${conn ? `${conn.name} (${formatConnectionTarget(conn)})` : 'Conexão removida'} · ${tab.title}${pending ? ' (alterações pendentes)' : ''}`}
             className={`group flex items-center gap-1.5 max-w-[220px] pl-2.5 pr-1.5 py-1.5 rounded-t-md border border-b-0 text-xs cursor-pointer select-none transition-colors ${
               active
                 ? 'bg-background border-border text-foreground font-semibold'
