@@ -47,7 +47,7 @@ export const DocsSearchResults: React.FC<DocsSearchResultsProps> = ({
       </span>
       <button
         onClick={onClearSearch}
-        className="text-[11px] text-primary hover:underline font-semibold cursor-pointer"
+        className="text-2xs text-primary hover:underline font-semibold cursor-pointer"
       >
         ← Ver todos os documentos ({catalogCount})
       </button>
@@ -69,7 +69,7 @@ export const DocsSearchResults: React.FC<DocsSearchResultsProps> = ({
     )}
 
     {!isSearching && results.length === 0 && (
-      <div className="cockpit-panel rounded-2xl p-8 text-center border border-border">
+      <div className="cockpit-panel rounded-xl p-8 text-center border border-border">
         <p className="text-xs text-muted-foreground">Nenhum resultado encontrado para essa busca.</p>
       </div>
     )}

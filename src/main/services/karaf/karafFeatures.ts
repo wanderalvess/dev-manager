@@ -3,6 +3,7 @@ import { isSafeKarafCommand } from '../../utils/security';
 import { parseFeatureRepoListOutput } from '../../utils/karafFeaturesUtils';
 import { parseAllFeaturesOutput, parseInstalledFeaturesOutput } from '../../utils/karafListParsers';
 import type { ChunkHandler, KarafActionResult, KarafContext, KarafCredentials } from './karafContext';
+import { noopChunk } from './karafContext';
 
 /**
  * Executa "feature:list -i" e retorna a lista estruturada de Features Karaf instaladas.
@@ -11,8 +12,7 @@ export async function listInstalledFeatures(
   ctx: KarafContext,
   credentials?: KarafCredentials
 ): Promise<KarafFeatureInfo[]> {
-  const dummyChunk = () => {};
-  const res = await ctx.executeKarafCommand('feature:list -i', dummyChunk, credentials);
+  const res = await ctx.executeKarafCommand('feature:list -i', noopChunk, credentials);
   if (res.code !== 0 || !res.stdout) return [];
 
   return parseInstalledFeaturesOutput(res.stdout);
@@ -27,8 +27,7 @@ export async function listAllFeatures(
   credentials?: KarafCredentials
 ): Promise<KarafFeatureInfo[]> {
   const cmd = installedOnly ? 'feature:list -i' : 'feature:list';
-  const dummyChunk = () => {};
-  const res = await ctx.executeKarafCommand(cmd, dummyChunk, credentials);
+  const res = await ctx.executeKarafCommand(cmd, noopChunk, credentials);
   if (res.code !== 0 || !res.stdout) return [];
 
   return parseAllFeaturesOutput(res.stdout);
@@ -113,8 +112,7 @@ export async function listFeatureRepositories(
   ctx: KarafContext,
   credentials?: KarafCredentials
 ): Promise<KarafFeatureRepoInfo[]> {
-  const dummyChunk = () => {};
-  const res = await ctx.executeKarafCommand('feature:repo-list', dummyChunk, credentials);
+  const res = await ctx.executeKarafCommand('feature:repo-list', noopChunk, credentials);
   if (res.code !== 0 || !res.stdout) return [];
   return parseFeatureRepoListOutput(res.stdout);
 }

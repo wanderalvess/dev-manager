@@ -45,7 +45,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
     </div>
 
     {/* Current Bundle (Center) */}
-    <div className="p-3.5 bg-primary/10 border-2 border-primary/40 rounded-xl flex items-center justify-between">
+    <div className="p-3 bg-primary/10 border-2 border-primary/40 rounded-xl flex items-center justify-between">
       <div className="flex items-center gap-2.5">
         <div className="p-2 rounded-lg bg-primary text-primary-foreground">
           <Package className="w-5 h-5" />
@@ -88,7 +88,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
           {bundleDetails.importedPackages.map((pkg, idx) => (
             <div
               key={idx}
-              className="p-1.5 px-2 rounded bg-card/60 border border-border/60 text-[11px] font-mono text-muted-foreground truncate"
+              className="p-1.5 px-2 rounded bg-card/60 border border-border/60 text-2xs font-mono text-muted-foreground truncate"
               title={pkg}
             >
               {pkg}

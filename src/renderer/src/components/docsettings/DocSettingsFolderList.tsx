@@ -34,7 +34,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
             {docFolders.length} {docFolders.length === 1 ? 'pasta' : 'pastas'}
           </span>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Diretórios fora do Git contendo manuais, especificações ou guias (.md, .txt, .pdf, .docx).
         </p>
       </div>
@@ -56,7 +56,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
         </div>
         <div>
           <p className="text-xs font-semibold text-foreground">Nenhuma pasta local configurada</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5 max-w-sm mx-auto">
+          <p className="text-2xs text-muted-foreground mt-0.5 max-w-sm mx-auto">
             Adicione diretórios dedicados de documentação para que seus arquivos sejam indexados no RAG.
           </p>
         </div>
@@ -99,7 +99,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
                 type="button"
                 onClick={() => onCopyPath(folder.path)}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-                title={copiedFolderPath === folder.path ? 'Caminho copiado!' : 'Copiar caminho completo'}
+                title={copiedFolderPath === folder.path ? 'Caminho copiado!' : 'Copiar caminho completo'} aria-label={copiedFolderPath === folder.path ? 'Caminho copiado!' : 'Copiar caminho completo'}
               >
                 {copiedFolderPath === folder.path ? (
                   <Check className="w-3.5 h-3.5 text-emerald-500" />
@@ -111,7 +111,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
                 type="button"
                 onClick={() => onOpenInExplorer(folder.path)}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-                title="Revelar pasta no Explorador de Arquivos"
+                title="Revelar pasta no Explorador de Arquivos" aria-label="Revelar pasta no Explorador de Arquivos"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
@@ -119,7 +119,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
                 type="button"
                 onClick={() => onRemoveFolder(folder.path)}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition cursor-pointer"
-                title="Remover pasta da indexação"
+                title="Remover pasta da indexação" aria-label="Remover pasta da indexação"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

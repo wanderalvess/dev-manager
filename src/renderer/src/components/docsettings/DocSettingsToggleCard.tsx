@@ -23,7 +23,7 @@ export const DocSettingsToggleCard: React.FC<DocSettingsToggleCardProps> = ({
 }) => {
   const hint = checked ? 'Clique para desativar' : 'Clique para ativar';
   return (
-    <div className="p-3.5 rounded-xl border border-border/90 bg-card hover:border-border transition-colors shadow-2xs space-y-2.5 flex flex-col justify-between">
+    <div className="p-3 rounded-xl border border-border/90 bg-card hover:border-border transition-colors shadow-2xs space-y-2.5 flex flex-col justify-between">
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -35,10 +35,10 @@ export const DocSettingsToggleCard: React.FC<DocSettingsToggleCardProps> = ({
             role="switch"
             aria-checked={checked}
             onClick={() => onToggle(!checked)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-primary/40 ${
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 ${
               checked ? 'bg-primary' : 'bg-muted-foreground/30'
             }`}
-            title={hint}
+            title={hint} aria-label={hint}
           >
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
@@ -47,7 +47,7 @@ export const DocSettingsToggleCard: React.FC<DocSettingsToggleCardProps> = ({
             />
           </button>
         </div>
-        <p className="text-[11px] text-muted-foreground leading-relaxed">{description}</p>
+        <p className="text-2xs text-muted-foreground leading-relaxed">{description}</p>
       </div>
       <div className="pt-1 flex items-center">
         <button
@@ -58,7 +58,7 @@ export const DocSettingsToggleCard: React.FC<DocSettingsToggleCardProps> = ({
               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-2xs'
               : 'bg-muted/80 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground'
           }`}
-          title={hint}
+          title={hint} aria-label={hint}
         >
           <span className={`w-2 h-2 rounded-full ${checked ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'}`} />
           <span>{checked ? activeLabel : inactiveLabel}</span>

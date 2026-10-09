@@ -38,7 +38,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
     <div
       className={`p-3.5 rounded-xl border transition-all duration-200 ${
         entry.success
-          ? 'border-slate-800/80 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/60'
+          ? 'border-border/80 bg-card/40 hover:border-border hover:bg-card/60'
           : 'border-rose-900/40 bg-rose-950/15 hover:border-rose-800/60 hover:bg-rose-950/25'
       }`}
     >
@@ -60,7 +60,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
           {/* Info Principal */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-slate-100 truncate" title={entry.artifactId || entry.projectName || entry.featureInstall}>
+              <span className="text-xs font-bold text-foreground truncate" title={entry.artifactId || entry.projectName || entry.featureInstall}>
                 {entry.artifactId || entry.projectName || entry.featureInstall}
               </span>
 
@@ -78,12 +78,12 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               }`}>
                 {entry.trigger === 'mcp' ? (
                   <>
-                    <Sparkles className="w-2.5 h-2.5" />
+                    <Sparkles className="w-3 h-3" />
                     <span>MCP Agent</span>
                   </>
                 ) : (
                   <>
-                    <Terminal className="w-2.5 h-2.5" />
+                    <Terminal className="w-3 h-3" />
                     <span>Console UI</span>
                   </>
                 )}
@@ -101,7 +101,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
 
             {/* Coordenadas Maven / Feature */}
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-              <code className="text-[11px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800/80 truncate max-w-md select-all">
+              <code className="text-2xs font-mono text-muted-foreground bg-background px-2 py-0.5 rounded border border-border/80 truncate max-w-md select-all">
                 {mvnCoords}
               </code>
 
@@ -109,8 +109,8 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               <button
                 type="button"
                 onClick={() => onCopy(mvnCoords)}
-                className="p-1 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-2xs flex items-center gap-1 border border-slate-700 transition cursor-pointer"
-                title="Copiar coordenadas Maven"
+                className="p-1 px-1.5 rounded bg-muted hover:bg-muted text-muted-foreground hover:text-foreground text-2xs flex items-center gap-1 border border-border transition cursor-pointer"
+                title="Copiar coordenadas Maven" aria-label="Copiar coordenadas Maven"
               >
                 {isCopied ? (
                   <>
@@ -130,7 +130,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
                 <button
                   type="button"
                   onClick={() => onUseInInstaller(mvnCoords, entry.version)}
-                  className="p-1 px-1.5 rounded bg-slate-800/60 hover:bg-slate-800 text-sky-400 hover:text-sky-300 text-2xs flex items-center gap-1 border border-slate-700/60 transition cursor-pointer"
+                  className="p-1 px-1.5 rounded bg-muted/60 hover:bg-muted text-sky-400 hover:text-sky-300 text-2xs flex items-center gap-1 border border-border/60 transition cursor-pointer"
                   title="Reutilizar coordenadas para novo deploy"
                 >
                   <UploadCloud className="w-3 h-3" />
@@ -145,14 +145,14 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
                 <button
                   type="button"
                   onClick={onToggleExpanded}
-                  className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1.5 cursor-pointer"
+                  className="text-2xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1.5 cursor-pointer"
                 >
                   {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   <span>{isExpanded ? 'Ocultar diagnóstico da falha' : 'Ver diagnóstico detalhado da falha'}</span>
                 </button>
 
                 {isExpanded && (
-                  <div className="mt-2 p-2.5 rounded-lg bg-black/60 border border-rose-900/60 text-[11px] font-mono text-rose-300 whitespace-pre-wrap wrap-break-word max-h-40 overflow-y-auto">
+                  <div className="mt-2 p-2.5 rounded-lg bg-black/60 border border-rose-900/60 text-2xs font-mono text-rose-300 whitespace-pre-wrap wrap-break-word max-h-40 overflow-y-auto">
                     {entry.message}
                   </div>
                 )}
@@ -160,14 +160,14 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
             )}
 
             {/* Metadados */}
-            <div className="flex items-center gap-3 mt-2 text-2xs text-slate-500 font-mono">
+            <div className="flex items-center gap-3 mt-2 text-2xs text-muted-foreground font-mono">
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3 text-slate-400" />
+                <Clock className="w-3 h-3 text-muted-foreground" />
                 {new Date(entry.startedAt).toLocaleString('pt-BR')}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Activity className="w-3 h-3 text-slate-400" />
+                <Activity className="w-3 h-3 text-muted-foreground" />
                 {(entry.durationMs / 1000).toFixed(2)}s duração
               </span>
               {entry.repoUrl && (

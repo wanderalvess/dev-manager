@@ -35,7 +35,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({ onExport }) => {
         aria-haspopup="menu"
         aria-expanded={open}
         title="Exportar as linhas exibidas (respeita busca, filtros e ordenação)"
-        className="flex items-center space-x-1 text-primary hover:underline font-medium text-[11px] cursor-pointer"
+        className="flex items-center space-x-1 text-primary hover:underline font-medium text-2xs cursor-pointer"
       >
         <Download className="w-3 h-3" />
         <span>Exportar</span>

@@ -12,7 +12,7 @@ export const QualityTabHeader: React.FC<QualityTabHeaderProps> = ({ activeSource
   <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
     <div className="space-y-1">
       <div className="flex items-center gap-2.5">
-        <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <CheckCheck className="w-5 h-5 text-primary" />
           Fontes de Informação de Qualidade &amp; Testes (QA / PO)
         </h3>

@@ -10,8 +10,8 @@ interface MarkdownCodeBlockProps {
 }
 
 export const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({ language, lineCount, code, isCopied, onCopy }) => (
-  <div className="my-5 rounded-2xl border border-border/80 overflow-hidden bg-slate-950 text-slate-100 shadow-lg">
-    <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800 text-[11px] font-mono select-none">
+  <div className="my-5 rounded-xl border border-border/80 overflow-hidden bg-slate-950 text-slate-100 shadow-lg">
+    <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800 text-2xs font-mono select-none">
       <div className="flex items-center gap-2">
         <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
         <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
@@ -31,7 +31,7 @@ export const MarkdownCodeBlock: React.FC<MarkdownCodeBlockProps> = ({ language, 
         <span>{isCopied ? 'Copiado!' : 'Copiar'}</span>
       </button>
     </div>
-    <div className="p-4 overflow-x-auto font-mono text-[12px] leading-relaxed text-slate-200 selection:bg-cyan-500/30">
+    <div className="p-4 overflow-x-auto font-mono text-xs leading-relaxed text-slate-200 selection:bg-cyan-500/30">
       <pre>
         <code>{code}</code>
       </pre>

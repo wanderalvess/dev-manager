@@ -79,11 +79,11 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
       </div>
 
       <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60 text-xs space-y-1.5 font-mono">
-        <div className="flex items-center justify-between text-[11px]">
+        <div className="flex items-center justify-between text-2xs">
           <span className="text-muted-foreground">Modelo:</span>
           <span className="text-foreground font-bold truncate max-w-[180px]">{provider.model}</span>
         </div>
-        <div className="flex items-center justify-between text-[11px]">
+        <div className="flex items-center justify-between text-2xs">
           <span className="text-muted-foreground">Endpoint:</span>
           <span
             className="text-muted-foreground truncate max-w-[180px]"
@@ -92,7 +92,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
             {formatEndpoint(provider.baseUrl)}
           </span>
         </div>
-        <div className="flex items-center justify-between text-[11px]">
+        <div className="flex items-center justify-between text-2xs">
           <span className="text-muted-foreground">Credencial:</span>
           <span className="text-muted-foreground">{maskApiKey(provider)}</span>
         </div>
@@ -113,7 +113,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
         }`}
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-semibold text-[11px] min-w-0">
+          <div className="flex items-center gap-1.5 font-semibold text-2xs min-w-0">
             {testResult.success ? (
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
             ) : (
@@ -137,7 +137,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           type="button"
           onClick={() => onTest(provider)}
           disabled={isTesting}
-          className="px-2.5 py-1.5 rounded-xl bg-card hover:bg-muted text-foreground text-[11px] font-semibold border border-border hover:border-primary/40 transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
+          className="px-2.5 py-1.5 rounded-xl bg-card hover:bg-muted text-foreground text-2xs font-semibold border border-border hover:border-primary/40 transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
         >
           {isTesting ? (
             <RotateCcw className="w-3 h-3 animate-spin text-primary" />
@@ -150,7 +150,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
         <button
           type="button"
           onClick={() => onToggle(provider.id, !provider.enabled)}
-          className="px-2.5 py-1.5 rounded-xl bg-card hover:bg-muted text-muted-foreground hover:text-foreground text-[11px] border border-border transition-all cursor-pointer shadow-2xs"
+          className="px-2.5 py-1.5 rounded-xl bg-card hover:bg-muted text-muted-foreground hover:text-foreground text-2xs border border-border transition-all cursor-pointer shadow-2xs"
         >
           {provider.enabled ? 'Desativar' : 'Habilitar'}
         </button>
@@ -161,7 +161,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           type="button"
           onClick={() => onEdit({ ...provider })}
           className="p-1.5 rounded-xl bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border transition-all cursor-pointer shadow-2xs"
-          title="Editar parâmetros"
+          title="Editar parâmetros" aria-label="Editar parâmetros"
         >
           <Sliders className="w-3.5 h-3.5" />
         </button>
@@ -169,7 +169,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           type="button"
           onClick={() => onDelete(provider.id)}
           className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
-          title="Remover este motor"
+          title="Remover este motor" aria-label="Remover este motor"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

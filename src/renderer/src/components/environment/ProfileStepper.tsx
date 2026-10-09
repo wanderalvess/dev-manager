@@ -75,12 +75,12 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
               title={`${stepNum}. ${step.name}${step.port ? ` — porta ${step.port} ${isPortUp ? 'ativa' : 'inativa'}` : ` — ${step.type}`}`}
             >
               <div
-                className={`w-6 h-6 rounded-lg border flex items-center justify-center font-bold text-[11px] transition-all ${dotStyle}`}
+                className={`w-6 h-6 rounded-lg border flex items-center justify-center font-bold text-2xs transition-all ${dotStyle}`}
               >
                 {isDone ? <CheckCircle2 className="w-3.5 h-3.5 stroke-3" /> : stepNum}
               </div>
               <span
-                className={`text-[11px] font-semibold truncate max-w-[140px] ${
+                className={`text-2xs font-semibold truncate max-w-[140px] ${
                   isCurrent ? 'text-primary font-bold' : isDone ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground'
                 }`}
               >

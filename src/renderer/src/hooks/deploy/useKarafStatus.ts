@@ -1,48 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useStartEmbeddedKaraf } from '../karaf/useStartEmbeddedKaraf';
 
 export function useKarafStatus() {
   const [isKarafOnline, setIsKarafOnline] = useState<boolean | null>(null);
-  const [isStartingKaraf, setIsStartingKaraf] = useState<boolean>(false);
+
+  const checkKaraf = useCallback(async () => {
+    try {
+      if (window.electronAPI?.isKarafRunning) {
+        setIsKarafOnline(await window.electronAPI.isKarafRunning());
+      }
+    } catch {
+      setIsKarafOnline(false);
+    }
+  }, []);
 
   // Monitora o status de escuta do Karaf OSGi em segundo plano
   useEffect(() => {
-    let mounted = true;
-    const checkKaraf = async () => {
-      try {
-        if (window.electronAPI?.isKarafRunning) {
-          const running = await window.electronAPI.isKarafRunning();
-          if (mounted) setIsKarafOnline(running);
-        }
-      } catch {
-        if (mounted) setIsKarafOnline(false);
-      }
-    };
-    checkKaraf();
+    void checkKaraf();
     const interval = setInterval(checkKaraf, 5000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, []);
+    return () => clearInterval(interval);
+  }, [checkKaraf]);
 
-  const handleStartEmbeddedKaraf = async () => {
-    if (isStartingKaraf) return;
-    setIsStartingKaraf(true);
-    try {
-      if (window.electronAPI?.startEmbeddedKaraf) {
-        await window.electronAPI.startEmbeddedKaraf();
-        setTimeout(async () => {
-          if (window.electronAPI?.isKarafRunning) {
-            const running = await window.electronAPI.isKarafRunning();
-            setIsKarafOnline(running);
-          }
-          setIsStartingKaraf(false);
-        }, 3000);
-      }
-    } catch {
-      setIsStartingKaraf(false);
-    }
-  };
+  const { isStartingKaraf, handleStartEmbeddedKaraf } = useStartEmbeddedKaraf(checkKaraf);
 
   return { isKarafOnline, isStartingKaraf, handleStartEmbeddedKaraf };
 }

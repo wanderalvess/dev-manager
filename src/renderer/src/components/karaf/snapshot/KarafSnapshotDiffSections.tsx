@@ -26,7 +26,7 @@ export const KarafSnapshotDiffSections: React.FC<KarafSnapshotDiffSectionsProps>
                 <span className="font-mono font-bold text-foreground">[{current.id}] </span>
                 <span className="text-foreground font-medium">{current.name}</span>
               </div>
-              <div className="flex items-center gap-2 font-mono text-[11px]">
+              <div className="flex items-center gap-2 font-mono text-2xs">
                 <span className="text-muted-foreground line-through">{snapshot.version}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span className="text-amber-700 dark:text-amber-400 font-bold">{current.version}</span>
@@ -54,7 +54,7 @@ export const KarafSnapshotDiffSections: React.FC<KarafSnapshotDiffSectionsProps>
                 <span className="font-mono font-bold text-foreground">[{current.id}] </span>
                 <span className="text-foreground font-medium">{current.name}</span>
               </div>
-              <div className="flex items-center gap-2 font-mono text-[11px]">
+              <div className="flex items-center gap-2 font-mono text-2xs">
                 <span className="text-muted-foreground">{snapshot.state}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span className="text-blue-700 dark:text-blue-400 font-bold">{current.state}</span>

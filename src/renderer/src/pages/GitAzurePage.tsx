@@ -122,7 +122,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
         <div className="lg:col-span-8 flex flex-col space-y-3 overflow-y-auto pr-1">
           {currentProject ? (
             <>
-              <div className="cockpit-panel rounded-2xl p-5 space-y-4 border border-border">
+              <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
                 <GitProjectTitleBar
                   project={currentProject}
                   onOpenAzurePipelines={ops.handleOpenAzurePipelines}

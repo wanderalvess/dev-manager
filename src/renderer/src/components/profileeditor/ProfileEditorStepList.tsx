@@ -82,8 +82,8 @@ export const ProfileEditorStepList: React.FC<ProfileEditorStepListProps> = ({
                   type="button"
                   disabled={idx === 0}
                   onClick={() => onMove(idx, 'up')}
-                  className="p-1 hover:bg-muted text-muted-foreground disabled:opacity-30 rounded"
-                  title="Mover para cima"
+                  className="p-1 hover:bg-muted text-muted-foreground disabled:opacity-50 rounded"
+                  title="Mover para cima" aria-label="Mover para cima"
                 >
                   <ArrowUp className="w-3 h-3" />
                 </button>
@@ -91,8 +91,8 @@ export const ProfileEditorStepList: React.FC<ProfileEditorStepListProps> = ({
                   type="button"
                   disabled={idx === steps.length - 1}
                   onClick={() => onMove(idx, 'down')}
-                  className="p-1 hover:bg-muted text-muted-foreground disabled:opacity-30 rounded"
-                  title="Mover para baixo"
+                  className="p-1 hover:bg-muted text-muted-foreground disabled:opacity-50 rounded"
+                  title="Mover para baixo" aria-label="Mover para baixo"
                 >
                   <ArrowDown className="w-3 h-3" />
                 </button>
@@ -100,7 +100,7 @@ export const ProfileEditorStepList: React.FC<ProfileEditorStepListProps> = ({
                   type="button"
                   onClick={() => onRemove(idx)}
                   className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded"
-                  title="Remover etapa"
+                  title="Remover etapa" aria-label="Remover etapa"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>

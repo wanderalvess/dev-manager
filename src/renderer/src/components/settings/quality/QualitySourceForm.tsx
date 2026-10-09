@@ -129,7 +129,7 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
             type="button"
             onClick={() => onToggleShowToken(!showToken)}
             className="absolute right-2.5 top-2 text-muted-foreground hover:text-foreground cursor-pointer"
-            title={showToken ? 'Ocultar token' : 'Revelar token'}
+            title={showToken ? 'Ocultar token' : 'Revelar token'} aria-label={showToken ? 'Ocultar token' : 'Revelar token'}
           >
             {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>

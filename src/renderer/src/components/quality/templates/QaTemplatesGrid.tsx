@@ -48,7 +48,7 @@ export const QaTemplatesGrid: React.FC<QaTemplatesGridProps> = ({
               {tmpl.description || 'Sem descrição.'}
             </p>
 
-            <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-2 mb-4">
+            <div className="text-2xs text-muted-foreground font-mono flex items-center gap-2 mb-4">
               <span>
                 <b className="text-foreground">{tmpl.steps.length}</b> queries
               </span>
@@ -65,7 +65,7 @@ export const QaTemplatesGrid: React.FC<QaTemplatesGridProps> = ({
                 type="button"
                 onClick={() => onEdit(tmpl)}
                 className={ICON_BTN}
-                title="Editar template"
+                title="Editar template" aria-label="Editar template"
               >
                 <Edit className="w-3.5 h-3.5" />
               </button>
@@ -74,7 +74,7 @@ export const QaTemplatesGrid: React.FC<QaTemplatesGridProps> = ({
                 type="button"
                 onClick={() => onDuplicate(tmpl)}
                 className={ICON_BTN}
-                title="Duplicar template"
+                title="Duplicar template" aria-label="Duplicar template"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
@@ -83,7 +83,7 @@ export const QaTemplatesGrid: React.FC<QaTemplatesGridProps> = ({
                 type="button"
                 onClick={() => onExport(tmpl)}
                 className={ICON_BTN}
-                title="Exportar para arquivo JSON"
+                title="Exportar para arquivo JSON" aria-label="Exportar para arquivo JSON"
               >
                 <Download className="w-3.5 h-3.5" />
               </button>
@@ -92,7 +92,7 @@ export const QaTemplatesGrid: React.FC<QaTemplatesGridProps> = ({
                 type="button"
                 onClick={() => onDelete(tmpl)}
                 className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
-                title="Excluir template"
+                title="Excluir template" aria-label="Excluir template"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

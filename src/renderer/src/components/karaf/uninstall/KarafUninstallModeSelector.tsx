@@ -15,7 +15,7 @@ const cardClass = (active: boolean) =>
 
 export const KarafUninstallModeSelector: React.FC<KarafUninstallModeSelectorProps> = ({ mode, onChange }) => (
   <div className="space-y-2">
-    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+    <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
       Tipo de Desinstalação
     </label>
     <div className="grid grid-cols-2 gap-2">

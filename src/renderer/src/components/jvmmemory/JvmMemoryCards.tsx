@@ -19,7 +19,7 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
     {/* Cards de Métricas Principais */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
       {/* Heap Card */}
-      <div className="p-3.5 bg-card border border-border rounded-lg space-y-2.5">
+      <div className="p-3 bg-card border border-border rounded-lg space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-foreground font-mono uppercase tracking-wide flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5 text-sky-400" /> Heap Memory (Java Objects)
@@ -39,7 +39,7 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-2 pt-1 text-[11px] font-mono tabular-nums">
+        <div className="grid grid-cols-3 gap-2 pt-1 text-2xs font-mono tabular-nums">
           <div>
             <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Usado</span>
             <span className="font-bold text-foreground">{metrics?.heapUsedMb ?? 0} MB</span>
@@ -56,7 +56,7 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
       </div>
 
       {/* Non-Heap Card */}
-      <div className="p-3.5 bg-card border border-border rounded-lg space-y-2.5">
+      <div className="p-3 bg-card border border-border rounded-lg space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-foreground font-mono uppercase tracking-wide flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-purple-400" /> Non-Heap (Metaspace / CodeCache)
@@ -74,7 +74,7 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] font-mono tabular-nums">
+        <div className="grid grid-cols-2 gap-2 pt-1 text-2xs font-mono tabular-nums">
           <div>
             <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Usado</span>
             <span className="font-bold text-foreground">{metrics?.nonHeapUsedMb ?? 0} MB</span>

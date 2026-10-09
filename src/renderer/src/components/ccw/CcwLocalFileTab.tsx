@@ -100,7 +100,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
     </div>
 
     <div className="pt-3 border-t border-border/80 flex items-center justify-between gap-3">
-      <span className="text-[11px] text-muted-foreground font-mono">
+      <span className="text-2xs text-muted-foreground font-mono">
         Destino: {appPath || DEFAULT_CCW_APP_PATH}
       </span>
       <button

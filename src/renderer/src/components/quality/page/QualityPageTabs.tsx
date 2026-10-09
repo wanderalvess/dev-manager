@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, FileSpreadsheet, Grid, ScrollText, ShieldCheck, Rocket, LucideIcon } from 'lucide-react';
+import { Database, FileSpreadsheet, Grid, ScrollText, ShieldCheck, LucideIcon } from 'lucide-react';
 import type { QualityTabMode } from '../../../utils/qualityPageView';
 
 interface QualityPageTabsProps {
@@ -18,8 +18,7 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { id: 'matrix', label: 'Matriz', icon: FileSpreadsheet },
-  { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck },
-  { id: 'roadmap', label: 'Roadmap & Demandas', icon: Rocket }
+  { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck }
 ];
 
 const INACTIVE_CLASS = 'text-muted-foreground hover:text-foreground hover:bg-muted/60';
@@ -85,7 +84,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
       {/* Atalhos para Ecossistema de Testes */}
       {onNavigate && (
         <div className="hidden xl:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
-          <span className="text-[11px] font-mono">Atalhos:</span>
+          <span className="text-2xs font-mono">Atalhos:</span>
           <button
             type="button"
             onClick={() => onNavigate('routines')}

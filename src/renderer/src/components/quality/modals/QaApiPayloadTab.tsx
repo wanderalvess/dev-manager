@@ -101,7 +101,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
     <div className="flex-1 flex flex-col p-4 space-y-3.5 overflow-y-auto bg-background/50 text-xs">
       {/* Linha Principal de URL & Método */}
       <div className="space-y-1.5">
-        <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+        <label className="text-2xs font-semibold text-muted-foreground flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-primary" />
           <span>Endpoint REST da API</span>
         </label>
@@ -136,7 +136,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
 
       {/* Caminho JSON Opcional */}
       <div className="space-y-1">
-        <label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
+        <label className="text-2xs font-semibold text-muted-foreground flex items-center justify-between">
           <span className="flex items-center gap-1.5">
             <KeyRound className="w-3.5 h-3.5 text-primary" />
             <span>Caminho do Objeto no JSON (Opcional)</span>
@@ -154,7 +154,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
 
       {/* Cabeçalhos HTTP */}
       <div className="space-y-1">
-        <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+        <label className="text-2xs font-semibold text-muted-foreground flex items-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-primary" />
           <span>Cabeçalhos / Headers (JSON)</span>
         </label>
@@ -163,14 +163,14 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
           onChange={(e) => setHeadersText(e.target.value)}
           rows={3}
           placeholder='{"Authorization": "Bearer ...", "x-api-key": "..."}'
-          className="w-full bg-card border border-border rounded p-2.5 font-mono text-[11px] text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-tight resize-none"
+          className="w-full bg-card border border-border rounded p-2.5 font-mono text-2xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-tight resize-none"
         />
       </div>
 
       {/* Corpo (se POST) */}
       {method === 'POST' && (
         <div className="space-y-1">
-          <label className="text-[11px] font-semibold text-muted-foreground">
+          <label className="text-2xs font-semibold text-muted-foreground">
             Corpo da Requisição / Body (JSON)
           </label>
           <textarea
@@ -178,7 +178,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
             onChange={(e) => setBodyText(e.target.value)}
             rows={3}
             placeholder='{"codFilial": "1", "data": "2026-10-02"}'
-            className="w-full bg-card border border-border rounded p-2.5 font-mono text-[11px] text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-tight resize-none"
+            className="w-full bg-card border border-border rounded p-2.5 font-mono text-2xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-tight resize-none"
           />
         </div>
       )}
@@ -186,7 +186,7 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
       {/* Status da Requisição */}
       {statusInfo && (
         <div
-          className={`p-2.5 rounded border text-[11px] flex items-center justify-between font-mono ${
+          className={`p-2.5 rounded border text-2xs flex items-center justify-between font-mono ${
             statusInfo.error
               ? 'bg-rose-950/20 border-rose-900/50 text-rose-300'
               : 'bg-emerald-950/20 border-emerald-900/50 text-emerald-300'

@@ -73,7 +73,7 @@ export const GitDiffFileList: React.FC<GitDiffFileListProps> = ({
                   onOpenFileInIde(file.path);
                 }}
                 className="p-1 rounded hover:bg-card text-muted-foreground hover:text-primary transition-colors shrink-0 cursor-pointer"
-                title={`Abrir ${file.path} na IDE`}
+                title={`Abrir ${file.path} na IDE`} aria-label={`Abrir ${file.path} na IDE`}
               >
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>

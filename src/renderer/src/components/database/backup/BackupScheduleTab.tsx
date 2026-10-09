@@ -84,7 +84,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
         <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
           <SlidersHorizontal className="w-4 h-4 text-primary" /> Política de Retenção de Backups
         </span>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Os arquivos mais antigos são limpos automaticamente após cada execução conforme as regras abaixo:
         </p>
 
@@ -125,7 +125,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
         <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
           <FlaskConical className="w-4 h-4 text-cyan-500" /> Restore Drill Automático (Teste Periódico)
         </span>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Restaura automaticamente o backup mais recente gerado contra uma base de teste descartável (scratch) para certificar a integridade dos dados.
         </p>
 
@@ -183,7 +183,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
       </button>
 
       {scheduleSaveResult && (
-        <div className={`p-3.5 rounded-xl border text-xs ${backupResultToneClass(scheduleSaveResult.success)}`}>
+        <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(scheduleSaveResult.success)}`}>
           {scheduleSaveResult.message}
         </div>
       )}

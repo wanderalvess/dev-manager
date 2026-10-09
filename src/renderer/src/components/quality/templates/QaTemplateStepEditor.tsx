@@ -25,7 +25,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
     <div className="flex-1 p-4 overflow-y-auto space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+          <label className="text-2xs font-semibold text-muted-foreground block mb-1">
             Título do Passo:
           </label>
           <input
@@ -36,7 +36,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
           />
         </div>
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+          <label className="text-2xs font-semibold text-muted-foreground block mb-1">
             Tabela Principal WinThor:
           </label>
           <input
@@ -52,7 +52,7 @@ export const QaTemplateStepEditor: React.FC<QaTemplateStepEditorProps> = ({
       {/* Editor SQL da Query */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-[11px] font-semibold text-muted-foreground">
+          <label className="text-2xs font-semibold text-muted-foreground">
             Comando SQL (suporta :binds como :codFilial, :numCupom):
           </label>
           {detectedBinds.length > 0 && (

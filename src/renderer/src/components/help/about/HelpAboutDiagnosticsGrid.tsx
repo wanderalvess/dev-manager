@@ -34,7 +34,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
       {/* UAC / Permissão */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
+      <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Elevação UAC (Windows):
         </span>
@@ -54,7 +54,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Sistema Operacional */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
+      <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Sistema Operacional:
         </span>
@@ -67,7 +67,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Memória RAM */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
+      <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <div className="flex items-center justify-between">
           <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
             Memória RAM do Sistema:
@@ -78,7 +78,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
         </div>
         <div className="flex items-center space-x-1.5 font-mono text-foreground font-semibold">
           <HardDrive className="w-4 h-4 text-amber-400 shrink-0" />
-          <span className="text-[11px]">
+          <span className="text-2xs">
             {appInfo
               ? `${appInfo.freeMemoryMb} MB livres de ${appInfo.totalMemoryMb} MB`
               : 'Carregando...'}
@@ -94,33 +94,33 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       </div>
 
       {/* Versão Electron & Chromium */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
+      <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Runtimes Desktop:
         </span>
-        <div className="font-mono text-foreground text-[11px] truncate">
+        <div className="font-mono text-foreground text-2xs truncate">
           Electron <strong className="text-primary">v{appInfo?.electronVersion}</strong> • Chrome{' '}
           <strong>v{appInfo?.chromeVersion}</strong>
         </div>
       </div>
 
       {/* Versão Node & V8 */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
+      <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Motor JavaScript:
         </span>
-        <div className="font-mono text-foreground text-[11px] truncate">
+        <div className="font-mono text-foreground text-2xs truncate">
           Node.js <strong className="text-emerald-500">v{appInfo?.nodeVersion}</strong> • V8{' '}
           <strong>v{appInfo?.v8Version}</strong>
         </div>
       </div>
 
       {/* Hostname */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
+      <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1.5 shadow-2xs">
         <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
           Nome da Máquina (Host):
         </span>
-        <div className="font-mono text-foreground text-[11px] truncate flex items-center gap-1.5">
+        <div className="font-mono text-foreground text-2xs truncate flex items-center gap-1.5">
           <Laptop className="w-3.5 h-3.5 text-primary shrink-0" />
           <span className="truncate">{appInfo?.osHostname || 'Localhost'}</span>
         </div>
@@ -136,12 +136,12 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
       )}
 
       {/* Notas de Versão / Changelog */}
-      <div className="p-3.5 rounded-xl bg-card/60 border border-border flex items-center justify-between gap-2 shadow-2xs">
+      <div className="p-3 rounded-xl bg-card/60 border border-border flex items-center justify-between gap-2 shadow-2xs">
         <div className="min-w-0">
           <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
             Notas de Versão
           </span>
-          <span className="text-[11px] text-foreground truncate block">Histórico de mudanças e melhorias</span>
+          <span className="text-2xs text-foreground truncate block">Histórico de mudanças e melhorias</span>
         </div>
         <button
           onClick={handleOpenChangelog}

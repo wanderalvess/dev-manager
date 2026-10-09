@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AppSettings, DatabaseConnectionConfig, SqlSnippet } from '../../../../shared/types';
 import { DEFAULT_PORTS } from '../../utils/dbPageTypes';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 interface UseDatabaseConnectionsParams {
   settingsVersion?: number;
@@ -158,7 +159,7 @@ export function useDatabaseConnections({ settingsVersion, setSql, setCustomSnipp
   };
 
   const handleDeleteConnection = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta conexão?')) {
+    if (await requestConfirm({ title: 'Excluir conexão?', message: 'Tem certeza que deseja excluir esta conexão?', confirmLabel: 'Excluir', tone: 'danger' })) {
       const updated = connections.filter((c) => c.id !== id);
       await saveConnectionsToSettings(updated);
       if (activeConnectionId === id && updated.length > 0) {

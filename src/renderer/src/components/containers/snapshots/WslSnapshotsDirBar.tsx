@@ -16,7 +16,7 @@ export const WslSnapshotsDirBar: React.FC<WslSnapshotsDirBarProps> = ({
   onLoadSnapshots,
   onSaveSnapshotsDir
 }) => (
-  <div className="p-3.5 bg-muted/30 border border-border/80 rounded-xl space-y-2.5">
+  <div className="p-3 bg-muted/30 border border-border/80 rounded-xl space-y-2.5">
     <div className="flex items-center justify-between">
       <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
         <FolderOpen className="w-3.5 h-3.5 text-primary" />
@@ -25,7 +25,7 @@ export const WslSnapshotsDirBar: React.FC<WslSnapshotsDirBarProps> = ({
       <button
         onClick={onLoadSnapshots}
         disabled={isLoadingSnapshots}
-        className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+        className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
       >
         <RefreshCw className={`w-3 h-3 ${isLoadingSnapshots ? 'animate-spin text-primary' : ''}`} />
         <span>Atualizar Lista</span>

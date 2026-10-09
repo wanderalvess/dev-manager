@@ -94,7 +94,7 @@ export const QaRunnerRowsModal: React.FC<QaRunnerRowsModalProps> = ({ title, row
         </button>
       </div>
       <div className="p-4 flex-1 overflow-auto">
-        <pre className="p-3 rounded-md bg-background border border-border font-mono text-[11px] text-foreground overflow-x-auto leading-relaxed">
+        <pre className="p-3 rounded-md bg-background border border-border font-mono text-2xs text-foreground overflow-x-auto leading-relaxed">
           {JSON.stringify(rows, null, 2)}
         </pre>
       </div>

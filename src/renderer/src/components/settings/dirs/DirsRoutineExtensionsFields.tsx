@@ -81,7 +81,7 @@ export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsPr
             type="button"
             onClick={() => handleBrowseLauncherPath(index)}
             className="p-1.5 bg-card hover:bg-muted border border-border rounded-lg shrink-0"
-            title="Selecionar executável"
+            title="Selecionar executável" aria-label="Selecionar executável"
           >
             <FolderOpen className="w-3.5 h-3.5 text-emerald-500" />
           </button>
@@ -89,7 +89,7 @@ export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsPr
             type="button"
             onClick={() => handleRemoveLauncherRow(index)}
             className="p-1.5 text-muted-foreground hover:text-rose-500 transition-colors shrink-0"
-            title="Remover"
+            title="Remover" aria-label="Remover"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

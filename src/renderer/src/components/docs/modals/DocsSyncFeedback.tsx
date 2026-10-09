@@ -48,7 +48,7 @@ export const DocsSyncFeedback: React.FC<DocsSyncFeedbackProps> = ({ isSyncing, s
             {res.success ? <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" /> : <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />}
             <div className="flex-1 min-w-0">
               <div className="font-bold text-foreground">{res.targetName}</div>
-              <div className="text-[11px] mt-0.5">
+              <div className="text-2xs mt-0.5">
                 {res.success
                   ? `Sincronização concluída com sucesso! ${res.totalChunksSent || 0} chunks${res.totalArticlesSent ? ` e ${res.totalArticlesSent} artigos` : ''} entregues em ${res.totalBatches} lote(s).`
                   : `Falha: ${res.error || 'Não foi possível conectar com o endpoint remoto'}`}

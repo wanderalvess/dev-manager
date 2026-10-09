@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollText, X, Plus, FolderOpen, Settings, Trash2 } from 'lucide-react';
 import { RealtimeLogSource } from '../../../../../shared/types';
 import { Modal } from '../../ui/Modal';
+import { requestConfirm } from '../../ui/confirmService';
 
 interface ManageLogSourcesModalProps {
   sources: RealtimeLogSource[];
@@ -26,7 +27,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border/80 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150"
+    panelClassName="bg-card border border-border/80 rounded-xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150"
     closeOnBackdrop={false}
     closeOnEscape={false}
     ariaLabel="Gerenciar Fontes de Log"
@@ -57,7 +58,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Nome de Exibição</label>
+            <label className="text-2xs font-semibold text-muted-foreground block mb-1">Nome de Exibição</label>
             <input
               type="text"
               value={editingSource?.name || ''}
@@ -67,7 +68,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
             />
           </div>
           <div>
-            <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Codificação (Encoding)</label>
+            <label className="text-2xs font-semibold text-muted-foreground block mb-1">Codificação (Encoding)</label>
             <select
               value={editingSource?.encoding || 'utf-8'}
               onChange={(e) => setEditingSource((prev) => ({ ...prev, encoding: e.target.value as any }))}
@@ -81,7 +82,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
         </div>
 
         <div>
-          <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Caminho do Arquivo de Log</label>
+          <label className="text-2xs font-semibold text-muted-foreground block mb-1">Caminho do Arquivo de Log</label>
           <div className="flex items-center space-x-2">
             <input
               type="text"
@@ -136,7 +137,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
                     {src.encoding || 'utf-8'}
                   </span>
                 </div>
-                <p className="text-[11px] text-muted-foreground font-mono truncate mt-0.5" title={src.filePath}>
+                <p className="text-2xs text-muted-foreground font-mono truncate mt-0.5" title={src.filePath}>
                   {src.filePath}
                 </p>
               </div>
@@ -170,12 +171,18 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
       {sources.length > 0 && (
         <div className="pt-2 flex justify-between items-center text-xs text-muted-foreground">
           <button
-            onClick={() => {
-              if (confirm('Remover todas as fontes de log configuradas?')) {
+            onClick={async () => {
+              const confirmed = await requestConfirm({
+                title: 'Remover todas as fontes?',
+                message: 'Todas as fontes de log configuradas serão removidas.',
+                confirmLabel: 'Remover todas',
+                tone: 'danger'
+              });
+              if (confirmed) {
                 persistSources([], '');
               }
             }}
-            className="hover:text-foreground text-[11px] underline"
+            className="hover:text-foreground text-2xs underline"
           >
             Remover Todas as Fontes
           </button>

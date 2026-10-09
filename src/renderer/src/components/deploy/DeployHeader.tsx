@@ -58,14 +58,14 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
   onAbort,
   onRun
 }) => (
-  <div className="cockpit-panel rounded-2xl p-4 shadow-xl border border-border shrink-0">
+  <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border shrink-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center space-x-3">
         <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
           <Layers className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+          <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
             Perfis de Deploy
             <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
               Karaf · Docker · Genérico
@@ -74,12 +74,12 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
               type="button"
               onClick={onOpenTour}
               className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
-              title="Rever o tour guiado desta página"
+              title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
             >
               <Sparkles className="w-3.5 h-3.5" />
             </button>
-          </h2>
-          <p className="text-[11px] text-muted-foreground">
+          </h1>
+          <p className="text-2xs text-muted-foreground">
             {activeProfile?.description || 'Monte etapas sequenciais de build e publicação para qualquer alvo.'}
           </p>
         </div>
@@ -103,8 +103,8 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
           data-tour="edit-deploy-profile"
           onClick={onEditProfile}
           disabled={!activeProfile}
-          className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors disabled:opacity-40 cursor-pointer"
-          title="Editar Perfil"
+          className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+          title="Editar Perfil" aria-label="Editar Perfil"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
@@ -182,7 +182,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
             data-tour="run-active-profile"
             onClick={onRun}
             disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
-            className="px-5 py-2 rounded-lg font-semibold text-xs flex items-center space-x-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-2xs cursor-pointer disabled:opacity-40"
+            className="px-5 py-2 rounded-lg font-semibold text-xs flex items-center space-x-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-2xs cursor-pointer disabled:opacity-50"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>Executar Perfil</span>

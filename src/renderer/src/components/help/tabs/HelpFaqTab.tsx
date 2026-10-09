@@ -49,10 +49,10 @@ export const HelpFaqTab: React.FC<HelpFaqTabProps> = ({
       {/* Lista Accordion */}
       <div className="space-y-3">
         {filteredFaqs.length === 0 ? (
-          <div className="cockpit-panel rounded-2xl p-8 text-center border border-border space-y-2">
+          <div className="cockpit-panel rounded-xl p-8 text-center border border-border space-y-2">
             <LifeBuoy className="w-8 h-8 text-muted-foreground mx-auto" />
             <h4 className="text-xs font-bold text-foreground">Nenhuma pergunta encontrada</h4>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               Nenhum tópico correspondeu aos filtros atuais. Tente pesquisar por termos como "porta", "uac", "karaf", "mcp" ou "git".
             </p>
             {searchQuery && (
@@ -70,7 +70,7 @@ export const HelpFaqTab: React.FC<HelpFaqTabProps> = ({
             return (
               <div
                 key={faq.id}
-                className="cockpit-panel rounded-2xl border border-border overflow-hidden transition-all shadow-md"
+                className="cockpit-panel rounded-xl border border-border overflow-hidden transition-all shadow-md"
               >
                 <button
                   onClick={() => toggleFaq(faq.id)}

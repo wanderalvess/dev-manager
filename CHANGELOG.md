@@ -5,6 +5,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Alterado
+- **Auditoria de UI/UX**: foco de teclado visível em todo o app (`:focus-visible` global) e `prefers-reduced-motion` respeitado; ~270 botões só de ícone ganharam `aria-label` e o componente `IconButton` (rótulo obrigatório) substitui os do cabeçalho. A rampa `amber` passou para amarelo, separando "aviso" do laranja do tema, e há tokens `success`/`warning`/`danger`/`info`. Cinzas crus (`slate`/`zinc`/`neutral`) saíram do cromo de UI e ficam só em console/terminal; `text-[11px]` virou `text-2xs`; raios `2xl` viraram `xl`. Cada página tem um único `<h1>` e os modais usam `<h2>`.
+- **Diálogos**: 3 `confirm()` nativos (excluir perfil de deploy/ambiente e remover fontes de log) agora usam o diálogo do app; nove overlays (QuickLauncher, leitor de Markdown, drawer de análise de exceção, modais de binds/snippet/especificação/item de qualidade, onboarding) passaram a usar o `ui/Modal` (foco preso, Esc e ARIA padronizados), e os menus de clique-fora fecham com Esc.
+- **Lint**: `confirm`/`alert` viram erro; `text-[11px]`, cinzas crus e `fixed inset-0` fora de `ui/Modal` geram aviso (com exceções para consoles e menus).
+
 ### Corrigido
 - **DB Studio — edição do grid em tabela sem chave primária**: em Oracle e PostgreSQL a consulta `SELECT * FROM <tabela>` é refeita trazendo `ROWID`/`ctid` (oculto no grid, na busca e na exportação) e UPDATE/DELETE passam a usar `WHERE ROWID = :p`/`ctid = :p`. Linhas duplicadas, BLOB, datas e números grandes deixam de impedir a alteração. No PostgreSQL só para tabelas comuns (views e partições seguem pelo fallback). MySQL sem PK continua localizando por todas as colunas, agora com aviso.
 
@@ -303,7 +308,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - **`DockerService.stopContainerSequence`**: Novo método central de negócio no serviço de Docker com notificações de progresso em tempo real (`onProgress`) e tratamento de erros;
   - **Transporte IPC (Desktop)**: Handlers registrados `docker:stop-sequence` e aliases `container:start-sequence` e `container:stop-sequence`, com interfaces tipadas no `preload` e no `apiBridge`;
   - **Transporte REST / Express (Headless)**: Novos endpoints `POST /api/docker/stop-sequence` e `POST /api/containers/stop-sequence`;
-  - **Servidor MCP**: Novas ferramentas disponibilizadas para agentes e LLMs: `docker_stop_sequence`, `container_stop_sequence`, `docker_start_sequence` e `container_start_sequence`.
+  - **Servidor MCP**: Novas ferramentas disponibilizadas para agentes e LLMs: `docker_stop_sequence` e `docker_start_sequence`.
 - **Documentação e Central de Ajuda**:
   - Card de Containers no Guia dos Módulos (`HelpModulesTab.tsx`) atualizado com Grupos de Containers e Ações em Lote;
   - Nova pergunta no FAQ da Central de Ajuda (`HelpPage.tsx`) com passo a passo sobre a criação de grupos, warm-up e controle em lote;

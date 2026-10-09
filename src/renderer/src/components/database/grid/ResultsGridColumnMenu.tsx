@@ -1,4 +1,5 @@
 import React from 'react';
+import { EscapeToClose } from '../../ui/EscapeToClose';
 import { X, ArrowUp, ArrowDown } from 'lucide-react';
 import { omitColumnFilter } from '../../../utils/resultsGridUtils';
 
@@ -24,8 +25,9 @@ export const ResultsGridColumnMenu: React.FC<ResultsGridColumnMenuProps> = ({
 }) => (
   <>
     <div className="fixed inset-0 z-20 cursor-default" onClick={onClose} />
+    <EscapeToClose onEscape={onClose} />
     <div className="absolute left-0 top-full mt-1 w-64 bg-popover text-popover-foreground rounded-lg shadow-xl border border-border p-2.5 z-30 font-sans text-xs space-y-2">
-      <div className="font-bold text-[11px] text-muted-foreground pb-1 border-b border-border flex items-center justify-between">
+      <div className="font-bold text-2xs text-muted-foreground pb-1 border-b border-border flex items-center justify-between">
         <span>Opções: {col}</span>
         <button onClick={onClose} className="hover:text-foreground text-muted-foreground cursor-pointer">
           <X className="w-3 h-3" />
@@ -85,7 +87,7 @@ export const ResultsGridColumnMenu: React.FC<ResultsGridColumnMenuProps> = ({
         </div>
       </div>
 
-      <div className="pt-1.5 border-t border-border flex items-center justify-between text-[11px]">
+      <div className="pt-1.5 border-t border-border flex items-center justify-between text-2xs">
         <button
           type="button"
           onClick={() => {

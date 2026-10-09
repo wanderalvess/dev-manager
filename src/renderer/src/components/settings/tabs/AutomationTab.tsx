@@ -14,13 +14,13 @@ export const AutomationTab: React.FC<AutomationTabProps> = ({
   defaultAutomation
 }) => {
   return (
-    <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border flex-1" id="field-automation">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1" id="field-automation">
       <div className="flex items-center justify-between pb-1 border-b border-border/60">
         <div>
           <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" /> Preferências Padrão de Automação
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-2xs text-muted-foreground mt-0.5">
             Defina o comportamento pré-selecionado ao abrir o Painel de Preparação de Ambiente.
           </p>
         </div>
@@ -28,7 +28,7 @@ export const AutomationTab: React.FC<AutomationTabProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-border">
-          <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">
+          <h4 className="font-bold text-foreground uppercase tracking-wider text-2xs">
             Ações Pré-Debug Padrão
           </h4>
 
@@ -70,7 +70,7 @@ export const AutomationTab: React.FC<AutomationTabProps> = ({
         </div>
 
         <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-border">
-          <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">
+          <h4 className="font-bold text-foreground uppercase tracking-wider text-2xs">
             Ações de Inicialização Padrão
           </h4>
 

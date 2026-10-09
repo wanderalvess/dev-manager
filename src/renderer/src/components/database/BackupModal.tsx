@@ -39,7 +39,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in flex flex-col max-h-[92vh]"
+      panelClassName="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in flex flex-col max-h-[92vh]"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >

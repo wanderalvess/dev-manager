@@ -35,8 +35,6 @@ import { checkPortOpen } from '../utils/network';
 import { launchProcessSafely } from '../utils/routineLaunchUtils';
 import { isWslKaraf, launchWslServerDebug, killWslKarafProcesses } from '../utils/karafWslUtils';
 
-export const TRACKED_SERVICES = DEFAULT_TRACKED_SERVICES;
-
 export class WindowsService {
   private configService: ConfigService;
   private karafService: KarafService;
@@ -1142,13 +1140,15 @@ export class WindowsService {
         return { success: true, logs };
       }
 
+      const failedSteps: string[] = [];
       for (let i = 0; i < total; i++) {
         const step = enabledSteps[i];
         const stepNum = i + 1;
         pushLog('info', `[${stepNum}/${total}] Executando: ${step.name}...`);
         if (onStepProgress) onStepProgress(stepNum, total, step);
 
-        await this.runProfileStep(step, profile.name, onLog);
+        const stepOk = await this.runProfileStep(step, profile.name, onLog);
+        if (!stepOk) failedSteps.push(step.name);
 
         if (step.waitForPort && step.port) {
           pushLog('info', `Aguardando porta ${step.port} responder...`);
@@ -1173,6 +1173,12 @@ export class WindowsService {
           pushLog('info', `Aguardando ${delaySeconds}s antes da próxima etapa...`);
           await new Promise((r) => setTimeout(r, delaySeconds * 1000));
         }
+      }
+
+      if (failedSteps.length > 0) {
+        const error = `${failedSteps.length} etapa(s) falharam: ${failedSteps.join(', ')}`;
+        pushLog('error', `Perfil "${profile.name}" concluído com falhas. ${error}`);
+        return { success: false, logs, error };
       }
 
       pushLog('success', `🎉 Perfil "${profile.name}" executado com sucesso! Todos os passos disparados.`);

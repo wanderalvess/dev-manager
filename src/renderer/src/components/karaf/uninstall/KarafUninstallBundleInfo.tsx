@@ -15,7 +15,7 @@ export const KarafUninstallBundleInfo: React.FC<KarafUninstallBundleInfoProps> =
       </div>
     </div>
     <span
-      className={`px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 font-mono ${getBundleStateBadgeClass(target.state)}`}
+      className={`px-2.5 py-1 rounded-full text-2xs font-bold border inline-flex items-center gap-1 font-mono ${getBundleStateBadgeClass(target.state)}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${getBundleStateDotClass(target.state)}`} />
       {target.state}

@@ -39,7 +39,7 @@ export const OracleMaintenanceModal: React.FC<OracleMaintenanceModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -79,7 +79,7 @@ export const OracleMaintenanceModal: React.FC<OracleMaintenanceModalProps> = ({
 
       {/* Footer */}
       <div className="px-5 py-3 border-t border-border/80 flex items-center justify-between bg-muted/10">
-        <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+        <span className="text-2xs text-muted-foreground flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
           Comandos executados nativamente via container engine
         </span>

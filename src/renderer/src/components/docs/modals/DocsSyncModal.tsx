@@ -56,7 +56,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border/80 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95"
+    panelClassName="bg-card border border-border/80 rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95"
     closeOnBackdrop={false}
     closeOnEscape={false}
     ariaLabel="Sincronização de Documentação"
@@ -74,7 +74,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
               RAG Agnóstico
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-2xs text-muted-foreground">
             Exporte trechos e vetores locais de 384 dimensões para o Espaço Ágil ou APIs externas sem custos de IA.
           </p>
         </div>
@@ -99,7 +99,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
           <span className="text-foreground/90 font-mono font-semibold">
             {status?.totalChunks || 0} trechos
           </span>{' '}
-          <span className="text-muted-foreground text-[11px]">
+          <span className="text-muted-foreground text-2xs">
             em {status?.totalFiles || 0} arquivos {!status?.isTextOnly && '· Vetorizado'}
           </span>
         </div>
@@ -138,7 +138,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
           <div className="text-center py-8 px-4 border border-dashed border-border rounded-xl text-xs text-muted-foreground space-y-2 bg-muted/10">
             <Radio className="w-6 h-6 mx-auto text-muted-foreground/60" />
             <p className="font-semibold text-foreground">Nenhum destino de API cadastrado ainda</p>
-            <p className="text-[11px] max-w-md mx-auto">
+            <p className="text-2xs max-w-md mx-auto">
               Cadastre o endpoint do <strong>Espaço Ágil</strong> (ex: <code>https://espacoagil.com.br/api/v1/knowledge/docs</code>) ou o novo backend local na VM para abastecer o chat.
             </p>
           </div>

@@ -107,7 +107,7 @@ export const QaOraclePayloadTab: React.FC<QaOraclePayloadTabProps> = ({
                   setSearchMode(tab.id as QaCoreSearchMode);
                   setError(null);
                 }}
-                className={`px-2.5 py-1 rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-2xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted'

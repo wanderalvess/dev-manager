@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import * as cron from 'node-cron';
+import { mergeBackupConfig, validateBackupConfig } from '../../utils/backupConfigUtils';
 import {
   DatabaseConnectionConfig,
   DbObjectType,
@@ -152,16 +152,10 @@ export function registerDatabaseHandlers(ctx: IpcContext): void {
   });
 
   ipcMain.handle('db:save-backup-config', async (_, config: BackupConfig) => {
-    if (config.cronExpression && !cron.validate(config.cronExpression)) {
-      return { success: false, message: 'Expressão cron inválida.' };
-    }
+    const invalid = validateBackupConfig(config);
+    if (invalid) return { success: false, message: invalid };
 
-    const settings = configService.getSettings();
-    const existing = settings.backupConfigs || [];
-    const previous = existing.find((b) => b.connectionId === config.connectionId);
-    const merged: BackupConfig = { ...previous, ...config };
-    const updated = [merged, ...existing.filter((b) => b.connectionId !== config.connectionId)];
-    configService.saveSettings({ backupConfigs: updated });
+    configService.saveSettings({ backupConfigs: mergeBackupConfig(configService.getSettings().backupConfigs || [], config) });
     backupSchedulerService.rescheduleAll();
 
     return { success: true, message: 'Agendamento salvo com sucesso.' };

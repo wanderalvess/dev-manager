@@ -23,7 +23,7 @@ export const MappedProgramsPanel: React.FC<MappedProgramsPanelProps> = ({
   onLaunch,
   onRemove
 }) => (
-  <div className="cockpit-panel rounded-xl p-3.5 shadow-2xs border border-border/80 shrink-0 space-y-2.5">
+  <div className="cockpit-panel rounded-xl p-3 shadow-2xs border border-border/80 shrink-0 space-y-2.5">
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-2">
         <AppWindow className="w-4 h-4 text-primary shrink-0" />
@@ -79,7 +79,7 @@ export const MappedProgramsPanel: React.FC<MappedProgramsPanelProps> = ({
                   ? 'bg-primary text-primary-foreground animate-pulse'
                   : 'bg-muted/40 hover:bg-primary text-foreground hover:text-primary-foreground border border-border/70 hover:border-primary'
               }`}
-              title="Executar este programa"
+              title="Executar este programa" aria-label="Executar este programa"
             >
               <Play className="w-3 h-3 fill-current" />
             </button>
@@ -87,7 +87,7 @@ export const MappedProgramsPanel: React.FC<MappedProgramsPanelProps> = ({
               type="button"
               onClick={() => onRemove(program.id)}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 cursor-pointer"
-              title="Remover atalho"
+              title="Remover atalho" aria-label="Remover atalho"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

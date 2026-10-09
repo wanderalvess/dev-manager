@@ -70,20 +70,6 @@ export function createDocsApi({ apiFetch, wsManager }: BridgeDeps) {
       });
     },
 
-    askLlm: async (request: LlmRagQueryRequest, providerConfig?: LlmProviderConfig): Promise<LlmRagQueryResponse> => {
-      return apiFetch('/api/llm/ask-with-docs', {
-        method: 'POST',
-        body: JSON.stringify({ ...request, providerId: providerConfig?.id })
-      });
-    },
-
-    chatLlm: async (request: LlmChatRequest, providerConfig?: LlmProviderConfig): Promise<LlmChatResponse> => {
-      return apiFetch('/api/llm/chat', {
-        method: 'POST',
-        body: JSON.stringify({ ...request, providerId: providerConfig?.id })
-      });
-    },
-
     openDocFile: async (filePath: string, mode?: 'editor' | 'folder'): Promise<boolean> => {
       if (mode === 'folder') {
         window.prompt('Localização do arquivo:', filePath);

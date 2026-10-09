@@ -1,5 +1,6 @@
 import React from 'react';
 import { Trash2, Download, Save } from 'lucide-react';
+import { requestConfirm } from '../ui/confirmService';
 
 interface ProfileEditorFooterProps {
   profileId?: string;
@@ -26,7 +27,13 @@ export const ProfileEditorFooter: React.FC<ProfileEditorFooterProps> = ({
         <button
           type="button"
           onClick={async () => {
-            if (confirm(`Tem certeza que deseja excluir o perfil "${profileName}"?`)) {
+            const confirmed = await requestConfirm({
+              title: 'Excluir perfil?',
+              message: `O perfil "${profileName}" será excluído.`,
+              confirmLabel: 'Excluir',
+              tone: 'danger'
+            });
+            if (confirmed) {
               await onDelete(profileId);
               onClose();
             }

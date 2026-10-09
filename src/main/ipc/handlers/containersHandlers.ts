@@ -66,91 +66,52 @@ export function registerContainerHandlers(ctx: IpcContext): void {
   ipcMain.handle('docker:get-status', async () => {
     return await dockerService.checkDockerStatus();
   });
-  ipcMain.handle('container:get-status', async () => {
-    return await dockerService.checkDockerStatus();
-  });
 
   ipcMain.handle('docker:list-containers', async () => {
-    return await dockerService.listContainers();
-  });
-  ipcMain.handle('container:list-containers', async () => {
     return await dockerService.listContainers();
   });
 
   ipcMain.handle('docker:start', async (_, containerId: string) => {
     return await dockerService.startContainer(containerId);
   });
-  ipcMain.handle('container:start', async (_, containerId: string) => {
-    return await dockerService.startContainer(containerId);
-  });
 
   ipcMain.handle('docker:stop', async (_, containerId: string) => {
-    return await dockerService.stopContainer(containerId);
-  });
-  ipcMain.handle('container:stop', async (_, containerId: string) => {
     return await dockerService.stopContainer(containerId);
   });
 
   ipcMain.handle('docker:restart', async (_, containerId: string) => {
     return await dockerService.restartContainer(containerId);
   });
-  ipcMain.handle('container:restart', async (_, containerId: string) => {
-    return await dockerService.restartContainer(containerId);
-  });
 
   ipcMain.handle('docker:logs', async (_, containerId: string, lines?: number) => {
-    return await dockerService.getContainerLogs(containerId, lines);
-  });
-  ipcMain.handle('container:logs', async (_, containerId: string, lines?: number) => {
     return await dockerService.getContainerLogs(containerId, lines);
   });
 
   ipcMain.handle('docker:remove', async (_, containerId: string) => {
     return await dockerService.removeContainer(containerId);
   });
-  ipcMain.handle('container:remove', async (_, containerId: string) => {
-    return await dockerService.removeContainer(containerId);
-  });
 
   ipcMain.handle('docker:get-stats', async () => {
-    return await dockerService.getContainerStats();
-  });
-  ipcMain.handle('container:get-stats', async () => {
     return await dockerService.getContainerStats();
   });
 
   ipcMain.handle('docker:open-terminal', async (_, containerId: string, shellName?: string) => {
     return await dockerService.openContainerTerminal(containerId, shellName);
   });
-  ipcMain.handle('container:open-terminal', async (_, containerId: string, shellName?: string) => {
-    return await dockerService.openContainerTerminal(containerId, shellName);
-  });
 
   ipcMain.handle('docker:inspect', async (_, containerId: string) => {
-    return await dockerService.inspectContainer(containerId);
-  });
-  ipcMain.handle('container:inspect', async (_, containerId: string) => {
     return await dockerService.inspectContainer(containerId);
   });
 
   ipcMain.handle('docker:pause', async (_, containerId: string) => {
     return await dockerService.pauseContainer(containerId);
   });
-  ipcMain.handle('container:pause', async (_, containerId: string) => {
-    return await dockerService.pauseContainer(containerId);
-  });
 
   ipcMain.handle('docker:unpause', async (_, containerId: string) => {
     return await dockerService.unpauseContainer(containerId);
   });
-  ipcMain.handle('container:unpause', async (_, containerId: string) => {
-    return await dockerService.unpauseContainer(containerId);
-  });
 
   ipcMain.handle('docker:prune', async () => {
-    return await dockerService.pruneContainers();
-  });
-  ipcMain.handle('container:prune', async () => {
     return await dockerService.pruneContainers();
   });
 

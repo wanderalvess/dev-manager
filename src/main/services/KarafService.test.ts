@@ -477,6 +477,31 @@ client.bat "feature:install -r custom-feature/2.0.0"
       expect(executeSpy).toHaveBeenCalledWith('bundle:refresh 255', expect.any(Function), undefined);
       expect(executeSpy).toHaveBeenCalledWith('bundle:start 255', expect.any(Function), undefined);
     });
+
+    it('reinstallBundle e updateBundleVersion falham quando o bundle:start falha', async () => {
+      vi.spyOn(karafService, 'executeKarafCommand').mockImplementation(async (cmd) =>
+        cmd.startsWith('bundle:start') ? { code: 1, stdout: '', stderr: 'não resolvido' } : { code: 0, stdout: '', stderr: '' }
+      );
+
+      const reinstall = await karafService.reinstallBundle({ bundleId: '255', location: 'mvn:a/b/1' });
+      const update = await karafService.updateBundleVersion({ bundleId: '255', newVersionOrLocation: 'mvn:a/b/2' });
+
+      expect(reinstall.success).toBe(false);
+      expect(reinstall.output).toContain('não iniciou');
+      expect(update.success).toBe(false);
+    });
+
+    it('manageBundle com uninstall também executa bundle:refresh', async () => {
+      const commands: string[] = [];
+      vi.spyOn(karafService, 'executeKarafCommand').mockImplementation(async (cmd) => {
+        commands.push(cmd);
+        return { code: 0, stdout: '', stderr: '' };
+      });
+
+      const res = await karafService.manageBundle('uninstall', '255');
+      expect(res.success).toBe(true);
+      expect(commands).toEqual(['bundle:uninstall 255', 'bundle:refresh']);
+    });
   });
 
   describe('getResolvedJavaEnv', () => {
