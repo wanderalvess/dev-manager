@@ -1,4 +1,4 @@
-import type { DatabaseConnectionConfig, TableColumnInfo } from '../../../shared/types';
+import type { DatabaseConnectionConfig, DbTableColumnsResult, DbTablesResult } from '../../../shared/types';
 import type { DatabaseContext } from './databaseContext';
 
 // Teto de segurança da listagem de tabelas. Schemas de ERP passam fácil de alguns
@@ -8,7 +8,7 @@ const MAX_LISTED_TABLES = 50000;
 /**
  * Lista as tabelas disponíveis no schema/banco de dados conectado.
  */
-export async function listTables(ctx: DatabaseContext, config: DatabaseConnectionConfig): Promise<string[]> {
+export async function listTables(ctx: DatabaseContext, config: DatabaseConnectionConfig): Promise<DbTablesResult> {
   try {
     let query = '';
     if (config.type === 'oracle') {
@@ -22,14 +22,18 @@ export async function listTables(ctx: DatabaseContext, config: DatabaseConnectio
     }
 
     const res = await ctx.executeQuery(config, query, MAX_LISTED_TABLES);
-    if (!res.success || !res.rows) return [];
+    if (!res.success || !res.rows) {
+      return { tables: [], error: res.error || 'Falha ao listar as tabelas.' };
+    }
 
-    return res.rows.map((row) => {
-      const firstKey = Object.keys(row)[0];
-      return String(row[firstKey]);
-    });
-  } catch {
-    return [];
+    return {
+      tables: res.rows.map((row) => {
+        const firstKey = Object.keys(row)[0];
+        return String(row[firstKey]);
+      })
+    };
+  } catch (err) {
+    return { tables: [], error: await ctx.formatErrorMessage(err, config) };
   }
 }
 
@@ -40,9 +44,9 @@ export async function getTableColumns(
   ctx: DatabaseContext,
   config: DatabaseConnectionConfig,
   tableName: string
-): Promise<TableColumnInfo[]> {
+): Promise<DbTableColumnsResult> {
   const cleanTable = tableName.trim().replace(/[^a-zA-Z0-9_$.]/g, '');
-  if (!cleanTable) return [];
+  if (!cleanTable) return { columns: [] };
 
   try {
     if (config.type === 'oracle') {
@@ -69,9 +73,9 @@ export async function getTableColumns(
           ORDER BY c.COLUMN_ID
         `;
       const res = await ctx.executeQuery(config, query, 300);
-      if (!res.success || !res.rows) return [];
+      if (!res.success || !res.rows) return { columns: [], error: res.error || 'Falha ao obter as colunas.' };
 
-      return res.rows.map((r: any) => {
+      const columns = res.rows.map((r: any) => {
         let typeStr = String(r.DATA_TYPE || '');
         if (r.DATA_PRECISION) {
           typeStr += `(${r.DATA_PRECISION}${r.DATA_SCALE ? ',' + r.DATA_SCALE : ''})`;
@@ -86,6 +90,7 @@ export async function getTableColumns(
           length: r.DATA_LENGTH
         };
       });
+      return { columns };
     } else if (config.type === 'postgres') {
       const dotIdx = cleanTable.lastIndexOf('.');
       const schemaPart = dotIdx >= 0 ? cleanTable.slice(0, dotIdx) : 'public';
@@ -110,9 +115,9 @@ export async function getTableColumns(
           ORDER BY c.ordinal_position
         `;
       const res = await ctx.executeQuery(config, query, 300);
-      if (!res.success || !res.rows) return [];
+      if (!res.success || !res.rows) return { columns: [], error: res.error || 'Falha ao obter as colunas.' };
 
-      return res.rows.map((r: any) => ({
+      const columns = res.rows.map((r: any) => ({
         name: String(r.column_name || ''),
         type: r.character_maximum_length ? `${r.data_type}(${r.character_maximum_length})` : String(r.data_type || ''),
         nullable: r.is_nullable === 'YES',
@@ -120,22 +125,24 @@ export async function getTableColumns(
         length: r.character_maximum_length,
         defaultValue: r.column_default ? String(r.column_default) : undefined
       }));
+      return { columns };
     } else if (config.type === 'mysql') {
       const query = `SHOW FULL COLUMNS FROM \`${cleanTable}\``;
       const res = await ctx.executeQuery(config, query, 300);
-      if (!res.success || !res.rows) return [];
+      if (!res.success || !res.rows) return { columns: [], error: res.error || 'Falha ao obter as colunas.' };
 
-      return res.rows.map((r: any) => ({
+      const columns = res.rows.map((r: any) => ({
         name: String(r.Field || Object.values(r)[0] || ''),
         type: String(r.Type || ''),
         nullable: r.Null === 'YES',
         isPrimaryKey: r.Key === 'PRI',
         defaultValue: r.Default !== null && r.Default !== undefined ? String(r.Default) : undefined
       }));
+      return { columns };
     }
-    return [];
+    return { columns: [] };
   } catch (err) {
     console.warn(`[DatabaseService] Erro ao obter colunas da tabela ${cleanTable}:`, err);
-    return [];
+    return { columns: [], error: await ctx.formatErrorMessage(err, config) };
   }
 }

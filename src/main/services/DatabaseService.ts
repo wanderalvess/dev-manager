@@ -5,7 +5,8 @@ import { createRequire } from 'module';
 import {
   DatabaseConnectionConfig,
   QueryResult,
-  TableColumnInfo,
+  DbTableColumnsResult,
+  DbTablesResult,
   ExplainPlanResult,
   OracleTracerFilter,
   OracleActiveSessionsResult,
@@ -214,14 +215,14 @@ export class DatabaseService {
     return interpolateSqlBinds(sql, binds);
   }
 
-  public async listTables(config: DatabaseConnectionConfig): Promise<string[]> {
+  public async listTables(config: DatabaseConnectionConfig): Promise<DbTablesResult> {
     return metadata.listTables(this.ctx, config);
   }
 
   public async getTableColumns(
     config: DatabaseConnectionConfig,
     tableName: string
-  ): Promise<TableColumnInfo[]> {
+  ): Promise<DbTableColumnsResult> {
     return metadata.getTableColumns(this.ctx, config, tableName);
   }
 

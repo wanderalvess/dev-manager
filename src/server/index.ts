@@ -958,8 +958,8 @@ app.post('/api/db/tables', async (req, res) => {
   try {
     const result = await databaseService.listTables(req.body);
     res.json(result);
-  } catch {
-    res.status(500).json([]);
+  } catch (err: any) {
+    res.status(500).json({ tables: [], error: err?.message || 'Erro ao listar tabelas' });
   }
 });
 
@@ -968,8 +968,8 @@ app.post('/api/db/columns', async (req, res) => {
     const { config, tableName } = req.body;
     const result = await databaseService.getTableColumns(config, tableName);
     res.json(result);
-  } catch {
-    res.status(500).json([]);
+  } catch (err: any) {
+    res.status(500).json({ columns: [], error: err?.message || 'Erro ao obter colunas' });
   }
 });
 

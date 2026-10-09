@@ -78,7 +78,8 @@ import type {
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
   Routine801InstallRequest,
-  TableColumnInfo,
+  DbTableColumnsResult,
+  DbTablesResult,
   DockerContainerStats,
   ComposeServiceStatus,
   LogWatchStatus,
@@ -488,9 +489,9 @@ const electronAPI = {
   closeDbSession: (sessionId: string): Promise<void> => ipcRenderer.invoke('db:session-close', sessionId),
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string): Promise<ExplainPlanResult> =>
     ipcRenderer.invoke('db:explain-plan', config, sql),
-  listDbTables: (config: DatabaseConnectionConfig): Promise<string[]> =>
+  listDbTables: (config: DatabaseConnectionConfig): Promise<DbTablesResult> =>
     ipcRenderer.invoke('db:list-tables', config),
-  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
+  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<DbTableColumnsResult> =>
     ipcRenderer.invoke('db:get-table-columns', config, tableName),
   insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>, sessionId?: string): Promise<QueryResult> =>
     ipcRenderer.invoke('db:insert-row', config, tableName, values, sessionId),
