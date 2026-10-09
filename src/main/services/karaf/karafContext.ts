@@ -14,6 +14,9 @@ export type DeployTrigger = 'ui' | 'mcp';
 
 export type KarafCredentials = { user?: string; pass?: string; port?: number };
 export type ChunkHandler = (chunk: string) => void;
+
+/** Descarta a saída em streaming quando só o resultado final interessa. */
+export const noopChunk: ChunkHandler = () => {};
 export type KarafActionResult = { success: boolean; output: string };
 export type KarafDeployResult = { success: boolean; error?: string };
 export type KarafCommandResult = {

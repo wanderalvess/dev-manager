@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Sparkles } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import type { TraceSummary } from '../../../../shared/types';
 import { buildApmSetupSnippets, getMethodBadgeClass, getStatusBadgeClass } from '../../utils/apmUiUtils';
 
@@ -10,14 +10,13 @@ export interface ApmTraceListProps {
   maxListDuration: number;
   setupSnippets: ReturnType<typeof buildApmSetupSnippets>;
   onSelectTrace: (traceId: string) => void;
-  onGenerateDemo: () => void;
   onOpenSetup: () => void;
   onResetFilters: () => void;
 }
 
 export const ApmTraceList: React.FC<ApmTraceListProps> = ({
   displayedTraces, rawTraces, selectedTraceId, maxListDuration, setupSnippets,
-  onSelectTrace, onGenerateDemo, onOpenSetup, onResetFilters
+  onSelectTrace, onOpenSetup, onResetFilters
 }) => (
         <section
           aria-label="Lista de Traces"
@@ -47,14 +46,6 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                   )}
                 </p>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={onGenerateDemo}
-                    className="h-8 px-3.5 rounded bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Simular Tráfego</span>
-                  </button>
                   {rawTraces.length === 0 ? (
                     <button
                       type="button"
@@ -155,7 +146,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                         <td className="py-1.5 px-3">
                           <div className="flex flex-col gap-0.5">
                             <span
-                              className={`text-[11px] font-medium leading-none ${
+                              className={`text-2xs font-medium leading-none ${
                                 trace.durationMs > 1000
                                   ? 'text-rose-600 dark:text-rose-400 font-bold'
                                   : trace.durationMs > 400

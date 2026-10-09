@@ -1,6 +1,7 @@
 import { KarafJvmMemoryInfo } from '../../../shared/types';
 import { parseJmxMemoryOutput, parseKarafInfoOutput, buildJvmMemoryMetrics } from '../../utils/jvmMemoryUtils';
 import type { ChunkHandler, KarafActionResult, KarafContext, KarafCredentials } from './karafContext';
+import { noopChunk } from './karafContext';
 
 /**
  * Verifica se a feature/bundle foi de fato instalada e está ativa após um deploy,
@@ -66,20 +67,19 @@ export async function getJvmMemoryMetrics(
     throw new Error('Karaf OSGi offline: porta SSH fechada');
   }
 
-  const dummyChunk = () => {};
 
   // 1. Tentar ler Heap e Non-Heap via JMX MBeans (feature management do Karaf)
   try {
-    const heapJmxRes = await ctx.executeKarafCommand('jmx:read java.lang:type=Memory HeapMemoryUsage', dummyChunk, credentials, 15000);
+    const heapJmxRes = await ctx.executeKarafCommand('jmx:read java.lang:type=Memory HeapMemoryUsage', noopChunk, credentials, 15000);
     const heapParsed = parseJmxMemoryOutput(heapJmxRes.stdout);
 
     if (heapParsed) {
       // Só consulta Non-Heap quando o JMX respondeu ao Heap (evita round-trip SSH inútil)
-      const nonHeapJmxRes = await ctx.executeKarafCommand('jmx:read java.lang:type=Memory NonHeapMemoryUsage', dummyChunk, credentials, 15000);
+      const nonHeapJmxRes = await ctx.executeKarafCommand('jmx:read java.lang:type=Memory NonHeapMemoryUsage', noopChunk, credentials, 15000);
       const nonHeapParsed = parseJmxMemoryOutput(nonHeapJmxRes.stdout);
 
       // Tentar obter threads e uptime via info rápido
-      const infoRes = await ctx.executeKarafCommand('info', dummyChunk, credentials, 15000);
+      const infoRes = await ctx.executeKarafCommand('info', noopChunk, credentials, 15000);
       const infoParsed = parseKarafInfoOutput(infoRes.stdout);
 
       return buildJvmMemoryMetrics({
@@ -102,7 +102,7 @@ export async function getJvmMemoryMetrics(
   }
 
   // 2. Fallback: Comando "info" nativo do Karaf
-  const infoRes = await ctx.executeKarafCommand('info', dummyChunk, credentials, 20000);
+  const infoRes = await ctx.executeKarafCommand('info', noopChunk, credentials, 20000);
   const infoParsed = parseKarafInfoOutput(infoRes.stdout);
 
   return buildJvmMemoryMetrics({
@@ -125,10 +125,9 @@ export async function triggerGarbageCollection(
   ctx: KarafContext,
   credentials?: KarafCredentials
 ): Promise<KarafActionResult> {
-  const dummyChunk = () => {};
-  let res = await ctx.executeKarafCommand('jmx:run java.lang:type=Memory gc', dummyChunk, credentials, 15000);
+  let res = await ctx.executeKarafCommand('jmx:run java.lang:type=Memory gc', noopChunk, credentials, 15000);
   if (res.code !== 0) {
-    res = await ctx.executeKarafCommand('system:gc', dummyChunk, credentials, 15000);
+    res = await ctx.executeKarafCommand('system:gc', noopChunk, credentials, 15000);
   }
   return {
     success: res.code === 0,

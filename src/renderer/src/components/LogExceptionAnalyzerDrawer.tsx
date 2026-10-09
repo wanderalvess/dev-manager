@@ -10,7 +10,7 @@ import {
   Zap
 } from 'lucide-react';
 import { LogAnalysisSummary, LogExceptionType } from '../../../shared/types';
-import { analyzeLogText } from '../utils/logAnalyzerUtils';
+import { analyzeLogText } from '../../../shared/logAnalyzerUtils';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface LogExceptionAnalyzerDrawerProps {

@@ -6,6 +6,7 @@ import {
   KarafContext,
   KarafCredentials
 } from './karafContext';
+import { uninstallBundle } from './karafBundleActions';
 
 /**
  * Executa ação de ciclo de vida em um bundle específico (start, stop, restart, uninstall).
@@ -24,6 +25,9 @@ export async function manageBundle(
   if (!/^\d+$/.test(cleanId)) {
     return { success: false, output: 'ID do bundle inválido (deve ser numérico).' };
   }
+
+  // Desinstalar também precisa limpar fiações; mesmo caminho da tool dedicada
+  if (action === 'uninstall') return uninstallBundle(ctx, cleanId, credentials, onChunk);
 
   const command = `bundle:${action} ${cleanId}`;
   let output = '';

@@ -11,7 +11,7 @@ describe('classifyTool', () => {
       'profile_run',
       'env_launch_app',
       'karaf_exec_command',
-      'container_remove',
+      'docker_remove_container',
       'logs_clear_file',
       'env_batch_kill_processes'
     ]) {

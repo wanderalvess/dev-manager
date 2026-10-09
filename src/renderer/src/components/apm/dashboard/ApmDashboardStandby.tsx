@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Terminal, Copy, Check, Zap } from 'lucide-react';
+import { Terminal, Copy, Check, Zap } from 'lucide-react';
 import { ObservabilityOverview, DEFAULT_APM_OTLP_PORT } from '../../../../../shared/types';
 import { showToast } from '../../ToastHost';
 import { buildApmSetupSnippets } from '../../../utils/apmUiUtils';
@@ -8,7 +8,6 @@ interface ApmDashboardStandbyProps {
   overview: ObservabilityOverview | null;
   copyToClipboard: (text: string, key: string) => void;
   copyFeedback: string | null;
-  onGenerateDemo?: () => void;
   /** Abre "Como Conectar", onde a porta do receptor pode ser trocada */
   onOpenSetup?: () => void;
 }
@@ -18,7 +17,6 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
   overview,
   copyToClipboard,
   copyFeedback,
-  onGenerateDemo,
   onOpenSetup
 }) => {
   const receiver = overview?.receiverStatus;
@@ -115,16 +113,6 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             <span>Dica: ligue "Anexar o agente automaticamente" em Como Conectar para o Karaf exportar sozinho.</span>
           </div>
-          {onGenerateDemo && (
-            <button
-              type="button"
-              onClick={onGenerateDemo}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              Simular Tráfego de Demonstração
-            </button>
-          )}
         </div>
       </div>
     </div>

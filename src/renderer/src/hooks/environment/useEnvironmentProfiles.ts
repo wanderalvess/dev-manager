@@ -10,6 +10,7 @@ import {
   upsertProfile,
   setStepEnabled
 } from '../../utils/environmentProfileTransfer';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 /** Configurações e perfis de automação: carga, seleção, persistência e importação/exportação. */
 export function useEnvironmentProfiles(settingsVersion?: number) {
@@ -98,7 +99,8 @@ export function useEnvironmentProfiles(settingsVersion?: number) {
       if (!target) return;
 
       if (!skipConfirm) {
-        if (!confirm(`Tem certeza que deseja excluir o perfil "${target.name}"?`)) {
+        const confirmed = await requestConfirm({ title: 'Excluir perfil?', message: `Tem certeza que deseja excluir o perfil "${target.name}"?`, confirmLabel: 'Excluir', tone: 'danger' });
+        if (!confirmed) {
           return;
         }
       }

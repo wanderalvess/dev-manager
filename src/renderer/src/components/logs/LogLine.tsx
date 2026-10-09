@@ -1,5 +1,5 @@
 import React from 'react';
-import { analyzeLogLine } from '../../utils/logAnalyzerUtils';
+import { analyzeLogLine } from '../../../../shared/logAnalyzerUtils';
 import { getLogRowKind, isStackTraceLine, isSystemNoticeLine, escapeRegExp } from '../../utils/logsFilterUtils';
 
 export type LogFontSize = 'xs' | 'sm' | 'base';

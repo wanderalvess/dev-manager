@@ -169,86 +169,39 @@ export class Routine801Service {
     }
   }
 
-  /**
-   * Obtém a lista de instalações disponíveis consultando o endpoint da Rotina 801.
-   */
-  public async fetchInstallations(customUrl?: string): Promise<Routine801CatalogResponse> {
+  /** Consulta um catálogo do servidor da Rotina 801, renovando o login do WTA se a sessão expirou. */
+  private async fetchCatalog(path: string, label: string, customUrl?: string): Promise<Routine801CatalogResponse> {
     const baseUrl = this.getServerUrl(customUrl);
     if (!isSafeUrl(baseUrl)) {
       throw new Error(`URL de servidor inválida: ${baseUrl}`);
     }
 
-    const targetUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/instalacao`;
-    let res = await httpRequest(targetUrl, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-      timeout: 15000
-    });
+    const targetUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/${path}`;
+    const request = () => httpRequest(targetUrl, { method: 'GET', headers: this.getAuthHeaders(), timeout: 15000 });
 
+    let res = await request();
     if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
-      res = await httpRequest(targetUrl, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-        timeout: 15000
-      });
+      res = await request();
     }
-
     if (!res.ok) {
-      throw new Error(
-        `Falha ao obter lista de instalações (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}`
-      );
+      throw new Error(`Falha ao obter lista de ${label} (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}`);
     }
 
-    const rawText = await res.text();
-    let parsedJson: any;
     try {
-      parsedJson = JSON.parse(rawText);
+      return normalizeRoutine801Catalog(JSON.parse(await res.text()));
     } catch {
-      throw new Error('A resposta do servidor de instalações não é um JSON válido.');
+      throw new Error(`A resposta do servidor de ${label} não é um JSON válido.`);
     }
-
-    return normalizeRoutine801Catalog(parsedJson);
   }
 
-  /**
-   * Obtém a lista de atualizações disponíveis para os pacotes instalados.
-   */
-  public async fetchUpdates(customUrl?: string): Promise<Routine801CatalogResponse> {
-    const baseUrl = this.getServerUrl(customUrl);
-    if (!isSafeUrl(baseUrl)) {
-      throw new Error(`URL de servidor inválida: ${baseUrl}`);
-    }
+  /** Obtém a lista de instalações disponíveis consultando o endpoint da Rotina 801. */
+  public fetchInstallations(customUrl?: string): Promise<Routine801CatalogResponse> {
+    return this.fetchCatalog('instalacao', 'instalações', customUrl);
+  }
 
-    const targetUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/atualizacao`;
-    let res = await httpRequest(targetUrl, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-      timeout: 15000
-    });
-
-    if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
-      res = await httpRequest(targetUrl, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-        timeout: 15000
-      });
-    }
-
-    if (!res.ok) {
-      throw new Error(
-        `Falha ao obter lista de atualizações (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}`
-      );
-    }
-
-    const rawText = await res.text();
-    let parsedJson: any;
-    try {
-      parsedJson = JSON.parse(rawText);
-    } catch {
-      throw new Error('A resposta do servidor de atualizações não é um JSON válido.');
-    }
-
-    return normalizeRoutine801Catalog(parsedJson);
+  /** Obtém a lista de atualizações disponíveis para os pacotes instalados. */
+  public fetchUpdates(customUrl?: string): Promise<Routine801CatalogResponse> {
+    return this.fetchCatalog('atualizacao', 'atualizações', customUrl);
   }
 
   /**

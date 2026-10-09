@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { DatabaseConnectionConfig, SqlSnippet } from '../../../../shared/types';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 interface UseDatabaseSnippetsParams {
   customSnippets: SqlSnippet[];
@@ -107,7 +108,7 @@ export function useDatabaseSnippets({
 
   const handleDeleteCustomSnippet = async (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (confirm('Deseja excluir esta consulta salva?')) {
+    if (await requestConfirm({ title: 'Excluir consulta?', message: 'Deseja excluir esta consulta salva?', confirmLabel: 'Excluir', tone: 'danger' })) {
       const updated = customSnippets.filter((s) => s.id !== id);
       await saveSnippets(updated);
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Layers, Pause, Play, Sparkles, Terminal, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Layers, Pause, Play, Terminal, Trash2 } from 'lucide-react';
 import type { ObservabilityOverview } from '../../../../shared/types';
 
 export interface ApmHeaderProps {
@@ -10,14 +10,13 @@ export interface ApmHeaderProps {
   onViewModeChange: (mode: 'dashboard' | 'traces') => void;
   isRecording: boolean;
   onToggleRecording: () => void;
-  onGenerateDemo: () => void;
   onClear: () => void;
   onOpenSetup: () => void;
 }
 
 export const ApmHeader: React.FC<ApmHeaderProps> = ({
   overview, receiverPort, traceCount, viewMode, onViewModeChange, isRecording,
-  onToggleRecording, onGenerateDemo, onClear, onOpenSetup
+  onToggleRecording, onClear, onOpenSetup
 }) => (
       <header className="h-11 px-3 border-b border-border bg-card/75 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0 text-xs">
         {/* Lado Esquerdo: Status do Receptor & Métricas Chave */}
@@ -26,7 +25,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenSetup}
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-mono shrink-0 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-2xs font-mono shrink-0 cursor-pointer ${
               overview?.receiverStatus.listening
                 ? 'bg-emerald-500/15 dark:bg-emerald-950/30 border-emerald-500/30 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400'
                 : 'bg-rose-500/15 dark:bg-rose-950/30 border-rose-500/30 dark:border-rose-800/60 text-rose-700 dark:text-rose-400'
@@ -149,8 +148,8 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
           <button
             type="button"
             onClick={() => onToggleRecording()}
-            title={isRecording ? 'Pausar captura em tempo real' : 'Retomar captura em tempo real'}
-            className={`h-7 px-2.5 rounded border text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+            title={isRecording ? 'Pausar captura em tempo real' : 'Retomar captura em tempo real'} aria-label={isRecording ? 'Pausar captura em tempo real' : 'Retomar captura em tempo real'}
+            className={`h-7 px-2.5 rounded border text-2xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
               isRecording
                 ? 'bg-rose-500/15 dark:bg-rose-950/40 border-rose-500/30 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 dark:hover:bg-rose-900/40'
                 : 'bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -168,17 +167,6 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
                 <span>Gravar</span>
               </>
             )}
-          </button>
-
-          {/* Botão Simular Tráfego */}
-          <button
-            type="button"
-            onClick={onGenerateDemo}
-            title="Simula requisições das APIs do WinThor, consultas Oracle e falhas para teste"
-            className="h-7 px-2.5 rounded border border-border bg-card hover:bg-muted text-foreground text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
-          >
-            <Sparkles className="w-3 h-3 text-primary" />
-            <span className="hidden sm:inline">Simular Tráfego</span>
           </button>
 
           {/* Limpar */}

@@ -13,7 +13,7 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
     icon={<Bot className="w-4 h-4" />}
     iconBoxClass="p-2 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20"
     title="9. Servidor MCP (Automação por IA)"
-    subtitle="165 Tools via stdio · IntelliJ · VS Code · Claude"
+    subtitle="153 Tools via stdio · IntelliJ · VS Code · Claude"
     footer={
       <div className="mt-3 flex items-center justify-between p-2 rounded-xl bg-muted/60 border border-border/60">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -52,7 +52,7 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
       className="w-full mt-2 py-2 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
     >
       <BookOpen className="w-3.5 h-3.5" />
-      <span>Ver Catálogo Completo das 165 Ferramentas MCP</span>
+      <span>Ver Catálogo Completo das 153 Ferramentas MCP</span>
     </button>
   </ModuleCardShell>
 );
