@@ -43,9 +43,9 @@ export const DeployKarafCommandFields: React.FC<DeployKarafCommandFieldsProps> =
         onChange={(e) => onSuggestProjectPathChange(e.target.value)}
         className="w-full bg-input/50 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
       >
-        <option value="">-- Selecionar projeto --</option>
+        <option value="" className="bg-card text-foreground">-- Selecionar projeto --</option>
         {projects.map((p) => (
-          <option key={p.path} value={p.path}>
+          <option key={p.path} value={p.path} className="bg-card text-foreground">
             {p.name} {p.pomInfo?.version ? `[${p.pomInfo.version}]` : ''}
           </option>
         ))}
@@ -91,13 +91,13 @@ export const DeployKarafBundleFields: React.FC<DeployKarafBundleFieldsProps> = (
         onChange={(e) => onUpdate({ bundleAction: e.target.value as DeployStep['bundleAction'] })}
         className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
       >
-        <option value="reinstall">Reinstalar (bundle:update + refresh + start)</option>
-        <option value="install">Instalar Novo (bundle:install)</option>
-        <option value="restart">Reiniciar (bundle:restart)</option>
-        <option value="refresh">Atualizar Fiações (bundle:refresh)</option>
-        <option value="start">Iniciar (bundle:start)</option>
-        <option value="stop">Parar (bundle:stop)</option>
-        <option value="uninstall">Desinstalar (bundle:uninstall)</option>
+        <option value="reinstall" className="bg-card text-foreground">Reinstalar (bundle:update + refresh + start)</option>
+        <option value="install" className="bg-card text-foreground">Instalar Novo (bundle:install)</option>
+        <option value="restart" className="bg-card text-foreground">Reiniciar (bundle:restart)</option>
+        <option value="refresh" className="bg-card text-foreground">Atualizar Fiações (bundle:refresh)</option>
+        <option value="start" className="bg-card text-foreground">Iniciar (bundle:start)</option>
+        <option value="stop" className="bg-card text-foreground">Parar (bundle:stop)</option>
+        <option value="uninstall" className="bg-card text-foreground">Desinstalar (bundle:uninstall)</option>
       </select>
     </div>
 

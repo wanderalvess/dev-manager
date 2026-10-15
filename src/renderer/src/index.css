@@ -83,6 +83,7 @@
 @layer base {
   :root,
   .light {
+    color-scheme: light;
     --success: 160 84% 26%;
     --warning: 41 96% 32%;
     --danger: 347 77% 40%;
@@ -90,10 +91,25 @@
   }
 
   .dark {
+    color-scheme: dark;
     --success: 158 64% 52%;
     --warning: 45 93% 47%;
     --danger: 349 89% 62%;
     --info: 199 89% 60%;
+  }
+
+  select {
+    color-scheme: light;
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
   }
 }
 

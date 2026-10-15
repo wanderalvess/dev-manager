@@ -57,12 +57,12 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
       <div className="flex items-center gap-1.5 mt-0.5">
         <span className="text-2xs text-muted-foreground font-mono truncate">{step.type}</span>
         {step.continueOnError && (
-          <span className="text-2xs bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1 rounded font-mono" title="Tolerante a falhas">
+          <span className="text-2xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-1 rounded font-mono" title="Tolerante a falhas">
             tolerante
           </span>
         )}
         {executionTimeMs !== undefined && (
-          <span className="text-2xs font-mono font-medium text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded-full flex items-center gap-1">
+          <span className="text-2xs font-mono font-semibold text-emerald-700 dark:text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded-full flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {(executionTimeMs / 1000).toFixed(1)}s
           </span>
