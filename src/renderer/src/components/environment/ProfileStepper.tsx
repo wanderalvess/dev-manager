@@ -56,7 +56,7 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
         if (isCurrent) {
           dotStyle = 'bg-primary text-primary-foreground border-primary animate-pulse glow-primary';
         } else if (isDone) {
-          dotStyle = 'bg-emerald-500 text-white border-emerald-500';
+          dotStyle = 'bg-success text-background border-success';
         }
 
         return (
@@ -64,7 +64,7 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
             {index > 0 && (
               <div
                 className={`h-[2px] flex-1 rounded-full ${
-                  isDone || isCurrent ? 'bg-emerald-500/50' : 'bg-border'
+                  isDone || isCurrent ? 'bg-success/50' : 'bg-border'
                 }`}
               />
             )}
@@ -81,7 +81,7 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
               </div>
               <span
                 className={`text-[11px] font-semibold truncate max-w-[140px] ${
-                  isCurrent ? 'text-primary font-bold' : isDone ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground'
+                  isCurrent ? 'text-primary font-bold' : isDone ? 'text-success' : 'text-muted-foreground'
                 }`}
               >
                 {step.name}

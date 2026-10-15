@@ -42,7 +42,7 @@ export const ProfileActionsMenu: React.FC<ProfileActionsMenuProps> = ({
                 onStopAll();
               }}
               disabled={isStoppingAll || isRunningProfile}
-              className="w-full px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-left"
+              className="w-full px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors text-danger hover:bg-danger/10 text-left"
               title="Encerrar todos os processos e portas configuradas neste perfil"
             >
               <Square className="w-3.5 h-3.5 shrink-0" />
@@ -55,7 +55,7 @@ export const ProfileActionsMenu: React.FC<ProfileActionsMenuProps> = ({
                 onRestartAll();
               }}
               disabled={isRunningProfile}
-              className="w-full px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 text-left"
+              className="w-full px-2.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors text-warning hover:bg-warning/10 text-left"
               title="Derrubar todas as portas e reexecutar a esteira na sequência"
             >
               <RefreshCw className="w-3.5 h-3.5 shrink-0" />

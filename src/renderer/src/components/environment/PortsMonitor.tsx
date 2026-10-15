@@ -51,12 +51,12 @@ export const PortsMonitor: React.FC<PortsMonitorProps> = ({
             key={p.port}
             className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono flex items-center gap-1.5 ${
               p.inUse
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-300 font-semibold'
+                ? 'bg-success/10 border-success/30 text-success font-semibold'
                 : 'bg-muted/40 border-border/60 text-muted-foreground'
             }`}
             title={`${p.label} - ${p.inUse ? `Porta ocupada (PID: ${p.pid || 'Ativo'})` : 'Porta livre / desconectada'}`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${p.inUse ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/50'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${p.inUse ? 'bg-success animate-pulse' : 'bg-muted-foreground/50'}`} />
             <span>:{p.port}</span>
             <span className="text-2xs text-muted-foreground font-sans hidden sm:inline">({p.label.split(' ')[0]})</span>
             {onNavigateToHelp && p.label.toLowerCase().includes('debug') && (

@@ -56,7 +56,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                 <button
                   onClick={onBatchStop}
                   disabled={actionLoading === 'batch-stop-srv'}
-                  className="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-2xs font-bold"
+                  className="px-2 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-2xs font-bold"
                 >
                   Parar Serviços
                 </button>
@@ -65,7 +65,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                 <button
                   onClick={onBatchStart}
                   disabled={actionLoading === 'batch-start-srv'}
-                  className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-2xs font-bold"
+                  className="px-2 py-1 bg-success/10 hover:bg-success/20 text-success border border-success/30 rounded-lg text-2xs font-bold"
                 >
                   Iniciar Serviços
                 </button>
@@ -83,7 +83,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                 <div className="flex items-center space-x-2 truncate">
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      srv.state === 'RUNNING' ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'
+                      srv.state === 'RUNNING' ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
                     }`}
                   />
                   <span className="font-semibold text-foreground truncate">{srv.displayName || srv.name}</span>
@@ -93,7 +93,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     <button
                       onClick={() => onStopService(srv.name)}
                       disabled={actionLoading === `stop-${srv.name}`}
-                      className="px-2 py-0.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded text-2xs font-bold"
+                      className="px-2 py-0.5 bg-danger/10 text-danger border border-danger/20 rounded text-2xs font-bold"
                     >
                       Parar
                     </button>
@@ -101,7 +101,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     <button
                       onClick={() => onStartService(srv.name)}
                       disabled={actionLoading === `start-${srv.name}`}
-                      className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded text-2xs font-bold"
+                      className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-2xs font-bold"
                     >
                       Iniciar
                     </button>
@@ -128,7 +128,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     {p.isRunning ? (
                       <button
                         onClick={() => onKillProcess(p.name)}
-                        className="px-1.5 py-0.5 bg-rose-500 text-white rounded text-2xs font-bold"
+                        className="px-1.5 py-0.5 bg-destructive text-destructive-foreground rounded text-2xs font-bold"
                       >
                         Matar
                       </button>

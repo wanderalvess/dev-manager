@@ -67,7 +67,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
         }}
       >
         {filteredLogs.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-600 font-mono text-xs italic space-y-1">
+          <div className="h-full flex flex-col items-center justify-center text-slate-400 font-mono text-xs italic space-y-1">
             <Terminal className="w-8 h-8 opacity-20 text-primary" />
             <span>Nenhum registro de log no momento.</span>
           </div>
