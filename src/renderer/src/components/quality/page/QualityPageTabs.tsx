@@ -48,8 +48,8 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
             active
               ? 'bg-background/20'
               : healthy
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                ? 'bg-success/15 text-success'
+                : 'bg-warning/15 text-warning'
           }`}
         >
           {readinessScore}%
@@ -101,7 +101,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
             className="hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors"
             title="Abrir Database Studio para consultar massa de dados"
           >
-            <Database className="w-3 h-3 text-emerald-500" />
+            <Database className="w-3 h-3 text-success" />
             <span>Banco</span>
           </button>
           <span className="text-border">|</span>
@@ -111,7 +111,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
             className="hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors"
             title="Acompanhar Logs em Tempo Real"
           >
-            <ScrollText className="w-3 h-3 text-amber-500" />
+            <ScrollText className="w-3 h-3 text-warning" />
             <span>Logs</span>
           </button>
         </div>

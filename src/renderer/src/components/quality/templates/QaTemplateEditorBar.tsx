@@ -55,7 +55,7 @@ export const QaTemplateEditorBar: React.FC<QaTemplateEditorBarProps> = ({
       <button
         type="button"
         onClick={onSave}
-        className="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+        className="px-3 py-1.5 rounded-md bg-success hover:bg-success/90 text-background text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
       >
         <Save className="w-3.5 h-3.5" />
         <span>Salvar Template</span>

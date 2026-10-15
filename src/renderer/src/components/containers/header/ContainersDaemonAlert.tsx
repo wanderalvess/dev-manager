@@ -21,9 +21,9 @@ export const ContainersDaemonAlert: React.FC<ContainersDaemonAlertProps> = ({
   onOpenWslTerminal,
   onRefreshData
 }) => (
-  <div className="p-3 mx-4 mt-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200 shadow-2xs">
+  <div className="p-3 mx-4 mt-3 bg-warning/10 border border-warning/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-warning shadow-2xs">
     <div className="flex items-start sm:items-center space-x-2.5">
-      <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+      <AlertCircle className="w-4 h-4 text-warning shrink-0 mt-0.5 sm:mt-0" />
       <div className="leading-snug">
         <span className="font-bold block sm:inline mr-1">Docker Engine offline:</span>
         <span>{containersHeaderOfflineMessage(daemonStatus.error, selectedDistro)}</span>
@@ -36,7 +36,7 @@ export const ContainersDaemonAlert: React.FC<ContainersDaemonAlertProps> = ({
             type="button"
             onClick={() => onStartDockerDaemon(selectedDistro)}
             disabled={isStartingDaemon}
-            className="flex items-center gap-1.5 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow-2xs disabled:opacity-50 active:scale-98"
+            className="flex items-center gap-1.5 px-3 py-1 bg-warning hover:bg-warning/90 text-background rounded-lg text-xs font-bold transition cursor-pointer shadow-2xs disabled:opacity-50 active:scale-98"
           >
             {isStartingDaemon ? (
               <RotateCw className="w-3 h-3 animate-spin" />
@@ -56,7 +56,7 @@ export const ContainersDaemonAlert: React.FC<ContainersDaemonAlertProps> = ({
       )}
       <button
         onClick={onRefreshData}
-        className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 dark:text-amber-200 border border-amber-500/35 rounded-lg font-semibold transition cursor-pointer shrink-0"
+        className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 text-warning border border-warning/35 rounded-lg font-semibold transition cursor-pointer shrink-0"
       >
         Recarregar
       </button>

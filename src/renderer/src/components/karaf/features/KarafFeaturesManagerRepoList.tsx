@@ -73,7 +73,7 @@ export const KarafFeaturesManagerRepoList: React.FC<KarafFeaturesManagerRepoList
               <button
                 onClick={() => onRemove(repo)}
                 disabled={isBusy}
-                className="p-1.5 text-rose-400 hover:text-rose-300 rounded-md hover:bg-rose-500/10 border border-border/40 hover:border-rose-500/30 transition-colors cursor-pointer disabled:opacity-50"
+                className="p-1.5 text-danger hover:text-danger rounded-md hover:bg-danger/10 border border-border/40 hover:border-danger/30 transition-colors cursor-pointer disabled:opacity-50"
                 title="Remover repositório do Karaf" aria-label="Remover repositório do Karaf"
               >
                 <Trash2 className="w-3.5 h-3.5" />

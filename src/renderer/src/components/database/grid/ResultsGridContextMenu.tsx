@@ -89,7 +89,7 @@ export const ResultsGridContextMenu: React.FC<ResultsGridContextMenuProps> = ({
                 onClose();
                 if (targetRow && onDeleteRow) onDeleteRow(targetRow);
               }}
-              className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-rose-500/10 transition text-left text-rose-600 dark:text-rose-400 font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-danger/10 transition text-left text-danger font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Trash2 className="w-3.5 h-3.5 shrink-0" />
               <span>Marcar linha para exclusão</span>

@@ -111,8 +111,8 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
                 <span
                   className={`inline-flex items-center justify-center w-6 h-5 text-2xs font-mono font-bold rounded border ${
                     isLiberado
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/35'
-                      : 'bg-amber-500/15 text-amber-400 border-amber-500/35'
+                      ? 'bg-success/15 text-success border-success/35'
+                      : 'bg-warning/15 text-warning border-warning/35'
                   }`}
                   title={isLiberado ? 'Canal Produção (Liberado oficial)' : 'Canal Homologação (Em validação)'}
                 >
@@ -161,7 +161,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground/70 line-through">{item.versaoAnterior}</span>
                     <ArrowRight className="w-3 h-3 text-primary shrink-0" />
-                    <span className="text-emerald-400 font-medium">{item.versao}</span>
+                    <span className="text-success font-medium">{item.versao}</span>
                   </div>
                 ) : (
                   <span className="text-foreground">{item.versao}</span>
@@ -184,7 +184,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
                     disabled={isExecuting}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-colors border ${
                       activeTab === 'updates'
-                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/40'
+                        ? 'bg-success hover:bg-success/90 text-background border-success/40'
                         : 'bg-primary hover:opacity-90 text-primary-foreground border-primary/40'
                     } disabled:opacity-50`}
                   >

@@ -48,11 +48,11 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
             Hub Manager • v{appInfo?.appVersion || '1.35.0'}
           </span>
           {appInfo?.isAdmin ? (
-            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
+            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/25">
               <ShieldCheck className="w-3 h-3" /> Modo Administrador
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
+            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning border border-warning/25">
               <ShieldAlert className="w-3 h-3" /> Usuário Padrão
             </span>
           )}
@@ -72,11 +72,11 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
             <span>Web: <strong className="text-foreground">:{webPort}</strong></span>
           </div>
           <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-2xs font-mono text-muted-foreground flex items-center gap-1.5">
-            <Terminal className="w-3 h-3 text-cyan-400" />
+            <Terminal className="w-3 h-3 text-cyan-700 dark:text-cyan-400" />
             <span>SSH Karaf: <strong className="text-foreground">:{sshPort}</strong></span>
           </div>
           <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-2xs font-mono text-muted-foreground flex items-center gap-1.5">
-            <Zap className="w-3 h-3 text-amber-400" />
+            <Zap className="w-3 h-3 text-warning" />
             <span>JVM Debug: <strong className="text-foreground">:{debugPort}</strong></span>
           </div>
         </div>
@@ -125,7 +125,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
           onClick={() => setActiveCategory('shortcuts')}
           className="px-4 py-2 rounded-xl text-xs font-semibold bg-card/60 hover:bg-card text-muted-foreground hover:text-foreground border border-border hover:border-primary/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+          <KeyRound className="w-3.5 h-3.5 text-warning" />
           <span>Ver Atalhos de Teclado</span>
         </button>
       </div>

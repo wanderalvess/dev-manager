@@ -85,7 +85,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                       title="Copiar nome da feature" aria-label="Copiar nome da feature"
                     >
                       {isCopied ? (
-                        <Check className="w-3 h-3 text-emerald-400" />
+                        <Check className="w-3 h-3 text-success" />
                       ) : (
                         <Copy className="w-3 h-3" />
                       )}
@@ -101,7 +101,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                     {/* Tag Obrigatório / Required */}
                     {feat.required && (
-                      <span className="px-1.5 py-0.2 rounded text-2xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25">
+                      <span className="px-1.5 py-0.2 rounded text-2xs font-bold bg-warning/10 text-warning border border-warning/25">
                         Required
                       </span>
                     )}
@@ -140,13 +140,13 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                   <span
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-bold border ${
                       isStarted
-                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25'
+                        ? 'bg-success/10 text-success border border-success/25'
                         : 'bg-muted text-muted-foreground border-border'
                     }`}
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
-                        isStarted ? 'bg-emerald-500 shadow-2xs' : 'bg-muted-foreground'
+                        isStarted ? 'bg-success shadow-2xs' : 'bg-muted-foreground'
                       }`}
                     />
                     <span>{feat.state || 'Active'}</span>
@@ -159,7 +159,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                     type="button"
                     onClick={() => onRequestUninstall(feat)}
                     disabled={isBusy}
-                    className="px-2.5 py-1 rounded-md font-mono font-semibold text-2xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/25 transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-2.5 py-1 rounded-md font-mono font-semibold text-2xs bg-danger/10 hover:bg-danger/20 text-danger border border-danger/25 transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                     title={`Desinstalar "${feat.name}" com feature:uninstall -r`}
                   >
                     {isBusy ? (

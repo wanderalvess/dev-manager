@@ -156,7 +156,7 @@ export const ManageLogSourcesModal: React.FC<ManageLogSourcesModalProps> = ({
                       const updated = sources.filter((s) => s.id !== src.id);
                       persistSources(updated, updated[0].id);
                     }}
-                    className="p-1.5 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-rose-500/10"
+                    className="p-1.5 text-danger hover:text-danger rounded-lg hover:bg-danger/10"
                     title="Remover"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

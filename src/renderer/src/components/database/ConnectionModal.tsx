@@ -238,15 +238,15 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
             <div
               className={`p-3 rounded-xl text-2xs border ${
                 testResult.success
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
-                  : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                  ? 'bg-success/10 border-success/30 text-success'
+                  : 'bg-danger/10 border-danger/30 text-danger'
               }`}
             >
               <div className="flex items-center space-x-2 font-bold">
                 {testResult.success ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-danger shrink-0" />
                 )}
                 <span>{testResult.message}</span>
               </div>
@@ -269,7 +269,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
               {isTesting ? (
                 <RotateCw className="w-3.5 h-3.5 animate-spin text-primary" />
               ) : (
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-success" />
               )}
               <span>Testar Conexão</span>
             </button>

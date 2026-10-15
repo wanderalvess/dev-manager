@@ -177,7 +177,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Apache Karaf roda sobre uma Java Virtual Machine (JVM). Durante compilações volumosas ou múltiplos deploys de bundles OSGi sem reinício, o consumo de memória Heap e Metaspace pode crescer até causar um <strong className="text-rose-500 font-bold">java.lang.OutOfMemoryError (OOM)</strong>, travando os serviços.
+            O Apache Karaf roda sobre uma Java Virtual Machine (JVM). Durante compilações volumosas ou múltiplos deploys de bundles OSGi sem reinício, o consumo de memória Heap e Metaspace pode crescer até causar um <strong className="text-danger font-bold">java.lang.OutOfMemoryError (OOM)</strong>, travando os serviços.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Recursos do Monitor de Memória JVM:</span>
@@ -186,7 +186,7 @@ export function getFaqList({
                 <strong className="text-foreground">Telemetria em Tempo Real:</strong> Gráfico SVG com histórico temporal do consumo de Heap (usado, alocado e máximo em MB) e Non-Heap (Metaspace/CodeCache), com contagem de threads e classes carregadas.
               </li>
               <li>
-                <strong className="text-foreground">Alertas Preventivos de OOM:</strong> Quando o consumo ultrapassa 70%, o painel entra em estado de <span className="text-amber-500 font-bold">AVISO</span>; acima de 85%, é emitido um alerta <span className="text-rose-500 font-bold">CRÍTICO</span> de risco iminente de travamento.
+                <strong className="text-foreground">Alertas Preventivos de OOM:</strong> Quando o consumo ultrapassa 70%, o painel entra em estado de <span className="text-warning font-bold">AVISO</span>; acima de 85%, é emitido um alerta <span className="text-danger font-bold">CRÍTICO</span> de risco iminente de travamento.
               </li>
               <li>
                 <strong className="text-foreground">Disparo de GC em 1 Clique:</strong> Botão <em>"Executar GC"</em> que solicita coleta imediata de lixo via JMX (<code className="font-mono text-primary font-semibold">java.lang:type=Memory gc</code>) ou shell nativo.
@@ -283,7 +283,7 @@ export function getFaqList({
               </li>
             </ul>
             <p className="pt-1 text-2xs">
-              As linhas do log exibem pílulas com o código do erro (ex: <span className="bg-rose-500/20 text-rose-400 px-1 py-0.2 rounded font-mono font-bold">ORA-00942</span>). Clique na pílula ou no botão <strong className="text-foreground">"Analisar Exceções"</strong> na barra de ferramentas para abrir a gaveta com filtros e comandos sugeridos de diagnóstico!
+              As linhas do log exibem pílulas com o código do erro (ex: <span className="bg-danger/20 text-danger px-1 py-0.2 rounded font-mono font-bold">ORA-00942</span>). Clique na pílula ou no botão <strong className="text-foreground">"Analisar Exceções"</strong> na barra de ferramentas para abrir a gaveta com filtros e comandos sugeridos de diagnóstico!
             </p>
           </div>
         </div>
@@ -343,7 +343,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Na aba <strong className="text-foreground">Catálogo de Rotinas</strong>, clique no ícone de <strong className="text-amber-400 font-semibold">estrela (★)</strong> no cartão de qualquer rotina.
+            Na aba <strong className="text-foreground">Catálogo de Rotinas</strong>, clique no ícone de <strong className="text-warning font-semibold">estrela (★)</strong> no cartão de qualquer rotina.
           </p>
           <p>
             As rotinas marcadas são exibidas no topo do painel na seção "Rotinas Favoritas" para acesso instantâneo. A lista é persistida automaticamente no seu perfil de usuário local.
@@ -434,7 +434,7 @@ export function getFaqList({
                 Com a sessão autenticada, envia os parâmetros para o serviço local do WinThor Start (<code className="font-mono text-primary">:9195</code>), que abre a rotina já logada no ERP.
               </li>
               <li>
-                <strong className="text-amber-500">Quando o Karaf não está em execução:</strong> a chamada ao WTA falha por conexão recusada. Sem a sessão do Karaf, a rotina não consegue autenticar e apresenta erro de inicialização.
+                <strong className="text-warning">Quando o Karaf não está em execução:</strong> a chamada ao WTA falha por conexão recusada. Sem a sessão do Karaf, a rotina não consegue autenticar e apresenta erro de inicialização.
               </li>
             </ol>
             <p className="pt-1.5 border-t border-border/50">
@@ -493,7 +493,7 @@ export function getFaqList({
                 1. Histórico de Versões &amp; Rollback em 1 Clique (.bak)
               </span>
               <p>
-                No card de qualquer rotina, clique no ícone de retorno (<RotateCcw className="w-3 h-3 inline text-amber-500" />) ou na aba <strong>Histórico &amp; Rollback</strong> da central de rotinas. O sistema lista todos os arquivos <code className="font-mono text-primary">.bak</code> encontrados com data, hora e tamanho. Ao clicar em <strong>Restaurar</strong>, uma cópia preventiva de segurança (<code className="font-mono text-primary">_pre_rollback.bak</code>) é gerada automaticamente antes da substituição do executável, garantindo reversibilidade total.
+                No card de qualquer rotina, clique no ícone de retorno (<RotateCcw className="w-3 h-3 inline text-warning" />) ou na aba <strong>Histórico &amp; Rollback</strong> da central de rotinas. O sistema lista todos os arquivos <code className="font-mono text-primary">.bak</code> encontrados com data, hora e tamanho. Ao clicar em <strong>Restaurar</strong>, uma cópia preventiva de segurança (<code className="font-mono text-primary">_pre_rollback.bak</code>) é gerada automaticamente antes da substituição do executável, garantindo reversibilidade total.
               </p>
             </div>
             <div className="pt-2 border-t border-border/50">
@@ -501,7 +501,7 @@ export function getFaqList({
                 2. Leitura Binária de Versão do Executável (PE Header / FileVersion)
               </span>
               <p>
-                O Hub Manager inspeciona o cabeçalho binário (PE Header / <code className="font-mono text-primary">.rsrc</code>) do executável sem depender de ferramentas externas do Windows. Ele extrai e exibe diretamente no card o badge verde com a <code className="font-mono text-primary">FileVersion</code> (ex: <span className="text-emerald-500 font-bold">v30.0.12</span>) e a <code className="font-mono text-primary">ProductVersion</code>, facilitando a comparação visual com as versões publicadas na CCW.
+                O Hub Manager inspeciona o cabeçalho binário (PE Header / <code className="font-mono text-primary">.rsrc</code>) do executável sem depender de ferramentas externas do Windows. Ele extrai e exibe diretamente no card o badge verde com a <code className="font-mono text-primary">FileVersion</code> (ex: <span className="text-success font-bold">v30.0.12</span>) e a <code className="font-mono text-primary">ProductVersion</code>, facilitando a comparação visual com as versões publicadas na CCW.
               </p>
             </div>
             <div className="pt-2 border-t border-border/50">
@@ -580,7 +580,7 @@ export function getFaqList({
                 className="p-1 hover:text-foreground transition-colors cursor-pointer"
                 title="Copiar comando"
               >
-                {copiedItem === 'cmd-build-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedItem === 'cmd-build-faq' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
             <span className="font-bold text-foreground block pt-1 text-2xs uppercase tracking-wider text-primary">Arquivos gerados na pasta release/:</span>
@@ -677,7 +677,7 @@ export function getFaqList({
             <div>
               <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary mb-1">O que a IA consegue realizar por você:</span>
               <ul className="list-disc pl-4 space-y-1 mb-2">
-                <li><strong className="text-foreground">Build Maven &amp; Deploy Karaf:</strong> Roda <code className="font-mono text-primary font-semibold">mvn clean install</code>, instala features Maven via <code className="font-mono text-primary font-semibold">client.bat</code> e confirma se os bundles ficaram no estado <strong className="text-emerald-500 font-semibold">Started / Active</strong>.</li>
+                <li><strong className="text-foreground">Build Maven &amp; Deploy Karaf:</strong> Roda <code className="font-mono text-primary font-semibold">mvn clean install</code>, instala features Maven via <code className="font-mono text-primary font-semibold">client.bat</code> e confirma se os bundles ficaram no estado <strong className="text-success font-semibold">Started / Active</strong>.</li>
                 <li><strong className="text-foreground">Diagnóstico OSGi:</strong> Identifica bundles parados, com falha de fiação (wiring) ou dependências ausentes (<code className="font-mono text-primary">ResolutionException</code>).</li>
                 <li><strong className="text-foreground">Ambiente Windows:</strong> Checa portas TCP ocupadas, finaliza processos conflitantes e inicia/para serviços.</li>
                 <li><strong className="text-foreground">Banco de Dados:</strong> Executa consultas no Oracle/Postgres/MySQL e rastreia queries lentas com captura de binds.</li>
@@ -706,7 +706,7 @@ export function getFaqList({
                   className="p-1 hover:text-foreground transition-colors cursor-pointer shrink-0"
                   title="Copiar comando"
                 >
-                  {copiedItem === 'cmd-mcp-add-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedItem === 'cmd-mcp-add-faq' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
               <p className="mb-2">
@@ -726,7 +726,7 @@ export function getFaqList({
                   className="p-1 hover:text-foreground transition-colors cursor-pointer"
                   title="Copiar comando"
                 >
-                  {copiedItem === 'cmd-mcp-faq' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedItem === 'cmd-mcp-faq' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
@@ -785,7 +785,7 @@ export function getFaqList({
                   className="absolute right-2 top-2 p-1.5 bg-card/80 hover:bg-card text-foreground rounded-md border border-border transition-colors cursor-pointer"
                   title="Copiar JSON"
                 >
-                  {copiedItem === 'snippet-mcp-copilot' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedItem === 'snippet-mcp-copilot' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
@@ -808,10 +808,10 @@ export function getFaqList({
               </ol>
             </div>
 
-            <div className="pt-2 border-t border-border/50 bg-amber-500/5 p-2 rounded-lg border border-amber-500/20">
-              <span className="font-bold text-amber-500 block text-2xs uppercase tracking-wider mb-0.5">⚠️ Dica Essencial para Windows:</span>
+            <div className="pt-2 border-t border-border/50 bg-warning/5 p-2 rounded-lg border border-warning/20">
+              <span className="font-bold text-warning block text-2xs uppercase tracking-wider mb-0.5">⚠️ Dica Essencial para Windows:</span>
               <p className="text-2xs">
-                No Windows, sempre utilize <code className="font-mono text-foreground font-bold">npx.cmd</code> ou <code className="font-mono text-foreground font-bold">npm.cmd</code> no campo <code className="font-mono text-foreground">command</code>. Executar apenas <code className="font-mono text-foreground">npx</code> sem extensão faz o subprocesso do IntelliJ acusar erro de arquivo não encontrado (<code className="font-mono text-amber-500">CreateProcess error=2</code>).
+                No Windows, sempre utilize <code className="font-mono text-foreground font-bold">npx.cmd</code> ou <code className="font-mono text-foreground font-bold">npm.cmd</code> no campo <code className="font-mono text-foreground">command</code>. Executar apenas <code className="font-mono text-foreground">npx</code> sem extensão faz o subprocesso do IntelliJ acusar erro de arquivo não encontrado (<code className="font-mono text-warning">CreateProcess error=2</code>).
               </p>
             </div>
           </div>
@@ -871,7 +871,7 @@ export function getFaqList({
                   className="absolute right-2 top-2 p-1.5 bg-card/80 hover:bg-card text-foreground rounded-md border border-border transition-colors cursor-pointer"
                   title="Copiar JSON para VS Code"
                 >
-                  {copiedItem === 'snippet-mcp-vscode' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedItem === 'snippet-mcp-vscode' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
               <p className="mt-2 text-2xs">
@@ -901,10 +901,10 @@ export function getFaqList({
               </ul>
             </div>
 
-            <div className="pt-2 border-t border-border/50 bg-amber-500/5 p-2 rounded-lg border border-amber-500/20">
-              <span className="font-bold text-amber-500 block text-2xs uppercase tracking-wider mb-0.5">⚠️ Dica Windows:</span>
+            <div className="pt-2 border-t border-border/50 bg-warning/5 p-2 rounded-lg border border-warning/20">
+              <span className="font-bold text-warning block text-2xs uppercase tracking-wider mb-0.5">⚠️ Dica Windows:</span>
               <p className="text-2xs">
-                No Windows, utilize sempre <code className="font-mono text-foreground font-bold">npx.cmd</code> ou <code className="font-mono text-foreground font-bold">npm.cmd</code> no campo <code className="font-mono text-foreground">command</code>. Isso impede que o VS Code falhe com erro de <code className="font-mono text-amber-500">spawn ENOENT</code> ao inicializar o servidor em segundo plano.
+                No Windows, utilize sempre <code className="font-mono text-foreground font-bold">npx.cmd</code> ou <code className="font-mono text-foreground font-bold">npm.cmd</code> no campo <code className="font-mono text-foreground">command</code>. Isso impede que o VS Code falhe com erro de <code className="font-mono text-warning">spawn ENOENT</code> ao inicializar o servidor em segundo plano.
               </p>
             </div>
           </div>
@@ -936,7 +936,7 @@ export function getFaqList({
                   className="p-1 hover:text-primary transition-colors cursor-pointer shrink-0 ml-2"
                   title="Copiar prompt"
                 >
-                  {copiedItem === 'prompt-deploy-karaf' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-primary" />}
+                  {copiedItem === 'prompt-deploy-karaf' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5 text-primary" />}
                 </button>
               </div>
             </div>
@@ -945,13 +945,13 @@ export function getFaqList({
               <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary mb-1">Como a IA orquestra os passos nos bastidores:</span>
               <ol className="list-decimal pl-4 space-y-1.5 text-2xs">
                 <li>
-                  <strong className="text-foreground">Compilação Maven:</strong> A IA dispara <code className="font-mono text-primary font-semibold">mvn clean install -DskipTests</code> (ou chama <code className="font-mono text-primary font-semibold">karaf_run_maven_build</code>) no diretório do projeto e aguarda o <code className="font-mono text-emerald-500 font-bold">BUILD SUCCESS</code>.
+                  <strong className="text-foreground">Compilação Maven:</strong> A IA dispara <code className="font-mono text-primary font-semibold">mvn clean install -DskipTests</code> (ou chama <code className="font-mono text-primary font-semibold">karaf_run_maven_build</code>) no diretório do projeto e aguarda o <code className="font-mono text-success font-bold">BUILD SUCCESS</code>.
                 </li>
                 <li>
                   <strong className="text-foreground">Injeção no Karaf:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_exec_command</code> do Hub Manager para executar <code className="font-mono text-primary">feature:repo-add mvn:.../features.xml</code> e <code className="font-mono text-primary">feature:install &lt;nome-da-feature&gt;</code> via <code className="font-mono text-primary">client.bat</code>.
                 </li>
                 <li>
-                  <strong className="text-foreground">Verificação Pós-Deploy:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_verify_bundle</code> para validar <code className="font-mono text-primary">feature:list -i</code> e <code className="font-mono text-primary">bundle:list</code>, confirmando que a feature passou para o estado <strong className="text-emerald-500 font-bold">Started (Ativa)</strong>.
+                  <strong className="text-foreground">Verificação Pós-Deploy:</strong> Invoca a ferramenta <code className="font-mono text-primary font-semibold">karaf_verify_bundle</code> para validar <code className="font-mono text-primary">feature:list -i</code> e <code className="font-mono text-primary">bundle:list</code>, confirmando que a feature passou para o estado <strong className="text-success font-bold">Started (Ativa)</strong>.
                 </li>
               </ol>
             </div>
@@ -1129,18 +1129,18 @@ export function getFaqList({
             <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Régua de Tempo Visual (Time Budget):</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-sky-600 dark:text-sky-400">Requisição HTTP:</strong> tempo gasto em I/O de rede, filtros de servlet e recepção/despacho do servidor web.
+                <strong className="text-info">Requisição HTTP:</strong> tempo gasto em I/O de rede, filtros de servlet e recepção/despacho do servidor web.
               </li>
               <li>
                 <strong className="text-purple-600 dark:text-purple-400">Processamento Java:</strong> tempo gasto em regras de negócio, transformações de dados e handlers OSGi dentro do Apache Karaf.
               </li>
               <li>
-                <strong className="text-amber-600 dark:text-amber-400">Queries JDBC no banco:</strong> tempo dedicado a consultas e comandos SQL executados no Oracle/PostgreSQL.
+                <strong className="text-warning">Queries JDBC no banco:</strong> tempo dedicado a consultas e comandos SQL executados no Oracle/PostgreSQL.
               </li>
             </ul>
             <span className="font-bold text-foreground block pt-1 text-2xs uppercase tracking-wider text-primary">Detecção de Consultas e Endpoints Lentos:</span>
             <p>
-              O sistema detecta automaticamente chamadas com duração elevada (&gt;400ms ou &gt;1s) e exibe o badge <code className="font-mono text-amber-500 font-bold">⚡ Lenta</code> diretamente nos spans do Waterfall. Na barra de filtros e no Dashboard, use os botões rápidos <strong className="text-foreground">Top Lentos</strong>, <strong className="text-foreground">🗄️ Queries Lentas</strong>, <strong className="text-foreground">🌐 Endpoints Lentos</strong> ou ordene por <strong className="text-foreground">Mais Lentos</strong> em 1 clique.
+              O sistema detecta automaticamente chamadas com duração elevada (&gt;400ms ou &gt;1s) e exibe o badge <code className="font-mono text-warning font-bold">⚡ Lenta</code> diretamente nos spans do Waterfall. Na barra de filtros e no Dashboard, use os botões rápidos <strong className="text-foreground">Top Lentos</strong>, <strong className="text-foreground">🗄️ Queries Lentas</strong>, <strong className="text-foreground">🌐 Endpoints Lentos</strong> ou ordene por <strong className="text-foreground">Mais Lentos</strong> em 1 clique.
             </p>
           </div>
         </div>
@@ -1217,7 +1217,7 @@ export function getFaqList({
               A chave é gerada na primeira execução e fica no arquivo <code className="font-mono text-primary">.secrets.key</code>, ao lado do <code className="font-mono text-primary">config.json</code>. <strong className="text-foreground">Copiar o config.json para outra máquina sem essa chave faz os segredos serem perdidos</strong>: será preciso digitá-los de novo.
             </p>
             <p>
-              Por segurança contra vazamentos, a interface e a API nunca devolvem as senhas em texto puro: os campos exibem a indicação <strong className="text-emerald-500">"Senha salva e protegida"</strong>. Ao editar uma conexão de banco ou o Karaf, <strong className="text-foreground">deixe o campo em branco para manter a senha atual</strong>, ou digite uma nova para alterá-la. Se você trocar o Host ou a Porta de uma conexão, digite a senha novamente por segurança para evitar redirecionamento de credenciais.
+              Por segurança contra vazamentos, a interface e a API nunca devolvem as senhas em texto puro: os campos exibem a indicação <strong className="text-success">"Senha salva e protegida"</strong>. Ao editar uma conexão de banco ou o Karaf, <strong className="text-foreground">deixe o campo em branco para manter a senha atual</strong>, ou digite uma nova para alterá-la. Se você trocar o Host ou a Porta de uma conexão, digite a senha novamente por segurança para evitar redirecionamento de credenciais.
             </p>
           </div>
         </div>
@@ -1357,7 +1357,7 @@ export function getFaqList({
             <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Como criar e gerenciar grupos:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Painel Superior de Grupos:</strong> No topo da tela de Containers, visualize todos os grupos cadastrados com o status em tempo real (ex.: <code className="font-mono text-emerald-500 font-bold">3/3 rodando</code> ou <code className="font-mono text-amber-500 font-bold">1/3</code>). Clique em <strong className="text-emerald-500">Subir Grupo</strong> para iniciar todos os containers do conjunto ou em <strong className="text-foreground">Parar</strong> para interrompê-los.
+                <strong className="text-foreground">Painel Superior de Grupos:</strong> No topo da tela de Containers, visualize todos os grupos cadastrados com o status em tempo real (ex.: <code className="font-mono text-success font-bold">3/3 rodando</code> ou <code className="font-mono text-warning font-bold">1/3</code>). Clique em <strong className="text-success">Subir Grupo</strong> para iniciar todos os containers do conjunto ou em <strong className="text-foreground">Parar</strong> para interrompê-los.
               </li>
               <li>
                 <strong className="text-foreground">Criação Rápida por Seleção em Lote:</strong> Marque a caixa de seleção (checkbox) nos cards dos containers desejados. Na barra flutuante que surge no rodapé, clique em <strong className="text-foreground">"Criar Grupo (N)"</strong> para abrir o modal com os containers já pré-selecionados.
@@ -1366,7 +1366,7 @@ export function getFaqList({
                 <strong className="text-foreground">Configuração com Delays e Ordem:</strong> No modal do grupo, você pode buscar e selecionar livremente qualquer container do Docker/WSL, reordenar a sequência de subida e definir um tempo de espera (warm-up) opcional em segundos entre eles (útil quando um serviço depende de outro já ativo, como Kafka ou Oracle).
               </li>
               <li>
-                <strong className="text-foreground">Ações em Lote Instantâneas:</strong> Com múltiplos containers selecionados, a barra de lote permite também <strong className="text-emerald-500">Subir Selecionados</strong>, <strong className="text-rose-500">Parar Selecionados</strong> ou <strong className="text-amber-500">Reiniciar Selecionados</strong> sem precisar criar um grupo fixo.
+                <strong className="text-foreground">Ações em Lote Instantâneas:</strong> Com múltiplos containers selecionados, a barra de lote permite também <strong className="text-success">Subir Selecionados</strong>, <strong className="text-danger">Parar Selecionados</strong> ou <strong className="text-warning">Reiniciar Selecionados</strong> sem precisar criar um grupo fixo.
               </li>
             </ul>
           </div>
@@ -1390,7 +1390,7 @@ export function getFaqList({
                 <strong className="text-foreground">Seleção do Cenário &amp; Banco:</strong> Selecione a conexão Oracle desejada e o cenário de homologação (ex.: <em>Venda PDV — Integração WSH Mississauga</em>, <em>Cancelamento de Venda</em>, <em>Kits e Cestas</em>).
               </li>
               <li>
-                <strong className="text-foreground">Entrada de Dados (JSON / Binds):</strong> Cole o payload JSON da API ou PDV e clique em <strong className="text-emerald-500">"Mapear Binds"</strong> para auto-preencher parâmetros como <code className="font-mono text-primary font-bold">:codFilial</code> e <code className="font-mono text-primary font-bold">:numCupom</code>.
+                <strong className="text-foreground">Entrada de Dados (JSON / Binds):</strong> Cole o payload JSON da API ou PDV e clique em <strong className="text-success">"Mapear Binds"</strong> para auto-preencher parâmetros como <code className="font-mono text-primary font-bold">:codFilial</code> e <code className="font-mono text-primary font-bold">:numCupom</code>.
               </li>
               <li>
                 <strong className="text-foreground">Execução Automatizada:</strong> O sistema executa cada query SQL na ordem, repassa variáveis extraídas entre passos (ex.: <code className="font-mono text-primary font-bold">NUMTRANSVENDA</code>) e compara os resultados com o esperado.
@@ -1423,7 +1423,7 @@ export function getFaqList({
             <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Estrutura &amp; Uso Prático:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Parâmetros de Bind no SQL:</strong> Escreva queries com parâmetros nomeados (ex.: <code className="font-mono text-primary font-bold">SELECT * FROM PCNFSAID WHERE CODFILIAL = :codFilial AND NUMNOTA = :numCupom</code>). Os valores são preenchidos manualmente ou extraídos do JSON da API com 1 clique no botão <strong className="text-emerald-500">"Mapear Binds"</strong>.
+                <strong className="text-foreground">Parâmetros de Bind no SQL:</strong> Escreva queries com parâmetros nomeados (ex.: <code className="font-mono text-primary font-bold">SELECT * FROM PCNFSAID WHERE CODFILIAL = :codFilial AND NUMNOTA = :numCupom</code>). Os valores são preenchidos manualmente ou extraídos do JSON da API com 1 clique no botão <strong className="text-success">"Mapear Binds"</strong>.
               </li>
               <li>
                 <strong className="text-foreground">Tipos de Asserção Disponíveis:</strong>
@@ -1468,7 +1468,7 @@ export function getFaqList({
                 <strong className="text-foreground">Sincronização de .env:</strong> Botão de 1 clique que atualiza as variáveis <code className="font-mono text-primary">ORACLE_USER</code>, <code className="font-mono text-primary">ORACLE_PASSWORD</code> e <code className="font-mono text-primary">ORACLE_CONNECT_STRING</code> do TAUT com base na conexão Oracle ativa no Hub Manager.
               </li>
               <li>
-                <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-emerald-400">esteira</code>, <code className="font-mono text-rose-400">critico</code>, <code className="font-mono text-blue-400">regressao</code>, <code className="font-mono text-amber-400">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
+                <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-success">esteira</code>, <code className="font-mono text-danger">critico</code>, <code className="font-mono text-blue-700 dark:text-blue-400">regressao</code>, <code className="font-mono text-warning">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
               </li>
               <li>
                 <strong className="text-foreground">Auditoria de Cobertura Zephyr Scale:</strong> Cruza os cenários dos arquivos CSV da pasta <code className="font-mono text-foreground font-bold">Insumo/</code> com os testes implementados em <code className="font-mono text-foreground font-bold">cypress/e2e/api/</code>, calculando o percentual e apontando testes pendentes. Sem nenhum CSV em <code className="font-mono text-foreground font-bold">Insumo/</code> a porcentagem não é calculada (não há universo de cenários para comparar). As chaves reconhecidas seguem o padrão <code className="font-mono text-foreground font-bold">ABC-T123</code>; para restringir a um projeto, preencha o <strong className="text-foreground">Prefixo das chaves de cenário Zephyr</strong> (ex.: <code className="font-mono text-foreground font-bold">PROJ-T</code>) em Configurações &gt; Diretórios &amp; IDE.

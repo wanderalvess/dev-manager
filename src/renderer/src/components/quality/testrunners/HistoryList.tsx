@@ -34,8 +34,8 @@ export const HistoryList: React.FC<HistoryListProps> = ({ history, canSync, onVi
             </div>
 
             <div className="flex items-center gap-3 font-mono text-2xs">
-              <span className="text-emerald-400">+{item.passedCount}</span>
-              <span className="text-rose-400">-{item.failedCount}</span>
+              <span className="text-success">+{item.passedCount}</span>
+              <span className="text-danger">-{item.failedCount}</span>
               <span className="text-muted-foreground">~{item.skippedCount}</span>
               <span className="text-muted-foreground">{formatDurationSeconds(item.durationMs)}</span>
             </div>
@@ -58,7 +58,7 @@ export const HistoryList: React.FC<HistoryListProps> = ({ history, canSync, onVi
               <button
                 type="button"
                 onClick={() => onSync(item.runnerId, item)}
-                className="text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1 cursor-pointer"
+                className="text-warning hover:text-warning font-medium flex items-center gap-1 cursor-pointer"
               >
                 <Sparkles className="w-3 h-3" />
                 <span>Sincronizar com Matriz</span>

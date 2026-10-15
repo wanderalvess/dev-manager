@@ -17,7 +17,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
   <div className="cockpit-panel rounded-xl p-5 sm:p-6 border border-border space-y-3.5 shadow-md">
     <div className="flex items-center justify-between pb-2 border-b border-border flex-wrap gap-2">
       <div className="flex items-center space-x-2">
-        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+        <div className="p-2 rounded-xl bg-success/10 text-success border border-success/20">
           <Laptop className="w-4 h-4" />
         </div>
         <div>
@@ -34,7 +34,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
       >
         {copiedItem === 'btn-copy-build' ? (
           <>
-            <Check className="w-3.5 h-3.5 text-emerald-500" />
+            <Check className="w-3.5 h-3.5 text-success" />
             <span>Comando Copiado!</span>
           </>
         ) : (
@@ -59,7 +59,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
         <div className="p-3 rounded-xl bg-card/60 border border-border space-y-1 shadow-2xs">
           <span className="font-bold text-foreground block text-xs flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="w-2 h-2 rounded-full bg-success" />
             Hub Manager {appInfo?.appVersion || '1.22.0'}.exe (Portátil)
           </span>
           <p className="text-2xs text-muted-foreground">
@@ -78,8 +78,8 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
         </div>
       </div>
 
-      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-2xs text-emerald-600 dark:text-emerald-300 flex items-center gap-2">
-        <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-500" />
+      <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-2xs text-success flex items-center gap-2">
+        <ShieldCheck className="w-4 h-4 shrink-0 text-success" />
         <span>Ambos os executáveis solicitam elevação de Administrador (UAC) automaticamente ao abrir.</span>
       </div>
     </div>

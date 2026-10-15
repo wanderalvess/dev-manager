@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const RoutinesModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Grid className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+    iconBoxClass="p-2 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20"
     title="6. Catálogo de Rotinas WinThor"
     subtitle="Executáveis Delphi .exe e .pc"
     shortcut="Alt+6"
@@ -13,14 +13,14 @@ export const RoutinesModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) =>
       <ModuleNavButton
         onNavigate={onNavigate}
         target="routines"
-        colorClass="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+        colorClass="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-500/30"
         label="Abrir Catálogo de Rotinas"
       />
     }
   >
     <ModuleBullets
       intro="Acesso instantâneo aos executáveis compilados na sua máquina:"
-      checkClass="text-indigo-400"
+      checkClass="text-indigo-700 dark:text-indigo-400"
     >
       <span><strong>Busca Instantânea:</strong> Filtre rotinas por código numérico ou nome do executável.</span>
       <span><strong>Filtro por Módulo:</strong> Agrupamento automático por subpastas do diretório configurado.</span>

@@ -156,7 +156,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
           type="button"
           onClick={onRun}
           disabled={isRunning || !projectExists}
-          className="w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50"
+          className="w-full py-2 px-3 rounded-lg bg-success hover:bg-success/90 text-background font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50"
         >
           <Play className={`w-3.5 h-3.5 ${isRunning ? 'animate-spin' : ''}`} />
           <span>{isRunning ? 'Executando...' : 'Rodar Headless'}</span>
@@ -177,7 +177,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
           <button
             type="button"
             onClick={onAbort}
-            className="w-full sm:w-auto py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition cursor-pointer flex items-center justify-center space-x-1.5"
+            className="w-full sm:w-auto py-2 px-3 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs transition cursor-pointer flex items-center justify-center space-x-1.5"
             title="Interromper execução do processo Cypress"
           >
             <Square className="w-3.5 h-3.5 fill-current" />

@@ -40,15 +40,15 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
         }}
         className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           showSnippetsMenu
-            ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40'
+            ? 'bg-warning/20 text-warning border border-warning/40'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
         }`}
         title="Minhas consultas SQL salvas e modelos"
       >
-        <BookmarkPlus className="w-3.5 h-3.5 text-amber-500" />
+        <BookmarkPlus className="w-3.5 h-3.5 text-warning" />
         <span>Consultas Salvas</span>
         {customSnippets.length > 0 && (
-          <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+          <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-warning/20 text-warning">
             {customSnippets.length}
           </span>
         )}
@@ -61,7 +61,7 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
           <div className="absolute right-0 mt-1 w-96 bg-card border border-border rounded-xl shadow-2xl z-50 p-2.5 space-y-2 text-xs animate-fade-in font-sans">
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
               <div className="flex items-center space-x-1.5">
-                <BookmarkPlus className="w-4 h-4 text-amber-500" />
+                <BookmarkPlus className="w-4 h-4 text-warning" />
                 <span className="font-bold text-xs text-foreground">Consultas Salvas</span>
               </div>
               <div className="flex items-center space-x-1.5">
@@ -71,7 +71,7 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
                     setShowSnippetsMenu(false);
                     onOpenCreateSnippet();
                   }}
-                  className="flex items-center space-x-1 px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-black rounded text-2xs font-bold transition cursor-pointer"
+                  className="flex items-center space-x-1 px-2 py-0.5 bg-warning hover:bg-warning/90 text-background rounded text-2xs font-bold transition cursor-pointer"
                   title="Salvar consulta atual do editor"
                 >
                   <Plus className="w-3 h-3" />

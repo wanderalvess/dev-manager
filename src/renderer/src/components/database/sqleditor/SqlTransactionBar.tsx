@@ -57,7 +57,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
       </div>
 
       {isProduction && (
-        <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-rose-500/15 text-rose-500 border border-rose-500/30" title="Conexão marcada como produção">
+        <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-danger/15 text-danger border border-danger/30" title="Conexão marcada como produção">
           PRODUÇÃO
         </span>
       )}
@@ -65,7 +65,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
       {manual ? (
         <>
           <span
-            className={`text-2xs font-mono ${pending > 0 ? 'text-amber-500 font-semibold' : 'text-muted-foreground'}`}
+            className={`text-2xs font-mono ${pending > 0 ? 'text-warning font-semibold' : 'text-muted-foreground'}`}
             aria-live="polite"
           >
             {describePending(state)}
@@ -74,7 +74,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
             type="button"
             onClick={onCommit}
             disabled={pending === 0 || isExecuting}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-2xs font-bold disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-success hover:bg-success/90 text-background text-2xs font-bold disabled:opacity-50 cursor-pointer"
             title="Confirmar as alterações pendentes (F11)"
           >
             <CheckCheck className="w-3.5 h-3.5" />
@@ -88,7 +88,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
             className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-foreground text-2xs font-bold disabled:opacity-50 cursor-pointer"
             title="Desfazer as alterações pendentes (F12)"
           >
-            <Undo2 className="w-3.5 h-3.5 text-amber-500" />
+            <Undo2 className="w-3.5 h-3.5 text-warning" />
             <span>Rollback</span>
             <span className="opacity-60 font-mono">F12</span>
           </button>
@@ -106,7 +106,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-600 hover:bg-rose-500 text-white text-2xs font-bold cursor-pointer"
+          className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-md bg-destructive hover:bg-destructive/90 text-destructive-foreground text-2xs font-bold cursor-pointer"
           title="Interromper a consulta em andamento"
         >
           <XOctagon className="w-3.5 h-3.5" />

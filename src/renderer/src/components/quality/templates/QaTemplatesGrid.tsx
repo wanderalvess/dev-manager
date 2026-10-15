@@ -91,7 +91,7 @@ export const QaTemplatesGrid: React.FC<QaTemplatesGridProps> = ({
               <button
                 type="button"
                 onClick={() => onDelete(tmpl)}
-                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-danger transition-colors cursor-pointer"
                 title="Excluir template" aria-label="Excluir template"
               >
                 <Trash2 className="w-3.5 h-3.5" />

@@ -78,7 +78,7 @@ export const BackupDefaultCommandPanel: React.FC<BackupDefaultCommandPanelProps>
               className="flex items-center gap-1 px-2 py-0.5 text-muted-foreground hover:text-foreground text-2xs font-medium rounded-md hover:bg-muted transition cursor-pointer"
               title="Copiar comando"
             >
-              {commandCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+              {commandCopied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
               <span>{commandCopied ? 'Copiado' : 'Copiar'}</span>
             </button>
           </div>

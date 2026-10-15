@@ -46,7 +46,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
         onClick={() => onChangeTab('explain')}
         className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
           activeTab === 'explain'
-            ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30'
+            ? 'bg-warning/20 text-warning border border-warning/30'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -58,7 +58,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
         onClick={() => onChangeTab('tracer')}
         className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
           activeTab === 'tracer'
-            ? 'bg-sky-500/20 text-sky-500 border border-sky-500/30'
+            ? 'bg-info/20 text-info border border-info/30'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -88,7 +88,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
       <div className="flex items-center space-x-3 text-xs">
         {queryResult.success ? (
           <>
-            <span className="text-emerald-400 flex items-center gap-1 font-semibold">
+            <span className="text-success flex items-center gap-1 font-semibold">
               <CheckCircle2 className="w-3.5 h-3.5" />
               {queryResult.isQuery
                 ? `${queryResult.rowCount} linha(s)`
@@ -100,7 +100,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
             {queryResult.isQuery && queryResult.truncated && (
               <span className="flex items-center gap-1.5">
                 <span
-                  className="text-amber-500 font-semibold"
+                  className="text-warning font-semibold"
                   title="O banco tem mais linhas do que o limite configurado."
                 >
                   Limite atingido: há mais linhas
@@ -109,7 +109,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
                   <button
                     type="button"
                     onClick={onLoadMore}
-                    className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 text-2xs font-bold cursor-pointer"
+                    className="px-2 py-0.5 rounded bg-warning/15 text-warning hover:bg-warning/25 text-2xs font-bold cursor-pointer"
                     title={`Executar de novo trazendo até ${nextLimit} linhas`}
                   >
                     Carregar mais (até {nextLimit})
@@ -124,7 +124,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
             )}
           </>
         ) : (
-          <span className="text-red-400 flex items-center gap-1 font-semibold">
+          <span className="text-danger flex items-center gap-1 font-semibold">
             <AlertCircle className="w-3.5 h-3.5" /> Erro na execução
           </span>
         )}

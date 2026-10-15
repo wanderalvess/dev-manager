@@ -22,14 +22,14 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
       title="Detecção automática de gargalos e chamadas lentas"
       className={`h-6 px-2 rounded border text-2xs font-medium flex items-center gap-1.5 cursor-pointer transition ${
         isOpen || activePreset === 'SLOW_QUERIES' || activePreset === 'SLOW_ENDPOINTS'
-          ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-semibold'
-          : 'bg-card border-border text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400'
+          ? 'bg-warning/20 text-warning border-warning/50 font-semibold'
+          : 'bg-card border-border text-muted-foreground hover:text-warning'
       }`}
     >
-      <Flame className="w-3 h-3 text-amber-500" />
+      <Flame className="w-3 h-3 text-warning" />
       <span>Top Lentos</span>
       {summary.slowTracesCount > 0 && (
-        <span className="px-1 py-0.2 rounded-full bg-amber-500/20 text-2xs font-bold text-amber-700 dark:text-amber-300">
+        <span className="px-1 py-0.2 rounded-full bg-warning/20 text-2xs font-bold text-warning">
           {summary.slowTracesCount}
         </span>
       )}
@@ -38,7 +38,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
       <div className="absolute left-0 top-7 w-80 p-3 rounded-lg border border-border bg-card/95 backdrop-blur-md shadow-xl z-50 flex flex-col gap-2.5 font-sans text-xs animate-in fade-in-50 zoom-in-95">
         <div className="flex items-center justify-between pb-1.5 border-b border-border">
           <span className="font-bold text-foreground flex items-center gap-1.5">
-            <Flame className="w-3.5 h-3.5 text-amber-500" />
+            <Flame className="w-3.5 h-3.5 text-warning" />
             <span>Detecção OTLP de Lentidão</span>
           </span>
           <button type="button" onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground cursor-pointer">
@@ -48,15 +48,15 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
         <div className="grid grid-cols-3 gap-1.5 text-center font-mono text-2xs">
           <div className="p-1.5 rounded bg-muted/40 border border-border">
             <div className="text-muted-foreground">Lentos (&gt;400ms)</div>
-            <div className="font-bold text-amber-600 dark:text-amber-400 text-xs">{summary.slowTracesCount}</div>
+            <div className="font-bold text-warning text-xs">{summary.slowTracesCount}</div>
           </div>
           <div className="p-1.5 rounded bg-muted/40 border border-border">
             <div className="text-muted-foreground">Críticos (&gt;1s)</div>
-            <div className="font-bold text-rose-600 dark:text-rose-400 text-xs">{summary.criticalTracesCount}</div>
+            <div className="font-bold text-danger text-xs">{summary.criticalTracesCount}</div>
           </div>
           <div className="p-1.5 rounded bg-muted/40 border border-border">
             <div className="text-muted-foreground">Com Queries</div>
-            <div className="font-bold text-sky-600 dark:text-sky-400 text-xs">{summary.slowDbTracesCount}</div>
+            <div className="font-bold text-info text-xs">{summary.slowDbTracesCount}</div>
           </div>
         </div>
         {summary.topSlowEndpoints.length > 0 && (
@@ -77,7 +77,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
                   <span className="truncate max-w-[180px] text-foreground">
                     <strong className="text-primary">{endpoint.method}</strong> {endpoint.route}
                   </span>
-                  <span className="text-amber-600 dark:text-amber-400 font-bold shrink-0">{endpoint.maxDurationMs}ms</span>
+                  <span className="text-warning font-bold shrink-0">{endpoint.maxDurationMs}ms</span>
                 </button>
               ))}
             </div>
@@ -91,7 +91,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
               onSortChange('duration');
               setIsOpen(false);
             }}
-            className="text-2xs text-amber-600 dark:text-amber-400 hover:underline font-medium cursor-pointer"
+            className="text-2xs text-warning hover:underline font-medium cursor-pointer"
           >
             Filtrar Queries Lentas &rarr;
           </button>

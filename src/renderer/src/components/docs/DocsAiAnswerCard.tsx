@@ -35,7 +35,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="relative w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
             <Bot className="w-4.5 h-4.5" />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-success animate-pulse" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -69,8 +69,8 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
               >
                 {copiedLlmAnswer ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-emerald-500">Copiado!</span>
+                    <Check className="w-3.5 h-3.5 text-success" />
+                    <span className="text-success">Copiado!</span>
                   </>
                 ) : (
                   <>

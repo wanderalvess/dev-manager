@@ -10,13 +10,13 @@ export const GitOutputConsole: React.FC<GitOutputConsoleProps> = ({ output, isEr
   <div
     className={`rounded-xl p-3 font-mono text-xs whitespace-pre-wrap border ${
       isError
-        ? 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+        ? 'bg-danger/10 border-danger/30 text-danger'
         : 'bg-card border-border text-foreground'
     }`}
   >
     <div
       className={`flex items-center space-x-1.5 text-2xs font-bold uppercase tracking-wider mb-1 ${
-        isError ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'
+        isError ? 'text-danger' : 'text-muted-foreground'
       }`}
     >
       {isError && <AlertCircle className="w-3.5 h-3.5 shrink-0" />}

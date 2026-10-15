@@ -33,14 +33,14 @@ export const SettingsExportMenu: React.FC<SettingsExportMenuProps> = ({ isOpen, 
         <EscapeToClose onEscape={onClose} />
         <div role="menu" className="absolute right-0 mt-2 w-72 origin-top-right rounded-lg bg-card border border-border shadow-xl p-1.5 z-50 flex flex-col space-y-1">
           <button type="button" role="menuitem" onClick={() => onExport(true)} className={ITEM_CLASS}>
-            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-success shrink-0" />
             <div>
               <div className="font-bold text-foreground">Exportação Segura (JSON)</div>
               <div className="text-2xs text-muted-foreground">Omite senhas do banco e Karaf (P/ Time)</div>
             </div>
           </button>
           <button type="button" role="menuitem" onClick={() => onExport(false)} className={ITEM_CLASS}>
-            <Download className="w-4 h-4 text-amber-500 shrink-0" />
+            <Download className="w-4 h-4 text-warning shrink-0" />
             <div>
               <div className="font-bold text-foreground">Exportação Completa (Backup)</div>
               <div className="text-2xs text-muted-foreground">Contém todas as senhas (Para este PC)</div>
