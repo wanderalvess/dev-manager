@@ -94,7 +94,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
         className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
       />
       <label htmlFor="localBackupCheck" className="text-xs text-foreground flex items-center gap-1.5 cursor-pointer">
-        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+        <ShieldCheck className="w-4 h-4 text-success" />
         <span>Criar backup automático (.bak) da versão existente antes de substituir</span>
       </label>
     </div>

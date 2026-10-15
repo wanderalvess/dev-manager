@@ -34,7 +34,7 @@ export const GitDiffFileList: React.FC<GitDiffFileListProps> = ({
     <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
       {files.length === 0 ? (
         <div className="h-32 flex flex-col items-center justify-center text-xs text-muted-foreground text-center p-3">
-          <Check className="w-5 h-5 text-emerald-500 mb-1" />
+          <Check className="w-5 h-5 text-success mb-1" />
           <span>Árvore de trabalho limpa.</span>
         </div>
       ) : (

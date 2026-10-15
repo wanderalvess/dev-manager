@@ -36,7 +36,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
     <div
       className={`p-3 rounded-xl bg-card border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all shadow-2xs ${
         isConfirmingRestore
-          ? 'border-amber-500/60 bg-amber-500/5'
+          ? 'border-warning/60 bg-warning/5'
           : isConfirmingDelete
           ? 'border-destructive/60 bg-destructive/5'
           : 'border-border/80 hover:border-primary/40'
@@ -48,16 +48,16 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
             {entry.fileName}
           </span>
           {entry.isPreRollback && (
-            <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1 uppercase tracking-wider">
+            <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-warning/15 text-warning border border-warning/30 flex items-center gap-1 uppercase tracking-wider">
               <span>Pré-Rollback</span>
             </span>
           )}
           {entry.version?.fileVersion && (
             <span
-              className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-2xs"
+              className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-success/15 text-success border border-success/30 flex items-center gap-1 shadow-2xs"
               title={`Versão do Executável (PE Header): FileVersion ${entry.version.fileVersion}${entry.version.productVersion ? ` / ProductVersion ${entry.version.productVersion}` : ''}`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-success" />
               <span>v{entry.version.fileVersion}</span>
             </span>
           )}
@@ -83,7 +83,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
               type="button"
               onClick={() => onRestore(entry)}
               disabled={isRestoring || isDeleting}
-              className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs animate-pulse"
+              className="px-2.5 py-1.5 bg-warning hover:bg-warning/90 text-background rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs animate-pulse"
               title="Confirmar restauração desta versão"
             >
               <RotateCcw className="w-3 h-3" />

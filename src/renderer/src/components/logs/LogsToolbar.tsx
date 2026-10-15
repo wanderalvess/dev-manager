@@ -58,18 +58,18 @@ export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
 
     {/* Navegador Rápido de Erros (Signature Element) */}
     {props.errorCount > 0 && (
-      <div className="flex items-center space-x-1 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-lg text-rose-300 text-[11px] font-mono">
+      <div className="flex items-center space-x-1 bg-danger/10 border border-danger/30 px-2 py-0.5 rounded-lg text-danger text-[11px] font-mono">
         <span className="font-bold mr-1">Erros: {props.errorCount}</span>
         <button
           onClick={() => props.onNavigateErrors('prev')}
-          className="p-0.5 hover:bg-rose-500/20 rounded transition-colors"
+          className="p-0.5 hover:bg-danger/20 rounded transition-colors"
           title="Ir para o erro anterior"
         >
           <ChevronUp className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => props.onNavigateErrors('next')}
-          className="p-0.5 hover:bg-rose-500/20 rounded transition-colors"
+          className="p-0.5 hover:bg-danger/20 rounded transition-colors"
           title="Ir para o próximo erro"
         >
           <ChevronDown className="w-3.5 h-3.5" />
@@ -80,13 +80,13 @@ export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
     {/* Botão Log Analyzer & Exceções WinThor */}
     <button
       onClick={props.onOpenAnalyzer}
-      className="px-2 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 border transition-colors bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30 cursor-pointer"
+      className="px-2 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 border transition-colors bg-danger/10 hover:bg-danger/20 text-danger border-danger/30 cursor-pointer"
       title="Abrir Log Analyzer com diagnóstico detalhado de erros WinThor (ORA, NPE, OSGi, OOM)"
     >
       <Bug className="w-3.5 h-3.5" />
       <span>Exceções</span>
       {props.detectedExceptionsCount > 0 && (
-        <span className="px-1.5 py-0.2 rounded text-2xs bg-rose-500 text-white font-mono font-bold tabular-nums">
+        <span className="px-1.5 py-0.2 rounded text-2xs bg-danger text-background font-mono font-bold tabular-nums">
           {props.detectedExceptionsCount}
         </span>
       )}

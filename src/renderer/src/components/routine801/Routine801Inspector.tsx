@@ -28,7 +28,7 @@ const CopyButton: React.FC<{
     onClick={onClick}
     className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground"
   >
-    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+    {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
     <span>{copied ? 'Copiado!' : label}</span>
   </button>
 );
@@ -73,8 +73,8 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
           <span
             className={`inline-flex items-center justify-center px-1.5 py-0.5 text-2xs font-mono font-bold rounded border ${
               feature.status === 'LIBERADO'
-                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/35'
-                : 'bg-amber-500/15 text-amber-400 border-amber-500/35'
+                ? 'bg-success/15 text-success border-success/35'
+                : 'bg-warning/15 text-warning border-warning/35'
             }`}
           >
             Canal: {feature.status === 'LIBERADO' ? 'Produção [P]' : 'Homologação [H]'}
@@ -102,7 +102,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Catálogo WTA:</span>
-          <strong className="text-emerald-400">{feature.versao}</strong>
+          <strong className="text-success">{feature.versao}</strong>
         </div>
         {feature.versaoAnterior && (
           <div className="flex items-center justify-between text-muted-foreground">
@@ -254,7 +254,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
         disabled={isExecuting}
         className={`w-full sm:w-auto flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded font-medium transition-colors ${
           activeTab === 'updates'
-            ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+            ? 'bg-success hover:bg-success/90 text-background'
             : 'bg-primary hover:opacity-90 text-primary-foreground'
         } disabled:opacity-50`}
       >

@@ -10,8 +10,8 @@ interface CcwFeedbackAlertsProps {
 export const CcwFeedbackAlerts: React.FC<CcwFeedbackAlertsProps> = ({ result, errorMsg }) => (
   <>
     {result && (
-      <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs space-y-1.5 animate-in fade-in duration-150">
-        <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
+      <div className="p-3.5 rounded-xl bg-success/10 border border-success/30 text-success text-xs space-y-1.5 animate-in fade-in duration-150">
+        <div className="flex items-center gap-2 font-bold text-success">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{result.message}</span>
         </div>

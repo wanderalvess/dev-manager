@@ -27,14 +27,14 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
     <div
       className={`relative rounded-xl border p-3 flex flex-col justify-between space-y-3 transition-all duration-150 group shadow-2xs ${
         isFavorite
-          ? 'bg-card/90 border-amber-500/40 hover:border-amber-500/80 shadow-amber-500/5'
+          ? 'bg-card/90 border-warning/40 hover:border-warning/80 shadow-warning/5'
           : 'bg-card/70 border-border/80 hover:border-primary/50 hover:bg-card/95 hover:shadow-primary/5'
       }`}
     >
       {/* Indicador de Status / Borda chanfrada de topo */}
       <div
         className={`absolute top-0 left-0 right-0 h-0.5 transition-colors ${
-          isFavorite ? 'bg-amber-500' : 'bg-transparent group-hover:bg-primary/70'
+          isFavorite ? 'bg-warning' : 'bg-transparent group-hover:bg-primary/70'
         }`}
       />
 
@@ -56,12 +56,12 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
             )}
             {routine.fileVersion && (
               <span
-                className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shadow-2xs shrink-0"
+                className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-success/15 text-success border border-success/30 flex items-center gap-1 shadow-2xs shrink-0"
                 title={`Versão PE do Executável: FileVersion ${routine.fileVersion}${
                   routine.productVersion ? ` / ProductVersion ${routine.productVersion}` : ''
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />
                 <span>v{routine.fileVersion}</span>
               </span>
             )}
@@ -73,7 +73,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
               <button
                 type="button"
                 onClick={onRollback}
-                className="p-1 rounded text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                className="p-1 rounded text-muted-foreground hover:text-warning hover:bg-warning/10 transition-colors cursor-pointer"
                 title="Histórico de versões e rollback (.bak) desta rotina"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -93,12 +93,12 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
               type="button"
               data-tour="favoritar-rotina"
               onClick={onToggleFavorite}
-              className="p-1 rounded text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
+              className="p-1 rounded text-muted-foreground hover:text-warning hover:bg-warning/10 transition-colors cursor-pointer"
               title={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
             >
               <Star
                 className={`w-3.5 h-3.5 transition-transform active:scale-125 ${
-                  isFavorite ? 'text-amber-500 fill-amber-500 drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]' : ''
+                  isFavorite ? 'text-warning fill-warning drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]' : ''
                 }`}
               />
             </button>

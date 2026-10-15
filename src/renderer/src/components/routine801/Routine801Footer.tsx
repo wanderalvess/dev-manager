@@ -28,7 +28,7 @@ export const Routine801Footer: React.FC<Routine801FooterProps> = ({
       {lastResult && (
         <span
           className={`flex items-center gap-1 font-medium font-mono ${
-            lastResult.success ? 'text-emerald-400' : 'text-amber-400'
+            lastResult.success ? 'text-success' : 'text-warning'
           }`}
         >
           {lastResult.success ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}

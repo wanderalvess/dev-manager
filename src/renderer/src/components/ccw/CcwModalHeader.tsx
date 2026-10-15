@@ -21,7 +21,7 @@ export const CcwModalHeader: React.FC<CcwModalHeaderProps> = ({ appPath, onClose
           </span>
         </div>
         <p className="text-2xs text-muted-foreground font-mono mt-0.5 flex items-center gap-1.5">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           <span>Destino:</span>
           <span className="text-foreground font-semibold font-mono">{appPath || DEFAULT_CCW_APP_PATH}</span>
         </p>

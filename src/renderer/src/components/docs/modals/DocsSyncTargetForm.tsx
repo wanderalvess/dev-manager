@@ -96,7 +96,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
                 <Layers className="w-3.5 h-3.5 text-primary" />
                 <span>Ambos</span>
               </div>
-              <span className="text-2xs px-1.5 py-0.2 rounded-full font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <span className="text-2xs px-1.5 py-0.2 rounded-full font-semibold bg-success/15 text-success">
                 Recomendado
               </span>
             </div>

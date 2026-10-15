@@ -152,8 +152,8 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
           onClick={() => onChangeStatus('P')}
           className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 ${
             statusFilter === 'P'
-              ? 'bg-emerald-500/15 text-emerald-400 font-medium border border-emerald-500/30'
-              : 'text-muted-foreground hover:text-emerald-400'
+              ? 'bg-success/15 text-success font-medium border border-success/30'
+              : 'text-muted-foreground hover:text-success'
           }`}
           title="Filtrar por Produção [P]"
         >
@@ -163,8 +163,8 @@ export const Routine801Toolbar: React.FC<Routine801ToolbarProps> = ({
           onClick={() => onChangeStatus('H')}
           className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 ${
             statusFilter === 'H'
-              ? 'bg-amber-500/15 text-amber-400 font-medium border border-amber-500/30'
-              : 'text-muted-foreground hover:text-amber-400'
+              ? 'bg-warning/15 text-warning font-medium border border-warning/30'
+              : 'text-muted-foreground hover:text-warning'
           }`}
           title="Filtrar por Homologação [H]"
         >

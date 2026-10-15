@@ -119,7 +119,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
         className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
       />
       <label htmlFor="backupExistingCheck" className="text-xs text-foreground flex items-center gap-1.5 cursor-pointer">
-        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+        <ShieldCheck className="w-4 h-4 text-success" />
         <span>Criar backup automático (.bak) do executável anterior antes de substituir</span>
       </label>
     </div>

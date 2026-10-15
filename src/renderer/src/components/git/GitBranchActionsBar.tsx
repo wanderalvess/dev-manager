@@ -36,7 +36,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
 }) => (
   <div className="bg-card border border-border rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
     <div className="flex items-center space-x-3">
-      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
+      <div className="w-8 h-8 rounded-lg bg-success/10 border border-success/30 flex items-center justify-center text-success">
         <GitBranch className="w-4 h-4" />
       </div>
       <div>
@@ -44,12 +44,12 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
           Branch Atual
         </span>
         <div className="flex items-center gap-1.5 mt-0.5" data-tour="branch-atual">
-          <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-300">
+          <span className="text-xs font-mono font-bold text-success">
             {project.currentBranch}
           </span>
           {project.detachedHead && (
             <span
-              className="text-2xs bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold"
+              className="text-2xs bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.5 rounded font-bold"
               title="O repositório está em um commit específico, fora de qualquer branch"
             >
               HEAD DESTACADO
@@ -80,7 +80,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         <button
           type="button"
           onClick={onOpenDiff}
-          className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[11px] font-mono transition cursor-pointer"
+          className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-warning/10 hover:bg-warning/20 border border-warning/30 text-warning text-[11px] font-mono transition cursor-pointer"
           title="Inspecionar arquivos alterados e visualizador de diff"
         >
           <FileEdit className="w-3.5 h-3.5" />
@@ -98,7 +98,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         className="px-2.5 py-1.5 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-xs cursor-pointer"
         title="Visualizar diff e arquivos alterados"
       >
-        <Split className="w-3.5 h-3.5 text-amber-400" />
+        <Split className="w-3.5 h-3.5 text-warning" />
         <span>Diff</span>
       </button>
       <button
@@ -114,7 +114,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         type="button"
         data-tour="commit-push"
         onClick={onOpenCommit}
-        className="px-2.5 py-1.5 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-500 dark:text-emerald-300 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-xs cursor-pointer"
+        className="px-2.5 py-1.5 bg-success/15 hover:bg-success/25 border border-success/40 text-success rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors shadow-xs cursor-pointer"
         title="Fazer commit rápido e push para o repositório remoto"
       >
         <UploadCloud className="w-3.5 h-3.5" />
@@ -146,7 +146,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         title="Guardar alterações locais temporariamente (git stash)"
         aria-label="Guardar alterações locais (git stash)"
       >
-        <Archive className="w-3.5 h-3.5 text-amber-500" />
+        <Archive className="w-3.5 h-3.5 text-warning" />
       </button>
       <button
         onClick={() => onExecGit('stash-pop')}
@@ -155,7 +155,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         title="Restaurar alterações locais guardadas (git stash pop)"
         aria-label="Restaurar alterações guardadas (git stash pop)"
       >
-        <ArchiveRestore className="w-3.5 h-3.5 text-emerald-500" />
+        <ArchiveRestore className="w-3.5 h-3.5 text-success" />
       </button>
     </div>
   </div>

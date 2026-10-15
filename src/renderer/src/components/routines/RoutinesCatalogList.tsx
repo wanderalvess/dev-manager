@@ -45,8 +45,8 @@ export const RoutinesCatalogList: React.FC<RoutinesCatalogListProps> = ({
       {favoriteRoutines.length > 0 && (
         <div className="space-y-2.5 shrink-0" data-tour="rotinas-favoritas">
           <div className="flex items-center space-x-2">
-            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+            <Star className="w-4 h-4 text-warning fill-warning" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-warning">
               Rotinas Favoritas ({favoriteRoutines.length})
             </h3>
           </div>

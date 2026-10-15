@@ -53,7 +53,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
     {/* Modal Body */}
     <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
       {task.taskBranchError && (
-        <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+        <div className="flex items-start gap-2 p-2.5 rounded-lg bg-danger/10 border border-danger/30 text-danger text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>{task.taskBranchError}</span>
         </div>
@@ -157,7 +157,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
               title="Copiar nome da branch"
             >
               {copiedKey === task.computedTaskBranchName ? (
-                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                <Check className="w-3.5 h-3.5 text-success" />
               ) : (
                 <Copy className="w-3.5 h-3.5" />
               )}
@@ -165,7 +165,7 @@ export const GitTaskBranchModal: React.FC<GitTaskBranchModalProps> = ({ project,
           )}
         </div>
         {!task.taskBranchValidation.valid && (
-          <p className="text-[11px] text-rose-500 font-medium">{task.taskBranchValidation.error}</p>
+          <p className="text-[11px] text-danger font-medium">{task.taskBranchValidation.error}</p>
         )}
       </div>
     </div>

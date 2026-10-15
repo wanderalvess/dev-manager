@@ -42,7 +42,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
                 ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-400'
                 : target.syncMode === 'chunks'
                 ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-700 dark:text-cyan-400'
-                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-success/10 border-success/30 text-success'
             }`}
           >
             {target.syncMode === 'articles'
@@ -61,7 +61,7 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
             <span>Auth: <strong>{target.authHeader}</strong> ({target.authValue ? 'definida' : 'sem chave'})</span>
           )}
           {target.lastSyncedAt && (
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+            <span className="text-success font-medium">
               Último envio: {new Date(target.lastSyncedAt).toLocaleString('pt-BR')}
             </span>
           )}

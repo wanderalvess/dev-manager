@@ -49,7 +49,7 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
           </button>
           <button
             onClick={() => onChangeFilter('ERRORS')}
-            className={`px-1.5 py-0.2 rounded ${logFilter === 'ERRORS' ? 'bg-rose-500/20 text-rose-400 font-medium' : 'text-muted-foreground'}`}
+            className={`px-1.5 py-0.2 rounded ${logFilter === 'ERRORS' ? 'bg-danger/20 text-danger font-medium' : 'text-muted-foreground'}`}
           >
             Erros
           </button>

@@ -56,7 +56,7 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
               <div className="flex items-center space-x-1.5">
                 {hasChanges && (
                   <span
-                    className="text-2xs bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded font-mono font-bold"
+                    className="text-2xs bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.2 rounded font-mono font-bold"
                     title={`${pendingCount} arquivo(s) modificado(s)`}
                   >
                     ● {pendingCount}
@@ -70,8 +70,8 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
               </div>
             </div>
             <div className="flex items-center space-x-1.5 mt-1.5 text-[11px] text-muted-foreground truncate">
-              <GitBranch className="w-3 h-3 text-emerald-500 shrink-0" />
-              <span className="truncate font-mono text-emerald-600 dark:text-emerald-300 font-medium">
+              <GitBranch className="w-3 h-3 text-success shrink-0" />
+              <span className="truncate font-mono text-success font-medium">
                 {p.currentBranch}
               </span>
             </div>

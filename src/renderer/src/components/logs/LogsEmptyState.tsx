@@ -20,17 +20,17 @@ export const LogsEmptyState: React.FC<LogsEmptyStateProps> = ({
   <div className="h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center select-none space-y-3">
     <ScrollText className="w-12 h-12 text-slate-800 stroke-[1.5]" />
     <div className="space-y-1.5 max-w-lg">
-      <p className="text-sm font-semibold text-slate-400">Nenhum log para exibir no momento</p>
+      <p className="text-sm font-semibold text-slate-300">Nenhum log para exibir no momento</p>
       {!hasSources ? (
-        <div className="text-xs text-slate-400 leading-relaxed bg-muted/30 border border-border/50 p-3 rounded-xl">
+        <div className="text-xs text-slate-300 leading-relaxed bg-muted/30 border border-border/50 p-3 rounded-xl">
           Nenhuma fonte de log configurada.{' '}
-          <button onClick={onOpenManage} className="text-primary underline font-semibold">
+          <button onClick={onOpenManage} className="text-amber-300 underline font-semibold">
             Cadastre um arquivo de log
           </button>{' '}
           para começar a acompanhar em tempo real.
         </div>
       ) : status && !status.exists ? (
-        <div className="text-xs text-rose-400/90 leading-relaxed bg-rose-950/20 border border-rose-900/40 p-3 rounded-xl">
+        <div className="text-xs text-danger/90 leading-relaxed bg-danger/20 border border-danger/40 p-3 rounded-xl">
           O arquivo <code className="text-slate-200 font-mono font-bold">{filePath}</code> não
           foi encontrado. O Hub Manager está em escuta contínua e iniciará a transmissão assim que o serviço
           gravar as primeiras saídas.

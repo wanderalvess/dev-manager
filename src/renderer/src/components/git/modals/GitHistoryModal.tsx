@@ -55,7 +55,7 @@ export const GitHistoryModal: React.FC<GitHistoryModalProps> = ({
           <span>Carregando histórico do Git...</span>
         </div>
       ) : error ? (
-        <div className="h-48 flex flex-col items-center justify-center text-xs text-rose-600 dark:text-rose-400 space-y-2 text-center px-4">
+        <div className="h-48 flex flex-col items-center justify-center text-xs text-danger space-y-2 text-center px-4">
           <AlertCircle className="w-8 h-8 opacity-70" />
           <p className="font-semibold text-foreground">Falha ao carregar histórico</p>
           <p className="text-muted-foreground font-mono">{error}</p>

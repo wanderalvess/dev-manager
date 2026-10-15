@@ -40,7 +40,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
   >
     <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
       <div className="flex items-center space-x-2">
-        <UploadCloud className="w-5 h-5 text-emerald-500" />
+        <UploadCloud className="w-5 h-5 text-success" />
         <div>
           <h3 className="text-sm font-bold text-foreground">Commit & Push Rápido</h3>
           <span className="text-[11px] text-muted-foreground font-mono">
@@ -60,7 +60,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
 
     <div className="p-4 space-y-3">
       {commitError && (
-        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-[11px] font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>{commitError}</span>
         </div>

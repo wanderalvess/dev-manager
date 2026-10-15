@@ -24,11 +24,11 @@ export const LaunchFeedbackBanner: React.FC<LaunchFeedbackBannerProps> = ({
 }) => (
   <div className={`shrink-0 rounded-xl p-3 flex items-start justify-between space-x-2.5 text-xs border ${
     feedback.karafOffline
-      ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-200'
-      : 'bg-rose-500/10 border-rose-500/40 text-rose-700 dark:text-rose-200'
+      ? 'bg-warning/10 border-warning/40 text-warning'
+      : 'bg-danger/10 border-danger/40 text-danger'
   }`}>
     <div className="flex items-start space-x-2.5 flex-1">
-      <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${feedback.karafOffline ? 'text-amber-500' : 'text-rose-500'}`} />
+      <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${feedback.karafOffline ? 'text-warning' : 'text-danger'}`} />
       <div className="flex-1">
         <span className="font-bold block">{getLaunchFeedbackTitle(feedback)}</span>
         <span className="text-[11px] text-muted-foreground block mt-0.5 leading-relaxed">
@@ -43,7 +43,7 @@ export const LaunchFeedbackBanner: React.FC<LaunchFeedbackBannerProps> = ({
                 <button
                   type="button"
                   onClick={onNavigateToEnv}
-                  className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-[11px] font-bold text-amber-700 dark:text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-lg text-[11px] font-bold text-warning flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Terminal className="w-3 h-3" />
                   <span>Ir para Ambiente Dev &amp; Iniciar Karaf (Alt+1)</span>
@@ -72,7 +72,7 @@ export const LaunchFeedbackBanner: React.FC<LaunchFeedbackBannerProps> = ({
             <button
               type="button"
               onClick={onNavigateToSettings}
-              className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 rounded-lg text-[11px] font-bold text-rose-700 dark:text-rose-200 flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-2.5 py-1 bg-danger/20 hover:bg-danger/30 border border-danger/40 rounded-lg text-[11px] font-bold text-danger flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Settings className="w-3 h-3" />
               <span>Configurar Credenciais do WTA</span>

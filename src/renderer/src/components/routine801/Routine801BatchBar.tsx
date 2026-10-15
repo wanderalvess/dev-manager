@@ -65,7 +65,7 @@ export const Routine801BatchBar: React.FC<Routine801BatchBarProps> = ({
         disabled={isExecuting}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-colors ${
           activeTab === 'updates'
-            ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+            ? 'bg-success hover:bg-success/90 text-background'
             : 'bg-primary hover:opacity-90 text-primary-foreground'
         } disabled:opacity-50`}
       >

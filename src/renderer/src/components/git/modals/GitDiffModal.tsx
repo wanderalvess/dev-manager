@@ -78,7 +78,7 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({
           title="Copiar diff unificado para a área de transferência"
         >
           {copiedKey === diffText ? (
-            <Check className="w-3.5 h-3.5 text-emerald-500" />
+            <Check className="w-3.5 h-3.5 text-success" />
           ) : (
             <Copy className="w-3.5 h-3.5 text-muted-foreground" />
           )}
