@@ -8,7 +8,7 @@ interface KarafUninstallModalHeaderProps {
 export const KarafUninstallModalHeader: React.FC<KarafUninstallModalHeaderProps> = ({ onClose }) => (
   <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
     <div className="flex items-center space-x-2.5">
-      <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400">
+      <div className="p-2 rounded-xl bg-danger/10 border border-danger/30 text-danger">
         <ShieldAlert className="w-5 h-5" />
       </div>
       <div>

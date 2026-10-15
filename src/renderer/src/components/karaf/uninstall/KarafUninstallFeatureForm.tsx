@@ -12,7 +12,7 @@ interface KarafUninstallFeatureFormProps {
 }
 
 const INPUT_CLASS =
-  'w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-rose-500';
+  'w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-danger';
 
 export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps> = ({
   featureName,
@@ -24,7 +24,7 @@ export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps>
   <div className="p-3.5 bg-muted/20 border border-border rounded-xl space-y-3">
     <div className="flex items-center justify-between">
       <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+        <Sparkles className="w-3.5 h-3.5 text-warning" />
         Parâmetros da Feature Karaf
       </span>
       {installedFeatures.length > 0 && (
@@ -72,7 +72,7 @@ export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps>
 
     <div className="text-2xs font-mono text-muted-foreground bg-muted/40 p-2 rounded-lg border border-border/50">
       Comando Karaf que será executado:
-      <div className="text-rose-400 font-bold mt-0.5">
+      <div className="text-danger font-bold mt-0.5">
         {buildFeatureUninstallPreview(featureName, featureVersion)}
       </div>
     </div>

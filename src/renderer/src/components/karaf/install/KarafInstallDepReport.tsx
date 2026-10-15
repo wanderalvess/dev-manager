@@ -10,9 +10,9 @@ export const KarafInstallDepReport: React.FC<KarafInstallDepReportProps> = ({ ch
   <div className="p-3.5 bg-muted/40 border border-border rounded-xl space-y-2 text-xs">
     <div className="font-bold flex items-center gap-2">
       {check.alreadyInstalled ? (
-        <AlertTriangle className="w-4 h-4 text-amber-500" />
+        <AlertTriangle className="w-4 h-4 text-warning" />
       ) : (
-        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        <CheckCircle2 className="w-4 h-4 text-success" />
       )}
       <span className="text-foreground">
         {check.alreadyInstalled ? 'Substituição de Versão Detectada' : 'Novo Bundle no Container'}

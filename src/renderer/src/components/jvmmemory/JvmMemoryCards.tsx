@@ -22,7 +22,7 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
       <div className="p-3.5 bg-card border border-border rounded-lg space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-foreground font-mono uppercase tracking-wide flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-sky-400" /> Heap Memory (Java Objects)
+            <Cpu className="w-3.5 h-3.5 text-info" /> Heap Memory (Java Objects)
           </span>
           <span
             className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded border ${resolveBadgeClass(isNearOom, alertLevel)}`}

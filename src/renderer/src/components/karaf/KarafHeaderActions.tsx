@@ -63,29 +63,29 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
           type="button"
           onClick={onStopKaraf}
           disabled={isStoppingKaraf}
-          className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-rose-500/10 border border-border hover:border-rose-500/30 text-rose-600 dark:text-rose-400 cursor-pointer shadow-2xs disabled:opacity-50"
+          className="h-[30px] px-3 py-1.5 rounded-md font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-danger/10 border border-border hover:border-danger/30 text-danger cursor-pointer shadow-2xs disabled:opacity-50"
           title="Encerrar a execução do container Apache Karaf"
         >
           {isStoppingKaraf ? (
             <>
-              <RotateCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+              <RotateCw className="w-3.5 h-3.5 animate-spin text-danger" />
               <span>Parando...</span>
             </>
           ) : (
             <>
-              <Square className="w-3.5 h-3.5 fill-current text-rose-500" />
+              <Square className="w-3.5 h-3.5 fill-current text-danger" />
               <span className="hidden sm:inline">Parar Karaf</span>
             </>
           )}
         </button>
       ) : (
         <div className="relative">
-          <div className="inline-flex rounded-md shadow-2xs overflow-hidden border border-emerald-600">
+          <div className="inline-flex rounded-md shadow-2xs overflow-hidden border border-success">
             <button
               type="button"
               onClick={onLaunchKarafDebug}
               disabled={isStartingKaraf}
-              className="h-[30px] px-3 py-1.5 font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer disabled:opacity-50"
+              className="h-[30px] px-3 py-1.5 font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-success hover:bg-success/90 text-background cursor-pointer disabled:opacity-50"
               title="Iniciar o Apache Karaf em modo Debug com JDWP (:5005) em terminal"
             >
               {isStartingKaraf ? (
@@ -104,7 +104,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
               type="button"
               onClick={() => setIsKarafStartMenuOpen((prev) => !prev)}
               disabled={isStartingKaraf}
-              className="h-[30px] px-1.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white border-l border-emerald-500 cursor-pointer disabled:opacity-50"
+              className="h-[30px] px-1.5 py-1.5 bg-success hover:bg-success/90 text-background border-l border-success cursor-pointer disabled:opacity-50"
               title="Mais opções de inicialização do Karaf"
             >
               <ChevronDown className="w-3.5 h-3.5" />
@@ -126,7 +126,7 @@ export const KarafHeaderActions: React.FC<KarafHeaderActionsProps> = ({
                   }}
                   className="w-full text-left px-3 py-2 text-foreground hover:bg-muted flex items-start gap-2 cursor-pointer"
                 >
-                  <Play className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0 fill-current" />
+                  <Play className="w-3.5 h-3.5 text-success mt-0.5 shrink-0 fill-current" />
                   <div>
                     <div className="font-semibold text-xs">Subir em Modo Debug</div>
                     <div className="text-2xs text-muted-foreground">karaf.bat debug com porta JDWP (:5005)</div>

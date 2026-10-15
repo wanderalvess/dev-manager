@@ -206,7 +206,7 @@ export const KarafFeaturesModal: React.FC<KarafFeaturesModalProps> = ({
         <span className="text-[11px] text-muted-foreground font-mono flex items-center gap-2">
           <Info className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
           <span>
-            Desinstalar com <code className="text-rose-700 dark:text-rose-400 font-bold bg-rose-500/10 px-1 py-0.2 rounded border border-rose-500/20">-r</code> purga a feature e seus bundles associados do container Karaf permanentemente.
+            Desinstalar com <code className="text-danger font-bold bg-danger/10 px-1 py-0.2 rounded border border-danger/20">-r</code> purga a feature e seus bundles associados do container Karaf permanentemente.
           </span>
         </span>
 

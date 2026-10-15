@@ -82,7 +82,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <div className="sm:col-span-2">
             <label className="text-2xs font-mono uppercase font-semibold text-muted-foreground block mb-1">
-              Nome da Feature <span className="text-rose-600 dark:text-rose-400">*</span>
+              Nome da Feature <span className="text-danger">*</span>
             </label>
             <input
               type="text"

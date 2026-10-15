@@ -25,7 +25,7 @@ export const KarafBundleStateCell: React.FC<KarafBundleStateCellProps> = ({ bund
         <button
           type="button"
           onClick={() => onOpenInlineDiag(bundle)}
-          className="px-1.5 py-0.5 rounded text-2xs font-mono font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition-colors cursor-pointer"
+          className="px-1.5 py-0.5 rounded text-2xs font-mono font-semibold bg-warning/15 hover:bg-warning/25 text-warning border border-warning/30 transition-colors cursor-pointer"
           title="Ver diagnóstico do Karaf para este bundle (bundle:diag)"
         >
           Diag

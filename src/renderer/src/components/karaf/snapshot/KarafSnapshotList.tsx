@@ -52,7 +52,7 @@ export const KarafSnapshotList: React.FC<KarafSnapshotListProps> = ({
             <button
               type="button"
               onClick={(e) => onDelete(snap.id, e)}
-              className="text-muted-foreground/50 hover:text-rose-400 opacity-0 group-hover:opacity-100 p-1 rounded transition"
+              className="text-muted-foreground/50 hover:text-danger opacity-0 group-hover:opacity-100 p-1 rounded transition"
               title="Excluir snapshot"
             >
               <Trash2 className="w-3.5 h-3.5" />

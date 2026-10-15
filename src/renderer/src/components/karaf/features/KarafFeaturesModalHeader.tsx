@@ -28,8 +28,8 @@ export const KarafFeaturesModalHeader: React.FC<KarafFeaturesModalHeaderProps> =
               <h3 className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
                 Features Karaf Instaladas
               </h3>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-mono font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-mono font-semibold bg-success/10 text-success border border-success/25">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 OSGi :8101
               </span>
               <span className="text-2xs font-mono px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
@@ -39,7 +39,7 @@ export const KarafFeaturesModalHeader: React.FC<KarafFeaturesModalHeaderProps> =
 
             <p className="text-xs text-muted-foreground mt-1 max-w-2xl leading-relaxed">
               Catálogo de funcionalidades ativas e provisionadas no container OSGi. A desinstalação via{' '}
-              <code className="text-rose-700 dark:text-rose-400 font-mono text-[11px] bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 font-semibold">
+              <code className="text-danger font-mono text-[11px] bg-danger/10 px-1.5 py-0.5 rounded border border-danger/20 font-semibold">
                 feature:uninstall -r
               </code>{' '}
               remove a feature e descarrega os bundles associados da memória.
