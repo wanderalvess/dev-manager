@@ -28,7 +28,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
 }) => (
   <div className="p-4 bg-muted/20 border border-border/80 rounded-xl space-y-3">
     <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-      <Archive className="w-3.5 h-3.5 text-amber-500" />
+      <Archive className="w-3.5 h-3.5 text-warning" />
       <span>Exportar Backup ou Desregistrar Distro Existente</span>
     </h4>
 
@@ -72,7 +72,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
           onClick={() => onUnregister(distro)}
           disabled={unregistering === distro}
           title="Exclui definitivamente esta distro e seu disco virtual"
-          className="flex items-center space-x-1 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+          className="flex items-center space-x-1 px-3 py-1.5 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
         >
           <Trash2 className="w-3.5 h-3.5" />
           <span>{unregistering === distro ? 'Removendo...' : `Desregistrar "${distro}"`}</span>
@@ -83,7 +83,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
       <button
         onClick={onExport}
         disabled={exporting || !canExportSnapshot(distro, exportPath)}
-        className="ml-auto flex items-center space-x-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+        className="ml-auto flex items-center space-x-1.5 px-3.5 py-1.5 bg-warning hover:bg-warning/90 text-background rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {exporting ? (
           <RotateCw className="w-3.5 h-3.5 animate-spin" />

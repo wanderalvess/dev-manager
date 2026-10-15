@@ -44,7 +44,7 @@ export const InfrScriptsTab: React.FC<InfrScriptsTabProps> = ({
         <div
           key={s.script}
           className={`p-3 rounded-xl border flex items-start justify-between gap-3 ${
-            s.exists ? 'bg-emerald-500/5 border-emerald-500/25' : 'bg-rose-500/5 border-rose-500/25'
+            s.exists ? 'bg-success/5 border-success/25' : 'bg-danger/5 border-danger/25'
           }`}
         >
           <div className="space-y-0.5 min-w-0 flex-1">
@@ -53,8 +53,8 @@ export const InfrScriptsTab: React.FC<InfrScriptsTabProps> = ({
               <span
                 className={`text-2xs font-bold px-1.5 py-0.2 rounded uppercase border ${
                   s.exists
-                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                    : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                    ? 'bg-success/20 text-success border-success/30'
+                    : 'bg-danger/20 text-danger border-danger/30'
                 }`}
               >
                 {s.exists ? 'Disponível' : 'Não Encontrado'}

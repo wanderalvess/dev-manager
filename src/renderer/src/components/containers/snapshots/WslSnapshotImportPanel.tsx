@@ -28,7 +28,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
 }) => (
   <div className="p-4 bg-muted/20 border border-border/80 rounded-xl space-y-3">
     <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-      <Play className="w-3.5 h-3.5 text-emerald-500 fill-current" />
+      <Play className="w-3.5 h-3.5 text-success fill-current" />
       <span>Importar Snapshot Selecionado (wsl --import)</span>
     </h4>
 
@@ -81,7 +81,7 @@ export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
       <button
         onClick={onImport}
         disabled={importing || !canImportSnapshot(tarPath, name)}
-        className="flex items-center space-x-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-1.5 px-4 py-2 bg-success hover:bg-success/90 text-background rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {importing ? (
           <RotateCw className="w-3.5 h-3.5 animate-spin" />

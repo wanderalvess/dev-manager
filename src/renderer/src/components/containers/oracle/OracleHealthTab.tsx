@@ -12,8 +12,8 @@ interface OracleHealthTabProps {
 
 export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copiedKey, onCopy }) => (
   <div className="space-y-4">
-    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3.5 flex items-start gap-3">
-      <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+    <div className="bg-warning/5 border border-warning/20 rounded-xl p-3.5 flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center text-warning shrink-0 mt-0.5">
         <Shield className="w-4 h-4" />
       </div>
       <div className="text-xs leading-relaxed text-muted-foreground">
@@ -67,7 +67,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
       <button
         onClick={() => health.run(true)}
         disabled={health.isRunning}
-        className="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-1.5 px-3.5 py-2 bg-warning hover:bg-warning/90 text-background rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         <Wrench className="w-3.5 h-3.5" />
         <span>Diagnosticar e Corrigir (--fix)</span>

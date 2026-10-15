@@ -101,13 +101,13 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
               title={isLogAutoRefresh ? 'Desativar auto-refresh (a cada 3s)' : 'Ativar auto-refresh a cada 3s'}
               className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                 isLogAutoRefresh
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                  ? 'bg-success/10 text-success border-success/30'
                   : 'bg-muted/70 text-muted-foreground border-border/70 hover:text-foreground'
               }`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isLogAutoRefresh ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/60'
+                  isLogAutoRefresh ? 'bg-success animate-pulse' : 'bg-muted-foreground/60'
                 }`}
               />
               <span className="hidden md:inline">Live</span>

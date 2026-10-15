@@ -23,7 +23,7 @@ export const SaveEnvironmentSummary: React.FC<SaveEnvironmentSummaryProps> = ({ 
             <strong className="text-primary font-bold">#{idx + 1}</strong>
             <span className="text-foreground">{slot.name}</span>
             {slot.delay > 0 && (
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">(+{slot.delay}s)</span>
+              <span className="text-warning font-semibold">(+{slot.delay}s)</span>
             )}
           </span>
         ))}

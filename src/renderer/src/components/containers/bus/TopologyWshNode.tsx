@@ -33,7 +33,7 @@ export const TopologyWshNode: React.FC<TopologyWshNodeProps> = ({ node, containe
       <span
         className={`text-2xs font-mono font-bold px-1.5 py-0.2 rounded border ${
           node.running
-            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+            ? 'bg-success/15 text-success border-success/30'
             : 'bg-muted text-muted-foreground border-border/70'
         }`}
       >

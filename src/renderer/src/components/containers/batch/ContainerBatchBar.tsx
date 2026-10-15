@@ -60,7 +60,7 @@ export const ContainerBatchBar: React.FC<ContainerBatchBarProps> = ({
           onClick={onBatchStart}
           disabled={isExecutingBatch}
           title="Iniciar todos os containers selecionados"
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer disabled:opacity-50 active:scale-98"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-success hover:bg-success/90 text-background rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer disabled:opacity-50 active:scale-98"
         >
           {isExecutingBatch && batchActionType === 'start' ? (
             <RotateCw className="w-3.5 h-3.5 animate-spin" />

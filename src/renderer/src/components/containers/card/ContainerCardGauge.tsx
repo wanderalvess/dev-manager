@@ -18,8 +18,8 @@ interface ContainerCardGaugeProps {
 }
 
 const TONE_CLASS: Record<Exclude<ContainerCardGaugeTone, 'normal'>, string> = {
-  critical: 'bg-rose-500',
-  warning: 'bg-amber-500'
+  critical: 'bg-danger',
+  warning: 'bg-warning'
 };
 
 export const ContainerCardGauge: React.FC<ContainerCardGaugeProps> = ({

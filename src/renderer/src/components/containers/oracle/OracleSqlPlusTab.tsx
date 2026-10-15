@@ -8,8 +8,8 @@ interface OracleSqlPlusTabProps {
 
 export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
   <div className="space-y-4">
-    <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-3.5 flex items-start gap-3">
-      <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0 mt-0.5">
+    <div className="bg-info/5 border border-info/20 rounded-xl p-3.5 flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg bg-info/10 flex items-center justify-center text-info shrink-0 mt-0.5">
         <Terminal className="w-4 h-4" />
       </div>
       <div className="text-xs leading-relaxed text-muted-foreground">
@@ -45,7 +45,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
       <button
         onClick={sql.open}
         disabled={sql.isOpening}
-        className="flex items-center space-x-2 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-2 px-4 py-2 bg-info hover:bg-info/90 text-background rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         <Terminal className="w-4 h-4" />
         <span>{sql.isOpening ? 'Abrindo Terminal...' : 'Abrir Sessão SQL*Plus no Terminal'}</span>

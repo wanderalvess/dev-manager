@@ -24,11 +24,11 @@ export const ContainerCardMetrics: React.FC<ContainerCardMetricsProps> = ({ cont
       <div className="flex items-center gap-4 shrink-0 flex-wrap" data-tour="container-stats">
         <ContainerCardGauge
           label="CPU"
-          icon={<Cpu className="w-3 h-3 text-sky-400" />}
+          icon={<Cpu className="w-3 h-3 text-info" />}
           percent={containerCardParsePercent(stats.cpu)}
           warnAbove={50}
           criticalAbove={80}
-          normalClassName="bg-sky-500"
+          normalClassName="bg-info"
           valueText={stats.cpu}
           valueClassName="min-w-[36px] text-right"
         />

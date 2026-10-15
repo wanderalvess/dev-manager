@@ -92,7 +92,7 @@ export const ContainerCardTitleRow: React.FC<ContainerCardTitleRowProps> = ({
               target="_blank"
               rel="noreferrer"
               title={`Abrir http://localhost:${p.hostPort} (${p.containerPort}/${p.protocol})`}
-              className="inline-flex items-center gap-1 text-2xs font-mono px-2 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 transition cursor-pointer"
+              className="inline-flex items-center gap-1 text-2xs font-mono px-2 py-0.5 rounded bg-info/10 hover:bg-info/20 text-info border border-info/30 transition cursor-pointer"
             >
               <span>{p.hostPort}→{p.containerPort}</span>
               <ExternalLink className="w-2.5 h-2.5 opacity-70" />

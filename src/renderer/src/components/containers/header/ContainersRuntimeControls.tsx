@@ -68,16 +68,16 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             title={`Abrir terminal WSL na distro ${selectedDistro}`}
             className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
           >
-            <Terminal className="w-3 h-3 text-sky-500" />
+            <Terminal className="w-3 h-3 text-info" />
           </button>
           <button
             type="button"
             onClick={() => onTerminateDistro()}
             disabled={isTerminatingDistro}
             title={`Desligar distro ${selectedDistro} (wsl --terminate)`}
-            className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+            className="p-1 rounded text-muted-foreground hover:text-danger hover:bg-danger/10 transition cursor-pointer"
           >
-            <Power className={`w-3 h-3 ${isTerminatingDistro ? 'animate-spin text-rose-500' : ''}`} />
+            <Power className={`w-3 h-3 ${isTerminatingDistro ? 'animate-spin text-danger' : ''}`} />
           </button>
         </div>
       )}
@@ -121,7 +121,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             }}
             disabled={sequenceRunning}
             title="Excluir grupo salvo"
-            className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer disabled:opacity-50"
+            className="p-1 rounded text-muted-foreground hover:text-danger hover:bg-danger/10 transition cursor-pointer disabled:opacity-50"
           >
             <Trash2 className="w-3 h-3" />
           </button>

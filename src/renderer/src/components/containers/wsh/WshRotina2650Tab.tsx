@@ -9,8 +9,8 @@ interface WshRotina2650TabProps {
 
 export const WshRotina2650Tab: React.FC<WshRotina2650TabProps> = ({ copiedKey, onCopy }) => (
   <div className="space-y-4">
-    <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3.5 flex items-start gap-3">
-      <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+    <div className="bg-warning/5 border border-warning/20 rounded-xl p-3.5 flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center text-warning shrink-0 mt-0.5">
         <Activity className="w-4 h-4" />
       </div>
       <div className="text-xs leading-relaxed text-muted-foreground">
@@ -54,7 +54,7 @@ export const WshRotina2650Tab: React.FC<WshRotina2650TabProps> = ({ copiedKey, o
 
         <div className="p-3 bg-muted/40 rounded-lg border border-border/50">
           <span className="text-[11px] text-muted-foreground block mb-0.5">Validação de Conexão</span>
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+          <div className="text-[11px] text-success font-semibold">
             Clique em "Testar Conexão" na rotina
           </div>
         </div>

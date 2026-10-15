@@ -39,7 +39,7 @@ export const TopologyOracleNode: React.FC<TopologyOracleNodeProps> = ({
       <span
         className={`text-2xs font-mono font-bold px-1.5 py-0.2 rounded border ${
           node.running
-            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+            ? 'bg-success/15 text-success border-success/30'
             : 'bg-muted text-muted-foreground border-border/70'
         }`}
       >
@@ -53,7 +53,7 @@ export const TopologyOracleNode: React.FC<TopologyOracleNodeProps> = ({
         onClick={() => {
           onCopyText(getOracleTnsConfig(node.port), 'topo-tns');
         }}
-        className="px-1.5 py-0.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-700 dark:text-orange-400 rounded border border-orange-500/30 font-semibold cursor-pointer transition"
+        className="px-1.5 py-0.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-800 dark:text-orange-400 rounded border border-orange-500/30 font-semibold cursor-pointer transition"
       >
         {copyFeedback === 'topo-tns' ? 'Copiado!' : 'Copiar TNS'}
       </button>

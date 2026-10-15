@@ -156,7 +156,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
         <button
           onClick={onComposeUp}
           disabled={!composeFilePath.trim() || isComposeRunning !== null}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success border border-success/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
         >
           {isComposeRunning === 'up' ? (
             <RotateCw className="w-3 h-3 animate-spin" />
@@ -168,7 +168,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
         <button
           onClick={onComposeDown}
           disabled={!composeFilePath.trim() || isComposeRunning !== null}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
         >
           {isComposeRunning === 'down' ? (
             <RotateCw className="w-3 h-3 animate-spin" />
@@ -180,16 +180,16 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
         <button
           onClick={onComposeRestart}
           disabled={!composeFilePath.trim() || isComposeRestarting}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
           title="Reiniciar serviços do Compose"
         >
-          <RotateCw className={`w-3 h-3 ${isComposeRestarting ? 'animate-spin text-amber-500' : ''}`} />
+          <RotateCw className={`w-3 h-3 ${isComposeRestarting ? 'animate-spin text-warning' : ''}`} />
           Restart
         </button>
         <button
           onClick={onComposeLogs}
           disabled={!composeFilePath.trim()}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 border border-sky-500/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
           title="Buscar últimos logs do Compose"
         >
           <Terminal className="w-3 h-3" />
@@ -212,7 +212,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
               key={s.name}
               className={`text-2xs font-mono px-2 py-0.5 rounded-md border ${
                 s.state.toLowerCase().includes('running')
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                  ? 'bg-success/10 border-success/30 text-success'
                   : 'bg-muted/80 border-border text-muted-foreground'
               }`}
             >

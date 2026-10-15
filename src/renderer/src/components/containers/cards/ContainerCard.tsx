@@ -74,9 +74,9 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
       <div
         className={`absolute left-0 top-0 bottom-0 w-1.5 transition-colors ${
           isRunning
-            ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]'
+            ? 'bg-success shadow-[0_0_10px_rgba(16,185,129,0.7)]'
             : container.state === 'paused'
-            ? 'bg-amber-500'
+            ? 'bg-warning'
             : 'bg-zinc-400 dark:bg-zinc-700'
         }`}
       />

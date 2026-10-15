@@ -80,7 +80,7 @@ export const OracleMaintenanceModal: React.FC<OracleMaintenanceModalProps> = ({
       {/* Footer */}
       <div className="px-5 py-3 border-t border-border/80 flex items-center justify-between bg-muted/10">
         <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+          <span className="w-2 h-2 rounded-full bg-success inline-block" />
           Comandos executados nativamente via container engine
         </span>
 

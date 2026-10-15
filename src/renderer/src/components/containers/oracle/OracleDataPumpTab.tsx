@@ -35,9 +35,9 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
   onCopy
 }) => (
   <div className="space-y-4">
-    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="bg-success/5 border border-success/20 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div className="flex items-start gap-3">
-        <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
+        <div className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center text-success shrink-0 mt-0.5">
           <FileText className="w-4 h-4" />
         </div>
         <div className="text-xs leading-relaxed text-muted-foreground">
@@ -50,7 +50,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
         type="button"
         onClick={onOpenDumpsFolder}
         disabled={isOpeningDumpsFolder}
-        className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 active:scale-98"
+        className="flex items-center space-x-1.5 px-3 py-1.5 bg-success/20 hover:bg-success/30 text-success border border-success/40 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 active:scale-98"
         title="Abre a pasta \\wsl$\distro\opt\dumps no Windows Explorer para copiar dumps"
       >
         <FolderOpen className="w-3.5 h-3.5" />
@@ -178,7 +178,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
       <button
         onClick={dp.run}
         disabled={dp.isRunning || !dp.dumpfile || !dp.schemaOrig}
-        className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+        className="flex items-center space-x-2 px-4 py-2 bg-success hover:bg-success/90 text-background rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
       >
         {dp.isRunning ? (
           <RotateCw className="w-4 h-4 animate-spin" />
