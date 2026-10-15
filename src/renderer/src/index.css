@@ -83,10 +83,10 @@
 @layer base {
   :root,
   .light {
-    --success: 160 84% 26%;
-    --warning: 41 96% 32%;
-    --danger: 347 77% 40%;
-    --info: 201 96% 32%;
+    --success: 160 84% 18%;
+    --warning: 41 96% 20%;
+    --danger: 347 77% 32%;
+    --info: 201 96% 24%;
   }
 
   .dark {
@@ -250,7 +250,7 @@
     --card-foreground: 160 50% 10%;
     --popover: 155 30% 98%;
     --popover-foreground: 160 50% 10%;
-    --primary: 158 90% 27%;
+    --primary: 158 90% 24%;
     --primary-foreground: 0 0% 100%;
     --secondary: 155 25% 86%;
     --secondary-foreground: 160 50% 10%;
@@ -348,7 +348,7 @@
     --card-foreground: 205 50% 11%;
     --popover: 198 40% 98%;
     --popover-foreground: 205 50% 11%;
-    --primary: 196 95% 34%;
+    --primary: 196 95% 30%;
     --primary-foreground: 0 0% 100%;
     --secondary: 198 28% 86%;
     --secondary-foreground: 205 50% 11%;
