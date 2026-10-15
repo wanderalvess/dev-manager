@@ -27,7 +27,7 @@ export const DeployStepAdvancedSettings: React.FC<DeployStepAdvancedSettingsProp
           type="checkbox"
           checked={step.continueOnError ?? false}
           onChange={(e) => onUpdate({ continueOnError: e.target.checked })}
-          className="rounded border-border text-amber-500 focus:ring-amber-500 mt-0.5"
+          className="rounded border-border text-warning focus:ring-warning mt-0.5"
         />
         <div>
           <span className="text-foreground font-semibold flex items-center gap-1.5">

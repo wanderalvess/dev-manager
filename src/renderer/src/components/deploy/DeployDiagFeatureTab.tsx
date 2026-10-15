@@ -62,7 +62,7 @@ export const DeployDiagFeatureTab: React.FC<DeployDiagFeatureTabProps> = ({
             onClick={() => onRun(`feature:info ${name}`, 'feat-info')}
           />
           <DeployDiagActionButton
-            icon={<Download className="w-3 h-3 text-emerald-500" />}
+            icon={<Download className="w-3 h-3 text-success" />}
             label="Instalar"
             title="Instalar / atualizar feature (-r -u)"
             disabled={actionDisabled}

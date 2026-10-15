@@ -59,7 +59,7 @@ export const DeployDiagActionButton: React.FC<DeployDiagActionButtonProps> = ({
     disabled={disabled}
     className={
       danger
-        ? 'px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 rounded-md text-[11px] font-medium text-rose-600 dark:text-rose-400 disabled:opacity-40 cursor-pointer transition flex items-center gap-1 ml-auto'
+        ? 'px-2.5 py-1 bg-danger/10 hover:bg-danger/20 border border-danger/30 rounded-md text-[11px] font-medium text-danger disabled:opacity-40 cursor-pointer transition flex items-center gap-1 ml-auto'
         : 'px-2.5 py-1 bg-card hover:bg-muted border border-border rounded-md text-[11px] font-medium text-foreground disabled:opacity-40 cursor-pointer transition flex items-center gap-1'
     }
     title={title}

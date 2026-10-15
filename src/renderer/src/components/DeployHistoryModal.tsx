@@ -93,14 +93,14 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
             </div>
             <div className="bg-muted/30 border border-border/60 rounded-xl p-2">
               <span className="text-[11px] text-muted-foreground block">Taxa de Sucesso</span>
-              <span className={`text-base font-bold font-mono ${successRate >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>
+              <span className={`text-base font-bold font-mono ${successRate >= 80 ? 'text-success' : 'text-warning'}`}>
                 {successRate}%
               </span>
             </div>
             <div className="bg-muted/30 border border-border/60 rounded-xl p-2">
               <span className="text-[11px] text-muted-foreground block">Com Sucesso / Falhas</span>
               <span className="text-base font-bold font-mono text-foreground">
-                <span className="text-emerald-500">{successRuns}</span> / <span className="text-rose-500">{totalRuns - successRuns}</span>
+                <span className="text-success">{successRuns}</span> / <span className="text-danger">{totalRuns - successRuns}</span>
               </span>
             </div>
           </div>
@@ -127,10 +127,10 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                   key={entry.id}
                   className={`border rounded-xl transition-all overflow-hidden ${
                     entry.success
-                      ? 'border-border/80 bg-card hover:border-emerald-500/40'
+                      ? 'border-border/80 bg-card hover:border-success/40'
                       : entry.aborted
-                      ? 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50'
-                      : 'border-rose-500/30 bg-rose-500/5 hover:border-rose-500/50'
+                      ? 'border-warning/30 bg-warning/5 hover:border-warning/50'
+                      : 'border-danger/30 bg-danger/5 hover:border-danger/50'
                   }`}
                 >
                   <div
@@ -140,15 +140,15 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className="shrink-0">
                         {entry.success ? (
-                          <div className="w-7 h-7 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-full bg-success/15 text-success flex items-center justify-center">
                             <CheckCircle2 className="w-4 h-4" />
                           </div>
                         ) : entry.aborted ? (
-                          <div className="w-7 h-7 rounded-full bg-amber-500/15 text-amber-500 flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-full bg-warning/15 text-warning flex items-center justify-center">
                             <AlertTriangle className="w-4 h-4" />
                           </div>
                         ) : (
-                          <div className="w-7 h-7 rounded-full bg-rose-500/15 text-rose-500 flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-full bg-danger/15 text-danger flex items-center justify-center">
                             <XCircle className="w-4 h-4" />
                           </div>
                         )}
@@ -160,10 +160,10 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                           <span
                             className={`text-2xs px-1.5 py-0.2 rounded-full font-mono font-bold uppercase tracking-wider ${
                               entry.success
-                                ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
+                                ? 'bg-success/15 text-success border border-success/30'
                                 : entry.aborted
-                                ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
-                                : 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
+                                ? 'bg-warning/15 text-warning border border-warning/30'
+                                : 'bg-danger/15 text-danger border border-danger/30'
                             }`}
                           >
                             {entry.success ? 'Sucesso' : entry.aborted ? 'Cancelado' : 'Falhou'}
@@ -193,7 +193,7 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                   {isExpanded && (
                     <div className="px-4 pb-3 pt-1 border-t border-border/50 bg-muted/10 space-y-2 text-xs">
                       {entry.error && (
-                        <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-2 text-rose-600 dark:text-rose-300 text-[11px] font-mono break-all">
+                        <div className="bg-danger/10 border border-danger/30 rounded-lg p-2 text-danger text-[11px] font-mono break-all">
                           {entry.error}
                         </div>
                       )}
@@ -209,16 +209,16 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                           >
                             <div className="flex items-center gap-2 truncate">
                               {step.success ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
                               ) : step.ignoredError ? (
-                                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
                               ) : (
-                                <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                <XCircle className="w-3.5 h-3.5 text-danger shrink-0" />
                               )}
                               <span className="font-semibold text-foreground truncate">{step.stepName}</span>
                               <span className="text-2xs text-muted-foreground font-mono">({step.stepType})</span>
                               {step.ignoredError && (
-                                <span className="text-2xs bg-amber-500/15 text-amber-500 px-1 rounded font-mono">
+                                <span className="text-2xs bg-warning/15 text-warning px-1 rounded font-mono">
                                   tolerado
                                 </span>
                               )}

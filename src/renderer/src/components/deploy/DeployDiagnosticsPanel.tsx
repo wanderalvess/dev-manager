@@ -37,14 +37,14 @@ export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
     <div className="cockpit-panel rounded-xl p-3.5 space-y-3 border border-border/80 shadow-2xs">
       <div className="flex items-center justify-between">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-amber-500" /> Diagnósticos Rápidos OSGi (client.bat)
+          <Zap className="w-3.5 h-3.5 text-warning" /> Diagnósticos Rápidos OSGi (client.bat)
         </div>
       </div>
 
       {/* Abas de Escopo: Rápidos | Features | Bundles */}
       <div className="flex items-center gap-1 p-0.5 bg-muted/40 border border-border/70 rounded-lg text-xs">
         <button type="button" onClick={() => setDiagTab('quick')} className={tabClass(diagTab === 'quick')}>
-          <Zap className="w-3.5 h-3.5 text-amber-500" />
+          <Zap className="w-3.5 h-3.5 text-warning" />
           <span>Rápidos</span>
         </button>
         <button type="button" onClick={() => setDiagTab('feature')} className={tabClass(diagTab === 'feature')}>
