@@ -29,10 +29,10 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     chips: (debugPort) => [`:${debugPort} JDWP`, 'Portas'],
     linkLabel: 'Ir para Ambiente',
     cardClass: 'border-cyan-500/20 hover:border-cyan-500/60',
-    numberClass: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/25',
-    badgeClass: 'bg-cyan-500/10 text-cyan-400',
-    titleHoverClass: 'group-hover:text-cyan-400',
-    linkClass: 'text-cyan-400'
+    numberClass: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/25',
+    badgeClass: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400',
+    titleHoverClass: 'group-hover:text-cyan-700 dark:group-hover:text-cyan-400',
+    linkClass: 'text-cyan-700 dark:text-cyan-400'
   },
   {
     number: 2,
@@ -45,10 +45,10 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     chips: () => ['OSGi', 'Docker', 'Maven'],
     linkLabel: 'Ir para Deploy',
     cardClass: 'border-amber-500/20 hover:border-amber-500/60',
-    numberClass: 'bg-amber-500/10 text-amber-500 border border-amber-500/25',
-    badgeClass: 'bg-amber-500/10 text-amber-500',
-    titleHoverClass: 'group-hover:text-amber-500',
-    linkClass: 'text-amber-500'
+    numberClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25',
+    badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    titleHoverClass: 'group-hover:text-amber-700 dark:group-hover:text-amber-400',
+    linkClass: 'text-amber-700 dark:text-amber-400'
   },
   {
     number: 3,
@@ -60,10 +60,10 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     chips: () => ['Azure DevOps', 'Branches'],
     linkLabel: 'Ir para Git & Azure',
     cardClass: 'border-blue-500/20 hover:border-blue-500/60',
-    numberClass: 'bg-blue-500/10 text-blue-500 border border-blue-500/25',
-    badgeClass: 'bg-blue-500/10 text-blue-500',
-    titleHoverClass: 'group-hover:text-blue-500',
-    linkClass: 'text-blue-500'
+    numberClass: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/25',
+    badgeClass: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+    titleHoverClass: 'group-hover:text-blue-700 dark:group-hover:text-blue-400',
+    linkClass: 'text-blue-700 dark:text-blue-400'
   },
   {
     number: 4,
@@ -75,10 +75,10 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     chips: () => ['Delphi .exe', 'CCW Download', 'Backup .bak'],
     linkLabel: 'Ir para Rotinas',
     cardClass: 'border-indigo-500/20 hover:border-indigo-500/60',
-    numberClass: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/25',
-    badgeClass: 'bg-indigo-500/10 text-indigo-400',
-    titleHoverClass: 'group-hover:text-indigo-400',
-    linkClass: 'text-indigo-400'
+    numberClass: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25',
+    badgeClass: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400',
+    titleHoverClass: 'group-hover:text-indigo-700 dark:group-hover:text-indigo-400',
+    linkClass: 'text-indigo-700 dark:text-indigo-400'
   },
   {
     number: 5,
@@ -90,9 +90,9 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     chips: () => ['Oracle / PG', 'FastEmbed IA'],
     linkLabel: 'Ir para Banco',
     cardClass: 'border-violet-500/20 hover:border-violet-500/60',
-    numberClass: 'bg-violet-500/10 text-violet-400 border border-violet-500/25',
-    badgeClass: 'bg-violet-500/10 text-violet-400',
-    titleHoverClass: 'group-hover:text-violet-400',
-    linkClass: 'text-violet-400'
+    numberClass: 'bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/25',
+    badgeClass: 'bg-violet-500/10 text-violet-700 dark:text-violet-400',
+    titleHoverClass: 'group-hover:text-violet-700 dark:group-hover:text-violet-400',
+    linkClass: 'text-violet-700 dark:text-violet-400'
   }
 ];

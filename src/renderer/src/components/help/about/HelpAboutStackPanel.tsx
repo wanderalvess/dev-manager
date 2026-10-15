@@ -6,13 +6,13 @@ const BADGE_BASE = 'px-2.5 py-1 rounded-lg bg-card border border-border font-sem
 // Cada item mantém a cor original do chip; as strings são conteúdo do produto.
 const STACK_ITEMS: { label: string; colorClass: string }[] = [
   { label: 'Electron 29', colorClass: 'text-foreground' },
-  { label: 'React 18 + TypeScript 5', colorClass: 'text-cyan-400' },
-  { label: 'Tailwind CSS 3', colorClass: 'text-blue-400' },
-  { label: 'Vite 5', colorClass: 'text-amber-400' },
+  { label: 'React 18 + TypeScript 5', colorClass: 'text-cyan-700 dark:text-cyan-400' },
+  { label: 'Tailwind CSS 3', colorClass: 'text-blue-700 dark:text-blue-400' },
+  { label: 'Vite 5', colorClass: 'text-warning' },
   { label: 'Lucide Icons', colorClass: 'text-primary' },
-  { label: 'Apache Karaf OSGi', colorClass: 'text-purple-400' },
-  { label: 'Git & Azure DevOps REST', colorClass: 'text-emerald-400' },
-  { label: 'Model Context Protocol (MCP)', colorClass: 'text-violet-400' }
+  { label: 'Apache Karaf OSGi', colorClass: 'text-purple-700 dark:text-purple-400' },
+  { label: 'Git & Azure DevOps REST', colorClass: 'text-success' },
+  { label: 'Model Context Protocol (MCP)', colorClass: 'text-violet-700 dark:text-violet-400' }
 ];
 
 /** Tecnologias utilizadas */

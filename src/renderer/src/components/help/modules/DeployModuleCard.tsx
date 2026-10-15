@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const DeployModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Layers className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20"
+    iconBoxClass="p-2 rounded-xl bg-warning/10 text-warning border border-warning/20"
     title="4. Perfis de Deploy (Multi-Alvo)"
     subtitle="Karaf OSGi · Docker · Comandos Maven"
     shortcut="Alt+4"
@@ -13,14 +13,14 @@ export const DeployModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       <ModuleNavButton
         onNavigate={onNavigate}
         target="deploy"
-        colorClass="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30"
+        colorClass="bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30"
         label="Abrir Módulo de Deploy"
       />
     }
   >
     <ModuleBullets
       intro="Crie pipelines sequenciais de build e publicação com feedback visual instantâneo:"
-      checkClass="text-amber-400"
+      checkClass="text-warning"
     >
       <span><strong>Karaf OSGi:</strong> Comandos <code className="font-mono text-primary">feature:repo-add</code> e <code className="font-mono text-primary">feature:install</code> sugeridos pelo <code className="font-mono text-primary">pom.xml</code>.</span>
       <span><strong>Proteção Prévia OSGi:</strong> Validação automática do status do Karaf (porta SSH 8101) antes de compilar ou instalar, prevenindo falsos sucessos e esperas desnecessárias com container offline.</span>

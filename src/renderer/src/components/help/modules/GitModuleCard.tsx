@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const GitModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<GitPullRequest className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"
+    iconBoxClass="p-2 rounded-xl bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20"
     title="5. Git &amp; Azure DevOps Hub"
     subtitle="Gestão de Branches &amp; Pull Requests"
     shortcut="Alt+5"
@@ -13,14 +13,14 @@ export const GitModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       <ModuleNavButton
         onNavigate={onNavigate}
         target="git"
-        colorClass="bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/30"
+        colorClass="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30"
         label="Abrir Git &amp; Azure DevOps"
       />
     }
   >
     <ModuleBullets
       intro="Hub centralizado para gerenciar múltiplos repositórios do seu workspace local:"
-      checkClass="text-blue-400"
+      checkClass="text-blue-700 dark:text-blue-400"
     >
       <span><strong>Varredura Automática:</strong> Detecta branch atual, contagem de arquivos não commitados em cada projeto (incluindo worktrees e submódulos) e aviso de HEAD destacado.</span>
       <span><strong>Visualizador de Diff &amp; Alterações Pendentes:</strong> Painel dedicado de arquivos modificados com status visual (M, A, D, ?, R), modal de diff com syntax highlighting e atalho "Abrir na IDE" em 1 clique para navegar direto ao arquivo no IntelliJ IDEA ou VS Code.</span>

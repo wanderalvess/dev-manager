@@ -40,7 +40,7 @@ export const HelpAboutAppHeader: React.FC<HelpAboutAppHeaderProps> = ({
     >
       {copiedDiag ? (
         <>
-          <Check className="w-3.5 h-3.5 text-emerald-500" />
+          <Check className="w-3.5 h-3.5 text-success" />
           <span>Diagnóstico Copiado!</span>
         </>
       ) : (

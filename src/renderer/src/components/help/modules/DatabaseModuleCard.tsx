@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const DatabaseModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Database className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+    iconBoxClass="p-2 rounded-xl bg-success/10 text-success border border-success/20"
     title="2. Banco de Dados &amp; Backups"
     subtitle="Oracle · PostgreSQL · MySQL · CLI Custom"
     shortcut="Alt+2"
@@ -13,14 +13,14 @@ export const DatabaseModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) =>
       <ModuleNavButton
         onNavigate={onNavigate}
         target="database"
-        colorClass="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30"
+        colorClass="bg-success/10 hover:bg-success/20 text-success border border-success/30"
         label="Abrir Módulo de Banco de Dados"
       />
     }
   >
     <ModuleBullets
       intro="Gerenciador de bancos multi-vendor com suporte a rotinas de exportação e restauração seguras:"
-      checkClass="text-emerald-400"
+      checkClass="text-success"
     >
       <span><strong>Modo Personalizado Oracle:</strong> Alternância entre <em>expdp padrão</em>, <em>expdp com VERSION=11.2</em> e <em>exp clássico</em> (sem depender de pasta remota).</span>
       <span><strong>Tokens Dinâmicos:</strong> Marcadores automáticos como <code className="font-mono text-primary">{'{filePath}'}</code>, <code className="font-mono text-primary">{'{user}'}</code>, <code className="font-mono text-primary">{'{connectString}'}</code>.</span>

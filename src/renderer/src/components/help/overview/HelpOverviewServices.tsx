@@ -66,7 +66,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           className="p-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition cursor-pointer"
           title="Copiar URL"
         >
-          {copy.copiedItem === copy.copyKey ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+          {copy.copiedItem === copy.copyKey ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
       )}
     </div>
@@ -104,9 +104,9 @@ export const HelpOverviewServices: React.FC<HelpOverviewServicesProps> = ({
       <ServiceCard
         title="Console Felix / OSGi"
         badge="Bundles"
-        badgeClass="bg-amber-500/10 text-amber-500"
-        hoverBorderClass="hover:border-amber-500/50"
-        openClass="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500"
+        badgeClass="bg-warning/10 text-warning"
+        hoverBorderClass="hover:border-warning/50"
+        openClass="bg-warning/10 hover:bg-warning/20 text-warning"
         openLabel="Abrir"
         displayText={consoleUrl.replace('http://', '')}
         displayTitle={consoleUrl}
@@ -126,9 +126,9 @@ export const HelpOverviewServices: React.FC<HelpOverviewServicesProps> = ({
       <ServiceCard
         title="Azure DevOps"
         badge="PRs & Repos"
-        badgeClass="bg-indigo-500/10 text-indigo-400"
+        badgeClass="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400"
         hoverBorderClass="hover:border-indigo-500/50"
-        openClass="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400"
+        openClass="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400"
         openLabel="Abrir Portal"
         displayText="dev.azure.com"
         onOpen={() => handleOpenLink('https://dev.azure.com')}
