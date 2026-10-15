@@ -16,8 +16,8 @@ const SIZE_CLASS: Record<ModalSize, string> = {
 
 const TONE_BORDER: Record<ModalTone, string> = {
   default: 'border-border',
-  danger: 'border-rose-500/40',
-  warning: 'border-amber-500/40'
+  danger: 'border-danger/40',
+  warning: 'border-warning/40'
 };
 
 /** Pilha de modais abertos: o Esc fecha só o de cima (um modal pode abrir outro por cima). */

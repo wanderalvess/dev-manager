@@ -36,7 +36,7 @@ export const ThemeToggle: React.FC = () => {
       case 'midnight':
         return 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]';
       case 'cyberpunk':
-        return 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
+        return 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.8)]';
       case 'nebula':
         return 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]';
       case 'nordic':
@@ -76,8 +76,8 @@ export const ThemeToggle: React.FC = () => {
       label: 'Cyberpunk',
       description: mode === 'light' ? 'Verde Esmeralda & Mint Fresh' : 'Verde Neon & Cyber Void',
       icon: Cpu,
-      colorClass: mode === 'light' ? 'text-emerald-600' : 'text-emerald-400',
-      bgPreview: 'bg-emerald-500'
+      colorClass: mode === 'light' ? 'text-success' : 'text-success',
+      bgPreview: 'bg-success'
     },
     {
       id: 'nebula',
@@ -115,7 +115,7 @@ export const ThemeToggle: React.FC = () => {
           {mode === 'dark' ? (
             <Moon className="w-3.5 h-3.5 text-blue-400 transition-transform duration-300" />
           ) : (
-            <Sun className="w-3.5 h-3.5 text-amber-500 transition-transform duration-300" />
+            <Sun className="w-3.5 h-3.5 text-warning transition-transform duration-300" />
           )}
         </div>
 
@@ -158,11 +158,11 @@ export const ThemeToggle: React.FC = () => {
                 onClick={() => setMode('light')}
                 className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
                   mode === 'light'
-                    ? 'bg-card text-amber-600 shadow-xs border border-border/80 font-bold'
+                    ? 'bg-card text-warning shadow-xs border border-border/80 font-bold'
                     : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
                 }`}
               >
-                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <Sun className="w-3.5 h-3.5 text-warning" />
                 <span>Modo Claro</span>
               </button>
 

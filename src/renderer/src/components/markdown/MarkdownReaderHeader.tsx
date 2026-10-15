@@ -109,7 +109,7 @@ export const MarkdownReaderHeader: React.FC<MarkdownReaderHeaderProps> = ({
         className="px-3 py-1.5 bg-card hover:bg-muted border border-border rounded-xl text-xs font-bold text-foreground transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
         title="Copiar texto markdown completo"
       >
-        {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+        {copiedAll ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
         <span className="hidden sm:inline">{copiedAll ? 'Copiado!' : 'Copiar'}</span>
       </button>
 

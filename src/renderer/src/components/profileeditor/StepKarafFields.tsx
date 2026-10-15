@@ -63,7 +63,7 @@ export const StepKarafFields: React.FC<StepKarafFieldsProps> = ({
       <p>
         Dispara o script configurado (<code>winthor.bat</code> ou <code>karaf.bat</code>) com o argumento <code>debug</code> a partir da pasta <code>bin</code>.
       </p>
-      <p className="text-[11px] text-amber-600/90 dark:text-amber-400/90 bg-amber-500/10 border border-amber-500/20 p-2 rounded">
+      <p className="text-[11px] text-warning/90 bg-warning/10 border border-warning/20 p-2 rounded">
         ⚠️ <strong>Dica de conexão:</strong> Se o Windows exibir <em>"transport error 202: bind failed: Permission denied"</em> na porta 5005 (bloqueio do Hyper-V / WSL2), altere para <strong>5006</strong> ou <strong>5050</strong> neste campo e utilize a mesma porta no IntelliJ IDEA (Remote JVM Debug).
       </p>
     </div>

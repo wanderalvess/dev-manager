@@ -237,7 +237,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
   return (
     <div className="relative inline-flex shrink-0">
       {svgContent}
-      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full flex items-center justify-center">
+      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success border-2 border-card rounded-full flex items-center justify-center">
         <span className="w-1 h-1 bg-white rounded-full animate-ping" />
       </div>
     </div>

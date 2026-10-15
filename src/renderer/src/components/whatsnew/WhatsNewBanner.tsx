@@ -22,9 +22,9 @@ export const WhatsNewBanner: React.FC<WhatsNewBannerProps> = ({
 }) => {
   if (!isAllVersions && !isLatestVersion && currentVersionItem) {
     return (
-      <div className="px-5 py-2 flex items-center justify-between gap-3 text-xs bg-amber-500/10 border-b border-amber-500/30 text-amber-700 dark:text-amber-300">
+      <div className="px-5 py-2 flex items-center justify-between gap-3 text-xs bg-warning/10 border-b border-warning/30 text-warning">
         <div className="flex items-center gap-2 min-w-0">
-          <History className="w-4 h-4 shrink-0 text-amber-500" />
+          <History className="w-4 h-4 shrink-0 text-warning" />
           <span className="truncate">
             Você está visualizando as notas históricas da versão <strong>v{selectedVersion}</strong>
             {currentVersionItem.date ? ` (lançada em ${currentVersionItem.date})` : ''}.
@@ -34,7 +34,7 @@ export const WhatsNewBanner: React.FC<WhatsNewBannerProps> = ({
           <button
             type="button"
             onClick={() => onSelectVersion(latestVersion)}
-            className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-200 border border-amber-500/40 text-[11px] font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning border border-warning/40 text-[11px] font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Voltar para v{latestVersion} (Mais recente)</span>

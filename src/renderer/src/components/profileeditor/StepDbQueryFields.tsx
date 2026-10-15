@@ -30,7 +30,7 @@ export const StepDbQueryFields: React.FC<StepDbQueryFieldsProps> = ({
         ))}
       </select>
       {dbConnections.length === 0 && (
-        <p className="text-2xs text-amber-500 mt-1">
+        <p className="text-2xs text-warning mt-1">
           Nenhuma conexão salva. Cadastre uma na página "Banco de Dados" primeiro.
         </p>
       )}

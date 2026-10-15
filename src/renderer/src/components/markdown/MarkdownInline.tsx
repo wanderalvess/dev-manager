@@ -77,7 +77,7 @@ export const MarkdownInline: React.FC<MarkdownInlineProps> = ({ text, searchTerm
       <>
         {parts.map((part, i) =>
           regex.test(part) ? (
-            <mark key={i} className="bg-amber-300 text-slate-900 dark:bg-amber-400 dark:text-slate-950 px-1 py-0.5 rounded-sm font-semibold">
+            <mark key={i} className="bg-warning text-slate-900 dark:text-slate-950 px-1 py-0.5 rounded-sm font-semibold">
               {part}
             </mark>
           ) : (

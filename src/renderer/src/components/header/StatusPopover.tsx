@@ -35,9 +35,9 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
         }`}
         title="Clique para ver IPs da máquina (LAN/WSL) e uso de CPU/RAM"
       >
-        <Activity className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <Activity className="w-3.5 h-3.5 text-success shrink-0" />
         <span className="hidden xl:inline text-xs font-medium">Status</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+        <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
       </button>
 
       {isOpen && (
@@ -51,7 +51,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
               <Activity className="w-4 h-4 text-primary" />
               <span className="text-xs font-bold text-foreground">Diagnósticos & Rede</span>
             </div>
-            <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+            <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/30 font-bold">
               Online
             </span>
           </div>
@@ -77,7 +77,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
                       title="Copiar IP Local"
                     >
                       {copiedIp === 'lan' ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-3.5 h-3.5 text-success" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
@@ -98,7 +98,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
                         title="Copiar IP do WSL"
                       >
                         {copiedIp === 'wsl' ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <Check className="w-3.5 h-3.5 text-success" />
                         ) : (
                           <Copy className="w-3.5 h-3.5" />
                         )}
@@ -133,13 +133,13 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-muted-foreground">Processador (CPU)</span>
-                      <span className={`font-mono font-bold ${cpu > 80 ? 'text-rose-400' : 'text-foreground'}`}>
+                      <span className={`font-mono font-bold ${cpu > 80 ? 'text-danger' : 'text-foreground'}`}>
                         {cpu}%
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${cpu > 80 ? 'bg-rose-500' : 'bg-primary'}`}
+                        className={`h-full rounded-full transition-all ${cpu > 80 ? 'bg-danger' : 'bg-primary'}`}
                         style={{ width: `${Math.min(100, Math.max(0, cpu))}%` }}
                       />
                     </div>
@@ -149,13 +149,13 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-muted-foreground">Memória RAM</span>
-                      <span className={`font-mono font-bold ${memPercent > 85 ? 'text-amber-400' : 'text-foreground'}`}>
+                      <span className={`font-mono font-bold ${memPercent > 85 ? 'text-warning' : 'text-foreground'}`}>
                         {(usedMb / 1024).toFixed(1)} / {(totalMb / 1024).toFixed(1)} GB ({memPercent}%)
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${memPercent > 85 ? 'bg-amber-500' : 'bg-primary'}`}
+                        className={`h-full rounded-full transition-all ${memPercent > 85 ? 'bg-warning' : 'bg-primary'}`}
                         style={{ width: `${Math.min(100, Math.max(0, memPercent))}%` }}
                       />
                     </div>

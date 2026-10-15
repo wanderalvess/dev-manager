@@ -46,7 +46,7 @@ export const WhatsNewFooterButtons: React.FC<WhatsNewFooterButtonsProps> = ({
           className="px-3 py-1.5 bg-card hover:bg-muted border border-border/80 text-foreground rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 text-xs shadow-2xs"
           title="Retornar para a versão mais recente"
         >
-          <RotateCcw className="w-3.5 h-3.5 text-emerald-500" />
+          <RotateCcw className="w-3.5 h-3.5 text-success" />
           <span>Voltar para v{latestVersion}</span>
         </button>
 

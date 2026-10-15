@@ -19,7 +19,7 @@ export const QuickLauncherFooter: React.FC<{ resultCount: number }> = ({ resultC
       </span>
     </div>
     <div className="flex items-center space-x-1 font-mono text-2xs">
-      <Zap className="w-3 h-3 text-amber-500" />
+      <Zap className="w-3 h-3 text-warning" />
       <span>{resultCount} resultados</span>
     </div>
   </div>

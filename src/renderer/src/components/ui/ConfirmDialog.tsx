@@ -6,13 +6,13 @@ import type { ConfirmOptions, ConfirmTone } from './confirmService';
 const TONE_STYLE: Record<ConfirmTone, { modal: 'danger' | 'warning' | 'default'; iconBox: string; button: string }> = {
   danger: {
     modal: 'danger',
-    iconBox: 'bg-rose-500/10 border-rose-500/30 text-rose-500',
-    button: 'bg-rose-600 hover:bg-rose-500 text-white'
+    iconBox: 'bg-danger/10 border-danger/30 text-danger',
+    button: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
   },
   warning: {
     modal: 'warning',
-    iconBox: 'bg-amber-500/10 border-amber-500/30 text-amber-500',
-    button: 'bg-amber-600 hover:bg-amber-500 text-white'
+    iconBox: 'bg-warning/10 border-warning/30 text-warning',
+    button: 'bg-warning hover:bg-warning/90 text-background'
   },
   primary: {
     modal: 'default',
