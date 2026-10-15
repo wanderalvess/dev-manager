@@ -61,8 +61,8 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
 
         <div className="flex items-center gap-1.5 shrink-0">
           {isActive ? (
-            <span className="px-2 py-0.5 text-2xs font-mono font-bold rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="px-2 py-0.5 text-2xs font-mono font-bold rounded-lg bg-success/10 text-success border border-success/25 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-success" />
               ATIVO
             </span>
           ) : (
@@ -108,16 +108,16 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
       <div
         className={`p-2.5 rounded-xl text-xs border font-mono ${
           testResult.success
-            ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400'
-            : 'bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400'
+            ? 'bg-success/10 border-success/25 text-success'
+            : 'bg-danger/10 border-danger/25 text-danger'
         }`}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 font-semibold text-[11px] min-w-0">
             {testResult.success ? (
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-success" />
             ) : (
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-danger" />
             )}
             <span className="truncate">{testResult.message}</span>
           </div>
@@ -142,7 +142,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           {isTesting ? (
             <RotateCcw className="w-3 h-3 animate-spin text-primary" />
           ) : (
-            <Zap className="w-3 h-3 text-amber-500" />
+            <Zap className="w-3 h-3 text-warning" />
           )}
           <span>{isTesting ? 'Testando...' : 'Testar Conexão'}</span>
         </button>
@@ -168,7 +168,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
         <button
           type="button"
           onClick={() => onDelete(provider.id)}
-          className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+          className="p-1.5 rounded-xl text-danger hover:bg-danger/10 border border-transparent hover:border-danger/20 transition-all cursor-pointer"
           title="Remover este motor"
         >
           <Trash2 className="w-3.5 h-3.5" />

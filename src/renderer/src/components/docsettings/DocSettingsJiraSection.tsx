@@ -105,8 +105,8 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
               <div
                 className={`text-2xs px-2 py-1 rounded-md ${
                   testResults[source.id].success
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                    : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                    ? 'bg-success/10 text-success'
+                    : 'bg-danger/10 text-danger'
                 }`}
               >
                 {testResults[source.id].message}

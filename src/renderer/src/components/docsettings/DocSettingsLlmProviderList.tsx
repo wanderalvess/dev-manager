@@ -26,7 +26,7 @@ export const DocSettingsLlmProviderList: React.FC<DocSettingsLlmProviderListProp
     <div className="flex items-center justify-between gap-3">
       <div>
         <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-amber-500" />
+          <Sparkles className="w-4 h-4 text-warning" />
           <span>Provedores de IA / LLM (BYOK)</span>
         </h4>
         <p className="text-[11px] text-muted-foreground">
@@ -70,14 +70,14 @@ export const DocSettingsLlmProviderList: React.FC<DocSettingsLlmProviderListProp
                   onClick={() => onSetActive(p.id)}
                   className={`px-2.5 py-1 rounded-lg text-2xs font-mono font-bold border transition flex items-center gap-1 cursor-pointer ${
                     isActive
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-2xs'
+                      ? 'bg-success/10 text-success border-success/30 shadow-2xs'
                       : 'bg-muted text-muted-foreground border-border/60 hover:text-foreground hover:bg-muted/80'
                   }`}
                   title={isActive ? 'Provedor ativo para o RAG' : 'Clique para ativar este provedor'}
                 >
                   {isActive ? (
                     <>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                       <span>Ativo</span>
                     </>
                   ) : (

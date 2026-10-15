@@ -55,12 +55,12 @@ export const DocSettingsToggleCard: React.FC<DocSettingsToggleCardProps> = ({
           onClick={() => onToggle(!checked)}
           className={`text-2xs font-mono font-bold px-2.5 py-1 rounded-md border flex items-center gap-1.5 cursor-pointer transition-all hover:opacity-90 active:scale-95 ${
             checked
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-2xs'
+              ? 'bg-success/10 text-success border-success/30 shadow-2xs'
               : 'bg-muted/80 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground'
           }`}
           title={hint}
         >
-          <span className={`w-2 h-2 rounded-full ${checked ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'}`} />
+          <span className={`w-2 h-2 rounded-full ${checked ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'}`} />
           <span>{checked ? activeLabel : inactiveLabel}</span>
         </button>
       </div>

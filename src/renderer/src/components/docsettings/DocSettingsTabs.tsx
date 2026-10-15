@@ -30,14 +30,14 @@ export const DocSettingsTabs: React.FC<DocSettingsTabsProps> = ({
   activeProvider
 }) => (
   <div className="flex border-b border-border bg-muted/20 px-5 pt-2.5 gap-2 shrink-0 overflow-x-auto">
-    <button type="button" onClick={() => onChange('folders')} className={tabClass(activeTab === 'folders', 'border-amber-500')}>
-      <FolderOpen className={`w-3.5 h-3.5 ${activeTab === 'folders' ? 'text-amber-500' : 'text-muted-foreground'}`} />
+    <button type="button" onClick={() => onChange('folders')} className={tabClass(activeTab === 'folders', 'border-warning')}>
+      <FolderOpen className={`w-3.5 h-3.5 ${activeTab === 'folders' ? 'text-warning' : 'text-muted-foreground'}`} />
       <span>Pastas Locais & Git</span>
       <span className={COUNT_BADGE}>{foldersCount}</span>
     </button>
 
-    <button type="button" onClick={() => onChange('sources')} className={tabClass(activeTab === 'sources', 'border-sky-500')}>
-      <Globe className={`w-3.5 h-3.5 ${activeTab === 'sources' ? 'text-sky-500' : 'text-muted-foreground'}`} />
+    <button type="button" onClick={() => onChange('sources')} className={tabClass(activeTab === 'sources', 'border-info')}>
+      <Globe className={`w-3.5 h-3.5 ${activeTab === 'sources' ? 'text-info' : 'text-muted-foreground'}`} />
       <span>Confluence & Jira</span>
       <span className={COUNT_BADGE}>{sourcesCount}</span>
     </button>
@@ -46,8 +46,8 @@ export const DocSettingsTabs: React.FC<DocSettingsTabsProps> = ({
       <Sparkles className={`w-3.5 h-3.5 ${activeTab === 'llm' ? 'text-primary' : 'text-muted-foreground'}`} />
       <span>Assistente IA / LLM</span>
       {activeProvider && activeProvider.enabled && (
-        <span className="flex items-center gap-1 text-2xs font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/25">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="flex items-center gap-1 text-2xs font-mono px-1.5 py-0.2 rounded-full bg-success/10 text-success font-bold border border-success/25">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           <span>{activeProvider.model}</span>
         </span>
       )}

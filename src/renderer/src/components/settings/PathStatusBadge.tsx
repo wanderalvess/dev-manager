@@ -8,16 +8,16 @@ export const PathStatusBadge: React.FC<{ status: PathStatusInfo | undefined }> =
 
   if (status.exists) {
     return (
-      <div className="flex items-center space-x-1.5 text-[11px] text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg">
-        <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+      <div className="flex items-center space-x-1.5 text-[11px] text-success bg-success/10 border border-success/30 px-2.5 py-0.5 rounded-lg">
+        <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-success" />
         <span className="font-medium">{status.message || 'Caminho acessível'}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center space-x-1.5 text-[11px] text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2.5 py-0.5 rounded-lg">
-      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+    <div className="flex items-center space-x-1.5 text-[11px] text-danger bg-danger/10 border border-danger/30 px-2.5 py-0.5 rounded-lg">
+      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-danger" />
       <span className="font-medium">{status.message || 'Caminho não localizado no disco'}</span>
     </div>
   );

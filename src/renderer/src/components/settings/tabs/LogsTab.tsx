@@ -34,7 +34,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
           <div>
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-              <ScrollText className="w-4 h-4 text-emerald-500" /> Fontes de Logs em Tempo Real (Tail -f)
+              <ScrollText className="w-4 h-4 text-success" /> Fontes de Logs em Tempo Real (Tail -f)
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Arquivos de saída de serviços e rotinas monitorados continuamente pela aba &quot;Logs em Tempo Real&quot;.
@@ -45,7 +45,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
             <button
               type="button"
               onClick={handleResetLogSources}
-              className="px-3 py-1.5 bg-muted hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/40 hover:border-rose-500/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+              className="px-3 py-1.5 bg-muted hover:bg-danger/10 text-danger border border-danger/40 hover:border-danger/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
               title="Remove todas as fontes de log configuradas"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -122,7 +122,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveLogSource(idx)}
-                  className="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center space-x-1 p-1 hover:bg-rose-500/10 rounded-lg transition-colors"
+                  className="text-xs text-danger hover:text-danger font-semibold flex items-center space-x-1 p-1 hover:bg-danger/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Remover</span>

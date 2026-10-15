@@ -98,10 +98,10 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
       <div className="relative flex items-center">
         {hasUnsavedChanges && !isSaving && (
           <span
-            className="mr-2 flex items-center gap-1 text-2xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md"
+            className="mr-2 flex items-center gap-1 text-2xs font-semibold text-warning bg-warning/10 border border-warning/30 px-2 py-1 rounded-md"
             title="Existem alterações que ainda não foram salvas"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-warning" />
             Não salvo
           </span>
         )}

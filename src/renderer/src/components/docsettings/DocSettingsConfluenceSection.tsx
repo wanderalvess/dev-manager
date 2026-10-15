@@ -32,7 +32,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
     <div className="flex items-center justify-between gap-3">
       <div>
         <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-          <Globe className="w-3.5 h-3.5 text-sky-500" />
+          <Globe className="w-3.5 h-3.5 text-info" />
           <span>Espaços Confluence</span>
         </h4>
         <p className="text-[11px] text-muted-foreground">
@@ -51,7 +51,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
 
     {sources.length === 0 && !editing ? (
       <div className="text-center py-5 border border-dashed border-border rounded-xl bg-muted/20">
-        <Globe className="w-6 h-6 mx-auto text-sky-500/50 mb-1" />
+        <Globe className="w-6 h-6 mx-auto text-info/50 mb-1" />
         <p className="text-xs font-semibold text-foreground">Nenhum espaço Confluence configurado</p>
         <p className="text-[11px] text-muted-foreground mt-0.5">
           Conecte sua wiki técnica da Atlassian para indexar páginas e especificações.
@@ -69,7 +69,7 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
                   onChange={(e) => onToggleEnabled(source, e.target.checked)}
                   className="text-primary focus:ring-0 shrink-0 accent-primary cursor-pointer"
                 />
-                <Globe className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                <Globe className="w-3.5 h-3.5 text-info shrink-0" />
                 <span className="font-semibold text-foreground truncate">{source.name}</span>
                 <span className="font-mono text-2xs text-muted-foreground truncate">{source.baseUrl}</span>
                 {source.spaceKey && (
@@ -107,8 +107,8 @@ export const DocSettingsConfluenceSection: React.FC<DocSettingsConfluenceSection
               <div
                 className={`text-2xs px-2 py-1 rounded-md ${
                   testResults[source.id].success
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                    : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                    ? 'bg-success/10 text-success'
+                    : 'bg-danger/10 text-danger'
                 }`}
               >
                 {testResults[source.id].message}

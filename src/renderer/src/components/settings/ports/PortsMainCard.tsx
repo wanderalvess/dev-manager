@@ -59,17 +59,17 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
       </div>
 
       {/* Porta SSH do Apache Karaf */}
-      <div className="bg-card border border-border hover:border-amber-500/40 rounded-xl p-3.5 space-y-2 transition-all">
+      <div className="bg-card border border-border hover:border-warning/40 rounded-xl p-3.5 space-y-2 transition-all">
         <div className="flex items-center justify-between">
           <label htmlFor="ports-main-card-2" className="font-bold text-foreground flex items-center gap-1.5">
-            <Terminal className="w-3.5 h-3.5 text-amber-500" /> Porta SSH Karaf (client.bat):
+            <Terminal className="w-3.5 h-3.5 text-warning" /> Porta SSH Karaf (client.bat):
           </label>
-          <span className="text-2xs bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded font-mono font-bold">
+          <span className="text-2xs bg-warning/10 text-warning px-2 py-0.5 rounded font-mono font-bold">
             SSH
           </span>
         </div>
         <div className="flex items-center bg-muted/30 border border-border rounded-lg px-2.5 py-1.5 shadow-inner">
-          <span className="text-amber-500 font-mono text-xs select-none mr-1 font-bold">:</span>
+          <span className="text-warning font-mono text-xs select-none mr-1 font-bold">:</span>
           <input id="ports-main-card-2"
             type="number"
             value={settings.karafSshPort ?? 8101}
@@ -84,17 +84,17 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
       </div>
 
       {/* Porta Remote Debug Java */}
-      <div className="bg-card border border-border hover:border-emerald-500/40 rounded-xl p-3.5 space-y-2 transition-all">
+      <div className="bg-card border border-border hover:border-success/40 rounded-xl p-3.5 space-y-2 transition-all">
         <div className="flex items-center justify-between">
           <label htmlFor="ports-main-card-3" className="font-bold text-foreground flex items-center gap-1.5">
-            <Code2 className="w-3.5 h-3.5 text-emerald-500" /> Porta Debug JVM (Java):
+            <Code2 className="w-3.5 h-3.5 text-success" /> Porta Debug JVM (Java):
           </label>
-          <span className="text-2xs bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded font-mono font-bold">
+          <span className="text-2xs bg-success/10 text-success px-2 py-0.5 rounded font-mono font-bold">
             JDWP
           </span>
         </div>
         <div className="flex items-center bg-muted/30 border border-border rounded-lg px-2.5 py-1.5 shadow-inner">
-          <span className="text-emerald-500 font-mono text-xs select-none mr-1 font-bold">:</span>
+          <span className="text-success font-mono text-xs select-none mr-1 font-bold">:</span>
           <input id="ports-main-card-3"
             type="number"
             value={settings.karafDebugPort ?? 5005}

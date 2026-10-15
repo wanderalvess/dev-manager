@@ -16,7 +16,7 @@ export const DocSettingsFooter: React.FC<DocSettingsFooterProps> = ({
 }) => (
   <div className="p-3.5 px-5 border-t border-border bg-muted/25 flex items-center justify-between shrink-0">
     <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-mono">
-      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+      <span className="w-2 h-2 rounded-full bg-success" />
       <span className="hidden sm:inline">
         {foldersCount} {foldersCount === 1 ? 'pasta local' : 'pastas locais'} · {sourcesCount} integrações Atlassian
         {activeProvider && activeProvider.enabled && ` · IA: ${activeProvider.name}`}

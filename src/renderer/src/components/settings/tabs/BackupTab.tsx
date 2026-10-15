@@ -25,7 +25,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
         <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-              <HardDriveDownload className="w-4 h-4 text-sky-500" /> Executáveis de Backup
+              <HardDriveDownload className="w-4 h-4 text-info" /> Executáveis de Backup
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
           </div>
@@ -38,7 +38,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             {/* pg_dump */}
             <div className="space-y-1.5">
               <label htmlFor="backup-tab-1" className="font-bold text-foreground flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-sky-500" /> pg_dump (Postgres)
+                <Database className="w-3.5 h-3.5 text-info" /> pg_dump (Postgres)
               </label>
               <div className="flex items-center space-x-2">
                 <input id="backup-tab-1"
@@ -54,7 +54,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
-                  <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
+                  <FolderOpen className="w-3.5 h-3.5 text-info" />
                 </button>
               </div>
             </div>
@@ -62,7 +62,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             {/* expdp */}
             <div className="space-y-1.5">
               <label htmlFor="backup-tab-2" className="font-bold text-foreground flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-rose-500" /> expdp (Oracle)
+                <Database className="w-3.5 h-3.5 text-danger" /> expdp (Oracle)
               </label>
               <div className="flex items-center space-x-2">
                 <input id="backup-tab-2"
@@ -78,7 +78,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
-                  <FolderOpen className="w-3.5 h-3.5 text-rose-500" />
+                  <FolderOpen className="w-3.5 h-3.5 text-danger" />
                 </button>
               </div>
             </div>
@@ -86,7 +86,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             {/* mysqldump */}
             <div className="space-y-1.5">
               <label htmlFor="backup-tab-3" className="font-bold text-foreground flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-amber-500" /> mysqldump (MySQL)
+                <Database className="w-3.5 h-3.5 text-warning" /> mysqldump (MySQL)
               </label>
               <div className="flex items-center space-x-2">
                 <input id="backup-tab-3"
@@ -102,7 +102,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
-                  <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+                  <FolderOpen className="w-3.5 h-3.5 text-warning" />
                 </button>
               </div>
             </div>
@@ -112,7 +112,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
         <div className="cockpit-panel rounded-2xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-              <RotateCcw className="w-4 h-4 text-emerald-500" /> Executáveis de Restauração
+              <RotateCcw className="w-4 h-4 text-success" /> Executáveis de Restauração
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
           </div>
@@ -121,7 +121,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             {/* psql */}
             <div className="space-y-1.5">
               <label htmlFor="backup-tab-4" className="font-bold text-foreground flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-sky-500" /> psql (Postgres)
+                <Database className="w-3.5 h-3.5 text-info" /> psql (Postgres)
               </label>
               <div className="flex items-center space-x-2">
                 <input id="backup-tab-4"
@@ -137,7 +137,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
-                  <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
+                  <FolderOpen className="w-3.5 h-3.5 text-info" />
                 </button>
               </div>
             </div>
@@ -145,7 +145,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             {/* impdp */}
             <div className="space-y-1.5">
               <label htmlFor="backup-tab-5" className="font-bold text-foreground flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-rose-500" /> impdp (Oracle)
+                <Database className="w-3.5 h-3.5 text-danger" /> impdp (Oracle)
               </label>
               <div className="flex items-center space-x-2">
                 <input id="backup-tab-5"
@@ -161,7 +161,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
-                  <FolderOpen className="w-3.5 h-3.5 text-rose-500" />
+                  <FolderOpen className="w-3.5 h-3.5 text-danger" />
                 </button>
               </div>
             </div>
@@ -169,7 +169,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
             {/* mysql */}
             <div className="space-y-1.5">
               <label htmlFor="backup-tab-6" className="font-bold text-foreground flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-amber-500" /> mysql (Cliente MySQL)
+                <Database className="w-3.5 h-3.5 text-warning" /> mysql (Cliente MySQL)
               </label>
               <div className="flex items-center space-x-2">
                 <input id="backup-tab-6"
@@ -185,7 +185,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs"
                   title="Selecionar executável"
                 >
-                  <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+                  <FolderOpen className="w-3.5 h-3.5 text-warning" />
                 </button>
               </div>
             </div>

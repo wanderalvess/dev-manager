@@ -17,12 +17,12 @@ export const QualityTabHeader: React.FC<QualityTabHeaderProps> = ({ activeSource
           Fontes de Informação de Qualidade &amp; Testes (QA / PO)
         </h3>
         {activeSource ? (
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 font-mono text-2xs font-bold flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="px-2.5 py-0.5 rounded-full bg-success/10 border border-success/25 text-success font-mono text-2xs font-bold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             SELECIONADA · {activeSource.name} ({getQualityProviderBadge(activeSource.type).label})
           </span>
         ) : (
-          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-500 font-mono text-2xs font-bold flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-warning/10 border border-warning/25 text-warning font-mono text-2xs font-bold flex items-center gap-1.5">
             <AlertTriangle className="w-3 h-3" />
             NENHUMA FONTE ATIVA
           </span>
@@ -30,7 +30,7 @@ export const QualityTabHeader: React.FC<QualityTabHeaderProps> = ({ activeSource
       </div>
       <p className="text-xs text-muted-foreground">
         Cadastre as fontes de gestão de testes (Zephyr Scale, Zephyr Squad, Jira e Azure DevOps).{' '}
-        <strong className="text-amber-500">Em breve:</strong> a sincronização de cenários e casos de teste ainda não está implementada, então
+        <strong className="text-warning">Em breve:</strong> a sincronização de cenários e casos de teste ainda não está implementada, então
         as fontes ficam apenas registradas e o teste de conexão valida só os campos preenchidos.
       </p>
     </div>

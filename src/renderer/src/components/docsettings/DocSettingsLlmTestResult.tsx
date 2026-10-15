@@ -6,12 +6,12 @@ export const DocSettingsLlmTestResult: React.FC<{ result: LlmTestResult }> = ({ 
   <div
     className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
       result.success
-        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+        ? 'bg-success/10 border-success/30 text-success'
         : 'bg-destructive/10 border-destructive/30 text-destructive'
     }`}
   >
     {result.success ? (
-      <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
+      <Check className="w-4 h-4 shrink-0 mt-0.5 text-success" />
     ) : (
       <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
     )}
