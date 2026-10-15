@@ -1,5 +1,4 @@
-import React, { useRef } from 'react';
-import { FilterX } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
 import { QueryResult, TableColumnInfo } from '../../../../shared/types';
 import { useVirtualScroll } from '../../hooks/useVirtualScroll';
 import { useResultsGridEditing } from '../../hooks/database/useResultsGridEditing';
@@ -10,6 +9,7 @@ import { ResultsGridHeader } from './grid/ResultsGridHeader';
 import { ResultsGridNewRow } from './grid/ResultsGridNewRow';
 import { ResultsGridRow } from './grid/ResultsGridRow';
 import { ResultsGridContextMenu } from './grid/ResultsGridContextMenu';
+import { ResultsGridEmptyState } from './grid/ResultsGridEmptyState';
 import { X } from 'lucide-react';
 import { EMPTY_PENDING, isRowDeleted, pendingCount as countPending, pendingValuesOf, type PendingChanges } from '../../utils/gridPendingChanges';
 
@@ -106,7 +106,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
   });
 
   // Hook de Virtualização de Alta Performance (Windowing a 60 FPS)
-  const { virtualItems, totalHeight, offsetY, isVirtual } = useVirtualScroll(
+  const { virtualItems, totalHeight, offsetY, isVirtual, onScroll, setContainerRef, scrollToTop } = useVirtualScroll(
     tableContainerRef,
     {
       itemCount: processedRows.length,
@@ -114,6 +114,11 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
       overscan: 10
     }
   );
+
+  // Reseta a rolagem para o topo quando uma nova consulta for carregada
+  useEffect(() => {
+    scrollToTop();
+  }, [queryResult, scrollToTop]);
 
   const stateView = ResultsGridStates({ queryResult, isExecuting });
   if (stateView || !queryResult) return stateView;
@@ -146,7 +151,11 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
       />
 
       {/* Tabela de Resultados Virtualizada */}
-      <div ref={tableContainerRef} className="flex-1 overflow-auto min-w-full relative">
+      <div
+        ref={setContainerRef}
+        onScroll={onScroll}
+        className="flex-1 overflow-auto min-w-full relative"
+      >
         <table className="min-w-full divide-y divide-border/60 text-xs font-mono border-separate border-spacing-0">
           <ResultsGridHeader
             columns={queryResult.columns}
@@ -191,40 +200,19 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
               </tr>
             ))}
             {processedRows.length === 0 ? (
-              <tr className="bg-background">
-                <td colSpan={columnCount} className="py-12 text-center text-muted-foreground text-xs font-sans">
-                  {queryResult.rows.length === 0 ? (
-                    // A consulta rodou, mas o banco não devolveu linhas (tabela vazia, WHERE sem correspondência ou sem permissão de leitura)
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <FilterX className="w-8 h-8 opacity-30 text-info" />
-                      <p className="font-semibold text-foreground">A consulta foi executada, mas não retornou nenhuma linha.</p>
-                      <span className="text-2xs opacity-70 max-w-md">
-                        A tabela pode estar vazia, o WHERE pode não ter correspondência, ou o usuário da conexão pode não ter
-                        permissão de leitura nas linhas (por exemplo, políticas de segurança por linha).
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <FilterX className="w-8 h-8 opacity-30 text-warning" />
-                      <p className="font-semibold text-foreground">Nenhum resultado corresponde aos filtros aplicados.</p>
-                      <span className="text-2xs opacity-70">Tente ajustar o termo de busca ou filtros de coluna.</span>
-                      <button
-                        type="button"
-                        onClick={onClearAllFilters}
-                        className="mt-2 px-3 py-1 bg-primary/15 text-primary hover:bg-primary/25 rounded text-xs font-semibold transition cursor-pointer"
-                      >
-                        Remover todos os filtros
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
+              <ResultsGridEmptyState
+                columnCount={columnCount}
+                totalRows={queryResult.rows.length}
+                onClearAllFilters={onClearAllFilters}
+              />
             ) : (
               <>
                 {/* Spacer Top para Virtualização */}
                 {isVirtual && offsetY > 0 && (
-                  <tr>
-                    <td colSpan={columnCount} style={{ height: `${offsetY}px`, padding: 0, border: 'none' }} />
+                  <tr style={{ height: `${offsetY}px` }}>
+                    <td colSpan={columnCount} style={{ padding: 0, border: 'none' }}>
+                      <div style={{ height: `${offsetY}px` }} />
+                    </td>
                   </tr>
                 )}
 
@@ -252,8 +240,10 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
 
                 {/* Spacer Bottom para Virtualização */}
                 {isVirtual && bottomSpacerHeight > 0 && (
-                  <tr>
-                    <td colSpan={columnCount} style={{ height: `${bottomSpacerHeight}px`, padding: 0, border: 'none' }} />
+                  <tr style={{ height: `${bottomSpacerHeight}px` }}>
+                    <td colSpan={columnCount} style={{ padding: 0, border: 'none' }}>
+                      <div style={{ height: `${bottomSpacerHeight}px` }} />
+                    </td>
                   </tr>
                 )}
               </>

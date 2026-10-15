@@ -4,13 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.35.1] - 2026-10-15
+### Adicionado
+- **DB Studio — seletor de pasta para Oracle Instant Client**: adicionado botão com diálogo nativo de busca no Explorer diretamente ao lado do campo de diretório do Instant Client no modal de conexão.
+
 ### Alterado
+- **DB Studio — largura do modal de conexão**: ampliado de `max-w-md` (448px) para `max-w-2xl` (672px), distribuindo com conforto todas as configurações (Host, Porta, Service Name/SID, Thick Mode, credenciais e ambiente de produção) e evitando corte/truncamento na mensagem de versão do banco.
 - **Auditoria de UI/UX**: foco de teclado visível em todo o app (`:focus-visible` global) e `prefers-reduced-motion` respeitado; ~270 botões só de ícone ganharam `aria-label` e o componente `IconButton` (rótulo obrigatório) substitui os do cabeçalho. A rampa `amber` passou para amarelo, separando "aviso" do laranja do tema, e há tokens `success`/`warning`/`danger`/`info`. Cinzas crus (`slate`/`zinc`/`neutral`) saíram do cromo de UI e ficam só em console/terminal; `text-[11px]` virou `text-2xs`; raios `2xl` viraram `xl`. Cada página tem um único `<h1>` e os modais usam `<h2>`.
 - **Diálogos**: 3 `confirm()` nativos (excluir perfil de deploy/ambiente e remover fontes de log) agora usam o diálogo do app; nove overlays (QuickLauncher, leitor de Markdown, drawer de análise de exceção, modais de binds/snippet/especificação/item de qualidade, onboarding) passaram a usar o `ui/Modal` (foco preso, Esc e ARIA padronizados), e os menus de clique-fora fecham com Esc.
 - **Lint**: `confirm`/`alert` viram erro; `text-[11px]`, cinzas crus e `fixed inset-0` fora de `ui/Modal` geram aviso (com exceções para consoles e menus).
 
 ### Corrigido
+- **DB Studio — virtualização do grid de resultados SQL**: corrigido problema no hook `useVirtualScroll` onde consultas com mais de 39 linhas travavam a rolagem na linha 39 porque a referência do container e os ouvintes de evento não eram reinicializados após o término da execução da consulta (`isExecuting`). Adicionado suporte a callback ref, handler `onScroll` reativo e espaçadores virtuais com elementos de bloco para garantir que o scrollbar represente com precisão todas as linhas retornadas (ex: 127 linhas ou milhares).
 - **DB Studio — edição do grid em tabela sem chave primária**: em Oracle e PostgreSQL a consulta `SELECT * FROM <tabela>` é refeita trazendo `ROWID`/`ctid` (oculto no grid, na busca e na exportação) e UPDATE/DELETE passam a usar `WHERE ROWID = :p`/`ctid = :p`. Linhas duplicadas, BLOB, datas e números grandes deixam de impedir a alteração. No PostgreSQL só para tabelas comuns (views e partições seguem pelo fallback). MySQL sem PK continua localizando por todas as colunas, agora com aviso.
 
 ## [1.35.0] - 2026-10-06

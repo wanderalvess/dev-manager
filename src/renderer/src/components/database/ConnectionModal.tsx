@@ -1,15 +1,11 @@
 import React from 'react';
-import {
-  Database,
-  CheckCircle2,
-  AlertCircle,
-  RotateCw,
-  ShieldCheck
-} from 'lucide-react';
+import { Database, X } from 'lucide-react';
 import { DatabaseConnectionConfig, DatabaseType, OracleTnsEntry } from '../../../../shared/types';
 import { OracleTnsSelector } from './OracleTnsSelector';
 import { OracleThickClientSection } from './OracleThickClientSection';
 import { ConnectionCredentialsSection } from './ConnectionCredentialsSection';
+import { ConnectionTestFeedback } from './ConnectionTestFeedback';
+import { ConnectionModalFooter } from './ConnectionModalFooter';
 import { Modal } from '../ui/Modal';
 
 export interface ConnectionModalProps {
@@ -55,7 +51,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in flex flex-col max-h-[90vh]"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -69,13 +65,15 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground text-sm font-bold p-1 cursor-pointer"
+            className="text-muted-foreground hover:text-foreground text-sm font-bold p-1 rounded-md hover:bg-muted/60 transition-colors cursor-pointer"
+            aria-label="Fechar"
+            title="Fechar"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={onSaveConnection} className="p-4 space-y-3 text-xs overflow-y-auto flex-1">
+        <form onSubmit={onSaveConnection} className="p-5 space-y-3.5 text-xs overflow-y-auto flex-1">
           {/* Tipo de Banco */}
           <div>
             <label className="block font-bold text-foreground mb-1">Tipo de Banco</label>
@@ -234,62 +232,14 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
           </div>
 
           {/* Feedback de Teste de Conexão */}
-          {testResult && (
-            <div
-              className={`p-3 rounded-xl text-2xs border ${
-                testResult.success
-                  ? 'bg-success/10 border-success/30 text-success'
-                  : 'bg-danger/10 border-danger/30 text-danger'
-              }`}
-            >
-              <div className="flex items-center space-x-2 font-bold">
-                {testResult.success ? (
-                  <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 text-danger shrink-0" />
-                )}
-                <span>{testResult.message}</span>
-              </div>
-              {testResult.version && (
-                <p className="text-2xs font-mono opacity-80 mt-1 truncate">
-                  {testResult.version}
-                </p>
-              )}
-            </div>
-          )}
+          <ConnectionTestFeedback testResult={testResult} />
 
           {/* Botões de Ação */}
-          <div className="pt-2 flex items-center justify-between border-t border-border/60">
-            <button
-              type="button"
-              onClick={onTestConnection}
-              disabled={isTesting}
-              className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg font-semibold transition disabled:opacity-50 flex items-center space-x-1 cursor-pointer"
-            >
-              {isTesting ? (
-                <RotateCw className="w-3.5 h-3.5 animate-spin text-primary" />
-              ) : (
-                <ShieldCheck className="w-3.5 h-3.5 text-success" />
-              )}
-              <span>Testar Conexão</span>
-            </button>
-
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-3 py-1.5 text-muted-foreground hover:text-foreground font-semibold cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg font-bold hover:bg-primary/90 transition shadow-xs cursor-pointer"
-              >
-                Salvar
-              </button>
-            </div>
-          </div>
+          <ConnectionModalFooter
+            isTesting={isTesting}
+            onTestConnection={onTestConnection}
+            onClose={onClose}
+          />
         </form>
     </Modal>
   );
