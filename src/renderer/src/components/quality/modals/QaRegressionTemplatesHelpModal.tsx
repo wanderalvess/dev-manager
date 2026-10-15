@@ -69,7 +69,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
             <div>
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <span>Guia Prático: Como Usar Templates de Regressivo</span>
-                <span className="px-1.5 py-0.2 rounded text-2xs font-mono bg-emerald-500/20 text-emerald-400 font-semibold">
+                <span className="px-1.5 py-0.2 rounded text-2xs font-mono bg-success/20 text-success font-semibold">
                   Oracle QA
                 </span>
               </h2>
@@ -185,7 +185,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-foreground flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                         {a.label}
                       </span>
                       <code className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-primary border border-border">
@@ -212,7 +212,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
             <div className="space-y-3">
               <div className="p-3.5 rounded-lg border border-border bg-card space-y-3">
                 <div className="flex items-start gap-2.5">
-                  <div className="p-1.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded bg-success/10 text-success border border-success/20 shrink-0 mt-0.5">
                     <Download className="w-4 h-4" />
                   </div>
                   <div>
@@ -236,7 +236,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                 </div>
 
                 <div className="flex items-start gap-2.5 pt-2 border-t border-border">
-                  <div className="p-1.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded bg-warning/10 text-warning border border-warning/20 shrink-0 mt-0.5">
                     <Upload className="w-4 h-4" />
                   </div>
                   <div>
@@ -263,7 +263,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                   className="px-2.5 py-1 rounded bg-background hover:bg-muted text-foreground border border-border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
                   {copiedKey === 'sample-json' ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-success" />
                   ) : (
                     <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                   )}

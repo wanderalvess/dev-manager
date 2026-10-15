@@ -49,7 +49,7 @@ export const QaRunnerJsonTab: React.FC<QaRunnerJsonTabProps> = ({
             className="text-[11px] text-foreground font-semibold hover:text-primary flex items-center gap-1 cursor-pointer transition-colors"
             title="Extrai parâmetros como codFilial e numCupom automaticamente do JSON"
           >
-            <Cpu className="w-3 h-3 text-emerald-500" />
+            <Cpu className="w-3 h-3 text-success" />
             <span>Mapear Binds</span>
           </button>
         </div>

@@ -31,7 +31,7 @@ export const QualityRoadmapPanel: React.FC = () => (
               <span
                 className={`text-2xs font-mono font-semibold px-2 py-0.5 rounded ${
                   item.status === 'ready'
-                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                    ? 'bg-success/10 text-success border border-success/20'
                     : item.status === 'in_progress'
                       ? 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20'
                       : 'bg-muted text-muted-foreground'

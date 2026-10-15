@@ -26,8 +26,8 @@ export const QaRunnerResultHeader: React.FC<QaRunnerResultHeaderProps> = ({
         <span
           className={`px-2 py-0.5 rounded text-xs font-mono font-bold uppercase inline-flex items-center gap-1.5 border ${
             result.success
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+              ? 'bg-success/10 text-success border-success/30'
+              : 'bg-danger/10 text-danger border-danger/30'
           }`}
         >
           {result.success ? (
@@ -49,17 +49,17 @@ export const QaRunnerResultHeader: React.FC<QaRunnerResultHeaderProps> = ({
             Total: <b className="text-foreground tabular-nums">{result.totalAssertions}</b>
           </span>
           <span className="text-border">|</span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+          <span className="text-success font-semibold">
             Pass: <span className="tabular-nums">{result.passedAssertions}</span>
           </span>
           <span className="text-border">|</span>
-          <span className="text-rose-600 dark:text-rose-400 font-semibold">
+          <span className="text-danger font-semibold">
             Fail: <span className="tabular-nums">{result.failedAssertions}</span>
           </span>
           {result.warningAssertions > 0 && (
             <>
               <span className="text-border">|</span>
-              <span className="text-amber-500 font-semibold">
+              <span className="text-warning font-semibold">
                 Warn: <span className="tabular-nums">{result.warningAssertions}</span>
               </span>
             </>
@@ -90,7 +90,7 @@ export const QaRunnerResultHeader: React.FC<QaRunnerResultHeaderProps> = ({
           title="Copiar relatório completo com queries e tabelas em Markdown"
         >
           {copiedKey === 'markdown-report' ? (
-            <Check className="w-3.5 h-3.5 text-emerald-500" />
+            <Check className="w-3.5 h-3.5 text-success" />
           ) : (
             <Copy className="w-3.5 h-3.5 text-muted-foreground" />
           )}
@@ -104,7 +104,7 @@ export const QaRunnerResultHeader: React.FC<QaRunnerResultHeaderProps> = ({
           title="Copiar tabela formatada em markup clássico do Jira"
         >
           {copiedKey === 'jira-markup' ? (
-            <Check className="w-3.5 h-3.5 text-emerald-500" />
+            <Check className="w-3.5 h-3.5 text-success" />
           ) : (
             <Table className="w-3.5 h-3.5 text-muted-foreground" />
           )}

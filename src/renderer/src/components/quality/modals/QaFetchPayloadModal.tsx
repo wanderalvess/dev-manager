@@ -130,7 +130,7 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
                   <span className="font-mono">
                     Visualização do Payload ({currentPreviewJson.length} caracteres)
                   </span>
-                  <span className="font-mono text-emerald-400 font-semibold">JSON Válido</span>
+                  <span className="font-mono text-success font-semibold">JSON Válido</span>
                 </div>
                 <pre className="flex-1 overflow-auto mt-2 p-2 bg-card border border-border rounded font-mono text-[11px] text-foreground leading-relaxed select-text">
                   {currentPreviewJson}

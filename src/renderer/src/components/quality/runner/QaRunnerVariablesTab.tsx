@@ -93,7 +93,7 @@ export const QaRunnerVariablesTab: React.FC<QaRunnerVariablesTabProps> = ({
                     return next;
                   });
                 }}
-                className="text-muted-foreground hover:text-red-500 p-1 cursor-pointer transition-colors"
+                className="text-muted-foreground hover:text-danger p-1 cursor-pointer transition-colors"
                 title="Remover variável"
               >
                 <Trash2 className="w-3 h-3" />

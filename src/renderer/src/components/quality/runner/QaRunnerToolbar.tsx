@@ -64,14 +64,14 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
               ))}
             </select>
           ) : (
-            <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md">
+            <div className="flex items-center gap-2 text-xs text-warning bg-warning/10 border border-warning/20 px-2.5 py-1 rounded-md">
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Nenhuma conexão cadastrada</span>
               {onNavigate && (
                 <button
                   type="button"
                   onClick={() => onNavigate('database')}
-                  className="underline font-bold hover:text-amber-400 cursor-pointer ml-1"
+                  className="underline font-bold hover:text-warning cursor-pointer ml-1"
                 >
                   Cadastrar
                 </button>
