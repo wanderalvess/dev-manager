@@ -30,6 +30,11 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-info: hsl(var(--info));
+  --color-danger: hsl(var(--danger));
+
   --color-brand-50: #f0f7ff;
   --color-brand-100: #e0effe;
   --color-brand-500: #0066cc;
@@ -88,7 +93,7 @@
     --card-foreground: 28 35% 15%;
     --popover: 35 35% 98%;
     --popover-foreground: 28 35% 15%;
-    --primary: 24 95% 39%;
+    --primary: 24 95% 32%;
     --primary-foreground: 0 0% 100%;
     --secondary: 32 25% 88%;
     --secondary-foreground: 28 35% 15%;
@@ -96,12 +101,19 @@
     --muted-foreground: 28 15% 38%;
     --accent: 28 100% 92%;
     --accent-foreground: 24 95% 35%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --border: 30 20% 78%;
-    --input: 30 20% 78%;
+    --input: 30 12% 48%;
     --ring: 24 95% 44%;
     --radius: 0.625rem;
+
+    /* Status semânticos (tema claro): >= 4,5:1 sobre card/background, também com tint de 10%.
+       Use text-success, bg-success/10, border-success/30 etc.; valem para todos os temas. */
+    --success: 142 75% 21%;
+    --warning: 26 92% 22%;
+    --info: 201 90% 25%;
+    --danger: 0 72% 38%;
   }
 
   .dark,
@@ -124,8 +136,14 @@
     --accent-foreground: 25 100% 60%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+
+    /* Status semânticos (tema escuro): >= 5,7:1 sobre card, também com tint de 10%. */
+    --success: 142 70% 55%;
+    --warning: 43 96% 56%;
+    --info: 199 89% 60%;
+    --danger: 0 91% 71%;
     --border: 217.2 32.6% 22%;
-    --input: 217.2 32.6% 22%;
+    --input: 217 20% 45%;
     --ring: 25 100% 50%;
   }
 
@@ -173,7 +191,7 @@
     --input: 215 25% 76%;
     --accent: 218 90% 93%;
     --accent-foreground: 220 92% 35%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 220 92% 48%;
   }
@@ -222,7 +240,7 @@
     --input: 155 25% 74%;
     --accent: 155 80% 92%;
     --accent-foreground: 158 90% 24%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 158 90% 32%;
   }
@@ -271,7 +289,7 @@
     --input: 268 25% 76%;
     --accent: 270 85% 94%;
     --accent-foreground: 271 85% 35%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 271 85% 48%;
   }
@@ -320,7 +338,7 @@
     --input: 198 28% 74%;
     --accent: 196 85% 92%;
     --accent-foreground: 196 95% 24%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 196 95% 34%;
   }
@@ -360,7 +378,7 @@
 
   input::placeholder,
   textarea::placeholder {
-    color: var(--color-gray-400);
+    color: hsl(var(--muted-foreground));
   }
 }
 
