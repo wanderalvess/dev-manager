@@ -45,10 +45,10 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     chips: () => ['OSGi', 'Docker', 'Maven'],
     linkLabel: 'Ir para Deploy',
     cardClass: 'border-amber-500/20 hover:border-amber-500/60',
-    numberClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25',
-    badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    numberClass: 'bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/25',
+    badgeClass: 'bg-amber-500/10 text-amber-800 dark:text-amber-400',
     titleHoverClass: 'group-hover:text-amber-700 dark:group-hover:text-amber-700 dark:group-hover:text-amber-400',
-    linkClass: 'text-amber-700 dark:text-amber-400'
+    linkClass: 'text-amber-800 dark:text-amber-400'
   },
   {
     number: 3,

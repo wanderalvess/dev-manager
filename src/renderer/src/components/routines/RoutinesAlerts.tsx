@@ -26,7 +26,7 @@ export const KarafWarningBanner: React.FC<KarafWarningBannerProps> = ({
       <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
       <div className="flex-1">
         <span className="font-bold block">Apache Karaf não está em execução (WTA offline)</span>
-        <span className="text-2xs text-muted-foreground block mt-0.5 leading-relaxed">
+        <span className="text-2xs text-foreground/80 block mt-0.5 leading-relaxed">
           O WinThor Start está ativado e depende do servidor Apache Karaf / WTA ({karafStatus?.wtaUrl || DEFAULT_WTA_URL}) em execução para autenticar a sessão do usuário. Se você iniciar uma rotina agora, ela apresentará erro por falta de autenticação.
         </span>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -77,7 +77,7 @@ export const AppPathWarning: React.FC<AppPathWarningProps> = ({ onNavigateToSett
     <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
     <div className="flex-1">
       <span className="font-bold block">Diretório de Rotinas WinThor não configurado</span>
-      <span className="text-2xs text-muted-foreground block mt-0.5">
+      <span className="text-2xs text-foreground/80 block mt-0.5">
         Defina a pasta onde os executáveis das rotinas estão localizados (ex: P:\ ou C:\Totvs\Winthor\Rotinas) para catalogá-los automaticamente.
       </span>
       {onNavigateToSettings && (
