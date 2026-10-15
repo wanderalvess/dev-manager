@@ -21,7 +21,7 @@ export const BindModalHeader: React.FC<BindModalHeaderProps> = ({ count, onClose
         </div>
         <p className="text-[11px] text-muted-foreground">
           Suporta binds (<span className="text-violet-400 font-mono">:VAR</span>), variáveis SQL*Plus/WinThor (
-          <span className="text-amber-500 font-mono">&VAR</span>), scripts (<span className="text-sky-400 font-mono">@VAR</span>) e templates (<span className="text-pink-400 font-mono">{'${VAR}'}</span>).
+          <span className="text-warning font-mono">&VAR</span>), scripts (<span className="text-info font-mono">@VAR</span>) e templates (<span className="text-pink-400 font-mono">{'${VAR}'}</span>).
         </p>
       </div>
     </div>

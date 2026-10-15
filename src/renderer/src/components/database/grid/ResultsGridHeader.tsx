@@ -19,13 +19,13 @@ const BADGE_BASE = 'px-1 py-0.2 rounded text-2xs font-mono font-bold border';
 const DataTypeBadge: React.FC<{ dataType: ResultsGridDataType }> = ({ dataType }) => {
   // Indicador de Tipo de Dado
   if (dataType === 'number') {
-    return <span className={`${BADGE_BASE} bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30`}>123</span>;
+    return <span className={`${BADGE_BASE} bg-info/15 text-info border-info/30`}>123</span>;
   }
   if (dataType === 'date') {
     return <span className={`${BADGE_BASE} bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30`}>📅</span>;
   }
   if (dataType === 'boolean') {
-    return <span className={`${BADGE_BASE} bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30`}>0/1</span>;
+    return <span className={`${BADGE_BASE} bg-warning/15 text-warning border-warning/30`}>0/1</span>;
   }
   if (dataType === 'object') {
     return <span className={`${BADGE_BASE} bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30`}>{'{ }'}</span>;

@@ -61,15 +61,15 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
 
     <div className="flex items-center space-x-2 text-xs">
       {pendingCount > 0 && (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/40" role="status">
-          <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-warning/15 border border-warning/40" role="status">
+          <span className="text-[11px] font-bold text-warning">
             {pendingCount} {pendingCount === 1 ? 'alteração pendente' : 'alterações pendentes'}
           </span>
           <button
             type="button"
             onClick={onApplyPending}
             disabled={isMutatingRow}
-            className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold cursor-pointer disabled:opacity-50"
+            className="px-2 py-0.5 rounded bg-success hover:bg-success/90 text-background text-[11px] font-bold cursor-pointer disabled:opacity-50"
             title="Gravar as alterações no banco (na transação do editor)"
           >
             Aplicar
@@ -88,7 +88,7 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
       {isEditable ? (
         <>
           <span
-            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-mono font-bold bg-success/10 text-success border border-success/20"
             title={`Editável: duplo-clique numa célula para editar, botão direito para marcar a linha para exclusão. As alterações só vão ao banco em Aplicar. Tabela: ${editableTableName}`}
           >
             <Pencil className="w-3 h-3" />
@@ -114,14 +114,14 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
         </span>
       )}
       {isVirtual && (
-        <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="Virtual scrolling ativo para rolagem a 60 FPS">
+        <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-success/10 text-success border border-success/20" title="Virtual scrolling ativo para rolagem a 60 FPS">
           Virtual 60 FPS
         </span>
       )}
       {hasActiveFilters ? (
         <>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-            <Filter className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-warning/15 text-warning border border-warning/30">
+            <Filter className="w-3 h-3 text-warning" />
             <span>
               {visibleRowCount} de {totalRowCount} linha(s)
             </span>
@@ -129,7 +129,7 @@ export const ResultsGridToolbar: React.FC<ResultsGridToolbarProps> = ({
           <button
             type="button"
             onClick={onClearAllFilters}
-            className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 transition cursor-pointer"
+            className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-danger/10 text-danger hover:bg-danger/20 border border-danger/30 transition cursor-pointer"
             title="Remover todos os filtros e ordenações da tabela"
           >
             <FilterX className="w-3 h-3" />

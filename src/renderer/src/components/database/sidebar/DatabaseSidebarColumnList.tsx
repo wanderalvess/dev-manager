@@ -31,7 +31,7 @@ export const DatabaseSidebarColumnList: React.FC<DatabaseSidebarColumnListProps>
           <div className="flex items-center space-x-1.5 truncate">
             {col.isPrimaryKey && (
               <span title="Chave Primária (PK)" className="flex items-center justify-center shrink-0">
-                <Key className="w-2.5 h-2.5 text-amber-400" />
+                <Key className="w-2.5 h-2.5 text-warning" />
               </span>
             )}
             <span className="font-semibold text-foreground group-hover/col:text-primary truncate">
@@ -41,7 +41,7 @@ export const DatabaseSidebarColumnList: React.FC<DatabaseSidebarColumnListProps>
           <div className="flex items-center space-x-1 shrink-0">
             <span className="text-2xs text-muted-foreground font-mono">{col.type}</span>
             {col.nullable === false && (
-              <span className="text-2xs px-1 rounded bg-amber-500/10 text-amber-400 font-bold">
+              <span className="text-2xs px-1 rounded bg-warning/10 text-warning font-bold">
                 NOT NULL
               </span>
             )}

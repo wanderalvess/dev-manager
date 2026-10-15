@@ -104,7 +104,7 @@ export const ResultsGridColumnMenu: React.FC<ResultsGridColumnMenuProps> = ({
               setColumnFilters((prev) => omitColumnFilter(prev, col));
               onClose();
             }}
-            className="text-rose-500 hover:text-rose-600 font-semibold text-2xs cursor-pointer"
+            className="text-danger hover:text-danger font-semibold text-2xs cursor-pointer"
           >
             Limpar coluna
           </button>

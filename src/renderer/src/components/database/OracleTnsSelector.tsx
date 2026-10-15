@@ -123,7 +123,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
         <div className="flex items-center justify-between text-[11px] text-muted-foreground bg-background/50 p-2 rounded border border-border/50">
           <div className="flex items-center gap-1.5 min-w-0">
             {error ? (
-              <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <AlertCircle className="w-3.5 h-3.5 text-warning shrink-0" />
             ) : (
               <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             )}

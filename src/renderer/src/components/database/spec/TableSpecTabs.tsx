@@ -11,7 +11,7 @@ const StatusBadge: React.FC<{ status?: string }> = ({ status }) =>
   status ? (
     <span
       className={`px-1.5 py-0.5 rounded text-2xs font-bold ${
-        STATUS_BAD.test(status) ? 'bg-rose-500/15 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'
+        STATUS_BAD.test(status) ? 'bg-danger/15 text-danger' : 'bg-success/10 text-success'
       }`}
     >
       {status}
@@ -64,8 +64,8 @@ export const ColumnsTab: React.FC<{ details: TableDetails }> = ({ details }) => 
               <td className={`${TD} text-muted-foreground font-mono`}>{c.position}</td>
               <td className={`${TD} font-mono font-semibold text-foreground`}>
                 <span className="inline-flex items-center gap-1">
-                  {c.isPrimaryKey && <Key className="w-3 h-3 text-amber-400" aria-label="Chave primária" />}
-                  {fkColumns.has(c.name) && <Link2 className="w-3 h-3 text-sky-400" aria-label="Chave estrangeira" />}
+                  {c.isPrimaryKey && <Key className="w-3 h-3 text-warning" aria-label="Chave primária" />}
+                  {fkColumns.has(c.name) && <Link2 className="w-3 h-3 text-info" aria-label="Chave estrangeira" />}
                   {c.name}
                 </span>
               </td>
@@ -74,7 +74,7 @@ export const ColumnsTab: React.FC<{ details: TableDetails }> = ({ details }) => 
                 {c.nullable ? (
                   <span className="text-muted-foreground">sim</span>
                 ) : (
-                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-2xs font-bold">NOT NULL</span>
+                  <span className="px-1.5 py-0.5 rounded bg-warning/10 text-warning text-2xs font-bold">NOT NULL</span>
                 )}
               </td>
               <td className={`${TD} font-mono text-muted-foreground`}>{c.defaultValue ?? '—'}</td>
@@ -116,7 +116,7 @@ export const ConstraintsTab: React.FC<{ details: TableDetails; onOpenTable: (nam
             <td className={TD}>
               {c.kind === 'FOREIGN KEY' && c.refTable ? (
                 <span className="inline-flex flex-wrap items-center gap-1">
-                  <ArrowRight className="w-3 h-3 text-sky-400" />
+                  <ArrowRight className="w-3 h-3 text-info" />
                   <button
                     type="button"
                     onClick={() => onOpenTable(c.refTable!)}
@@ -167,9 +167,9 @@ export const IndexesTab: React.FC<{ details: TableDetails }> = ({ details }) => 
             <td className={`${TD} text-muted-foreground`}>{i.type ?? '—'}</td>
             <td className={TD}>
               {i.primary ? (
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-2xs font-bold">PK</span>
+                <span className="px-1.5 py-0.5 rounded bg-warning/10 text-warning text-2xs font-bold">PK</span>
               ) : i.unique ? (
-                <span className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-500 text-2xs font-bold">sim</span>
+                <span className="px-1.5 py-0.5 rounded bg-info/10 text-info text-2xs font-bold">sim</span>
               ) : (
                 <span className="text-muted-foreground">não</span>
               )}
@@ -233,7 +233,7 @@ export const DdlTab: React.FC<DdlTabProps> = ({ ddl, loading, error }) => {
   };
 
   if (loading) return <Empty>Carregando DDL...</Empty>;
-  if (error) return <div className="p-4 text-xs text-rose-500 whitespace-pre-wrap">{error}</div>;
+  if (error) return <div className="p-4 text-xs text-danger whitespace-pre-wrap">{error}</div>;
   if (!ddl) return <Empty>Sem DDL para mostrar.</Empty>;
 
   return (
@@ -244,7 +244,7 @@ export const DdlTab: React.FC<DdlTabProps> = ({ ddl, loading, error }) => {
         className="absolute right-3 top-3 flex items-center gap-1 px-2 py-1 rounded-md bg-card hover:bg-muted border border-border/70 text-[11px] font-semibold text-foreground cursor-pointer"
         title="Copiar o DDL para a área de transferência"
       >
-        {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+        {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
         <span>{copied ? 'Copiado' : 'Copiar DDL'}</span>
       </button>
       <pre className="p-4 pr-32 text-xs font-mono text-emerald-300 bg-[#0B0F17] whitespace-pre-wrap wrap-break-word select-text">{ddl}</pre>

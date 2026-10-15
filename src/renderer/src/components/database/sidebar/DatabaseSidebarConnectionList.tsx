@@ -71,7 +71,7 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
                   onDeleteConnection(conn.id);
                 }}
                 title="Excluir Conexão"
-                className="p-1 hover:text-red-400 text-muted-foreground rounded hover:bg-muted/50 transition cursor-pointer"
+                className="p-1 hover:text-danger text-muted-foreground rounded hover:bg-muted/50 transition cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
               </button>

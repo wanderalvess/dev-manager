@@ -171,12 +171,12 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
               />
             )}
             {pending.inserts.map((values, i) => (
-              <tr key={`new_${i}`} className="bg-emerald-500/10" style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}>
+              <tr key={`new_${i}`} className="bg-success/10" style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}>
                 <td className="px-2 py-1.5 text-center border-r border-border/30">
                   <button
                     type="button"
                     onClick={() => onUnstageInsert?.(i)}
-                    className="text-emerald-600 hover:text-rose-500 cursor-pointer"
+                    className="text-success hover:text-danger cursor-pointer"
                     title="Remover esta nova linha pendente"
                     aria-label="Remover nova linha pendente"
                   >
@@ -184,7 +184,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                   </button>
                 </td>
                 {queryResult.columns.map((col) => (
-                  <td key={col} className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate text-emerald-700 dark:text-emerald-300" title="Nova linha (ainda não gravada)">
+                  <td key={col} className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate text-success" title="Nova linha (ainda não gravada)">
                     {values[col] === null || values[col] === undefined ? <span className="opacity-50">NULL</span> : String(values[col])}
                   </td>
                 ))}
@@ -196,7 +196,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                   {queryResult.rows.length === 0 ? (
                     // A consulta rodou, mas o banco não devolveu linhas (tabela vazia, WHERE sem correspondência ou sem permissão de leitura)
                     <div className="flex flex-col items-center justify-center space-y-2">
-                      <FilterX className="w-8 h-8 opacity-30 text-sky-500" />
+                      <FilterX className="w-8 h-8 opacity-30 text-info" />
                       <p className="font-semibold text-foreground">A consulta foi executada, mas não retornou nenhuma linha.</p>
                       <span className="text-[11px] opacity-70 max-w-md">
                         A tabela pode estar vazia, o WHERE pode não ter correspondência, ou o usuário da conexão pode não ter
@@ -205,7 +205,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center space-y-2">
-                      <FilterX className="w-8 h-8 opacity-30 text-amber-500" />
+                      <FilterX className="w-8 h-8 opacity-30 text-warning" />
                       <p className="font-semibold text-foreground">Nenhum resultado corresponde aos filtros aplicados.</p>
                       <span className="text-[11px] opacity-70">Tente ajustar o termo de busca ou filtros de coluna.</span>
                       <button

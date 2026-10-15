@@ -6,24 +6,24 @@ const FLAG_LABEL: Record<PlanFlag, { text: string; title: string; className: str
   hotspot: {
     text: 'MAIS CARO',
     title: 'Maior custo próprio do plano: é aqui que a consulta gasta mais',
-    className: 'bg-rose-500/15 text-rose-500'
+    className: 'bg-danger/15 text-danger'
   },
   'full-scan': {
     text: 'FULL SCAN',
     title: 'Lê a tabela inteira. Em tabelas grandes, avalie um índice ou um filtro mais seletivo',
-    className: 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+    className: 'bg-warning/15 text-warning'
   },
   cartesian: {
     text: 'CARTESIANO',
     title: 'Produto cartesiano: falta condição de junção',
-    className: 'bg-rose-500/15 text-rose-500'
+    className: 'bg-danger/15 text-danger'
   }
 };
 
 function barColor(share: number): string {
-  if (share >= 0.3) return 'bg-rose-500';
-  if (share >= 0.1) return 'bg-amber-500';
-  return 'bg-emerald-500/70';
+  if (share >= 0.3) return 'bg-danger';
+  if (share >= 0.1) return 'bg-warning';
+  return 'bg-success/70';
 }
 
 const formatCost = (n: number | undefined) => (n === undefined ? '—' : Number.isInteger(n) ? n.toLocaleString('pt-BR') : n.toLocaleString('pt-BR', { maximumFractionDigits: 2 }));
@@ -48,7 +48,7 @@ const NodeRow: React.FC<{ node: PlanNode; expanded: boolean; onToggle: () => voi
 
         <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
           <span className="font-mono font-semibold text-foreground">{node.operation}</span>
-          {node.object && <span className="font-mono text-sky-500">{node.object}</span>}
+          {node.object && <span className="font-mono text-info">{node.object}</span>}
           {node.flags.map((f) => (
             <span key={f} title={FLAG_LABEL[f].title} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold ${FLAG_LABEL[f].className}`}>
               {f === 'hotspot' ? <Flame className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}

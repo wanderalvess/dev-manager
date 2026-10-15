@@ -16,7 +16,7 @@ export const StatementsTable: React.FC<{
   if (statements.length === 0) {
     return (
       <TracerEmptyState
-        icon={<History className="w-8 h-8 mx-auto opacity-30 text-sky-500" />}
+        icon={<History className="w-8 h-8 mx-auto opacity-30 text-info" />}
         title="Nenhuma instrução capturada ainda."
         subtitle="Instruções distintas vistas no cursor cache do Oracle (v$sql) aparecem aqui, deduplicadas por SQL_ID."
       />
@@ -48,10 +48,10 @@ export const StatementsTable: React.FC<{
                 key={st.sqlId}
                 onClick={() => onSelect(st)}
                 className={`border-t border-border/50 transition-colors cursor-pointer align-top ${
-                  isSelected ? 'bg-sky-500/15 border-l-2 border-l-sky-500' : 'hover:bg-card/60'
+                  isSelected ? 'bg-info/15 border-l-2 border-l-sky-500' : 'hover:bg-card/60'
                 }`}
               >
-                <td className="px-2.5 py-2 whitespace-nowrap font-bold text-sky-400">{st.sqlId}</td>
+                <td className="px-2.5 py-2 whitespace-nowrap font-bold text-info">{st.sqlId}</td>
                 <td className="px-2.5 py-2 whitespace-nowrap font-medium text-foreground">{st.parsingSchemaName || '-'}</td>
                 <td className="px-2.5 py-2">
                   <div className="truncate max-w-[140px]">{st.module || '-'}</div>

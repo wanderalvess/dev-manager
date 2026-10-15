@@ -18,7 +18,7 @@ export const BackupCommandModeSection: React.FC<BackupCommandModeSectionProps> =
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-border/50 pb-3">
         <div>
           <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
-            <Terminal className="w-4 h-4 text-sky-500" />
+            <Terminal className="w-4 h-4 text-info" />
             <span>Modo de Execução do Comando</span>
           </span>
           <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -36,7 +36,7 @@ export const BackupCommandModeSection: React.FC<BackupCommandModeSectionProps> =
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Zap className="w-3 h-3 text-amber-500" />
+            <Zap className="w-3 h-3 text-warning" />
             <span>Padrão</span>
           </button>
           <button

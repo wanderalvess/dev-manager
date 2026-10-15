@@ -18,11 +18,11 @@ export const ResultsGridCellContent: React.FC<ResultsGridCellContentProps> = ({ 
         </span>
       );
     case 'number':
-      return <span className="text-blue-700 dark:text-sky-300 font-mono font-medium">{formatCellValue(value, kind)}</span>;
+      return <span className="text-blue-700 font-mono font-medium">{formatCellValue(value, kind)}</span>;
     case 'date':
       return <span className="text-purple-700 dark:text-purple-300 font-mono font-medium">{formatCellValue(value, kind)}</span>;
     case 'boolean':
-      return <span className="text-amber-700 dark:text-amber-400 font-mono font-semibold">{formatCellValue(value, kind)}</span>;
+      return <span className="text-warning font-mono font-semibold">{formatCellValue(value, kind)}</span>;
     case 'object':
       return <span className="text-teal-700 dark:text-teal-300 font-mono text-[11px]">{formatCellValue(value, kind)}</span>;
     default:

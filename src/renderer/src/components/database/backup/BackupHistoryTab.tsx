@@ -58,15 +58,15 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
           <div
             key={h.id}
             className={`p-3.5 bg-background/70 border rounded-xl gap-2 transition ${
-              h.success ? 'border-emerald-500/25 shadow-2xs' : 'border-rose-500/30'
+              h.success ? 'border-success/25 shadow-2xs' : 'border-danger/30'
             }`}
           >
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-2 text-xs font-bold">
                 {h.success ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-danger shrink-0" />
                 )}
                 <span className="text-foreground">{getBackupHistoryActionLabel(h.action)}</span>
                 <span className="text-2xs font-mono px-2 py-0.2 rounded-md bg-muted border border-border/50 text-muted-foreground">

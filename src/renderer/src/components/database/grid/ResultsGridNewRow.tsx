@@ -19,7 +19,7 @@ export const ResultsGridNewRow: React.FC<ResultsGridNewRowProps> = ({
   onConfirm,
   onCancel
 }) => (
-  <tr className="bg-emerald-500/10 dark:bg-emerald-500/15" style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}>
+  <tr className="bg-success/10" style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}>
     <td className="px-1 py-1 text-center border-r border-border/30 select-none">
       <div className="flex items-center justify-center gap-1">
         <button
@@ -27,7 +27,7 @@ export const ResultsGridNewRow: React.FC<ResultsGridNewRowProps> = ({
           onClick={onConfirm}
           disabled={isMutatingRow}
           title="Confirmar inserção (Enter)"
-          className="p-0.5 rounded text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 cursor-pointer disabled:opacity-50"
+          className="p-0.5 rounded text-success hover:bg-success/20 cursor-pointer disabled:opacity-50"
         >
           <Check className="w-3.5 h-3.5" />
         </button>
@@ -52,7 +52,7 @@ export const ResultsGridNewRow: React.FC<ResultsGridNewRowProps> = ({
             if (e.key === 'Escape') onCancel();
           }}
           placeholder={col}
-          className="w-full px-1.5 py-0.5 text-xs bg-background border border-emerald-500/40 rounded font-mono focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+          className="w-full px-1.5 py-0.5 text-xs bg-background border border-success/40 rounded font-mono focus:outline-hidden focus:ring-1 focus:ring-success"
         />
       </td>
     ))}

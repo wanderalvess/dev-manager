@@ -33,7 +33,7 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
         type="button"
         onClick={onRun}
         disabled={isRunningBackup || !backupFolder.trim() || missingFileTag}
-        className="w-full flex items-center justify-center space-x-2 px-5 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition disabled:opacity-50 text-sm tracking-wide cursor-pointer"
+        className="w-full flex items-center justify-center space-x-2 px-5 py-3 bg-info hover:bg-info/90 text-background rounded-xl font-bold shadow-md hover:shadow-lg transition disabled:opacity-50 text-sm tracking-wide cursor-pointer"
       >
         {isRunningBackup ? (
           <>
@@ -49,7 +49,7 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
       </button>
 
       {missingFileTag && (
-        <p className="text-[11px] text-amber-500 flex items-center justify-center gap-1.5">
+        <p className="text-[11px] text-warning flex items-center justify-center gap-1.5">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>Para iniciar o backup personalizado, inclua a tag <code>{'{filePath}'}</code> ou <code>{'{fileName}'}</code> no comando.</span>
         </p>
@@ -59,18 +59,18 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
         <div className={`p-4 rounded-xl border ${backupResultToneClass(backupResult.success)}`}>
           <div className="flex items-start space-x-2.5 font-bold">
             {backupResult.success ? (
-              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-500" />
+              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-success" />
             ) : (
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-rose-500" />
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-danger" />
             )}
             <div className="min-w-0 flex-1">
               <span className="break-all text-xs">{backupResult.message}</span>
               {backupResult.success && backupResult.sizeBytes !== undefined && (
                 <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono opacity-90 mt-1.5">
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30">
+                  <span className="px-2 py-0.5 rounded bg-success/20 border border-success/30">
                     Tamanho: {formatBytes(backupResult.sizeBytes)}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30">
+                  <span className="px-2 py-0.5 rounded bg-success/20 border border-success/30">
                     Duração: {backupResult.durationMs} ms
                   </span>
                 </div>
@@ -83,7 +83,7 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => onCopyHash(backupResult.checksumSha256!, 'result-hash')}
-                    className="text-2xs px-1.5 py-0.2 rounded hover:bg-emerald-500/20 font-mono transition cursor-pointer"
+                    className="text-2xs px-1.5 py-0.2 rounded hover:bg-success/20 font-mono transition cursor-pointer"
                     title="Copiar hash"
                   >
                     {copyFeedback === 'result-hash' ? '✓ Copiado' : 'Copiar hash'}

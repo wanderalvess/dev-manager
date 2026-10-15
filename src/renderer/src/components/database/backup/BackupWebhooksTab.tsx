@@ -116,8 +116,8 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
             <div
               className={`text-2xs px-2.5 py-1.5 rounded-lg border ${
                 webhookTestResults[w.id].success
-                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
+                  ? 'bg-success/10 text-success border-success/20'
+                  : 'bg-danger/10 text-danger border-danger/20'
               }`}
             >
               {webhookTestResults[w.id].message}

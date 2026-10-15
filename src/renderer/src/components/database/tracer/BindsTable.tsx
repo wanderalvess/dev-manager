@@ -36,12 +36,12 @@ export const BindsTable: React.FC<{
             return (
               <tr key={bindKey} className="hover:bg-muted/30 transition-colors">
                 <td className="px-3 py-1.5 text-center font-bold text-muted-foreground">#{b.position}</td>
-                <td className="px-3 py-1.5 text-sky-400 font-bold">{b.name || `:${b.position}`}</td>
+                <td className="px-3 py-1.5 text-info font-bold">{b.name || `:${b.position}`}</td>
                 <td className="px-3 py-1.5 text-muted-foreground text-2xs">{b.datatype || '-'}</td>
                 <td className="px-3 py-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className="font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 max-w-[400px] truncate"
+                      className="font-semibold text-success bg-success/10 px-2 py-0.5 rounded border border-success/20 max-w-[400px] truncate"
                       title={b.value ?? 'NULL'}
                     >
                       {b.value ?? 'NULL'}
