@@ -103,7 +103,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
               </label>
 
               {overview && !overview.receiverStatus.listening && (
-                <div className="px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-800 dark:bg-rose-950/30 dark:border-rose-800/60 dark:text-rose-300 font-sans text-xs leading-relaxed">
+                <div className="px-3 py-2 rounded-lg border border-danger/30 bg-danger/10 text-danger font-sans text-xs leading-relaxed">
                   <strong>Receptor inativo:</strong> {overview.receiverStatus.error || 'não foi possível abrir a porta'}.
                   Se outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o e
                   aplique a porta de novo — ou escolha outra porta abaixo.
@@ -215,7 +215,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                       onClick={() => copyToClipboard(setupSnippets.karafCopy, 'karafCmd')}
                       className="absolute top-2 right-2 px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-200 cursor-pointer flex items-center gap-1"
                     >
-                      {copyFeedback === 'karafCmd' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copyFeedback === 'karafCmd' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
                       Copiar
                     </button>
                   </div>
@@ -237,7 +237,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                       onClick={() => copyToClipboard(setupSnippets.curlCopy, 'curlCmd')}
                       className="absolute top-2 right-2 px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-200 cursor-pointer flex items-center gap-1"
                     >
-                      {copyFeedback === 'curlCmd' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copyFeedback === 'curlCmd' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
                       Copiar
                     </button>
                   </div>

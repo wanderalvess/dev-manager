@@ -30,13 +30,13 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
         </div>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-mono">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500" /> Sucesso (2xx/3xx)
+            <span className="w-2.5 h-2.5 rounded-xs bg-success" /> Sucesso (2xx/3xx)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-xs bg-amber-500" /> Erro Cliente (4xx)
+            <span className="w-2.5 h-2.5 rounded-xs bg-warning" /> Erro Cliente (4xx)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-xs bg-rose-500" /> Erro Servidor (5xx)
+            <span className="w-2.5 h-2.5 rounded-xs bg-danger" /> Erro Servidor (5xx)
           </span>
           <span className="flex items-center gap-1.5 ml-2 border-l border-border pl-2">
             <span className="w-3 h-0.5 bg-indigo-500 rounded-full" /> Curva p95
@@ -109,13 +109,13 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
                   {total > 0 && (
                     <>
                       {serverErrPct > 0 && (
-                        <div className="bg-rose-500 w-full" style={{ height: `${serverErrPct}%` }} />
+                        <div className="bg-danger w-full" style={{ height: `${serverErrPct}%` }} />
                       )}
                       {clientErrPct > 0 && (
-                        <div className="bg-amber-500 w-full" style={{ height: `${clientErrPct}%` }} />
+                        <div className="bg-warning w-full" style={{ height: `${clientErrPct}%` }} />
                       )}
                       {successPct > 0 && (
-                        <div className="bg-emerald-500 w-full" style={{ height: `${successPct}%` }} />
+                        <div className="bg-success w-full" style={{ height: `${successPct}%` }} />
                       )}
                     </>
                   )}

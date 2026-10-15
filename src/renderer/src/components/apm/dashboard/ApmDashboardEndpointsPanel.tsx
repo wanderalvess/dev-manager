@@ -22,7 +22,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
     <div className="p-4 rounded-xl bg-card border border-border shadow-2xs flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Server className="w-4 h-4 text-sky-500" />
+          <Server className="w-4 h-4 text-info" />
           <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-foreground">
             Endpoints {sortMode === 'slow' ? 'Mais Lentos (p95)' : 'Mais Solicitados'}
           </h4>
@@ -46,12 +46,12 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
             onClick={() => onSortModeChange('slow')}
             className={`px-2 py-0.5 rounded transition cursor-pointer flex items-center gap-1 ${
               sortMode === 'slow'
-                ? 'bg-card text-amber-600 dark:text-amber-400 font-bold shadow-2xs'
+                ? 'bg-card text-warning font-bold shadow-2xs'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <span>Mais Lentos</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-warning" />
           </button>
         </div>
       </div>
@@ -86,16 +86,16 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
                     <span
                       className={`font-bold ${
                         ep.p95DurationMs >= 1000
-                          ? 'text-rose-600 dark:text-rose-400'
+                          ? 'text-danger'
                           : ep.p95DurationMs >= 400
-                          ? 'text-amber-600 dark:text-amber-400'
+                          ? 'text-warning'
                           : 'text-indigo-600 dark:text-indigo-400'
                       }`}
                     >
                       {ep.p95DurationMs}ms
                     </span>
                     {ep.errorRate > 0 && (
-                      <span className="text-rose-600 dark:text-rose-400 ml-1.5 font-bold">
+                      <span className="text-danger ml-1.5 font-bold">
                         {ep.errorRate}% err
                       </span>
                     )}

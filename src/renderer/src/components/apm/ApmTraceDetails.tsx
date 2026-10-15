@@ -68,7 +68,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
           title="Copiar Trace ID"
           className="h-6 px-2 rounded border border-border bg-card hover:bg-muted text-2xs font-mono text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
         >
-          {copyFeedback === 'traceId' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+          {copyFeedback === 'traceId' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
           <span>ID</span>
         </button>
         <button
@@ -126,7 +126,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
           type="button"
           onClick={() => setDetailTab('sql')}
           className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-            visibleTab === 'sql' ? 'border-sky-500 text-sky-700 dark:border-sky-400 dark:text-sky-400 font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'
+            visibleTab === 'sql' ? 'border-info text-info font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           <Database className="w-3 h-3" /><span>Queries SQL</span>
@@ -137,7 +137,7 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
           type="button"
           onClick={() => setDetailTab('error')}
           className={`h-full px-2.5 text-[11px] font-semibold border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
-            visibleTab === 'error' ? 'border-rose-500 text-rose-700 dark:border-rose-400 dark:text-rose-400 font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'
+            visibleTab === 'error' ? 'border-danger text-danger font-bold' : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           <AlertCircle className="w-3 h-3" /><span>Erro / Stacktrace</span>

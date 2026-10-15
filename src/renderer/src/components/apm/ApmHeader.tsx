@@ -28,8 +28,8 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             onClick={onOpenSetup}
             className={`flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-mono shrink-0 cursor-pointer ${
               overview?.receiverStatus.listening
-                ? 'bg-emerald-500/15 dark:bg-emerald-950/30 border-emerald-500/30 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400'
-                : 'bg-rose-500/15 dark:bg-rose-950/30 border-rose-500/30 dark:border-rose-800/60 text-rose-700 dark:text-rose-400'
+                ? 'bg-success/15 border-success/30 text-success'
+                : 'bg-danger/15 border-danger/30 text-danger'
             }`}
             title={
               overview?.receiverStatus.listening
@@ -39,11 +39,11 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                overview?.receiverStatus.listening ? 'bg-emerald-500 dark:bg-emerald-400 radar-live' : 'bg-rose-500 dark:bg-rose-400'
+                overview?.receiverStatus.listening ? 'bg-success radar-live' : 'bg-danger'
               }`}
             />
             <span className="font-semibold">:{receiverPort}</span>
-            <span className="text-2xs uppercase tracking-wider text-muted-foreground font-sans font-medium">OTLP</span>
+            <span className="text-2xs uppercase tracking-wider text-foreground/80 font-sans font-medium">OTLP</span>
           </button>
 
           <div className="h-4 w-px bg-border shrink-0" />
@@ -60,10 +60,10 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
               <strong
                 className={
                   (overview?.p95LatencyMs || 0) > 1000
-                    ? 'text-rose-600 dark:text-rose-400 font-bold'
+                    ? 'text-danger font-bold'
                     : (overview?.p95LatencyMs || 0) > 400
-                    ? 'text-amber-600 dark:text-amber-400 font-bold'
-                    : 'text-emerald-600 dark:text-emerald-400'
+                    ? 'text-warning font-bold'
+                    : 'text-success'
                 }
               >
                 {Math.round(overview?.p95LatencyMs || 0)}ms
@@ -74,7 +74,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
               Erros:{' '}
               <strong
                 className={
-                  (overview?.errorRate || 0) > 0 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-emerald-600 dark:text-emerald-400'
+                  (overview?.errorRate || 0) > 0 ? 'text-danger font-bold' : 'text-success'
                 }
               >
                 {overview?.errorRate || 0}%
@@ -94,7 +94,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
                 {overview?.receiverStatus.bufferSize ?? traceCount} / {overview?.receiverStatus.maxBufferSize || 5000}
               </strong>
               {!!overview?.receiverStatus.droppedSpans && (
-                <strong className="ml-1 text-amber-600 dark:text-amber-400">
+                <strong className="ml-1 text-warning">
                   (−{overview.receiverStatus.droppedSpans} spans)
                 </strong>
               )}
@@ -113,7 +113,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <LayoutDashboard className="w-3.5 h-3.5 text-sky-500" />
+            <LayoutDashboard className="w-3.5 h-3.5 text-info" />
             <span>Dashboard</span>
           </button>
           <button
@@ -152,19 +152,19 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             title={isRecording ? 'Pausar captura em tempo real' : 'Retomar captura em tempo real'}
             className={`h-7 px-2.5 rounded border text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer ${
               isRecording
-                ? 'bg-rose-500/15 dark:bg-rose-950/40 border-rose-500/30 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 dark:hover:bg-rose-900/40'
+                ? 'bg-danger/15 border-danger/30 text-danger hover:bg-danger/25'
                 : 'bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             {isRecording ? (
               <>
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400 animate-ping" />
-                <Pause className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-danger animate-ping" />
+                <Pause className="w-3 h-3 text-danger" />
                 <span>Pausar</span>
               </>
             ) : (
               <>
-                <Play className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <Play className="w-3 h-3 text-success" />
                 <span>Gravar</span>
               </>
             )}
@@ -186,7 +186,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             type="button"
             onClick={onClear}
             title="Limpar todos os traces coletados em memória"
-            className="h-7 px-2 rounded border border-border bg-card hover:bg-muted text-muted-foreground hover:text-rose-400 cursor-pointer transition"
+            className="h-7 px-2 rounded border border-border bg-card hover:bg-muted text-muted-foreground hover:text-danger cursor-pointer transition"
           >
             <Trash2 className="w-3 h-3" />
           </button>

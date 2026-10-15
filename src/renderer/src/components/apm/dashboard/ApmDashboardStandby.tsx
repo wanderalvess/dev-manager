@@ -35,11 +35,11 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               {receiverState === 'listening' && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
               )}
               <span
                 className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  receiverState === 'listening' ? 'bg-emerald-500' : receiverState === 'down' ? 'bg-rose-500' : 'bg-neutral-400'
+                  receiverState === 'listening' ? 'bg-success' : receiverState === 'down' ? 'bg-danger' : 'bg-neutral-400'
                 }`}
               />
             </span>
@@ -50,9 +50,9 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
           <span
             className={`text-2xs font-mono px-2 py-0.5 rounded border ${
               receiverState === 'listening'
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                ? 'bg-success/10 text-success border-success/20'
                 : receiverState === 'down'
-                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                ? 'bg-danger/10 text-danger border-danger/20'
                 : 'bg-muted text-muted-foreground border-border'
             }`}
           >
@@ -62,7 +62,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
         {receiverState === 'down' ? (
           <div className="flex flex-col gap-2">
-            <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+            <p className="text-xs text-danger leading-relaxed">
               O receptor não conseguiu abrir a porta {port}: <strong>{receiver?.error || 'erro desconhecido'}</strong>. Se
               outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o ou escolha
               outra porta para o receptor.
@@ -71,7 +71,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
               <button
                 type="button"
                 onClick={onOpenSetup}
-                className="self-start px-3 py-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold cursor-pointer transition"
+                className="self-start px-3 py-1.5 rounded-lg border border-danger/40 bg-danger/10 hover:bg-danger/20 text-danger text-xs font-semibold cursor-pointer transition"
               >
                 Trocar porta do receptor
               </button>

@@ -22,10 +22,10 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
     </span>
     <div className="w-28 h-2.5 rounded-full bg-muted/60 overflow-hidden flex cursor-pointer p-px gap-0.5">
       {([
-        { bracket: 'FAST', pct: spectrum.fastPct, count: spectrum.fast, label: '< 100ms', active: 'bg-emerald-400 ring-2 ring-emerald-300', idle: 'bg-emerald-500/80 hover:bg-emerald-400' },
-        { bracket: 'NORMAL', pct: spectrum.normalPct, count: spectrum.normal, label: '100 - 400ms', active: 'bg-sky-400 ring-2 ring-sky-300', idle: 'bg-sky-500/80 hover:bg-sky-400' },
-        { bracket: 'SLOW', pct: spectrum.slowPct, count: spectrum.slow, label: '400 - 1000ms', active: 'bg-amber-400 ring-2 ring-amber-300', idle: 'bg-amber-500/80 hover:bg-amber-400' },
-        { bracket: 'CRITICAL', pct: spectrum.criticalPct, count: spectrum.critical, label: '> 1000ms', active: 'bg-rose-400 ring-2 ring-rose-300', idle: 'bg-rose-500/80 hover:bg-rose-400' }
+        { bracket: 'FAST', pct: spectrum.fastPct, count: spectrum.fast, label: '< 100ms', active: 'bg-success ring-2 ring-success', idle: 'bg-success/80 hover:bg-success' },
+        { bracket: 'NORMAL', pct: spectrum.normalPct, count: spectrum.normal, label: '100 - 400ms', active: 'bg-info ring-2 ring-info', idle: 'bg-info/80 hover:bg-info' },
+        { bracket: 'SLOW', pct: spectrum.slowPct, count: spectrum.slow, label: '400 - 1000ms', active: 'bg-warning ring-2 ring-warning', idle: 'bg-warning/80 hover:bg-warning' },
+        { bracket: 'CRITICAL', pct: spectrum.criticalPct, count: spectrum.critical, label: '> 1000ms', active: 'bg-danger ring-2 ring-danger', idle: 'bg-danger/80 hover:bg-danger' }
       ] as const).map(({ bracket, pct, count, label, active, idle }) => (
         <div
           key={bracket}
@@ -38,10 +38,10 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
     </div>
     <div className="flex items-center gap-1.5 text-2xs">
       {([
-        { bracket: 'FAST', count: spectrum.fast, title: 'Filtrar < 100ms', active: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-500/50', idle: 'text-emerald-700 dark:text-emerald-400 hover:underline' },
-        { bracket: 'NORMAL', count: spectrum.normal, title: 'Filtrar 100 - 400ms', active: 'bg-sky-500/20 text-sky-800 dark:text-sky-300 font-bold border border-sky-500/50', idle: 'text-sky-700 dark:text-sky-400 hover:underline' },
-        { bracket: 'SLOW', count: spectrum.slow, title: 'Filtrar 400 - 1000ms', active: 'bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold border border-amber-500/50', idle: 'text-amber-700 dark:text-amber-400 hover:underline' },
-        { bracket: 'CRITICAL', count: spectrum.critical, title: 'Filtrar > 1000ms', active: 'bg-rose-500/20 text-rose-800 dark:text-rose-300 font-bold border border-rose-500/50', idle: 'text-rose-700 dark:text-rose-400 font-bold hover:underline' }
+        { bracket: 'FAST', count: spectrum.fast, title: 'Filtrar < 100ms', active: 'bg-success/20 text-success font-bold border border-success/50', idle: 'text-success hover:underline' },
+        { bracket: 'NORMAL', count: spectrum.normal, title: 'Filtrar 100 - 400ms', active: 'bg-info/20 text-info font-bold border border-info/50', idle: 'text-info hover:underline' },
+        { bracket: 'SLOW', count: spectrum.slow, title: 'Filtrar 400 - 1000ms', active: 'bg-warning/20 text-warning font-bold border border-warning/50', idle: 'text-warning hover:underline' },
+        { bracket: 'CRITICAL', count: spectrum.critical, title: 'Filtrar > 1000ms', active: 'bg-danger/20 text-danger font-bold border border-danger/50', idle: 'text-danger font-bold hover:underline' }
       ] as const).map(({ bracket, count, title, active, idle }, index) => (
         <React.Fragment key={bracket}>
           {index > 0 && <span className="text-border">/</span>}

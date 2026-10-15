@@ -24,7 +24,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
     <div className="p-4 rounded-xl bg-card border border-border shadow-2xs flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-amber-500" />
+          <Flame className="w-4 h-4 text-warning" />
           <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-foreground">
             Top Slow Queries (Oracle / Banco)
           </h4>
@@ -52,10 +52,10 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                     <span
                       className={`text-2xs font-mono px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
                         severity === 'critical'
-                          ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
+                          ? 'bg-danger/15 text-danger border border-danger/30'
                           : severity === 'slow'
-                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
-                          : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                          ? 'bg-warning/15 text-warning border border-warning/30'
+                          : 'bg-success/15 text-success border border-success/30'
                       }`}
                     >
                       {severity === 'critical' ? 'Crítica' : severity === 'slow' ? 'Lenta' : 'Normal'}
@@ -85,9 +85,9 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                       type="button"
                       onClick={() => onOpenInDbStudio(sq.statement)}
                       title="Abrir query no DB Studio para executar ou Explain Plan"
-                      className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 text-2xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                      className="px-2 py-0.5 rounded bg-warning/15 text-warning hover:bg-warning/25 border border-warning/30 text-2xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                     >
-                      <Database className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                      <Database className="w-3 h-3 text-warning" />
                       DB Studio
                     </button>
                     {onSelectTrace && sq.sampleTraceId && (
@@ -108,14 +108,14 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                   {tokens.map((tok, tIdx) => {
                     if (tok.isKeyword) {
                       return (
-                        <span key={`tk-${tIdx}`} className="text-amber-600 dark:text-amber-400 font-bold">
+                        <span key={`tk-${tIdx}`} className="text-warning font-bold">
                           {tok.text}
                         </span>
                       );
                     }
                     if (isWinThorTable(tok.text)) {
                       return (
-                        <span key={`tk-${tIdx}`} className="text-sky-600 dark:text-sky-400 font-semibold underline decoration-dotted decoration-sky-500/50">
+                        <span key={`tk-${tIdx}`} className="text-info font-semibold underline decoration-dotted decoration-sky-500/50">
                           {tok.text}
                         </span>
                       );
