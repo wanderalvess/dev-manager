@@ -23,7 +23,7 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
   <div className="bg-card border border-border/80 rounded-xl p-3 space-y-3">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <FileEdit className="w-4 h-4 text-amber-500" />
+        <FileEdit className="w-4 h-4 text-warning" />
         <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
           Alterações Pendentes
         </span>
@@ -31,7 +31,7 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
           {files.length} {files.length === 1 ? 'arquivo' : 'arquivos'}
         </span>
         {ideFeedback && (
-          <span className="text-2xs text-emerald-500 font-medium flex items-center gap-1">
+          <span className="text-2xs text-success font-medium flex items-center gap-1">
             <Check className="w-3.5 h-3.5" /> Aberto na IDE ({ideFeedback})
           </span>
         )}
@@ -52,7 +52,7 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
           type="button"
           onClick={onOpenCommit}
           disabled={files.length === 0}
-          className="px-2.5 py-1 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+          className="px-2.5 py-1 bg-success/15 hover:bg-success/25 border border-success/30 text-success rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
           title="Prosseguir para commit"
         >
           <UploadCloud className="w-3.5 h-3.5" />
@@ -69,7 +69,7 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
     ) : files.length === 0 ? (
       <div className="py-3 px-3 bg-muted/20 border border-border/50 rounded-lg flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Check className="w-4 h-4 text-emerald-500" />
+          <Check className="w-4 h-4 text-success" />
           <span>Árvore de trabalho limpa. Nenhuma modificação pendente neste repositório.</span>
         </div>
         <span className="text-2xs font-mono opacity-60">git status limpo</span>

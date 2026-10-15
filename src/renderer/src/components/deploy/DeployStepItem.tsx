@@ -29,9 +29,9 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
         : isRunning
         ? 'border-primary bg-primary/10 ring-1 ring-primary shadow-xs'
         : status?.status === 'completed'
-        ? 'border-emerald-500/40 bg-emerald-500/5'
+        ? 'border-success/40 bg-success/5'
         : status?.status === 'failed'
-        ? 'border-rose-500/40 bg-rose-500/5'
+        ? 'border-danger/40 bg-danger/5'
         : 'border-border/70 bg-card hover:border-border'
     }`}
   >
@@ -41,12 +41,12 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
         <RotateCw className="w-3 h-3 text-primary animate-spin" />
       ) : status?.status === 'completed' ? (
         status.ignoredError ? (
-          <AlertTriangle className="w-3 h-3 text-amber-500" />
+          <AlertTriangle className="w-3 h-3 text-warning" />
         ) : (
-          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+          <CheckCircle2 className="w-3 h-3 text-success" />
         )
       ) : status?.status === 'failed' ? (
-        <XCircle className="w-3 h-3 text-rose-500" />
+        <XCircle className="w-3 h-3 text-danger" />
       ) : (
         index + 1
       )}
@@ -57,12 +57,12 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
       <div className="flex items-center gap-1.5 mt-0.5">
         <span className="text-2xs text-muted-foreground font-mono truncate">{step.type}</span>
         {step.continueOnError && (
-          <span className="text-2xs bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1 rounded font-mono" title="Tolerante a falhas">
+          <span className="text-2xs bg-warning/10 text-warning border border-warning/20 px-1 rounded font-mono" title="Tolerante a falhas">
             tolerante
           </span>
         )}
         {executionTimeMs !== undefined && (
-          <span className="text-2xs font-mono font-medium text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded-full flex items-center gap-1">
+          <span className="text-2xs font-mono font-medium text-success/90 bg-success/10 border border-success/20 px-1.5 py-0.2 rounded-full flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {(executionTimeMs / 1000).toFixed(1)}s
           </span>

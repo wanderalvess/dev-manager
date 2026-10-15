@@ -32,7 +32,7 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
           <div className="space-y-2">
             {bundleDetails.dependentBundles.length === 0 ? (
               <div className="text-center py-10 text-xs text-muted-foreground">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500/40 mx-auto mb-2" />
+                <CheckCircle2 className="w-8 h-8 text-success/40 mx-auto mb-2" />
                 <p>Nenhum bundle dependente com fiação direta ativa detectado no container.</p>
               </div>
             ) : (
@@ -101,7 +101,7 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
         )}
 
         {detailsTab === 'diag' && (
-          <div className="p-3 bg-rose-500/10 dark:bg-rose-950/40 border border-rose-500/30 dark:border-rose-800/50 rounded-xl font-mono text-xs text-rose-800 dark:text-rose-200 whitespace-pre-wrap leading-relaxed">
+          <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl font-mono text-xs text-danger whitespace-pre-wrap leading-relaxed">
             {bundleDetails.diag}
           </div>
         )}

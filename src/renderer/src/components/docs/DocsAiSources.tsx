@@ -28,7 +28,7 @@ export const DocsAiSources: React.FC<DocsAiSourcesProps> = ({ sources, onOpenPre
         >
           <FileText className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform shrink-0" />
           <span className="max-w-[260px] truncate font-medium">{source.title}</span>
-          <span className="text-2xs font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20 font-mono shrink-0">
+          <span className="text-2xs font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-md border border-success/20 font-mono shrink-0">
             {(source.score * 100).toFixed(0)}%
           </span>
         </button>

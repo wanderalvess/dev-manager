@@ -37,14 +37,14 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
 
   return (
     <div
-      className="mb-3 rounded-xl bg-card border border-amber-500/35 border-l-4 border-l-amber-500 shadow-md text-foreground overflow-hidden animate-fade-in"
+      className="mb-3 rounded-xl bg-card border border-warning/35 border-l-4 border-l-amber-500 shadow-md text-foreground overflow-hidden animate-fade-in"
       role="alert"
       aria-label="Diagnóstico de Resolução OSGi"
     >
       {/* Topo / Cabeçalho do Card */}
       <div className="px-3.5 py-2.5 bg-muted/50 border-b border-border/80 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-400 shrink-0">
+          <div className="p-1 rounded-md bg-warning/15 border border-warning/30 text-warning shrink-0">
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -52,7 +52,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               <span className="text-xs font-bold text-foreground tracking-tight">
                 Dependência OSGi Não Resolvida
               </span>
-              <span className="text-2xs px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono font-semibold uppercase tracking-wider">
+              <span className="text-2xs px-1.5 py-0.5 rounded bg-warning/15 border border-warning/30 text-warning font-mono font-semibold uppercase tracking-wider">
                 {diagnostic.requirementType}
               </span>
             </div>
@@ -90,8 +90,8 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               >
                 {isCopied ? (
                   <>
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span className="text-emerald-400 font-semibold">Copiado</span>
+                    <Check className="w-3 h-3 text-success" />
+                    <span className="text-success font-semibold">Copiado</span>
                   </>
                 ) : (
                   <>
@@ -102,14 +102,14 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               </button>
             </div>
 
-            <div className="font-mono text-xs text-amber-300 font-semibold break-all select-all bg-background/60 p-2 rounded border border-border/80">
+            <div className="font-mono text-xs text-warning font-semibold break-all select-all bg-background/60 p-2 rounded border border-border/80">
               {diagnostic.missingItem}
             </div>
 
             {diagnostic.versionRangeDesc && (
               <div className="flex items-center gap-1.5 text-2xs font-mono text-muted-foreground pt-0.5">
                 <span className="text-muted-foreground text-2xs uppercase font-bold">Faixa Exigida:</span>
-                <span className="text-sky-300 font-semibold">{diagnostic.versionRangeDesc}</span>
+                <span className="text-info font-semibold">{diagnostic.versionRangeDesc}</span>
               </div>
             )}
           </div>
@@ -121,7 +121,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                 Módulo Maven Declarado (pom.xml):
               </span>
               {diagnostic.matchedProfileName && (
-                <span className="text-2xs px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-mono font-semibold">
+                <span className="text-2xs px-1.5 py-0.2 rounded bg-success/10 text-success border border-success/25 font-mono font-semibold">
                   Perfil Mapeado
                 </span>
               )}
@@ -129,13 +129,13 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
 
             {diagnostic.matchedPomDependency ? (
               <div className="bg-background/60 p-2 rounded border border-border/80 space-y-1">
-                <div className="font-mono text-xs font-semibold text-emerald-300 break-all select-all flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <div className="font-mono text-xs font-semibold text-success break-all select-all flex items-center gap-1.5">
+                  <Package className="w-3.5 h-3.5 text-success shrink-0" />
                   <span>{diagnostic.matchedPomDependency.artifactId}</span>
                 </div>
                 <div className="flex items-center justify-between text-2xs font-mono text-muted-foreground">
                   <span className="truncate">{diagnostic.matchedPomDependency.groupId}</span>
-                  <span className="text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
+                  <span className="text-success font-bold bg-success/40 px-1.5 py-0.5 rounded border border-success/20 shrink-0">
                     v{diagnostic.matchedPomDependency.version}
                   </span>
                 </div>
@@ -157,8 +157,8 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
 
         {/* Alerta de Divergência de Versão (Release vs Snapshot) */}
         {diagnostic.versionMismatchWarning && (
-          <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/25 text-2xs text-amber-300/90 flex items-start gap-2">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-2 rounded-lg bg-warning/10 border border-warning/25 text-2xs text-warning/90 flex items-start gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
             <div className="leading-snug">
               {diagnostic.versionMismatchWarning}
             </div>
@@ -173,12 +173,12 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                 type="button"
                 onClick={() => onExecuteMatchedProfile(diagnostic.matchedProfileId || diagnostic.matchedProfileName!)}
                 disabled={isBusy}
-                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all duration-150 cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-1.5 rounded-lg bg-success hover:bg-success active:bg-success text-background font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all duration-150 cursor-pointer disabled:opacity-50"
                 title={`Disparar imediatamente o perfil de deploy "${diagnostic.matchedProfileName}" para construir e registrar a versão necessária no Karaf`}
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Executar Perfil "{diagnostic.matchedProfileName}"</span>
-                <span className="ml-1 text-2xs font-mono bg-emerald-950/60 text-emerald-200 border border-emerald-400/40 px-1 py-0.2 rounded font-semibold uppercase tracking-wider">
+                <span className="ml-1 text-2xs font-mono bg-success/60 text-success border border-success/40 px-1 py-0.2 rounded font-semibold uppercase tracking-wider">
                   Recomendado
                 </span>
               </button>
@@ -192,7 +192,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                 className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted active:bg-card border border-border hover:border-border text-foreground font-semibold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
                 title="Adicionar repositório e instalar a release remota via comandos Karaf (feature:repo-add e feature:install)"
               >
-                <Download className="w-3.5 h-3.5 text-sky-400" />
+                <Download className="w-3.5 h-3.5 text-info" />
                 <span>Instalar Release do Nexus</span>
               </button>
             )}

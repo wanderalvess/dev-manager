@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const QualityModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<CheckCheck className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+    iconBoxClass="p-2 rounded-xl bg-success/10 text-success border border-success/20"
     title="11. Central de Qualidade (QA &amp; PO)"
     subtitle="Matriz de Testes · Critérios de Aceite · Prontidão"
     shortcut="Alt+Q"
@@ -13,14 +13,14 @@ export const QualityModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => 
       <ModuleNavButton
         onNavigate={onNavigate}
         target="quality"
-        colorClass="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+        colorClass="bg-success/10 hover:bg-success/20 text-success border border-success/30"
         label="Abrir Central de Qualidade"
       />
     }
   >
     <ModuleBullets
       intro="Hub de apoio e orquestração para testes de software, homologação de rotinas e acompanhamento de releases:"
-      checkClass="text-emerald-400"
+      checkClass="text-success"
     >
       <span><strong>TAUT (Cypress):</strong> Painel integrado de testes de API e integração com seletor de tags (@cypress/grep), execução headless ou interativa (cy:open), streaming de console, sincronização de .env com o Oracle ativo, auditoria de cobertura Zephyr Scale (COVERAGE.md) e processamento automatizado de CSVs de intake.</span>
       <span><strong>Test Runners:</strong> Disparo e streaming em tempo real de testes unitários e de integração (Maven / JUnit / Mockito), testes web E2E (Playwright / Cypress) e coleções de API REST (Newman / Postman) com sincronização automática na Matriz de Validação.</span>

@@ -24,13 +24,13 @@ export const LogsEmptyState: React.FC<LogsEmptyStateProps> = ({
       {!hasSources ? (
         <div className="text-xs text-muted-foreground leading-relaxed bg-muted/30 border border-border/50 p-3 rounded-xl">
           Nenhuma fonte de log configurada.{' '}
-          <button onClick={onOpenManage} className="text-primary underline font-semibold">
+          <button onClick={onOpenManage} className="text-amber-300 underline font-semibold">
             Cadastre um arquivo de log
           </button>{' '}
           para começar a acompanhar em tempo real.
         </div>
       ) : status && !status.exists ? (
-        <div className="text-xs text-rose-400/90 leading-relaxed bg-rose-950/20 border border-rose-900/40 p-3 rounded-xl">
+        <div className="text-xs text-danger/90 leading-relaxed bg-danger/20 border border-danger/40 p-3 rounded-xl">
           O arquivo <code className="text-foreground font-mono font-bold">{filePath}</code> não
           foi encontrado. O Hub Manager está em escuta contínua e iniciará a transmissão assim que o serviço
           gravar as primeiras saídas.

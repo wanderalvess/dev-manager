@@ -14,8 +14,8 @@ interface StepActionsProps {
   onToggleService: (step: AutomationStep, isRunning: boolean) => void;
 }
 
-const STOP_CLASS = 'p-1 px-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
-const START_CLASS = 'p-1 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
+const STOP_CLASS = 'p-1 px-2 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
+const START_CLASS = 'p-1 px-2 bg-success/10 hover:bg-success/20 text-success border border-success/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
 
 /** Badge de porta/debug e botões individuais de uma etapa. */
 export const StepActions: React.FC<StepActionsProps> = ({
@@ -37,13 +37,13 @@ export const StepActions: React.FC<StepActionsProps> = ({
         <span
           className={`text-2xs font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
             isPortActive
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30'
+              ? 'bg-success/10 text-success border border-success/30'
               : 'bg-muted/40 text-muted-foreground border border-border/60'
           }`}
         >
           <span
             className={`w-1.5 h-1.5 rounded-full ${
-              isPortActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'
+              isPortActive ? 'bg-success animate-pulse' : 'bg-muted-foreground/40'
             }`}
           />
           :{targetPort} {step.type === 'karaf' ? (isPortActive ? 'Debug Ativo' : 'Debug Livre') : (isPortActive ? 'Online' : 'Offline')}
@@ -103,7 +103,7 @@ export const StepActions: React.FC<StepActionsProps> = ({
               type="button"
               onClick={() => onRestart(step)}
               disabled={loadingAction === 'restart' || isRunningProfile}
-              className="p-1 px-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all"
+              className="p-1 px-2 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all"
               title="Reiniciar esta etapa" aria-label="Reiniciar esta etapa"
             >
               <RefreshCw className={`w-3 h-3 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />

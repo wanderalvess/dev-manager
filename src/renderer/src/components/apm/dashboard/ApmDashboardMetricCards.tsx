@@ -30,10 +30,10 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between relative overflow-hidden">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
           <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
-            <Activity className="w-3.5 h-3.5 text-sky-500" />
+            <Activity className="w-3.5 h-3.5 text-info" />
             Vazão (Throughput)
           </span>
-          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-info/10 text-info border border-info/20">
             {overview.requestsPerSecond} req/s
           </span>
         </div>
@@ -49,7 +49,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             {timeSeries.slice(-15).map((b, i) => (
               <div
                 key={`sp-${b.timestampUnixMs}-${i}`}
-                className="flex-1 bg-sky-500/40 dark:bg-sky-400/40 rounded-t-xs hover:bg-sky-500 transition-colors"
+                className="flex-1 bg-info/40 rounded-t-xs hover:bg-info transition-colors"
                 style={{ height: `${getSparklineHeightPct(b.requestCount, maxBucketRequests)}%` }}
                 title={`${b.label}: ${b.requestCount} reqs`}
               />
@@ -72,10 +72,10 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           <span
             className={`text-2xs font-mono px-1.5 py-0.5 rounded border ${
               overview.p95LatencyMs < 200
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                ? 'bg-success/10 text-success border-success/20'
                 : overview.p95LatencyMs < 800
-                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                ? 'bg-warning/10 text-warning border-warning/20'
+                : 'bg-danger/10 text-danger border-danger/20'
             }`}
           >
             méd: {overview.avgLatencyMs}ms
@@ -87,9 +87,9 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
             <span
               className={
                 overview.p95LatencyMs > 1000
-                  ? 'text-rose-600 dark:text-rose-400'
+                  ? 'text-danger'
                   : overview.p95LatencyMs > 400
-                  ? 'text-amber-600 dark:text-amber-400'
+                  ? 'text-warning'
                   : 'text-foreground'
               }
             >
@@ -120,7 +120,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
             <AlertCircle
               className={`w-3.5 h-3.5 ${
-                overview.errorRate > 0 ? 'text-rose-500' : 'text-emerald-500'
+                overview.errorRate > 0 ? 'text-danger' : 'text-success'
               }`}
             />
             Taxa de Falhas
@@ -128,8 +128,8 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           <span
             className={`text-2xs font-mono px-1.5 py-0.5 rounded border ${
               overview.errorRate === 0
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                ? 'bg-success/10 text-success border-success/20'
+                : 'bg-danger/10 text-danger border-danger/20'
             }`}
           >
             {overview.errorRate === 0 ? '100% OK' : 'Atenção'}
@@ -139,7 +139,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
         <div className="mt-2">
           <div
             className={`text-2xl font-bold font-mono tracking-tight flex items-baseline gap-1 ${
-              overview.errorRate > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
+              overview.errorRate > 0 ? 'text-danger' : 'text-foreground'
             }`}
           >
             <span>{overview.errorRate}</span>
@@ -150,7 +150,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-3">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                overview.errorRate > 0 ? 'bg-rose-500' : 'bg-emerald-500'
+                overview.errorRate > 0 ? 'bg-danger' : 'bg-success'
               }`}
               style={{ width: `${getErrorBarWidthPct(overview.errorRate)}%` }}
             />
@@ -168,29 +168,29 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
           <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
-            <Database className="w-3.5 h-3.5 text-amber-500" />
+            <Database className="w-3.5 h-3.5 text-warning" />
             Tempo em Banco (Oracle)
           </span>
-          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-bold">
+          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20 font-bold">
             Listener SQL
           </span>
         </div>
 
         <div className="mt-2">
           <div className="text-2xl font-bold font-mono tracking-tight text-foreground flex items-baseline gap-1">
-            <span className="text-amber-600 dark:text-amber-400">{overview.dbTimePercentage}</span>
+            <span className="text-warning">{overview.dbTimePercentage}</span>
             <span className="text-xs font-normal font-sans text-muted-foreground">%</span>
           </div>
 
           {/* Barra de Proporção: Banco vs Java */}
           <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-3 flex">
             <div
-              className="bg-amber-500 h-full transition-all duration-500"
+              className="bg-warning h-full transition-all duration-500"
               style={{ width: `${Math.min(100, overview.dbTimePercentage)}%` }}
               title={`Banco de Dados: ${overview.dbTimePercentage}%`}
             />
             <div
-              className="bg-sky-500 h-full transition-all duration-500"
+              className="bg-info h-full transition-all duration-500"
               style={{ width: `${Math.max(0, 100 - overview.dbTimePercentage)}%` }}
               title={`Processamento Java: ${javaTimePct}%`}
             />
@@ -198,10 +198,10 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
 
           <div className="flex items-center justify-between text-2xs text-muted-foreground mt-1.5 font-mono">
             <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Oracle ({overview.dbTimePercentage}%)
+              <span className="w-1.5 h-1.5 rounded-full bg-warning" /> Oracle ({overview.dbTimePercentage}%)
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-500" /> Java ({javaTimePct}%)
+              <span className="w-1.5 h-1.5 rounded-full bg-info" /> Java ({javaTimePct}%)
             </span>
           </div>
         </div>

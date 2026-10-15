@@ -46,8 +46,8 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
     {/* Diagrama Visual das Branches */}
     <div className="bg-muted/40 border border-border/80 rounded-xl p-3 flex items-center justify-between text-xs font-mono">
       <div className="flex items-center space-x-2 truncate">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-        <span className="text-emerald-600 dark:text-emerald-300 font-bold truncate max-w-[200px]">
+        <span className="w-2 h-2 rounded-full bg-success animate-pulse shrink-0" />
+        <span className="text-success font-bold truncate max-w-[200px]">
           {project.currentBranch}
         </span>
       </div>

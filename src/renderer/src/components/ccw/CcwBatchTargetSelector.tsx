@@ -20,8 +20,8 @@ export const CcwBatchTargetSelector: React.FC<CcwBatchTargetSelectorProps> = ({ 
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
     <button type="button" onClick={() => onChange('favorites')} className={cardClass(value === 'favorites')}>
       <div className="flex items-center justify-between">
-        <div className="p-1 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/30">
-          <Star className="w-3.5 h-3.5 fill-amber-500" />
+        <div className="p-1 rounded-md bg-warning/10 text-warning border border-warning/30">
+          <Star className="w-3.5 h-3.5 fill-warning" />
         </div>
         <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20 uppercase tracking-wider">
           Recomendado

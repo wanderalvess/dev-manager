@@ -34,7 +34,7 @@ export const LogsFooter: React.FC<LogsFooterProps> = ({
         Linhas: <strong className="text-foreground">{visibleCount}</strong> / {totalCount}
       </span>
       {filterText && (
-        <span className="text-amber-400 truncate max-w-xs">
+        <span className="text-warning truncate max-w-xs">
           Filtro: &quot;{filterText}&quot; {invertFilter ? '(invertido)' : ''}
         </span>
       )}

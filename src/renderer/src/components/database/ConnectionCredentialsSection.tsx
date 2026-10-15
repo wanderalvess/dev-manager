@@ -47,7 +47,7 @@ export const ConnectionCredentialsSection: React.FC<ConnectionCredentialsSection
           className="w-full bg-background border border-border/70 rounded-md p-2 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
         />
         {hasSavedPassword && !editingConn.password && (
-          <p className="text-2xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+          <p className="text-2xs text-success mt-1 flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
             <span>Senha salva. Deixe em branco para mantê-la ou digite para alterá-la.</span>
           </p>

@@ -36,8 +36,8 @@ export const DocSettingsLlmTab: React.FC<DocSettingsLlmTabProps> = (p) => (
     />
 
     {p.llmSaveSuccess && (
-      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
-        <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+      <div className="p-3 rounded-xl bg-success/10 border border-success/30 text-success text-xs flex items-center gap-2">
+        <Check className="w-4 h-4 text-success shrink-0" />
         <span>Configuração do modelo de IA salva com sucesso!</span>
       </div>
     )}

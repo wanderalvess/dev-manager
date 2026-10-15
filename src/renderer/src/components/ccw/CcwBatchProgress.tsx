@@ -45,7 +45,7 @@ export const CcwBatchProgress: React.FC<CcwBatchProgressProps> = ({ progressList
                 </span>
               )}
               {prog.status === 'completed' && (
-                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                <span className="h-2 w-2 rounded-full bg-success shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
               )}
               {prog.status === 'failed' && (
                 <span className="h-2 w-2 rounded-full bg-destructive shrink-0" />
@@ -61,7 +61,7 @@ export const CcwBatchProgress: React.FC<CcwBatchProgressProps> = ({ progressList
             <span
               className={`text-2xs font-mono truncate max-w-xs ${
                 prog.status === 'completed'
-                  ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                  ? 'text-success font-semibold'
                   : prog.status === 'failed'
                   ? 'text-destructive font-bold'
                   : prog.status === 'downloading'

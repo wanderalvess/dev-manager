@@ -48,7 +48,7 @@ export const QaTemplateAssertionRow: React.FC<QaTemplateAssertionRowProps> = ({
     <button
       type="button"
       onClick={onRemove}
-      className="text-muted-foreground hover:text-red-500 text-xs p-1 cursor-pointer transition-colors"
+      className="text-muted-foreground hover:text-danger text-xs p-1 cursor-pointer transition-colors"
       title="Remover asserção" aria-label="Remover asserção"
     >
       <Trash2 className="w-3.5 h-3.5" />

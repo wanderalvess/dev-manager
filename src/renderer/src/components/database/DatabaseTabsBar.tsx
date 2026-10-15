@@ -5,9 +5,9 @@ import type { QueryTab } from '../../utils/queryTabsUtils';
 import type { WorkspaceStatus } from './DatabaseWorkspace';
 
 const TYPE_DOT: Record<DatabaseType, string> = {
-  oracle: 'bg-rose-500',
-  mysql: 'bg-amber-500',
-  postgres: 'bg-sky-500'
+  oracle: 'bg-danger',
+  mysql: 'bg-warning',
+  postgres: 'bg-info'
 };
 
 interface DatabaseTabsBarProps {
@@ -59,7 +59,7 @@ export const DatabaseTabsBar: React.FC<DatabaseTabsBarProps> = ({ tabs, activeId
             <span className={`w-2 h-2 rounded-full shrink-0 ${conn ? TYPE_DOT[conn.type] : 'bg-muted-foreground'}`} aria-hidden="true" />
             <span className="truncate">{conn?.name ?? '?'}</span>
             <span className="text-2xs text-muted-foreground font-mono shrink-0">{tab.title.replace('Consulta ', '#')}</span>
-            {pending && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" title="Alterações pendentes" aria-label="Alterações pendentes" />}
+            {pending && <span className="w-1.5 h-1.5 rounded-full bg-warning shrink-0" title="Alterações pendentes" aria-label="Alterações pendentes" />}
             <button
               type="button"
               onClick={(e) => {
@@ -67,7 +67,7 @@ export const DatabaseTabsBar: React.FC<DatabaseTabsBarProps> = ({ tabs, activeId
                 onClose(tab.id);
               }}
               aria-label={`Fechar ${tab.title}`}
-              className="p-0.5 rounded hover:bg-rose-500/15 hover:text-rose-500 text-muted-foreground opacity-60 group-hover:opacity-100 cursor-pointer shrink-0"
+              className="p-0.5 rounded hover:bg-danger/15 hover:text-danger text-muted-foreground opacity-60 group-hover:opacity-100 cursor-pointer shrink-0"
             >
               <X className="w-3 h-3" />
             </button>

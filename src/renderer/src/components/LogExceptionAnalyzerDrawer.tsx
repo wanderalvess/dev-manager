@@ -55,11 +55,11 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
   const getTypeBadge = (type: LogExceptionType) => {
     switch (type) {
       case 'ORA':
-        return { label: 'Oracle SQL', bg: 'bg-rose-500/15 text-rose-400 border-rose-500/40' };
+        return { label: 'Oracle SQL', bg: 'bg-danger/15 text-danger border-danger/40' };
       case 'OOM':
-        return { label: 'JVM Memória', bg: 'bg-red-500/20 text-red-400 border-red-500/40' };
+        return { label: 'JVM Memória', bg: 'bg-danger/20 text-danger border-danger/40' };
       case 'NPE':
-        return { label: 'NullPointer', bg: 'bg-amber-500/15 text-amber-400 border-amber-500/40' };
+        return { label: 'NullPointer', bg: 'bg-warning/15 text-warning border-warning/40' };
       case 'BUNDLE':
         return { label: 'OSGi Bundle', bg: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/40' };
       case 'CLASS_NOT_FOUND':
@@ -84,13 +84,13 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
         {/* Header do Drawer */}
         <div className="p-3.5 border-b border-border bg-muted/20 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
-            <Bug className="w-5 h-5 text-rose-500 shrink-0" />
+            <Bug className="w-5 h-5 text-danger shrink-0" />
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xs font-bold font-mono tracking-tight uppercase text-foreground">
                   Diagnóstico de Exceções & Logs
                 </h3>
-                <span className="text-2xs font-mono px-2 py-0.2 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold tabular-nums">
+                <span className="text-2xs font-mono px-2 py-0.2 rounded bg-danger/10 text-danger border border-danger/20 font-bold tabular-nums">
                   {summary.totalErrors} DETECTADAS
                 </span>
               </div>
@@ -127,8 +127,8 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
               onClick={() => setFilterType('ORA')}
               className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
                 filterType === 'ORA'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-2xs'
-                  : 'text-rose-400 hover:text-rose-300'
+                  ? 'bg-danger/20 text-danger border border-danger/40 shadow-2xs'
+                  : 'text-danger hover:text-danger'
               }`}
             >
               ORACLE ({summary.oraErrorsCount})
@@ -140,8 +140,8 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
               onClick={() => setFilterType('OOM')}
               className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
                 filterType === 'OOM'
-                  ? 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-2xs'
-                  : 'text-red-400 hover:text-red-300'
+                  ? 'bg-danger/20 text-danger border border-danger/40 shadow-2xs'
+                  : 'text-danger hover:text-danger'
               }`}
             >
               MEMÓRIA OOM ({summary.oomCount})
@@ -153,8 +153,8 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
               onClick={() => setFilterType('NPE')}
               className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
                 filterType === 'NPE'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-2xs'
-                  : 'text-amber-400 hover:text-amber-300'
+                  ? 'bg-warning/20 text-warning border border-warning/40 shadow-2xs'
+                  : 'text-warning hover:text-warning'
               }`}
             >
               NULLPOINTER ({summary.npeCount})
@@ -193,7 +193,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
         <div className="flex-1 overflow-y-auto p-3.5 space-y-2.5">
           {filteredMatches.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-muted-foreground text-xs font-mono">
-              <Zap className="w-7 h-7 mb-2 text-emerald-500 opacity-80" />
+              <Zap className="w-7 h-7 mb-2 text-success opacity-80" />
               <span className="font-bold text-foreground">Nenhuma anomalia crítica detectada</span>
               <span className="text-2xs text-muted-foreground/80 mt-1 max-w-xs">
                 As linhas analisadas não contêm padrões conhecidos de ORA, NullPointer, BundleException ou OutOfMemory.
@@ -266,7 +266,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                               title="Copiar comando"
                             >
                               {isCopied ? (
-                                <Check className="w-3 h-3 text-emerald-400" />
+                                <Check className="w-3 h-3 text-success" />
                               ) : (
                                 <Copy className="w-3 h-3" />
                               )}

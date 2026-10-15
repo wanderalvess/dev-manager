@@ -102,7 +102,7 @@ export const WhatsNewVersionDropdown: React.FC<WhatsNewVersionDropdownProps> = (
                     className={`px-1.5 py-0.2 rounded-md text-2xs font-bold ${
                       isSelected
                         ? 'bg-white/20 text-white'
-                        : 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-success/15 border border-success/30 text-success'
                     }`}
                   >
                     Atual

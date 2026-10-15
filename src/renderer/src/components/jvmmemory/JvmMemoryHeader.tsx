@@ -13,7 +13,7 @@ interface JvmMemoryHeaderProps {
 export const JvmMemoryHeader: React.FC<JvmMemoryHeaderProps> = ({ metrics, isNearOom, alertLevel, onClose }) => (
   <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-muted/20">
     <div className="flex items-center space-x-3">
-      <Activity className={`w-5 h-5 shrink-0 ${isNearOom ? 'text-rose-500 animate-pulse' : 'text-primary'}`} />
+      <Activity className={`w-5 h-5 shrink-0 ${isNearOom ? 'text-danger animate-pulse' : 'text-primary'}`} />
       <div>
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-bold tracking-tight text-foreground uppercase">

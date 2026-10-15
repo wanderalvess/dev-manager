@@ -15,7 +15,7 @@ export const MarkdownList: React.FC<MarkdownListProps> = ({ items, searchTerm })
           <span
             className={`inline-flex items-center justify-center w-4 h-4 rounded-md mt-0.5 border text-2xs shrink-0 font-bold ${
               li.checked
-                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                ? 'bg-success/20 border-success text-success'
                 : 'border-border bg-muted/40 text-transparent'
             }`}
           >

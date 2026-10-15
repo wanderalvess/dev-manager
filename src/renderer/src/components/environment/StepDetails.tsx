@@ -48,8 +48,8 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
             <span
               className={`text-2xs px-1.5 py-0.2 rounded font-sans font-bold ${
                 srvFound.state === 'RUNNING'
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                  ? 'bg-success/10 text-success'
+                  : 'bg-danger/10 text-danger'
               }`}
             >
               {srvFound.state === 'RUNNING' ? 'Em Execução' : srvFound.state === 'STOPPED' ? 'Parado' : srvFound.state}
@@ -69,7 +69,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
             <span
               className={`text-2xs px-1.5 py-0.2 rounded font-sans font-bold ${
                 procFound.isRunning
-                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  ? 'bg-warning/10 text-warning'
                   : 'bg-muted text-muted-foreground'
               }`}
             >

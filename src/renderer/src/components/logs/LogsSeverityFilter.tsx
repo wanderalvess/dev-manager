@@ -27,8 +27,8 @@ export const LogsSeverityFilter: React.FC<LogsSeverityFilterProps> = ({
       onClick={() => onChange('ERROR')}
       className={`px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 ${
         levelFilter === 'ERROR'
-          ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40'
-          : 'text-rose-400/80 hover:text-rose-300'
+          ? 'bg-danger/20 text-danger font-bold border border-danger/40'
+          : 'text-danger hover:text-danger/80'
       }`}
     >
       ERROR {levelCounts.errorCount > 0 && <span className="font-mono">({levelCounts.errorCount})</span>}
@@ -37,8 +37,8 @@ export const LogsSeverityFilter: React.FC<LogsSeverityFilterProps> = ({
       onClick={() => onChange('WARN')}
       className={`px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 ${
         levelFilter === 'WARN'
-          ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
-          : 'text-amber-400/80 hover:text-amber-300'
+          ? 'bg-warning/20 text-warning font-bold border border-warning/40'
+          : 'text-warning hover:text-warning/80'
       }`}
     >
       WARN {levelCounts.warnCount > 0 && <span className="font-mono">({levelCounts.warnCount})</span>}
@@ -47,8 +47,8 @@ export const LogsSeverityFilter: React.FC<LogsSeverityFilterProps> = ({
       onClick={() => onChange('INFO')}
       className={`px-2 py-0.5 rounded-md transition-colors ${
         levelFilter === 'INFO'
-          ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/40'
-          : 'text-sky-400/80 hover:text-sky-300'
+          ? 'bg-info/20 text-info font-bold border border-info/40'
+          : 'text-info hover:text-info/80'
       }`}
     >
       INFO

@@ -13,7 +13,7 @@ export const TracerViewTabs: React.FC<{
       type="button"
       onClick={() => onChange('sessions')}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 font-semibold transition cursor-pointer ${
-        view === 'sessions' ? 'bg-sky-500/20 text-sky-500' : 'text-muted-foreground hover:text-foreground'
+        view === 'sessions' ? 'bg-info/20 text-info' : 'text-muted-foreground hover:text-foreground'
       }`}
     >
       <Users className="w-3.5 h-3.5" />
@@ -23,7 +23,7 @@ export const TracerViewTabs: React.FC<{
       type="button"
       onClick={() => onChange('recent')}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 font-semibold transition cursor-pointer border-l border-border/70 ${
-        view === 'recent' ? 'bg-sky-500/20 text-sky-500' : 'text-muted-foreground hover:text-foreground'
+        view === 'recent' ? 'bg-info/20 text-info' : 'text-muted-foreground hover:text-foreground'
       }`}
     >
       <History className="w-3.5 h-3.5" />

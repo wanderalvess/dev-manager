@@ -52,7 +52,7 @@ export const ResultsGridRow: React.FC<ResultsGridRowProps> = ({
   <tr
     onClick={() => onSelectRow(idx)}
     style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}
-    className={`transition-colors select-text cursor-pointer ${getRowClassName(isSelected, idx)} ${isDeleted ? 'bg-rose-500/10 line-through opacity-60' : ''}`}
+    className={`transition-colors select-text cursor-pointer ${getRowClassName(isSelected, idx)} ${isDeleted ? 'bg-danger/10 line-through opacity-60' : ''}`}
   >
     <td className="px-2 py-1.5 text-center text-muted-foreground text-2xs border-r border-border/30 select-none">
       {idx + 1}
@@ -65,7 +65,7 @@ export const ResultsGridRow: React.FC<ResultsGridRowProps> = ({
 
       if (isEditingThisCell && editingCell) {
         return (
-          <td key={col} className="px-1.5 py-1 border-r border-border/30 bg-sky-500/5">
+          <td key={col} className="px-1.5 py-1 border-r border-border/30 bg-info/5">
             <input
               autoFocus
               type="text"
@@ -84,7 +84,7 @@ export const ResultsGridRow: React.FC<ResultsGridRowProps> = ({
                 }
               }}
               title={`Valor especial "${NULL_SIGIL}" grava NULL na coluna`}
-              className="w-full px-1.5 py-0.5 text-xs bg-background border border-sky-500 rounded font-mono focus:outline-hidden"
+              className="w-full px-1.5 py-0.5 text-xs bg-background border border-info rounded font-mono focus:outline-hidden"
             />
           </td>
         );
@@ -101,7 +101,7 @@ export const ResultsGridRow: React.FC<ResultsGridRowProps> = ({
             onOpenContextMenu({ x: e.clientX, y: e.clientY, column: col, value: val, rowIndex: idx });
           }}
           title={hasPending ? `Alteração pendente (valor original: ${row[col] ?? 'NULL'})` : getCellTitle(isEditable)}
-          className={`px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate hover:bg-sky-500/10 dark:hover:bg-sky-500/20 transition-colors cursor-pointer ${hasPending ? 'bg-amber-500/20 ring-1 ring-inset ring-amber-500/50 font-semibold' : ''}`}
+          className={`px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate hover:bg-info/10 transition-colors cursor-pointer ${hasPending ? 'bg-warning/20 ring-1 ring-inset ring-warning/50 font-semibold' : ''}`}
         >
           <ResultsGridCellContent value={val} dataType={dType} />
         </td>

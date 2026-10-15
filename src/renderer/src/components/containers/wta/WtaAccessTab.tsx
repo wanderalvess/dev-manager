@@ -57,20 +57,20 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
         <div className="p-3 bg-card border border-border/80 rounded-xl space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <Wrench className="w-3.5 h-3.5 text-amber-500" />
+              <Wrench className="w-3.5 h-3.5 text-warning" />
               <span>Instalador WTA</span>
             </span>
             <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
               /instalador
             </span>
           </div>
-          <div className="text-xs font-mono text-amber-600 dark:text-amber-400 bg-background p-2 rounded-lg border border-border/60 break-all select-all">
+          <div className="text-xs font-mono text-warning bg-background p-2 rounded-lg border border-border/60 break-all select-all">
             {installerUrl}
           </div>
           <button
             type="button"
             onClick={() => window.electronAPI?.openExternal?.(installerUrl)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
           >
             <ExternalLink className="w-3 h-3" />
             <span>Abrir Instalador no Navegador</span>

@@ -21,9 +21,9 @@ export const KarafWarningBanner: React.FC<KarafWarningBannerProps> = ({
   onStartKaraf,
   onCheckKaraf
 }) => (
-  <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start justify-between space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
+  <div className="shrink-0 bg-warning/10 border border-warning/40 rounded-xl p-3 flex items-start justify-between space-x-2.5 text-xs text-warning">
     <div className="flex items-start space-x-2.5 flex-1">
-      <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+      <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
       <div className="flex-1">
         <span className="font-bold block">Apache Karaf não está em execução (WTA offline)</span>
         <span className="text-2xs text-muted-foreground block mt-0.5 leading-relaxed">
@@ -34,7 +34,7 @@ export const KarafWarningBanner: React.FC<KarafWarningBannerProps> = ({
             <button
               type="button"
               onClick={onNavigateToEnv}
-              className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-2xs font-bold text-amber-700 dark:text-amber-200 flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-lg text-2xs font-bold text-warning flex items-center gap-1.5 transition-all cursor-pointer"
               title="Abrir o Gestor de Ambiente para iniciar o Karaf e ver logs"
             >
               <Terminal className="w-3 h-3" />
@@ -73,8 +73,8 @@ interface AppPathWarningProps {
 
 // Alerta de diretório não configurado
 export const AppPathWarning: React.FC<AppPathWarningProps> = ({ onNavigateToSettings }) => (
-  <div className="shrink-0 bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-amber-700 dark:text-amber-200">
-    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+  <div className="shrink-0 bg-warning/10 border border-warning/40 rounded-xl p-3 flex items-start space-x-2.5 text-xs text-warning">
+    <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
     <div className="flex-1">
       <span className="font-bold block">Diretório de Rotinas WinThor não configurado</span>
       <span className="text-2xs text-muted-foreground block mt-0.5">
@@ -84,7 +84,7 @@ export const AppPathWarning: React.FC<AppPathWarningProps> = ({ onNavigateToSett
         <button
           type="button"
           onClick={onNavigateToSettings}
-          className="mt-2 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-2xs font-bold text-amber-700 dark:text-amber-200 flex items-center gap-1 transition-all cursor-pointer"
+          className="mt-2 px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-lg text-2xs font-bold text-warning flex items-center gap-1 transition-all cursor-pointer"
         >
           <Settings className="w-3 h-3" />
           <span>Configurar Diretório</span>

@@ -84,7 +84,7 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
 
         {/* Dica 2: Karaf Shell */}
         <div className="cockpit-panel rounded-xl p-5 border border-border shadow-md space-y-3">
-          <div className="flex items-center space-x-2 text-amber-500 font-bold text-xs uppercase tracking-wider">
+          <div className="flex items-center space-x-2 text-warning font-bold text-xs uppercase tracking-wider">
             <Terminal className="w-4 h-4" />
             <span>Dica Pro: Comandos Rápidos do Apache Karaf</span>
           </div>
@@ -98,14 +98,14 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
               className="p-1 hover:text-foreground text-muted-foreground transition cursor-pointer"
               title="Copiar comando"
             >
-              {copiedItem === 'cmd-karaf-bl' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedItem === 'cmd-karaf-bl' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>
 
         {/* Dica 3: Automação por IA via MCP */}
         <div className="cockpit-panel rounded-xl p-5 border border-border shadow-md space-y-3">
-          <div className="flex items-center space-x-2 text-violet-400 font-bold text-xs uppercase tracking-wider">
+          <div className="flex items-center space-x-2 text-violet-700 dark:text-violet-400 font-bold text-xs uppercase tracking-wider">
             <Bot className="w-4 h-4" />
             <span>Dica Pro: Automação por IA no IntelliJ &amp; VS Code (Copilot / MCP)</span>
           </div>
@@ -119,7 +119,7 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
               className="p-1 hover:text-foreground text-muted-foreground transition cursor-pointer shrink-0 ml-2"
               title="Copiar prompt completo"
             >
-              {copiedItem === 'tip-mcp-prompt' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedItem === 'tip-mcp-prompt' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>

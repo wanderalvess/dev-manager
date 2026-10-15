@@ -102,7 +102,7 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
                 title={copiedFolderPath === folder.path ? 'Caminho copiado!' : 'Copiar caminho completo'} aria-label={copiedFolderPath === folder.path ? 'Caminho copiado!' : 'Copiar caminho completo'}
               >
                 {copiedFolderPath === folder.path ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  <Check className="w-3.5 h-3.5 text-success" />
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}

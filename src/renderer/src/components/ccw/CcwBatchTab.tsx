@@ -108,7 +108,7 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
           className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
         />
         <label htmlFor="batchBackupExisting" className="text-xs font-medium text-foreground cursor-pointer flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <ShieldCheck className="w-3.5 h-3.5 text-success" />
           <span>Gerar cópias .bak antes de substituir</span>
         </label>
       </div>
@@ -147,8 +147,8 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
       <div
         className={`p-3.5 rounded-xl border text-xs space-y-1.5 animate-in fade-in duration-150 ${
           summary.success
-            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-            : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300'
+            ? 'bg-success/10 border-success/30 text-success'
+            : 'bg-warning/10 border-warning/30 text-warning'
         }`}
       >
         <div className="flex items-center gap-2 font-bold">
@@ -161,7 +161,7 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
         </div>
         <div className="text-2xs font-mono text-muted-foreground pl-6">
           Total: <b className="text-foreground">{summary.totalRoutines ?? summary.total}</b> | Sucessos:{' '}
-          <b className="text-emerald-500">{summary.successfulDownloads ?? summary.completed}</b> | Falhas:{' '}
+          <b className="text-success">{summary.successfulDownloads ?? summary.completed}</b> | Falhas:{' '}
           <b className={(summary.failedDownloads ?? summary.failed ?? 0) > 0 ? 'text-destructive' : 'text-foreground'}>
             {summary.failedDownloads ?? summary.failed ?? 0}
           </b>

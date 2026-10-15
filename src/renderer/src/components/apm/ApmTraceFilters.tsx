@@ -33,11 +33,11 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
     setLatencyBracket((previous) => previous === bracket ? 'ALL' : bracket);
   };
   const presets: Array<{ value: FilterPreset; label: string; title?: string; activeClass: string; hoverClass: string }> = [
-    { value: 'ERRORS', label: 'Erros', activeClass: 'bg-rose-500/20 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-400 dark:border-rose-700', hoverClass: 'hover:text-rose-600 dark:hover:text-rose-400' },
-    { value: 'SLOW', label: '🐢 Lentos', title: 'Traces com duração superior a 400ms', activeClass: 'bg-amber-500/20 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-400 dark:border-amber-700', hoverClass: 'hover:text-amber-600 dark:hover:text-amber-400' },
-    { value: 'SLOW_QUERIES', label: '🗄️ Queries Lentas', title: 'Traces contendo queries SQL com alta latência', activeClass: 'bg-amber-500/25 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border-amber-500', hoverClass: 'hover:text-amber-600 dark:hover:text-amber-400' },
+    { value: 'ERRORS', label: 'Erros', activeClass: 'bg-danger/20 text-danger border-danger', hoverClass: 'hover:text-danger' },
+    { value: 'SLOW', label: '🐢 Lentos', title: 'Traces com duração superior a 400ms', activeClass: 'bg-warning/20 text-warning border-warning', hoverClass: 'hover:text-warning' },
+    { value: 'SLOW_QUERIES', label: '🗄️ Queries Lentas', title: 'Traces contendo queries SQL com alta latência', activeClass: 'bg-warning/25 text-warning border-warning', hoverClass: 'hover:text-warning' },
     { value: 'SLOW_ENDPOINTS', label: '🌐 Endpoints Lentos', title: 'Endpoints com maior latência observada', activeClass: 'bg-orange-500/25 text-orange-900 dark:bg-orange-950 dark:text-orange-200 border-orange-500', hoverClass: 'hover:text-orange-600 dark:hover:text-orange-400' },
-    { value: 'DB', label: 'Com SQL', activeClass: 'bg-sky-500/20 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-400 dark:border-sky-700', hoverClass: 'hover:text-sky-600 dark:hover:text-sky-400' }
+    { value: 'DB', label: 'Com SQL', activeClass: 'bg-info/20 text-info border-info', hoverClass: 'hover:text-info' }
   ];
   return (
     <div className="h-10 px-3 border-b border-border bg-card/40 flex items-center justify-between gap-3 shrink-0 text-xs">
@@ -87,10 +87,10 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
           onClick={() => setSortOrder((previous) => previous === 'time' ? 'duration' : 'time')}
           title={sortOrder === 'time' ? 'Ordenando por horário mais recente. Clique para ordenar pelos mais lentos.' : 'Ordenando por duração (mais lentos primeiro). Clique para ordenar por horário.'}
           className={`h-6 px-2 rounded border text-2xs font-mono flex items-center gap-1 cursor-pointer transition ${
-            sortOrder === 'duration' ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/50 font-bold shadow-2xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
+            sortOrder === 'duration' ? 'bg-warning/20 text-warning border-warning/50 font-bold shadow-2xs' : 'bg-card border-border text-muted-foreground hover:text-foreground'
           }`}
         >
-          <ArrowUpDown className="w-3 h-3 text-amber-500" />
+          <ArrowUpDown className="w-3 h-3 text-warning" />
           <span>{sortOrder === 'duration' ? 'Mais Lentos' : 'Recentes'}</span>
         </button>
         <ApmSlowPicker

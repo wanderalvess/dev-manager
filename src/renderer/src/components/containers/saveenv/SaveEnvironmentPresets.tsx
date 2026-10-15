@@ -30,7 +30,7 @@ export const SaveEnvironmentPresets: React.FC<SaveEnvironmentPresetsProps> = ({
       <button
         type="button"
         onClick={() => onApplyPreset('running')}
-        className="px-2 py-1 rounded-md text-2xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 transition cursor-pointer"
+        className="px-2 py-1 rounded-md text-2xs font-semibold bg-success/10 hover:bg-success/20 text-success border border-success/30 transition cursor-pointer"
       >
         Apenas Rodando ({cleanContainers.filter((c) => c.state === 'running').length})
       </button>

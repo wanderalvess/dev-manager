@@ -46,7 +46,7 @@ export const TautSubTabs: React.FC<TautSubTabsProps> = ({
     </button>
 
     <button type="button" onClick={() => onChange('intake')} className={tabClass(activeSubTab === 'intake')}>
-      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+      <Sparkles className="w-3.5 h-3.5 text-warning" />
       <span>Orquestrador de Intake CSV (IA)</span>
     </button>
   </div>

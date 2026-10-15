@@ -103,7 +103,7 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
           onClick={() => onBasicAction('resolve', b.id)}
           disabled={isRowLoading}
           title="Forçar resolução de dependências OSGi (bundle:resolve)" aria-label="Forçar resolução de dependências OSGi (bundle:resolve)"
-          className="p-1.5 rounded-md text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-50 cursor-pointer"
+          className="p-1.5 rounded-md text-warning hover:bg-warning/10 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <Wrench className="w-3.5 h-3.5" />
         </button>
@@ -116,7 +116,7 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
           onClick={() => onBasicAction('stop', b.id)}
           disabled={isRowLoading}
           title="Parar bundle" aria-label="Parar bundle"
-          className="p-1.5 rounded-md text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-50 cursor-pointer"
+          className="p-1.5 rounded-md text-muted-foreground hover:text-warning hover:bg-warning/10 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <Square className="w-3.5 h-3.5 fill-current" />
         </button>
@@ -126,7 +126,7 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
           onClick={() => onBasicAction('start', b.id)}
           disabled={isRowLoading}
           title="Iniciar bundle" aria-label="Iniciar bundle"
-          className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors disabled:opacity-50 cursor-pointer"
+          className="p-1.5 rounded-md text-muted-foreground hover:text-success hover:bg-success/10 transition-colors disabled:opacity-50 cursor-pointer"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
         </button>
@@ -138,7 +138,7 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
         onClick={() => onOpenUninstall(b)}
         disabled={isRowLoading}
         title="Desinstalar bundle com verificação de dependências" aria-label="Desinstalar bundle com verificação de dependências"
-        className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors disabled:opacity-50 cursor-pointer"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-50 cursor-pointer"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

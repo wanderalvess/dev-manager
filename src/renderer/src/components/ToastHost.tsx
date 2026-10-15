@@ -57,10 +57,10 @@ export const ToastHost: React.FC = () => {
           key={toast.id}
           className={`flex items-start gap-2 p-3 rounded-xl border shadow-2xl text-xs animate-fade-in ${
             toast.variant === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+              ? 'bg-success/10 border-success/30 text-success'
               : toast.variant === 'info'
                 ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                : 'bg-danger/10 border-danger/30 text-danger'
           }`}
         >
           {toast.variant === 'success' ? (
