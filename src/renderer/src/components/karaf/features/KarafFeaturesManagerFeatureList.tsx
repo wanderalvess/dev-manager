@@ -76,7 +76,7 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
               <button
                 onClick={() => onToggleInstall(feat)}
                 disabled={isBusy}
-                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-40 ${
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-50 ${
                   isInstalled
                     ? 'bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30'
                     : 'bg-success/10 hover:bg-success/20 text-success border border-success/30'

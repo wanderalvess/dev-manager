@@ -11,7 +11,7 @@ export const AiTabHeader: React.FC<AiTabHeaderProps> = ({ activeProvider, onNewP
   <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
     <div className="space-y-1">
       <div className="flex items-center gap-2.5">
-        <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Bot className="w-5 h-5 text-primary" />
           Provedores de IA & Motores LLM (BYOK)
         </h3>

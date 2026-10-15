@@ -74,7 +74,7 @@ export const StatementTracerPanel: React.FC<StatementTracerPanelProps> = ({ acti
             <AlertCircle className="w-4 h-4 text-danger shrink-0" />
             <span>Falha na última consulta ao Oracle:</span>
           </div>
-          <pre className="font-mono text-[11px] whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-danger mt-2">
+          <pre className="font-mono text-2xs whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-danger mt-2">
             {state.lastError}
           </pre>
         </div>

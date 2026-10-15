@@ -35,7 +35,7 @@ export const TerminalCommandInput: React.FC<TerminalCommandInputProps> = ({
     <button
       type="submit"
       disabled={!value.trim()}
-      className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors disabled:opacity-40"
+      className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors disabled:opacity-50"
     >
       <span>Enviar</span>
       <CornerDownLeft className="w-3 h-3" />

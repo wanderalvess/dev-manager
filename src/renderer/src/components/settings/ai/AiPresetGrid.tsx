@@ -7,9 +7,9 @@ interface AiPresetGridProps {
 }
 
 export const AiPresetGrid: React.FC<AiPresetGridProps> = ({ onApplyTemplate }) => (
-  <div className="p-3.5 bg-muted/30 rounded-2xl border border-border/80 space-y-2.5">
+  <div className="p-3 bg-muted/30 rounded-xl border border-border/80 space-y-2.5">
     <div className="flex items-center justify-between">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+      <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
         <Cpu className="w-3.5 h-3.5 text-primary" />
         Presets de Conexão Rápida
       </span>

@@ -44,7 +44,7 @@ export const KarafInstallModal: React.FC<KarafInstallModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -79,7 +79,7 @@ export const KarafInstallModal: React.FC<KarafInstallModalProps> = ({
         {state.installDepCheck && <KarafInstallDepReport check={state.installDepCheck} />}
 
         {state.installLog && (
-          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-[11px] text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
+          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-2xs text-slate-200 overflow-x-auto whitespace-pre-wrap max-h-48 overflow-y-auto selection:bg-slate-800">
             {state.installLog}
           </div>
         )}

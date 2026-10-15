@@ -17,7 +17,7 @@ import { DatabaseService } from '../main/services/DatabaseService';
 import { OracleTracerCaptureService } from '../main/services/OracleTracerCaptureService';
 import { BackupService } from '../main/services/BackupService';
 import { BackupSchedulerService } from '../main/services/BackupSchedulerService';
-import * as cron from 'node-cron';
+import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupConfigUtils';
 import { DockerService } from '../main/services/DockerService';
 import { wslService } from '../main/services/WslService';
 import { NetworkService } from '../main/services/NetworkService';
@@ -52,7 +52,7 @@ import {
   RoutineDownloadRequest,
   BatchRoutineDownloadRequest
 } from '../shared/types';
-import { isValidIdentifier, isSafeUrl, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
+import { isValidIdentifier, isSafeKarafCommand, isSafeLocalPath } from '../main/utils/security';
 import { z } from 'zod';
 import {
   createApiKeyMiddleware,
@@ -808,11 +808,6 @@ app.post('/api/llm/test-connection', handleTestLlmRoute);
 app.post('/api/llm/chat', handleChatLlmRoute);
 app.post('/api/llm/ask-with-docs', handleAskDocsRoute);
 
-// Aliases de compatibilidade
-app.post('/api/docs/test-llm', handleTestLlmRoute);
-app.post('/api/docs/chat-llm', handleChatLlmRoute);
-app.post('/api/docs/ask-llm', handleAskDocsRoute);
-
 app.post('/api/docs/sync', async (req, res) => {
   const targetId = req.body?.targetId as string | undefined;
   const results = await docSyncService.syncToTarget(targetId, (progress: DocSyncProgress) => {
@@ -878,15 +873,6 @@ app.post('/api/settings', (req, res) => {
     }
   }
   res.json(configService.sanitizeSecrets(saved));
-});
-
-// 7. Utilitários Shell
-app.post('/api/shell/open', (req, res) => {
-  const { url } = req.body;
-  if (!isSafeUrl(url)) {
-    return res.status(400).json({ error: 'URL insegura ou não permitida.' });
-  }
-  res.json({ success: true, url });
 });
 
 // 8. Banco de Dados (Oracle, MySQL, Postgres)
@@ -1108,16 +1094,10 @@ app.post('/api/db/backups', async (req, res) => {
 app.post('/api/db/backup-config', async (req, res) => {
   try {
     const config = req.body;
-    if (config.cronExpression && !cron.validate(config.cronExpression)) {
-      return res.json({ success: false, message: 'Expressão cron inválida.' });
-    }
+    const invalid = validateBackupConfig(config);
+    if (invalid) return res.json({ success: false, message: invalid });
 
-    const settings = configService.getSettings();
-    const existing = settings.backupConfigs || [];
-    const previous = existing.find((b) => b.connectionId === config.connectionId);
-    const merged = { ...previous, ...config };
-    const updated = [merged, ...existing.filter((b) => b.connectionId !== config.connectionId)];
-    configService.saveSettings({ backupConfigs: updated });
+    configService.saveSettings({ backupConfigs: mergeBackupConfig(configService.getSettings().backupConfigs || [], config) });
     backupSchedulerService.rescheduleAll();
 
     res.json({ success: true, message: 'Agendamento salvo com sucesso.' });
@@ -1350,7 +1330,7 @@ app.post(['/api/wsl/target-distro', '/api/docker/target-distro'], async (req, re
   res.json(status);
 });
 
-app.post(['/api/docker/start-sequence', '/api/containers/start-sequence'], async (req, res) => {
+app.post('/api/docker/start-sequence', async (req, res) => {
   const { containers } = req.body || {};
   if (!Array.isArray(containers)) {
     return res.status(400).json({ success: false, error: 'containers deve ser um array' });
@@ -1361,7 +1341,7 @@ app.post(['/api/docker/start-sequence', '/api/containers/start-sequence'], async
   res.json(result);
 });
 
-app.post(['/api/docker/stop-sequence', '/api/containers/stop-sequence'], async (req, res) => {
+app.post('/api/docker/stop-sequence', async (req, res) => {
   const { containers } = req.body || {};
   if (!Array.isArray(containers)) {
     return res.status(400).json({ success: false, error: 'containers deve ser um array' });
@@ -1372,22 +1352,22 @@ app.post(['/api/docker/stop-sequence', '/api/containers/stop-sequence'], async (
   res.json(result);
 });
 
-app.get(['/api/docker/status', '/api/containers/status'], async (_req, res) => {
+app.get('/api/docker/status', async (_req, res) => {
   const status = await dockerService.checkDockerStatus();
   res.json(status);
 });
 
-app.get(['/api/docker/containers', '/api/containers', '/api/containers/list'], async (_req, res) => {
+app.get('/api/docker/containers', async (_req, res) => {
   const containers = await dockerService.listContainers();
   res.json(containers);
 });
 
-app.get(['/api/docker/stats', '/api/containers/stats'], async (_req, res) => {
+app.get('/api/docker/stats', async (_req, res) => {
   const stats = await dockerService.getContainerStats();
   res.json(stats);
 });
 
-app.post(['/api/docker/containers/:id/start', '/api/containers/:id/start'], async (req, res) => {
+app.post('/api/docker/containers/:id/start', async (req, res) => {
   try {
     const success = await dockerService.startContainer(req.params.id);
     res.json({ success });
@@ -1396,7 +1376,7 @@ app.post(['/api/docker/containers/:id/start', '/api/containers/:id/start'], asyn
   }
 });
 
-app.post(['/api/docker/containers/:id/stop', '/api/containers/:id/stop'], async (req, res) => {
+app.post('/api/docker/containers/:id/stop', async (req, res) => {
   try {
     const success = await dockerService.stopContainer(req.params.id);
     res.json({ success });
@@ -1405,7 +1385,7 @@ app.post(['/api/docker/containers/:id/stop', '/api/containers/:id/stop'], async 
   }
 });
 
-app.post(['/api/docker/containers/:id/restart', '/api/containers/:id/restart'], async (req, res) => {
+app.post('/api/docker/containers/:id/restart', async (req, res) => {
   try {
     const success = await dockerService.restartContainer(req.params.id);
     res.json({ success });
@@ -1414,7 +1394,7 @@ app.post(['/api/docker/containers/:id/restart', '/api/containers/:id/restart'], 
   }
 });
 
-app.get(['/api/docker/containers/:id/logs', '/api/containers/:id/logs'], async (req, res) => {
+app.get('/api/docker/containers/:id/logs', async (req, res) => {
   try {
     const lines = req.query.lines ? Number(req.query.lines) : 200;
     const logs = await dockerService.getContainerLogs(req.params.id, lines);
@@ -1424,7 +1404,7 @@ app.get(['/api/docker/containers/:id/logs', '/api/containers/:id/logs'], async (
   }
 });
 
-app.post(['/api/docker/containers/:id/terminal', '/api/containers/:id/terminal'], async (req, res) => {
+app.post('/api/docker/containers/:id/terminal', async (req, res) => {
   try {
     const shellName = req.body?.shell || 'bash';
     const success = await dockerService.openContainerTerminal(req.params.id, shellName);
@@ -1434,7 +1414,7 @@ app.post(['/api/docker/containers/:id/terminal', '/api/containers/:id/terminal']
   }
 });
 
-app.get(['/api/docker/containers/:id/inspect', '/api/containers/:id/inspect'], async (req, res) => {
+app.get('/api/docker/containers/:id/inspect', async (req, res) => {
   try {
     const details = await dockerService.inspectContainer(req.params.id);
     if (!details) {
@@ -1446,7 +1426,7 @@ app.get(['/api/docker/containers/:id/inspect', '/api/containers/:id/inspect'], a
   }
 });
 
-app.post(['/api/docker/containers/:id/pause', '/api/containers/:id/pause'], async (req, res) => {
+app.post('/api/docker/containers/:id/pause', async (req, res) => {
   try {
     const success = await dockerService.pauseContainer(req.params.id);
     res.json({ success });
@@ -1455,7 +1435,7 @@ app.post(['/api/docker/containers/:id/pause', '/api/containers/:id/pause'], asyn
   }
 });
 
-app.post(['/api/docker/containers/:id/unpause', '/api/containers/:id/unpause'], async (req, res) => {
+app.post('/api/docker/containers/:id/unpause', async (req, res) => {
   try {
     const success = await dockerService.unpauseContainer(req.params.id);
     res.json({ success });
@@ -1464,7 +1444,7 @@ app.post(['/api/docker/containers/:id/unpause', '/api/containers/:id/unpause'], 
   }
 });
 
-app.post(['/api/docker/containers/prune', '/api/containers/prune'], async (_req, res) => {
+app.post('/api/docker/containers/prune', async (_req, res) => {
   try {
     const result = await dockerService.pruneContainers();
     res.json(result);
@@ -1473,7 +1453,7 @@ app.post(['/api/docker/containers/prune', '/api/containers/prune'], async (_req,
   }
 });
 
-app.delete(['/api/docker/containers/:id', '/api/containers/:id'], async (req, res) => {
+app.delete('/api/docker/containers/:id', async (req, res) => {
   try {
     const success = await dockerService.removeContainer(req.params.id);
     res.json({ success });
@@ -1483,7 +1463,7 @@ app.delete(['/api/docker/containers/:id', '/api/containers/:id'], async (req, re
 });
 
 // Ferramentas de Manutenção Oracle (INFR-Docker)
-app.post(['/api/docker/oracle-health', '/api/containers/oracle-health'], async (req, res) => {
+app.post('/api/docker/oracle-health', async (req, res) => {
   try {
     const { containerName, schema, fix, user, password } = req.body || {};
     const result = await dockerService.execOracleHealth(containerName, schema, fix, user, password);
@@ -1493,7 +1473,7 @@ app.post(['/api/docker/oracle-health', '/api/containers/oracle-health'], async (
   }
 });
 
-app.post(['/api/docker/oracle-sqlplus', '/api/containers/oracle-sqlplus'], async (req, res) => {
+app.post('/api/docker/oracle-sqlplus', async (req, res) => {
   try {
     const { containerName, user, password } = req.body || {};
     const success = await dockerService.openOracleSqlPlus(containerName, user, password);
@@ -1503,7 +1483,7 @@ app.post(['/api/docker/oracle-sqlplus', '/api/containers/oracle-sqlplus'], async
   }
 });
 
-app.post(['/api/docker/oracle-datapump', '/api/containers/oracle-datapump'], async (req, res) => {
+app.post('/api/docker/oracle-datapump', async (req, res) => {
   try {
     const result = await dockerService.execOracleDataPump(req.body);
     res.json(result);
@@ -1512,7 +1492,7 @@ app.post(['/api/docker/oracle-datapump', '/api/containers/oracle-datapump'], asy
   }
 });
 
-app.post(['/api/docker/wta-karaf-client', '/api/containers/wta-karaf-client'], async (req, res) => {
+app.post('/api/docker/wta-karaf-client', async (req, res) => {
   try {
     const { containerName } = req.body || {};
     if (!containerName) {
@@ -1525,7 +1505,7 @@ app.post(['/api/docker/wta-karaf-client', '/api/containers/wta-karaf-client'], a
   }
 });
 
-app.post(['/api/docker/compose-up', '/api/containers/compose-up'], async (req, res) => {
+app.post('/api/docker/compose-up', async (req, res) => {
   try {
     const { composeFilePath, profile, detach, build } = req.body || {};
     const result = await dockerService.composeUp(composeFilePath, { profile, detach, build }, (chunk) => {
@@ -1537,7 +1517,7 @@ app.post(['/api/docker/compose-up', '/api/containers/compose-up'], async (req, r
   }
 });
 
-app.post(['/api/docker/compose-down', '/api/containers/compose-down'], async (req, res) => {
+app.post('/api/docker/compose-down', async (req, res) => {
   try {
     const { composeFilePath, profile, volumes } = req.body || {};
     const result = await dockerService.composeDown(composeFilePath, { profile, volumes }, (chunk) => {
@@ -1549,7 +1529,7 @@ app.post(['/api/docker/compose-down', '/api/containers/compose-down'], async (re
   }
 });
 
-app.post(['/api/docker/compose-restart', '/api/containers/compose-restart'], async (req, res) => {
+app.post('/api/docker/compose-restart', async (req, res) => {
   try {
     const { composeFilePath, profile } = req.body || {};
     const result = await dockerService.composeRestart(composeFilePath, { profile }, (chunk) => {
@@ -1561,7 +1541,7 @@ app.post(['/api/docker/compose-restart', '/api/containers/compose-restart'], asy
   }
 });
 
-app.post(['/api/docker/compose-logs', '/api/containers/compose-logs'], async (req, res) => {
+app.post('/api/docker/compose-logs', async (req, res) => {
   try {
     const { composeFilePath, profile, lines } = req.body || {};
     const logs = await dockerService.getComposeLogs(composeFilePath, { profile, lines });
@@ -1571,7 +1551,7 @@ app.post(['/api/docker/compose-logs', '/api/containers/compose-logs'], async (re
   }
 });
 
-app.post(['/api/docker/compose-status', '/api/containers/compose-status'], async (req, res) => {
+app.post('/api/docker/compose-status', async (req, res) => {
   try {
     const { composeFilePath, profile } = req.body || {};
     res.json(await dockerService.composeStatus(composeFilePath, profile));
@@ -1993,11 +1973,6 @@ app.get('/api/apm/receiver-status', (_req, res) => {
 app.delete('/api/apm/traces', (_req, res) => {
   apmService.clear();
   res.json({ success: true });
-});
-
-app.post('/api/apm/demo', (_req, res) => {
-  const result = apmService.generateDemoData();
-  res.json(result);
 });
 
 app.post('/api/apm/receiver-port', async (req, res) => {

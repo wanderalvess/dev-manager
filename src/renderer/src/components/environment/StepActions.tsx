@@ -104,7 +104,7 @@ export const StepActions: React.FC<StepActionsProps> = ({
               onClick={() => onRestart(step)}
               disabled={loadingAction === 'restart' || isRunningProfile}
               className="p-1 px-2 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all"
-              title="Reiniciar esta etapa"
+              title="Reiniciar esta etapa" aria-label="Reiniciar esta etapa"
             >
               <RefreshCw className={`w-3 h-3 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />
             </button>

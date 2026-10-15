@@ -25,7 +25,7 @@ export const StatementsTable: React.FC<{
 
   return (
     <div className="border border-border/70 rounded-xl overflow-auto max-h-[360px]">
-      <table className="w-full text-[11px] font-mono">
+      <table className="w-full text-2xs font-mono">
         <thead className="bg-card/90 text-muted-foreground sticky top-0 z-10 border-b border-border/70">
           <tr className="text-left">
             <th className="px-2.5 py-1.5 font-semibold">SQL_ID</th>

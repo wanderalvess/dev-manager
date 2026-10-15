@@ -31,7 +31,7 @@ export const CcwModalHeader: React.FC<CcwModalHeaderProps> = ({ appPath, onClose
       type="button"
       onClick={onClose}
       className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-      title="Fechar"
+      title="Fechar" aria-label="Fechar"
     >
       <X className="w-4 h-4" />
     </button>

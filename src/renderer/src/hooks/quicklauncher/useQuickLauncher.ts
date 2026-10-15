@@ -87,10 +87,8 @@ export function useQuickLauncher({
       if (filteredItems[selectedIndex]) {
         filteredItems[selectedIndex].onSelect();
       }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      onClose();
     }
+    // Esc é tratado pelo Modal
   };
 
   return {

@@ -38,7 +38,7 @@ export const KarafHistoryModal: React.FC<KarafHistoryModalProps> = ({
       <div className="flex items-center gap-2">
         <button
           onClick={onClear}
-          className="px-2.5 py-1 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg text-[11px] font-bold transition"
+          className="px-2.5 py-1 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg text-2xs font-bold transition"
         >
           Limpar
         </button>
@@ -65,7 +65,7 @@ export const KarafHistoryModal: React.FC<KarafHistoryModalProps> = ({
         </div>
       ) : output ? (
         filtered ? (
-          <pre className="text-[11px] font-mono whitespace-pre-wrap text-foreground">{filtered}</pre>
+          <pre className="text-2xs font-mono whitespace-pre-wrap text-foreground">{filtered}</pre>
         ) : (
           <p className="text-xs text-muted-foreground text-center py-8">
             Nenhuma linha corresponde ao filtro "{search}".

@@ -236,7 +236,7 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
           {/* Feedback de Teste de Conexão */}
           {testResult && (
             <div
-              className={`p-3 rounded-xl text-[11px] border ${
+              className={`p-3 rounded-xl text-2xs border ${
                 testResult.success
                   ? 'bg-success/10 border-success/30 text-success'
                   : 'bg-danger/10 border-danger/30 text-danger'

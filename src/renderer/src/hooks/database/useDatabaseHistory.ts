@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ExecutionHistoryItem } from '../../utils/dbPageTypes';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 const HISTORY_KEY = 'devManager:dbHistory';
 const HISTORY_LIMIT = 50;
@@ -27,8 +28,8 @@ export function useDatabaseHistory() {
     });
   };
 
-  const handleClearHistory = () => {
-    if (confirm('Deseja limpar todo o histórico de consultas salvas?')) {
+  const handleClearHistory = async () => {
+    if (await requestConfirm({ title: 'Limpar histórico?', message: 'Deseja limpar todo o histórico de consultas salvas?', confirmLabel: 'Limpar', tone: 'warning' })) {
       setHistory([]);
       try {
         localStorage.removeItem(HISTORY_KEY);

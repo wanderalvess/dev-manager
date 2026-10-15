@@ -36,7 +36,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
             type="button"
             onClick={() => onSearchChange('')}
             className="absolute right-3 top-2 text-muted-foreground hover:text-foreground cursor-pointer"
-            title="Limpar busca"
+            title="Limpar busca" aria-label="Limpar busca"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -74,7 +74,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
       )}
     </div>
 
-    <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground shrink-0">
+    <div className="flex items-center gap-2 text-2xs font-mono text-muted-foreground shrink-0">
       <span>
         Exibindo <b className="text-foreground">{filteredCount}</b> de{' '}
         <b className="text-foreground">{routinesCount}</b> rotinas

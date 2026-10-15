@@ -76,7 +76,7 @@ export const QaRunnerResultFilters: React.FC<QaRunnerResultFiltersProps> = ({
         <button
           type="button"
           onClick={onExpandAll}
-          className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          className="text-2xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
         >
           Expandir
         </button>
@@ -84,7 +84,7 @@ export const QaRunnerResultFilters: React.FC<QaRunnerResultFiltersProps> = ({
         <button
           type="button"
           onClick={onCollapseAll}
-          className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+          className="text-2xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
         >
           Recolher
         </button>

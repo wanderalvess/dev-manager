@@ -20,7 +20,7 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
   onTargetBranchChange,
   onOpenPr
 }) => (
-  <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-xs">
+  <div className="bg-card border border-border rounded-xl p-5 space-y-4 shadow-xs">
     <div className="flex items-center justify-between">
       <span className="text-[13px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
         <GitMerge className="w-4 h-4" />

@@ -91,9 +91,6 @@ export function createApmApi({ apiFetch, wsManager }: BridgeDeps) {
         return { success: false };
       }
     },
-    generateApmDemo: async (): Promise<{ generatedSpans: number; generatedTraces: number }> => {
-      return apiFetch<{ generatedSpans: number; generatedTraces: number }>('/api/apm/demo', { method: 'POST' });
-    },
     changeApmReceiverPort: async (port: number): Promise<ApmReceiverPortChangeResult> => {
       return apiFetch<ApmReceiverPortChangeResult>('/api/apm/receiver-port', {
         method: 'POST',

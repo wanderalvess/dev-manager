@@ -42,7 +42,7 @@ export const Routine801Footer: React.FC<Routine801FooterProps> = ({
     <div className="flex items-center gap-2">
       <button
         onClick={onToggleConsole}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-border hover:bg-muted text-foreground transition-colors font-mono text-[11px]"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-border hover:bg-muted text-foreground transition-colors font-mono text-2xs"
       >
         <Terminal className="w-3 h-3 text-primary" />
         <span>Terminal Karaf</span>

@@ -18,7 +18,7 @@ interface KarafFeaturesManagerFilterBarProps {
 }
 
 const filterButtonClass = (active: boolean) =>
-  `px-2.5 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+  `px-2.5 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
     active
       ? 'bg-card text-foreground border border-border shadow-2xs'
       : 'text-muted-foreground hover:text-foreground'
@@ -87,7 +87,7 @@ export const KarafFeaturesManagerFilterBar: React.FC<KarafFeaturesManagerFilterB
         <button
           onClick={onRefreshAll}
           disabled={actionInProgress !== null}
-          className="px-2.5 py-1.5 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer disabled:opacity-40"
+          className="px-2.5 py-1.5 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border border-border text-foreground cursor-pointer disabled:opacity-50"
           title="Recarregar todos os repositórios (feature:repo-refresh)"
         >
           <RefreshCw className="w-3 h-3 text-muted-foreground" />

@@ -22,7 +22,7 @@ export const MarkdownList: React.FC<MarkdownListProps> = ({ items, searchTerm })
             {li.checked ? '✓' : ''}
           </span>
         ) : li.isOrdered ? (
-          <span className="text-[11px] font-bold text-primary font-mono shrink-0 mt-0.5 w-4 text-right">
+          <span className="text-2xs font-bold text-primary font-mono shrink-0 mt-0.5 w-4 text-right">
             {idx + 1}.
           </span>
         ) : (

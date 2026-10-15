@@ -41,7 +41,7 @@ export const DeployMavenFields: React.FC<DeployMavenFieldsProps> = ({
         <button
           type="button"
           onClick={() => onSelectDirectory('projectPath')}
-          className="text-[11px] text-primary hover:underline flex items-center gap-1"
+          className="text-2xs text-primary hover:underline flex items-center gap-1"
         >
           <FolderOpen className="w-3 h-3" /> Procurar Pasta
         </button>

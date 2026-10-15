@@ -30,7 +30,7 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
     <div className="flex items-center justify-between px-4 py-1.5 border-b border-border bg-muted/30 text-xs">
       <div className="flex items-center gap-2 text-foreground font-mono">
         <Terminal className="w-3.5 h-3.5 text-primary" />
-        <span className="font-semibold text-[11px]">Console Karaf — Execução da Rotina 801</span>
+        <span className="font-semibold text-2xs">Console Karaf — Execução da Rotina 801</span>
         {isExecuting && (
           <span className="flex items-center gap-1.5 text-primary font-mono text-2xs ml-2">
             <RotateCw className="w-3 h-3 animate-spin" />
@@ -66,7 +66,7 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
 
         <button
           onClick={onCollapse}
-          className="text-muted-foreground hover:text-foreground text-[11px] flex items-center gap-0.5"
+          className="text-muted-foreground hover:text-foreground text-2xs flex items-center gap-0.5"
         >
           <ChevronDown className="w-3.5 h-3.5" />
           <span>Recolher</span>
@@ -75,7 +75,7 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
     </div>
 
     {/* Linhas de Log */}
-    <div className="p-3 overflow-y-auto font-mono text-[11px] leading-relaxed text-foreground/90 bg-background select-text flex-1">
+    <div className="p-3 overflow-y-auto font-mono text-2xs leading-relaxed text-foreground/90 bg-background select-text flex-1">
       {displayedLogs.length === 0 ? (
         <div className="text-muted-foreground italic text-center py-4">
           Nenhum log registrado para este filtro. Dispare uma instalação para acompanhar a telemetria do Karaf em tempo real.

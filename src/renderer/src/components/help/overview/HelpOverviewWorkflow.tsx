@@ -9,7 +9,7 @@ interface HelpOverviewWorkflowProps {
 }
 
 export const HelpOverviewWorkflow: React.FC<HelpOverviewWorkflowProps> = ({ debugPort, onNavigate }) => (
-  <div className="cockpit-panel rounded-2xl p-5 border border-border shadow-xl space-y-3.5">
+  <div className="cockpit-panel rounded-xl p-5 border border-border shadow-xl space-y-3.5">
     <HelpOverviewSectionHeader
       icon={Workflow}
       title="Fluxo de Trabalho Diário Recomendado"
@@ -34,7 +34,7 @@ export const HelpOverviewWorkflow: React.FC<HelpOverviewWorkflowProps> = ({ debu
             <h4 className={`text-xs font-bold text-foreground ${step.titleHoverClass} transition-colors`}>
               {step.title}
             </h4>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-2xs text-muted-foreground leading-relaxed">
               {step.description}
               {step.inlineCode && <code className="font-mono text-primary">{step.inlineCode}</code>}
               {step.descriptionSuffix}
@@ -49,7 +49,7 @@ export const HelpOverviewWorkflow: React.FC<HelpOverviewWorkflowProps> = ({ debu
           {onNavigate && (
             <button
               onClick={() => onNavigate(step.navTarget)}
-              className={`pt-2 text-[11px] ${step.linkClass} font-bold flex items-center gap-1 hover:underline cursor-pointer`}
+              className={`pt-2 text-2xs ${step.linkClass} font-bold flex items-center gap-1 hover:underline cursor-pointer`}
             >
               <span>{step.linkLabel}</span> <ArrowRight className="w-3 h-3" />
             </button>

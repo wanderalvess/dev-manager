@@ -15,7 +15,7 @@ export const DatabaseFirstUseBanner: React.FC<DatabaseFirstUseBannerProps> = ({
     <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
     <div className="flex-1">
       <span className="font-bold block">Nenhuma conexão de banco configurada</span>
-      <span className="text-[11px] text-muted-foreground block mt-0.5">
+      <span className="text-2xs text-muted-foreground block mt-0.5">
         Cadastre uma conexão Oracle, PostgreSQL ou MySQL para executar consultas, ver tabelas e agendar
         backups.
       </span>
@@ -24,7 +24,7 @@ export const DatabaseFirstUseBanner: React.FC<DatabaseFirstUseBannerProps> = ({
       <button
         type="button"
         onClick={onOpenCreateModal}
-        className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-lg text-[11px] font-bold text-warning flex items-center gap-1 transition-all"
+        className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-lg text-2xs font-bold text-warning flex items-center gap-1 transition-all"
       >
         <DatabaseZap className="w-3 h-3" />
         <span>Nova Conexão</span>
@@ -33,7 +33,7 @@ export const DatabaseFirstUseBanner: React.FC<DatabaseFirstUseBannerProps> = ({
         <button
           type="button"
           onClick={onNavigateToSettings}
-          className="px-2.5 py-1 bg-card hover:bg-muted border border-warning/40 rounded-lg text-[11px] font-bold text-warning flex items-center gap-1 transition-all"
+          className="px-2.5 py-1 bg-card hover:bg-muted border border-warning/40 rounded-lg text-2xs font-bold text-warning flex items-center gap-1 transition-all"
         >
           <Settings className="w-3 h-3" />
           <span>Configurações</span>

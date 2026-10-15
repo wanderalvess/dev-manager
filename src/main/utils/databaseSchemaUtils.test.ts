@@ -131,7 +131,14 @@ describe('PostgreSQL', () => {
     ]);
     expect(result.map((c) => c.kind)).toEqual(['PRIMARY KEY', 'FOREIGN KEY', 'CHECK']);
     expect(result[0].columns).toEqual(['id', 'tenant']);
-    expect(result[1]).toMatchObject({ refTable: 'public.users', refColumns: ['id'] });
+    expect(result[1]).toMatchObject({ refTable: 'public.users', refColumns: ['id'], onDelete: 'NO ACTION' });
+  });
+
+  it('constraints: regra ON DELETE da FK vem da definição', () => {
+    const [fk] = mapPgConstraints([
+      { conname: 'fk', contype: 'f', columns: 't_id', ref_table: 't', ref_columns: 'id', definition: 'FOREIGN KEY (t_id) REFERENCES t(id) ON DELETE SET NULL' }
+    ]);
+    expect(fk.onDelete).toBe('SET NULL');
   });
 
   it('índices: unicidade, primário e colunas', () => {

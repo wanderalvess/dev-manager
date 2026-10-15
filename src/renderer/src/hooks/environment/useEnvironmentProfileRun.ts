@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { AutomationProfile } from '../../../../shared/types';
 import type { EnvironmentLogEntry } from './useEnvironmentLogs';
+import { showToast } from '../../components/ToastHost';
 
 interface UseEnvironmentProfileRunOptions {
   activeProfile: AutomationProfile | null;
@@ -54,7 +55,8 @@ export function useEnvironmentProfileRun({
     setLogs([]);
 
     try {
-      await window.electronAPI.runProfile(activeProfile);
+      const result = await window.electronAPI.runProfile(activeProfile);
+      if (!result.success) showToast(result.error || 'O perfil terminou com falhas. Veja o console.', 'error');
       refreshAllStatus();
     } catch (err: any) {
       setLogs((prev) => [

@@ -91,13 +91,13 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
       onClick={onClear}
       disabled={isBusy || (state.statements.length === 0 && state.sessionEvents.length === 0)}
       title="Limpar dados capturados"
-      className="flex items-center gap-1.5 px-2.5 py-1.5 text-muted-foreground hover:text-danger border border-border/70 hover:border-danger/40 rounded-lg text-xs font-medium transition cursor-pointer disabled:opacity-30"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 text-muted-foreground hover:text-danger border border-border/70 hover:border-danger/40 rounded-lg text-xs font-medium transition cursor-pointer disabled:opacity-50"
     >
       <Trash2 className="w-3.5 h-3.5" />
       Limpar
     </button>
 
-    <div className="ml-auto flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
+    <div className="ml-auto flex items-center gap-2 text-2xs font-mono text-muted-foreground">
       {state.isCapturing ? (
         <span className="flex items-center gap-1.5 text-success font-semibold">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />

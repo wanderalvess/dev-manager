@@ -119,17 +119,6 @@ export function useApmTraceController({ isActive, filters }: { isActive: boolean
     };
   }, [isActive, isRecording, filters.limit, loadTraceDetails]);
 
-  const generateDemo = useCallback(async () => {
-    if (!api?.generateApmDemo) return;
-    try {
-      const result = await api.generateApmDemo();
-      showToast(`${result.generatedTraces} requisições de demonstração simuladas com sucesso!`, 'success');
-      refreshData();
-    } catch {
-      showToast('Falha ao simular requisições de demonstração.', 'error');
-    }
-  }, [refreshData]);
-
   const clearBuffer = useCallback(async () => {
     if (!api?.clearApmTraces) return;
     try {
@@ -157,7 +146,6 @@ export function useApmTraceController({ isActive, filters }: { isActive: boolean
     openTrace,
     closeTrace,
     handleSelectTrace: selectTrace,
-    handleGenerateDemo: generateDemo,
     handleClear: clearBuffer
   };
 }

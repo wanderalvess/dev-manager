@@ -1,4 +1,5 @@
 import React from 'react';
+import { Modal } from '../ui/Modal';
 import { BindInputState } from '../../utils/sqlBinds';
 import { useBindVariablesModalState } from '../../hooks/database/useBindVariablesModalState';
 import { BindModalHeader } from './binds/BindModalHeader';
@@ -26,18 +27,16 @@ export const BindVariablesModal: React.FC<BindVariablesModalProps> = ({
 }) => {
   const state = useBindVariablesModalState(setBindInputs);
 
-  if (!isOpen) return null;
-
   const hasBinds = bindInputs.length > 0;
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') onClose();
-      }}
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      bare
+      closeOnBackdrop={false}
+      panelClassName="bg-card border border-border rounded-xl shadow-2xl max-w-2xl w-full p-5 space-y-4 font-sans animate-fade-in"
     >
-      <div className="bg-card border border-border rounded-xl shadow-2xl max-w-2xl w-full p-5 space-y-4 font-sans">
         <BindModalHeader count={bindInputs.length} onClose={onClose} />
 
         <BindQuickActions
@@ -73,7 +72,6 @@ export const BindVariablesModal: React.FC<BindVariablesModalProps> = ({
 
           <BindModalFooter hasBinds={hasBinds} onClose={onClose} onSubstituteInline={onSubstituteInline} />
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };

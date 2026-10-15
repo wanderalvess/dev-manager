@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2, Save } from 'lucide-react';
 import type { DeployProfile } from '../../../../shared/types';
+import { requestConfirm } from '../ui/confirmService';
 
 interface DeployEditorFooterProps {
   profile: DeployProfile | null;
@@ -23,7 +24,13 @@ export const DeployEditorFooter: React.FC<DeployEditorFooterProps> = ({
         <button
           type="button"
           onClick={async () => {
-            if (confirm(`Tem certeza que deseja excluir o perfil "${profile.name}"?`)) {
+            const confirmed = await requestConfirm({
+              title: 'Excluir perfil?',
+              message: `O perfil "${profile.name}" será excluído.`,
+              confirmLabel: 'Excluir',
+              tone: 'danger'
+            });
+            if (confirmed) {
               await onDelete(profile.id);
               onClose();
             }

@@ -79,69 +79,51 @@ export async function startContainer(ctx: DockerContext, containerId: string): P
 }
 
 /**
- * Para um container em execução (com suporte a resolução de aliases).
+ * Executa `docker <subcommand> <id>` e, se o container não existir, tenta o alias resolvido
+ * (ex.: oracle-winthor <-> oracle-local) antes de devolver o erro do identificador informado.
  */
-export async function stopContainer(ctx: DockerContext, containerId: string): Promise<boolean> {
+async function runWithAlias(
+  ctx: DockerContext,
+  subcommand: 'stop' | 'restart',
+  containerId: string,
+  failureMessage: string
+): Promise<boolean> {
   if (!ctx.isValidContainerId(containerId)) {
     throw new Error('Identificador de container inválido.');
   }
 
-  try {
-    const { binary, finalArgs } = await ctx.resolveCommandAndArgs('stop', [containerId]);
-    await execFileAsync(binary, finalArgs, {
-      timeout: 25000,
-      windowsHide: true
-    });
+  const run = async (targetId: string) => {
+    const { binary, finalArgs } = await ctx.resolveCommandAndArgs(subcommand, [targetId]);
+    await execFileAsync(binary, finalArgs, { timeout: 25000, windowsHide: true });
     return true;
+  };
+
+  try {
+    return await run(containerId);
   } catch (err: any) {
     if ((err?.stderr || '').includes('No such container')) {
       const alias = await ctx.resolveContainerAlias(containerId);
       if (alias) {
         try {
-          const { binary, finalArgs } = await ctx.resolveCommandAndArgs('stop', [alias]);
-          await execFileAsync(binary, finalArgs, { timeout: 25000, windowsHide: true });
-          return true;
+          return await run(alias);
         } catch {
           // Falha no alias: ignora e segue para o erro original do containerId informado
         }
       }
     }
-    console.error(`[DockerService] Erro ao parar container ${containerId}:`, err);
-    throw new Error(err.stderr || err.message || 'Falha ao parar container');
+    console.error(`[DockerService] Erro ao executar ${subcommand} no container ${containerId}:`, err);
+    throw new Error(err.stderr || err.message || failureMessage);
   }
 }
 
-/**
- * Reinicia um container (com suporte a resolução de aliases).
- */
-export async function restartContainer(ctx: DockerContext, containerId: string): Promise<boolean> {
-  if (!ctx.isValidContainerId(containerId)) {
-    throw new Error('Identificador de container inválido.');
-  }
+/** Para um container em execução (com suporte a resolução de aliases). */
+export function stopContainer(ctx: DockerContext, containerId: string): Promise<boolean> {
+  return runWithAlias(ctx, 'stop', containerId, 'Falha ao parar container');
+}
 
-  try {
-    const { binary, finalArgs } = await ctx.resolveCommandAndArgs('restart', [containerId]);
-    await execFileAsync(binary, finalArgs, {
-      timeout: 25000,
-      windowsHide: true
-    });
-    return true;
-  } catch (err: any) {
-    if ((err?.stderr || '').includes('No such container')) {
-      const alias = await ctx.resolveContainerAlias(containerId);
-      if (alias) {
-        try {
-          const { binary, finalArgs } = await ctx.resolveCommandAndArgs('restart', [alias]);
-          await execFileAsync(binary, finalArgs, { timeout: 25000, windowsHide: true });
-          return true;
-        } catch {
-          // Falha no alias: ignora e segue para o erro original do containerId informado
-        }
-      }
-    }
-    console.error(`[DockerService] Erro ao reiniciar container ${containerId}:`, err);
-    throw new Error(err.stderr || err.message || 'Falha ao reiniciar container');
-  }
+/** Reinicia um container (com suporte a resolução de aliases). */
+export function restartContainer(ctx: DockerContext, containerId: string): Promise<boolean> {
+  return runWithAlias(ctx, 'restart', containerId, 'Falha ao reiniciar container');
 }
 
 /**

@@ -23,7 +23,7 @@ export const DatabaseSidebarHeader: React.FC<DatabaseSidebarHeaderProps> = ({
           type="button"
           onClick={onToggleCollapse}
           className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-          title="Recolher barra lateral (mais espaço para queries)"
+          title="Recolher barra lateral (mais espaço para queries)" aria-label="Recolher barra lateral (mais espaço para queries)"
         >
           <PanelLeftClose className="w-3.5 h-3.5" />
         </button>
@@ -32,14 +32,14 @@ export const DatabaseSidebarHeader: React.FC<DatabaseSidebarHeaderProps> = ({
         type="button"
         onClick={onOpenTour}
         className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
-        title="Rever o tour guiado desta página"
+        title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
       >
         <Sparkles className="w-3.5 h-3.5" />
       </button>
       <button
         data-tour="new-connection-button"
         onClick={onOpenCreateModal}
-        className="flex items-center space-x-1 px-2 py-1 bg-primary text-primary-foreground rounded text-[11px] font-semibold hover:bg-primary/90 transition shadow-xs cursor-pointer"
+        className="flex items-center space-x-1 px-2 py-1 bg-primary text-primary-foreground rounded text-2xs font-semibold hover:bg-primary/90 transition shadow-xs cursor-pointer"
       >
         <Plus className="w-3 h-3" />
         <span>Nova</span>

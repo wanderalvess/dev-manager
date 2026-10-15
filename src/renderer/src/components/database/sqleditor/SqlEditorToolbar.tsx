@@ -67,7 +67,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         <div className="flex items-center space-x-2">
           {getDbBadge(activeConnection.type)}
           <span className="text-xs font-bold text-foreground">{activeConnection.name}</span>
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-2xs text-muted-foreground font-mono">
             ({activeConnection.user}@{activeConnection.database || activeConnection.host})
           </span>
         </div>
@@ -127,6 +127,10 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
           isMaximizedActual
             ? 'Restaurar layout padrão do editor'
             : 'Maximizar editor (tela cheia para edição de queries grandes)'
+        } aria-label={
+          isMaximizedActual
+            ? 'Restaurar layout padrão do editor'
+            : 'Maximizar editor (tela cheia para edição de queries grandes)'
         }
       >
         {isMaximizedActual ? (
@@ -180,7 +184,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
 
       {/* Limite de Linhas */}
       <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-        <span className="text-[11px]">Limite:</span>
+        <span className="text-2xs">Limite:</span>
         <select
           value={maxRows}
           onChange={(e) => setMaxRows(Number(e.target.value))}

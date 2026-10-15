@@ -15,7 +15,7 @@ import {
   LogAnalysisSummary
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
-import { analyzeLogText } from '../utils/logAnalyzerUtils';
+import { analyzeLogText } from '../../shared/logAnalyzerUtils';
 import type {
   BundleAction,
   ChunkHandler,
@@ -37,6 +37,7 @@ import * as bundleActions from './karaf/karafBundleActions';
 import * as bundleManage from './karaf/karafBundleManage';
 import * as features from './karaf/karafFeatures';
 import * as runtimeInfo from './karaf/karafRuntimeInfo';
+import * as wiring from './karaf/karafWiring';
 
 export { filterBenignStderr } from '../utils/karafCommandUtils';
 export { parseClauseList, parseManifestHeaders, parseCapabilitiesWiredBundles } from '../utils/karafManifestUtils';
@@ -158,6 +159,10 @@ export class KarafService {
   /** Lista o histórico persistido de deploys/builds Karaf, mais recente primeiro. */
   public getDeployHistory(): KarafDeployHistoryEntry[] {
     return deployOps.getDeployHistory(this.ctx);
+  }
+
+  public async detectWiringConflicts(credentials?: KarafCredentials): Promise<wiring.WiringReport | null> {
+    return wiring.detectWiringConflicts(this.ctx, credentials);
   }
 
   public async listBundlesParsed(credentials?: KarafCredentials): Promise<KarafBundleInfo[]> {

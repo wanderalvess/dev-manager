@@ -14,7 +14,7 @@ export const InfrBootstrapHeader: React.FC<{ onClose: () => void }> = ({ onClose
             Scripts Oficiais
           </span>
         </h3>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Automação guiada de criação e setup dos containers Oracle XE 11g, WTA e WSH
         </p>
       </div>

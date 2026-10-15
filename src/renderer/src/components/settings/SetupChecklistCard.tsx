@@ -16,7 +16,7 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({
   return (
     <div className="px-4 py-3 rounded-xl bg-card border border-border/80 shadow-xs shrink-0 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+        <span className="text-2xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
           <ListChecks className="w-3.5 h-3.5 text-primary" />
           Checklist de Configuração Inicial
         </span>
@@ -30,7 +30,7 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({
             key={item.id}
             type="button"
             onClick={item.action}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-2xs font-semibold border transition-all ${
               item.done
                 ? 'bg-success/10 border-success/30 text-success'
                 : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/20'

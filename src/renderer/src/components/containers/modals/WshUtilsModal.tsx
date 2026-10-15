@@ -38,7 +38,7 @@ export const WshUtilsModal: React.FC<WshUtilsModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border/80 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >

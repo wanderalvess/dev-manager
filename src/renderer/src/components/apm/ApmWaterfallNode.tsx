@@ -83,7 +83,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
             />
           )}
 
-          <span className="truncate text-foreground font-medium text-[11px]" title={span.name}>
+          <span className="truncate text-foreground font-medium text-2xs" title={span.name}>
             {span.name}
           </span>
 
@@ -93,7 +93,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
               className="px-1 py-0.2 rounded bg-warning/20 text-warning border border-warning/40 text-2xs font-bold flex items-center gap-0.5 shrink-0"
               title={`Span com duração elevada: ${span.durationMs}ms`}
             >
-              <Zap className="w-2.5 h-2.5 text-warning" />
+              <Zap className="w-3 h-3 text-warning" />
               <span>Lenta</span>
             </span>
           )}

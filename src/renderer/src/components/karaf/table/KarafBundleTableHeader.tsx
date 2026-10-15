@@ -23,11 +23,11 @@ export const KarafBundleTableHeader: React.FC<KarafBundleTableHeaderProps> = ({
           title={getSelectAllTitle(filteredCount, selectedCount)}
         />
       </th>
-      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-20 border-b border-border select-none text-[11px]">ID</th>
-      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36 border-b border-border select-none text-[11px]">Estado</th>
-      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider min-w-[340px] border-b border-border select-none text-[11px]">Nome do Bundle / SymbolicName</th>
-      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36 border-b border-border select-none text-[11px]">Versão</th>
-      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-right text-muted-foreground uppercase font-bold tracking-wider w-72 border-b border-border select-none text-[11px]">Ações</th>
+      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-20 border-b border-border select-none text-2xs">ID</th>
+      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36 border-b border-border select-none text-2xs">Estado</th>
+      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider min-w-[340px] border-b border-border select-none text-2xs">Nome do Bundle / SymbolicName</th>
+      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-left text-muted-foreground uppercase font-bold tracking-wider w-36 border-b border-border select-none text-2xs">Versão</th>
+      <th className="sticky top-0 z-20 bg-muted px-4 py-3 text-right text-muted-foreground uppercase font-bold tracking-wider w-72 border-b border-border select-none text-2xs">Ações</th>
     </tr>
   </thead>
 );

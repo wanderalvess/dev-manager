@@ -20,7 +20,7 @@ export const DocSettingsHeader: React.FC<DocSettingsHeaderProps> = ({ onClose })
             Cockpit RAG
           </span>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-2xs text-muted-foreground mt-0.5">
           Fontes locais, repositórios Git, integrações Atlassian e Copilot de Linguagem (LLM).
         </p>
       </div>
@@ -28,7 +28,7 @@ export const DocSettingsHeader: React.FC<DocSettingsHeaderProps> = ({ onClose })
     <button
       onClick={onClose}
       className="p-1.5 hover:bg-muted rounded-xl text-muted-foreground hover:text-foreground transition cursor-pointer"
-      title="Fechar (Esc)"
+      title="Fechar (Esc)" aria-label="Fechar (Esc)"
     >
       <X className="w-4 h-4" />
     </button>

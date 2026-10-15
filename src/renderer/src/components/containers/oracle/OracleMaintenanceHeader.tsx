@@ -15,12 +15,12 @@ export const OracleMaintenanceHeader: React.FC<OracleMaintenanceHeaderProps> = (
       <div>
         <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
           Manutenção Oracle WinThor
-          <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/60">
+          <span className="text-2xs font-mono font-medium px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/60">
             {containerName}
           </span>
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Utilitários integrados de <code className="text-[11px]">INFR-Docker</code> (/home/oracle/tools)
+          Utilitários integrados de <code className="text-2xs">INFR-Docker</code> (/home/oracle/tools)
         </p>
       </div>
     </div>

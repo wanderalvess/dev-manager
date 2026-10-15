@@ -18,7 +18,6 @@ import {
   parseApmFilterQuery,
   aggregateTimeSeriesBuckets,
   buildCompactTraceDetails,
-  generateMockTraces
 } from './apmUtils';
 import { TraceSpan, TraceSummary } from '../../shared/types';
 
@@ -48,18 +47,6 @@ const makeSummary = (partial: Partial<TraceSummary>): TraceSummary => ({
   hasDatabaseQuery: false,
   ...partial
 });
-
-// PRNG determinístico (mulberry32) para testar geração de dados simulados
-function seededRandom(seed: number): () => number {
-  let a = seed;
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 describe('apmUtils', () => {
   describe('unpackOtelAttributeValue & normalizeOtelAttributes', () => {
@@ -309,46 +296,6 @@ describe('apmUtils', () => {
       const ordersEndpoint = endpoints.find((e) => e.route === '/orders');
       expect(ordersEndpoint?.requestCount).toBe(2);
       expect(ordersEndpoint?.errorRate).toBe(50);
-    });
-  });
-
-  describe('generateMockTraces', () => {
-    it('gera lote com múltiplos traces incluindo casos de sucesso, lento e erro 500', () => {
-      const mockSpans = generateMockTraces();
-      expect(mockSpans.length).toBeGreaterThan(5);
-
-      const traceIds = new Set(mockSpans.map((s) => s.traceId));
-      expect(traceIds.size).toBeGreaterThanOrEqual(4);
-
-      // Deve ter pelo menos um trace com erro 500
-      expect(mockSpans.some((s) => s.httpStatusCode === 500 && s.statusCode === 'ERROR')).toBe(true);
-      // Deve ter pelo menos um span com query de banco
-      expect(mockSpans.some((s) => !!s.dbStatement)).toBe(true);
-    });
-
-    it('usa IDs novos a cada lote, para que simular de novo some tráfego em vez de sobrescrever', () => {
-      const now = 1_711_200_000_000;
-      const first = new Set(generateMockTraces(now, seededRandom(1)).map((s) => s.traceId));
-      const second = generateMockTraces(now, seededRandom(2)).map((s) => s.traceId);
-      expect(second.some((id) => first.has(id))).toBe(false);
-      expect([...first].every((id) => /^[0-9a-f]{32}$/.test(id))).toBe(true);
-    });
-
-    it('espalha o tráfego pela janela do gráfico e inclui stacktrace, 4xx e chamada externa', () => {
-      const now = 1_711_200_000_000;
-      const spans = generateMockTraces(now, seededRandom(42));
-
-      expect(spans.every((s) => s.startTimeUnixMs >= now - 15 * 60_000 && s.endTimeUnixMs <= now)).toBe(true);
-      const buckets = aggregateTimeSeriesBuckets(
-        Array.from(new Set(spans.map((s) => s.traceId)), (id) => buildTraceSummary(id, spans.filter((s) => s.traceId === id))),
-        15,
-        now
-      );
-      expect(buckets.filter((b) => b.requestCount > 0).length).toBeGreaterThan(3);
-
-      expect(spans.some((s) => !!s.exception?.stacktrace)).toBe(true);
-      expect(spans.some((s) => s.kind === 'SERVER' && s.httpStatusCode === 404)).toBe(true);
-      expect(spans.some((s) => s.kind === 'CLIENT' && !s.dbStatement && !!s.httpUrl)).toBe(true);
     });
   });
 

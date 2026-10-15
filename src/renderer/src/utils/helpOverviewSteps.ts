@@ -31,7 +31,7 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     cardClass: 'border-cyan-500/20 hover:border-cyan-500/60',
     numberClass: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/25',
     badgeClass: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400',
-    titleHoverClass: 'group-hover:text-cyan-700 dark:group-hover:text-cyan-400',
+    titleHoverClass: 'group-hover:text-cyan-700 dark:group-hover:text-cyan-700 dark:group-hover:text-cyan-400',
     linkClass: 'text-cyan-700 dark:text-cyan-400'
   },
   {
@@ -47,7 +47,7 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     cardClass: 'border-amber-500/20 hover:border-amber-500/60',
     numberClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25',
     badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-    titleHoverClass: 'group-hover:text-amber-700 dark:group-hover:text-amber-400',
+    titleHoverClass: 'group-hover:text-amber-700 dark:group-hover:text-amber-700 dark:group-hover:text-amber-400',
     linkClass: 'text-amber-700 dark:text-amber-400'
   },
   {
@@ -62,7 +62,7 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     cardClass: 'border-blue-500/20 hover:border-blue-500/60',
     numberClass: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/25',
     badgeClass: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
-    titleHoverClass: 'group-hover:text-blue-700 dark:group-hover:text-blue-400',
+    titleHoverClass: 'group-hover:text-blue-700 dark:group-hover:text-blue-700 dark:group-hover:text-blue-400',
     linkClass: 'text-blue-700 dark:text-blue-400'
   },
   {
@@ -77,7 +77,7 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     cardClass: 'border-indigo-500/20 hover:border-indigo-500/60',
     numberClass: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25',
     badgeClass: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400',
-    titleHoverClass: 'group-hover:text-indigo-700 dark:group-hover:text-indigo-400',
+    titleHoverClass: 'group-hover:text-indigo-700 dark:group-hover:text-indigo-700 dark:group-hover:text-indigo-400',
     linkClass: 'text-indigo-700 dark:text-indigo-400'
   },
   {
@@ -92,7 +92,7 @@ export const HELP_OVERVIEW_STEPS: HelpOverviewStep[] = [
     cardClass: 'border-violet-500/20 hover:border-violet-500/60',
     numberClass: 'bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/25',
     badgeClass: 'bg-violet-500/10 text-violet-700 dark:text-violet-400',
-    titleHoverClass: 'group-hover:text-violet-700 dark:group-hover:text-violet-400',
+    titleHoverClass: 'group-hover:text-violet-700 dark:group-hover:text-violet-700 dark:group-hover:text-violet-400',
     linkClass: 'text-violet-700 dark:text-violet-400'
   }
 ];

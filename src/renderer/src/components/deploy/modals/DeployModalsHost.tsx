@@ -6,7 +6,7 @@ import { KarafBundleManagerModal } from '../../KarafBundleManagerModal';
 import { DeployHistoryModal } from '../../DeployHistoryModal';
 import { Routine801CatalogModal } from '../../Routine801CatalogModal';
 import { KarafJvmMemoryModal } from '../../KarafJvmMemoryModal';
-import { KarafFeaturesManagerModal } from '../../KarafFeaturesManagerModal';
+import { KarafFeaturesModal } from '../../karaf/modals/KarafFeaturesModal';
 
 interface DeployModalsHostProps {
   modals: DeployModalsState;
@@ -54,7 +54,7 @@ export const DeployModalsHost: React.FC<DeployModalsHostProps> = ({
     />
 
     {/* Modal Gerenciador de Features & Repositórios Maven */}
-    <KarafFeaturesManagerModal
+    <KarafFeaturesModal
       isOpen={modals.isFeaturesModalOpen}
       onClose={() => modals.setIsFeaturesModalOpen(false)}
     />

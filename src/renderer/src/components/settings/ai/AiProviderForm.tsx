@@ -23,7 +23,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
   onToggleShowKey,
   onSave
 }) => (
-  <div className="p-5 rounded-2xl border border-primary/40 bg-card shadow-2xl space-y-4 animate-in fade-in-0">
+  <div className="p-5 rounded-xl border border-primary/40 bg-card shadow-2xl space-y-4 animate-in fade-in-0">
     <div className="flex items-center justify-between pb-2 border-b border-border">
       <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
         <Sliders className="w-4 h-4 text-primary" />
@@ -114,7 +114,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
             type="button"
             onClick={() => onToggleShowKey(!showKey)}
             className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-muted-foreground hover:text-foreground shadow-2xs cursor-pointer"
-            title={showKey ? 'Ocultar chave' : 'Mostrar chave'}
+            title={showKey ? 'Ocultar chave' : 'Mostrar chave'} aria-label={showKey ? 'Ocultar chave' : 'Mostrar chave'}
           >
             {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>

@@ -11,7 +11,7 @@ const INPUT_CLASS =
   'w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary';
 
 export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }) => (
-  <div className="bg-card border border-border/80 rounded-xl p-3.5 space-y-3 shadow-xs">
+  <div className="bg-card border border-border/80 rounded-xl p-3 space-y-3 shadow-xs">
     <div className="flex items-center justify-between">
       <div>
         <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
@@ -25,7 +25,7 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
       <div>
-        <label htmlFor="dirs-ccw-panel-1" className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-ccw-panel-1" className="block text-2xs font-semibold text-foreground mb-1">
           URL Base da Central de Controle:
         </label>
         <input id="dirs-ccw-panel-1"
@@ -37,7 +37,7 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
         />
       </div>
       <div>
-        <label htmlFor="dirs-ccw-panel-2" className="block text-[11px] font-semibold text-foreground mb-1">
+        <label htmlFor="dirs-ccw-panel-2" className="block text-2xs font-semibold text-foreground mb-1">
           Versão WinThor Padrão (CCW):
         </label>
         <input id="dirs-ccw-panel-2"
@@ -51,7 +51,7 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
     </div>
 
     <div>
-      <label htmlFor="dirs-ccw-panel-3" className="block text-[11px] font-semibold text-foreground mb-1">
+      <label htmlFor="dirs-ccw-panel-3" className="block text-2xs font-semibold text-foreground mb-1">
         Cookie de Autenticação CCW (<code>auth_token</code> ou similar, opcional):
       </label>
       <input id="dirs-ccw-panel-3"

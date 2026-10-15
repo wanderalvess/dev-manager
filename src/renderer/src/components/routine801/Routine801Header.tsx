@@ -44,7 +44,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           {connectionHealth && (
             <button
               onClick={onToggleConfig}
-              className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-mono rounded border transition-colors hover:border-border"
+              className="flex items-center gap-1.5 px-2 py-0.5 text-2xs font-mono rounded border transition-colors hover:border-border"
               title="Clique para gerenciar a URL de conexão"
             >
               <span
@@ -126,7 +126,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
       <button
         onClick={onClose}
         className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors ml-1"
-        title="Fechar (Esc)"
+        title="Fechar (Esc)" aria-label="Fechar (Esc)"
       >
         <X className="w-4 h-4" />
       </button>

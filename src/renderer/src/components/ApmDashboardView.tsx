@@ -13,7 +13,6 @@ interface ApmDashboardViewProps {
   onFilterBySlowQuery?: (statement: string) => void;
   onSelectTrace?: (traceId: string) => void;
   onNavigateToDatabase?: () => void;
-  onGenerateDemo?: () => void;
   /** Abre "Como Conectar", onde a porta do receptor pode ser trocada */
   onOpenSetup?: () => void;
 }
@@ -24,7 +23,6 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
   onFilterBySlowQuery,
   onSelectTrace,
   onNavigateToDatabase,
-  onGenerateDemo,
   onOpenSetup
 }) => {
   const dashboard = useApmDashboard({ overview, onNavigateToDatabase });
@@ -35,7 +33,6 @@ export const ApmDashboardView: React.FC<ApmDashboardViewProps> = ({
         overview={overview}
         copyToClipboard={dashboard.copyToClipboard}
         copyFeedback={dashboard.copyFeedback}
-        onGenerateDemo={onGenerateDemo}
         onOpenSetup={onOpenSetup}
       />
     );

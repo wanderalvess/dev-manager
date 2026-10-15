@@ -3,13 +3,14 @@ import type { KarafFeatureInfo, KarafFeatureRepoInfo } from '../../../../shared/
 import { apiBridge } from '../../services/apiBridge';
 import { filterFeatures, filterFeatureRepos } from '../../utils/karafFeaturesUtils';
 import { isFeatureInstalled } from '../../utils/karafFeaturesModalUtils';
+import { requestConfirm } from '../../components/ui/confirmService';
 
-export type KarafFeaturesManagerTab = 'features' | 'repos';
+export type KarafFeaturesManagerTab = 'installed' | 'features' | 'repos';
 export type KarafFeatureFilterMode = 'all' | 'installed' | 'winthor';
 export type KarafFeaturesFeedback = { type: 'success' | 'error'; text: string } | null;
 
-export function useKarafFeaturesManager(isOpen: boolean, onClose: () => void) {
-  const [activeTab, setActiveTab] = useState<KarafFeaturesManagerTab>('features');
+export function useKarafFeaturesManager(isOpen: boolean) {
+  const [activeTab, setActiveTab] = useState<KarafFeaturesManagerTab>('installed');
   const [features, setFeatures] = useState<KarafFeatureInfo[]>([]);
   const [repos, setRepos] = useState<KarafFeatureRepoInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -39,20 +40,13 @@ export function useKarafFeaturesManager(isOpen: boolean, onClose: () => void) {
     }
   };
 
+  // O catálogo e os repositórios só são consultados quando uma dessas abas é aberta (cada consulta é um comando SSH)
+  const needsCatalog = isOpen && activeTab !== 'installed';
   useEffect(() => {
-    if (isOpen) {
+    if (needsCatalog) {
       loadData();
     }
-  }, [isOpen]);
-
-  // Fechar com ESC
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [needsCatalog]);
 
   const filteredFeatures = useMemo(() => {
     return filterFeatures(features, { search: searchQuery, filterMode: featureFilterMode });
@@ -116,7 +110,13 @@ export function useKarafFeaturesManager(isOpen: boolean, onClose: () => void) {
   };
 
   const handleRemoveRepo = async (repo: KarafFeatureRepoInfo) => {
-    if (!confirm(`Deseja remover o repositório "${repo.name}" do Karaf?`)) return;
+    const confirmed = await requestConfirm({
+      title: 'Remover repositório?',
+      message: `Deseja remover o repositório "${repo.name}" do Karaf?`,
+      confirmLabel: 'Remover',
+      tone: 'warning'
+    });
+    if (!confirmed) return;
 
     const actionKey = `remove_${repo.name}`;
     setActionInProgress(actionKey);

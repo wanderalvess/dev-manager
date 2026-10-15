@@ -29,7 +29,7 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
       {history.length > 0 && (
         <button
           onClick={onClearHistory}
-          className="text-[11px] text-danger hover:text-danger hover:underline flex items-center gap-1 cursor-pointer"
+          className="text-2xs text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 cursor-pointer"
         >
           <Trash2 className="w-3 h-3" /> Limpar Histórico
         </button>
@@ -48,9 +48,9 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               {item.success ? (
-                <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
               ) : (
-                <span className="w-2 h-2 rounded-full bg-danger shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
               )}
               <span className="font-bold text-foreground">{item.connectionName}</span>
               <span className="text-2xs text-muted-foreground font-mono">{item.timestamp}</span>
@@ -73,14 +73,14 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
               </button>
               <button
                 onClick={() => onRunSql(item.sql)}
-                className="px-2 py-0.5 bg-success/20 hover:bg-success text-success hover:text-background rounded text-2xs font-semibold transition cursor-pointer"
+                className="px-2 py-0.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded text-2xs font-semibold transition cursor-pointer"
                 title="Executar imediatamente"
               >
                 Executar
               </button>
               <button
                 onClick={() => onSaveSnippet(item.sql)}
-                className="px-2 py-0.5 bg-warning/20 hover:bg-warning text-warning hover:text-background rounded text-2xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-600 dark:text-amber-400 hover:text-black rounded text-2xs font-semibold transition flex items-center gap-1 cursor-pointer"
                 title="Salvar esta consulta nas Minhas Consultas"
               >
                 <BookmarkPlus className="w-3 h-3" />
@@ -88,11 +88,11 @@ export const DatabaseHistoryPanel: React.FC<DatabaseHistoryPanelProps> = ({
               </button>
             </div>
           </div>
-          <pre className="text-[11px] font-mono text-emerald-300 bg-[#0B0F17] p-2 rounded truncate whitespace-pre-wrap max-h-16 overflow-hidden">
+          <pre className="text-2xs font-mono text-emerald-300 bg-[#0B0F17] p-2 rounded truncate whitespace-pre-wrap max-h-16 overflow-hidden">
             {item.sql}
           </pre>
           {item.error && (
-            <span className="text-2xs text-danger font-mono truncate">{item.error}</span>
+            <span className="text-2xs text-red-400 font-mono truncate">{item.error}</span>
           )}
         </div>
       ))

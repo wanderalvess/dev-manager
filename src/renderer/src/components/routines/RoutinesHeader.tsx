@@ -45,15 +45,15 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
   const badgeInfo = getKarafWtaBadgeInfo(karafStatus, isCheckingKaraf, winthorStartActive);
 
   return (
-    <div className="cockpit-panel rounded-xl p-3.5 shadow-2xs border border-border/80 flex flex-col space-y-3 shrink-0">
+    <div className="cockpit-panel rounded-xl p-3 shadow-2xs border border-border/80 flex flex-col space-y-3 shrink-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <Grid className="w-5 h-5 text-primary shrink-0" />
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-sm font-bold text-foreground tracking-tight" data-tour="catalogo-rotinas">
+              <h1 className="text-lg font-bold text-foreground tracking-tight" data-tour="catalogo-rotinas">
                 Catálogo de Rotinas &amp; Atalhos
-              </h2>
+              </h1>
               <span className="text-2xs bg-primary/15 text-primary border border-primary/30 px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
                 {routinesCount} {routinesCount === 1 ? 'Rotina' : 'Rotinas'}
               </span>
@@ -81,7 +81,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
                 className={`text-2xs px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-1 border uppercase tracking-wider ${badgeInfo.colorClass}`}
                 title={badgeInfo.tooltip}
               >
-                <Server className="w-2.5 h-2.5" />
+                <Server className="w-3 h-3" />
                 <span>{badgeInfo.label}</span>
               </span>
             </div>
@@ -128,7 +128,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
             type="button"
             onClick={onOpenTour}
             className="h-8 w-8 rounded-lg border border-border/70 hover:border-primary/40 text-muted-foreground hover:text-primary transition flex items-center justify-center shrink-0 cursor-pointer active:scale-[0.98]"
-            title="Rever o tour guiado desta página"
+            title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
           >
             <Sparkles className="w-3.5 h-3.5" />
           </button>

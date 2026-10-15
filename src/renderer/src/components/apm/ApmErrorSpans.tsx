@@ -13,7 +13,7 @@ export const ApmErrorSpans: React.FC<{
       const exceptionHeadline = [span.exception?.type, span.exception?.message].filter(Boolean).join(': ');
       return (
         <div key={span.spanId} className="p-3 rounded-lg border border-danger/30 bg-danger/10 flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2 text-[11px] text-danger font-bold">
+          <div className="flex items-center justify-between gap-2 text-2xs text-danger font-bold">
             <span className="flex items-center gap-1.5 min-w-0">
               <AlertCircle className="w-3.5 h-3.5 text-danger shrink-0" />
               <span className="truncate" title={span.name}>{span.name}</span>
@@ -29,7 +29,7 @@ export const ApmErrorSpans: React.FC<{
             </button>
           </div>
           {(exceptionHeadline || span.statusMessage) && (
-            <div className="text-[11px] text-danger wrap-break-word select-text">
+            <div className="text-2xs text-danger wrap-break-word select-text">
               {exceptionHeadline || span.statusMessage}
             </div>
           )}
@@ -39,7 +39,7 @@ export const ApmErrorSpans: React.FC<{
             </pre>
           ) : (
             !exceptionHeadline && !span.statusMessage && (
-              <pre className="p-2.5 rounded bg-card border border-danger/30 text-danger text-[11px] whitespace-pre-wrap leading-relaxed">
+              <pre className="p-2.5 rounded bg-card border border-danger/30 text-danger text-2xs whitespace-pre-wrap leading-relaxed">
                 {span.httpStatusCode ? `HTTP ${span.httpStatusCode} sem mensagem de erro` : 'Erro sem mensagem explícita'}
               </pre>
             )

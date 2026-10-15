@@ -50,7 +50,7 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
         onClick={onOpenWslTerminal}
         className="text-2xs text-muted-foreground hover:text-info hover:underline cursor-pointer flex items-center gap-1"
       >
-        <Terminal className="w-2.5 h-2.5" /> Terminal
+        <Terminal className="w-3 h-3" /> Terminal
       </button>
     </div>
   </div>

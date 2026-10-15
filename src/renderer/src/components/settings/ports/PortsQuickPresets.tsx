@@ -10,7 +10,7 @@ export const PortsQuickPresets: React.FC<PortsQuickPresetsProps> = ({ onAddPort 
     <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block">
       Atalhos Rápidos de Adição:
     </span>
-    <div className="flex flex-wrap gap-1.5 text-[11px] font-mono">
+    <div className="flex flex-wrap gap-1.5 text-2xs font-mono">
       {QUICK_PORT_PRESETS.map((preset) => (
         <button
           key={preset.port}

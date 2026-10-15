@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Terminal, Copy, Check, Zap } from 'lucide-react';
+import { Terminal, Copy, Check, Zap } from 'lucide-react';
 import { ObservabilityOverview, DEFAULT_APM_OTLP_PORT } from '../../../../../shared/types';
 import { showToast } from '../../ToastHost';
 import { buildApmSetupSnippets } from '../../../utils/apmUiUtils';
@@ -8,7 +8,6 @@ interface ApmDashboardStandbyProps {
   overview: ObservabilityOverview | null;
   copyToClipboard: (text: string, key: string) => void;
   copyFeedback: string | null;
-  onGenerateDemo?: () => void;
   /** Abre "Como Conectar", onde a porta do receptor pode ser trocada */
   onOpenSetup?: () => void;
 }
@@ -18,7 +17,6 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
   overview,
   copyToClipboard,
   copyFeedback,
-  onGenerateDemo,
   onOpenSetup
 }) => {
   const receiver = overview?.receiverStatus;
@@ -35,11 +33,11 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               {receiverState === 'listening' && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               )}
               <span
                 className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  receiverState === 'listening' ? 'bg-success' : receiverState === 'down' ? 'bg-danger' : 'bg-neutral-400'
+                  receiverState === 'listening' ? 'bg-emerald-500' : receiverState === 'down' ? 'bg-rose-500' : 'bg-muted-foreground'
                 }`}
               />
             </span>
@@ -50,9 +48,9 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
           <span
             className={`text-2xs font-mono px-2 py-0.5 rounded border ${
               receiverState === 'listening'
-                ? 'bg-success/10 text-success border-success/20'
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                 : receiverState === 'down'
-                ? 'bg-danger/10 text-danger border-danger/20'
+                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                 : 'bg-muted text-muted-foreground border-border'
             }`}
           >
@@ -62,7 +60,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
         {receiverState === 'down' ? (
           <div className="flex flex-col gap-2">
-            <p className="text-xs text-danger leading-relaxed">
+            <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
               O receptor não conseguiu abrir a porta {port}: <strong>{receiver?.error || 'erro desconhecido'}</strong>. Se
               outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o ou escolha
               outra porta para o receptor.
@@ -71,7 +69,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
               <button
                 type="button"
                 onClick={onOpenSetup}
-                className="self-start px-3 py-1.5 rounded-lg border border-danger/40 bg-danger/10 hover:bg-danger/20 text-danger text-xs font-semibold cursor-pointer transition"
+                className="self-start px-3 py-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold cursor-pointer transition"
               >
                 Trocar porta do receptor
               </button>
@@ -87,7 +85,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
         {/* Teste Rápido / Chamada */}
         <div className="flex flex-col gap-2 p-3 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-200 text-xs">
-          <div className="flex items-center justify-between text-[11px] text-neutral-400">
+          <div className="flex items-center justify-between text-2xs text-neutral-400">
             <span className="flex items-center gap-1.5 font-mono">
               <Terminal className="w-3.5 h-3.5 text-sky-400" />
               Disparo de Teste Rápido (PowerShell):
@@ -111,20 +109,10 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
         {/* Ações de Inicialização */}
         <div className="flex items-center justify-between pt-1">
-          <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+          <div className="text-2xs text-muted-foreground flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-amber-500" />
             <span>Dica: ligue "Anexar o agente automaticamente" em Como Conectar para o Karaf exportar sozinho.</span>
           </div>
-          {onGenerateDemo && (
-            <button
-              type="button"
-              onClick={onGenerateDemo}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              Simular Tráfego de Demonstração
-            </button>
-          )}
         </div>
       </div>
     </div>

@@ -19,7 +19,7 @@ export const DatabaseSidebarCollapsed: React.FC<DatabaseSidebarCollapsedProps> =
       type="button"
       onClick={onToggleCollapse}
       className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-foreground transition cursor-pointer"
-      title="Expandir barra lateral (Conexões e Tabelas)"
+      title="Expandir barra lateral (Conexões e Tabelas)" aria-label="Expandir barra lateral (Conexões e Tabelas)"
     >
       <PanelLeftOpen className="w-4 h-4 text-primary" />
     </button>

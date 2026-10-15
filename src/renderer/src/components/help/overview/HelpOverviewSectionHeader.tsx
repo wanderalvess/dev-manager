@@ -19,7 +19,7 @@ export const HelpOverviewSectionHeader: React.FC<HelpOverviewSectionHeaderProps>
         {title}
       </h3>
     </div>
-    <span className="text-[11px] text-muted-foreground font-mono">
+    <span className="text-2xs text-muted-foreground font-mono">
       {subtitle}
     </span>
   </div>

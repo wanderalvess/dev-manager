@@ -23,7 +23,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-danger/30 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+      panelClassName="bg-card border border-danger/30 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -35,7 +35,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
           </div>
           <div>
             <h4 className="text-sm font-bold text-foreground">Confirmar Desinstalação</h4>
-            <p className="text-[11px] font-mono text-danger">feature:uninstall -r</p>
+            <p className="text-2xs font-mono text-danger">feature:uninstall -r</p>
           </div>
         </div>
         <button
@@ -75,7 +75,7 @@ export const KarafFeatureUninstallModal: React.FC<KarafFeatureUninstallModalProp
           )}
         </div>
 
-        <div className="p-3 rounded-xl bg-danger/5 border border-danger/20 text-[11px] text-muted-foreground leading-relaxed">
+        <div className="p-3 rounded-xl bg-danger/5 border border-danger/20 text-2xs text-muted-foreground leading-relaxed">
           <strong className="text-danger block mb-0.5 font-mono text-2xs uppercase">Impacto OSGi:</strong>
           A opção <code className="text-danger font-bold bg-danger/10 px-1 py-0.2 rounded">-r</code> desinstala a feature e limpa as referências de todos os bundles que não sejam dependência de outros módulos ativos, impedindo que retornem após reiniciar o Karaf.
         </div>

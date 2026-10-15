@@ -8,7 +8,7 @@ interface DocSettingsEmbeddingCardProps {
 }
 
 export const DocSettingsEmbeddingCard: React.FC<DocSettingsEmbeddingCardProps> = ({ status, onOpenModelHelp }) => (
-  <div className="p-3.5 rounded-xl border border-border/90 bg-muted/25 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+  <div className="p-3 rounded-xl border border-border/90 bg-muted/25 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
     <div className="flex items-center gap-3 min-w-0">
       <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
         <Cpu className="w-4 h-4" />
@@ -36,7 +36,7 @@ export const DocSettingsEmbeddingCard: React.FC<DocSettingsEmbeddingCardProps> =
             </span>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+        <p className="text-2xs text-muted-foreground mt-0.5 leading-relaxed">
           Executado <strong>100% localmente</strong> no seu computador via ONNX. Acionado pelo botão <strong>Reindexar</strong> ou pelo <strong>Watchdog</strong>.
         </p>
       </div>

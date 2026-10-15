@@ -37,7 +37,7 @@ export const Routine801BatchBar: React.FC<Routine801BatchBarProps> = ({
 
       {/* Opção para forçar versão específica na seleção em lote */}
       <div className="flex items-center gap-1.5 border-l border-border/80 pl-3">
-        <span className="text-muted-foreground text-[11px] whitespace-nowrap">Versão Alvo:</span>
+        <span className="text-muted-foreground text-2xs whitespace-nowrap">Versão Alvo:</span>
         <input
           type="text"
           value={batchVersionOverride}

@@ -65,7 +65,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
             {entry.sizeFormatted}
           </span>
         </div>
-        <div className="text-[11px] text-muted-foreground flex items-center gap-3">
+        <div className="text-2xs text-muted-foreground flex items-center gap-3">
           <span className="flex items-center gap-1 font-mono text-2xs">
             <Clock className="w-3 h-3 text-muted-foreground/70" />
             {entry.dateFormatted}
@@ -93,7 +93,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
               type="button"
               onClick={onCancelRestore}
               className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-              title="Cancelar"
+              title="Cancelar" aria-label="Cancelar"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -127,7 +127,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
               type="button"
               onClick={onCancelDelete}
               className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-              title="Cancelar"
+              title="Cancelar" aria-label="Cancelar"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -138,7 +138,7 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
             onClick={() => onDelete(entry)}
             disabled={isRestoring || isDeleting}
             className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-            title="Excluir este arquivo .bak definitivamente"
+            title="Excluir este arquivo .bak definitivamente" aria-label="Excluir este arquivo .bak definitivamente"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

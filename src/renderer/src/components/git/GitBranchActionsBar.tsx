@@ -80,7 +80,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         <button
           type="button"
           onClick={onOpenDiff}
-          className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-warning/10 hover:bg-warning/20 border border-warning/30 text-warning text-[11px] font-mono transition cursor-pointer"
+          className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-warning/10 hover:bg-warning/20 border border-warning/30 text-warning text-2xs font-mono transition cursor-pointer"
           title="Inspecionar arquivos alterados e visualizador de diff"
         >
           <FileEdit className="w-3.5 h-3.5" />
