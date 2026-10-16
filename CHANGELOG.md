@@ -4,6 +4,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.37.0] - 2026-10-15
+### Adicionado
+- **API Studio (Postman Integrado)**: novo módulo completo acessível via atalho `Alt+9` no grupo de Desenvolvimento & DevOps, permitindo testar, depurar e homologar APIs REST e serviços WinThor/Karaf sem necessidade de ferramentas externas pesadas.
+- **Importador Nativo de Coleções Postman**: importação de arquivos `.json` de coleções nos formatos Postman v2.1 e v2.0 com reconstrução fiel da árvore de pastas e subpastas, métodos HTTP, parâmetros de query, cabeçalhos, corpos e exemplos de resposta.
+- **Gerenciador de Ambientes & Variáveis**: suporte completo a variáveis de ambiente com interpolação dinâmica (`{{host}}`, `{{port}}`, `{{LOGIN}}`, `{{SENHA}}`, `{{TOKEN}}`) e variáveis dinâmicas Postman (`{{$randomInt}}`, `{{$timestamp}}`, `{{$uuid}}`).
+- **Autenticação Automática WinThor**: recurso de login direto contra `/winthor/autenticacao/v1/login`, extraindo o `accessToken` e injetando automaticamente nas requisições da coleção com um único clique no botão *"Autenticar no WinThor"*.
+- **Editor Monaco Integrado**: suporte a realce sintático em JSON, validação estrutural, formatação rápida (*Beautify JSON*) e visualizador de respostas com métricas de tempo em milissegundos e tamanho de payload.
+- **Integração com Validador Regressivo**: botão direto na resposta HTTP para enviar payloads JSON ao Validador Regressivo da Central de Qualidade (QA Hub).
+- **Servidor MCP — 4 Novas Ferramentas**: adicionadas as tools `http_send_request`, `http_list_collections`, `http_login_winthor` e `http_import_postman_collection`, elevando o catálogo total do Hub Manager para 157 ferramentas de IA.
+
+## [1.36.0] - 2026-10-15
+### Adicionado
+- **DB Studio — redimensionamento interativo de colunas**: os cabeçalhos das colunas do grid de resultados agora contam com divisores interativos arrastáveis via mouse, permitindo alargar e encolher qualquer coluna livremente. O duplo-clique no divisor expande a coluna instantaneamente em +200px (até o teto de 1200px) para leitura rápida de campos volumosos.
+- **DB Studio — visualizador detalhado de célula (CellViewerModal)**: duplo-clique em qualquer célula da consulta em modo de leitura (ou botão direito &gt; *"Ver valor completo..."*) abre um modal de inspeção com formatação e indentação automática de JSON, alternância de quebra de linha (*word-wrap*), contador de caracteres e botão de cópia direta.
+- **DB Studio — feedback visual e proteção na cópia de células**: o clique em uma célula agora exibe notificação toast com prévia do valor e identificação da coluna copiada. Foi implementada verificação de seleção manual de texto com o mouse para evitar sobreposição involuntária da cópia automática da célula inteira.
+- **Área de transferência — fallback com execCommand**: o hook `useCopyToClipboard` agora conta com fallback retrocompatível via `document.execCommand('copy')`, garantindo sucesso na cópia de células mesmo quando a API moderna `navigator.clipboard.writeText` estiver restrita por foco ou políticas de permissão da janela.
+
+### Alterado
+- **DB Studio — largura flexível nas colunas do grid**: removida a restrição fixa rígida de `max-w-xs` (320px) em todas as células, adotando largura dinâmica baseada nas preferências do usuário e largura mínima confortável de `120px` por padrão.
+
 ## [1.35.1] - 2026-10-15
 ### Adicionado
 - **DB Studio — seletor de pasta para Oracle Instant Client**: adicionado botão com diálogo nativo de busca no Explorer diretamente ao lado do campo de diretório do Instant Client no modal de conexão.

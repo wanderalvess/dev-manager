@@ -1,16 +1,18 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { QueryResult, TableColumnInfo } from '../../../../shared/types';
 import { useVirtualScroll } from '../../hooks/useVirtualScroll';
 import { useResultsGridEditing } from '../../hooks/database/useResultsGridEditing';
+import { useResultsGridColumnResize } from '../../hooks/database/useResultsGridColumnResize';
 import { RESULTS_GRID_ROW_HEIGHT, computeBottomSpacerHeight } from '../../utils/resultsGridUtils';
 import { ResultsGridStates } from './grid/ResultsGridStates';
 import { ResultsGridToolbar } from './grid/ResultsGridToolbar';
 import { ResultsGridHeader } from './grid/ResultsGridHeader';
 import { ResultsGridNewRow } from './grid/ResultsGridNewRow';
 import { ResultsGridRow } from './grid/ResultsGridRow';
-import { ResultsGridContextMenu } from './grid/ResultsGridContextMenu';
+import { ResultsGridContextMenu, type ResultsGridContextMenuState } from './grid/ResultsGridContextMenu';
 import { ResultsGridEmptyState } from './grid/ResultsGridEmptyState';
-import { X } from 'lucide-react';
+import { ResultsGridPendingInserts } from './grid/ResultsGridPendingInserts';
+import { CellViewerModal } from './CellViewerModal';
 import { EMPTY_PENDING, isRowDeleted, pendingCount as countPending, pendingValuesOf, type PendingChanges } from '../../utils/gridPendingChanges';
 
 export interface ResultsDataGridProps {
@@ -30,21 +32,9 @@ export interface ResultsDataGridProps {
   setSelectedRowIndex: (idx: number | null) => void;
   activeColumnMenu: string | null;
   setActiveColumnMenu: (col: string | null) => void;
-  cellContextMenu: {
-    x: number;
-    y: number;
-    column: string;
-    value: any;
-    rowIndex: number;
-  } | null;
-  setCellContextMenu: React.Dispatch<React.SetStateAction<{
-    x: number;
-    y: number;
-    column: string;
-    value: any;
-    rowIndex: number;
-  } | null>>;
-  onCopyCell: (text: any, cellKey?: string) => void;
+  cellContextMenu: ResultsGridContextMenuState | null;
+  setCellContextMenu: React.Dispatch<React.SetStateAction<ResultsGridContextMenuState | null>>;
+  onCopyCell: (text: any, cellKey?: string, columnName?: string) => void;
   onFilterByCellValue: (col: string, val: any) => void;
   /** Nome da tabela de origem quando o resultado atual é um `SELECT * FROM <tabela>` simples — habilita inserir/editar/excluir linhas. */
   editableTableName?: string | null;
@@ -96,6 +86,22 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const isEditable = Boolean(editableTableName && onUpdateCell && onInsertRow && onDeleteRow);
+  const { columnWidths, startResize, expandColumn } = useResultsGridColumnResize();
+  const [viewerCell, setViewerCell] = useState<{
+    column: string;
+    value: any;
+    rowIndex: number;
+    dataType: 'number' | 'date' | 'boolean' | 'object' | 'string';
+  } | null>(null);
+
+  const handleOpenViewer = (column: string, value: any, rowIndex: number) => {
+    setViewerCell({
+      column,
+      value,
+      rowIndex,
+      dataType: columnDataTypes[column] || 'string'
+    });
+  };
 
   const editing = useResultsGridEditing({
     isEditable,
@@ -166,6 +172,9 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
             onToggleSort={onToggleSort}
             activeColumnMenu={activeColumnMenu}
             setActiveColumnMenu={setActiveColumnMenu}
+            columnWidths={columnWidths}
+            onStartResize={startResize}
+            onExpandColumn={expandColumn}
           />
 
           <tbody className="divide-y divide-border/40">
@@ -179,26 +188,12 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                 onCancel={editing.cancelAddingRow}
               />
             )}
-            {pending.inserts.map((values, i) => (
-              <tr key={`new_${i}`} className="bg-success/10" style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}>
-                <td className="px-2 py-1.5 text-center border-r border-border/30">
-                  <button
-                    type="button"
-                    onClick={() => onUnstageInsert?.(i)}
-                    className="text-success hover:text-danger cursor-pointer"
-                    title="Remover esta nova linha pendente"
-                    aria-label="Remover nova linha pendente"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </td>
-                {queryResult.columns.map((col) => (
-                  <td key={col} className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate text-success" title="Nova linha (ainda não gravada)">
-                    {values[col] === null || values[col] === undefined ? <span className="opacity-50">NULL</span> : String(values[col])}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            <ResultsGridPendingInserts
+              inserts={pending.inserts}
+              columns={queryResult.columns}
+              columnWidths={columnWidths}
+              onUnstageInsert={onUnstageInsert}
+            />
             {processedRows.length === 0 ? (
               <ResultsGridEmptyState
                 columnCount={columnCount}
@@ -235,6 +230,8 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                     onOpenContextMenu={setCellContextMenu}
                     pendingValues={pendingValuesOf(pending, row, keyColumns)}
                     isDeleted={isRowDeleted(pending, row, keyColumns)}
+                    columnWidths={columnWidths}
+                    onOpenViewer={handleOpenViewer}
                   />
                 ))}
 
@@ -262,7 +259,20 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
           onCopyCell={onCopyCell}
           onFilterByCellValue={onFilterByCellValue}
           onStartEditing={editing.startEditingCell}
+          onOpenViewer={handleOpenViewer}
           onDeleteRow={onDeleteRow}
+        />
+      )}
+
+      {viewerCell && (
+        <CellViewerModal
+          isOpen={Boolean(viewerCell)}
+          onClose={() => setViewerCell(null)}
+          columnName={viewerCell.column}
+          value={viewerCell.value}
+          rowIndex={viewerCell.rowIndex}
+          dataType={viewerCell.dataType}
+          onCopyCell={onCopyCell}
         />
       )}
     </div>

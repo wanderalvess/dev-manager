@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   PlayCircle,
   Zap,
+  Globe,
   LucideIcon
 } from 'lucide-react';
 
@@ -130,6 +131,14 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         icon: FileSearch,
         description: 'Busca semântica RAG na documentação dos projetos',
         shortcut: 'Alt+7'
+      },
+      {
+        id: 'http-client',
+        label: 'API Studio',
+        shortLabel: 'API Studio',
+        icon: Globe,
+        description: 'Cliente HTTP estilo Postman: coleções, variáveis e testes de APIs REST',
+        shortcut: 'Alt+9'
       }
     ]
   },

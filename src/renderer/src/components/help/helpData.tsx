@@ -1513,6 +1513,63 @@ export function getFaqList({
           </div>
         </div>
       )
+    },
+    {
+      id: 'db-grid-resize-and-copy',
+      question: 'Como redimensionar colunas e visualizar ou copiar valores grandes (JSON, CLOB) na grade de resultados do Database Studio?',
+      category: 'Banco de Dados & Backups',
+      tags: ['grid', 'database', 'colunas', 'redimensionar', 'copiar', 'json', 'clob', 'visualizador', 'tamanho', 'db studio'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            A grade de resultados do <strong className="text-foreground">Database Studio (Alt+2)</strong> permite inspecionar e extrair dados tabulares com facilidade:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
+            <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Recursos da Grade de Resultados:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Redimensionamento Livre de Colunas:</strong> Passe o mouse sobre a borda direita do cabeçalho de qualquer coluna e arraste para ajustar a largura desejada. Um duplo-clique no divisor expande a coluna automaticamente.
+              </li>
+              <li>
+                <strong className="text-foreground">Cópia Rápida de Valores:</strong> Clique em qualquer célula para copiar imediatamente seu conteúdo com notificação toast de confirmação. Se preferir selecionar apenas parte do texto com o cursor do mouse, a seleção manual é respeitada sem sobreposição.
+              </li>
+              <li>
+                <strong className="text-foreground">Visualizador de Célula Completa:</strong> Dê um duplo-clique em qualquer célula de consulta ou clique com o botão direito e selecione <strong className="text-foreground">"Ver valor completo..."</strong> para abrir o modal dedicado de inspeção, com formatação JSON automática, quebra de linha opcional e contagem de caracteres.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'api-studio-postman-and-winthor-auth',
+      question: 'Como funciona o API Studio (Postman integrado) e a Autenticação Automática WinThor?',
+      category: 'Desenvolvimento & DevOps',
+      tags: ['api studio', 'postman', 'http', 'rest', 'winthor', 'login', 'token', 'autenticação', 'coleções', 'variáveis'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            O <strong className="text-foreground">API Studio (Alt+9)</strong> é o cliente HTTP completo embutido no cockpit para você testar rotinas, microsserviços e APIs do WinThor sem precisar de ferramentas externas pesadas:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
+            <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Recursos do API Studio:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Importação do Postman (.json):</strong> Clique em <em>"Postman"</em> na barra lateral para importar coleções completas (v2.1 e v2.0) com pastas, rotas, corpos JSON, query params e exemplos em 1 clique.
+              </li>
+              <li>
+                <strong className="text-foreground">Autenticação WinThor Nativa:</strong> Configure o seu usuário e senha no seletor de Ambiente (<kbd className="px-1 py-0.5 rounded bg-muted font-mono text-2xs">LOGIN</kbd> e <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-2xs">SENHA</kbd>) e clique em <strong>"Autenticar no WinThor"</strong>. O sistema realiza o login contra <code className="font-mono text-primary">/winthor/autenticacao/v1/login</code>, extrai o <code className="font-mono text-primary font-bold">accessToken</code> e injeta automaticamente nas requisições da coleção.
+              </li>
+              <li>
+                <strong className="text-foreground">Variáveis Dinâmicas:</strong> Suporte a interpolação estilo <code className="font-mono text-primary font-bold">{'{{host}}'}</code>, <code className="font-mono text-primary font-bold">{'{{port}}'}</code>, <code className="font-mono text-primary font-bold">{'{{TOKEN}}'}</code> e geradores dinâmicos como <code className="font-mono text-primary font-bold">{'{{$randomInt}}'}</code>, <code className="font-mono text-primary font-bold">{'{{$timestamp}}'}</code> e <code className="font-mono text-primary font-bold">{'{{$uuid}}'}</code>.
+              </li>
+              <li>
+                <strong className="text-foreground">Monaco Editor Integrado:</strong> Edição de payloads com destaque sintático, formatação automática (<em>Beautify JSON</em>) e visualizador de respostas com métricas de tempo (ms) e tamanho.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
     }
   ];
 }
@@ -1527,21 +1584,22 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Alt + 6', desc: 'Acessar "Catálogo de Rotinas" (Executáveis Delphi .exe/.pc)', category: 'Navegação' },
     { key: 'Alt + 7', desc: 'Acessar "Documentação" (Busca Semântica RAG com IA)', category: 'Navegação' },
     { key: 'Alt + 8', desc: 'Acessar "Logs em Tempo Real" (tail -f de logs de aplicações)', category: 'Navegação' },
-    { key: 'Alt + 9', desc: 'Acessar esta Central de Ajuda & Launchpad do Sistema', category: 'Navegação' },
+    { key: 'Alt + 9', desc: 'Acessar "API Studio" (Cliente HTTP REST estilo Postman, coleções e variáveis)', category: 'Navegação' },
     { key: 'Alt + 0', desc: 'Acessar "APM & Traces" (Dashboard e Traces Explorer OpenTelemetry)', category: 'Navegação' },
     { key: 'Alt + Q', desc: 'Acessar "Qualidade & Homologação" (abas agrupadas em Automação, Validação e Entrega)', category: 'Navegação' },
+    { key: 'Alt + H', desc: 'Acessar esta Central de Ajuda & Launchpad do Sistema', category: 'Navegação' },
     { key: 'Ctrl + K', desc: 'Abrir o Quick Launcher (busca aproximada de ações, projetos e Configurações)', category: 'Navegação' },
     { key: 'Alt + ← / →', desc: 'Navegar entre versões anterior e seguinte no modal de Novidades', category: 'Navegação' },
-    { key: 'Ctrl + Enter', desc: 'Executar consulta SQL selecionada no Database Studio', category: 'Banco de Dados' },
+    { key: 'Ctrl + Enter', desc: 'Enviar requisição no API Studio / Executar SQL no Database Studio', category: 'Produtividade' },
     { key: 'Shift + F9', desc: `Depuração Remota JVM no IntelliJ IDEA (Porta :${debugPort})`, category: 'Desenvolvimento' },
     { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' }
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.35.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.37.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
-    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '11 Módulos' },
+    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '12 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqCount}` },
     { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appVersion}` }

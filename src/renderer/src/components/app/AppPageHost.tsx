@@ -23,6 +23,7 @@ const QualityRegressionPage = lazy(() =>
 );
 const QualityRunnersPage = lazy(() => import('../../pages/QualityRunnersPage').then((m) => ({ default: m.QualityRunnersPage })));
 const QualityTautPage = lazy(() => import('../../pages/QualityTautPage').then((m) => ({ default: m.QualityTautPage })));
+const HttpClientPage = lazy(() => import('../../pages/HttpClientPage').then((m) => ({ default: m.HttpClientPage })));
 
 const PageLoadingFallback: React.FC = () => (
   <div className="h-full w-full flex items-center justify-center">
@@ -119,6 +120,14 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
         </PageSlot>
         <PageSlot id="docs" {...slot}>
           <DocsPage onNavigateToSettings={goSettings} settingsVersion={settingsVersion} />
+        </PageSlot>
+        <PageSlot id="http-client" {...slot}>
+          <HttpClientPage
+            onNavigateToSettings={goSettings}
+            onNavigateToQaRegression={() => setActiveTab('quality-regression')}
+            isActive={activeTab === 'http-client'}
+            settingsVersion={settingsVersion}
+          />
         </PageSlot>
         <PageSlot id="logs" {...slot}>
           <LogsPage

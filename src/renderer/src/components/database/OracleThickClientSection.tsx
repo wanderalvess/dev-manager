@@ -14,11 +14,13 @@ export const OracleThickClientSection: React.FC<OracleThickClientSectionProps> =
   const isThickActive = Boolean(editingConn.oracleThickMode || editingConn.oracleClientPath);
 
   const handleBrowseDir = async () => {
-    if (window.electronAPI?.selectDirectory) {
-      const selected = await window.electronAPI.selectDirectory(editingConn.oracleClientPath || undefined);
+    try {
+      const selected = await window.electronAPI?.selectDirectory?.(editingConn.oracleClientPath || undefined);
       if (selected) {
         setEditingConn((prev) => ({ ...prev, oracleClientPath: selected }));
       }
+    } catch (err) {
+      console.error('Falha ao selecionar diretório do Instant Client:', err);
     }
   };
 
@@ -57,17 +59,15 @@ export const OracleThickClientSection: React.FC<OracleThickClientSectionProps> =
               placeholder="Ex: C:\oracle\instantclient_19_25"
               className="flex-1 bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
             />
-            {window.electronAPI?.selectDirectory && (
-              <button
-                type="button"
-                onClick={handleBrowseDir}
-                className="p-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-md border border-border/70 transition cursor-pointer shrink-0"
-                title="Selecionar pasta do Instant Client"
-                aria-label="Selecionar pasta do Instant Client"
-              >
-                <FolderOpen className="w-3.5 h-3.5" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleBrowseDir}
+              className="p-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-md border border-border/70 transition cursor-pointer shrink-0"
+              title="Selecionar pasta do Instant Client"
+              aria-label="Selecionar pasta do Instant Client"
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}

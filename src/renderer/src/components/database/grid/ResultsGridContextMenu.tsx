@@ -1,6 +1,6 @@
 import React from 'react';
 import { EscapeToClose } from '../../ui/EscapeToClose';
-import { Filter, Copy, Trash2, Pencil } from 'lucide-react';
+import { Filter, Copy, Trash2, Pencil, Maximize2 } from 'lucide-react';
 import { clampContextMenuPosition, formatFilterValueLabel } from '../../../utils/resultsGridUtils';
 
 export interface ResultsGridContextMenuState {
@@ -17,9 +17,10 @@ interface ResultsGridContextMenuProps {
   isMutatingRow: boolean;
   processedRows: any[];
   onClose: () => void;
-  onCopyCell: (text: any, cellKey?: string) => void;
+  onCopyCell: (text: any, cellKey?: string, columnName?: string) => void;
   onFilterByCellValue: (col: string, val: any) => void;
   onStartEditing: (rowIndex: number, column: string, value: any) => void;
+  onOpenViewer?: (column: string, value: any, rowIndex: number) => void;
   onDeleteRow?: (row: Record<string, any>) => void;
 }
 
@@ -33,6 +34,7 @@ export const ResultsGridContextMenu: React.FC<ResultsGridContextMenuProps> = ({
   onCopyCell,
   onFilterByCellValue,
   onStartEditing,
+  onOpenViewer,
   onDeleteRow
 }) => (
   <>
@@ -58,7 +60,7 @@ export const ResultsGridContextMenu: React.FC<ResultsGridContextMenuProps> = ({
       <button
         type="button"
         onClick={() => {
-          onCopyCell(menu.value);
+          onCopyCell(menu.value, undefined, menu.column);
           onClose();
         }}
         className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-accent transition text-left text-muted-foreground hover:text-foreground cursor-pointer"
@@ -66,6 +68,20 @@ export const ResultsGridContextMenu: React.FC<ResultsGridContextMenuProps> = ({
         <Copy className="w-3.5 h-3.5 shrink-0" />
         <span>Copiar valor</span>
       </button>
+
+      {onOpenViewer && (
+        <button
+          type="button"
+          onClick={() => {
+            onOpenViewer(menu.column, menu.value, menu.rowIndex);
+            onClose();
+          }}
+          className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded hover:bg-accent transition text-left text-muted-foreground hover:text-foreground cursor-pointer"
+        >
+          <Maximize2 className="w-3.5 h-3.5 shrink-0 text-primary" />
+          <span>Ver valor completo...</span>
+        </button>
+      )}
 
       {isEditable && (
         <>
