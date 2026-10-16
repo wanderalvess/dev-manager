@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FileArchive, RotateCw, RotateCcw, FlaskConical } from 'lucide-react';
 import type { BackupFileInfo, BackupResult, DatabaseConnectionConfig } from '../../../../../shared/types';
 import { backupResultToneClass, formatBytes } from '../../../utils/backupModalUtils';
@@ -17,6 +17,8 @@ interface BackupFilesTabProps {
   onRefresh: () => void;
   onRestore: (file: BackupFileInfo) => void;
   onRestoreDrill: (file: BackupFileInfo) => void;
+  /** Conexão Oracle: permite restaurar um .dmp que está no DIRECTORY do servidor (sem cópia local). */
+  isOracle?: boolean;
 }
 
 export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
@@ -32,8 +34,14 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
   drillingFilePath,
   onRefresh,
   onRestore,
-  onRestoreDrill
-}) => (
+  onRestoreDrill,
+  isOracle = false
+}) => {
+  const [serverDump, setServerDump] = useState('');
+  // Mesmo formato aceito pelo backend: só o nome do .dmp, sem caminho
+  const serverDumpName = serverDump.trim();
+  const serverDumpValid = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.dmp$/i.test(serverDumpName);
+  return (
   <div className="space-y-4 animate-fade-in">
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/40 border border-border/70 rounded-xl">
       <div className="flex items-center gap-2">
@@ -68,6 +76,36 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
         </button>
       </div>
     </div>
+
+    {isOracle && (
+      <div className="p-3 bg-muted/30 border border-border/70 rounded-xl space-y-2">
+        <p className="font-bold text-foreground text-xs">Restaurar dump que está no servidor Oracle</p>
+        <p className="text-2xs text-muted-foreground">
+          O expdp grava o .dmp no DIRECTORY do servidor. Com servidor remoto o arquivo não aparece na lista acima: informe
+          o nome do dump (ex.: MinhaConexao_USER_2026-10-16.dmp) e o impdp o lê direto de lá.
+        </p>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={serverDump}
+            onChange={(e) => setServerDump(e.target.value)}
+            placeholder="nome_do_dump.dmp"
+            aria-label="Nome do dump no servidor Oracle"
+            className="flex-1 bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
+          />
+          <button
+            type="button"
+            disabled={!serverDumpValid || restoringFilePath !== null}
+            onClick={() =>
+              onRestore({ fileName: serverDumpName, filePath: serverDumpName, sizeBytes: 0, createdAt: new Date().toISOString() })
+            }
+            className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-lg border border-border/80 font-semibold text-xs disabled:opacity-50 cursor-pointer"
+          >
+            Restaurar do servidor
+          </button>
+        </div>
+      </div>
+    )}
 
     {restoreResult && (
       <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(restoreResult.success)}`}>
@@ -151,4 +189,5 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
       </div>
     )}
   </div>
-);
+  );
+};
