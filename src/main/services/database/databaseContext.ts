@@ -8,6 +8,8 @@ export interface CachedConnection {
   queue: Promise<any>;
   /** Execuções em andamento ou na fila: o timer de ociosidade só conta quando zera. */
   active: number;
+  /** Uma operação falhou: a conexão já saiu do cache e é fechada por quem terminar por último. */
+  broken?: boolean;
 }
 
 export type OracleConnection = { conn: any; oracledb: any };
