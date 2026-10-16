@@ -44,6 +44,18 @@ describe('parseSingleTableSelect', () => {
     expect(parseSingleTableSelect('  SELECT   *   FROM   TAB$1  ')).toBe('TAB$1');
   });
 
+  it('aceita ORDER BY simples (colunas com ASC/DESC) antes do LIMIT', () => {
+    expect(parseSingleTableSelect('SELECT * FROM clientes ORDER BY id')).toBe('clientes');
+    expect(parseSingleTableSelect('SELECT * FROM public.clientes ORDER BY nome DESC, id ASC LIMIT 50')).toBe('public.clientes');
+    expect(parseSingleTableSelect('select * from t where rownum <= 10 order by c.id')).toBe('t');
+  });
+
+  it('continua rejeitando ORDER BY com expressões ou subqueries', () => {
+    expect(parseSingleTableSelect('SELECT * FROM clientes ORDER BY LOWER(nome)')).toBeNull();
+    expect(parseSingleTableSelect('SELECT * FROM clientes ORDER BY (SELECT 1)')).toBeNull();
+    expect(parseSingleTableSelect('SELECT * FROM clientes ORDER BY id; DROP TABLE x')).toBeNull();
+  });
+
   it('rejeita joins, agregações, subqueries e filtros arbitrários', () => {
     expect(parseSingleTableSelect('SELECT * FROM a JOIN b ON a.id = b.id')).toBeNull();
     expect(parseSingleTableSelect('SELECT COUNT(*) FROM clientes')).toBeNull();

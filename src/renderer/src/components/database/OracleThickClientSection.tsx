@@ -59,15 +59,17 @@ export const OracleThickClientSection: React.FC<OracleThickClientSectionProps> =
               placeholder="Ex: C:\oracle\instantclient_19_25"
               className="flex-1 bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
             />
-            <button
-              type="button"
-              onClick={handleBrowseDir}
-              className="p-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-md border border-border/70 transition cursor-pointer shrink-0"
-              title="Selecionar pasta do Instant Client"
-              aria-label="Selecionar pasta do Instant Client"
-            >
-              <FolderOpen className="w-3.5 h-3.5" />
-            </button>
+            {typeof window.electronAPI?.selectDirectory === 'function' && (
+              <button
+                type="button"
+                onClick={handleBrowseDir}
+                className="p-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-md border border-border/70 transition cursor-pointer shrink-0"
+                title="Selecionar pasta do Instant Client"
+                aria-label="Selecionar pasta do Instant Client"
+              >
+                <FolderOpen className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       )}

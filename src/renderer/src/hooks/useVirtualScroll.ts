@@ -58,7 +58,7 @@ export function useVirtualScroll(
     if (targetEl && targetEl !== containerNode) {
       setContainerNode(targetEl);
     }
-  });
+  }, [containerNode, containerTarget]);
 
   const activeElement = containerNode || (containerTarget && 'current' in containerTarget ? containerTarget.current : containerTarget) || null;
 
