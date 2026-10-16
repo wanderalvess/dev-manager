@@ -620,6 +620,9 @@ export class BackupService {
       '-F', compress ? 'c' : 'p',
       '--no-password'
     ];
+    // Dump em SQL puro sem --clean falhava ao restaurar sobre uma base existente (relation already exists).
+    // O formato custom já é restaurado com --clean --if-exists; o puro passa a se comportar igual.
+    if (!compress) args.push('--clean', '--if-exists');
 
     return new Promise<BackupResult>((resolve) => {
       execFile(
