@@ -57,7 +57,7 @@ export const OracleThickClientSection: React.FC<OracleThickClientSectionProps> =
               placeholder="Ex: C:\oracle\instantclient_19_25"
               className="flex-1 bg-background border border-border/70 rounded-md p-1.5 text-foreground focus:outline-hidden focus:border-primary font-mono text-xs"
             />
-            {window.electronAPI?.selectDirectory && (
+            {typeof window.electronAPI?.selectDirectory === 'function' && (
               <button
                 type="button"
                 onClick={handleBrowseDir}
