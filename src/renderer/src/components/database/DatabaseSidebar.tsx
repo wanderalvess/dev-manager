@@ -15,6 +15,7 @@ export interface DatabaseSidebarProps {
   onOpenEditModal: (conn: DatabaseConnectionConfig) => void;
   onDeleteConnection: (id: string) => void;
   tables: string[];
+  tablesError?: string | null;
   filteredTables: string[];
   tableFilter: string;
   setTableFilter: (val: string) => void;
@@ -48,6 +49,7 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
   onOpenEditModal,
   onDeleteConnection,
   tables,
+  tablesError,
   filteredTables,
   tableFilter,
   setTableFilter,
@@ -96,6 +98,7 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
       />
       <DatabaseSidebarTableExplorer
         tables={tables}
+        tablesError={tablesError}
         filteredTables={filteredTables}
         tableFilter={tableFilter}
         setTableFilter={setTableFilter}
