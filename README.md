@@ -414,6 +414,25 @@ Para gerar só essa pasta, sem empacotar o app: `npm run build:mcp`.
 
 ---
 
+## 📊 Métricas de Adoção e Impacto
+
+> **Status:** planejado, épico [#11](https://github.com/wanderalvess/dev-manager/issues/11).
+
+O Hub Manager vai medir quantas pessoas usam o app (Dev e QA) e quanto tempo cada automação economiza em relação ao processo manual.
+
+* **O que é medido:** execuções por módulo, ação e tool MCP, duração, sucesso ou falha, e o tempo manual de referência informado pelo usuário.
+* **O que nunca é medido:** SQL, caminhos, schemas, prompts, respostas da IA, credenciais, nome ou e-mail. Cada instalação tem só um ID aleatório.
+* **Como os dados saem da máquina,** sempre depois de configurado e com opção de desligar:
+  1. **API do Portal Tech V&D:** envio automático uma vez por dia, com fila e reenvio quando o Portal não estiver acessível.
+  2. **JSON compartilhado:** exportação manual ou pasta de rede, importado no Portal por um admin.
+* **Onde ver:**
+  * equipe: página do Hub Manager no Portal Tech V&D (admin);
+  * individual: tela **Meu impacto** no app.
+
+A decisão completa, a tabela de onde pegar cada número e os comandos para medir o desenvolvimento com IA estão em [docs/decisions/0001-medir-adocao-e-impacto.md](docs/decisions/0001-medir-adocao-e-impacto.md).
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
 
 | Camada | Tecnologias |
