@@ -14,7 +14,21 @@ import type { BridgeDeps } from './core';
 /**
  * Adaptador web (REST) para o API Studio / HTTP Client (Postman).
  */
-export function createHttpClientApi({ apiFetch }: BridgeDeps): Partial<ElectronAPI> {
+type HttpClientApiKeys =
+  | 'httpExecute'
+  | 'httpListCollections'
+  | 'httpSaveCollection'
+  | 'httpDeleteCollection'
+  | 'httpSaveRequest'
+  | 'httpDeleteRequest'
+  | 'httpImportPostman'
+  | 'httpListEnvironments'
+  | 'httpSaveEnvironments'
+  | 'httpLoginWinThor'
+  | 'httpGetHistory'
+  | 'httpClearHistory';
+
+export function createHttpClientApi({ apiFetch }: BridgeDeps): Pick<ElectronAPI, HttpClientApiKeys> {
   return {
     httpExecute: async (req: HttpExecutionRequest): Promise<HttpResponseData> => {
       return apiFetch<HttpResponseData>('/api/http-client/execute', {
