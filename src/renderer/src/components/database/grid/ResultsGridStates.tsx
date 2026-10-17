@@ -1,14 +1,18 @@
 import React from 'react';
-import { Terminal, AlertCircle, CheckCircle2, Info, RotateCw } from 'lucide-react';
-import type { QueryResult } from '../../../../../shared/types';
+import { Terminal, AlertCircle, CheckCircle2, RotateCw } from 'lucide-react';
+import type { DatabaseConnectionConfig, QueryResult } from '../../../../../shared/types';
+import { EmptyResultNotice } from './EmptyResultNotice';
 
 interface ResultsGridStatesProps {
   queryResult: QueryResult | null;
   isExecuting: boolean;
+  /** Tabela do SELECT de tabela única e conexão da aba; habilitam a estimativa de linhas no resultado vazio. */
+  tableName?: string | null;
+  connection?: DatabaseConnectionConfig | null;
 }
 
 /** Estados sem tabela (executando, vazio, erro, comando sem retorno). Retorna null quando há grade a exibir. */
-export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResult, isExecuting }) => {
+export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResult, isExecuting, tableName = null, connection = null }) => {
   if (isExecuting) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-xs space-y-3">
@@ -65,8 +69,7 @@ export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResul
   if (queryResult.rows && queryResult.rows.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-xs">
-        <Info className="w-6 h-6 opacity-40 mb-1" />
-        <p>A consulta não retornou nenhuma linha.</p>
+        <EmptyResultNotice tableName={tableName} connection={connection} />
       </div>
     );
   }

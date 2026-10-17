@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { QueryResult, TableColumnInfo } from '../../../../shared/types';
+import { DatabaseConnectionConfig, QueryResult, TableColumnInfo } from '../../../../shared/types';
 import { useVirtualScroll } from '../../hooks/useVirtualScroll';
 import { useResultsGridEditing } from '../../hooks/database/useResultsGridEditing';
 import { useResultsGridColumnResize } from '../../hooks/database/useResultsGridColumnResize';
@@ -49,6 +49,8 @@ export interface ResultsDataGridProps {
   onApplyPending?: () => void;
   onDiscardPending?: () => void;
   onUnstageInsert?: (index: number) => void;
+  /** Conexão da aba; usada para estimar as linhas da tabela quando o resultado vem vazio. */
+  connection?: DatabaseConnectionConfig | null;
 }
 
 export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
@@ -82,7 +84,8 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
   keyColumns = [],
   onApplyPending,
   onDiscardPending,
-  onUnstageInsert
+  onUnstageInsert,
+  connection = null
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const isEditable = Boolean(editableTableName && onUpdateCell && onInsertRow && onDeleteRow);
@@ -126,7 +129,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
     scrollToTop();
   }, [queryResult, scrollToTop]);
 
-  const stateView = ResultsGridStates({ queryResult, isExecuting });
+  const stateView = ResultsGridStates({ queryResult, isExecuting, tableName: editableTableName, connection });
   if (stateView || !queryResult) return stateView;
 
   const rowsToRender = isVirtual
