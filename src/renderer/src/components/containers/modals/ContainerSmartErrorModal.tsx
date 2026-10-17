@@ -55,10 +55,10 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
               smartError.isNotInstalled
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                ? 'bg-warning/10 border-warning/30 text-warning'
                 : smartError.isDaemonOffline
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                ? 'bg-warning/10 border-warning/30 text-warning'
+                : 'bg-danger/10 border-danger/30 text-danger'
             }`}
           >
             {smartError.isNotInstalled ? (
@@ -139,8 +139,8 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
               >
                 {installCmdFeedback === 'install-btn' ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Comando Copiado!</span>
+                    <Check className="w-3.5 h-3.5 text-success" />
+                    <span className="text-success">Comando Copiado!</span>
                   </>
                 ) : (
                   <>
@@ -171,7 +171,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                 type="button"
                 onClick={() => onStartDaemon(smartError.distroName)}
                 disabled={isStartingDaemon}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-warning hover:bg-warning/90 text-background text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
               >
                 {isStartingDaemon ? (
                   <RotateCw className="w-3.5 h-3.5 animate-spin" />

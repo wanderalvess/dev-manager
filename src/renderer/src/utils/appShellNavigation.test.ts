@@ -16,13 +16,14 @@ const ev = (key: string, mods: Partial<{ ctrlKey: boolean; metaKey: boolean; alt
 });
 
 describe('appShellNavigation', () => {
-  it('mapeia Alt+0..9 e Alt+Q para as abas', () => {
+  it('mapeia Alt+0..9, Alt+Q e Alt+H para as abas', () => {
     expect(resolveAltShortcutTab(ev('1', { altKey: true }))).toBe('env');
     expect(resolveAltShortcutTab(ev('0', { altKey: true }))).toBe('apm');
-    expect(resolveAltShortcutTab(ev('9', { altKey: true }))).toBe('help');
+    expect(resolveAltShortcutTab(ev('9', { altKey: true }))).toBe('http-client');
+    expect(resolveAltShortcutTab(ev('h', { altKey: true }))).toBe('help');
     expect(resolveAltShortcutTab(ev('q', { altKey: true }))).toBe('quality');
     expect(resolveAltShortcutTab(ev('Q', { altKey: true }))).toBe('quality');
-    expect(Object.keys(ALT_SHORTCUT_TABS)).toHaveLength(11);
+    expect(Object.keys(ALT_SHORTCUT_TABS)).toHaveLength(12);
   });
 
   it('ignora teclas sem Alt ou sem mapeamento', () => {

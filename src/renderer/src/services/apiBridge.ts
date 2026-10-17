@@ -15,6 +15,7 @@ import { createWslApi } from './webBridge/wsl';
 import { createLogsApi } from './webBridge/logs';
 import { createApmApi } from './webBridge/apm';
 import { createQualityApi } from './webBridge/quality';
+import { createHttpClientApi } from './webBridge/httpClient';
 
 export function initApiBridge() {
   if (typeof window === 'undefined') return;
@@ -45,7 +46,8 @@ export function initApiBridge() {
     ...createWslApi(deps),
     ...createLogsApi(deps),
     ...createApmApi(deps),
-    ...createQualityApi(deps)
+    ...createQualityApi(deps),
+    ...createHttpClientApi(deps)
   };
 }
 

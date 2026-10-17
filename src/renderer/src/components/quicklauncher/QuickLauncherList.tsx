@@ -13,7 +13,7 @@ const HighlightedText: React.FC<{ text: string; matchedIndices?: number[] }> = (
     <>
       {text.split('').map((char, idx) =>
         matchSet.has(idx) ? (
-          <mark key={idx} className="bg-transparent text-amber-400 font-extrabold">
+          <mark key={idx} className="bg-transparent text-warning font-extrabold">
             {char}
           </mark>
         ) : (
@@ -75,7 +75,7 @@ export const QuickLauncherList: React.FC<QuickLauncherListProps> = ({
                     <HighlightedText text={item.title} matchedIndices={item.titleMatchIndices} />
                   </span>
                   {item.isFavorite && (
-                    <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                    <Star className="w-3 h-3 fill-warning text-warning shrink-0" />
                   )}
                 </div>
                 {item.subtitle && (

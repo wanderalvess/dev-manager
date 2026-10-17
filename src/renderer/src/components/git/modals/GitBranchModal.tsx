@@ -40,7 +40,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
     >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
           <div className="flex items-center space-x-2">
-            <GitBranch className="w-5 h-5 text-emerald-500" />
+            <GitBranch className="w-5 h-5 text-success" />
             <h3 className="text-sm font-bold text-foreground">Gerenciar Branches - {project.name}</h3>
           </div>
           <button
@@ -55,7 +55,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
 
         <div className="p-4 space-y-4">
           {branchError && (
-            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
               <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>{branchError}</span>
             </div>
@@ -117,16 +117,16 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                     disabled={isCurrent || isExecutingGit}
                     className={`w-full text-left p-2 rounded-lg font-mono text-xs flex items-center justify-between transition border cursor-pointer ${
                       isCurrent
-                        ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold'
+                        ? 'bg-success/15 border-success/30 text-success font-bold'
                         : 'bg-card border-transparent hover:bg-muted text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <span className="truncate">{name}</span>
                     {isCurrent ? (
-                      <span className="text-2xs bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-1.5 py-0.5 rounded font-sans">Ativa</span>
+                      <span className="text-2xs bg-success/20 text-success px-1.5 py-0.5 rounded font-sans">Ativa</span>
                     ) : remote ? (
                       <span
-                        className="text-2xs text-sky-600 dark:text-sky-400 font-sans shrink-0"
+                        className="text-2xs text-info font-sans shrink-0"
                         title="Existe só no origin; o checkout cria a branch local rastreando origin"
                       >
                         origin · Checkout

@@ -42,7 +42,7 @@ export const QaRunnerResultFilters: React.FC<QaRunnerResultFiltersProps> = ({
           onClick={() => onChangeFilter('failed')}
           className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors cursor-pointer ${
             resultFilter === 'failed'
-              ? 'bg-rose-600 text-white'
+              ? 'bg-danger text-background'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -53,7 +53,7 @@ export const QaRunnerResultFilters: React.FC<QaRunnerResultFiltersProps> = ({
           onClick={() => onChangeFilter('passed')}
           className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors cursor-pointer ${
             resultFilter === 'passed'
-              ? 'bg-emerald-600 text-white'
+              ? 'bg-success text-background'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >

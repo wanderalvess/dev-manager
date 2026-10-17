@@ -74,7 +74,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
           <Settings className="w-3.5 h-3.5 text-primary" />
           <span>Configurações ({settingsCount})</span>
           {activeLlmProvider && activeLlmProvider.enabled && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" title={`IA Ativa: ${activeLlmProvider.name}`} />
+            <span className="w-2 h-2 rounded-full bg-success animate-pulse ml-0.5" title={`IA Ativa: ${activeLlmProvider.name}`} />
           )}
         </button>
 
@@ -110,7 +110,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
     )}
 
     {hasIndex && status?.isTextOnly && (
-      <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs flex items-center justify-between gap-2">
+      <div className="mt-3 p-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-xs flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 shrink-0" />
           <span>
@@ -128,7 +128,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
     )}
 
     {!status?.modelDownloaded && !status?.isTextOnly && (
-      <div className="mt-3 pt-3 border-t border-border/60 flex items-start justify-between gap-2 text-2xs text-amber-600 dark:text-amber-400">
+      <div className="mt-3 pt-3 border-t border-border/60 flex items-start justify-between gap-2 text-2xs text-warning">
         <div className="flex items-start gap-2">
           <Download className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>

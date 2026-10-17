@@ -39,7 +39,8 @@ describe('buildQuickLauncherActions', () => {
       'act-logs': 'Alt+8',
       'act-apm': 'Alt+0',
       'act-quality': 'Alt+Q',
-      'act-help': 'Alt+9'
+      'act-http-client': 'Alt+9',
+      'act-help': 'Alt+H'
     });
     expect(badges['act-settings']).toBeUndefined();
     expect(badges['act-refresh']).toBeUndefined();
@@ -63,10 +64,10 @@ describe('buildQuickLauncherItems', () => {
       routines: [routine({})],
       projects: [project({ uncommittedCount: 2 })]
     });
-    expect(items).toHaveLength(18);
-    expect(items[16].id).toBe('rt-801');
-    expect(items[17].id).toBe('repo-api');
-    expect(items[17].subtitle).toBe('Branch: main (2 mods)');
+    expect(items).toHaveLength(19);
+    expect(items[17].id).toBe('rt-801');
+    expect(items[18].id).toBe('repo-api');
+    expect(items[18].subtitle).toBe('Branch: main (2 mods)');
   });
 
   it('filtra por busca e ordena por score decrescente', () => {

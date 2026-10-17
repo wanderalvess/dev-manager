@@ -49,7 +49,7 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
             className={COPY_BTN}
             title="Copiar IP Local"
           >
-            {copiedIp === 'main_lan' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+            {copiedIp === 'main_lan' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
             <span className="text-2xs">{copiedIp === 'main_lan' ? 'Copiado' : 'Copiar'}</span>
           </button>
         </div>
@@ -57,7 +57,7 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
         {/* IP WSL */}
         <div className="p-2.5 bg-card/60 border border-border/70 rounded-xl flex items-center justify-between">
           <div className="flex items-center space-x-2.5 truncate">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-warning/10 border border-warning/30 flex items-center justify-center text-warning shrink-0">
               <Cpu className="w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col truncate">
@@ -74,7 +74,7 @@ export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, on
               className={COPY_BTN}
               title="Copiar IP WSL"
             >
-              {copiedIp === 'main_wsl' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              {copiedIp === 'main_wsl' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
               <span className="text-2xs">{copiedIp === 'main_wsl' ? 'Copiado' : 'Copiar'}</span>
             </button>
           )}

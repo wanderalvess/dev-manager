@@ -23,7 +23,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
     <div className="flex items-center justify-between">
       <div>
         <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
-          <Activity className="w-4 h-4 text-emerald-500" /> Integração WinThor Start (DataSnap) & WTA
+          <Activity className="w-4 h-4 text-success" /> Integração WinThor Start (DataSnap) & WTA
         </span>
         <p className="text-2xs text-muted-foreground mt-0.5">
           Abre rotinas desktop autenticadas via serviço local do WinThor Start sem necessitar do menu aberto.
@@ -37,7 +37,7 @@ export const DirsWinthorStartPanel: React.FC<DirsWinthorStartPanelProps> = ({
           onChange={(e) => setField('winthorStartEnabled', e.target.checked)}
           className="sr-only peer"
         />
-        <div className="w-9 h-5 bg-muted peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+        <div className="w-9 h-5 bg-muted peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-success"></div>
       </label>
     </div>
 

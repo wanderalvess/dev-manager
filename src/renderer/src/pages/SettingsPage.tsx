@@ -94,15 +94,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
       />
 
       {importExport.statusMessage && (
-        <div role="status" className={`${BANNER_BASE} bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-300 animate-in fade-in duration-200`}>
-          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+        <div role="status" className={`${BANNER_BASE} bg-success/10 border-success/30 text-success animate-in fade-in duration-200`}>
+          <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           <span>{importExport.statusMessage}</span>
         </div>
       )}
 
       {draft.saveError && (
-        <div role="alert" className={`${BANNER_BASE} bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300`}>
-          <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+        <div role="alert" className={`${BANNER_BASE} bg-danger/10 border-danger/30 text-danger`}>
+          <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
           <span>Não foi possível salvar as configurações: {draft.saveError}</span>
         </div>
       )}

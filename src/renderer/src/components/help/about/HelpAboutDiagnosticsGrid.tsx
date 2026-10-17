@@ -41,13 +41,13 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
         <div className="flex items-center space-x-1.5 font-bold">
           {appInfo?.isAdmin ? (
             <>
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span className="text-emerald-500">Modo Administrador (Ativo)</span>
+              <ShieldCheck className="w-4 h-4 text-success" />
+              <span className="text-success">Modo Administrador (Ativo)</span>
             </>
           ) : (
             <>
-              <ShieldAlert className="w-4 h-4 text-amber-500" />
-              <span className="text-amber-500">Usuário Padrão (Sem Elevação)</span>
+              <ShieldAlert className="w-4 h-4 text-warning" />
+              <span className="text-warning">Usuário Padrão (Sem Elevação)</span>
             </>
           )}
         </div>
@@ -59,7 +59,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
           Sistema Operacional:
         </span>
         <div className="flex items-center space-x-1.5 font-mono text-foreground font-semibold truncate">
-          <Monitor className="w-4 h-4 text-blue-400 shrink-0" />
+          <Monitor className="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" />
           <span className="truncate">
             {appInfo ? `Windows (${appInfo.osRelease} ${appInfo.osArch})` : 'Carregando...'}
           </span>
@@ -77,7 +77,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
           </span>
         </div>
         <div className="flex items-center space-x-1.5 font-mono text-foreground font-semibold">
-          <HardDrive className="w-4 h-4 text-amber-400 shrink-0" />
+          <HardDrive className="w-4 h-4 text-warning shrink-0" />
           <span className="text-2xs">
             {appInfo
               ? `${appInfo.freeMemoryMb} MB livres de ${appInfo.totalMemoryMb} MB`
@@ -110,7 +110,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
           Motor JavaScript:
         </span>
         <div className="font-mono text-foreground text-2xs truncate">
-          Node.js <strong className="text-emerald-500">v{appInfo?.nodeVersion}</strong> • V8{' '}
+          Node.js <strong className="text-success">v{appInfo?.nodeVersion}</strong> • V8{' '}
           <strong>v{appInfo?.v8Version}</strong>
         </div>
       </div>

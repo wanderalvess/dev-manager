@@ -52,13 +52,13 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
           <span className="text-2xs uppercase font-bold text-muted-foreground">SSH Karaf</span>
-          <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">8101</div>
+          <div className="text-xs font-mono font-bold text-success">8101</div>
           <p className="text-2xs text-muted-foreground">user/pass: karaf</p>
         </div>
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
           <span className="text-2xs uppercase font-bold text-muted-foreground">JMX RMI</span>
-          <div className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">1099</div>
+          <div className="text-xs font-mono font-bold text-warning">1099</div>
           <p className="text-2xs text-muted-foreground">Monitoramento</p>
         </div>
 

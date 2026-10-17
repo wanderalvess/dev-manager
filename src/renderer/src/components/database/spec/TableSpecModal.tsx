@@ -206,7 +206,7 @@ export const TableSpecModal: React.FC<TableSpecModalProps> = ({ target, connecti
               <RotateCw className="w-3.5 h-3.5 animate-spin text-primary" /> Lendo o catálogo do banco...
             </div>
           ) : !details ? null : !details.success ? (
-            <div className="p-4 text-xs text-rose-500 whitespace-pre-wrap">{details.error}</div>
+            <div className="p-4 text-xs text-danger whitespace-pre-wrap">{details.error}</div>
           ) : tab === 'columns' ? (
             <ColumnsTab details={details} />
           ) : tab === 'constraints' ? (

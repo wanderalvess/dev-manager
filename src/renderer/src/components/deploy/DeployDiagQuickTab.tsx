@@ -26,7 +26,7 @@ export const DeployDiagQuickTab: React.FC<DeployDiagQuickTabProps> = ({ disabled
       onClick={() => onRun('bundle:list -s', 'bundles-s')}
     />
     <DeployDiagCommandButton
-      icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+      icon={<AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />}
       label="Diag Falhas"
       command="bundle:diag"
       title="bundle:diag (diagnostica todos os bundles com falha de resolução)"

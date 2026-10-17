@@ -38,20 +38,20 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
 
         <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-1">
           <span className="text-xs text-muted-foreground">Cenários Automatizados</span>
-          <div className="text-2xl font-extrabold text-emerald-400 font-mono flex items-center gap-2">
+          <div className="text-2xl font-extrabold text-success font-mono flex items-center gap-2">
             <span>{coverageReport?.automatedCount || 0}</span>
             <CheckCircle2 className="w-5 h-5" />
           </div>
-          <p className="text-2xs text-emerald-500/80">Cobertos em arquivos .cy.ts</p>
+          <p className="text-2xs text-success/80">Cobertos em arquivos .cy.ts</p>
         </div>
 
         <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-1">
           <span className="text-xs text-muted-foreground">Cenários Pendentes</span>
-          <div className="text-2xl font-extrabold text-amber-400 font-mono flex items-center gap-2">
+          <div className="text-2xl font-extrabold text-warning font-mono flex items-center gap-2">
             <span>{coverageReport?.pendingCount || 0}</span>
             <AlertTriangle className="w-5 h-5" />
           </div>
-          <p className="text-2xs text-amber-500/80">Aguardando implementação</p>
+          <p className="text-2xs text-warning/80">Aguardando implementação</p>
         </div>
 
         <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-1">
@@ -100,7 +100,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
                 onClick={() => setCoverageStatusFilter('automated')}
                 className={`px-2.5 py-1 rounded text-xs transition cursor-pointer ${
                   coverageStatusFilter === 'automated'
-                    ? 'bg-emerald-600 text-white font-bold'
+                    ? 'bg-success text-background font-bold'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
@@ -111,7 +111,7 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
                 onClick={() => setCoverageStatusFilter('pending')}
                 className={`px-2.5 py-1 rounded text-xs transition cursor-pointer ${
                   coverageStatusFilter === 'pending'
-                    ? 'bg-amber-600 text-white font-bold'
+                    ? 'bg-warning text-background font-bold'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
@@ -151,12 +151,12 @@ export const TautCoverageTab: React.FC<TautCoverageTabProps> = ({
                     </td>
                     <td className="py-2 px-3">
                       {item.status === 'automated' ? (
-                        <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded bg-success/10 text-success border border-success/20">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>Automatizado</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
                           <AlertTriangle className="w-3 h-3" />
                           <span>Pendente</span>
                         </span>

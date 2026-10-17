@@ -32,8 +32,8 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({
             onClick={item.action}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-2xs font-semibold border transition-all ${
               item.done
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-300'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
+                ? 'bg-success/10 border-success/30 text-success'
+                : 'bg-warning/10 border-warning/30 text-warning hover:bg-warning/20'
             }`}
             title={item.done ? `${item.label} - configurado` : `${item.label} - clique para configurar`}
           >

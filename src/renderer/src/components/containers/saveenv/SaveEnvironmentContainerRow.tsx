@@ -59,7 +59,7 @@ export const SaveEnvironmentContainerRow: React.FC<SaveEnvironmentContainerRowPr
             <span
               className={`text-2xs px-1.5 py-0.2 rounded font-semibold ${
                 container.state === 'running'
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  ? 'bg-success/10 text-success'
                   : 'bg-muted text-muted-foreground'
               }`}
             >

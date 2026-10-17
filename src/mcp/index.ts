@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.35.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.37.0';
   } catch {
-    return '1.35.0';
+    return '1.37.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -43,6 +43,9 @@ import { QaRegressionService } from '../main/services/QaRegressionService';
 import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
+import { HttpClientService } from '../main/services/HttpClientService';
+import { HttpCollectionService } from '../main/services/HttpCollectionService';
+import { registerHttpClientTools } from './tools/httpClientTools';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
 import { buildCompactTraceDetails } from '../main/utils/apmUtils';
 import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupConfigUtils';
@@ -74,6 +77,8 @@ const qaRegressionService = new QaRegressionService(configService, databaseServi
 const qaPayloadService = new QaPayloadService(configService, databaseService);
 const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
 const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
+const httpCollectionService = new HttpCollectionService();
+const httpClientService = new HttpClientService(httpCollectionService);
 // Os traces vivem na memória do processo dono da porta OTLP (app desktop ou servidor web): este
 // processo não sobe receptor próprio — tomaria a porta do app — e consulta aquele buffer.
 const apmClient = new ApmReceiverClient(getApmReceiverHandlePath());
@@ -3204,6 +3209,8 @@ server.registerTool(
     }
   }
 );
+
+registerHttpClientTools(server, httpClientService, httpCollectionService);
 
 // --- Inicialização ---
 async function main() {

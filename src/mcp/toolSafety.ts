@@ -39,7 +39,7 @@ const DESTRUCTIVE_TOOLS = new Set([
 ]);
 
 /** Parecem leitura pelo nome, mas têm efeito (rede externa, envio de webhook, execução de testes). */
-const WRITE_EXCEPTIONS = new Set(['backup_test_webhook', 'qa_fetch_api_payload', 'qa_fetch_incoming_payload', 'test_runner_execute']);
+const WRITE_EXCEPTIONS = new Set(['backup_test_webhook', 'qa_fetch_api_payload', 'qa_fetch_incoming_payload', 'test_runner_execute', 'http_send_request']);
 
 const READ_NAME = /(^|_)(get|list|check|status|is|read|search|analyze|explain|fetch|parse|verify|detect|test|logs|history|stats|ips|health|metrics|info|chat|ask)(_|$)/;
 

@@ -23,13 +23,13 @@ export const DocSettingsEmbeddingCard: React.FC<DocSettingsEmbeddingCardProps> =
             <span
               className={`text-2xs font-mono px-2 py-0.5 rounded-md border font-bold flex items-center gap-1 ${
                 !status.isTextOnly
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
-                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'
+                  ? 'bg-success/10 text-success border-success/25'
+                  : 'bg-warning/10 text-warning border-warning/25'
               }`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  !status.isTextOnly ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                  !status.isTextOnly ? 'bg-success animate-pulse' : 'bg-warning'
                 }`}
               />
               <span>{!status.isTextOnly ? 'Neural Ativo' : 'Modo Textual'}</span>

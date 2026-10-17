@@ -34,16 +34,16 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
       <div className="space-y-1">
         <div className="flex items-center space-x-2">
-          <Zap className="w-5 h-5 text-emerald-400" />
+          <Zap className="w-5 h-5 text-success" />
           <h2 className="text-sm font-semibold text-foreground">
             Testes Automatizados (Cypress / TAUT) — Automação de API &amp; Integração
           </h2>
           {projectStatus?.exists ? (
-            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-success/10 text-success border border-success/20">
               Online
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-danger/10 text-danger border border-danger/20">
               Não Localizado
             </span>
           )}
@@ -91,7 +91,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
 
     {/* Alerta quando o projeto não for localizado */}
     {!projectStatus?.exists && (
-      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs flex items-center justify-between gap-2">
+      <div className="p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning text-xs flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>
@@ -102,7 +102,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
           <button
             type="button"
             onClick={onNavigateToSettings}
-            className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 font-semibold text-amber-700 dark:text-amber-300 transition cursor-pointer shrink-0"
+            className="px-2.5 py-1 rounded bg-warning/20 hover:bg-warning/30 font-semibold text-warning transition cursor-pointer shrink-0"
           >
             Definir nas Configurações →
           </button>
@@ -115,7 +115,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
       <div className="p-2 rounded-lg bg-muted/30 border border-border/40 space-y-0.5">
         <span className="text-2xs text-muted-foreground">Framework E2E</span>
         <div className="font-semibold text-foreground flex items-center gap-1">
-          <span className={`w-2 h-2 rounded-full ${projectStatus?.cypressVersion ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} />
+          <span className={`w-2 h-2 rounded-full ${projectStatus?.cypressVersion ? 'bg-success' : 'bg-muted-foreground/40'}`} />
           <span>{projectStatus?.cypressVersion ? `Cypress ${projectStatus.cypressVersion}` : 'Cypress não detectado'}</span>
         </div>
       </div>
@@ -125,12 +125,12 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
         <div className="font-semibold text-foreground flex items-center gap-1">
           {projectStatus?.hasCypressConfig ? (
             <>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-success" />
               <span>cypress.config.ts</span>
             </>
           ) : (
             <>
-              <XCircle className="w-3.5 h-3.5 text-rose-400" />
+              <XCircle className="w-3.5 h-3.5 text-danger" />
               <span>Ausente</span>
             </>
           )}
@@ -141,11 +141,11 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
         <span className="text-2xs text-muted-foreground">Banco Oracle (.env)</span>
         <div className="font-semibold text-foreground truncate" title={projectStatus?.envVariables?.oracleConnectString || 'Não configurado'}>
           {projectStatus?.envVariables?.hasOracleConnectString ? (
-            <span className="text-emerald-400 font-mono text-2xs">
+            <span className="text-success font-mono text-2xs">
               {projectStatus.envVariables.oracleConnectString}
             </span>
           ) : (
-            <span className="text-amber-400">Pendente</span>
+            <span className="text-warning">Pendente</span>
           )}
         </div>
       </div>

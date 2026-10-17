@@ -47,7 +47,7 @@ export function parseSingleTableSelect(sql: string): string | null {
   if (!sql) return null;
   const clean = sql.trim().replace(/;+\s*$/, '');
   const match = clean.match(
-    /^SELECT\s+\*\s+FROM\s+([A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?)\s*(?:WHERE\s+ROWNUM\s*<=\s*\d+)?\s*(?:LIMIT\s+\d+)?\s*$/i
+    /^SELECT\s+\*\s+FROM\s+([A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?)\s*(?:WHERE\s+ROWNUM\s*<=\s*\d+)?\s*(?:ORDER\s+BY\s+[A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?(?:\s+(?:ASC|DESC))?(?:\s*,\s*[A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?(?:\s+(?:ASC|DESC))?)*)?\s*(?:LIMIT\s+\d+)?\s*$/i
   );
   return match ? match[1] : null;
 }

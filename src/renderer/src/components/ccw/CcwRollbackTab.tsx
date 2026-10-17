@@ -78,8 +78,8 @@ export const CcwRollbackTab: React.FC<CcwRollbackTabProps> = ({
 
     {/* Feedback de sucesso do rollback */}
     {rollbackSuccessMsg && (
-      <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2 font-bold animate-in fade-in duration-150">
-        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+      <div className="p-3 rounded-xl bg-success/10 border border-success/30 text-success text-xs flex items-center gap-2 font-bold animate-in fade-in duration-150">
+        <CheckCircle2 className="w-4 h-4 shrink-0 text-success" />
         <span>{rollbackSuccessMsg}</span>
       </div>
     )}

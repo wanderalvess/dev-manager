@@ -51,7 +51,7 @@ export const BackupTabNav: React.FC<BackupTabNavProps> = ({
             <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-primary' : 'opacity-70'}`} />
             <span>{tab.label}</span>
             {tab.indicator === 'active' && (
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Agendamento ativo" />
+              <span className="w-2 h-2 rounded-full bg-success animate-pulse" title="Agendamento ativo" />
             )}
             {tab.count !== undefined && tab.count > 0 && (
               <span

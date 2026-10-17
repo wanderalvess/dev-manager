@@ -81,7 +81,8 @@ export async function withConnection<T, R>(
       close: closeConn as (c: any) => Promise<void>,
       timer: undefined as any,
       queue: Promise.resolve(),
-      active: 0
+      active: 0,
+      broken: false
     }));
     // Se a conexão falhar, remove a entrada para permitir uma nova tentativa
     // (sem consumir a rejeição de quem está aguardando `cachedPromise` abaixo).
@@ -113,13 +114,20 @@ export async function withConnection<T, R>(
   try {
     const result = await runInQueue();
     cached.active--;
-    if (cached.active === 0) armIdleTimer();
+    if (cached.active === 0) {
+      if (cached.broken) await closeConn(cached.conn as T).catch(() => {});
+      else armIdleTimer();
+    }
     return result;
   } catch (err) {
     cached.active--;
     clearTimeout(cached.timer);
-    ctx.connCache.delete(key);
-    await closeConn(cached.conn as T).catch(() => {});
+    // Novas chamadas já não reutilizam esta conexão. Mas ela só é fechada quando ninguém mais a usa:
+    // fechar com outras operações enfileiradas/em voo as derrubava com NJS-003 (invalid or closed connection),
+    // mascarando o erro real (ex.: ORA-00942 no Statement Tracer, que dispara duas consultas em paralelo).
+    cached.broken = true;
+    if (ctx.connCache.get(key) === cachedPromise) ctx.connCache.delete(key);
+    if (cached.active === 0) await closeConn(cached.conn as T).catch(() => {});
     throw err;
   }
 }

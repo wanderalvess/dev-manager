@@ -14,13 +14,13 @@ export const KarafDeployHistoryHeader: React.FC<KarafDeployHistoryHeaderProps> =
 }) => (
   <div className="p-4 border-b border-border/80 bg-card/60 flex items-center justify-between shrink-0">
     <div className="flex items-center space-x-3">
-      <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 shadow-xs shadow-sky-500/10">
+      <div className="p-2.5 rounded-xl bg-info/10 border border-info/30 text-info shadow-xs shadow-info/10">
         <History className="w-5 h-5" />
       </div>
       <div>
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold text-foreground tracking-tight">Histórico & Telemetria de Deploys</h3>
-          <span className="text-2xs uppercase font-mono tracking-wider px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 font-semibold">
+          <span className="text-2xs uppercase font-mono tracking-wider px-2 py-0.5 rounded-md bg-info/15 text-info border border-info/30 font-semibold">
             OSGi Audit Rail
           </span>
         </div>
@@ -38,7 +38,7 @@ export const KarafDeployHistoryHeader: React.FC<KarafDeployHistoryHeaderProps> =
         className="p-2 bg-muted/80 hover:bg-muted border border-border/80 rounded-xl text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
         title="Recarregar histórico de deploys" aria-label="Recarregar histórico de deploys"
       >
-        <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-sky-400' : ''}`} />
+        <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-info' : ''}`} />
       </button>
       <button
         type="button"

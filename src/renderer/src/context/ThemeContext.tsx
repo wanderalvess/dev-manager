@@ -57,9 +57,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     if (targetMode === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      root.style.colorScheme = 'dark';
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
+      root.style.colorScheme = 'light';
     }
 
     // Remove todas as variantes possíveis
