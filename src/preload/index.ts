@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   AppSettings,
+  UsageDays,
   UsageSummary,
   UsageSummaryQuery,
   KarafDeployRequest,
@@ -473,6 +474,7 @@ const electronAPI = {
     ipcRenderer.invoke('settings:export', sanitizePasswords),
   // Métricas locais de uso (só contadores e durações)
   getUsageSummary: (query?: UsageSummaryQuery): Promise<UsageSummary> => ipcRenderer.invoke('usage:get-summary', query),
+  getUsageDays: (): Promise<UsageDays> => ipcRenderer.invoke('usage:get-days'),
   clearUsageMetrics: (): Promise<void> => ipcRenderer.invoke('usage:clear'),
 
   importSettings: (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }> =>

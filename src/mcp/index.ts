@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.38.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.39.0';
   } catch {
-    return '1.38.0';
+    return '1.39.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -1735,6 +1735,18 @@ server.registerTool(
     inputSchema: { from: usageDay.optional(), to: usageDay.optional() }
   },
   async ({ from, to }) => ok(usageMetricsService.getSummary({ from, to }))
+);
+
+server.registerTool(
+  'usage_get_impact',
+  {
+    title: 'Tempo economizado',
+    description:
+      'Retorna o tempo economizado pelo Hub Manager nesta máquina: usos com sucesso x tempo que a pessoa levava à mão, nos últimos 7 dias, 30 dias e desde o início, por módulo e por automação. ' +
+      'Cada automação mostra a origem do tempo manual (padrão ou informado pela pessoa); "confirmedMs" é a parte baseada em tempo informado. ' +
+      'Falhas não contam e a economia nunca é negativa. Esta consulta não conta como uso.'
+  },
+  async () => ok(usageMetricsService.getImpact())
 );
 
 // --- 7. Configurações ---

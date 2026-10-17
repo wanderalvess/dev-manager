@@ -10,7 +10,7 @@ O Hub Manager nasceu em 02/09/2026 e foi construído em dupla com agentes de IA.
 
 - 304 commits, 7 em cada 10 com coautoria do Claude;
 - 54 versões publicadas, da 1.0.0 à 1.37.0;
-- 157 tools MCP, que viraram 158 com a `usage_get_summary` desta decisão.
+- 157 tools MCP, que viraram 159 com `usage_get_summary` e `usage_get_impact`, desta decisão.
 
 Os módulos de QA estão em construção, então o app vai passar a ser usado por Devs e QAs. Hoje não existe nenhuma medição de uso. Sem dados não dá para:
 
@@ -27,8 +27,9 @@ Também pesou um motivo de reconhecimento. Avaliamos inscrever o Hub Manager no 
    - só números, sem conteúdo;
    - ID aleatório por instalação, gravado em arquivo porque o MCP roda em outro processo.
 2. **Linha de base e tempo economizado** ([#13](https://github.com/wanderalvess/dev-manager/issues/13)):
-   - cada automação tem um tempo manual de referência;
-   - economia = execuções com sucesso × (tempo manual − duração real), nunca negativa.
+   - cada automação tem um tempo manual de referência, que a pessoa informa em Configurações → Meu uso;
+   - economia = execuções com sucesso × tempo manual − tempo real somado, por dia e por automação, com piso em zero. O piso por dia (e não por uso) deixa a conta **conservadora**: nunca passa do que a soma uso a uso daria;
+   - **o tempo padrão é estimativa, não medição.** Enquanto a pessoa não informa o dela, vale um padrão que eu escolhi como ponto de partida. Por isso a economia é separada em **confirmada** (tempo informado pela pessoa) e **estimada** (tempo padrão), e a origem vai junto até a tela, o CSV e a tool MCP.
 3. **Envio por dois caminhos com o mesmo JSON** ([#14](https://github.com/wanderalvess/dev-manager/issues/14)):
    - **API do Portal Tech V&D:** `POST /api/v1/hub-usage` com `X-Api-Key` de escopo `HUB_USAGE_WRITE`, uma vez por dia, com fila e reenvio;
    - **JSON compartilhado:** exportação manual ou pasta de rede, importado no Portal por um admin.
@@ -48,6 +49,7 @@ Também pesou um motivo de reconhecimento. Avaliamos inscrever o Hub Manager no 
 - **Envio só depois de configurado** pelo usuário. Ele sempre pode ver o JSON antes e desligar.
 - **Nada de URL interna nem chave no código,** porque o repositório é público. A chave do release vem de segredo do CI ou de Configurações.
 - **O formato do JSON é contrato com o Portal.** Mudou o formato, sobe o `schemaVersion` e atualiza o backend junto.
+- **Número de economia só vira afirmação quando é confirmado.** Em relatórios e inscrições (como o Gente que Faz 2027), cite a parte *confirmada* e diga que é estimativa da própria pessoa; nunca apresente o resultado do tempo padrão como fato.
 
 ## Onde pegar as métricas
 
@@ -55,7 +57,8 @@ Também pesou um motivo de reconhecimento. Avaliamos inscrever o Hub Manager no 
 |----------|------|
 | Quantas pessoas usam por semana, Dev contra QA | Portal Tech, página do Hub Manager (admin) |
 | Horas economizadas (equipe) | Portal Tech, mesma página, com exportação CSV |
-| Horas economizadas (uma pessoa) | No app, tela "Meu impacto" |
+| Horas economizadas (uma pessoa) | No app, Configurações → Meu uso → Meu impacto (com exportação CSV), ou a tool MCP `usage_get_impact` |
+| Quanto da economia é confirmada | O mesmo painel: "confirmado" × "estimado (padrão)" |
 | Dados brutos | `GET /api/hub-usage/summary` no Portal, ou os arquivos `hub-usage-*.json` |
 | Depoimentos | Feedbacks com autorização de uso como depoimento ([#16](https://github.com/wanderalvess/dev-manager/issues/16)) |
 | Desenvolvimento com IA | Comandos abaixo, rodados na raiz do repositório |

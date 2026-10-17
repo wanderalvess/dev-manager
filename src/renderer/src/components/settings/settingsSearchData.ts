@@ -35,5 +35,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-ai', tab: 'ai', tabLabel: 'IA & Provedores LLM', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' },
   { id: 'field-quality', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Integrações de Testes (Zephyr, Jira, Azure)', keywords: 'qualidade qa zephyr scale squad jira test plans testes homologacao cenarios token api' },
   { id: 'field-usageMetricsEnabled', tab: 'usage', tabLabel: 'Meu uso', label: 'Contagem de uso (ligar, desligar, apagar histórico)', keywords: 'uso metricas contagem telemetria privacidade historico apagar meu uso impacto horas economizadas' },
+  { id: 'field-usageImpact', tab: 'usage', tabLabel: 'Meu uso', label: 'Meu impacto: tempo economizado por automação', keywords: 'impacto tempo economizado horas economia produtividade resultado exportar csv' },
+  { id: 'field-usageBaselines', tab: 'usage', tabLabel: 'Meu uso', label: 'Quanto tempo você levava à mão (linha de base)', keywords: 'linha de base tempo manual levava a mao minutos referencia antes economia padrao estimativa confirmar' },
   { id: 'field-usageSummary', tab: 'usage', tabLabel: 'Meu uso', label: 'Resumo do meu uso (execuções por módulo e semana)', keywords: 'uso resumo execucoes modulo semana sucesso falha tempo meu uso metricas' }
 ];

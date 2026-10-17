@@ -265,6 +265,23 @@ são lidos no Portal Tech V&D. Ao implementar ou alterar qualquer automação:
 - **Mantenha o trailer `Co-Authored-By`** nos commits feitos com IA. É a fonte da métrica de
   desenvolvimento com IA citada na decisão.
 
+### Tempo economizado (issue #13)
+
+O cálculo é *usos com sucesso × tempo manual − tempo real*, por dia e por automação, com piso em
+zero ([src/shared/usageImpact.ts](src/shared/usageImpact.ts)). Ao mexer em automações:
+
+- **Automação nova com equivalente manual** entra em `USAGE_BASELINE_DEFINITIONS`
+  ([src/shared/usageBaselines.ts](src/shared/usageBaselines.ts)), e a tool MCP dela em
+  `MCP_TOOL_TO_BASELINE_KEY`. Testes impedem chave sem ação rastreada e tool inexistente.
+- **O tempo padrão é uma estimativa, não uma medição.** Nunca apresente economia calculada com o
+  padrão como fato: a origem (`default` ou `user`) acompanha o número até a tela, o CSV e a tool
+  MCP, e a economia é separada em confirmada e estimada.
+- **Só o tempo dos usos com sucesso (`okMs`) abate a economia.** Falha não economiza nada.
+- **A economia é conservadora de propósito**: o piso em zero vale por dia e ação, não por uso.
+  Não "melhore" isso para o número subir.
+- **Mudou o formato do contador?** Arquivos antigos precisam continuar válidos (ver
+  `normalizeStore`); só suba o `schemaVersion` para mudança incompatível.
+
 ## Versionamento, Changelog e Release
 
 O modal de **"Novidades da Versão"** que o usuário vê ao abrir o app após um update

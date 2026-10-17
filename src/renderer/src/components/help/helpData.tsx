@@ -671,7 +671,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">158 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
+            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">159 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div>
@@ -690,7 +690,7 @@ export function getFaqList({
                 className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-2 w-fit cursor-pointer"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Ver Catálogo Completo das 158 Ferramentas e Prompts</span>
+                <span>Ver Catálogo Completo das 159 Ferramentas e Prompts</span>
               </button>
             </div>
             
@@ -884,7 +884,7 @@ export function getFaqList({
               <ol className="list-decimal pl-4 space-y-1 text-2xs">
                 <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Ctrl+Alt+I</kbd>).</li>
                 <li>Selecione o modo <strong className="text-foreground">Agent</strong> (ou digite <code className="font-mono text-primary">@agent</code> no campo de mensagem).</li>
-                <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 158 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
+                <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 159 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
                 <li>Envie sua solicitação diretamente (ex.: <em>"Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."</em>).</li>
               </ol>
             </div>
@@ -1600,6 +1600,32 @@ export function getFaqList({
           </div>
         </div>
       )
+    },
+    {
+      id: 'usage-impact',
+      question: 'Como o "tempo economizado" é calculado e por que parte dele aparece como estimativa?',
+      category: 'Segurança & Configurações',
+      tags: ['tempo economizado', 'impacto', 'horas', 'economia', 'linha de base', 'tempo manual', 'estimativa', 'csv', 'meu impacto'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Em <strong className="text-foreground">Configurações → Meu uso → Meu impacto</strong> o Hub Manager calcula:{' '}
+            <strong className="text-foreground">usos com sucesso × o tempo que você levava à mão − o tempo real no app</strong>. Falhas não contam e o resultado nunca é negativo. O cálculo é feito por dia e por automação; um uso lento no mesmo dia compensa parte da economia dos rápidos, então o número tende a ficar abaixo do real, nunca acima.
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
+            <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Confirmado × estimado:</span>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>O app não sabe quanto tempo <em>você</em> levava à mão. Enquanto você não informar, usa um <strong className="text-foreground">tempo padrão</strong>, que é só uma estimativa inicial.</li>
+              <li>Na tabela, informe os minutos de cada automação. A economia calculada com o que você informou aparece como <strong className="text-foreground">confirmada</strong>; a calculada com o padrão, como <strong className="text-foreground">estimada</strong>.</li>
+              <li>Zerar o tempo de uma automação zera a economia dela. O botão de restaurar volta ao padrão.</li>
+              <li>A mudança vale ao clicar em <strong className="text-foreground">Salvar</strong>; a tela mostra o efeito na hora.</li>
+            </ul>
+          </div>
+          <p>
+            <strong className="text-foreground">Exportar CSV</strong> baixa a tabela com a origem do tempo de cada linha (padrão ou informado, e a data). Para citar números em relatórios ou inscrições, use o que está <em>confirmado</em> e diga que é uma estimativa sua. Pelo MCP, a tool <code className="font-mono text-primary">usage_get_impact</code> responde "quanto tempo economizei neste mês?".
+          </p>
+        </div>
+      )
     }
   ];
 }
@@ -1626,7 +1652,7 @@ export function getKeyboardShortcuts(debugPort: number) {
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.38.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.39.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '12 Módulos' },

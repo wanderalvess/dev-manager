@@ -853,6 +853,14 @@ app.get('/api/usage/summary', (req, res) => {
   res.json(usageMetricsService.getSummary({ from: pick(req.query.from), to: pick(req.query.to) }));
 });
 
+app.get('/api/usage/days', (_req, res) => {
+  res.json(usageMetricsService.getDays());
+});
+
+app.get('/api/usage/impact', (_req, res) => {
+  res.json(usageMetricsService.getImpact());
+});
+
 app.post('/api/usage/clear', (_req, res) => {
   usageMetricsService.clear();
   res.json({ success: true });

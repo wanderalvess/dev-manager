@@ -353,7 +353,7 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
 ### 10. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
   * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code ou GitHub Copilot — pode chamar diretamente, sem passar pela interface gráfica.
-* **158 Tools Organizadas por Domínio:**
+* **159 Tools Organizadas por Domínio:**
   * Para detalhes e exemplos de como usar cada ferramenta, **[acesse o Catálogo Completo de Ferramentas MCP](docs/MCP_TOOLS.md)**.
   * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (gerência de bundles, diagnóstico de dependências OSGi, telemetria Heap/Metaspace JVM com alertas OOM, disparo de GC, gestão de repositórios/features Maven e Log Analyzer), `docker_*`, `git_*` (inspeção de diff, criação de branch por tarefas Azure DevOps/Jira e links de PR), `routines_*` (execução com WinThor Start, download CCW, rollback de `.bak`, versão PE Header e atualização em lote), `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, backup/restore/restore drill, Statement Tracer com captura e interpolação de binds), `logs_*` (leitura pontual e limpeza de arquivos), `apm_*` (traces OTLP, waterfall analítico e top endpoints/queries lentas), `routine801_*`, `deploy_*`, `llm_*`, `network_*` e `usage_*` (resumo local de uso).
 * **Terceiro Consumidor da Mesma Camada de Serviços:**
@@ -427,7 +427,8 @@ O Hub Manager vai medir quantas pessoas usam o app (Dev e QA) e quanto tempo cad
   2. **JSON compartilhado:** exportação manual ou pasta de rede, importado no Portal por um admin.
 * **Onde ver:**
   * equipe: página do Hub Manager no Portal Tech V&D (admin);
-  * individual: tela **Meu impacto** no app.
+  * individual: **Configurações → Meu uso**, com o resumo de uso e o **Meu impacto**.
+* **Tempo economizado:** *usos com sucesso × o tempo que você levava à mão − o tempo real no app*. Falhas não contam e o resultado nunca é negativo. Você informa os minutos de cada automação; enquanto isso vale um tempo padrão, tratado como **estimativa**. A tela separa a economia **confirmada** da **estimada** e exporta CSV.
 
 A decisão completa, a tabela de onde pegar cada número e os comandos para medir o desenvolvimento com IA estão em [docs/decisions/0001-medir-adocao-e-impacto.md](docs/decisions/0001-medir-adocao-e-impacto.md).
 

@@ -5,6 +5,7 @@ import type {
   AppSettings,
   UsageDays,
   UsageEvent,
+  UsageImpact,
   UsageMetricsStore,
   UsageOrigin,
   UsageRisk,
@@ -21,6 +22,8 @@ import {
   resultIndicatesFailure,
   summarizeUsage
 } from '../utils/usageMetricsUtils';
+import { sanitizeBaselineOverrides, type UsageBaselineOverrides } from '../../shared/usageBaselines';
+import { computeImpact } from '../../shared/usageImpact';
 import { withFileLock } from '../utils/fileLock';
 import { getAppDataDir } from './ConfigService';
 
@@ -30,7 +33,7 @@ const DEFAULT_FLUSH_DELAY_MS = 1500;
 
 /** O que o service precisa das configurações (o `ConfigService` real cumpre isto). */
 export interface UsageSettingsSource {
-  getSettings(): Pick<AppSettings, 'usageMetricsEnabled'>;
+  getSettings(): Pick<AppSettings, 'usageMetricsEnabled' | 'usageBaselines'>;
 }
 
 export interface UsageMetricsOptions {
@@ -153,6 +156,17 @@ export class UsageMetricsService {
     return summarizeUsage(this.getStore(), query, this.isEnabled());
   }
 
+  /** Contadores por dia (todos os dias guardados). A interface calcula a economia com isso. */
+  public getDays(): UsageDays {
+    this.flush();
+    return this.getStore().days;
+  }
+
+  /** Tempo economizado com as linhas de base salvas nas configurações (issue #13). */
+  public getImpact(now: Date = this.now()): UsageImpact {
+    return computeImpact(this.getDays(), this.getBaselines(), now);
+  }
+
   /** Apaga o histórico (os dias). O ID da instalação é mantido. */
   public clear(): void {
     this.pending = {};
@@ -183,6 +197,14 @@ export class UsageMetricsService {
   }
 
   // ----- internos -----
+
+  private getBaselines(): UsageBaselineOverrides {
+    try {
+      return sanitizeBaselineOverrides(this.settings.getSettings().usageBaselines);
+    } catch {
+      return {};
+    }
+  }
 
   private scheduleFlush(): void {
     if (this.timer) return;

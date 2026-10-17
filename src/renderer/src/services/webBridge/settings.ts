@@ -1,5 +1,6 @@
 import type {
   AppSettings,
+  UsageDays,
   UsageSummary,
   UsageSummaryQuery
 } from '../../../../shared/types';
@@ -32,6 +33,10 @@ export function createSettingsApi({ apiFetch }: BridgeDeps) {
       if (query?.to) params.set('to', query.to);
       const qs = params.toString();
       return apiFetch<UsageSummary>(`/api/usage/summary${qs ? `?${qs}` : ''}`);
+    },
+
+    getUsageDays: async (): Promise<UsageDays> => {
+      return apiFetch<UsageDays>('/api/usage/days');
     },
 
     clearUsageMetrics: async (): Promise<void> => {

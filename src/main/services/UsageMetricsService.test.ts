@@ -9,8 +9,10 @@ let dir: string;
 const NOW = new Date(2026, 9, 16, 12, 0, 0); // 2026-10-16 local
 
 function makeSettings(enabled: boolean | undefined = undefined) {
-  const state = { usageMetricsEnabled: enabled };
-  const source: UsageSettingsSource = { getSettings: () => ({ usageMetricsEnabled: state.usageMetricsEnabled }) };
+  const state: { usageMetricsEnabled?: boolean; usageBaselines?: unknown } = { usageMetricsEnabled: enabled };
+  const source: UsageSettingsSource = {
+    getSettings: () => ({ usageMetricsEnabled: state.usageMetricsEnabled, usageBaselines: state.usageBaselines as never })
+  };
   return { source, state };
 }
 
@@ -47,7 +49,7 @@ describe('UsageMetricsService', () => {
 
     const file = readFile();
     expect(file.schemaVersion).toBe(1);
-    expect(file.days['2026-10-16']['database/backup-run/ui']).toEqual({ runs: 2, ok: 1, failed: 1, totalMs: 4000 });
+    expect(file.days['2026-10-16']['database/backup-run/ui']).toEqual({ runs: 2, ok: 1, failed: 1, totalMs: 4000, okMs: 1000 });
   });
 
   it('não grava nada enquanto não há uso', () => {
@@ -203,6 +205,69 @@ describe('UsageMetricsService', () => {
 
       expect(service.getSummary().totalRuns).toBe(0);
       expect(service.getInstallId()).toBe(id);
+    });
+  });
+
+  describe('dias e tempo economizado', () => {
+    const backup = (durationMs: number, extra: Record<string, unknown> = {}) => event({ durationMs, ...extra });
+
+    it('getDays inclui o que ainda estava pendente', () => {
+      const service = makeService();
+      service.record(event());
+      expect(service.getDays()['2026-10-16']['database/backup-run/ui']).toMatchObject({ runs: 1, ok: 1, okMs: 1000 });
+    });
+
+    it('getImpact usa o tempo padrão enquanto a pessoa não informa o dela', () => {
+      const service = makeService();
+      service.record(backup(60_000));
+      service.record(backup(60_000));
+      const row = service.getImpact().rows.find((r) => r.key === 'database/backup-run')!;
+      expect(row).toMatchObject({ source: 'default', baselineMinutes: 15, okRuns: 2 });
+      expect(row.savedMs).toBe((2 * 15 - 2) * 60_000);
+      expect(service.getImpact().total.confirmedMs).toBe(0);
+    });
+
+    it('getImpact usa a linha de base salva nas configurações, na hora', () => {
+      const { source, state } = makeSettings();
+      const service = new UsageMetricsService(source, { dir, now: () => NOW, flushDelayMs: 60_000 });
+      service.record(backup(60_000));
+      service.record(backup(60_000));
+
+      state.usageBaselines = { 'database/backup-run': { minutes: 30, setAt: '2026-10-01' } };
+      const impact = service.getImpact();
+      expect(impact.rows.find((r) => r.key === 'database/backup-run')).toMatchObject({ source: 'user', setAt: '2026-10-01' });
+      expect(impact.total.savedMs).toBe((2 * 30 - 2) * 60_000);
+      expect(impact.total.confirmedMs).toBe(impact.total.savedMs);
+    });
+
+    it('configuração com lixo nas linhas de base é ignorada, sem quebrar', () => {
+      const { source, state } = makeSettings();
+      const service = new UsageMetricsService(source, { dir, now: () => NOW, flushDelayMs: 60_000 });
+      service.record(backup(60_000));
+      state.usageBaselines = 'isto não é um objeto';
+      expect(service.getImpact().rows.find((r) => r.key === 'database/backup-run')?.source).toBe('default');
+      state.usageBaselines = { 'database/backup-run': { minutes: 'muito' }, 'chave/falsa': { minutes: 5 } };
+      expect(service.getImpact().rows.find((r) => r.key === 'database/backup-run')?.source).toBe('default');
+    });
+
+    it('config ilegível não impede o cálculo', () => {
+      const service = new UsageMetricsService(
+        {
+          getSettings: () => {
+            throw new Error('config corrompida');
+          }
+        },
+        { dir, now: () => NOW, flushDelayMs: 60_000 }
+      );
+      service.record(backup(60_000));
+      expect(service.getImpact().total.savedMs).toBeGreaterThan(0);
+    });
+
+    it('falha não gera economia, mesmo gravada no arquivo', () => {
+      const service = makeService();
+      service.record(backup(60_000, { ok: false }));
+      service.flush();
+      expect(new UsageMetricsService(makeSettings().source, { dir, now: () => NOW }).getImpact().total.savedMs).toBe(0);
     });
   });
 

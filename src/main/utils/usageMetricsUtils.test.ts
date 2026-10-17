@@ -60,11 +60,11 @@ describe('usageMetricsUtils', () => {
       expect(addEventToDays(days, ev({ module: 'qa', action: 'taut-run-tests' }))).toBe(true);
     });
 
-    it('o evento só grava contadores: nada além de runs, ok, failed, totalMs e risk', () => {
+    it('o evento só grava contadores: nada além de runs, ok, failed, totalMs, okMs e risk', () => {
       const days: UsageDays = {};
       addEventToDays(days, ev({ risk: 'destructive' }), at('2026-10-16'));
       const counter = days['2026-10-16']['database/backup-run/ui'];
-      expect(Object.keys(counter).sort()).toEqual(['failed', 'ok', 'risk', 'runs', 'totalMs']);
+      expect(Object.keys(counter).sort()).toEqual(['failed', 'ok', 'okMs', 'risk', 'runs', 'totalMs']);
     });
   });
 
@@ -118,7 +118,8 @@ describe('usageMetricsUtils', () => {
       const now = at('2026-10-16');
       addEventToDays(days, ev({ durationMs: 1000 }), now);
       addEventToDays(days, ev({ durationMs: 3000, ok: false }), now);
-      expect(days['2026-10-16']['database/backup-run/ui']).toEqual({ runs: 2, ok: 1, failed: 1, totalMs: 4000 });
+      // okMs só soma o uso com sucesso (1000 ms); a falha de 3000 ms entra no total, mas não na economia
+      expect(days['2026-10-16']['database/backup-run/ui']).toEqual({ runs: 2, ok: 1, failed: 1, totalMs: 4000, okMs: 1000 });
     });
 
     it('separa dias e origens', () => {
@@ -145,7 +146,7 @@ describe('usageMetricsUtils', () => {
       mergeDays(ba, a);
 
       expect(ab).toEqual(ba);
-      expect(ab['2026-10-16']['database/backup-run/ui']).toEqual({ runs: 2, ok: 1, failed: 1, totalMs: 400 });
+      expect(ab['2026-10-16']['database/backup-run/ui']).toEqual({ runs: 2, ok: 1, failed: 1, totalMs: 400, okMs: 100 });
     });
 
     it('mergeDays não altera a origem', () => {
@@ -210,6 +211,32 @@ describe('usageMetricsUtils', () => {
       expect(normalizeStore('texto')).toBeNull();
       expect(normalizeStore({ ...valido(), schemaVersion: 2 })).toBeNull();
       expect(normalizeStore({ ...valido(), installId: 'x' })).toBeNull();
+    });
+
+    describe('okMs (arquivos gravados antes do campo existir)', () => {
+      const comContador = (counter: Record<string, number>) => ({
+        ...valido(),
+        days: { '2026-10-16': { 'database/backup-run/ui': counter } }
+      });
+      const lido = (counter: Record<string, number>) =>
+        normalizeStore(comContador(counter))?.days['2026-10-16']['database/backup-run/ui'];
+
+      it('estima pela fração de usos com sucesso quando o campo não existe', () => {
+        expect(lido({ runs: 4, ok: 3, failed: 1, totalMs: 400 })?.okMs).toBe(300);
+      });
+
+      it('sem execuções, ou só com falhas, a estimativa é zero', () => {
+        expect(lido({ runs: 0, ok: 0, failed: 0, totalMs: 0 })?.okMs).toBe(0);
+        expect(lido({ runs: 2, ok: 0, failed: 2, totalMs: 500 })?.okMs).toBe(0);
+      });
+
+      it('mantém o valor gravado', () => {
+        expect(lido({ runs: 2, ok: 2, failed: 0, totalMs: 500, okMs: 450 })?.okMs).toBe(450);
+      });
+
+      it('nunca passa do total (arquivo editado à mão)', () => {
+        expect(lido({ runs: 2, ok: 2, failed: 0, totalMs: 500, okMs: 999_999 })?.okMs).toBe(500);
+      });
     });
 
     it('descarta dia, chave e contador inválidos sem perder o resto', () => {

@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **158 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **159 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -294,7 +294,7 @@ Executa chamadas HTTP e gerencia coleções estilo Postman com suporte a interpo
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
 *   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (81 das 158) são registradas. As demais nem aparecem para o cliente.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (82 das 159) são registradas. As demais nem aparecem para o cliente.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 
@@ -306,6 +306,9 @@ Consulta a contagem **local** de uso do Hub Manager nesta máquina: quantas veze
 
 *   **`usage_get_summary`**: Retorna o resumo de uso (totais, por módulo, por semana e por ação). Aceita `from` e `to` (`AAAA-MM-DD`, inclusivos) para filtrar o período. É de leitura e a própria consulta não conta como uso.
 
+*   **`usage_get_impact`**: Retorna o tempo economizado (usos com sucesso × o tempo que a pessoa levava à mão − o tempo real), nos últimos 7 dias, 30 dias e desde o início, por módulo e por automação. Cada automação traz a origem do tempo manual (`default` = estimativa padrão, `user` = informado pela pessoa) e `confirmedMs` é a parte baseada em tempo informado. Falhas não contam e a economia nunca é negativa. Também é de leitura e não conta como uso.
+
 **Exemplo de como pedir à IA:**
 > "Quantas vezes usei o pipeline de ambiente nos últimos 30 dias, e quanto tempo isso levou no total?"
 > "Quais módulos do Hub Manager eu mais usei neste mês?"
+> "Quanto tempo o Hub Manager me economizou neste mês, e quanto disso é estimativa?"

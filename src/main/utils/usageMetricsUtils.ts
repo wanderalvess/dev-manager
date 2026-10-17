@@ -4,7 +4,6 @@ import type {
   UsageEvent,
   UsageMetricsStore,
   UsageModuleTotal,
-  UsageOrigin,
   UsageRisk,
   UsageSummary,
   UsageSummaryQuery,
@@ -12,23 +11,21 @@ import type {
   UsageWeekTotal
 } from '../../shared/usageMetricsTypes';
 import { dayKey, isDayKey, weekStartOf } from '../../shared/usageDates';
+import { buildUsageKey, isUsageOrigin, isUsageSegment, parseUsageKey } from '../../shared/usageKeys';
 
 // Reexporta: quem já importava daqui continua funcionando.
-export { dayKey, isDayKey, weekStartOf };
+export { dayKey, isDayKey, weekStartOf, buildUsageKey, isUsageOrigin, isUsageSegment, parseUsageKey };
 
 /**
  * Lógica pura das métricas de uso (épico #11, issue #12): validação, agregação e resumo.
  * O arquivo e o lock ficam no UsageMetricsService; aqui nada toca disco.
  *
- * Privacidade: módulo e ação precisam bater com SEGMENT_PATTERN (minúsculas, números, `-` e
- * `_`). Qualquer outra coisa é DESCARTADA, não "limpa" — um caminho, SQL ou e-mail passado por
- * engano não tem como virar chave.
+ * Privacidade: as regras da chave (padrão estrito de módulo e ação, descarte do que não bate) estão
+ * em shared/usageKeys.ts.
  */
 
 export const USAGE_SCHEMA_VERSION = 1 as const;
 
-const SEGMENT_PATTERN = /^[a-z0-9][a-z0-9_-]{0,47}$/;
-const ORIGINS: readonly UsageOrigin[] = ['ui', 'rest', 'mcp'];
 const RISKS: readonly UsageRisk[] = ['read', 'write', 'destructive'];
 
 /** Duração máxima aceita por evento (24 h). Evita um relógio quebrado distorcer a soma. */
@@ -36,28 +33,8 @@ export const MAX_EVENT_DURATION_MS = 24 * 60 * 60 * 1000;
 /** Quantos dias o arquivo guarda. Acima disso os dias mais antigos são apagados. */
 export const USAGE_RETENTION_DAYS = 400;
 
-export function isUsageSegment(value: unknown): value is string {
-  return typeof value === 'string' && SEGMENT_PATTERN.test(value);
-}
-
-export function isUsageOrigin(value: unknown): value is UsageOrigin {
-  return typeof value === 'string' && (ORIGINS as readonly string[]).includes(value);
-}
-
 export function isUsageRisk(value: unknown): value is UsageRisk {
   return typeof value === 'string' && (RISKS as readonly string[]).includes(value);
-}
-
-export function buildUsageKey(module: string, action: string, origin: UsageOrigin): string {
-  return `${module}/${action}/${origin}`;
-}
-
-export function parseUsageKey(key: string): { module: string; action: string; origin: UsageOrigin } | null {
-  const parts = key.split('/');
-  if (parts.length !== 3) return null;
-  const [module, action, origin] = parts;
-  if (!isUsageSegment(module) || !isUsageSegment(action) || !isUsageOrigin(origin)) return null;
-  return { module, action, origin };
 }
 
 export function normalizeDuration(durationMs: unknown): number {
@@ -66,7 +43,7 @@ export function normalizeDuration(durationMs: unknown): number {
 }
 
 export function emptyCounter(): UsageCounter {
-  return { runs: 0, ok: 0, failed: 0, totalMs: 0 };
+  return { runs: 0, ok: 0, failed: 0, totalMs: 0, okMs: 0 };
 }
 
 /**
@@ -82,9 +59,14 @@ export function addEventToDays(days: UsageDays, event: UsageEvent, now: Date = n
   const bucket = (days[day] ??= {});
   const counter = (bucket[key] ??= emptyCounter());
   counter.runs += 1;
-  if (event.ok) counter.ok += 1;
-  else counter.failed += 1;
-  counter.totalMs += normalizeDuration(event.durationMs);
+  const duration = normalizeDuration(event.durationMs);
+  if (event.ok) {
+    counter.ok += 1;
+    counter.okMs += duration;
+  } else {
+    counter.failed += 1;
+  }
+  counter.totalMs += duration;
   if (isUsageRisk(event.risk)) counter.risk = event.risk;
   return true;
 }
@@ -99,6 +81,7 @@ export function mergeDays(target: UsageDays, source: UsageDays): void {
       existing.ok += counter.ok;
       existing.failed += counter.failed;
       existing.totalMs += counter.totalMs;
+      existing.okMs += counter.okMs;
       if (counter.risk) existing.risk = counter.risk;
     }
   }
@@ -155,7 +138,9 @@ export function normalizeStore(raw: unknown): UsageMetricsStore | null {
       const failed = toCount(c.failed);
       const totalMs = toCount(c.totalMs);
       if (runs === null || ok === null || failed === null || totalMs === null) continue;
-      const counter: UsageCounter = { runs, ok, failed, totalMs };
+      // Arquivos gravados antes do `okMs` existir: estima pela fração de usos com sucesso (nunca passa do total).
+      const okMs = Math.min(totalMs, toCount(c.okMs) ?? (runs > 0 ? Math.round((totalMs * ok) / runs) : 0));
+      const counter: UsageCounter = { runs, ok, failed, totalMs, okMs };
       if (isUsageRisk(c.risk)) counter.risk = c.risk;
       (days[day] ??= {})[key] = counter;
     }

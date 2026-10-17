@@ -1,5 +1,6 @@
 import type {
   AppSettings,
+  UsageDays,
   UsageSummary,
   UsageSummaryQuery,
   KarafDeployRequest,
@@ -285,6 +286,7 @@ export interface ElectronAPI {
   saveSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
   exportSettings: (sanitizePasswords?: boolean) => Promise<string>;
   getUsageSummary: (query?: UsageSummaryQuery) => Promise<UsageSummary>;
+  getUsageDays: () => Promise<UsageDays>;
   clearUsageMetrics: () => Promise<void>;
   importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }>;
 

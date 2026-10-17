@@ -10,6 +10,10 @@ export function registerUsageHandlers(ctx: IpcContext): void {
     return usageMetricsService.getSummary(query);
   });
 
+  ipcMain.handle('usage:get-days', async () => {
+    return usageMetricsService.getDays();
+  });
+
   ipcMain.handle('usage:clear', async () => {
     usageMetricsService.clear();
   });
