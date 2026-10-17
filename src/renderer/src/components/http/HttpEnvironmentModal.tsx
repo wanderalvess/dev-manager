@@ -122,7 +122,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
         if (onTokenUpdated) onTokenUpdated(res.accessToken);
 
         // Atualiza a variável no estado local
-        let tokenVar = currentEnv.variables.find((v) => v.key.toUpperCase() === 'TOKEN');
+        const tokenVar = currentEnv.variables.find((v) => v.key.toUpperCase() === 'TOKEN');
         if (tokenVar) {
           handleUpdateVariable(tokenVar.id, 'value', res.accessToken);
         } else {
@@ -139,7 +139,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
   };
 
   return (
-    <Modal open onClose={onClose} title="Gerenciar Ambientes & Variáveis" width="max-w-3xl">
+    <Modal open onClose={onClose} title="Gerenciar Ambientes & Variáveis" size="xl">
       <div className="flex gap-4 h-[420px] text-xs">
         {/* Painel lateral de ambientes */}
         <div className="w-52 border-r border-border pr-3 flex flex-col justify-between">

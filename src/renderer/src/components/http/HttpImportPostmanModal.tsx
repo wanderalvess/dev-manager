@@ -66,7 +66,7 @@ export const HttpImportPostmanModal: React.FC<HttpImportPostmanModalProps> = ({
   };
 
   return (
-    <Modal open onClose={onClose} title="Importar Coleção do Postman" width="max-w-2xl">
+    <Modal open onClose={onClose} title="Importar Coleção do Postman" size="lg">
       <div className="space-y-4 text-xs">
         <p className="text-muted-foreground">
           Importe coleções completas exportadas do Postman (formato v2.1 ou v2.0). Todas as pastas, rotas, corpos, parâmetros e variáveis serão convertidos automaticamente.
