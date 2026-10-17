@@ -1,5 +1,8 @@
 import type {
-  AppSettings
+  AppSettings,
+  UsageDays,
+  UsageSummary,
+  UsageSummaryQuery
 } from '../../../../shared/types';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
@@ -22,6 +25,22 @@ export function createSettingsApi({ apiFetch }: BridgeDeps) {
     exportSettings: async (sanitizePasswords?: boolean): Promise<string> => {
       const data = await apiFetch<{ json: string }>(`/api/settings/export?sanitize=${sanitizePasswords ?? true}`);
       return data.json;
+    },
+
+    getUsageSummary: async (query?: UsageSummaryQuery): Promise<UsageSummary> => {
+      const params = new URLSearchParams();
+      if (query?.from) params.set('from', query.from);
+      if (query?.to) params.set('to', query.to);
+      const qs = params.toString();
+      return apiFetch<UsageSummary>(`/api/usage/summary${qs ? `?${qs}` : ''}`);
+    },
+
+    getUsageDays: async (): Promise<UsageDays> => {
+      return apiFetch<UsageDays>('/api/usage/days');
+    },
+
+    clearUsageMetrics: async (): Promise<void> => {
+      await apiFetch('/api/usage/clear', { method: 'POST', body: '{}' });
     },
 
     importSettings: async (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }> => {

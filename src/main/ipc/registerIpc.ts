@@ -1,4 +1,7 @@
+import { ipcMain } from 'electron';
 import type { IpcContext } from './ipcContext';
+import { installIpcUsageTracking } from './usageTracking';
+import { registerUsageHandlers } from './handlers/usageHandlers';
 import { registerSystemHandlers } from './handlers/systemHandlers';
 import { registerEnvironmentHandlers } from './handlers/environmentHandlers';
 import { registerKarafHandlers } from './handlers/karafHandlers';
@@ -23,23 +26,30 @@ export type { IpcContext } from './ipcContext';
 
 /** Registra todos os canais IPC do app; cada grupo vive em `handlers/` e recebe o mesmo contexto. */
 export function registerIpcHandlers(ctx: IpcContext): void {
-  registerSystemHandlers(ctx);
-  registerEnvironmentHandlers(ctx);
-  registerKarafHandlers(ctx);
-  registerRoutine801Handlers(ctx);
-  registerDeployHandlers(ctx);
-  registerGitHandlers(ctx);
-  registerRoutinesHandlers(ctx);
-  registerDocsHandlers(ctx);
-  registerLlmHandlers(ctx);
-  registerSettingsHandlers(ctx);
-  registerDatabaseHandlers(ctx);
-  registerWslHandlers(ctx);
-  registerContainerHandlers(ctx);
-  registerNetworkHandlers(ctx);
-  registerLogsHandlers(ctx);
-  registerUpdateHandlers(ctx);
-  registerApmHandlers(ctx);
-  registerQualityHandlers(ctx);
-  registerHttpClientHandlers(ctx);
+  // As ações rastreadas (usageActions.ts) passam pelas métricas de uso; a interceptação vale só durante o registro.
+  const restoreIpc = installIpcUsageTracking(ipcMain, ctx.usageMetricsService);
+  try {
+    registerSystemHandlers(ctx);
+    registerEnvironmentHandlers(ctx);
+    registerKarafHandlers(ctx);
+    registerRoutine801Handlers(ctx);
+    registerDeployHandlers(ctx);
+    registerGitHandlers(ctx);
+    registerRoutinesHandlers(ctx);
+    registerDocsHandlers(ctx);
+    registerLlmHandlers(ctx);
+    registerSettingsHandlers(ctx);
+    registerDatabaseHandlers(ctx);
+    registerWslHandlers(ctx);
+    registerContainerHandlers(ctx);
+    registerNetworkHandlers(ctx);
+    registerLogsHandlers(ctx);
+    registerUpdateHandlers(ctx);
+    registerApmHandlers(ctx);
+    registerQualityHandlers(ctx);
+    registerHttpClientHandlers(ctx);
+    registerUsageHandlers(ctx);
+  } finally {
+    restoreIpc();
+  }
 }

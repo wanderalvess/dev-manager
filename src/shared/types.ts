@@ -1,3 +1,4 @@
+import type { UsageBaselineOverrides } from './usageBaselines';
 export type ServiceState = 'RUNNING' | 'STOPPED' | 'START_PENDING' | 'STOP_PENDING' | 'UNKNOWN' | 'NOT_INSTALLED';
 
 export interface ServiceStatus {
@@ -590,6 +591,10 @@ export interface AppSettings {
   llmProviders?: LlmProviderConfig[];
   /** ID do provedor de LLM atualmente ativo */
   activeLlmProviderId?: string;
+  /** Contagem local de uso (só contadores e durações, nada de conteúdo). Ligada por padrão; `false` desliga. */
+  usageMetricsEnabled?: boolean;
+  /** Tempo que a pessoa levava para fazer à mão cada automação (minutos). Quem não está aqui usa o padrão. */
+  usageBaselines?: UsageBaselineOverrides;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
   azureDevOpsToken?: string;
   /** Fontes externas de qualidade e testes (Zephyr Scale, Zephyr Squad, Jira, Azure Test Plans) */
@@ -2810,3 +2815,4 @@ export interface TautEnvSyncResult {
 }
 
 export * from './httpClientTypes';
+export * from './usageMetricsTypes';

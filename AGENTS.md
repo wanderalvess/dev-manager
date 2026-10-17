@@ -9,7 +9,8 @@ rotinas, busca RAG local sobre docs (Confluence/Jira) e chat LLM (BYOK). Tudo is
 exposto a assistentes de IA via um servidor MCP embutido.
 
 Leia [README.md](README.md) para a lista completa de features e [CHANGELOG.md](CHANGELOG.md)
-para o histórico. Este arquivo cobre **arquitetura e decisões**, não features.
+para o histórico. Este arquivo cobre **arquitetura e decisões**, não features. Decisões de
+produto ficam registradas uma por arquivo em [docs/decisions/](docs/decisions/README.md).
 
 ## Arquitetura: três transportes, uma única camada de serviços
 
@@ -241,6 +242,45 @@ Checklist ao entregar uma funcionalidade:
 - Se houver tour da página em
   [onboarding/tourSteps.ts](src/renderer/src/components/onboarding/tourSteps.ts), revise
   também.
+
+## Métricas de adoção e impacto
+
+A decisão e o plano estão em
+[docs/decisions/0001-medir-adocao-e-impacto.md](docs/decisions/0001-medir-adocao-e-impacto.md)
+(épico [#11](https://github.com/wanderalvess/dev-manager/issues/11)). As métricas mostram
+quantas pessoas usam o app (Dev e QA) e quantas horas cada automação economiza. Os números
+são lidos no Portal Tech V&D. Ao implementar ou alterar qualquer automação:
+
+- **Só contadores e durações.** Nunca grave nem envie SQL, caminhos, schemas, prompts,
+  respostas da IA ou credenciais. Use o ID aleatório da instalação, nunca nome ou e-mail.
+- **Automação nova registra uso** no service de métricas (pipeline, deploy, módulos de QA,
+  backup, rotinas). Tool MCP nova entra na contagem pelo wrapper de `registerTool` em
+  [src/mcp/index.ts](src/mcp/index.ts), sem código extra.
+- **Persistência em arquivo**, nunca em memória: o MCP roda em outro processo (ver a regra
+  de estado entre processos acima).
+- **O JSON de uso é contrato com o Portal Tech** (`agile-space-backend`). Mudou o formato,
+  sobe o `schemaVersion` e atualiza o backend no mesmo ciclo.
+- **Envio só depois que o usuário configurar** a URL ou a pasta compartilhada. URL interna e
+  chave nunca entram no código (repositório público).
+- **Mantenha o trailer `Co-Authored-By`** nos commits feitos com IA. É a fonte da métrica de
+  desenvolvimento com IA citada na decisão.
+
+### Tempo economizado (issue #13)
+
+O cálculo é *usos com sucesso × tempo manual − tempo real*, por dia e por automação, com piso em
+zero ([src/shared/usageImpact.ts](src/shared/usageImpact.ts)). Ao mexer em automações:
+
+- **Automação nova com equivalente manual** entra em `USAGE_BASELINE_DEFINITIONS`
+  ([src/shared/usageBaselines.ts](src/shared/usageBaselines.ts)), e a tool MCP dela em
+  `MCP_TOOL_TO_BASELINE_KEY`. Testes impedem chave sem ação rastreada e tool inexistente.
+- **O tempo padrão é uma estimativa, não uma medição.** Nunca apresente economia calculada com o
+  padrão como fato: a origem (`default` ou `user`) acompanha o número até a tela, o CSV e a tool
+  MCP, e a economia é separada em confirmada e estimada.
+- **Só o tempo dos usos com sucesso (`okMs`) abate a economia.** Falha não economiza nada.
+- **A economia é conservadora de propósito**: o piso em zero vale por dia e ação, não por uso.
+  Não "melhore" isso para o número subir.
+- **Mudou o formato do contador?** Arquivos antigos precisam continuar válidos (ver
+  `normalizeStore`); só suba o `schemaVersion` para mudança incompatível.
 
 ## Versionamento, Changelog e Release
 

@@ -4,6 +4,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.39.0] - 2026-10-17
+### Adicionado
+- **Meu impacto (Configurações → Meu uso)**: o Hub Manager passa a calcular quanto tempo as automações economizaram. A conta é *usos com sucesso × o tempo que você levava à mão − o tempo real no app*. Falhas não contam e o resultado nunca é negativo. A tela mostra a economia dos últimos 7 dias, dos últimos 30 dias e desde o início, por módulo e por automação.
+- **Linha de base editável**: para cada automação (preparar ambiente, deploy, backup e restore, regressão de QA, testes Cypress…) você informa quantos minutos levava para fazer à mão. Enquanto não informar, vale um tempo padrão, que é só uma estimativa inicial. A tela separa o tempo **confirmado** (baseado no que você informou) do **estimado** (baseado no padrão), avisa quando parte da economia ainda usa o padrão e sinaliza as automações já usadas que pedem confirmação. Zerar o tempo de uma automação zera a economia dela; o botão de restaurar volta ao padrão. Como as demais configurações, a mudança vale ao clicar em **Salvar**, e a tela mostra o efeito na hora.
+- **Exportar CSV**: baixa a tabela de economia por automação (formato "CSV para Excel Brasil"), com a origem do tempo manual em cada linha (padrão ou informado, e a data), para quem recebe o arquivo saber o que é medição e o que é estimativa.
+- **Nova tool MCP `usage_get_impact`** (de leitura, 159 tools no total) e **API REST** `GET /api/usage/impact` e `GET /api/usage/days`: permitem perguntar a uma IA quanto tempo você economizou. A consulta não conta como uso.
+### Alterado
+- A contagem de uso passa a guardar também o tempo dos usos **com sucesso** (necessário para o cálculo). Contagens gravadas pela 1.38.0 continuam válidas: o tempo dos usos com sucesso é estimado a partir do total quando o campo não existe.
+
+## [1.38.0] - 2026-10-17
+### Adicionado
+- **Meu uso (Configurações → Meu uso)**: o Hub Manager passa a contar, só na sua máquina, quantas vezes você executou cada automação (pipeline de ambiente, deploy, backup e restore, testes de QA, API Studio, consulta à documentação, Assistente IA…), quanto tempo cada execução levou e se terminou com sucesso. A tela mostra os totais, o uso por módulo e por semana e as ações mais usadas, nos últimos 7 dias, 30 dias ou em todo o período.
+- **Privacidade da contagem**: só contadores e durações. Nunca são registrados SQL, nomes de banco ou schema, caminhos, perguntas e respostas da IA, senhas, tokens, nome ou e-mail. Cada instalação tem apenas um identificador aleatório, e nada sai da máquina. A contagem vem **ligada** e pode ser desligada na própria tela (vale ao salvar as configurações); o botão **Apagar histórico** remove tudo.
+- **Contagem unificada**: o uso pela interface, pela API REST e pelas ferramentas MCP é somado por módulo. Um app aberto e vários assistentes de IA usando o MCP ao mesmo tempo gravam no mesmo arquivo (`usage-metrics.json`, na pasta de dados do app) sem perder contagem.
+- **Nova tool MCP `usage_get_summary`** (de leitura): permite perguntar a uma IA quanto você usou cada automação. A própria consulta não conta como uso. No modo somente leitura (`HUB_MCP_MODE=readonly`) continua disponível.
+- **API REST**: `GET /api/usage/summary` (aceita `from` e `to`) e `POST /api/usage/clear`.
+### Alterado
+- Contagem de tools MCP atualizada nos textos da Ajuda, do README e do catálogo (`docs/MCP_TOOLS.md`), que estavam desatualizados.
+
 ## [1.37.0] - 2026-10-15
 ### Adicionado
 - **API Studio (Postman Integrado)**: novo módulo completo acessível via atalho `Alt+9` no grupo de Desenvolvimento & DevOps, permitindo testar, depurar e homologar APIs REST e serviços WinThor/Karaf sem necessidade de ferramentas externas pesadas.

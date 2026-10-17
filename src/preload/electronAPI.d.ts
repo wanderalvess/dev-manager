@@ -1,5 +1,8 @@
 import type {
   AppSettings,
+  UsageDays,
+  UsageSummary,
+  UsageSummaryQuery,
   KarafDeployRequest,
   KarafDeployHistoryEntry,
   EnvironmentLog,
@@ -282,6 +285,9 @@ export interface ElectronAPI {
   getSettings: () => Promise<AppSettings>;
   saveSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
   exportSettings: (sanitizePasswords?: boolean) => Promise<string>;
+  getUsageSummary: (query?: UsageSummaryQuery) => Promise<UsageSummary>;
+  getUsageDays: () => Promise<UsageDays>;
+  clearUsageMetrics: () => Promise<void>;
   importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }>;
 
   // IA & Provedores LLM (BYOK - Bring Your Own Key)
