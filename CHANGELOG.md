@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.38.0] - 2026-10-17
+### Adicionado
+- **Meu uso (Configurações → Meu uso)**: o Hub Manager passa a contar, só na sua máquina, quantas vezes você executou cada automação (pipeline de ambiente, deploy, backup e restore, testes de QA, API Studio, consulta à documentação, Assistente IA…), quanto tempo cada execução levou e se terminou com sucesso. A tela mostra os totais, o uso por módulo e por semana e as ações mais usadas, nos últimos 7 dias, 30 dias ou em todo o período.
+- **Privacidade da contagem**: só contadores e durações. Nunca são registrados SQL, nomes de banco ou schema, caminhos, perguntas e respostas da IA, senhas, tokens, nome ou e-mail. Cada instalação tem apenas um identificador aleatório, e nada sai da máquina. A contagem vem **ligada** e pode ser desligada na própria tela (vale ao salvar as configurações); o botão **Apagar histórico** remove tudo.
+- **Contagem unificada**: o uso pela interface, pela API REST e pelas ferramentas MCP é somado por módulo. Um app aberto e vários assistentes de IA usando o MCP ao mesmo tempo gravam no mesmo arquivo (`usage-metrics.json`, na pasta de dados do app) sem perder contagem.
+- **Nova tool MCP `usage_get_summary`** (de leitura, 158 tools no total): permite perguntar a uma IA quanto você usou cada automação. A própria consulta não conta como uso. No modo somente leitura (`HUB_MCP_MODE=readonly`) continua disponível.
+- **API REST**: `GET /api/usage/summary` (aceita `from` e `to`) e `POST /api/usage/clear`.
+### Alterado
+- Contagem de tools MCP atualizada nos textos da Ajuda, do README e do catálogo (`docs/MCP_TOOLS.md`) para 158, que é o total real.
+
 ## [1.37.0] - 2026-10-15
 ### Adicionado
 - **API Studio (Postman Integrado)**: novo módulo completo acessível via atalho `Alt+9` no grupo de Desenvolvimento & DevOps, permitindo testar, depurar e homologar APIs REST e serviços WinThor/Karaf sem necessidade de ferramentas externas pesadas.

@@ -590,6 +590,8 @@ export interface AppSettings {
   llmProviders?: LlmProviderConfig[];
   /** ID do provedor de LLM atualmente ativo */
   activeLlmProviderId?: string;
+  /** Contagem local de uso (só contadores e durações, nada de conteúdo). Ligada por padrão; `false` desliga. */
+  usageMetricsEnabled?: boolean;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
   azureDevOpsToken?: string;
   /** Fontes externas de qualidade e testes (Zephyr Scale, Zephyr Squad, Jira, Azure Test Plans) */
@@ -2810,3 +2812,4 @@ export interface TautEnvSyncResult {
 }
 
 export * from './httpClientTypes';
+export * from './usageMetricsTypes';

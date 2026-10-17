@@ -41,6 +41,8 @@ import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
+import { UsageMetricsService } from '../main/services/UsageMetricsService';
+import { createUsageTrackingMiddleware } from './usageTracking';
 import { createHttpClientRouter } from './routes/httpClientRoutes';
 import {
   EnvironmentLog,
@@ -134,6 +136,10 @@ wrapAsyncRoutes(app);
 
 // Inicializa os serviços
 const configService = new ConfigService();
+const usageMetricsService = new UsageMetricsService(configService);
+usageMetricsService.attachProcessHooks();
+// Depois da autenticação (requisição barrada não conta) e antes das rotas.
+app.use(createUsageTrackingMiddleware(usageMetricsService));
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService(configService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
@@ -839,6 +845,17 @@ app.get('/api/docs/content', (req, res) => {
   } catch (err: any) {
     res.status(500).json({ content: null, error: err.message });
   }
+});
+
+// Métricas locais de uso (issue #12): só contadores e durações
+app.get('/api/usage/summary', (req, res) => {
+  const pick = (value: unknown) => (typeof value === 'string' ? value : undefined);
+  res.json(usageMetricsService.getSummary({ from: pick(req.query.from), to: pick(req.query.to) }));
+});
+
+app.post('/api/usage/clear', (_req, res) => {
+  usageMetricsService.clear();
+  res.json({ success: true });
 });
 
 // 7. Configurações

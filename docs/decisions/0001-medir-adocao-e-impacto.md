@@ -10,7 +10,7 @@ O Hub Manager nasceu em 02/09/2026 e foi construído em dupla com agentes de IA.
 
 - 304 commits, 7 em cada 10 com coautoria do Claude;
 - 54 versões publicadas, da 1.0.0 à 1.37.0;
-- 153 tools MCP.
+- 157 tools MCP, que viraram 158 com a `usage_get_summary` desta decisão.
 
 Os módulos de QA estão em construção, então o app vai passar a ser usado por Devs e QAs. Hoje não existe nenhuma medição de uso. Sem dados não dá para:
 
@@ -65,7 +65,7 @@ git log --oneline | wc -l                                                       
 git log --format='%B%x00' | tr '\n' ' ' | tr '\0' '\n' | grep -ciE "co-authored-by: claude"   # commits com coautoria de IA
 git log --reverse --format='%ad' --date=short | head -1                                     # primeiro commit
 grep -c "^## \[" CHANGELOG.md                                                               # versões no changelog
-grep -cE "^\s*server\.registerTool\(" src/mcp/index.ts                                      # tools MCP
+grep -rhoPzo "registerTool\(\s*'[a-z0-9_]+'" src/mcp | tr '\0' '\n' | grep -c registerTool      # tools MCP (inclui src/mcp/tools)
 ```
 
 ## Lembrete: Gente que Faz 2027
