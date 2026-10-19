@@ -122,7 +122,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
         if (onTokenUpdated) onTokenUpdated(res.accessToken);
 
         // Atualiza a variável no estado local
-        let tokenVar = currentEnv.variables.find((v) => v.key.toUpperCase() === 'TOKEN');
+        const tokenVar = currentEnv.variables.find((v) => v.key.toUpperCase() === 'TOKEN');
         if (tokenVar) {
           handleUpdateVariable(tokenVar.id, 'value', res.accessToken);
         } else {

@@ -10,6 +10,7 @@ import {
   HardDriveDownload,
   Bot,
   CheckCheck,
+  LayoutGrid,
   LucideIcon
 } from 'lucide-react';
 import type { SettingsTab } from './settingsSearchData';
@@ -26,8 +27,9 @@ interface TabDef {
   icon: LucideIcon;
 }
 
-// Grupos separados por divisor sutil: onde configurar, o que monitorar e o que automatizar.
+// Grupos separados por divisor sutil: o que aparece, onde configurar, o que monitorar e o que automatizar.
 const TAB_GROUPS: TabDef[][] = [
+  [{ id: 'modules', label: 'Módulos', icon: LayoutGrid }],
   [
     { id: 'dirs', label: 'Diretórios & IDE', icon: Folder },
     { id: 'karaf', label: 'Karaf', icon: KeyRound },

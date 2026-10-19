@@ -1,10 +1,11 @@
 import React from 'react';
 import { ChevronDown, HelpCircle, Settings, Terminal } from 'lucide-react';
-import { NAV_THEME_GROUPS } from './headerNavConfig';
+import type { NavThemeGroup } from './headerNavConfig';
 
 interface HeaderNavProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  groups: NavThemeGroup[];
   openMenu: string | null;
   setOpenMenu: (menu: string | null) => void;
   navRef: React.RefObject<HTMLDivElement>;
@@ -13,11 +14,12 @@ interface HeaderNavProps {
 export const HeaderNav: React.FC<HeaderNavProps> = ({
   activeTab,
   setActiveTab,
+  groups,
   openMenu,
   setOpenMenu,
   navRef
 }) => {
-  const activeGroup = NAV_THEME_GROUPS.find((g) => g.items.some((item) => item.id === activeTab));
+  const activeGroup = groups.find((g) => g.items.some((item) => item.id === activeTab));
   const activeItem = activeGroup?.items.find((item) => item.id === activeTab);
   const ActiveIcon = activeItem?.icon || (activeTab === 'help' ? HelpCircle : activeTab === 'settings' ? Settings : Terminal);
 
@@ -25,7 +27,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     <nav ref={navRef} className="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
       {/* Visualização Desktop (>= lg): Botões de Tema com Dropdown Individual */}
       <div className="hidden lg:flex items-center space-x-1 xl:space-x-1.5">
-        {NAV_THEME_GROUPS.map((group) => {
+        {groups.map((group) => {
           const GroupIcon = group.icon;
           const isGroupActive = group.items.some((item) => item.id === activeTab);
           const activeSubItem = group.items.find((item) => item.id === activeTab);
@@ -155,7 +157,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             style={{ backgroundColor: 'hsl(var(--card))' }}
             className="absolute top-full left-0 mt-2 w-72 max-h-[80vh] overflow-y-auto bg-card text-card-foreground rounded-xl border border-border shadow-2xl z-50 p-2 space-y-3"
           >
-            {NAV_THEME_GROUPS.map((group) => (
+            {groups.map((group) => (
               <div key={group.id} className="space-y-1">
                 <div className="px-2 text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <group.icon className="w-3 h-3 text-primary" />
