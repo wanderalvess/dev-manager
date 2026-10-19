@@ -64,7 +64,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
             <div className="h-3 w-full bg-muted rounded-full overflow-hidden flex">
               <div
                 style={{ width: getProgressWidth(metrics.passed, metrics.total) }}
-                className="bg-emerald-500 h-full transition-all"
+                className="bg-success h-full transition-all"
                 title="Aprovados"
               />
               <div
@@ -74,12 +74,12 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
               />
               <div
                 style={{ width: getProgressWidth(metrics.blocked, metrics.total) }}
-                className="bg-amber-500 h-full transition-all"
+                className="bg-warning h-full transition-all"
                 title="Bloqueados"
               />
               <div
                 style={{ width: getProgressWidth(metrics.failed, metrics.total) }}
-                className="bg-rose-500 h-full transition-all"
+                className="bg-danger h-full transition-all"
                 title="Falhas"
               />
             </div>
@@ -96,10 +96,10 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex">
-                  <div style={{ width: getProgressWidth(cat.passed, cat.total) }} className="bg-emerald-500 h-full" />
+                  <div style={{ width: getProgressWidth(cat.passed, cat.total) }} className="bg-success h-full" />
                   <div style={{ width: getProgressWidth(cat.inProgress, cat.total) }} className="bg-cyan-500 h-full" />
-                  <div style={{ width: getProgressWidth(cat.blocked, cat.total) }} className="bg-amber-500 h-full" />
-                  <div style={{ width: getProgressWidth(cat.failed, cat.total) }} className="bg-rose-500 h-full" />
+                  <div style={{ width: getProgressWidth(cat.blocked, cat.total) }} className="bg-warning h-full" />
+                  <div style={{ width: getProgressWidth(cat.failed, cat.total) }} className="bg-danger h-full" />
                 </div>
                 <p className="text-2xs text-muted-foreground">
                   {cat.total === 0

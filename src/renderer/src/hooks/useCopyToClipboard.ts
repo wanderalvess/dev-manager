@@ -1,10 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+function fallbackCopy(text: string): boolean {
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return successful;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Copia texto para a área de transferência e mantém uma "chave copiada" ativa
- * por `resetMs`, para feedback visual (ex: trocar um ícone de copiar por um de
- * check). Compartilhado pelos vários componentes que reimplementavam o mesmo
- * par navigator.clipboard.writeText + useState + setTimeout individualmente.
+ * Copia texto para a área de transferência com fallback robusto e mantém uma "chave copiada" ativa
+ * por `resetMs`, para feedback visual.
  */
 export function useCopyToClipboard(resetMs: number = 1500) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -18,7 +34,18 @@ export function useCopyToClipboard(resetMs: number = 1500) {
 
   const copy = useCallback(
     (text: string, key: string = text) => {
-      navigator.clipboard.writeText(text);
+      const doCopy = async () => {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            fallbackCopy(text);
+          }
+        } catch {
+          fallbackCopy(text);
+        }
+      };
+      void doCopy();
       setCopiedKey(key);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => setCopiedKey(null), resetMs);

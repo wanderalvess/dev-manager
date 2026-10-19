@@ -44,7 +44,7 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
             </span>
           )}
           {isCurrentActive && (
-            <span className="text-2xs font-bold text-emerald-500 font-mono flex items-center gap-1">
+            <span className="text-2xs font-bold text-success font-mono flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> Padrão / Ativa
             </span>
           )}
@@ -53,7 +53,7 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
         {testResult && (
           <div
             className={`text-2xs font-medium flex items-center gap-1 ${
-              testResult.success ? 'text-emerald-500' : 'text-rose-500'
+              testResult.success ? 'text-success' : 'text-danger'
             }`}
           >
             {testResult.success ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
@@ -98,7 +98,7 @@ export const QualitySourceRow: React.FC<QualitySourceRowProps> = ({
         <button
           type="button"
           onClick={() => onDelete(source.id)}
-          className="p-1.5 text-muted-foreground hover:text-rose-500 rounded-lg hover:bg-muted transition cursor-pointer"
+          className="p-1.5 text-muted-foreground hover:text-danger rounded-lg hover:bg-muted transition cursor-pointer"
           title="Excluir fonte" aria-label="Excluir fonte"
         >
           <Trash2 className="w-3.5 h-3.5" />

@@ -33,7 +33,11 @@ export function parseProjectPomOrBat(projectPath: string): PomInfo | null {
       const artifactId = artifactIdMatch ? artifactIdMatch[artifactIdMatch.length > 1 ? 1 : 0].replace(/<\/?artifactId>/g, '') : '';
       const version = versionMatch ? versionMatch[versionMatch.length > 1 ? 1 : 0].replace(/<\/?version>/g, '') : '0.0.1-SNAPSHOT';
 
-      const serviceModule = moduleMatches.find((m) => m.includes('service')) || moduleMatches[0] || artifactId;
+      const featureModule =
+        moduleMatches.find((m) => /features?/i.test(m)) ||
+        moduleMatches.find((m) => m.includes('service')) ||
+        moduleMatches[0] ||
+        artifactId;
       const featureName = artifactId.replace('-parent', '');
 
       return {
@@ -41,7 +45,7 @@ export function parseProjectPomOrBat(projectPath: string): PomInfo | null {
         artifactId,
         version,
         modules: moduleMatches,
-        suggestedRepoCommand: batRepoCmd || `feature:repo-add mvn:${groupId}/${serviceModule}/${version}/xml/features`,
+        suggestedRepoCommand: batRepoCmd || `feature:repo-add mvn:${groupId}/${featureModule}/${version}/xml/features`,
         suggestedInstallCommand: batInstallCmd || `feature:install -r -u ${featureName}/${version}`
       };
     }

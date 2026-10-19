@@ -16,7 +16,7 @@ const TABS: {
   { id: 'download', label: 'Download CCW', Icon: DownloadCloud, activeIconClass: 'text-primary' },
   { id: 'file', label: 'Arquivo Local', Icon: FileUp, activeIconClass: 'text-primary' },
   { id: 'catalog', label: 'Árvore CCW', Icon: Globe, activeIconClass: 'text-primary' },
-  { id: 'rollback', label: 'Histórico & Rollback', Icon: RotateCcw, activeIconClass: 'text-amber-500' },
+  { id: 'rollback', label: 'Histórico & Rollback', Icon: RotateCcw, activeIconClass: 'text-warning' },
   { id: 'batch', label: 'Atualização em Lote', Icon: Layers, activeIconClass: 'text-primary' }
 ];
 

@@ -69,7 +69,7 @@ export const LogsSearchControls: React.FC<LogsSearchControlsProps> = ({
       <button
         onClick={onToggleInvert}
         className={`px-1.5 py-0.5 rounded font-bold transition-colors ${
-          invertFilter ? 'bg-amber-500 text-black' : 'text-muted-foreground hover:text-foreground'
+          invertFilter ? 'bg-warning text-background' : 'text-muted-foreground hover:text-foreground'
         }`}
         title="Inverter Filtro (Excluir correspondências)"
       >

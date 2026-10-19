@@ -124,7 +124,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
             onClick={() => onContainerAction(container, 'stop')}
             disabled={Boolean(isLoadingAction)}
             title="Parar Container"
-            className="flex items-center space-x-1 px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98"
+            className="flex items-center space-x-1 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98"
           >
             <Square className="w-3 h-3 fill-current" />
             <span>Parar</span>
@@ -132,7 +132,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
           <button
             onClick={() => onTogglePause(container)}
             title={container.state === 'paused' ? 'Despausar Container' : 'Pausar Container'}
-            className="p-1.5 bg-card hover:bg-muted text-amber-400 border border-amber-500/30 rounded-lg transition cursor-pointer active:scale-98"
+            className="p-1.5 bg-card hover:bg-muted text-warning border border-warning/30 rounded-lg transition cursor-pointer active:scale-98"
           >
             {container.state === 'paused' ? (
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -156,7 +156,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
           onClick={() => onContainerAction(container, 'start')}
           disabled={Boolean(isLoadingAction)}
           title="Iniciar Container"
-          className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-2xs disabled:opacity-50 cursor-pointer active:scale-98"
+          className="flex items-center space-x-1.5 px-3 py-1.5 bg-success hover:bg-success/90 text-background rounded-lg text-xs font-bold transition shadow-2xs disabled:opacity-50 cursor-pointer active:scale-98"
         >
           <Play className="w-3 h-3 fill-current" />
           <span>Iniciar</span>
@@ -169,7 +169,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
           onClick={() => onOpenTerminal(container)}
           disabled={Boolean(isOpeningTerminal)}
           title="Abrir terminal interativo do container (bash)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-card hover:bg-muted text-sky-400 border border-sky-500/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50 active:scale-98"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-card hover:bg-muted text-info border border-info/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50 active:scale-98"
         >
           <Terminal className="w-3.5 h-3.5" />
           <span>{isOpeningTerminal ? 'Abrindo...' : 'Terminal'}</span>
@@ -190,7 +190,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         onClick={() => onContainerAction(container, 'remove')}
         disabled={Boolean(isLoadingAction)}
         title="Remover Container" aria-label="Remover Container"
-        className="p-1.5 hover:text-rose-400 text-muted-foreground rounded-lg hover:bg-rose-500/10 transition cursor-pointer"
+        className="p-1.5 hover:text-danger text-muted-foreground rounded-lg hover:bg-danger/10 transition cursor-pointer"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

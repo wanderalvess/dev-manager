@@ -132,7 +132,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
                 <span className="truncate">{o.name}</span>
                 <span className="flex items-center gap-1 shrink-0">
                   {o.status === 'INVALID' && (
-                    <span className="text-2xs px-1 rounded bg-rose-500/15 text-rose-500 font-bold" title="Objeto inválido: precisa ser recompilado">
+                    <span className="text-2xs px-1 rounded bg-danger/15 text-danger font-bold" title="Objeto inválido: precisa ser recompilado">
                       INVÁLIDO
                     </span>
                   )}

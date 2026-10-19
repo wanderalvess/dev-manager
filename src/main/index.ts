@@ -26,6 +26,8 @@ import { QaRegressionService } from './services/QaRegressionService';
 import { QaPayloadService } from './services/QaPayloadService';
 import { TestRunnerService } from './services/TestRunnerService';
 import { TautAutomationService } from './services/TautAutomationService';
+import { HttpClientService } from './services/HttpClientService';
+import { HttpCollectionService } from './services/HttpCollectionService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 import { notifyUser } from './services/NotificationService';
 
@@ -152,6 +154,8 @@ function createWindow() {
   const qaPayloadService = new QaPayloadService(configService, databaseService);
   const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
   const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
+  const httpCollectionService = new HttpCollectionService();
+  const httpClientService = new HttpClientService(httpCollectionService);
   apmService.onNewTrace = (summary) => {
     safeSend(mainWindow, 'apm:new-trace', summary);
   };
@@ -183,7 +187,9 @@ function createWindow() {
     qaRegressionService,
     testRunnerService,
     tautAutomationService,
-    qaPayloadService
+    qaPayloadService,
+    httpClientService,
+    httpCollectionService
   });
 
   backupSchedulerService.rescheduleAll();

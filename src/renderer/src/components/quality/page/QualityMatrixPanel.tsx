@@ -245,7 +245,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => onDeleteItem(item.id)}
-                      className="p-1 hover:text-rose-400 text-muted-foreground transition cursor-pointer"
+                      className="p-1 hover:text-danger text-muted-foreground transition cursor-pointer"
                       title="Remover cenário"
                       aria-label={`Remover cenário ${item.title}`}
                     >

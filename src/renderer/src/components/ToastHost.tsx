@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 
-export type ToastVariant = 'success' | 'error' | 'info';
+export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
 interface ToastItem {
   id: string;
@@ -27,7 +27,8 @@ export function showToast(message: string, variant: ToastVariant = 'success'): v
 const AUTO_DISMISS_MS: Record<ToastVariant, number> = {
   success: 5000,
   error: 10000,
-  info: 7000
+  info: 7000,
+  warning: 8000
 };
 
 export const ToastHost: React.FC = () => {
@@ -57,16 +58,20 @@ export const ToastHost: React.FC = () => {
           key={toast.id}
           className={`flex items-start gap-2 p-3 rounded-xl border shadow-2xl text-xs animate-fade-in ${
             toast.variant === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+              ? 'bg-success/10 border-success/30 text-success'
               : toast.variant === 'info'
                 ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                : toast.variant === 'warning'
+                  ? 'bg-warning/10 border-warning/30 text-warning'
+                  : 'bg-danger/10 border-danger/30 text-danger'
           }`}
         >
           {toast.variant === 'success' ? (
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
           ) : toast.variant === 'info' ? (
             <Info className="w-4 h-4 shrink-0 mt-0.5" />
+          ) : toast.variant === 'warning' ? (
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           )}

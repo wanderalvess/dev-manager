@@ -65,7 +65,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
               <span
                 className={`text-2xs px-1.5 py-0.5 rounded font-mono font-bold flex items-center gap-1 border uppercase tracking-wider ${
                   winthorStartActive
-                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    ? 'bg-success/15 text-success border-success/30'
                     : 'bg-muted/70 text-muted-foreground border-border'
                 }`}
                 title={
@@ -74,7 +74,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
                     : 'WinThor Start desativado: Rotinas serão disparadas via executável direto'
                 }
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${winthorStartActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${winthorStartActive ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
                 <span>WinThor Start: {winthorStartActive ? 'Ativo' : 'Desativado'}</span>
               </span>
               <span

@@ -14,10 +14,10 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
   daemonStatus,
   onOpenWslTerminal
 }) => (
-  <div className="bg-muted/30 dark:bg-muted/15 border border-border/80 rounded-lg p-3 flex flex-col justify-between space-y-2 relative group hover:border-sky-500/40 transition shadow-2xs">
+  <div className="bg-muted/30 dark:bg-muted/15 border border-border/80 rounded-lg p-3 flex flex-col justify-between space-y-2 relative group hover:border-info/40 transition shadow-2xs">
     <div className="flex items-start justify-between gap-1">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
+        <div className="w-7 h-7 rounded-md bg-info/10 border border-info/25 flex items-center justify-center text-info shrink-0">
           <Terminal className="w-3.5 h-3.5" />
         </div>
         <div>
@@ -31,7 +31,7 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
       </div>
       <span
         className={`w-2 h-2 rounded-full mt-1 ${
-          daemonStatus?.running ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-rose-500'
+          daemonStatus?.running ? 'bg-success shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-danger'
         }`}
         title={daemonStatus?.running ? 'Docker Engine Ativo' : 'Docker Engine Offline'}
       />
@@ -39,7 +39,7 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
 
     <div className="pt-1 flex items-center justify-between gap-1 text-2xs font-mono">
       {daemonStatus?.wslIp ? (
-        <span className="text-sky-700 dark:text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+        <span className="text-info bg-info/10 px-1.5 py-0.5 rounded border border-info/20">
           IP: {daemonStatus.wslIp}
         </span>
       ) : (
@@ -48,7 +48,7 @@ export const TopologyHostNode: React.FC<TopologyHostNodeProps> = ({
       <button
         type="button"
         onClick={onOpenWslTerminal}
-        className="text-2xs text-muted-foreground hover:text-sky-600 dark:hover:text-sky-400 hover:underline cursor-pointer flex items-center gap-1"
+        className="text-2xs text-muted-foreground hover:text-info hover:underline cursor-pointer flex items-center gap-1"
       >
         <Terminal className="w-3 h-3" /> Terminal
       </button>

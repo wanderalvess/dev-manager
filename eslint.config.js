@@ -21,7 +21,7 @@ const MODAL_SHELL = {
 // Superfícies escuras por definição (console, terminal, log, bloco de código): cinza cru é permitido.
 const DARK_SURFACES = [
   'src/renderer/src/components/terminal/**', 'src/renderer/src/components/TerminalViewer.tsx',
-  'src/renderer/src/components/logs/LogLine.tsx', 'src/renderer/src/components/markdown/Markdown*.tsx',
+  'src/renderer/src/components/logs/LogLine.tsx', 'src/renderer/src/components/logs/LogsEmptyState.tsx', 'src/renderer/src/components/markdown/Markdown*.tsx',
   'src/renderer/src/components/AiMarkdownViewer.tsx', 'src/renderer/src/components/quality/testrunners/ConsolePanel.tsx',
   'src/renderer/src/components/quality/taut/**', 'src/renderer/src/components/karaf/modals/Karaf*Modal.tsx',
   'src/renderer/src/components/karaf/features/KarafFeaturesLogDrawer.tsx', 'src/renderer/src/components/containers/modals/ContainerLogsModal.tsx',

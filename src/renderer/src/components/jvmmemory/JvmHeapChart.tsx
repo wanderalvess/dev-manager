@@ -58,7 +58,7 @@ export const JvmHeapChart: React.FC<JvmHeapChartProps> = ({ history, isNearOom, 
           x={chartWidth - paddingX - 4}
           y={warningY - 3}
           textAnchor="end"
-          className="text-2xs fill-amber-500/70 font-mono tracking-tight"
+          className="text-2xs fill-warning/70 font-mono tracking-tight"
         >
           LIMIAR 85%
         </text>

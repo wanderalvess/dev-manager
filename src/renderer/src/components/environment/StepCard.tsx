@@ -43,7 +43,7 @@ export const StepCard: React.FC<StepCardProps> = ({
         step.enabled === false
           ? 'opacity-50 border-border/40 bg-muted/20'
           : isPortActive || (srvFound && srvFound.state === 'RUNNING')
-          ? 'border-emerald-500/40 hover:border-emerald-500/60'
+          ? 'border-success/40 hover:border-success/60'
           : 'border-border/80 hover:border-border'
       }`}
     >

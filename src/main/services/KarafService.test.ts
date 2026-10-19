@@ -68,6 +68,30 @@ describe('KarafService', () => {
       );
     });
 
+    it('prioriza módulo com feature/features sobre domain e service para repo-add', () => {
+      const projDir = path.join(tmpDir, 'meu-projeto-tributacao');
+      fs.mkdirSync(projDir, { recursive: true });
+
+      const pomContent = `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>br.com.pcsist.winthor.tributacao</groupId>
+  <artifactId>winthor-tributacao-parent</artifactId>
+  <version>0.39.10.99</version>
+  <modules>
+    <module>winthor-tributacao-domain</module>
+    <module>winthor-tributacao-service</module>
+    <module>winthor-tributacao-features</module>
+  </modules>
+</project>`;
+      fs.writeFileSync(path.join(projDir, 'pom.xml'), pomContent, 'utf-8');
+
+      const info = karafService.parseProjectPomOrBat(projDir);
+      expect(info).not.toBeNull();
+      expect(info?.suggestedRepoCommand).toBe(
+        'feature:repo-add mvn:br.com.pcsist.winthor.tributacao/winthor-tributacao-features/0.39.10.99/xml/features'
+      );
+    });
+
     it('prioriza comandos customizados extraídos do deploy-local.bat', () => {
       const projDir = path.join(tmpDir, 'meu-projeto-bat');
       fs.mkdirSync(projDir, { recursive: true });

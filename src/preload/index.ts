@@ -122,7 +122,15 @@ import type {
   TautRunOptions,
   TautCsvIntakeResult,
   TautEnvSyncResult,
-  ParseTnsNamesResult
+  ParseTnsNamesResult,
+  HttpExecutionRequest,
+  HttpResponseData,
+  HttpCollection,
+  HttpRequestItem,
+  HttpEnvironment,
+  PostmanImportResult,
+  WinThorLoginCredentials,
+  WinThorLoginResult
 } from '../shared/types';
 
 const electronAPI = {
@@ -806,7 +814,33 @@ const electronAPI = {
     return () => {
       ipcRenderer.removeListener('taut:chunk', subscription);
     };
-  }
+  },
+
+  // API Studio / HTTP Client (Postman)
+  httpExecute: (req: HttpExecutionRequest): Promise<HttpResponseData> =>
+    ipcRenderer.invoke('http:execute', req),
+  httpListCollections: (): Promise<HttpCollection[]> =>
+    ipcRenderer.invoke('http:list-collections'),
+  httpSaveCollection: (collection: HttpCollection): Promise<HttpCollection> =>
+    ipcRenderer.invoke('http:save-collection', collection),
+  httpDeleteCollection: (id: string): Promise<boolean> =>
+    ipcRenderer.invoke('http:delete-collection', id),
+  httpSaveRequest: (request: HttpRequestItem): Promise<HttpRequestItem> =>
+    ipcRenderer.invoke('http:save-request', request),
+  httpDeleteRequest: (collectionId: string, requestId: string): Promise<boolean> =>
+    ipcRenderer.invoke('http:delete-request', collectionId, requestId),
+  httpImportPostman: (jsonContent: string): Promise<PostmanImportResult> =>
+    ipcRenderer.invoke('http:import-postman', jsonContent),
+  httpListEnvironments: (): Promise<HttpEnvironment[]> =>
+    ipcRenderer.invoke('http:list-environments'),
+  httpSaveEnvironments: (envs: HttpEnvironment[]): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('http:save-environments', envs),
+  httpLoginWinThor: (creds: WinThorLoginCredentials): Promise<WinThorLoginResult> =>
+    ipcRenderer.invoke('http:login-winthor', creds),
+  httpGetHistory: (): Promise<HttpResponseData[]> =>
+    ipcRenderer.invoke('http:get-history'),
+  httpClearHistory: (): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('http:clear-history')
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

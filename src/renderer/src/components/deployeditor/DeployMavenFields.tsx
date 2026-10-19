@@ -25,9 +25,9 @@ export const DeployMavenFields: React.FC<DeployMavenFieldsProps> = ({
         }}
         className="w-full bg-input/50 border border-border rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
       >
-        <option value="">-- Selecionar projeto --</option>
+        <option value="" className="bg-card text-foreground">-- Selecionar projeto --</option>
         {projects.map((p) => (
-          <option key={p.path} value={p.path}>
+          <option key={p.path} value={p.path} className="bg-card text-foreground">
             {p.name} {p.pomInfo?.version ? `[${p.pomInfo.version}]` : ''}
           </option>
         ))}

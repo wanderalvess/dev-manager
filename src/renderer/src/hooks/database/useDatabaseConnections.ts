@@ -162,6 +162,10 @@ export function useDatabaseConnections({ settingsVersion, setSql, setCustomSnipp
     if (await requestConfirm({ title: 'Excluir conexão?', message: 'Tem certeza que deseja excluir esta conexão?', confirmLabel: 'Excluir', tone: 'danger' })) {
       const updated = connections.filter((c) => c.id !== id);
       await saveConnectionsToSettings(updated);
+      // A config de backup/agendamento da conexão excluída ficaria órfã nas configurações
+      if (settings?.backupConfigs?.some((b) => b.connectionId === id) && window.electronAPI?.saveSettings) {
+        await window.electronAPI.saveSettings({ backupConfigs: settings.backupConfigs.filter((b) => b.connectionId !== id) });
+      }
       if (activeConnectionId === id && updated.length > 0) {
         setActiveConnectionId(updated[0].id);
       }

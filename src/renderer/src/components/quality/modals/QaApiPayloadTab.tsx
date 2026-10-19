@@ -188,15 +188,15 @@ export const QaApiPayloadTab: React.FC<QaApiPayloadTabProps> = ({ onPayloadLoade
         <div
           className={`p-2.5 rounded border text-2xs flex items-center justify-between font-mono ${
             statusInfo.error
-              ? 'bg-rose-950/20 border-rose-900/50 text-rose-300'
-              : 'bg-emerald-950/20 border-emerald-900/50 text-emerald-300'
+              ? 'bg-danger/20 border-danger/50 text-danger'
+              : 'bg-success/20 border-success/50 text-success'
           }`}
         >
           <div className="flex items-center gap-2">
             {statusInfo.error ? (
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-danger shrink-0" />
             ) : (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
             )}
             <span>{statusInfo.error || `HTTP ${statusInfo.code} OK - Payload extraído com sucesso!`}</span>
           </div>

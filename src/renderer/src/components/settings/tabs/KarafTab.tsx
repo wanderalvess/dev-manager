@@ -25,13 +25,13 @@ export const KarafTab: React.FC<KarafTabProps> = ({
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
               <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
-                <KeyRound className="w-3.5 h-3.5 text-amber-500" /> Credenciais &amp; Autenticação do Apache Karaf
+                <KeyRound className="w-3.5 h-3.5 text-warning" /> Credenciais &amp; Autenticação do Apache Karaf
               </h3>
               <p className="text-2xs text-muted-foreground mt-0.5">
-                Utilizado para autenticação no <code className="font-mono text-amber-500">client.bat</code> (OSGi) e comandos SSH remotos.
+                Utilizado para autenticação no <code className="font-mono text-warning">client.bat</code> (OSGi) e comandos SSH remotos.
               </p>
             </div>
-            <span className="text-2xs bg-amber-500/10 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-bold">
+            <span className="text-2xs bg-warning/10 text-warning border border-warning/30 px-2 py-0.5 rounded font-mono font-bold">
               client.bat SSH
             </span>
           </div>
@@ -71,7 +71,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                 placeholder={settings.hasKarafPass ? '(Senha salva e protegida)' : 'karaf'}
               />
               {settings.hasKarafPass && !settings.karafPass ? (
-                <p className="text-2xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                <p className="text-2xs text-success mt-1 flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                   <span>Senha salva e protegida. Deixe em branco para mantê-la ou digite para alterá-la.</span>
                 </p>
@@ -135,8 +135,8 @@ export const KarafTab: React.FC<KarafTabProps> = ({
           </div>
 
           {/* Box Informativo de Uso */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-foreground space-y-1">
-            <span className="font-bold text-amber-600 dark:text-amber-400 block flex items-center gap-1.5">
+          <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 text-xs text-foreground space-y-1">
+            <span className="font-bold text-warning block flex items-center gap-1.5">
               <Terminal className="w-4 h-4" /> Uso das Credenciais Karaf no Sistema
             </span>
             <p className="text-2xs text-muted-foreground leading-relaxed">

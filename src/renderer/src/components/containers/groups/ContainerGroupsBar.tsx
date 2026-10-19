@@ -135,7 +135,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                               {env.name}
                             </h4>
                             {env.wslDistro && (
-                              <span className="text-2xs px-1.5 py-0.2 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 font-mono font-medium">
+                              <span className="text-2xs px-1.5 py-0.2 rounded bg-info/10 text-info font-mono font-medium">
                                 {env.wslDistro}
                               </span>
                             )}
@@ -146,18 +146,18 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                             <span
                               className={`text-2xs font-semibold flex items-center gap-1 px-2 py-0.5 rounded-full border ${
                                 status.isAllRunning
-                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                                  ? 'bg-success/10 text-success border-success/30'
                                   : status.running > 0
-                                  ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30'
+                                  ? 'bg-warning/10 text-warning border-warning/30'
                                   : 'bg-muted text-muted-foreground border-border/60'
                               }`}
                             >
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
                                   status.isAllRunning
-                                    ? 'bg-emerald-500 animate-pulse'
+                                    ? 'bg-success animate-pulse'
                                     : status.running > 0
-                                    ? 'bg-amber-500'
+                                    ? 'bg-warning'
                                     : 'bg-muted-foreground'
                                 }`}
                               />
@@ -188,7 +188,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                             onClick={() => onDeleteGroup(env)}
                             disabled={sequenceProgress.running}
                             title="Excluir este grupo" aria-label="Excluir este grupo"
-                            className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer disabled:opacity-50"
+                            className="p-1 rounded text-muted-foreground hover:text-danger hover:bg-danger/10 transition cursor-pointer disabled:opacity-50"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -206,7 +206,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                               key={name}
                               className={`text-2xs font-mono px-1.5 py-0.5 rounded border max-w-[120px] truncate ${
                                 isCrunning
-                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+                                  ? 'bg-success/10 text-success border-success/25'
                                   : 'bg-muted/60 text-muted-foreground border-border/50'
                               }`}
                               title={name}
@@ -230,7 +230,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
                         onClick={() => onStartGroup(env)}
                         disabled={sequenceProgress.running}
                         title={`Subir todos os containers de "${env.name}" em sequência`}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50 active:scale-98"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-success hover:bg-success/90 text-background rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50 active:scale-98"
                       >
                         {isGroupRunningNow ? (
                           <RotateCw className="w-3 h-3 animate-spin" />

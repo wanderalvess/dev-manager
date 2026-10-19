@@ -47,6 +47,10 @@ export interface DatabasePageProps {
   onNavigateToSettings?: () => void;
 }
 
+// Identidade estável: useDatabaseConnections usa setSql nas dependências de loadSettings; uma função nova
+// a cada render fazia as configurações serem recarregadas em loop (re-render infinito e formulários zerando).
+const NOOP_SET_SQL = (): void => undefined;
+
 export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onNavigateToSettings }) => {
   const tour = usePageTour(DATABASE_TOUR_STORAGE_KEY);
   const [customSnippets, setCustomSnippets] = useState<SqlSnippet[]>(readStoredSnippets);
@@ -60,7 +64,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
 
   const layout = useDatabaseLayout();
   // O SQL inicial agora vem das abas; o hook de conexões só carrega e edita as conexões
-  const conn = useDatabaseConnections({ settingsVersion, setSql: () => undefined, setCustomSnippets });
+  const conn = useDatabaseConnections({ settingsVersion, setSql: NOOP_SET_SQL, setCustomSnippets });
   const historyState = useDatabaseHistory();
 
   const activeTab = getActiveTab(tabsState);

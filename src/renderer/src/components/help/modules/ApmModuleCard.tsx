@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const ApmModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Activity className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20"
+    iconBoxClass="p-2 rounded-xl bg-danger/10 text-danger border border-danger/20"
     title="8. APM &amp; Traces (OpenTelemetry)"
     subtitle="Receptor OTLP/HTTP embutido · porta 4318"
     shortcut="Alt+0"
@@ -13,14 +13,14 @@ export const ApmModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       <ModuleNavButton
         onNavigate={onNavigate}
         target="apm"
-        colorClass="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30"
+        colorClass="bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30"
         label="Abrir APM &amp; Traces"
       />
     }
   >
     <ModuleBullets
       intro="Observabilidade local das suas APIs sem subir um OTel Collector ou SigNoz:"
-      checkClass="text-rose-500"
+      checkClass="text-danger"
     >
       <span><strong>Dashboard &amp; Detecção de Gargalos:</strong> Vazão (RPS), percentis (p50/p95/p99), taxa de erros, ranking dos endpoints mais lentos e consultas SQL demoradas com filtros instantâneos em 1 clique.</span>
       <span><strong>Waterfall com Régua Visual:</strong> Linha do tempo com régua graduada dividindo proporcionalmente o tempo total entre <em>Requisição HTTP</em>, <em>Processamento Java</em> e <em>Queries JDBC no banco</em>, tags de queries lentas e filtros por camada.</span>

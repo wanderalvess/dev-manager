@@ -67,7 +67,7 @@ export const KarafBundleHeader: React.FC<KarafBundleHeaderProps> = ({
               title={statusInfo.description}
             >
               {karafStatus === 'STARTING' ? (
-                <RotateCw className="w-3 h-3 animate-spin text-amber-500" />
+                <RotateCw className="w-3 h-3 animate-spin text-warning" />
               ) : (
                 <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dotClass}`} />
               )}
@@ -79,16 +79,16 @@ export const KarafBundleHeader: React.FC<KarafBundleHeaderProps> = ({
               <span className="px-2 py-0.5 font-semibold text-foreground">
                 <strong className="text-foreground">{stats.total}</strong> bundles
               </span>
-              <span className="px-2 py-0.5 text-emerald-600 dark:text-emerald-400">
+              <span className="px-2 py-0.5 text-success">
                 <strong>{stats.active}</strong> ativos
               </span>
               {stats.resolved > 0 && (
-                <span className="px-2 py-0.5 text-amber-600 dark:text-amber-400">
+                <span className="px-2 py-0.5 text-warning">
                   <strong>{stats.resolved}</strong> resolvidos
                 </span>
               )}
               {stats.installed > 0 && (
-                <span className="px-2 py-0.5 text-sky-600 dark:text-sky-400">
+                <span className="px-2 py-0.5 text-info">
                   <strong>{stats.installed}</strong> instalados
                 </span>
               )}

@@ -38,7 +38,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
         type="button"
         onClick={onStart}
         disabled={isBusy}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-500 border border-emerald-500/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-success/15 hover:bg-success/25 text-success border border-success/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
       >
         <Play className="w-3.5 h-3.5" />
         Iniciar Captura
@@ -48,7 +48,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
         type="button"
         onClick={onStop}
         disabled={isBusy}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-500 border border-rose-500/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-danger/15 hover:bg-danger/25 text-danger border border-danger/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
       >
         <Square className="w-3.5 h-3.5" />
         Parar Captura
@@ -91,7 +91,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
       onClick={onClear}
       disabled={isBusy || (state.statements.length === 0 && state.sessionEvents.length === 0)}
       title="Limpar dados capturados"
-      className="flex items-center gap-1.5 px-2.5 py-1.5 text-muted-foreground hover:text-rose-500 border border-border/70 hover:border-rose-500/40 rounded-lg text-xs font-medium transition cursor-pointer disabled:opacity-50"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 text-muted-foreground hover:text-danger border border-border/70 hover:border-danger/40 rounded-lg text-xs font-medium transition cursor-pointer disabled:opacity-50"
     >
       <Trash2 className="w-3.5 h-3.5" />
       Limpar
@@ -99,8 +99,8 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
 
     <div className="ml-auto flex items-center gap-2 text-2xs font-mono text-muted-foreground">
       {state.isCapturing ? (
-        <span className="flex items-center gap-1.5 text-emerald-500 font-semibold">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="flex items-center gap-1.5 text-success font-semibold">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           Capturando há {elapsedSec}s · {state.pollCount} consulta(s)
         </span>
       ) : state.pollCount > 0 ? (

@@ -13,9 +13,9 @@ const ALERT_STYLES: Record<CalloutType, { bg: string; border: string; text: stri
     icon: Info
   },
   TIP: {
-    bg: 'bg-emerald-500/10 dark:bg-emerald-950/20',
-    border: 'border-emerald-500/40',
-    text: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-success/10',
+    border: 'border-success/40',
+    text: 'text-success',
     label: 'Dica & Boas Práticas',
     icon: Sparkles
   },
@@ -27,16 +27,16 @@ const ALERT_STYLES: Record<CalloutType, { bg: string; border: string; text: stri
     icon: AlertCircle
   },
   WARNING: {
-    bg: 'bg-amber-500/10 dark:bg-amber-950/20',
-    border: 'border-amber-500/40',
-    text: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-warning/10',
+    border: 'border-warning/40',
+    text: 'text-warning',
     label: 'Atenção / Aviso',
     icon: AlertTriangle
   },
   CAUTION: {
-    bg: 'bg-rose-500/10 dark:bg-rose-950/20',
-    border: 'border-rose-500/40',
-    text: 'text-rose-600 dark:text-rose-400',
+    bg: 'bg-danger/10',
+    border: 'border-danger/40',
+    text: 'text-danger',
     label: 'Cuidado Crítico',
     icon: Flame
   }

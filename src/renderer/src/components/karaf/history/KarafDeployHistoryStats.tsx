@@ -21,21 +21,21 @@ export const KarafDeployHistoryStats: React.FC<KarafDeployHistoryStatsProps> = (
 
     {/* Taxa de Sucesso */}
     <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-card/50 border border-border/60">
-      <div className={`p-1.5 rounded-lg ${stats.failures === 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+      <div className={`p-1.5 rounded-lg ${stats.failures === 0 ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
         <Activity className="w-3.5 h-3.5" />
       </div>
       <div>
         <div className="text-2xs uppercase tracking-wider text-muted-foreground font-medium">Taxa de Sucesso</div>
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-bold font-mono text-foreground">{stats.successRate}%</span>
-          <span className={`w-2 h-2 rounded-full ${stats.failures === 0 ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]' : 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)]'}`} />
+          <span className={`w-2 h-2 rounded-full ${stats.failures === 0 ? 'bg-success shadow-[0_0_6px_rgba(16,185,129,0.7)]' : 'bg-warning shadow-[0_0_6px_rgba(245,158,11,0.7)]'}`} />
         </div>
       </div>
     </div>
 
     {/* Duração Média */}
     <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-card/50 border border-border/60">
-      <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400">
+      <div className="p-1.5 rounded-lg bg-info/10 text-info">
         <Clock className="w-3.5 h-3.5" />
       </div>
       <div>
@@ -52,7 +52,7 @@ export const KarafDeployHistoryStats: React.FC<KarafDeployHistoryStatsProps> = (
       <div>
         <div className="text-2xs uppercase tracking-wider text-muted-foreground font-medium">Origem (MCP / UI)</div>
         <div className="text-xs font-bold font-mono text-foreground">
-          <span className="text-purple-400">{stats.mcpCount}</span> MCP · <span className="text-amber-400">{stats.uiCount}</span> UI
+          <span className="text-purple-400">{stats.mcpCount}</span> MCP · <span className="text-warning">{stats.uiCount}</span> UI
         </div>
       </div>
     </div>

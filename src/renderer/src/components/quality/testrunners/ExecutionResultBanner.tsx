@@ -14,10 +14,10 @@ export const ExecutionResultBanner: React.FC<ExecutionResultBannerProps> = ({ re
   <div
     className={`px-4 py-2.5 border-b flex items-center justify-between gap-4 shrink-0 font-mono text-xs ${
       result.status === 'passed'
-        ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-200'
+        ? 'bg-success/40 border-success/60 text-success'
         : result.status === 'aborted'
-        ? 'bg-amber-950/40 border-amber-800/60 text-amber-200'
-        : 'bg-rose-950/40 border-rose-800/60 text-rose-200'
+        ? 'bg-warning/40 border-warning/60 text-warning'
+        : 'bg-danger/40 border-danger/60 text-danger'
     }`}
   >
     <div className="flex items-center gap-3">
@@ -44,7 +44,7 @@ export const ExecutionResultBanner: React.FC<ExecutionResultBannerProps> = ({ re
         onClick={() => onSync(result.runnerId, result)}
         className="px-3 py-1.5 rounded-lg bg-card hover:bg-muted border border-border text-xs font-semibold text-foreground flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
       >
-        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+        <Sparkles className="w-3.5 h-3.5 text-warning" />
         <span>Sincronizar Matriz</span>
       </button>
     )}

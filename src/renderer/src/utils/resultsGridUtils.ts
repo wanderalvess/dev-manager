@@ -64,3 +64,27 @@ export function clampContextMenuPosition(
 export function formatFilterValueLabel(value: unknown): string {
   return value === null || value === undefined ? '[NULL]' : String(value);
 }
+
+export const MIN_COLUMN_WIDTH = 70;
+export const MAX_COLUMN_WIDTH = 1200;
+export const DEFAULT_COLUMN_WIDTH = 160;
+
+/** Limita a nova largura da coluna ao redimensionar via drag. */
+export function clampColumnWidth(
+  startWidth: number,
+  deltaX: number,
+  minWidth: number = MIN_COLUMN_WIDTH,
+  maxWidth: number = MAX_COLUMN_WIDTH
+): number {
+  return Math.min(maxWidth, Math.max(minWidth, startWidth + deltaX));
+}
+
+/** Calcula a largura expandida no duplo clique do redimensionador. */
+export function calculateExpandedWidth(
+  currentWidth: number,
+  extraWidth: number = 200,
+  maxWidth: number = MAX_COLUMN_WIDTH
+): number {
+  return Math.min(maxWidth, currentWidth + extraWidth);
+}
+

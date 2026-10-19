@@ -16,7 +16,7 @@ export const SessionsTimeline: React.FC<{
   if (events.length === 0) {
     return (
       <TracerEmptyState
-        icon={<Users className="w-8 h-8 mx-auto opacity-30 text-sky-500" />}
+        icon={<Users className="w-8 h-8 mx-auto opacity-30 text-info" />}
         title="Nenhuma troca de SQL observada ainda."
         subtitle="Cada linha aqui aparece quando uma sessão passa a rodar uma instrução diferente da anterior."
       />
@@ -49,7 +49,7 @@ export const SessionsTimeline: React.FC<{
                 key={rowKey}
                 onClick={() => onSelect(ev)}
                 className={`border-t border-border/50 transition-colors cursor-pointer align-top ${
-                  isSelected ? 'bg-sky-500/15 border-l-2 border-l-sky-500' : 'hover:bg-card/60'
+                  isSelected ? 'bg-info/15 border-l-2 border-l-sky-500' : 'hover:bg-card/60'
                 }`}
               >
                 <td className="px-2.5 py-2 whitespace-nowrap text-muted-foreground">

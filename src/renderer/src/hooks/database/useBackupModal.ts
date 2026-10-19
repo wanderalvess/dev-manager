@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { AppSettings, DatabaseConnectionConfig } from '../../../../shared/types';
 import { useCopyToClipboard } from '../useCopyToClipboard';
 import { buildBackupHistoryCsv, buildBackupHistoryCsvFilename } from '../../utils/backupModalUtils';
@@ -41,18 +41,28 @@ export function useBackupModal({
   const { resetResults } = actions;
   const { refreshBackupFiles, refreshBackupHistory, clearBackupFiles } = data;
 
+  // Settings e conexão ativa mudam durante o uso (ex.: o próprio backup grava lastRunAt em settings).
+  // O formulário só é reinicializado ao abrir o modal ou trocar de conexão; depender do objeto settings
+  // aqui zerava o resultado do backup e o que o usuário estava digitando a cada atualização.
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+  const activeConnectionRef = useRef(activeConnection);
+  activeConnectionRef.current = activeConnection;
+  const activeConnectionId = activeConnection?.id ?? null;
+
   // Inicializa valores ao abrir o modal com base na conexão ativa
   useEffect(() => {
-    if (!isOpen || !activeConnection) return;
+    const connection = activeConnectionRef.current;
+    if (!isOpen || !connection) return;
 
-    loadWebhooks(settings?.backupWebhooks || []);
-    const folder = resetFormFromSettings(activeConnection, settings);
+    loadWebhooks(settingsRef.current?.backupWebhooks || []);
+    const folder = resetFormFromSettings(connection, settingsRef.current);
     resetResults();
 
     if (folder) refreshBackupFiles(folder);
     else clearBackupFiles();
-    refreshBackupHistory(activeConnection.id);
-  }, [isOpen, activeConnection, settings, loadWebhooks, resetFormFromSettings, resetResults, refreshBackupFiles, clearBackupFiles, refreshBackupHistory]);
+    refreshBackupHistory(connection.id);
+  }, [isOpen, activeConnectionId, loadWebhooks, resetFormFromSettings, resetResults, refreshBackupFiles, clearBackupFiles, refreshBackupHistory]);
 
   const handleExportBackupHistoryCsv = () => {
     if (data.backupHistory.length === 0) return;

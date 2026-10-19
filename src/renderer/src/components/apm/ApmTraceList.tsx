@@ -93,7 +93,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                           isSelected
                             ? 'bg-primary/15 hover:bg-primary/20'
                             : trace.hasError
-                            ? 'bg-rose-500/10 hover:bg-rose-500/15'
+                            ? 'bg-danger/10 hover:bg-danger/15'
                             : 'hover:bg-muted/40'
                         }`}
                       >
@@ -128,7 +128,7 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                             </span>
                             {trace.hasDatabaseQuery && (
                               <span
-                                className="px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-sky-700 dark:bg-sky-950/50 dark:border-sky-800/60 dark:text-sky-400 text-2xs font-bold shrink-0"
+                                className="px-1 py-0.2 rounded bg-info/15 border border-info/30 text-info text-2xs font-bold shrink-0"
                                 title="Executa consultas no banco de dados (Oracle/Postgres)"
                               >
                                 SQL
@@ -148,9 +148,9 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                             <span
                               className={`text-2xs font-medium leading-none ${
                                 trace.durationMs > 1000
-                                  ? 'text-rose-600 dark:text-rose-400 font-bold'
+                                  ? 'text-danger font-bold'
                                   : trace.durationMs > 400
-                                  ? 'text-amber-600 dark:text-amber-400 font-bold'
+                                  ? 'text-warning font-bold'
                                   : 'text-foreground'
                               }`}
                             >
@@ -163,9 +163,9 @@ export const ApmTraceList: React.FC<ApmTraceListProps> = ({
                                 style={{ width: `${durationRatio}%` }}
                                 className={`h-full rounded-full ${
                                   trace.hasError
-                                    ? 'bg-rose-500'
+                                    ? 'bg-danger'
                                     : trace.durationMs > 1000
-                                    ? 'bg-amber-500'
+                                    ? 'bg-warning'
                                     : 'bg-primary'
                                 }`}
                               />

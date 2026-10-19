@@ -33,13 +33,13 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
       <div className="flex items-center gap-1.5 shrink-0">
         {webHealth && (
           (webHealth.reachable ?? webHealth.isHealthy) ? (
-            <span className="flex items-center gap-1 text-2xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-1.5 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="flex items-center gap-1 text-2xs font-mono text-success bg-success/10 border border-success/30 px-1.5 py-0.5 rounded">
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               {webHealth.status ?? webHealth.statusCode ?? 200} ({webHealth.timeMs ?? webHealth.responseTimeMs ?? 0}ms)
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-2xs font-mono text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            <span className="flex items-center gap-1 text-2xs font-mono text-warning bg-warning/10 border border-warning/30 px-1.5 py-0.5 rounded">
+              <span className="w-1.5 h-1.5 rounded-full bg-warning" />
               Off
             </span>
           )
@@ -54,7 +54,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
         className="py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all shadow-xs"
         title={`Abrir Console Web OSGi / Apache Felix (${karafConsoleUrl})`}
       >
-        <Server className="w-3.5 h-3.5 text-amber-500" />
+        <Server className="w-3.5 h-3.5 text-warning" />
         <span className="hidden lg:inline">Console OSGi</span>
       </button>
     )}

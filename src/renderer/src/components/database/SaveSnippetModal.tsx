@@ -41,7 +41,7 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
     >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
           <div className="flex items-center space-x-2">
-            <BookmarkPlus className="w-4 h-4 text-amber-500" />
+            <BookmarkPlus className="w-4 h-4 text-warning" />
             <h3 className="text-sm font-bold text-foreground">
               {editingSnippetId ? 'Editar Consulta Salva' : 'Salvar Nova Consulta'}
             </h3>
@@ -114,7 +114,7 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-1.5 rounded-lg bg-warning hover:bg-warning/90 text-background font-bold transition flex items-center gap-1.5 cursor-pointer"
             >
               <BookmarkPlus className="w-3.5 h-3.5" />
               <span>{editingSnippetId ? 'Atualizar Consulta' : 'Salvar Consulta'}</span>

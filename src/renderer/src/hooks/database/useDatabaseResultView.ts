@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { QueryResult } from '../../../../shared/types';
 import { useCopyToClipboard } from '../useCopyToClipboard';
+import { showToast } from '../../components/ToastHost';
 import { detectColumnDataTypes, processQueryRows, hasActiveQueryFilters } from '../../utils/databaseResultsUtils';
 import { formatCellForCopy } from '../../utils/databaseCsvUtils';
 import {
@@ -88,8 +89,12 @@ export function useDatabaseResultView(queryResult: QueryResult | null) {
     downloadBlob(content, exportFileName(meta.extension), meta.mime);
   };
 
-  const handleCopyCell = (text: any, cellKey?: string) => {
-    copyCellToClipboard(formatCellForCopy(text), cellKey || 'Copiado!');
+  const handleCopyCell = (text: any, cellKey?: string, columnName?: string) => {
+    const formatted = formatCellForCopy(text);
+    copyCellToClipboard(formatted, cellKey || 'Copiado!');
+    const preview = formatted.length > 35 ? `${formatted.slice(0, 32)}...` : (formatted || '[vazio]');
+    const label = columnName ? `Coluna [${columnName}]: ` : '';
+    showToast(`${label}Valor copiado ("${preview}")`, 'success');
   };
 
   return {

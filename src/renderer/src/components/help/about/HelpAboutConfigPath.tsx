@@ -26,7 +26,7 @@ export const HelpAboutConfigPath: React.FC<HelpAboutConfigPathProps> = ({
       className="p-1.5 rounded-lg bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-colors shrink-0 cursor-pointer"
       title="Copiar caminho completo"
     >
-      {copiedItem === 'configPath' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+      {copiedItem === 'configPath' ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
     </button>
   </div>
 );

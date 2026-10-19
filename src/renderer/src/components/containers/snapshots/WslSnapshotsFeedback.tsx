@@ -10,8 +10,8 @@ export const WslSnapshotsFeedback: React.FC<WslSnapshotsFeedbackProps> = ({ feed
   <div
     className={`mx-5 mt-4 p-3 rounded-xl border text-xs flex items-center justify-between gap-2 ${
       feedback.success
-        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-        : 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+        ? 'bg-success/10 border-success/30 text-success'
+        : 'bg-danger/10 border-danger/30 text-danger'
     }`}
   >
     <div className="flex items-center gap-2">

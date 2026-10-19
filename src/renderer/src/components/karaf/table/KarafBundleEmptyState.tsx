@@ -41,7 +41,7 @@ export const KarafBundleEmptyState: React.FC<KarafBundleEmptyStateProps> = ({
             type="button"
             onClick={onLaunchKarafDebug}
             disabled={isStartingKaraf}
-            className="px-3.5 py-1.5 rounded-md font-semibold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-1.5 rounded-md font-semibold text-xs bg-success hover:bg-success/90 text-background transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
           >
             {isStartingKaraf ? (
               <>
@@ -72,7 +72,7 @@ export const KarafBundleEmptyState: React.FC<KarafBundleEmptyStateProps> = ({
   if (kind === 'starting') {
     return (
       <div className="h-96 flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto space-y-2.5">
-        <div className="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-1 text-amber-500">
+        <div className="w-12 h-12 rounded-lg bg-warning/10 border border-warning/30 flex items-center justify-center mb-1 text-warning">
           <RotateCw className="w-6 h-6 animate-spin" />
         </div>
         <h4 className="text-sm font-semibold text-foreground">Aguardando Inicialização do Karaf...</h4>

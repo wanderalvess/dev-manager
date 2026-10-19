@@ -39,9 +39,9 @@ export const QaRunnerStepCard: React.FC<QaRunnerStepCardProps> = ({
           )}
 
           {step.success ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           ) : (
-            <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <XCircle className="w-4 h-4 text-danger shrink-0" />
           )}
 
           {step.tableName && (

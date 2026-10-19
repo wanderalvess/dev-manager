@@ -39,6 +39,9 @@ import { QaRegressionService } from '../main/services/QaRegressionService';
 import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
+import { HttpClientService } from '../main/services/HttpClientService';
+import { HttpCollectionService } from '../main/services/HttpCollectionService';
+import { createHttpClientRouter } from './routes/httpClientRoutes';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -163,6 +166,8 @@ const qaRegressionService = new QaRegressionService(configService, databaseServi
 const qaPayloadService = new QaPayloadService(configService, databaseService);
 const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
 const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
+const httpCollectionService = new HttpCollectionService();
+const httpClientService = new HttpClientService(httpCollectionService);
 apmService.onNewTrace = (summary) => {
   broadcastWs('apm:new-trace', summary);
 };
@@ -2169,6 +2174,8 @@ app.post('/api/taut/abort', (_req, res) => {
   const success = tautAutomationService.abortExecution();
   res.json({ success });
 });
+
+app.use('/api/http-client', createHttpClientRouter(httpClientService, httpCollectionService));
 
 // Servir Frontend SPA estático se compilado
 const clientDist = path.resolve(__dirname, '../../dist');
