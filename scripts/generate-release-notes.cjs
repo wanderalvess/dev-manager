@@ -96,8 +96,8 @@ function formatReleaseNotesMarkdown(opts) {
   const productName = opts.productName || 'Hub Manager';
   const version = opts.version || '1.0.0';
   const dateFormatted = formatDateBr(opts.date);
-  const installerFile = opts.installerFileName || `${productName} Setup ${version}.exe`;
-  const portableFile = opts.portableFileName || `${productName} ${version}.exe`;
+  const installerFile = opts.installerFileName || `HubManager-Setup-${version}.exe`;
+  const portableFile = opts.portableFileName || `HubManager-Portable-${version}.exe`;
   const changelogBody = opts.changelogBody || 'Consulte o arquivo CHANGELOG.md para a lista detalhada de alterações.';
   const author = opts.author || 'Wanderson Alves';
   const repoUrl = opts.repoUrl || 'https://github.com/wanderalvess/dev-manager';
@@ -178,8 +178,8 @@ function formatReleaseNotesText(opts) {
   const productName = opts.productName || 'Hub Manager';
   const version = opts.version || '1.0.0';
   const dateFormatted = formatDateBr(opts.date);
-  const installerFile = opts.installerFileName || `${productName} Setup ${version}.exe`;
-  const portableFile = opts.portableFileName || `${productName} ${version}.exe`;
+  const installerFile = opts.installerFileName || `HubManager-Setup-${version}.exe`;
+  const portableFile = opts.portableFileName || `HubManager-Portable-${version}.exe`;
   const rawChangelog = opts.changelogBody || 'Consulte o arquivo CHANGELOG.md para a lista detalhada de alteracoes.';
   const author = opts.author || 'Wanderson Alves';
   const repoUrl = opts.repoUrl || 'https://github.com/wanderalvess/dev-manager';
@@ -302,8 +302,8 @@ function generateReleaseNotes(customOutputDir, customVersion) {
     version,
     date,
     changelogBody,
-    installerFileName: `${productName} Setup ${version}.exe`,
-    portableFileName: `${productName} ${version}.exe`,
+    installerFileName: `HubManager-Setup-${version}.exe`,
+    portableFileName: `HubManager-Portable-${version}.exe`,
     author,
     repoUrl
   };

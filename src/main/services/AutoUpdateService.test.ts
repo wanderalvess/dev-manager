@@ -92,4 +92,46 @@ describe('AutoUpdateService', () => {
     expect(() => service.downloadUpdate()).not.toThrow();
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
+
+  describe('modo portátil (GitHub API direta)', () => {
+    const makeFetch = (tag: string, ok = true) =>
+      vi.fn(async () => ({
+        ok,
+        status: ok ? 200 : 403,
+        json: async () => ({
+          tag_name: tag,
+          html_url: 'https://github.com/r/releases/tag/' + tag,
+          assets: [{ name: `HubManager-Portable-${tag}.exe`, browser_download_url: 'https://dl/portable.exe' }]
+        })
+      })) as unknown as typeof fetch;
+
+    it('detecta versão nova, não usa o electron-updater e abre o .exe portátil no download', async () => {
+      const onStatus = vi.fn();
+      const openExternal = vi.fn();
+      const service = new AutoUpdateService(onStatus, {
+        portable: true,
+        currentVersion: '1.38.0',
+        fetchImpl: makeFetch('v1.39.0'),
+        openExternal
+      });
+      service.checkForUpdates();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(autoUpdaterMock.checkForUpdates).not.toHaveBeenCalled();
+      expect(onStatus).toHaveBeenLastCalledWith({ status: 'available', version: '1.39.0', manual: true });
+      service.downloadUpdate();
+      expect(openExternal).toHaveBeenCalledWith('https://dl/portable.exe');
+      expect(autoUpdaterMock.downloadUpdate).not.toHaveBeenCalled();
+    });
+
+    it('reporta not-available na mesma versão e error em falha HTTP', async () => {
+      const onStatus = vi.fn();
+      new AutoUpdateService(onStatus, { portable: true, currentVersion: '1.39.0', fetchImpl: makeFetch('v1.39.0') }).checkForUpdates();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(onStatus).toHaveBeenLastCalledWith({ status: 'not-available' });
+
+      new AutoUpdateService(onStatus, { portable: true, currentVersion: '1.0.0', fetchImpl: makeFetch('v2.0.0', false) }).checkForUpdates();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(onStatus).toHaveBeenLastCalledWith({ status: 'error', message: 'GitHub respondeu HTTP 403' });
+    });
+  });
 });

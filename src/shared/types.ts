@@ -294,7 +294,8 @@ export interface GitProjectInfo {
 /** Status do processo de atualização automática do app (electron-updater / GitHub Releases). */
 export type UpdateStatus =
   | { status: 'checking' }
-  | { status: 'available'; version: string }
+  /** `manual`: build portátil — o botão abre o download no navegador em vez de baixar/instalar no app. */
+  | { status: 'available'; version: string; manual?: boolean }
   | { status: 'not-available' }
   | { status: 'downloading'; percent: number }
   | { status: 'downloaded'; version: string }

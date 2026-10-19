@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { ToastHost } from '../ToastHost';
 import { ConfirmHost } from '../ui/ConfirmHost';
+import { UpdateNotifier } from './UpdateNotifier';
 import { OnboardingTour } from '../onboarding/OnboardingTour';
 import { WelcomeIntro } from '../onboarding/WelcomeIntro';
 import { PageToursPromptModal } from '../onboarding/PageToursPromptModal';
@@ -40,6 +41,7 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
   <>
     <ToastHost />
     <ConfirmHost />
+    <UpdateNotifier />
 
     <WelcomeIntro isOpen={isWelcomeOpen} onFinish={onFinishWelcome} />
 
