@@ -53,7 +53,7 @@ export const ProfileEditorFooter: React.FC<ProfileEditorFooterProps> = ({
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors border border-border/60 shadow-xs"
           title="Exportar este perfil como arquivo JSON"
         >
-          <Download className="w-3.5 h-3.5 text-emerald-500" />
+          <Download className="w-3.5 h-3.5 text-success" />
           <span>Exportar Perfil</span>
         </button>
       )}

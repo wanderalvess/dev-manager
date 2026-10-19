@@ -25,7 +25,7 @@ export const StatementTracerPanel: React.FC<StatementTracerPanelProps> = ({ acti
   if (!activeConnection) {
     return (
       <TracerEmptyState
-        icon={<Radio className="w-8 h-8 mx-auto opacity-30 text-sky-500" />}
+        icon={<Radio className="w-8 h-8 mx-auto opacity-30 text-info" />}
         title="Nenhuma conexão selecionada."
         subtitle="Selecione uma conexão Oracle na barra lateral para usar o Statement Tracer."
       />
@@ -35,7 +35,7 @@ export const StatementTracerPanel: React.FC<StatementTracerPanelProps> = ({ acti
   if (!tracer.isOracle) {
     return (
       <TracerEmptyState
-        icon={<Radio className="w-8 h-8 mx-auto opacity-30 text-sky-500" />}
+        icon={<Radio className="w-8 h-8 mx-auto opacity-30 text-info" />}
         title="Statement Tracer disponível apenas para Oracle."
         subtitle="Selecione uma conexão do tipo Oracle para capturar sessões ativas (v$session) ou SQL recente (v$sql)."
       />
@@ -69,12 +69,12 @@ export const StatementTracerPanel: React.FC<StatementTracerPanelProps> = ({ acti
       />
 
       {state.lastError ? (
-        <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+        <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-danger text-xs">
           <div className="flex items-center space-x-2 font-bold mb-1">
-            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-danger shrink-0" />
             <span>Falha na última consulta ao Oracle:</span>
           </div>
-          <pre className="font-mono text-2xs whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-rose-700 dark:text-rose-300 mt-2">
+          <pre className="font-mono text-2xs whitespace-pre-wrap bg-card p-3 rounded-lg border border-border text-danger mt-2">
             {state.lastError}
           </pre>
         </div>
@@ -82,7 +82,7 @@ export const StatementTracerPanel: React.FC<StatementTracerPanelProps> = ({ acti
 
       {!state.isCapturing && state.pollCount === 0 ? (
         <TracerEmptyState
-          icon={<Radio className="w-8 h-8 mx-auto opacity-30 text-sky-500" />}
+          icon={<Radio className="w-8 h-8 mx-auto opacity-30 text-info" />}
           title="Nenhuma captura em andamento."
           subtitle='Clique em "Iniciar Captura" e vá disparar a ação no outro app (Delphi/Karaf) — a captura roda em segundo plano e continua mesmo se você trocar de aba ou de página aqui no Hub Manager.'
         />

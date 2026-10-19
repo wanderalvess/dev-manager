@@ -14,7 +14,8 @@ import {
   Activity,
   CheckCheck,
   PlayCircle,
-  Zap
+  Zap,
+  Globe
 } from 'lucide-react';
 
 export interface QuickLauncherItem {
@@ -151,11 +152,19 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     icon: Zap
   },
   {
+    id: 'act-http-client',
+    tab: 'http-client',
+    title: 'API Studio (Postman)',
+    subtitle: 'Cliente HTTP para envio de requisições, coleções e testes de APIs REST',
+    badge: 'Alt+9',
+    icon: Globe
+  },
+  {
     id: 'act-help',
     tab: 'help',
     title: 'Ajuda & Diagnósticos',
     subtitle: 'FAQ, diagnósticos de rede e atalhos de teclado',
-    badge: 'Alt+9',
+    badge: 'Alt+H',
     icon: HelpCircle
   },
   {

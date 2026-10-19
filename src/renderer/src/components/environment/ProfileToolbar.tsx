@@ -47,7 +47,7 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
         className="flex items-center gap-1 px-2.5 py-1 text-muted-foreground hover:text-foreground font-semibold rounded-lg hover:bg-card transition-colors"
         title="Editar os passos, comandos e portas do perfil ativo"
       >
-        <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+        <Edit3 className="w-3.5 h-3.5 text-warning" />
         <span>Editar</span>
       </button>
 
@@ -57,7 +57,7 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
       </button>
 
       <button type="button" onClick={onExport} className={BTN} title="Exportar este perfil como arquivo JSON">
-        <Download className="w-3.5 h-3.5 text-emerald-500" />
+        <Download className="w-3.5 h-3.5 text-success" />
         <span>Exportar</span>
       </button>
 
@@ -67,7 +67,7 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
         className={BTN}
         title="Importar perfil a partir de arquivo JSON"
       >
-        <Upload className="w-3.5 h-3.5 text-blue-500" />
+        <Upload className="w-3.5 h-3.5 text-info" />
         <span>Importar</span>
       </button>
 
@@ -75,7 +75,7 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
         <button
           type="button"
           onClick={() => onDelete(activeProfile.id)}
-          className="flex items-center gap-1 px-2 py-1 text-rose-500 hover:text-rose-600 font-semibold rounded-lg hover:bg-rose-500/10 transition-colors"
+          className="flex items-center gap-1 px-2 py-1 text-danger hover:text-danger/80 font-semibold rounded-lg hover:bg-danger/10 transition-colors"
           title={`Excluir perfil "${activeProfile.name}"`}
         >
           <Trash2 className="w-3.5 h-3.5" />

@@ -36,14 +36,14 @@ export const EmptyResultNotice: React.FC<EmptyResultNoticeProps> = ({ tableName,
 
   return (
     <div className="flex flex-col items-center justify-center space-y-2">
-      <FilterX className="w-8 h-8 opacity-30 text-sky-500" />
+      <FilterX className="w-8 h-8 opacity-30 text-info" />
       <p className="font-semibold text-foreground">A consulta foi executada, mas não retornou nenhuma linha.</p>
       <span className="text-2xs opacity-70 max-w-md">
         A tabela pode estar vazia, o WHERE pode não ter correspondência, ou o usuário da conexão pode não ter
         permissão de leitura nas linhas (por exemplo, políticas de segurança por linha).
       </span>
       {hint && (
-        <span className="text-2xs text-sky-600 dark:text-sky-400 max-w-md" data-testid="empty-result-hint">
+        <span className="text-2xs text-info max-w-md" data-testid="empty-result-hint">
           {hint}
         </span>
       )}

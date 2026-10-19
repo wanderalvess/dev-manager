@@ -32,7 +32,7 @@ export const DeployDiagBundleTab: React.FC<DeployDiagBundleTabProps> = ({
         />
         <DeployDiagCommandButton
           fill
-          icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+          icon={<AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />}
           label="Diag Falhas"
           command="bundle:diag"
           disabled={disabled}
@@ -55,7 +55,7 @@ export const DeployDiagBundleTab: React.FC<DeployDiagBundleTabProps> = ({
         />
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
           <DeployDiagActionButton
-            icon={<AlertTriangle className="w-3 h-3 text-amber-500" />}
+            icon={<AlertTriangle className="w-3 h-3 text-warning" />}
             label="Diag"
             title="Diagnosticar falha de resolução do bundle"
             disabled={actionDisabled}

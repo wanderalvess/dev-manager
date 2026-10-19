@@ -4,6 +4,8 @@ import {
   computeBottomSpacerHeight,
   formatCellValue,
   formatFilterValueLabel,
+  clampColumnWidth,
+  calculateExpandedWidth,
   getCellKind,
   getCellTitle,
   getRowClassName,
@@ -70,5 +72,16 @@ describe('resultsGridUtils', () => {
   it('formatFilterValueLabel', () => {
     expect(formatFilterValueLabel(null)).toBe('[NULL]');
     expect(formatFilterValueLabel(3)).toBe('3');
+  });
+
+  it('clampColumnWidth respeita limites mínimo e máximo', () => {
+    expect(clampColumnWidth(160, 50)).toBe(210);
+    expect(clampColumnWidth(160, -150)).toBe(70);
+    expect(clampColumnWidth(1000, 300)).toBe(1200);
+  });
+
+  it('calculateExpandedWidth adiciona largura extra respeitando o teto', () => {
+    expect(calculateExpandedWidth(180, 200)).toBe(380);
+    expect(calculateExpandedWidth(1100, 200)).toBe(1200);
   });
 });

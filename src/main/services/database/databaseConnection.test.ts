@@ -93,6 +93,34 @@ describe('withConnection (conexão reutilizada)', () => {
     expect(ctx.connCache.size).toBe(0);
   });
 
+  it('uma execução que falha não derruba as concorrentes na mesma conexão (NJS-003)', async () => {
+    const ctx = makeCtx(1000);
+    let open = true;
+    const close = vi.fn().mockImplementation(async () => {
+      open = false;
+    });
+    const getConn = vi.fn().mockResolvedValue({ id: 1 });
+    const falha = withConnection(ctx, base, getConn, close, async () => {
+      throw new Error('ORA-00942');
+    }, true);
+    const ok = withConnection(ctx, base, getConn, close, async () => {
+      await new Promise((r) => setTimeout(r, 50));
+      if (!open) throw new Error('NJS-003: invalid or closed connection');
+      return 'ok';
+    }, true);
+
+    const settled = Promise.allSettled([falha, ok]);
+    await vi.advanceTimersByTimeAsync(100);
+    const [r1, r2] = await settled;
+
+    expect(r1.status).toBe('rejected');
+    expect(r2).toEqual({ status: 'fulfilled', value: 'ok' });
+    expect(getConn).toHaveBeenCalledTimes(1);
+    // só fecha depois que a última execução terminou, e a entrada saiu do cache
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(ctx.connCache.size).toBe(0);
+  });
+
   it('senha, modo SID/Service, Thick e SSL diferentes não compartilham a mesma sessão', async () => {
     const ctx = makeCtx(1000);
     const close = vi.fn().mockResolvedValue(undefined);

@@ -34,10 +34,10 @@ export const QualityMetricsStrip: React.FC<QualityMetricsStripProps> = ({ metric
       <div className="text-lg font-bold font-mono tabular-nums text-foreground">{metrics.total}</div>
     </Tile>
     <Tile status="passed" label="Aprovados" onFilterStatus={onFilterStatus}>
-      <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+      <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-success flex items-center gap-1">
         <CheckCircle2 className="w-3 h-3" /> Aprovados
       </span>
-      <div className="text-lg font-bold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">{metrics.passed}</div>
+      <div className="text-lg font-bold font-mono tabular-nums text-success">{metrics.passed}</div>
     </Tile>
     <Tile status="in_progress" label="Em Teste" onFilterStatus={onFilterStatus}>
       <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 flex items-center gap-1">
@@ -46,16 +46,16 @@ export const QualityMetricsStrip: React.FC<QualityMetricsStripProps> = ({ metric
       <div className="text-lg font-bold font-mono tabular-nums text-cyan-600 dark:text-cyan-400">{metrics.inProgress}</div>
     </Tile>
     <Tile status="failed" label="Falhas" onFilterStatus={onFilterStatus}>
-      <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1">
+      <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-danger flex items-center gap-1">
         <XCircle className="w-3 h-3" /> Falhas / Bugs
       </span>
-      <div className="text-lg font-bold font-mono tabular-nums text-rose-600 dark:text-rose-400">{metrics.failed}</div>
+      <div className="text-lg font-bold font-mono tabular-nums text-danger">{metrics.failed}</div>
     </Tile>
     <Tile status="blocked" label="Bloqueados" onFilterStatus={onFilterStatus}>
-      <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-amber-500 flex items-center gap-1">
+      <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-warning flex items-center gap-1">
         <Ban className="w-3 h-3" /> Bloqueados
       </span>
-      <div className="text-lg font-bold font-mono tabular-nums text-amber-500">{metrics.blocked}</div>
+      <div className="text-lg font-bold font-mono tabular-nums text-warning">{metrics.blocked}</div>
     </Tile>
     <div className="p-3 space-y-0.5">
       <span className="text-2xs font-mono font-semibold uppercase tracking-wider text-primary block">Taxa de Sucesso</span>

@@ -70,8 +70,8 @@ export const Routine801ConfigPanel: React.FC<Routine801ConfigPanelProps> = ({
       <div
         className={`w-full text-xs px-2.5 py-1.5 rounded-md border flex items-center gap-1.5 ${
           connectionHealth.ok
-            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+            ? 'bg-success/10 text-success border-success/30'
+            : 'bg-danger/10 text-danger border-danger/30'
         }`}
       >
         {connectionHealth.ok ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}

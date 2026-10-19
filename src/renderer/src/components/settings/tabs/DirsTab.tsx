@@ -92,7 +92,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
 
             <DirsPathField
               fieldId="field-karafPath"
-              labelIcon={<Layers className="w-3.5 h-3.5 text-amber-500" />}
+              labelIcon={<Layers className="w-3.5 h-3.5 text-warning" />}
               labelText="Diretório do Servidor Apache Karaf (OSGi):"
               labelTitle="Raiz da instalação do servidor Apache Karaf (a pasta que contém bin/client.bat). Usado para iniciar/parar o Karaf, abrir o console e rodar deploys."
               statusBadge={renderPathStatusBadge('karafPath')}
@@ -101,7 +101,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               placeholder="Ex: C:\servers\runtime ou C:\app\server"
               onChange={(val) => setPathField('karafPath', val)}
               onBrowse={() => handleBrowseDirectory('karafPath')}
-              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-amber-500" />}
+              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-warning" />}
               browseTitle="Selecionar pasta do Karaf"
             />
 
@@ -126,13 +126,13 @@ export const DirsTab: React.FC<DirsTabProps> = ({
 
             {/* Script de Inicialização Customizado do Karaf (sem validação de caminho, como antes) */}
             <DirsPathField
-              labelIcon={<FileCode2 className="w-3.5 h-3.5 text-amber-500" />}
+              labelIcon={<FileCode2 className="w-3.5 h-3.5 text-warning" />}
               labelText="Script de Inicialização do Karaf (Opcional):"
               inputValue={settings.karafScript || ''}
               placeholder="Ex: start.bat, run.bat ou caminho completo"
               onChange={(val) => setField('karafScript', val)}
               onBrowse={() => handleBrowseFile('karafScript')}
-              browseIcon={<FileCode2 className="w-3.5 h-3.5 text-amber-500" />}
+              browseIcon={<FileCode2 className="w-3.5 h-3.5 text-warning" />}
               browseTitle="Selecionar script .bat / .cmd"
               hint={
                 <p className="text-2xs text-muted-foreground">
@@ -143,14 +143,14 @@ export const DirsTab: React.FC<DirsTabProps> = ({
 
             <DirsPathField
               fieldId="field-appPath"
-              labelIcon={<Folder className="w-3.5 h-3.5 text-emerald-500" />}
+              labelIcon={<Folder className="w-3.5 h-3.5 text-success" />}
               labelText="Diretório Raiz das Rotinas / Binários (Prod):"
               statusBadge={renderPathStatusBadge('appPath')}
               inputValue={settings.appPath}
               placeholder="Ex: C:\app ou C:\ERP"
               onChange={(val) => setPathField('appPath', val)}
               onBrowse={() => handleBrowseDirectory('appPath')}
-              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-emerald-500" />}
+              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-success" />}
               browseTitle="Selecionar pasta das Rotinas"
             />
 
@@ -194,7 +194,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
             <DirsPathField
               fieldId="field-tautProjectPath"
               wrapperClassName="md:col-span-2 space-y-1.5 pt-2 border-t border-border/50"
-              labelIcon={<TestTube className="w-3.5 h-3.5 text-emerald-400" />}
+              labelIcon={<TestTube className="w-3.5 h-3.5 text-success" />}
               labelText="Diretório do Projeto de Testes Automatizados (Cypress):"
               labelTitle="Caminho do repositório de testes automatizados (Cypress / TAUT). Se deixado em branco, o Hub Manager tenta autodetectar automaticamente dentro da pasta de Projetos."
               statusBadge={renderPathStatusBadge('tautProjectPath')}
@@ -202,7 +202,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               placeholder="Ex: C:\Projetos\taut ou C:\Projetos\testes-cypress (Vazio: autodetecta na pasta de projetos)"
               onChange={(val) => setPathField('tautProjectPath', val)}
               onBrowse={() => handleBrowseDirectory('tautProjectPath')}
-              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-emerald-400" />}
+              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-success" />}
               browseTitle="Selecionar pasta do projeto de testes"
               hint={
                 <p className="text-2xs text-muted-foreground">

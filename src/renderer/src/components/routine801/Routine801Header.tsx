@@ -49,7 +49,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  connectionHealth.ok ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+                  connectionHealth.ok ? 'bg-success animate-pulse' : 'bg-danger'
                 }`}
               />
               <span className="text-muted-foreground text-2xs">{serverUrlInput}</span>

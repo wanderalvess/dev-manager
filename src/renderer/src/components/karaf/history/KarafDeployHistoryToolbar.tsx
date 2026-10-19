@@ -25,8 +25,8 @@ export const KarafDeployHistoryToolbar: React.FC<KarafDeployHistoryToolbarProps>
     icon?: React.ComponentType<{ className?: string }>;
   }> = [
     { id: 'ALL', label: 'Todos', count: stats.total },
-    { id: 'SUCCESS', label: 'Sucessos', count: stats.successes, dotColor: 'bg-emerald-400' },
-    { id: 'FAILURE', label: 'Falhas', count: stats.failures, dotColor: 'bg-rose-400' },
+    { id: 'SUCCESS', label: 'Sucessos', count: stats.successes, dotColor: 'bg-success' },
+    { id: 'FAILURE', label: 'Falhas', count: stats.failures, dotColor: 'bg-danger' },
     { id: 'MCP', label: 'MCP Agent', count: stats.mcpCount, icon: Sparkles },
     { id: 'UI', label: 'Console UI', count: stats.uiCount, icon: Terminal }
   ];
@@ -40,7 +40,7 @@ export const KarafDeployHistoryToolbar: React.FC<KarafDeployHistoryToolbarProps>
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Pesquisar por artefato, versão, feature, erro..."
-          className="w-full bg-background/80 border border-border rounded-xl pl-8.5 pr-8 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-sky-500/60 font-mono placeholder:text-muted-foreground placeholder:font-sans transition"
+          className="w-full bg-background/80 border border-border rounded-xl pl-8.5 pr-8 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-info/60 font-mono placeholder:text-muted-foreground placeholder:font-sans transition"
         />
         {search && (
           <button
@@ -65,7 +65,7 @@ export const KarafDeployHistoryToolbar: React.FC<KarafDeployHistoryToolbarProps>
               onClick={() => onFilterChange(chip.id)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer border ${
                 isSelected
-                  ? 'bg-sky-500/20 border-sky-500/50 text-sky-300 shadow-xs'
+                  ? 'bg-info/20 border-info/50 text-info shadow-xs'
                   : 'bg-card/60 border-border text-muted-foreground hover:text-foreground hover:bg-muted/60'
               }`}
             >

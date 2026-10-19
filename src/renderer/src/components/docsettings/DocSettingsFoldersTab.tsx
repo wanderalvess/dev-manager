@@ -36,7 +36,7 @@ export const DocSettingsFoldersTab: React.FC<DocSettingsFoldersTabProps> = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <DocSettingsToggleCard
         icon={<GitBranch className="w-3.5 h-3.5" />}
-        iconWrapperClass="bg-amber-500/10 text-amber-500 border border-amber-500/20"
+        iconWrapperClass="bg-warning/10 text-warning border border-warning/20"
         title="Repositórios Git"
         description="Vasculha arquivos README e pastas docs/ em todos os projetos Git clonados no Hub Manager."
         checked={indexProjectsDocs}

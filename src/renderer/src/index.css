@@ -83,17 +83,33 @@
 @layer base {
   :root,
   .light {
-    --success: 160 84% 26%;
-    --warning: 41 96% 32%;
-    --danger: 347 77% 40%;
-    --info: 201 96% 32%;
+    color-scheme: light;
+    --success: 160 84% 18%;
+    --warning: 41 96% 20%;
+    --danger: 347 77% 32%;
+    --info: 201 96% 24%;
   }
 
   .dark {
+    color-scheme: dark;
     --success: 158 64% 52%;
     --warning: 45 93% 47%;
     --danger: 349 89% 62%;
     --info: 199 89% 60%;
+  }
+
+  select {
+    color-scheme: light;
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
   }
 }
 
@@ -126,7 +142,7 @@
     --card-foreground: 28 35% 15%;
     --popover: 35 35% 98%;
     --popover-foreground: 28 35% 15%;
-    --primary: 24 95% 39%;
+    --primary: 24 95% 32%;
     --primary-foreground: 0 0% 100%;
     --secondary: 32 25% 88%;
     --secondary-foreground: 28 35% 15%;
@@ -134,10 +150,10 @@
     --muted-foreground: 28 15% 38%;
     --accent: 28 100% 92%;
     --accent-foreground: 24 95% 35%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --border: 30 20% 78%;
-    --input: 30 20% 78%;
+    --input: 30 12% 48%;
     --ring: 24 95% 44%;
     --radius: 0.625rem;
   }
@@ -163,7 +179,7 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 22%;
-    --input: 217.2 32.6% 22%;
+    --input: 217 20% 45%;
     --ring: 25 100% 50%;
   }
 
@@ -211,7 +227,7 @@
     --input: 215 25% 76%;
     --accent: 218 90% 93%;
     --accent-foreground: 220 92% 35%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 220 92% 48%;
   }
@@ -250,7 +266,7 @@
     --card-foreground: 160 50% 10%;
     --popover: 155 30% 98%;
     --popover-foreground: 160 50% 10%;
-    --primary: 158 90% 27%;
+    --primary: 158 90% 24%;
     --primary-foreground: 0 0% 100%;
     --secondary: 155 25% 86%;
     --secondary-foreground: 160 50% 10%;
@@ -260,7 +276,7 @@
     --input: 155 25% 74%;
     --accent: 155 80% 92%;
     --accent-foreground: 158 90% 24%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 158 90% 32%;
   }
@@ -309,7 +325,7 @@
     --input: 268 25% 76%;
     --accent: 270 85% 94%;
     --accent-foreground: 271 85% 35%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 271 85% 48%;
   }
@@ -348,7 +364,7 @@
     --card-foreground: 205 50% 11%;
     --popover: 198 40% 98%;
     --popover-foreground: 205 50% 11%;
-    --primary: 196 95% 34%;
+    --primary: 196 95% 30%;
     --primary-foreground: 0 0% 100%;
     --secondary: 198 28% 86%;
     --secondary-foreground: 205 50% 11%;
@@ -358,7 +374,7 @@
     --input: 198 28% 74%;
     --accent: 196 85% 92%;
     --accent-foreground: 196 95% 24%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
     --ring: 196 95% 34%;
   }
@@ -398,7 +414,7 @@
 
   input::placeholder,
   textarea::placeholder {
-    color: var(--color-gray-400);
+    color: hsl(var(--muted-foreground));
   }
 }
 

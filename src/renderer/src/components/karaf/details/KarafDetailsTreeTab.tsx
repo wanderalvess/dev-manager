@@ -53,7 +53,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
         <div>
           <div className="text-xs font-bold text-foreground flex items-center gap-2">
             <span>[{target.id}] {target.name}</span>
-            <span className="px-2 py-0.5 text-2xs rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-mono font-bold">
+            <span className="px-2 py-0.5 text-2xs rounded-full bg-success/15 text-success border border-success/30 font-mono font-bold">
               {target.state}
             </span>
           </div>
@@ -72,7 +72,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
     <div className="p-3 bg-muted/30 border border-border rounded-xl space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+          <span className="w-2 h-2 rounded-full bg-warning inline-block"></span>
           Pacotes Requeridos (Importados)
         </span>
         <span className="text-2xs font-mono text-muted-foreground">
@@ -84,7 +84,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
           Este bundle não declara imports de pacotes externos.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 pl-3.5 border-l-2 border-amber-500/40 ml-1 max-h-48 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 pl-3.5 border-l-2 border-warning/40 ml-1 max-h-48 overflow-y-auto">
           {bundleDetails.importedPackages.map((pkg, idx) => (
             <div
               key={idx}

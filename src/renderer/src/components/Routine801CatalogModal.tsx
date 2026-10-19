@@ -103,14 +103,14 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
 
       {/* Banner de Erro Global */}
       {catalog.errorBanner && (
-        <div className="px-5 py-2.5 bg-rose-500/10 border-b border-rose-500/25 flex items-center justify-between text-xs text-rose-400 shrink-0">
+        <div className="px-5 py-2.5 bg-danger/10 border-b border-danger/25 flex items-center justify-between text-xs text-danger shrink-0">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{catalog.errorBanner}</span>
           </div>
           <button
             onClick={() => catalog.setErrorBanner(null)}
-            className="text-rose-400 hover:text-rose-300 underline text-xs ml-4"
+            className="text-danger hover:text-danger underline text-xs ml-4"
           >
             Dispensar
           </button>

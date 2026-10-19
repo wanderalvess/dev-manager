@@ -171,7 +171,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
           <button
             type="button"
             onClick={onAbort}
-            className="px-4 py-2 rounded-lg font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-rose-600 hover:bg-rose-700 text-white shadow-2xs cursor-pointer"
+            className="px-4 py-2 rounded-lg font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-2xs cursor-pointer"
             title="Interromper execução do perfil imediatamente"
           >
             <Square className="w-3.5 h-3.5 fill-current" />

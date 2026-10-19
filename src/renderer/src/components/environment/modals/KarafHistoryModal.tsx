@@ -32,7 +32,7 @@ export const KarafHistoryModal: React.FC<KarafHistoryModalProps> = ({
   >
     <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
       <div className="flex items-center space-x-2">
-        <History className="w-4 h-4 text-sky-400" />
+        <History className="w-4 h-4 text-info" />
         <h3 className="text-sm font-bold text-foreground">Histórico do Karaf Embedded</h3>
       </div>
       <div className="flex items-center gap-2">

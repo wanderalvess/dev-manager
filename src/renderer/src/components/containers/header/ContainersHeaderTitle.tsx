@@ -34,8 +34,8 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
         {daemonStatus &&
           (daemonStatus.running ? (
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-2xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+              <span className="text-2xs px-2.5 py-0.5 rounded-full font-semibold bg-success/10 text-success border border-success/30 flex items-center gap-1.5 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                 {containersHeaderRuntimeLabel(daemonStatus)}
               </span>
               {daemonStatus.wslIp && (
@@ -43,19 +43,19 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
                   type="button"
                   onClick={() => copyWslIp(daemonStatus.wslIp!, 'wsl-ip')}
                   title="IP do WSL no Host (Clique para copiar)"
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/25 text-2xs font-mono transition cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-info/10 hover:bg-info/20 text-info border border-info/25 text-2xs font-mono transition cursor-pointer"
                 >
-                  <Network className="w-3 h-3 text-sky-500" />
+                  <Network className="w-3 h-3 text-info" />
                   <span>{daemonStatus.wslIp}</span>
                   <Copy className="w-3 h-3 opacity-70" />
                   {wslIpFeedback === 'wsl-ip' && (
-                    <span className="text-2xs font-bold text-emerald-500 ml-0.5">Copiado!</span>
+                    <span className="text-2xs font-bold text-success ml-0.5">Copiado!</span>
                   )}
                 </button>
               )}
             </div>
           ) : (
-            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 flex items-center gap-1.5">
+            <span className="text-2xs px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger border border-danger/30 flex items-center gap-1.5">
               <AlertCircle className="w-3 h-3" /> Offline
             </span>
           ))}

@@ -169,7 +169,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
                   <span className="text-2xs uppercase font-bold text-muted-foreground">Endereço IP</span>
-                  <div className="text-xs font-mono font-bold text-sky-600 dark:text-sky-400 select-all">
+                  <div className="text-xs font-mono font-bold text-info select-all">
                     {inspectingContainer.networkSettings.ipAddress || 'Host Mode / Nenhum'}
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                       {portEntries.map((p, idx) => (
                         <div key={idx} className="flex items-center justify-between p-2 bg-card rounded-lg border border-border/60 text-xs font-mono">
                           <span className="text-muted-foreground">Container: {p.containerPort}/{p.protocol}</span>
-                          <span className="text-sky-600 dark:text-sky-400 font-semibold">Host: {p.hostIp || '0.0.0.0'}:{p.hostPort}</span>
+                          <span className="text-info font-semibold">Host: {p.hostIp || '0.0.0.0'}:{p.hostPort}</span>
                         </div>
                       ))}
                     </div>
@@ -224,7 +224,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                     </div>
                     <div className="font-mono text-2xs space-y-1 select-all">
                       <div><span className="text-muted-foreground font-sans">Host:</span> <span className="text-foreground">{m.source}</span></div>
-                      <div><span className="text-muted-foreground font-sans">Destino:</span> <span className="text-sky-600 dark:text-sky-400">{m.destination}</span></div>
+                      <div><span className="text-muted-foreground font-sans">Destino:</span> <span className="text-info">{m.destination}</span></div>
                     </div>
                   </div>
                 ))

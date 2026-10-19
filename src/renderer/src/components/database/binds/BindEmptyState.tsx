@@ -7,7 +7,7 @@ export const BindEmptyState: React.FC = () => (
     <p className="font-semibold text-foreground">Nenhuma variável detectada no SQL.</p>
     <p className="text-2xs max-w-sm mx-auto">
       Você pode usar sintaxes como <span className="font-mono text-violet-400">:CODCLI</span>,{' '}
-      <span className="font-mono text-amber-500">&CODCLI</span> ou clicar em "Adicionar Variável Manual" acima.
+      <span className="font-mono text-warning">&CODCLI</span> ou clicar em "Adicionar Variável Manual" acima.
     </p>
   </div>
 );

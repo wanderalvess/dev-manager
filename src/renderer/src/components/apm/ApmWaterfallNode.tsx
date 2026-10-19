@@ -22,15 +22,15 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
   // Cor da barra de tempo do waterfall baseada na camada semântica (HTTP / Java / JDBC)
   const getBarColor = () => {
     if (span.statusCode === 'ERROR' || (span.httpStatusCode && span.httpStatusCode >= 500)) {
-      return 'bg-rose-500';
+      return 'bg-danger';
     }
     if (tier.category === 'jdbc' || span.dbStatement) {
-      return 'bg-amber-500';
+      return 'bg-warning';
     }
     if (tier.category === 'java') {
       return 'bg-purple-500/85';
     }
-    return 'bg-sky-500';
+    return 'bg-info';
   };
 
   return (
@@ -74,11 +74,11 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
           </span>
 
           {span.dbStatement ? (
-            <Database className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+            <Database className="w-3 h-3 text-warning shrink-0" />
           ) : (
             <span
               className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                span.statusCode === 'ERROR' ? 'bg-rose-500' : 'bg-emerald-500'
+                span.statusCode === 'ERROR' ? 'bg-danger' : 'bg-success'
               }`}
             />
           )}
@@ -90,10 +90,10 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
           {/* Tag de Alerta para Consulta/Span Lento (>= 300ms) */}
           {tier.isSlow && (
             <span
-              className="px-1 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-2xs font-bold flex items-center gap-0.5 shrink-0"
+              className="px-1 py-0.2 rounded bg-warning/20 text-warning border border-warning/40 text-2xs font-bold flex items-center gap-0.5 shrink-0"
               title={`Span com duração elevada: ${span.durationMs}ms`}
             >
-              <Zap className="w-3 h-3 text-amber-500" />
+              <Zap className="w-3 h-3 text-warning" />
               <span>Lenta</span>
             </span>
           )}

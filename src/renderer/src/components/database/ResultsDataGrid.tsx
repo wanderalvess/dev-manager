@@ -1,17 +1,18 @@
-import React, { useRef } from 'react';
-import { FilterX } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
 import { DatabaseConnectionConfig, QueryResult, TableColumnInfo } from '../../../../shared/types';
 import { useVirtualScroll } from '../../hooks/useVirtualScroll';
 import { useResultsGridEditing } from '../../hooks/database/useResultsGridEditing';
+import { useResultsGridColumnResize } from '../../hooks/database/useResultsGridColumnResize';
 import { RESULTS_GRID_ROW_HEIGHT, computeBottomSpacerHeight } from '../../utils/resultsGridUtils';
 import { ResultsGridStates } from './grid/ResultsGridStates';
 import { ResultsGridToolbar } from './grid/ResultsGridToolbar';
 import { ResultsGridHeader } from './grid/ResultsGridHeader';
 import { ResultsGridNewRow } from './grid/ResultsGridNewRow';
 import { ResultsGridRow } from './grid/ResultsGridRow';
-import { ResultsGridContextMenu } from './grid/ResultsGridContextMenu';
-import { EmptyResultNotice } from './grid/EmptyResultNotice';
-import { X } from 'lucide-react';
+import { ResultsGridContextMenu, type ResultsGridContextMenuState } from './grid/ResultsGridContextMenu';
+import { ResultsGridEmptyState } from './grid/ResultsGridEmptyState';
+import { ResultsGridPendingInserts } from './grid/ResultsGridPendingInserts';
+import { CellViewerModal } from './CellViewerModal';
 import { EMPTY_PENDING, isRowDeleted, pendingCount as countPending, pendingValuesOf, type PendingChanges } from '../../utils/gridPendingChanges';
 
 export interface ResultsDataGridProps {
@@ -31,21 +32,9 @@ export interface ResultsDataGridProps {
   setSelectedRowIndex: (idx: number | null) => void;
   activeColumnMenu: string | null;
   setActiveColumnMenu: (col: string | null) => void;
-  cellContextMenu: {
-    x: number;
-    y: number;
-    column: string;
-    value: any;
-    rowIndex: number;
-  } | null;
-  setCellContextMenu: React.Dispatch<React.SetStateAction<{
-    x: number;
-    y: number;
-    column: string;
-    value: any;
-    rowIndex: number;
-  } | null>>;
-  onCopyCell: (text: any, cellKey?: string) => void;
+  cellContextMenu: ResultsGridContextMenuState | null;
+  setCellContextMenu: React.Dispatch<React.SetStateAction<ResultsGridContextMenuState | null>>;
+  onCopyCell: (text: any, cellKey?: string, columnName?: string) => void;
   onFilterByCellValue: (col: string, val: any) => void;
   /** Nome da tabela de origem quando o resultado atual é um `SELECT * FROM <tabela>` simples — habilita inserir/editar/excluir linhas. */
   editableTableName?: string | null;
@@ -100,6 +89,22 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
 }) => {
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const isEditable = Boolean(editableTableName && onUpdateCell && onInsertRow && onDeleteRow);
+  const { columnWidths, startResize, expandColumn } = useResultsGridColumnResize();
+  const [viewerCell, setViewerCell] = useState<{
+    column: string;
+    value: any;
+    rowIndex: number;
+    dataType: 'number' | 'date' | 'boolean' | 'object' | 'string';
+  } | null>(null);
+
+  const handleOpenViewer = (column: string, value: any, rowIndex: number) => {
+    setViewerCell({
+      column,
+      value,
+      rowIndex,
+      dataType: columnDataTypes[column] || 'string'
+    });
+  };
 
   const editing = useResultsGridEditing({
     isEditable,
@@ -110,7 +115,7 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
   });
 
   // Hook de Virtualização de Alta Performance (Windowing a 60 FPS)
-  const { virtualItems, totalHeight, offsetY, isVirtual } = useVirtualScroll(
+  const { virtualItems, totalHeight, offsetY, isVirtual, onScroll, setContainerRef, scrollToTop } = useVirtualScroll(
     tableContainerRef,
     {
       itemCount: processedRows.length,
@@ -118,6 +123,11 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
       overscan: 10
     }
   );
+
+  // Reseta a rolagem para o topo quando uma nova consulta for carregada
+  useEffect(() => {
+    scrollToTop();
+  }, [queryResult, scrollToTop]);
 
   const stateView = ResultsGridStates({ queryResult, isExecuting, tableName: editableTableName, connection });
   if (stateView || !queryResult) return stateView;
@@ -150,7 +160,11 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
       />
 
       {/* Tabela de Resultados Virtualizada */}
-      <div ref={tableContainerRef} className="flex-1 overflow-auto min-w-full relative">
+      <div
+        ref={setContainerRef}
+        onScroll={onScroll}
+        className="flex-1 overflow-auto min-w-full relative"
+      >
         <table className="min-w-full divide-y divide-border/60 text-xs font-mono border-separate border-spacing-0">
           <ResultsGridHeader
             columns={queryResult.columns}
@@ -161,6 +175,9 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
             onToggleSort={onToggleSort}
             activeColumnMenu={activeColumnMenu}
             setActiveColumnMenu={setActiveColumnMenu}
+            columnWidths={columnWidths}
+            onStartResize={startResize}
+            onExpandColumn={expandColumn}
           />
 
           <tbody className="divide-y divide-border/40">
@@ -174,54 +191,28 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                 onCancel={editing.cancelAddingRow}
               />
             )}
-            {pending.inserts.map((values, i) => (
-              <tr key={`new_${i}`} className="bg-emerald-500/10" style={{ height: `${RESULTS_GRID_ROW_HEIGHT}px` }}>
-                <td className="px-2 py-1.5 text-center border-r border-border/30">
-                  <button
-                    type="button"
-                    onClick={() => onUnstageInsert?.(i)}
-                    className="text-emerald-600 hover:text-rose-500 cursor-pointer"
-                    title="Remover esta nova linha pendente"
-                    aria-label="Remover nova linha pendente"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </td>
-                {queryResult.columns.map((col) => (
-                  <td key={col} className="px-3 py-1.5 border-r border-border/30 whitespace-nowrap max-w-xs truncate text-emerald-700 dark:text-emerald-300" title="Nova linha (ainda não gravada)">
-                    {values[col] === null || values[col] === undefined ? <span className="opacity-50">NULL</span> : String(values[col])}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            <ResultsGridPendingInserts
+              inserts={pending.inserts}
+              columns={queryResult.columns}
+              columnWidths={columnWidths}
+              onUnstageInsert={onUnstageInsert}
+            />
             {processedRows.length === 0 ? (
-              <tr className="bg-background">
-                <td colSpan={columnCount} className="py-12 text-center text-muted-foreground text-xs font-sans">
-                  {queryResult.rows.length === 0 ? (
-                    // A consulta rodou, mas o banco não devolveu linhas (tabela vazia, WHERE sem correspondência ou sem permissão de leitura)
-                    <EmptyResultNotice tableName={editableTableName} connection={connection} />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <FilterX className="w-8 h-8 opacity-30 text-amber-500" />
-                      <p className="font-semibold text-foreground">Nenhum resultado corresponde aos filtros aplicados.</p>
-                      <span className="text-2xs opacity-70">Tente ajustar o termo de busca ou filtros de coluna.</span>
-                      <button
-                        type="button"
-                        onClick={onClearAllFilters}
-                        className="mt-2 px-3 py-1 bg-primary/15 text-primary hover:bg-primary/25 rounded text-xs font-semibold transition cursor-pointer"
-                      >
-                        Remover todos os filtros
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
+              <ResultsGridEmptyState
+                columnCount={columnCount}
+                totalRows={queryResult.rows.length}
+                tableName={editableTableName}
+                connection={connection}
+                onClearAllFilters={onClearAllFilters}
+              />
             ) : (
               <>
                 {/* Spacer Top para Virtualização */}
                 {isVirtual && offsetY > 0 && (
-                  <tr>
-                    <td colSpan={columnCount} style={{ height: `${offsetY}px`, padding: 0, border: 'none' }} />
+                  <tr style={{ height: `${offsetY}px` }}>
+                    <td colSpan={columnCount} style={{ padding: 0, border: 'none' }}>
+                      <div style={{ height: `${offsetY}px` }} />
+                    </td>
                   </tr>
                 )}
 
@@ -244,13 +235,17 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
                     onOpenContextMenu={setCellContextMenu}
                     pendingValues={pendingValuesOf(pending, row, keyColumns)}
                     isDeleted={isRowDeleted(pending, row, keyColumns)}
+                    columnWidths={columnWidths}
+                    onOpenViewer={handleOpenViewer}
                   />
                 ))}
 
                 {/* Spacer Bottom para Virtualização */}
                 {isVirtual && bottomSpacerHeight > 0 && (
-                  <tr>
-                    <td colSpan={columnCount} style={{ height: `${bottomSpacerHeight}px`, padding: 0, border: 'none' }} />
+                  <tr style={{ height: `${bottomSpacerHeight}px` }}>
+                    <td colSpan={columnCount} style={{ padding: 0, border: 'none' }}>
+                      <div style={{ height: `${bottomSpacerHeight}px` }} />
+                    </td>
                   </tr>
                 )}
               </>
@@ -269,7 +264,20 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
           onCopyCell={onCopyCell}
           onFilterByCellValue={onFilterByCellValue}
           onStartEditing={editing.startEditingCell}
+          onOpenViewer={handleOpenViewer}
           onDeleteRow={onDeleteRow}
+        />
+      )}
+
+      {viewerCell && (
+        <CellViewerModal
+          isOpen={Boolean(viewerCell)}
+          onClose={() => setViewerCell(null)}
+          columnName={viewerCell.column}
+          value={viewerCell.value}
+          rowIndex={viewerCell.rowIndex}
+          dataType={viewerCell.dataType}
+          onCopyCell={onCopyCell}
         />
       )}
     </div>

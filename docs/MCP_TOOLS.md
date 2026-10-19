@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **153 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **157 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -273,11 +273,27 @@ Integração com o projeto de testes automatizados Cypress (**TAUT**), localizad
 
 ---
 
-## 16. Segurança e modo somente leitura
+## 16. API Studio & Cliente HTTP REST (Postman)
+Executa chamadas HTTP e gerencia coleções estilo Postman com suporte a interpolação de variáveis (`{{host}}`, `{{port}}`, `{{TOKEN}}`), tokens Bearer e autenticação integrada com a API do WinThor.
+
+*   **`http_send_request`**: Executa chamadas HTTP diretas (GET, POST, PUT, DELETE, PATCH, etc.) com URL, cabeçalhos opcionais, body (JSON, form-data ou texto) e variáveis de ambiente.
+*   **`http_list_collections`**: Lista todas as coleções, pastas e requisições salvas no cockpit do desenvolvedor.
+*   **`http_login_winthor`**: Realiza autenticação na API do WinThor com usuário e senha (`/winthor/autenticacao/v1/login`) e retorna o accessToken.
+*   **`http_import_postman_collection`**: Importa coleções exportadas do Postman (formato JSON v2.1/v2.0) contendo pastas, rotas, corpos e exemplos.
+
+**Exemplo de como pedir à IA:**
+> "Faça uma requisição GET para 'http://localhost:8181/winthor/autenticacao/v1/usuariologado' usando o Bearer Token ativo."
+> "Autentique no WinThor com usuário PCADMIN e me informe o token gerado."
+> "Liste as coleções de API que tenho salvas no API Studio."
+> "Importe a coleção Postman que está no arquivo collection.json."
+
+---
+
+## 17. Segurança e modo somente leitura
 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
 *   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (80 das 153) são registradas. As demais nem aparecem para o cliente.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (82 das 157) são registradas. As demais nem aparecem para o cliente.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).

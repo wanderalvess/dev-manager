@@ -19,7 +19,7 @@ export const KarafFeaturesManagerFooter: React.FC<KarafFeaturesManagerFooterProp
         TOTAL: <strong className="text-foreground">{total}</strong>
       </span>
       <span>
-        INSTALADAS: <strong className="text-emerald-400">{installed}</strong>
+        INSTALADAS: <strong className="text-success">{installed}</strong>
       </span>
       <span>
         REPOSITÓRIOS: <strong className="text-foreground">{reposCount}</strong>

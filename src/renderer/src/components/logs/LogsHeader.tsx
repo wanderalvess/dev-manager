@@ -63,7 +63,7 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isSelected && status?.exists ? 'bg-emerald-400 animate-pulse' : 'bg-muted-foreground'
+                  isSelected && status?.exists ? 'bg-success animate-pulse' : 'bg-muted-foreground'
                 }`}
               />
               <span>{src.name}</span>
@@ -103,7 +103,7 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
             className="p-1 text-muted-foreground hover:text-foreground rounded shrink-0 transition-colors"
             title="Copiar caminho completo do arquivo"
           >
-            {copyFeedback === 'path' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+            {copyFeedback === 'path' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
           </button>
         </div>
 
@@ -130,19 +130,19 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
         <div
           className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-2xs font-mono font-bold border transition-colors ${
             isPaused
-              ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+              ? 'bg-warning/10 text-warning border-warning/30'
+              : 'bg-success/10 text-success border-success/30'
           }`}
         >
           <span
             className={`w-1.5 h-1.5 rounded-full ${
-              isPaused ? 'bg-amber-400' : 'bg-emerald-400 animate-ping'
+              isPaused ? 'bg-warning' : 'bg-success animate-ping'
             }`}
           />
           <span>{isPaused ? 'STREAM PAUSADO' : 'LIVE TAIL'}</span>
         </div>
       ) : (
-        <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-2xs font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">
+        <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-2xs font-mono font-bold bg-danger/10 text-danger border border-danger/30">
           <AlertTriangle className="w-3 h-3" />
           <span>{sources.length > 0 ? 'ARQUIVO AUSENTE' : 'NENHUMA FONTE'}</span>
         </div>
@@ -151,7 +151,7 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
       {sources.length > 0 && (
         <button
           onClick={onRequestClearFile}
-          className="px-2 py-1 text-rose-400 hover:text-rose-300 text-xs font-semibold rounded-lg hover:bg-rose-500/10 border border-border/60 hover:border-rose-500/30 transition-colors flex items-center space-x-1"
+          className="px-2 py-1 text-danger hover:text-danger text-xs font-semibold rounded-lg hover:bg-danger/10 border border-border/60 hover:border-danger/30 transition-colors flex items-center space-x-1"
           title="Zerar o arquivo no disco (ação destrutiva para novos testes)"
         >
           <Trash2 className="w-3 h-3" />

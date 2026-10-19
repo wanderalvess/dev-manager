@@ -32,14 +32,14 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
             </h1>
             {activeQualitySource ? (
               <span className="px-2 py-0.2 rounded text-2xs font-mono font-medium bg-muted text-foreground border border-border flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-success" />
                 Fonte: {activeQualitySource.name} ({activeQualitySource.type}) · sem sincronização
               </span>
             ) : (
               <button
                 type="button"
                 onClick={() => onNavigate?.('settings')}
-                className="px-2 py-0.2 rounded text-2xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 transition-colors cursor-pointer flex items-center gap-1"
+                className="px-2 py-0.2 rounded text-2xs font-medium bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 transition-colors cursor-pointer flex items-center gap-1"
                 title="Cadastrar fontes Zephyr Scale, Jira ou Azure DevOps (sincronização ainda não implementada)"
               >
                 <AlertTriangle className="w-3 h-3" />
@@ -76,7 +76,7 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
         title="Copiar relatório estruturado em Markdown para colar no Teams, Azure DevOps ou Jira"
       >
         {copiedKey === 'report' ? (
-          <Check className="w-3.5 h-3.5 text-emerald-500" />
+          <Check className="w-3.5 h-3.5 text-success" />
         ) : (
           <Copy className="w-3.5 h-3.5 text-muted-foreground" />
         )}

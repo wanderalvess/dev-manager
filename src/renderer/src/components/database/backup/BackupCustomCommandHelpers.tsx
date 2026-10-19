@@ -22,7 +22,7 @@ export const BackupCommandPresets: React.FC<BackupCommandPresetsProps> = ({ type
   <div className="space-y-1.5">
     <div className="flex items-center justify-between">
       <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-        <Zap className="w-3 h-3 text-amber-500" /> Modelos Recomendados (Presets Rápidos):
+        <Zap className="w-3 h-3 text-warning" /> Modelos Recomendados (Presets Rápidos):
       </span>
       <span className="text-2xs text-muted-foreground">Clique em um modelo para carregar</span>
     </div>
@@ -53,7 +53,7 @@ export const BackupVariableChips: React.FC<BackupVariableChipsProps> = ({ onInse
       <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">
         Variáveis Disponíveis (clique para inserir):
       </span>
-      <span className="text-2xs text-amber-500 font-mono font-semibold">
+      <span className="text-2xs text-warning font-mono font-semibold">
         * tag {'{filePath}'} ou {'{fileName}'} é obrigatória
       </span>
     </div>
@@ -68,7 +68,7 @@ export const BackupVariableChips: React.FC<BackupVariableChipsProps> = ({ onInse
             onClick={() => onInsert((prev) => appendCommandTag(prev, item.tag))}
             className={`px-2 py-0.5 rounded-md font-mono text-2xs border transition flex items-center gap-1 shadow-2xs cursor-pointer ${
               item.req
-                ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 font-semibold'
+                ? 'bg-warning/10 border-warning/40 text-warning hover:bg-warning/20 font-semibold'
                 : 'bg-background border-border text-foreground hover:bg-muted'
             }`}
             title={item.tip}

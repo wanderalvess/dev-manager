@@ -4,13 +4,38 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.37.0] - 2026-10-15
+### Adicionado
+- **API Studio (Postman Integrado)**: novo módulo completo acessível via atalho `Alt+9` no grupo de Desenvolvimento & DevOps, permitindo testar, depurar e homologar APIs REST e serviços WinThor/Karaf sem necessidade de ferramentas externas pesadas.
+- **Importador Nativo de Coleções Postman**: importação de arquivos `.json` de coleções nos formatos Postman v2.1 e v2.0 com reconstrução fiel da árvore de pastas e subpastas, métodos HTTP, parâmetros de query, cabeçalhos, corpos e exemplos de resposta.
+- **Gerenciador de Ambientes & Variáveis**: suporte completo a variáveis de ambiente com interpolação dinâmica (`{{host}}`, `{{port}}`, `{{LOGIN}}`, `{{SENHA}}`, `{{TOKEN}}`) e variáveis dinâmicas Postman (`{{$randomInt}}`, `{{$timestamp}}`, `{{$uuid}}`).
+- **Autenticação Automática WinThor**: recurso de login direto contra `/winthor/autenticacao/v1/login`, extraindo o `accessToken` e injetando automaticamente nas requisições da coleção com um único clique no botão *"Autenticar no WinThor"*.
+- **Editor Monaco Integrado**: suporte a realce sintático em JSON, validação estrutural, formatação rápida (*Beautify JSON*) e visualizador de respostas com métricas de tempo em milissegundos e tamanho de payload.
+- **Integração com Validador Regressivo**: botão direto na resposta HTTP para enviar payloads JSON ao Validador Regressivo da Central de Qualidade (QA Hub).
+- **Servidor MCP — 4 Novas Ferramentas**: adicionadas as tools `http_send_request`, `http_list_collections`, `http_login_winthor` e `http_import_postman_collection`, elevando o catálogo total do Hub Manager para 157 ferramentas de IA.
+
+## [1.36.0] - 2026-10-15
+### Adicionado
+- **DB Studio — redimensionamento interativo de colunas**: os cabeçalhos das colunas do grid de resultados agora contam com divisores interativos arrastáveis via mouse, permitindo alargar e encolher qualquer coluna livremente. O duplo-clique no divisor expande a coluna instantaneamente em +200px (até o teto de 1200px) para leitura rápida de campos volumosos.
+- **DB Studio — visualizador detalhado de célula (CellViewerModal)**: duplo-clique em qualquer célula da consulta em modo de leitura (ou botão direito &gt; *"Ver valor completo..."*) abre um modal de inspeção com formatação e indentação automática de JSON, alternância de quebra de linha (*word-wrap*), contador de caracteres e botão de cópia direta.
+- **DB Studio — feedback visual e proteção na cópia de células**: o clique em uma célula agora exibe notificação toast com prévia do valor e identificação da coluna copiada. Foi implementada verificação de seleção manual de texto com o mouse para evitar sobreposição involuntária da cópia automática da célula inteira.
+- **Área de transferência — fallback com execCommand**: o hook `useCopyToClipboard` agora conta com fallback retrocompatível via `document.execCommand('copy')`, garantindo sucesso na cópia de células mesmo quando a API moderna `navigator.clipboard.writeText` estiver restrita por foco ou políticas de permissão da janela.
+
 ### Alterado
+- **DB Studio — largura flexível nas colunas do grid**: removida a restrição fixa rígida de `max-w-xs` (320px) em todas as células, adotando largura dinâmica baseada nas preferências do usuário e largura mínima confortável de `120px` por padrão.
+
+## [1.35.1] - 2026-10-15
+### Adicionado
+- **DB Studio — seletor de pasta para Oracle Instant Client**: adicionado botão com diálogo nativo de busca no Explorer diretamente ao lado do campo de diretório do Instant Client no modal de conexão.
+
+### Alterado
+- **DB Studio — largura do modal de conexão**: ampliado de `max-w-md` (448px) para `max-w-2xl` (672px), distribuindo com conforto todas as configurações (Host, Porta, Service Name/SID, Thick Mode, credenciais e ambiente de produção) e evitando corte/truncamento na mensagem de versão do banco.
 - **Auditoria de UI/UX**: foco de teclado visível em todo o app (`:focus-visible` global) e `prefers-reduced-motion` respeitado; ~270 botões só de ícone ganharam `aria-label` e o componente `IconButton` (rótulo obrigatório) substitui os do cabeçalho. A rampa `amber` passou para amarelo, separando "aviso" do laranja do tema, e há tokens `success`/`warning`/`danger`/`info`. Cinzas crus (`slate`/`zinc`/`neutral`) saíram do cromo de UI e ficam só em console/terminal; `text-[11px]` virou `text-2xs`; raios `2xl` viraram `xl`. Cada página tem um único `<h1>` e os modais usam `<h2>`.
 - **Diálogos**: 3 `confirm()` nativos (excluir perfil de deploy/ambiente e remover fontes de log) agora usam o diálogo do app; nove overlays (QuickLauncher, leitor de Markdown, drawer de análise de exceção, modais de binds/snippet/especificação/item de qualidade, onboarding) passaram a usar o `ui/Modal` (foco preso, Esc e ARIA padronizados), e os menus de clique-fora fecham com Esc.
 - **Lint**: `confirm`/`alert` viram erro; `text-[11px]`, cinzas crus e `fixed inset-0` fora de `ui/Modal` geram aviso (com exceções para consoles e menus).
 
 ### Corrigido
+- **DB Studio — virtualização do grid de resultados SQL**: corrigido problema no hook `useVirtualScroll` onde consultas com mais de 39 linhas travavam a rolagem na linha 39 porque a referência do container e os ouvintes de evento não eram reinicializados após o término da execução da consulta (`isExecuting`). Adicionado suporte a callback ref, handler `onScroll` reativo e espaçadores virtuais com elementos de bloco para garantir que o scrollbar represente com precisão todas as linhas retornadas (ex: 127 linhas ou milhares).
 - **DB Studio — edição do grid em tabela sem chave primária**: em Oracle e PostgreSQL a consulta `SELECT * FROM <tabela>` é refeita trazendo `ROWID`/`ctid` (oculto no grid, na busca e na exportação) e UPDATE/DELETE passam a usar `WHERE ROWID = :p`/`ctid = :p`. Linhas duplicadas, BLOB, datas e números grandes deixam de impedir a alteração. No PostgreSQL só para tabelas comuns (views e partições seguem pelo fallback). MySQL sem PK continua localizando por todas as colunas, agora com aviso.
 
 ## [1.35.0] - 2026-10-06

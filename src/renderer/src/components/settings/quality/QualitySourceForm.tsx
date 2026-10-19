@@ -112,7 +112,7 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
         <div className="flex items-center justify-between mb-1">
           <label htmlFor="quality-source-form-7" className="font-bold text-foreground">API Token / Zephyr Token / PAT</label>
           {source.hasApiToken && !source.apiToken && (
-            <span className="text-2xs text-emerald-500 font-semibold flex items-center gap-1">
+            <span className="text-2xs text-success font-semibold flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> Token salvo e protegido
             </span>
           )}

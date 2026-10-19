@@ -9,9 +9,10 @@ export const ALT_SHORTCUT_TABS: Readonly<Record<string, string>> = {
   '6': 'routines',
   '7': 'docs',
   '8': 'logs',
-  '9': 'help',
+  '9': 'http-client',
   '0': 'apm',
-  q: 'quality'
+  q: 'quality',
+  h: 'help'
 };
 
 export interface ShortcutKeyEvent {
@@ -27,7 +28,7 @@ export const isQuickLauncherToggle = (e: ShortcutKeyEvent): boolean =>
 // Retorna a aba alvo do atalho Alt+tecla, ou null quando o evento não é um atalho de navegação.
 export const resolveAltShortcutTab = (e: ShortcutKeyEvent): string | null => {
   if (!e.altKey) return null;
-  const key = e.key === 'Q' ? 'q' : e.key;
+  const key = e.key.toLowerCase();
   return Object.prototype.hasOwnProperty.call(ALT_SHORTCUT_TABS, key) ? ALT_SHORTCUT_TABS[key] : null;
 };
 
