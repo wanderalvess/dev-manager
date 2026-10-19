@@ -27,7 +27,13 @@
     "requestedExecutionLevel": "asInvoker",
     "icon": "build/icon.ico"
   },
+  // Nomes sem espaço: o GitHub troca espaço por "." no upload e o latest.yml (auto-update) deixaria de
+  // achar o instalador. "Portable" no nome é como o app portátil acha o próprio .exe na release.
+  "portable": {
+    "artifactName": "HubManager-Portable-${version}.${ext}"
+  },
   "nsis": {
+    "artifactName": "HubManager-Setup-${version}.${ext}",
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
     // Público brasileiro (WinThor): instalador sempre em pt-BR, sem depender do idioma do Windows.

@@ -146,9 +146,16 @@ function createWindow() {
   const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
   const logWatcherService = new LogWatcherService();
   const karafLogPersistenceService = new KarafLogPersistenceService();
-  const autoUpdateService = new AutoUpdateService((status) => {
-    safeSend(mainWindow, 'update:status', status);
-  });
+  const autoUpdateService = new AutoUpdateService(
+    (status) => {
+      safeSend(mainWindow, 'update:status', status);
+    },
+    {
+      portable: Boolean(process.env.PORTABLE_EXECUTABLE_FILE),
+      currentVersion: app.getVersion(),
+      openExternal: (url) => shell.openExternal(url)
+    }
+  );
   const llmService = new LlmService(configService, docsIndexService);
   const routine801Service = new Routine801Service(configService, karafService);
   const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });

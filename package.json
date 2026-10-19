@@ -17,6 +17,7 @@
     "smoke:package": "node scripts/smoke-test-package.cjs",
     "build:mcp": "node scripts/build-mcp.cjs",
     "release:folder": "node scripts/prepare-release.cjs",
+    "release:publish": "node scripts/publish-release.cjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
