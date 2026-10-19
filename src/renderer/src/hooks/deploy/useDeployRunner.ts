@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DeployProfile, DeployStep } from '../../../../shared/types';
-import { buildDiagnosticResultLines } from '../../utils/deployProfileUtils';
-import { useDeployProgress } from './useDeployProgress';
+import { buildDiagnosticResultLines, sliceProfileFromStep } from '../../utils/deployProfileUtils';
+import { useDeployProgress, type DeployStepStatus } from './useDeployProgress';
 
 interface UseDeployRunnerArgs {
   profiles: DeployProfile[];
@@ -52,10 +52,18 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
 
   const runProfileDirect = async (profileToRun: DeployProfile) => {
     if (isDeploying || isDiagRunning || !profileToRun) return;
-    setIsDeploying(true);
-    setStepStatuses({});
-    setActiveResolutionDiag(null);
     const enabledSteps = profileToRun.steps.filter((s) => s.enabled !== false);
+    if (enabledSteps.length === 0) return;
+
+    setIsDeploying(true);
+    const initialStatuses: Record<string, DeployStepStatus> = {};
+    profileToRun.steps.forEach((s) => {
+      if (s.enabled === false) {
+        initialStatuses[s.id] = { status: 'skipped' };
+      }
+    });
+    setStepStatuses(initialStatuses);
+    setActiveResolutionDiag(null);
     setCurrentProgress({ current: 0, total: enabledSteps.length, stepId: enabledSteps[0]?.id || '' });
     streamRemainderRef.current = '';
     setTerminalLogs([]);
@@ -165,6 +173,12 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     }
   };
 
+  const handleRunFromStep = (stepIndex: number) => {
+    if (isDeploying || isDiagRunning || !activeProfile) return;
+    const partial = sliceProfileFromStep(activeProfile, stepIndex);
+    runProfileDirect(partial);
+  };
+
   return {
     ...progress,
     isDeploying,
@@ -173,6 +187,7 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     clearConsole,
     handleAbortDeploy,
     handleRunActiveProfile,
+    handleRunFromStep,
     handleExecuteMatchedProfile,
     handleRunSingleStep,
     handleRunDiagnostic,

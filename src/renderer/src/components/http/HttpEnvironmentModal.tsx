@@ -52,7 +52,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
 
   const handleDeleteEnv = (id: string) => {
     if (envs.length <= 1) {
-      showToast('Deve haver ao menos um ambiente configurado.', 'warning');
+      showToast('Deve haver ao menos um ambiente configurado.', 'info');
       return;
     }
     const filtered = envs.filter((e) => e.id !== id);
@@ -100,7 +100,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
     const portVar = currentEnv.variables.find((v) => v.key.toLowerCase() === 'port');
 
     if (!loginVar?.value || !senhaVar?.value) {
-      showToast('Preencha as variáveis LOGIN e SENHA no ambiente para autenticar.', 'warning');
+      showToast('Preencha as variáveis LOGIN e SENHA no ambiente para autenticar.', 'info');
       return;
     }
 
@@ -139,7 +139,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
   };
 
   return (
-    <Modal open onClose={onClose} title="Gerenciar Ambientes & Variáveis" width="max-w-3xl">
+    <Modal open onClose={onClose} title="Gerenciar Ambientes & Variáveis" size="xl">
       <div className="flex gap-4 h-[420px] text-xs">
         {/* Painel lateral de ambientes */}
         <div className="w-52 border-r border-border pr-3 flex flex-col justify-between">

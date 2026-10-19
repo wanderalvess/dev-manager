@@ -14,7 +14,7 @@ import type { BridgeDeps } from './core';
 /**
  * Adaptador web (REST) para o API Studio / HTTP Client (Postman).
  */
-export function createHttpClientApi({ apiFetch }: BridgeDeps): Partial<ElectronAPI> {
+export function createHttpClientApi({ apiFetch }: BridgeDeps) {
   return {
     httpExecute: async (req: HttpExecutionRequest): Promise<HttpResponseData> => {
       return apiFetch<HttpResponseData>('/api/http-client/execute', {

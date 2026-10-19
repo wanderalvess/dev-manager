@@ -9,7 +9,11 @@ import {
   buildProfileExportFileName,
   buildImportedProfile,
   buildDiagnosticResultLines,
-  navigateCommandHistory
+  navigateCommandHistory,
+  countEnabledSteps,
+  toggleProfileStep,
+  toggleAllProfileSteps,
+  sliceProfileFromStep
 } from './deployProfileUtils';
 
 const makeProfile = (steps: any[] = []): DeployProfile =>
@@ -76,5 +80,43 @@ describe('deployProfileUtils', () => {
     expect(navigateCommandHistory(h, -1, 'down')).toBeNull();
     expect(navigateCommandHistory(h, 0, 'down')).toEqual({ index: 1, value: 'b' });
     expect(navigateCommandHistory(h, 1, 'down')).toEqual({ index: -1, value: '' });
+  });
+
+  it('conta etapas habilitadas e detecta estado indeterminado', () => {
+    expect(countEnabledSteps(null)).toEqual({ enabledCount: 0, totalCount: 0, allEnabled: false, isIndeterminate: false });
+    const p1 = makeProfile([{ id: 's1', enabled: true }, { id: 's2', enabled: false }]);
+    expect(countEnabledSteps(p1)).toEqual({ enabledCount: 1, totalCount: 2, allEnabled: false, isIndeterminate: true });
+    const p2 = makeProfile([{ id: 's1' }, { id: 's2', enabled: true }]);
+    expect(countEnabledSteps(p2)).toEqual({ enabledCount: 2, totalCount: 2, allEnabled: true, isIndeterminate: false });
+  });
+
+  it('inverte estado enabled de uma etapa específica', () => {
+    const p = makeProfile([{ id: 's1', enabled: true }, { id: 's2', enabled: false }]);
+    const toggled1 = toggleProfileStep(p, 's1');
+    expect(toggled1.steps[0].enabled).toBe(false);
+    expect(toggled1.steps[1].enabled).toBe(false);
+    const toggled2 = toggleProfileStep(p, 's2');
+    expect(toggled2.steps[1].enabled).toBe(true);
+  });
+
+  it('habilita e desabilita todas as etapas', () => {
+    const p = makeProfile([{ id: 's1', enabled: true }, { id: 's2', enabled: false }]);
+    const allOn = toggleAllProfileSteps(p, true);
+    expect(allOn.steps.every((s) => s.enabled === true)).toBe(true);
+    const allOff = toggleAllProfileSteps(p, false);
+    expect(allOff.steps.every((s) => s.enabled === false)).toBe(true);
+  });
+
+  it('fatia o perfil para executar a partir de um índice', () => {
+    const p = makeProfile([
+      { id: 's1', enabled: true },
+      { id: 's2', enabled: true },
+      { id: 's3', enabled: true }
+    ]);
+    const sliced = sliceProfileFromStep(p, 1);
+    expect(sliced.steps[0].enabled).toBe(false);
+    expect(sliced.steps[1].enabled).toBe(true);
+    expect(sliced.steps[2].enabled).toBe(true);
+    expect(sliced.name).toContain('etapa 2 em diante');
   });
 });

@@ -62,7 +62,7 @@ export function useHttpClientState() {
 
   const handleExecute = async () => {
     if (!currentRequest.url.trim()) {
-      showToast('Por favor, informe a URL da requisição.', 'warning');
+      showToast('Por favor, informe a URL da requisição.', 'info');
       return;
     }
 

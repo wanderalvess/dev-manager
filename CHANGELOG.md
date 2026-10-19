@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.38.0] - 2026-10-16
+### Adicionado
+- **Perfis de Deploy — Execução Seletiva & Pular Etapas**: caixas de seleção (`checkbox`) interativas em cada etapa do perfil de deploy ativo, permitindo incluir ou desmarcar etapas individuais para pular comandos demorados (como compilações `mvn clean` desnecessárias quando o build já foi feito) na execução automática.
+- **Ação Rápida "Daqui em diante"**: botão dedicado em cada etapa intermediária que fatia o perfil ativo e dispara a execução imediatamente a partir daquela etapa até o final, sem necessidade de desmarcar manualmente as anteriores.
+- **Controles de Seleção em Lote**: checkbox mestre com estado indeterminado e botões de ação rápida *"Marcar todas"* e *"Desmarcar todas"* no cabeçalho do painel de etapas, com contador dinâmico `Etapas (X/Y)` e badge indicando a contagem de etapas puladas.
+- **Botão Dinâmico no Cabeçalho**: o botão principal de execução adapta seu texto para *"Executar Selecionadas (N)"* e tooltip explicativo quando há etapas puladas, desabilitando-se automaticamente quando nenhuma etapa estiver marcada para prevenir disparos vazios.
+- **Editor de Etapas de Deploy**: adicionada a opção *"Habilitar etapa na execução automática do perfil (enabled)"* no modal de configurações avançadas de etapas de deploy.
+- **Central de Ajuda**: novo tópico no FAQ e bullet atualizado no Guia dos Módulos detalhando a seleção e o pulo de etapas em perfis de deploy.
+
 ## [1.37.0] - 2026-10-15
 ### Adicionado
 - **API Studio (Postman Integrado)**: novo módulo completo acessível via atalho `Alt+9` no grupo de Desenvolvimento & DevOps, permitindo testar, depurar e homologar APIs REST e serviços WinThor/Karaf sem necessidade de ferramentas externas pesadas.
