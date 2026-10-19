@@ -144,18 +144,24 @@ export function useDatabaseQuery({
       // qual é a chave primária de cada linha).
       const editableTableName = res.success && res.isQuery ? parseSingleTableSelect(cleanSql) : null;
       let nextEditable: EditableTableState | null = null;
-      if (editableTableName) {
-        let cols = tableColumns[editableTableName];
-        if (!cols && window.electronAPI?.getDbTableColumns) {
-          try {
-            const colsResult = await window.electronAPI.getDbTableColumns(activeConnection, editableTableName);
-            cols = colsResult.columns;
-            if (!colsResult.error) setTableColumns((prev) => ({ ...prev, [editableTableName]: cols || [] }));
-          } catch (err) {
-            console.error('Erro ao carregar colunas para edição inline:', err);
-            cols = [];
+      let columnsFailed = false;
+      let cols = editableTableName ? tableColumns[editableTableName] : undefined;
+      if (editableTableName && !cols && window.electronAPI?.getDbTableColumns) {
+        try {
+          const colsResult = await window.electronAPI.getDbTableColumns(activeConnection, editableTableName);
+          cols = colsResult.columns;
+          if (colsResult.error) {
+            columnsFailed = true;
+            showToast(`Não foi possível carregar as colunas de ${editableTableName}; edição inline desabilitada: ${colsResult.error}`, 'error');
+          } else {
+            setTableColumns((prev) => ({ ...prev, [editableTableName]: cols || [] }));
           }
+        } catch (err) {
+          console.error('Erro ao carregar colunas para edição inline:', err);
+          cols = [];
         }
+      }
+      if (editableTableName && !columnsFailed) {
         cols = cols || [];
         nextEditable = { name: editableTableName, columns: cols, identity: lacksPrimaryKey(cols) ? 'all-columns' : 'pk' };
 

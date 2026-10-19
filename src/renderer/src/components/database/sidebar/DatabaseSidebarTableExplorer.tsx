@@ -149,10 +149,10 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
               </span>
             ) : tablesError ? (
               <div role="alert">
-                <p className="text-[11px] text-rose-500 break-words whitespace-pre-wrap">{tablesError}</p>
+                <p className="text-2xs text-rose-500 break-words whitespace-pre-wrap">{tablesError}</p>
                 <button
                   onClick={onFetchTables}
-                  className="mt-1.5 text-[11px] text-primary font-bold hover:underline cursor-pointer"
+                  className="mt-1.5 text-2xs text-primary font-bold hover:underline cursor-pointer"
                 >
                   Tentar de novo
                 </button>
