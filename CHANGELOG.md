@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Hub Git — Artefatos do Azure Pipelines**: novo botão *"Artefatos"* no cabeçalho de repositórios Azure DevOps lista os builds concluídos (filtrados pela branch atual ou por qualquer outra), mostra os artefatos publicados por cada build e baixa o `.zip` com um clique, em pipelines YAML (`PublishPipelineArtifact`/`publish`) e clássicos (`PublishBuildArtifacts`).
+- **Instalar artefato como rotina**: depois do download, o artefato pode ser instalado direto no diretório `Prod` do WinThor pelo mesmo instalador do catálogo de Rotinas, com backup automático da versão atual.
+- **Configurações → Azure**: nova opção *"Pasta de download dos artefatos de pipeline"* (padrão `Downloads\HubManager-Azure`). O PAT existente precisa do escopo `Build (Read)`.
+
+### Segurança
+- O PAT do Azure DevOps só é enviado a `dev.azure.com`; o redirect do PipelineArtifact para o armazenamento de blobs é seguido sem o cabeçalho `Authorization`.
+
 ## [1.38.0] - 2026-10-16
 ### Adicionado
 - **Perfis de Deploy — Execução Seletiva & Pular Etapas**: caixas de seleção (`checkbox`) interativas em cada etapa do perfil de deploy ativo, permitindo incluir ou desmarcar etapas individuais para pular comandos demorados (como compilações `mvn clean` desnecessárias quando o build já foi feito) na execução automática.

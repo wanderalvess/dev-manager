@@ -42,6 +42,8 @@ import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { createHttpClientRouter } from './routes/httpClientRoutes';
+import { createAzurePipelineRouter } from './routes/azurePipelineRoutes';
+import { AzurePipelineService } from '../main/services/AzurePipelineService';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -2176,6 +2178,7 @@ app.post('/api/taut/abort', (_req, res) => {
 });
 
 app.use('/api/http-client', createHttpClientRouter(httpClientService, httpCollectionService));
+app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
 
 // Servir Frontend SPA estático se compilado
 const clientDist = path.resolve(__dirname, '../../dist');

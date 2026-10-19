@@ -518,6 +518,7 @@ export class ConfigService {
           llmProviders: Array.isArray(parsed.llmProviders) ? parsed.llmProviders : [],
           activeLlmProviderId: typeof parsed.activeLlmProviderId === 'string' ? parsed.activeLlmProviderId : (Array.isArray(parsed.llmProviders) ? parsed.llmProviders[0]?.id : undefined),
           azureDevOpsToken: typeof parsed.azureDevOpsToken === 'string' ? parsed.azureDevOpsToken : undefined,
+          azureArtifactsDir: typeof parsed.azureArtifactsDir === 'string' ? parsed.azureArtifactsDir : undefined,
           qualitySources: Array.isArray(parsed.qualitySources) ? parsed.qualitySources : [],
           activeQualitySourceId: typeof parsed.activeQualitySourceId === 'string' ? parsed.activeQualitySourceId : (Array.isArray(parsed.qualitySources) ? parsed.qualitySources[0]?.id : undefined)
         };

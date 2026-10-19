@@ -2,11 +2,12 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session, Notificati
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { ConfigService } from './services/ConfigService';
+import { ConfigService } from './services/ConfigService';
 import { safeSend } from './utils/ipcSend';
 import { WindowsService } from './services/WindowsService';
 import { KarafService } from './services/KarafService';
 import { GitAzureService } from './services/GitAzureService';
+import { AzurePipelineService } from './services/AzurePipelineService';
 import { RoutinesService } from './services/RoutinesService';
 import { DocsIndexService } from './services/DocsIndexService';
 import { DatabaseService } from './services/DatabaseService';
@@ -129,6 +130,7 @@ function createWindow() {
   const networkService = new NetworkService();
   const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
   const gitAzureService = new GitAzureService(configService, karafService);
+  const azurePipelineService = new AzurePipelineService(configService);
   const routinesService = new RoutinesService(configService);
   const docsIndexService = new DocsIndexService(configService, gitAzureService);
   docsIndexService.onWatchReindexComplete = (status) => {
@@ -168,6 +170,7 @@ function createWindow() {
     windowsService,
     karafService,
     gitAzureService,
+    azurePipelineService,
     routinesService,
     configService,
     docsIndexService,

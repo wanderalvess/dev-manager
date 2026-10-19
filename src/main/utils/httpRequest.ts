@@ -8,6 +8,8 @@ export interface SimpleHttpResponse {
   text: () => Promise<string>;
   /** Corpo bruto, sem decodificar como texto — necessário pra baixar binários (PDF, DOCX, imagens). */
   buffer: () => Promise<Buffer>;
+  /** Cabeçalhos da resposta (ex.: `location` de um redirect, que esta função não segue sozinha). */
+  headers?: http.IncomingHttpHeaders;
 }
 
 /** Sem `timeout` explícito, uma conexão que para de responder travaria a chamada para sempre. */
@@ -56,7 +58,8 @@ function executeRequest(
               status: statusCode,
               statusText: res.statusMessage || `${statusCode}`,
               text: async () => bodyBuffer.toString('utf-8'),
-              buffer: async () => bodyBuffer
+              buffer: async () => bodyBuffer,
+              headers: res.headers
             });
           });
         }
