@@ -14,6 +14,7 @@ import {
   Activity,
   LucideIcon
 } from 'lucide-react';
+import { getModulesFaq } from './faq/modulesFaq';
 
 export type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
 
@@ -1603,7 +1604,8 @@ export function getFaqList({
           </div>
         </div>
       )
-    }
+    },
+    ...getModulesFaq(onNavigate)
   ];
 }
 

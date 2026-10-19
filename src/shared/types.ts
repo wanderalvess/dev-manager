@@ -484,6 +484,8 @@ export interface AppSettings {
   projectsPath: string;
   targetPrBranch: string;
   favoriteRoutines: string[];
+  /** Páginas da navegação desligadas pelo usuário (ids de APP_MODULE_IDS em shared/appModules.ts); ausente = todas ligadas */
+  disabledModules?: string[];
   webPort?: number;
   webPath?: string;
   karafSshPort?: number;

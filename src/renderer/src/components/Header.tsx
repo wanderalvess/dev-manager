@@ -4,6 +4,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { AppLogo } from './AppLogo';
 import { NetworkIpInfo, SystemMetrics } from '../../../shared/types';
 import { HeaderNav } from './header/HeaderNav';
+import type { NavThemeGroup } from './header/headerNavConfig';
 import { StatusPopover } from './header/StatusPopover';
 import { QuickSearchButton } from './header/QuickSearchButton';
 import { IconButton } from './ui/IconButton';
@@ -11,6 +12,8 @@ import { IconButton } from './ui/IconButton';
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  /** Grupos da navegação só com os módulos ligados. */
+  navGroups: NavThemeGroup[];
   onRefreshAll: () => void;
   isRefreshing: boolean;
   onOpenQuickLauncher?: () => void;
@@ -20,6 +23,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
+  navGroups,
   onRefreshAll,
   isRefreshing,
   onOpenQuickLauncher,
@@ -128,6 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
       <HeaderNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        groups={navGroups}
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
         navRef={navRef}

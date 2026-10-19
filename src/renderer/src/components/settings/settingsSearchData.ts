@@ -1,4 +1,4 @@
-export type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality';
+export type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality' | 'modules';
 
 export interface SettingsSearchEntry {
   id: string;
@@ -33,5 +33,6 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-backup', tab: 'backup', tabLabel: 'Backup de Bancos', label: 'Backup e Restore de Bancos de Dados', keywords: 'backup restore banco dados expdp impdp pg_dump agendamento webhook' },
   { id: 'field-oracleTnsnames', tab: 'backup', tabLabel: 'Backup & Oracle', label: 'Arquivo tnsnames.ora (Oracle)', keywords: 'tnsnames tnsnames.ora tns oracle rede listener conexao banco' },
   { id: 'field-ai', tab: 'ai', tabLabel: 'IA & Provedores LLM', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' },
-  { id: 'field-quality', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Integrações de Testes (Zephyr, Jira, Azure)', keywords: 'qualidade qa zephyr scale squad jira test plans testes homologacao cenarios token api' }
+  { id: 'field-quality', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Integrações de Testes (Zephyr, Jira, Azure)', keywords: 'qualidade qa zephyr scale squad jira test plans testes homologacao cenarios token api' },
+  { id: 'field-modules', tab: 'modules', tabLabel: 'Módulos', label: 'Ligar / Desligar Módulos da Navegação', keywords: 'modulos paginas navegacao menu cabecalho ocultar esconder desligar ligar perfil dev qa operacao' }
 ];

@@ -89,6 +89,25 @@ describe('ConfigService', () => {
     expect(settings.favoriteRoutines).toEqual(['PCROT01.EXE']);
   });
 
+  it('persiste os módulos desligados já normalizados (ids conhecidos, sem repetição)', () => {
+    const service = new ConfigService();
+    service.saveSettings({ disabledModules: ['apm', 'inexistente', 'apm', 'quality-taut'] });
+
+    expect(new ConfigService().getSettings().disabledModules).toEqual(['apm', 'quality-taut']);
+  });
+
+  it('nunca grava todos os módulos desligados e preserva a lista em saves de outros campos', () => {
+    const service = new ConfigService();
+    const all = ['env', 'containers', 'deploy', 'logs', 'apm', 'database', 'routines', 'git', 'docs', 'http-client',
+      'quality', 'quality-regression', 'quality-runners', 'quality-taut'];
+    service.saveSettings({ disabledModules: all });
+    expect(service.getSettings().disabledModules).not.toContain('env');
+
+    service.saveSettings({ disabledModules: ['logs'] });
+    service.saveSettings({ karafUser: 'admin' });
+    expect(new ConfigService().getSettings().disabledModules).toEqual(['logs']);
+  });
+
   it('retorna o caminho correto do arquivo de configuração via getConfigFilePath', () => {
     const service = new ConfigService();
     expect(service.getConfigFilePath()).toBe(path.join(tmpDir, 'config.json'));

@@ -10,6 +10,8 @@ interface QuickLauncherModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (tab: string) => void;
+  /** Módulos desligados em Configurações → Módulos: somem da busca, junto com rotinas/repositórios deles. */
+  disabledModules: readonly string[];
   projects: GitProjectInfo[];
   onRefreshAll: () => void;
 }
@@ -18,6 +20,7 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
   isOpen,
   onClose,
   onNavigate,
+  disabledModules,
   projects,
   onRefreshAll
 }) => {
@@ -30,7 +33,7 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
     inputRef,
     listRef,
     handleKeyDown
-  } = useQuickLauncher({ isOpen, onClose, onNavigate, projects, onRefreshAll });
+  } = useQuickLauncher({ isOpen, onClose, onNavigate, disabledModules, projects, onRefreshAll });
 
   return (
     <Modal
