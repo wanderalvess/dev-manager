@@ -1894,7 +1894,8 @@ server.registerTool(
     if (!targetConfig) {
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
     }
-    const tables = await databaseService.listTables(targetConfig);
+    const { tables, error } = await databaseService.listTables(targetConfig);
+    if (error) return fail(`Falha ao listar tabelas: ${error}`);
     return ok({ tables, count: tables.length });
   }
 );
@@ -1915,7 +1916,8 @@ server.registerTool(
     if (!targetConfig) {
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
     }
-    const columns = await databaseService.getTableColumns(targetConfig, tableName);
+    const { columns, error } = await databaseService.getTableColumns(targetConfig, tableName);
+    if (error) return fail(`Falha ao obter colunas de ${tableName}: ${error}`);
     return ok({ tableName, columns, count: columns.length });
   }
 );

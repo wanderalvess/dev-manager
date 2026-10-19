@@ -92,7 +92,8 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   // Carrega as colunas de uma tabela para o autocomplete e as guarda no estado da tela (compartilhado com a sidebar)
   const loadColumns = async (tableKey: string): Promise<TableColumnInfo[]> => {
     if (!activeConnection || !window.electronAPI?.getDbTableColumns) return [];
-    const cols = (await window.electronAPI.getDbTableColumns(activeConnection, tableKey)) ?? [];
+    const { columns: cols, error } = await window.electronAPI.getDbTableColumns(activeConnection, tableKey);
+    if (error) return [];
     setTableColumns((prev) => ({ ...prev, [tableKey]: cols }));
     return cols;
   };
