@@ -2,6 +2,7 @@ import type { BrowserWindow } from 'electron';
 import type { WindowsService } from '../services/WindowsService';
 import type { KarafService } from '../services/KarafService';
 import type { GitAzureService } from '../services/GitAzureService';
+import type { AzurePipelineService } from '../services/AzurePipelineService';
 import type { RoutinesService } from '../services/RoutinesService';
 import type { ConfigService } from '../services/ConfigService';
 import type { DocsIndexService } from '../services/DocsIndexService';
@@ -31,6 +32,7 @@ export interface IpcContext {
   windowsService: WindowsService;
   karafService: KarafService;
   gitAzureService: GitAzureService;
+  azurePipelineService: AzurePipelineService;
   routinesService: RoutinesService;
   configService: ConfigService;
   docsIndexService: DocsIndexService;

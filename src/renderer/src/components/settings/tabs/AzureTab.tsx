@@ -135,6 +135,25 @@ export const AzureTab: React.FC<AzureTabProps> = ({
               </div>
               <p className="text-2xs text-muted-foreground">
                 Utilizado pelo Hub Git para consultar Work Items e sugerir branches padronizadas com título e slug automáticos.
+                Para baixar artefatos de pipeline, o token também precisa do escopo <code>Build (Read)</code>.
+              </p>
+            </div>
+
+            {/* Pasta de download dos artefatos do Azure Pipelines */}
+            <div className="space-y-1.5 pt-2 border-t border-border/60">
+              <label htmlFor="azure-tab-artifacts-dir" className="font-bold text-foreground flex items-center gap-1.5">
+                <FolderOpen className="w-3.5 h-3.5 text-blue-500" />
+                Pasta de download dos artefatos de pipeline:
+              </label>
+              <input id="azure-tab-artifacts-dir"
+                type="text"
+                value={settings.azureArtifactsDir || ''}
+                onChange={(e) => setSettings({ ...settings, azureArtifactsDir: e.target.value })}
+                className="w-full bg-card border border-border hover:border-blue-500/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
+                placeholder="Padrão: %USERPROFILE%\Downloads\HubManager-Azure"
+              />
+              <p className="text-2xs text-muted-foreground">
+                Os .zip baixados pelo botão “Artefatos” do Hub Git são gravados aqui como <code>&lt;build&gt;_&lt;artefato&gt;.zip</code>.
               </p>
             </div>
           </div>

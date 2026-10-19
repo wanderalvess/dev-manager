@@ -1,10 +1,10 @@
 import { ipcMain } from 'electron';
-import { CreateTaskBranchOptions } from '../../../shared/types';
+import { CreateTaskBranchOptions, AzurePipelineTarget, AzureListBuildsOptions } from '../../../shared/types';
 import type { IpcContext } from '../ipcContext';
 
 /** Git e Azure DevOps. Canais: git:* */
 export function registerGitHandlers(ctx: IpcContext): void {
-  const { gitAzureService } = ctx;
+  const { gitAzureService, azurePipelineService } = ctx;
 
   ipcMain.handle('git:list-projects', async () => {
     return await gitAzureService.listProjects();
@@ -59,5 +59,25 @@ export function registerGitHandlers(ctx: IpcContext): void {
 
   ipcMain.handle('git:get-uncommitted-counts', async () => {
     return await gitAzureService.getUncommittedCounts();
+  });
+
+  // Artefatos do Azure Pipelines
+  ipcMain.handle('git:azure-list-builds', async (_, target: AzurePipelineTarget, options?: AzureListBuildsOptions) => {
+    return await azurePipelineService.listBuilds(target, options);
+  });
+
+  ipcMain.handle('git:azure-list-artifacts', async (_, target: AzurePipelineTarget, buildId: number) => {
+    return await azurePipelineService.listArtifacts(target, buildId);
+  });
+
+  ipcMain.handle(
+    'git:azure-download-artifact',
+    async (_, target: AzurePipelineTarget, buildId: number, buildNumber: string, artifactName: string) => {
+      return await azurePipelineService.downloadArtifact(target, buildId, buildNumber, artifactName);
+    }
+  );
+
+  ipcMain.handle('git:azure-artifacts-dir', async () => {
+    return azurePipelineService.getArtifactsDir();
   });
 }

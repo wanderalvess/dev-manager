@@ -1,5 +1,5 @@
 import React from 'react';
-import { FolderGit2, ArrowUpRight } from 'lucide-react';
+import { FolderGit2, ArrowUpRight, Package } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../shared/types';
 import { getRemoteProviderLabel } from '../../utils/gitViewUtils';
 
@@ -7,12 +7,14 @@ interface GitProjectTitleBarProps {
   project: GitProjectInfo;
   onOpenAzurePipelines: () => void;
   onOpenRemoteRepo: () => void;
+  onOpenArtifacts?: () => void;
 }
 
 export const GitProjectTitleBar: React.FC<GitProjectTitleBarProps> = ({
   project,
   onOpenAzurePipelines,
-  onOpenRemoteRepo
+  onOpenRemoteRepo,
+  onOpenArtifacts
 }) => (
   <div className="flex items-start justify-between">
     <div>
@@ -25,6 +27,17 @@ export const GitProjectTitleBar: React.FC<GitProjectTitleBarProps> = ({
 
     {project.webUrl && (
       <div className="flex items-center space-x-2">
+        {project.isAzure && onOpenArtifacts && (
+          <button
+            onClick={onOpenArtifacts}
+            className="flex items-center space-x-1.5 text-xs text-foreground bg-card hover:bg-muted border border-border px-3 py-1.5 rounded-xl font-bold transition-all shadow-xs cursor-pointer"
+            title="Listar builds do Azure Pipelines e baixar os artefatos publicados"
+          >
+            <Package className="w-3.5 h-3.5 text-primary" />
+            <span>Artefatos</span>
+          </button>
+        )}
+
         {project.isAzure && (
           <button
             onClick={onOpenAzurePipelines}

@@ -594,6 +594,8 @@ export interface AppSettings {
   activeLlmProviderId?: string;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
   azureDevOpsToken?: string;
+  /** Pasta onde os artefatos de build do Azure Pipelines são baixados (padrão: Downloads\HubManager-Azure) */
+  azureArtifactsDir?: string;
   /** Fontes externas de qualidade e testes (Zephyr Scale, Zephyr Squad, Jira, Azure Test Plans) */
   qualitySources?: QualitySourceConfig[];
   /** ID da fonte de qualidade ativa */
@@ -2824,3 +2826,4 @@ export interface TautEnvSyncResult {
 }
 
 export * from './httpClientTypes';
+export * from './azurePipelineTypes';
