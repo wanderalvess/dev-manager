@@ -31,6 +31,7 @@ export const RoutinesModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) =>
       <span><strong>Leitura de Versão do Executável (PE Header):</strong> Inspeção de metadados binários (<code className="font-mono text-primary">FileVersion</code> / <code className="font-mono text-primary">ProductVersion</code>) exibida diretamente nos cartões para validação instantânea de releases.</span>
       <span><strong>Atualização em Lote (Batch Download):</strong> Atualize todas as rotinas favoritas ou módulos inteiros com um único clique e acompanhamento em tempo real.</span>
       <span><strong>Instalação Local &amp; Árvore Oficial:</strong> Atualize a partir de arquivos <code className="font-mono text-primary">.exe</code> ou <code className="font-mono text-primary">.zip</code> baixados localmente ou explore a árvore de rotinas da CCW.</span>
+      <span><strong>Build Delphi:</strong> O botão <em>Build Delphi</em> compila um <code className="font-mono text-primary">.dproj</code> pelo MSBuild (Delphi 10.x, 11 ou 12, detectados automaticamente), mostra erros e avisos do compilador com arquivo, linha e código e permite rodar o <em>Pipeline completo</em>: encerrar o <code className="font-mono text-primary">.exe</code> em execução, compilar, publicar numa pasta (com <code className="font-mono text-primary">.bak</code> da versão anterior) e abrir.</span>
     </ModuleBullets>
   </ModuleCardShell>
 );

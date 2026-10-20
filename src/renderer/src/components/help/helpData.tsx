@@ -1210,6 +1210,26 @@ export function getFaqList({
       )
     },
     {
+      id: 'delphi-build-pipeline',
+      question: 'Como compilar um projeto Delphi pelo Hub Manager e publicar o executável?',
+      category: 'Catálogo de Rotinas',
+      tags: ['delphi', 'build', 'msbuild', 'dproj', 'rsvars', 'compilar', 'pipeline', 'publicar', 'bak', 'rad studio'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No <strong className="text-foreground">Catálogo de Rotinas</strong>, clique em <strong className="text-foreground">Build Delphi</strong>. O app procura as instalações do RAD Studio (cada versão do Delphi aparece pelo nome) e os arquivos <code className="font-mono text-primary">.dproj</code> dentro da <strong className="text-foreground">Pasta de projetos</strong> das Configurações.
+          </p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong className="text-foreground">Compilar:</strong> roda o MSBuild com o <code className="font-mono text-primary">rsvars.bat</code> escolhido e lista os erros (clique em um erro para copiar arquivo, linha e mensagem).</li>
+            <li><strong className="text-foreground">Pipeline completo:</strong> encerra o <code className="font-mono text-primary">.exe</code> em execução, compila, copia o executável para a pasta de publicação (guardando a versão anterior como <code className="font-mono text-primary">.bak</code>) e o abre. Se a compilação falhar, nada é publicado nem aberto.</li>
+          </ul>
+          <p>
+            Se nenhuma instalação for detectada, informe o caminho do <code className="font-mono text-primary">rsvars.bat</code> (em <code className="font-mono text-primary">...\Embarcadero\Studio\&lt;versão&gt;\bin</code>). O executável só é achado e publicado quando a saída do projeto fica dentro da pasta dele.
+          </p>
+        </div>
+      )
+    },
+    {
       id: 'routine-launch-eftype',
       question: 'Por que ao abrir uma rotina aparecia erro "spawn EFTYPE" e como funciona o lançamento seguro?',
       category: 'Catálogo de Rotinas',

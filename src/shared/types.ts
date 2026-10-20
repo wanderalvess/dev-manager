@@ -2830,3 +2830,4 @@ export interface TautEnvSyncResult {
 export * from './httpClientTypes';
 export * from './azurePipelineTypes';
 export * from './oracleTracerAnalysis';
+export * from './delphiTypes';

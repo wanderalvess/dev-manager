@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CcwRoutineModal } from '../components/CcwRoutineModal';
+import { DelphiBuildModal } from '../components/delphi/DelphiBuildModal';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { ROUTINES_TOUR_STEPS, ROUTINES_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/routinesTour';
@@ -29,6 +30,8 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({
   const tour = usePageTour(ROUTINES_TOUR_STORAGE_KEY);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedModule, setSelectedModule] = useState<string>('TODOS');
+
+  const [isDelphiBuildOpen, setIsDelphiBuildOpen] = useState<boolean>(false);
 
   // Modal de Download & Atualização via Central de Controle (CCW)
   const [isCcwModalOpen, setIsCcwModalOpen] = useState<boolean>(false);
@@ -86,6 +89,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({
         onModuleChange={setSelectedModule}
         onOpenCcwModal={handleOpenCcwModal}
         onRefresh={loadRoutines}
+        onOpenDelphiBuild={() => setIsDelphiBuildOpen(true)}
         onOpenTour={tour.open}
       />
 
@@ -145,6 +149,8 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({
         initialTab={ccwInitialTab}
         appPath={appPath}
       />
+
+      <DelphiBuildModal open={isDelphiBuildOpen} onClose={() => setIsDelphiBuildOpen(false)} />
 
       <OnboardingTour
         steps={ROUTINES_TOUR_STEPS}

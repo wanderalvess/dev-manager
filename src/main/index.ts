@@ -22,6 +22,7 @@ import { KarafLogPersistenceService } from './services/KarafLogPersistenceServic
 import { AutoUpdateService } from './services/AutoUpdateService';
 import { LlmService } from './services/LlmService';
 import { Routine801Service } from './services/Routine801Service';
+import { DelphiBuildService } from './services/DelphiBuildService';
 import { ApmService, getApmReceiverHandlePath } from './services/ApmService';
 import { QaRegressionService } from './services/QaRegressionService';
 import { QaPayloadService } from './services/QaPayloadService';
@@ -165,6 +166,7 @@ function createWindow() {
   const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
   const httpCollectionService = new HttpCollectionService();
   const httpClientService = new HttpClientService(httpCollectionService);
+  const delphiBuildService = new DelphiBuildService(configService, windowsService);
   apmService.onNewTrace = (summary) => {
     safeSend(mainWindow, 'apm:new-trace', summary);
   };
@@ -192,6 +194,7 @@ function createWindow() {
     autoUpdateService,
     llmService,
     routine801Service,
+    delphiBuildService,
     apmService,
     oracleTracerCaptureService,
     qaRegressionService,
