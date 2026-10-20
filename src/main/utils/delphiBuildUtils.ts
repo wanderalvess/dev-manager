@@ -62,6 +62,8 @@ export function parseDelphiBuildOutput(output: string): DelphiDiagnostic[] {
   return found.sort((a, b) => rank[a.severity] - rank[b.severity]);
 }
 
+// Os caminhos do build são sempre Windows (.dproj, rsvars.bat); path.win32 mantém o comportamento igual quando
+// os testes rodam no CI em Linux.
 /** O caminho entra entre aspas num .cmd: aspas, `%` e quebras de linha escapariam da string. */
 export function isSafeBatchPath(value: string): boolean {
   return typeof value === 'string' && value.trim() !== '' && !/["%\r\n\0]/.test(value);
@@ -71,11 +73,11 @@ const NAME_PATTERN = /^[A-Za-z0-9_.-]{1,40}$/;
 
 /** Retorna a mensagem de erro, ou null se o pedido de build é válido. */
 export function validateBuildRequest(req: DelphiBuildRequest): string | null {
-  if (!isSafeLocalPath(req.dprojPath) || !isSafeBatchPath(req.dprojPath) || path.extname(req.dprojPath).toLowerCase() !== '.dproj') {
+  if (!isSafeLocalPath(req.dprojPath) || !isSafeBatchPath(req.dprojPath) || path.win32.extname(req.dprojPath).toLowerCase() !== '.dproj') {
     return 'Informe um arquivo .dproj válido (sem aspas ou "%" no caminho).';
   }
   // Recusa UNC: o script faria `call` de um .bat em outra máquina.
-  if (!isSafeLocalPath(req.rsvarsPath) || !isSafeBatchPath(req.rsvarsPath) || path.basename(req.rsvarsPath).toLowerCase() !== 'rsvars.bat') {
+  if (!isSafeLocalPath(req.rsvarsPath) || !isSafeBatchPath(req.rsvarsPath) || path.win32.basename(req.rsvarsPath).toLowerCase() !== 'rsvars.bat') {
     return 'Informe o caminho do rsvars.bat da instalação do RAD Studio.';
   }
   if (!NAME_PATTERN.test(req.config)) return 'Configuração inválida (use letras, números, "_", "-" ou ".").';
@@ -110,6 +112,6 @@ export interface ExeCandidate {
 export function pickBuiltExe(candidates: ExeCandidate[], projectName: string, sinceMs: number): string | undefined {
   const wanted = `${projectName.toLowerCase()}.exe`;
   return candidates
-    .filter((c) => path.basename(c.path).toLowerCase() === wanted && c.mtimeMs >= sinceMs)
+    .filter((c) => path.win32.basename(c.path).toLowerCase() === wanted && c.mtimeMs >= sinceMs)
     .sort((a, b) => b.mtimeMs - a.mtimeMs)[0]?.path;
 }

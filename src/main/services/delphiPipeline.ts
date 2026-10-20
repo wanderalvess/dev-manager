@@ -49,7 +49,7 @@ export async function runDelphiPipeline(req: DelphiPipelineRequest, deps: Delphi
     return { success: steps.every((s) => s.status !== 'failed'), steps, build };
   };
 
-  const projectName = path.basename(req.dprojPath, path.extname(req.dprojPath));
+  const projectName = path.win32.basename(req.dprojPath, path.win32.extname(req.dprojPath));
   const publishDir = req.publishDir?.trim();
   if (publishDir && (!isSafeLocalPath(publishDir) || !isSafeBatchPath(publishDir))) {
     push('publish', 'failed', 'Pasta de publicação inválida.');
