@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FilterX } from 'lucide-react';
 import type { DatabaseConnectionConfig } from '../../../../../shared/types';
 import { buildEmptyResultHint, type RowEstimateState } from '../../../utils/emptyResultHint';
@@ -13,19 +13,24 @@ interface EmptyResultNoticeProps {
 export const EmptyResultNotice: React.FC<EmptyResultNoticeProps> = ({ tableName, connection }) => {
   const [estimate, setEstimate] = useState<RowEstimateState>({ status: 'loading' });
   const canEstimate = Boolean(tableName && connection && window.electronAPI?.getDbTableDetails);
+  // A conexão é lida via ref: depender do objeto refaria a consulta a cada render do pai.
+  const connectionRef = useRef(connection);
+  connectionRef.current = connection;
+  const connectionId = connection?.id;
 
   useEffect(() => {
-    if (!canEstimate || !tableName || !connection) return;
+    const conn = connectionRef.current;
+    if (!canEstimate || !tableName || !conn) return;
     let cancelled = false;
     setEstimate({ status: 'loading' });
     window
-      .electronAPI!.getDbTableDetails(connection, tableName)
+      .electronAPI!.getDbTableDetails(conn, tableName)
       .then((d) => !cancelled && setEstimate(d.success ? { status: 'done', estimate: d.rowCountEstimate } : { status: 'error' }))
       .catch(() => !cancelled && setEstimate({ status: 'error' }));
     return () => {
       cancelled = true;
     };
-  }, [canEstimate, tableName, connection]);
+  }, [canEstimate, tableName, connectionId]);
 
   const hint = canEstimate ? buildEmptyResultHint(estimate) : null;
 

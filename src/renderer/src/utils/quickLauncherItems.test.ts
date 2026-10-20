@@ -100,6 +100,26 @@ describe('buildQuickLauncherItems', () => {
     expect(launchRoutine).toHaveBeenCalledWith('C:\\r\\801.exe');
     expect(handlers.onClose).toHaveBeenCalled();
   });
+
+  it('esconde páginas desligadas e, com Rotinas/Git desligados, as rotinas e os repositórios', () => {
+    const { handlers, launchRoutine } = setup();
+    const ids = buildQuickLauncherItems({
+      ...handlers,
+      launchRoutine,
+      search: '',
+      routines: [routine({})],
+      projects: [project({})],
+      disabledModules: ['apm', 'routines', 'git']
+    }).map((i) => i.id);
+    expect(ids).not.toContain('act-apm');
+    expect(ids).not.toContain('act-routines');
+    expect(ids).not.toContain('act-git');
+    expect(ids).not.toContain('rt-801');
+    expect(ids).not.toContain('repo-api');
+    expect(ids).toContain('act-env');
+    expect(ids).toContain('act-help');
+    expect(ids).toContain('act-settings');
+  });
 });
 
 describe('applyQuickLauncherMatch', () => {

@@ -37,7 +37,7 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
           onClick={() => window.electronAPI?.downloadUpdate?.()}
           className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-lg text-2xs font-bold transition cursor-pointer"
         >
-          <Download className="w-3 h-3" /> Baixar
+          <Download className="w-3 h-3" /> {updateStatus.manual ? 'Baixar nova versão' : 'Baixar'}
         </button>
       ) : (
         <button
@@ -57,6 +57,14 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
           style={{ width: `${Math.round(updateStatus.percent)}%` }}
         />
       </div>
+    )}
+    {updateStatus?.status === 'available' && updateStatus.manual && (
+      <p className="text-2xs text-muted-foreground">
+        Versão portátil: o novo .exe será baixado pelo navegador. Feche o app e use o arquivo novo.
+      </p>
+    )}
+    {updateStatus?.status === 'downloaded' && (
+      <p className="text-2xs text-muted-foreground">Atualização baixada — reinicie para instalar.</p>
     )}
     {updateStatus?.status === 'not-available' && (
       <p className="text-2xs text-muted-foreground">Você já está na versão mais recente.</p>

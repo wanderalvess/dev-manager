@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.37.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.38.0';
   } catch {
-    return '1.37.0';
+    return '1.38.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -1894,7 +1894,8 @@ server.registerTool(
     if (!targetConfig) {
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
     }
-    const tables = await databaseService.listTables(targetConfig);
+    const { tables, error } = await databaseService.listTables(targetConfig);
+    if (error) return fail(`Falha ao listar tabelas: ${error}`);
     return ok({ tables, count: tables.length });
   }
 );
@@ -1915,7 +1916,8 @@ server.registerTool(
     if (!targetConfig) {
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
     }
-    const columns = await databaseService.getTableColumns(targetConfig, tableName);
+    const { columns, error } = await databaseService.getTableColumns(targetConfig, tableName);
+    if (error) return fail(`Falha ao obter colunas de ${tableName}: ${error}`);
     return ok({ tableName, columns, count: columns.length });
   }
 );

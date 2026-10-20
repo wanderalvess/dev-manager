@@ -16,7 +16,7 @@ const ev = (key: string, mods: Partial<{ ctrlKey: boolean; metaKey: boolean; alt
 });
 
 describe('appShellNavigation', () => {
-  it('mapeia Alt+0..9, Alt+Q e Alt+H para as abas', () => {
+  it('mapeia Alt+0..9 e Alt+Q para as abas', () => {
     expect(resolveAltShortcutTab(ev('1', { altKey: true }))).toBe('env');
     expect(resolveAltShortcutTab(ev('0', { altKey: true }))).toBe('apm');
     expect(resolveAltShortcutTab(ev('9', { altKey: true }))).toBe('http-client');

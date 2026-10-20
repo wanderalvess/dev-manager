@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { decryptSecret, encryptSecret } from '../utils/secretsCrypto';
+import { normalizeDisabledModules } from '../../shared/appModules';
 import {
   AppSettings,
   PathStatusInfo,
@@ -517,6 +518,7 @@ export class ConfigService {
           llmProviders: Array.isArray(parsed.llmProviders) ? parsed.llmProviders : [],
           activeLlmProviderId: typeof parsed.activeLlmProviderId === 'string' ? parsed.activeLlmProviderId : (Array.isArray(parsed.llmProviders) ? parsed.llmProviders[0]?.id : undefined),
           azureDevOpsToken: typeof parsed.azureDevOpsToken === 'string' ? parsed.azureDevOpsToken : undefined,
+          azureArtifactsDir: typeof parsed.azureArtifactsDir === 'string' ? parsed.azureArtifactsDir : undefined,
           qualitySources: Array.isArray(parsed.qualitySources) ? parsed.qualitySources : [],
           activeQualitySourceId: typeof parsed.activeQualitySourceId === 'string' ? parsed.activeQualitySourceId : (Array.isArray(parsed.qualitySources) ? parsed.qualitySources[0]?.id : undefined)
         };
@@ -535,6 +537,7 @@ export class ConfigService {
     const current = this.getSettings();
     const candidate = this.preserveExistingSecrets(settings, current);
     const updated = { ...current, ...candidate };
+    if ('disabledModules' in candidate) updated.disabledModules = normalizeDisabledModules(candidate.disabledModules);
     try {
       const forDisk = this.encryptSecretsForDisk(updated);
       // Grava num temporário e renomeia: uma queda no meio da escrita não deixa o config.json truncado

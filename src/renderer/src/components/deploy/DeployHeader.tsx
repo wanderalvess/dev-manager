@@ -12,6 +12,7 @@ import {
   Square
 } from 'lucide-react';
 import type { DeployProfile } from '../../../../shared/types';
+import { countEnabledSteps } from '../../utils/deployProfileUtils';
 import { DeployProfileMenu } from './DeployProfileMenu';
 
 interface DeployHeaderProps {
@@ -57,7 +58,10 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
   onOpenJvmMemory,
   onAbort,
   onRun
-}) => (
+}) => {
+  const { enabledCount, totalCount } = countEnabledSteps(activeProfile);
+
+  return (
   <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border shrink-0">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center space-x-3">
@@ -181,14 +185,28 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
           <button
             data-tour="run-active-profile"
             onClick={onRun}
-            disabled={isDeploying || !activeProfile || activeProfile.steps.length === 0}
+            disabled={isDeploying || !activeProfile || enabledCount === 0}
             className="px-5 py-2 rounded-lg font-semibold text-xs flex items-center space-x-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-2xs cursor-pointer disabled:opacity-50"
+            title={
+              enabledCount === 0
+                ? 'Selecione ao menos uma etapa para executar'
+                : enabledCount < totalCount
+                ? `Executar ${enabledCount} etapa(s) selecionada(s) automaticamente`
+                : 'Executar todas as etapas do perfil em sequência'
+            }
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            <span>Executar Perfil</span>
+            <span>
+              {enabledCount === 0
+                ? 'Nenhuma Selecionada'
+                : enabledCount < totalCount
+                ? `Executar Selecionadas (${enabledCount})`
+                : 'Executar Perfil'}
+            </span>
           </button>
         )}
       </div>
     </div>
   </div>
-);
+  );
+};

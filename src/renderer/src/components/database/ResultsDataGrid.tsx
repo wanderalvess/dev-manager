@@ -201,6 +201,8 @@ export const ResultsDataGrid: React.FC<ResultsDataGridProps> = ({
               <ResultsGridEmptyState
                 columnCount={columnCount}
                 totalRows={queryResult.rows.length}
+                tableName={editableTableName}
+                connection={connection}
                 onClearAllFilters={onClearAllFilters}
               />
             ) : (

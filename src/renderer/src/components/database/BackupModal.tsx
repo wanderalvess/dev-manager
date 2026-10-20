@@ -81,7 +81,6 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
         {backupActiveTab === 'files' && (
           <BackupFilesTab
-            isOracle={activeConnection.type === 'oracle'}
             connections={connections}
             backupFolder={form.backupFolder}
             backupFiles={data.backupFiles}

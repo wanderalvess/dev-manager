@@ -1,5 +1,6 @@
 import { Grid, GitBranch } from 'lucide-react';
 import type { GitProjectInfo, RoutineItem } from '../../../shared/types';
+import { isModuleEnabled } from '../../../shared/appModules';
 import { fuzzyMatchBest } from './fuzzyMatch';
 import {
   buildQuickLauncherActions,
@@ -32,7 +33,7 @@ export function applyQuickLauncherMatch(
 
 /** Monta, filtra e ordena (ações → rotinas → repositórios; por score quando há busca). */
 export function buildQuickLauncherItems(params: BuildQuickLauncherItemsParams): QuickLauncherItem[] {
-  const { search, routines, projects, onNavigate, onClose, launchRoutine } = params;
+  const { search, routines, projects, onNavigate, onClose, launchRoutine, disabledModules } = params;
   const q = search.trim().toLowerCase();
   const items: QuickLauncherItem[] = [];
   const push = (item: QuickLauncherItem) => {
@@ -42,7 +43,10 @@ export function buildQuickLauncherItems(params: BuildQuickLauncherItemsParams): 
 
   buildQuickLauncherActions(params).forEach(push);
 
-  routines.forEach((r) =>
+  const visibleRoutines = isModuleEnabled('routines', disabledModules) ? routines : [];
+  const visibleProjects = isModuleEnabled('git', disabledModules) ? projects : [];
+
+  visibleRoutines.forEach((r) =>
     push({
       id: `rt-${r.id}`,
       category: 'routine',
@@ -58,7 +62,7 @@ export function buildQuickLauncherItems(params: BuildQuickLauncherItemsParams): 
     })
   );
 
-  projects.forEach((p) =>
+  visibleProjects.forEach((p) =>
     push({
       id: `repo-${p.name}`,
       category: 'repo',

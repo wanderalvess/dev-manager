@@ -1,4 +1,5 @@
 import type React from 'react';
+import { isModuleEnabled } from '../../../shared/appModules';
 import {
   Grid,
   GitPullRequest,
@@ -37,6 +38,8 @@ export interface QuickLauncherActionHandlers {
   onNavigate: (tab: string) => void;
   onRefreshAll: () => void;
   onClose: () => void;
+  /** Páginas desligadas em Configurações → Módulos não aparecem na busca. */
+  disabledModules?: readonly string[];
 }
 
 interface NavigationActionSpec {
@@ -180,9 +183,11 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
 export function buildQuickLauncherActions({
   onNavigate,
   onRefreshAll,
-  onClose
+  onClose,
+  disabledModules
 }: QuickLauncherActionHandlers): QuickLauncherItem[] {
-  const navigation: QuickLauncherItem[] = NAVIGATION_ACTIONS.map((spec) => ({
+  const visibleActions = NAVIGATION_ACTIONS.filter((spec) => isModuleEnabled(spec.tab, disabledModules));
+  const navigation: QuickLauncherItem[] = visibleActions.map((spec) => ({
     id: spec.id,
     category: 'action',
     title: spec.title,

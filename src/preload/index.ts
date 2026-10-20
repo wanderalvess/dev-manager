@@ -15,6 +15,11 @@ import type {
   ProfileExecutionResult,
   GitProjectInfo,
   GitTaskItem,
+  AzurePipelineTarget,
+  AzureListBuildsOptions,
+  AzureListBuildsResult,
+  AzureListArtifactsResult,
+  AzureArtifactDownloadResult,
   CreateTaskBranchOptions,
   RoutineItem,
   RoutineLaunchResult,
@@ -78,7 +83,8 @@ import type {
   ReinstallBundleRequest,
   UpdateBundleVersionRequest,
   Routine801InstallRequest,
-  TableColumnInfo,
+  DbTableColumnsResult,
+  DbTablesResult,
   DockerContainerStats,
   ComposeServiceStatus,
   LogWatchStatus,
@@ -387,6 +393,18 @@ const electronAPI = {
   getGitDiff: (projectPath: string, targetFile?: string) =>
     ipcRenderer.invoke('git:get-diff', projectPath, targetFile),
   getGitUncommittedCounts: (): Promise<Record<string, number>> => ipcRenderer.invoke('git:get-uncommitted-counts'),
+  azureListBuilds: (target: AzurePipelineTarget, options?: AzureListBuildsOptions): Promise<AzureListBuildsResult> =>
+    ipcRenderer.invoke('git:azure-list-builds', target, options),
+  azureListArtifacts: (target: AzurePipelineTarget, buildId: number): Promise<AzureListArtifactsResult> =>
+    ipcRenderer.invoke('git:azure-list-artifacts', target, buildId),
+  azureDownloadArtifact: (
+    target: AzurePipelineTarget,
+    buildId: number,
+    buildNumber: string,
+    artifactName: string
+  ): Promise<AzureArtifactDownloadResult> =>
+    ipcRenderer.invoke('git:azure-download-artifact', target, buildId, buildNumber, artifactName),
+  azureGetArtifactsDir: (): Promise<string> => ipcRenderer.invoke('git:azure-artifacts-dir'),
   openExternal: (url: string): Promise<boolean> => ipcRenderer.invoke('shell:open-external', url),
 
   // Catálogo de Rotinas
@@ -496,9 +514,9 @@ const electronAPI = {
   closeDbSession: (sessionId: string): Promise<void> => ipcRenderer.invoke('db:session-close', sessionId),
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string): Promise<ExplainPlanResult> =>
     ipcRenderer.invoke('db:explain-plan', config, sql),
-  listDbTables: (config: DatabaseConnectionConfig): Promise<string[]> =>
+  listDbTables: (config: DatabaseConnectionConfig): Promise<DbTablesResult> =>
     ipcRenderer.invoke('db:list-tables', config),
-  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<TableColumnInfo[]> =>
+  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string): Promise<DbTableColumnsResult> =>
     ipcRenderer.invoke('db:get-table-columns', config, tableName),
   insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>, sessionId?: string): Promise<QueryResult> =>
     ipcRenderer.invoke('db:insert-row', config, tableName, values, sessionId),

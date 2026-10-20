@@ -21,7 +21,24 @@ export const DeployStepAdvancedSettings: React.FC<DeployStepAdvancedSettingsProp
   onUpdate
 }) => (
   <div className="pt-4 border-t border-border/80 space-y-3">
-    <div className="flex items-center justify-between">
+    <div className="space-y-3">
+      <label className="flex items-start gap-2.5 cursor-pointer text-xs">
+        <input
+          type="checkbox"
+          checked={step.enabled !== false}
+          onChange={(e) => onUpdate({ enabled: e.target.checked })}
+          className="rounded border-border text-primary focus:ring-primary mt-0.5"
+        />
+        <div>
+          <span className="text-foreground font-semibold flex items-center gap-1.5">
+            Habilitar etapa na execução automática do perfil
+          </span>
+          <span className="text-2xs text-muted-foreground block">
+            Se desmarcada, a etapa é pulada na execução automática, mas ainda pode ser executada manualmente avulsa.
+          </span>
+        </div>
+      </label>
+
       <label className="flex items-start gap-2.5 cursor-pointer text-xs">
         <input
           type="checkbox"

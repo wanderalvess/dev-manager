@@ -107,6 +107,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             stepExecutionTimes={runner.stepExecutionTimes}
             onEditSteps={() => modals.openProfileEditor(activeProfile)}
             onRunStep={runner.handleRunSingleStep}
+            onToggleStep={deployProfiles.handleToggleStep}
+            onToggleAllSteps={deployProfiles.handleToggleAllSteps}
+            onRunFromStep={runner.handleRunFromStep}
           />
 
           <DeployDiagnosticsPanel

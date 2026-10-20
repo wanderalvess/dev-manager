@@ -52,7 +52,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
 
   const handleDeleteEnv = (id: string) => {
     if (envs.length <= 1) {
-      showToast('Deve haver ao menos um ambiente configurado.', 'warning');
+      showToast('Deve haver ao menos um ambiente configurado.', 'info');
       return;
     }
     const filtered = envs.filter((e) => e.id !== id);
@@ -100,7 +100,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
     const portVar = currentEnv.variables.find((v) => v.key.toLowerCase() === 'port');
 
     if (!loginVar?.value || !senhaVar?.value) {
-      showToast('Preencha as variáveis LOGIN e SENHA no ambiente para autenticar.', 'warning');
+      showToast('Preencha as variáveis LOGIN e SENHA no ambiente para autenticar.', 'info');
       return;
     }
 

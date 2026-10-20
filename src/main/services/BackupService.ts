@@ -14,9 +14,6 @@ const SPAWN_TIMEOUT_MS = 20 * 60 * 1000;
 /** Margem mínima de espaço livre exigida na pasta de destino antes de iniciar um backup local. */
 const MIN_FREE_DISK_BYTES = 200 * 1024 * 1024;
 
-/** Nome simples de dump Oracle (sem separadores de caminho) que reside no DIRECTORY do servidor. */
-const SERVER_DUMP_NAME = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*\.dmp$/i;
-
 export interface BackupOptions {
   pgDumpPath?: string;
   expdpPath?: string;
@@ -476,11 +473,7 @@ export class BackupService {
     options?: BackupOptions
   ): Promise<BackupResult> {
     config = this.resolveConnectionConfig(config);
-    // Oracle: o expdp grava o .dmp no DIRECTORY do SERVIDOR e o impdp lê de lá pelo nome. Com servidor remoto o
-    // arquivo não existe na máquina do app, então um nome simples (sem caminho) de .dmp segue direto para o impdp,
-    // que reporta o erro dele se o dump não estiver no DIRECTORY.
-    const isServerSideOracleDump = config.type === 'oracle' && SERVER_DUMP_NAME.test(filePath);
-    if (!isServerSideOracleDump && (!isSafeLocalPath(filePath) || !fs.existsSync(filePath))) {
+    if (!isSafeLocalPath(filePath) || !fs.existsSync(filePath)) {
       return { success: false, message: 'Arquivo de backup não encontrado.' };
     }
 

@@ -19,6 +19,7 @@ import { LogsTab } from '../components/settings/tabs/LogsTab';
 import { BackupTab } from '../components/settings/tabs/BackupTab';
 import { AiTab } from '../components/settings/tabs/AiTab';
 import { QualityTab } from '../components/settings/tabs/QualityTab';
+import { ModulesTab } from '../components/settings/tabs/ModulesTab';
 import { useSettingsDraft } from '../hooks/settings/useSettingsDraft';
 import { usePathValidation } from '../hooks/settings/usePathValidation';
 import { useLauncherRows } from '../hooks/settings/useLauncherRows';
@@ -207,6 +208,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         {activeTab === 'backup' && (
           <BackupTab settings={settings} setSettings={setSettings} handleBrowseFile={paths.handleBrowseFile} />
         )}
+
+        {activeTab === 'modules' && <ModulesTab settings={settings} setSettings={setSettings} />}
 
         {activeTab === 'ai' && <AiTab settings={settings} setSettings={setSettings} {...llm} />}
 

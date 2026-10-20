@@ -95,3 +95,52 @@ export function navigateCommandHistory(
   if (nextIdx >= history.length) return { index: -1, value: '' };
   return { index: nextIdx, value: history[nextIdx] || '' };
 }
+
+export interface EnabledStepsCount {
+  enabledCount: number;
+  totalCount: number;
+  allEnabled: boolean;
+  isIndeterminate: boolean;
+}
+
+/** Calcula quantas etapas estão habilitadas no perfil. */
+export function countEnabledSteps(profile: DeployProfile | null | undefined): EnabledStepsCount {
+  const steps = profile?.steps || [];
+  const totalCount = steps.length;
+  const enabledCount = steps.filter((s) => s.enabled !== false).length;
+  return {
+    enabledCount,
+    totalCount,
+    allEnabled: totalCount > 0 && enabledCount === totalCount,
+    isIndeterminate: enabledCount > 0 && enabledCount < totalCount
+  };
+}
+
+/** Inverte o estado enabled de uma etapa no perfil. */
+export function toggleProfileStep(profile: DeployProfile, stepId: string): DeployProfile {
+  return {
+    ...profile,
+    steps: profile.steps.map((s) => (s.id === stepId ? { ...s, enabled: s.enabled === false } : s))
+  };
+}
+
+/** Habilita ou desabilita todas as etapas no perfil. */
+export function toggleAllProfileSteps(profile: DeployProfile, enableAll: boolean): DeployProfile {
+  return {
+    ...profile,
+    steps: profile.steps.map((s) => ({ ...s, enabled: enableAll }))
+  };
+}
+
+/** Cria um perfil derivado para executar a partir de um índice em diante (as etapas anteriores são desativadas). */
+export function sliceProfileFromStep(profile: DeployProfile, stepIndex: number): DeployProfile {
+  return {
+    ...profile,
+    name: `${profile.name} (etapa ${stepIndex + 1} em diante)`,
+    steps: profile.steps.map((s, idx) => ({
+      ...s,
+      enabled: idx >= stepIndex && s.enabled !== false
+    }))
+  };
+}
+

@@ -5,7 +5,9 @@ import {
   buildImportedProfile,
   buildProfileExportFileName,
   duplicateDeployProfile,
-  profileNeedsKaraf
+  profileNeedsKaraf,
+  toggleProfileStep,
+  toggleAllProfileSteps
 } from '../../utils/deployProfileUtils';
 
 export function useDeployProfiles(settingsVersion?: number) {
@@ -114,6 +116,18 @@ export function useDeployProfiles(settingsVersion?: number) {
     }
   };
 
+  const handleToggleStep = async (stepId: string) => {
+    if (!activeProfile) return;
+    const updated = toggleProfileStep(activeProfile, stepId);
+    await handleSaveProfile(updated);
+  };
+
+  const handleToggleAllSteps = async (enableAll: boolean) => {
+    if (!activeProfile) return;
+    const updated = toggleAllProfileSteps(activeProfile, enableAll);
+    await handleSaveProfile(updated);
+  };
+
   return {
     profiles,
     activeProfileId,
@@ -129,6 +143,8 @@ export function useDeployProfiles(settingsVersion?: number) {
     handleDuplicateProfile,
     handleExportProfile,
     handleImportProfileClick,
-    handleImportProfileFile
+    handleImportProfileFile,
+    handleToggleStep,
+    handleToggleAllSteps
   };
 }
