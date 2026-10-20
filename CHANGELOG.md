@@ -6,9 +6,11 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [Não lançado]
 ### Adicionado
+- **Statement Tracer — aba "Por rotina"**: a captura passa a trazer tempo decorrido, CPU, leituras de buffer, leituras de disco e linhas do `v$sql` e agrupa as consultas pelo módulo que as executou (ex.: rotina `2075` / `PCSIS2075.exe`), com as telas (`ACTION`) tocadas, as consultas mais lentas por tempo médio e as repetidas — mesma consulta em laço ou variações só de valor literal (SQL concatenado) —, com a dica de correção. Abrir uma consulta leva ao inspetor de binds.
+- **MCP**: nova tool `db_analyze_oracle_capture` entrega essa análise por rotina à IA depois de uma captura.
 - **Build Delphi**: novo botão *"Build Delphi"* no Catálogo de Rotinas compila um `.dproj` pelo MSBuild, com as versões do RAD Studio (Delphi 10.x, 11 e 12) detectadas automaticamente, e mostra erros e avisos do compilador estruturados (arquivo, linha, código), sem abrir a IDE. O formulário lembra a última escolha.
 - **Pipeline Delphi em um clique**: *"Pipeline completo"* encerra o `.exe` em execução, compila, publica o executável numa pasta (com `.bak` da versão anterior) e o abre no diretório correto para carregar DLLs e INIs. Se o build falhar, nada é publicado nem aberto.
-- **MCP**: novas tools `delphi_detect_installations`, `delphi_list_projects`, `delphi_build` e `delphi_run_pipeline` (as duas últimas marcadas como destrutivas). Total: 161 ferramentas.
+- **MCP**: novas tools `delphi_detect_installations`, `delphi_list_projects`, `delphi_build` e `delphi_run_pipeline` (as duas últimas marcadas como destrutivas). Total: 162 ferramentas.
 - **Hub Git — Artefatos do Azure Pipelines**: novo botão *"Artefatos"* no cabeçalho de repositórios Azure DevOps lista os builds concluídos (filtrados pela branch atual ou por qualquer outra), mostra os artefatos publicados por cada build e baixa o `.zip` com um clique, em pipelines YAML (`PublishPipelineArtifact`/`publish`) e clássicos (`PublishBuildArtifacts`).
 - **Instalar artefato como rotina**: depois do download, o artefato pode ser instalado direto no diretório `Prod` do WinThor pelo mesmo instalador do catálogo de Rotinas, com backup automático da versão atual.
 - **Configurações → Azure**: nova opção *"Pasta de download dos artefatos de pipeline"* (padrão `Downloads\HubManager-Azure`). O PAT existente precisa do escopo `Build (Read)`.
