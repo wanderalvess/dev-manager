@@ -35,7 +35,9 @@ const DESTRUCTIVE_TOOLS = new Set([
   'db_clear_oracle_capture',
   'logs_clear_file',
   'qa_delete_template',
-  'deploy_run_profile'
+  'deploy_run_profile',
+  'delphi_build',
+  'delphi_run_pipeline'
 ]);
 
 /** Parecem leitura pelo nome, mas têm efeito (rede externa, envio de webhook, execução de testes). */

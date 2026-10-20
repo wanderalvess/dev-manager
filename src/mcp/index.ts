@@ -36,6 +36,8 @@ import { KarafLogPersistenceService } from '../main/services/KarafLogPersistence
 import { LogWatcherService } from '../main/services/LogWatcherService';
 import { LlmService } from '../main/services/LlmService';
 import { Routine801Service } from '../main/services/Routine801Service';
+import { DelphiBuildService } from '../main/services/DelphiBuildService';
+import { registerDelphiTools } from './tools/delphiTools';
 import { OracleTracerCaptureService } from '../main/services/OracleTracerCaptureService';
 import { getApmReceiverHandlePath } from '../main/services/ApmService';
 import { ApmReceiverClient } from '../main/services/ApmReceiverClient';
@@ -72,6 +74,7 @@ const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
 const routine801Service = new Routine801Service(configService, karafService);
+const delphiBuildService = new DelphiBuildService(configService, windowsService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
 const qaRegressionService = new QaRegressionService(configService, databaseService);
 const qaPayloadService = new QaPayloadService(configService, databaseService);
@@ -2400,6 +2403,9 @@ server.registerTool(
     return success ? ok({ success: true }) : fail('Não foi possível limpar o arquivo (não existe ou sem permissão).');
   }
 );
+
+// --- Delphi: build via MSBuild e pipeline de publicação ---
+registerDelphiTools(server, { delphiBuildService, ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

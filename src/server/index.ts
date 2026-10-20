@@ -43,6 +43,8 @@ import { HttpClientService } from '../main/services/HttpClientService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { createHttpClientRouter } from './routes/httpClientRoutes';
 import { createAzurePipelineRouter } from './routes/azurePipelineRoutes';
+import { createDelphiRouter } from './routes/delphiRoutes';
+import { DelphiBuildService } from '../main/services/DelphiBuildService';
 import { AzurePipelineService } from '../main/services/AzurePipelineService';
 import {
   EnvironmentLog,
@@ -2178,6 +2180,7 @@ app.post('/api/taut/abort', (_req, res) => {
 });
 
 app.use('/api/http-client', createHttpClientRouter(httpClientService, httpCollectionService));
+app.use('/api/delphi', createDelphiRouter(new DelphiBuildService(configService, windowsService), broadcastWs));
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
 
 // Servir Frontend SPA estático se compilado
