@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, RefreshCw, Layers, Sparkles, Server, DownloadCloud } from 'lucide-react';
+import { Grid, RefreshCw, Layers, Sparkles, Server, DownloadCloud, Hammer } from 'lucide-react';
 import { KarafWtaStatusResult } from '../../../../shared/types';
 import { getKarafWtaBadgeInfo } from '../../utils/routineLaunchUiUtils';
 import { CcwInitialTab } from '../../utils/routinesPageUtils';
@@ -21,6 +21,7 @@ interface RoutinesHeaderProps {
   onModuleChange: (value: string) => void;
   onOpenCcwModal: (routineName?: string, tab?: CcwInitialTab) => void;
   onRefresh: () => void;
+  onOpenDelphiBuild: () => void;
   onOpenTour: () => void;
 }
 
@@ -40,6 +41,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
   onModuleChange,
   onOpenCcwModal,
   onRefresh,
+  onOpenDelphiBuild,
   onOpenTour
 }) => {
   const badgeInfo = getKarafWtaBadgeInfo(karafStatus, isCheckingKaraf, winthorStartActive);
@@ -110,6 +112,16 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
           >
             <Layers className="w-3.5 h-3.5 text-primary" />
             <span>Atualização em Lote</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenDelphiBuild}
+            className="px-2.5 py-1.5 bg-card hover:bg-muted text-foreground border border-border/80 hover:border-primary/40 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
+            title="Compilar um projeto Delphi (.dproj) e, se quiser, publicar e abrir o executável"
+          >
+            <Hammer className="w-3.5 h-3.5 text-primary" />
+            <span>Build Delphi</span>
           </button>
 
           <button

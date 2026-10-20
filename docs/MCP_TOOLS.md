@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **157 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **161 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -289,11 +289,26 @@ Executa chamadas HTTP e gerencia coleções estilo Postman com suporte a interpo
 
 ---
 
-## 17. Segurança e modo somente leitura
+## 17. Build Delphi (MSBuild)
+
+Compila projetos Delphi (10.x, 11, 12) pela mesma cadeia da IDE, sem abrir o RAD Studio. As tools começam com `delphi_...`.
+
+*   **`delphi_detect_installations`**: Lista as versões do RAD Studio/Delphi instaladas e o `rsvars.bat` de cada uma.
+    > "Quais versões do Delphi tenho instaladas?"
+*   **`delphi_list_projects`**: Procura arquivos `.dproj` na pasta de projetos configurada (ou na pasta informada).
+    > "Liste os projetos Delphi da minha pasta de projetos."
+*   **`delphi_build`**: Compila um `.dproj` e devolve erros e avisos já estruturados (arquivo, linha, código E/W/H do compilador) e o `.exe` gerado.
+    > "Compile o Rotina2075.dproj em Debug e me diga o que quebrou."
+*   **`delphi_run_pipeline`**: Encerra o `.exe` em execução, compila, publica o executável numa pasta (guardando a versão anterior como `.bak`) e o abre.
+    > "Compile a rotina 2075 e publique em Prod, depois abra para eu testar."
+
+---
+
+## 18. Segurança e modo somente leitura
 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
-*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (82 das 157) são registradas. As demais nem aparecem para o cliente.
+*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (84 das 161) são registradas. As demais nem aparecem para o cliente.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).

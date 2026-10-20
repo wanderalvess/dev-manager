@@ -3,6 +3,7 @@ import { registerSystemHandlers } from './handlers/systemHandlers';
 import { registerEnvironmentHandlers } from './handlers/environmentHandlers';
 import { registerKarafHandlers } from './handlers/karafHandlers';
 import { registerRoutine801Handlers } from './handlers/routine801Handlers';
+import { registerDelphiHandlers } from './handlers/delphiHandlers';
 import { registerDeployHandlers } from './handlers/deployHandlers';
 import { registerGitHandlers } from './handlers/gitHandlers';
 import { registerRoutinesHandlers } from './handlers/routinesHandlers';
@@ -27,6 +28,7 @@ export function registerIpcHandlers(ctx: IpcContext): void {
   registerEnvironmentHandlers(ctx);
   registerKarafHandlers(ctx);
   registerRoutine801Handlers(ctx);
+  registerDelphiHandlers(ctx);
   registerDeployHandlers(ctx);
   registerGitHandlers(ctx);
   registerRoutinesHandlers(ctx);

@@ -64,6 +64,12 @@ import type {
   UpdateBundleVersionRequest,
   Routine801CatalogResponse,
   Routine801InstallRequest,
+  DelphiInstallation,
+  DelphiProject,
+  DelphiBuildRequest,
+  DelphiBuildResult,
+  DelphiPipelineRequest,
+  DelphiPipelineResult,
   Routine801InstallResult,
   GitCommitInfo,
   GitFileStatus,
@@ -228,6 +234,14 @@ export interface ElectronAPI {
   routine801GetUpdates: (customUrl?: string) => Promise<Routine801CatalogResponse>;
   routine801CheckServer: (customUrl?: string) => Promise<{ ok: boolean; status: number; message: string; url: string }>;
   routine801InstallFeatures: (request: Routine801InstallRequest) => Promise<Routine801InstallResult>;
+
+  // Build Delphi (MSBuild) e pipeline compilar → publicar → abrir
+  delphiDetectInstallations: () => Promise<DelphiInstallation[]>;
+  delphiFindProjects: (root?: string) => Promise<DelphiProject[]>;
+  delphiBuild: (request: DelphiBuildRequest) => Promise<DelphiBuildResult>;
+  delphiRunPipeline: (request: DelphiPipelineRequest) => Promise<DelphiPipelineResult>;
+  delphiCancelBuild: () => Promise<{ success: boolean }>;
+  onDelphiLogChunk: (callback: (chunk: string) => void) => () => void;
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (

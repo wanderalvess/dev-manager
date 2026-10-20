@@ -25,6 +25,7 @@ import type { TautAutomationService } from '../services/TautAutomationService';
 import type { QaPayloadService } from '../services/QaPayloadService';
 import type { HttpClientService } from '../services/HttpClientService';
 import type { HttpCollectionService } from '../services/HttpCollectionService';
+import type { DelphiBuildService } from '../services/DelphiBuildService';
 
 /** Tudo que um grupo de handlers IPC pode precisar: a janela principal e os serviços do app. */
 export interface IpcContext {
@@ -55,4 +56,5 @@ export interface IpcContext {
   qaPayloadService: QaPayloadService;
   httpClientService: HttpClientService;
   httpCollectionService: HttpCollectionService;
+  delphiBuildService: DelphiBuildService;
 }

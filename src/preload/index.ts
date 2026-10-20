@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { delphiApi } from './delphiApi';
 import type {
   AppSettings,
   KarafDeployRequest,
@@ -337,6 +338,8 @@ const electronAPI = {
     ipcRenderer.invoke('routine801:check-server', customUrl),
   routine801InstallFeatures: (request: Routine801InstallRequest) =>
     ipcRenderer.invoke('routine801:install-features', request),
+
+  ...delphiApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (
