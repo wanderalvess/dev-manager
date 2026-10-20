@@ -19,6 +19,7 @@ import { LogsTab } from '../components/settings/tabs/LogsTab';
 import { BackupTab } from '../components/settings/tabs/BackupTab';
 import { AiTab } from '../components/settings/tabs/AiTab';
 import { QualityTab } from '../components/settings/tabs/QualityTab';
+import { UsageTab } from '../components/settings/tabs/UsageTab';
 import { ModulesTab } from '../components/settings/tabs/ModulesTab';
 import { useSettingsDraft } from '../hooks/settings/useSettingsDraft';
 import { usePathValidation } from '../hooks/settings/usePathValidation';
@@ -231,6 +232,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             testResults={quality.qualityTestResults}
           />
         )}
+
+        {activeTab === 'usage' && <UsageTab settings={settings} setSettings={setSettings} />}
       </div>
 
       <OnboardingTour

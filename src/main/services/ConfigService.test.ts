@@ -44,6 +44,27 @@ describe('ConfigService', () => {
     expect(reloaded.karafPath).toBe('C:/karaf');
   });
 
+  it('persiste a contagem de uso e as linhas de base, e uma nova instância relê do disco', () => {
+    new ConfigService().saveSettings({
+      usageMetricsEnabled: false,
+      usageBaselines: { 'database/backup-run': { minutes: 25, setAt: '2026-10-16' } }
+    });
+
+    const reloaded = new ConfigService().getSettings();
+    expect(reloaded.usageMetricsEnabled).toBe(false);
+    expect(reloaded.usageBaselines).toEqual({ 'database/backup-run': { minutes: 25, setAt: '2026-10-16' } });
+  });
+
+  it('salvar outra configuração não apaga a contagem de uso nem as linhas de base', () => {
+    const service = new ConfigService();
+    service.saveSettings({ usageMetricsEnabled: false, usageBaselines: { 'qa/taut-run-tests': { minutes: 12 } } });
+    service.saveSettings({ karafPath: 'C:/karaf' });
+
+    const reloaded = new ConfigService().getSettings();
+    expect(reloaded.usageMetricsEnabled).toBe(false);
+    expect(reloaded.usageBaselines).toEqual({ 'qa/taut-run-tests': { minutes: 12 } });
+  });
+
   it('lê config.json legado com chave winthorPath como fallback', () => {
     const configPath = path.join(tmpDir, 'config.json');
     fs.writeFileSync(

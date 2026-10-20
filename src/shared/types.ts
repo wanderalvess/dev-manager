@@ -1,3 +1,4 @@
+import type { UsageBaselineOverrides } from './usageBaselines';
 import type { OracleStatementMetrics } from './oracleTracerAnalysis';
 export type ServiceState = 'RUNNING' | 'STOPPED' | 'START_PENDING' | 'STOP_PENDING' | 'UNKNOWN' | 'NOT_INSTALLED';
 
@@ -594,6 +595,10 @@ export interface AppSettings {
   llmProviders?: LlmProviderConfig[];
   /** ID do provedor de LLM atualmente ativo */
   activeLlmProviderId?: string;
+  /** Contagem local de uso (só contadores e durações, nada de conteúdo). Ligada por padrão; `false` desliga. */
+  usageMetricsEnabled?: boolean;
+  /** Tempo que a pessoa levava para fazer à mão cada automação (minutos). Quem não está aqui usa o padrão. */
+  usageBaselines?: UsageBaselineOverrides;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
   azureDevOpsToken?: string;
   /** Pasta onde os artefatos de build do Azure Pipelines são baixados (padrão: Downloads\HubManager-Azure) */
@@ -2828,6 +2833,7 @@ export interface TautEnvSyncResult {
 }
 
 export * from './httpClientTypes';
+export * from './usageMetricsTypes';
 export * from './azurePipelineTypes';
 export * from './oracleTracerAnalysis';
 export * from './delphiTypes';

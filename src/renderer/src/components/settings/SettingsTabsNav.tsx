@@ -10,6 +10,7 @@ import {
   HardDriveDownload,
   Bot,
   CheckCheck,
+  BarChart3,
   LayoutGrid,
   LucideIcon
 } from 'lucide-react';
@@ -44,7 +45,8 @@ const TAB_GROUPS: TabDef[][] = [
     { id: 'automation', label: 'Automação', icon: Zap },
     { id: 'backup', label: 'Backup', icon: HardDriveDownload },
     { id: 'ai', label: 'IA & LLM', icon: Bot },
-    { id: 'quality', label: 'Qualidade & QA', icon: CheckCheck }
+    { id: 'quality', label: 'Qualidade & QA', icon: CheckCheck },
+    { id: 'usage', label: 'Meu uso', icon: BarChart3 }
   ]
 ];
 

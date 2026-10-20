@@ -23,6 +23,7 @@ import { AutoUpdateService } from './services/AutoUpdateService';
 import { LlmService } from './services/LlmService';
 import { Routine801Service } from './services/Routine801Service';
 import { DelphiBuildService } from './services/DelphiBuildService';
+import { UsageMetricsService } from './services/UsageMetricsService';
 import { ApmService, getApmReceiverHandlePath } from './services/ApmService';
 import { QaRegressionService } from './services/QaRegressionService';
 import { QaPayloadService } from './services/QaPayloadService';
@@ -108,6 +109,8 @@ function createWindow() {
   });
 
   const configService = new ConfigService();
+  const usageMetricsService = new UsageMetricsService(configService);
+  usageMetricsService.attachProcessHooks();
   const karafService = new KarafService(configService);
   const databaseService = new DatabaseService(configService);
   // Sessões do editor SQL com transação aberta não podem vazar: ao sair, desfaz o pendente e fecha as conexões
@@ -202,12 +205,14 @@ function createWindow() {
     tautAutomationService,
     qaPayloadService,
     httpClientService,
-    httpCollectionService
+    httpCollectionService,
+    usageMetricsService
   });
 
   backupSchedulerService.rescheduleAll();
   // Ao sair, não deixa para trás o Karaf embutido (processo filho), os agendamentos de backup nem a porta OTLP
   app.on('before-quit', () => {
+    usageMetricsService.dispose();
     backupSchedulerService.stopAll();
     void apmService.stopReceiver().catch(() => undefined);
     void karafService.stopEmbeddedKaraf().catch(() => undefined);

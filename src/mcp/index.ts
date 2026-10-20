@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.38.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.40.0';
   } catch {
-    return '1.38.0';
+    return '1.40.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -47,6 +47,8 @@ import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
+import { UsageMetricsService } from '../main/services/UsageMetricsService';
+import { mcpUsageInfo } from './usageTracking';
 import { registerHttpClientTools } from './tools/httpClientTools';
 import { registerTracerAnalysisTools } from './tools/tracerAnalysisTools';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
@@ -60,6 +62,8 @@ import type { AppSettings, BackupConfig, BackupWebhookConfig, DatabaseConnection
 
 // --- Composição dos serviços (mesma ordem usada em src/server/index.ts e src/main/index.ts) ---
 const configService = new ConfigService();
+const usageMetricsService = new UsageMetricsService(configService);
+usageMetricsService.attachProcessHooks();
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService(configService);
 const backupService = new BackupService(configService);
@@ -288,7 +292,13 @@ const mcpMode = getMcpMode();
 const registerToolRaw = server.registerTool.bind(server) as (...a: unknown[]) => unknown;
 (server as unknown as { registerTool: (...a: unknown[]) => unknown }).registerTool = (name, config, handler) => {
   if (!isToolAllowed(name as string, mcpMode)) return undefined;
-  return registerToolRaw(name, { annotations: annotationsFor(name as string), ...(config as object) }, handler);
+  // Métricas de uso (issue #12): cada chamada vira módulo/ação/risco/duração/sucesso. Só contadores.
+  const usage = mcpUsageInfo(name as string);
+  const run = handler as (...args: unknown[]) => unknown;
+  const measured = usage
+    ? (...args: unknown[]) => usageMetricsService.track({ ...usage, origin: 'mcp' }, () => run(...args))
+    : handler;
+  return registerToolRaw(name, { annotations: annotationsFor(name as string), ...(config as object) }, measured);
 };
 
 // --- 1. Sistema ---
@@ -1715,6 +1725,32 @@ server.registerTool(
       return fail(err.message || 'Erro ao comunicar com o LLM');
     }
   }
+);
+
+// --- Métricas de uso ---
+const usageDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use o formato AAAA-MM-DD.');
+server.registerTool(
+  'usage_get_summary',
+  {
+    title: 'Resumo de uso',
+    description:
+      'Retorna a contagem local de uso do Hub Manager (execuções, sucesso/falha e duração por módulo e ação, por semana). ' +
+      'Só contadores: nunca SQL, caminhos, prompts ou credenciais. Esta consulta não conta como uso.',
+    inputSchema: { from: usageDay.optional(), to: usageDay.optional() }
+  },
+  async ({ from, to }) => ok(usageMetricsService.getSummary({ from, to }))
+);
+
+server.registerTool(
+  'usage_get_impact',
+  {
+    title: 'Tempo economizado',
+    description:
+      'Retorna o tempo economizado pelo Hub Manager nesta máquina: usos com sucesso x tempo que a pessoa levava à mão, nos últimos 7 dias, 30 dias e desde o início, por módulo e por automação. ' +
+      'Cada automação mostra a origem do tempo manual (padrão ou informado pela pessoa); "confirmedMs" é a parte baseada em tempo informado. ' +
+      'Falhas não contam e a economia nunca é negativa. Esta consulta não conta como uso.'
+  },
+  async () => ok(usageMetricsService.getImpact())
 );
 
 // --- 7. Configurações ---

@@ -2,6 +2,9 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { delphiApi } from './delphiApi';
 import type {
   AppSettings,
+  UsageDays,
+  UsageSummary,
+  UsageSummaryQuery,
   KarafDeployRequest,
   KarafDeployHistoryEntry,
   EnvironmentLog,
@@ -490,6 +493,11 @@ const electronAPI = {
     ipcRenderer.invoke('settings:save', settings),
   exportSettings: (sanitizePasswords?: boolean): Promise<string> =>
     ipcRenderer.invoke('settings:export', sanitizePasswords),
+  // Métricas locais de uso (só contadores e durações)
+  getUsageSummary: (query?: UsageSummaryQuery): Promise<UsageSummary> => ipcRenderer.invoke('usage:get-summary', query),
+  getUsageDays: (): Promise<UsageDays> => ipcRenderer.invoke('usage:get-days'),
+  clearUsageMetrics: (): Promise<void> => ipcRenderer.invoke('usage:clear'),
+
   importSettings: (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }> =>
     ipcRenderer.invoke('settings:import', jsonString),
 
