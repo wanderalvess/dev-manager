@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { GitProjectInfo, RoutineItem } from '../../../../shared/types';
+import { isModuleEnabled } from '../../../../shared/appModules';
 import { buildQuickLauncherItems } from '../../utils/quickLauncherItems';
 import type { QuickLauncherItem } from '../../utils/quickLauncherActions';
 
@@ -7,6 +8,7 @@ interface UseQuickLauncherParams {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (tab: string) => void;
+  disabledModules: readonly string[];
   projects: GitProjectInfo[];
   onRefreshAll: () => void;
 }
@@ -15,6 +17,7 @@ export function useQuickLauncher({
   isOpen,
   onClose,
   onNavigate,
+  disabledModules,
   projects,
   onRefreshAll
 }: UseQuickLauncherParams) {
@@ -24,12 +27,17 @@ export function useQuickLauncher({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Carregar rotinas Delphi
+  // Carregar rotinas Delphi (não varre o disco com o Catálogo de Rotinas desligado)
+  const routinesEnabled = isModuleEnabled('routines', disabledModules);
   useEffect(() => {
     if (isOpen && window.electronAPI) {
-      window.electronAPI.listRoutines().then((data) => {
-        setRoutines(data || []);
-      });
+      if (routinesEnabled) {
+        window.electronAPI.listRoutines().then((data) => {
+          setRoutines(data || []);
+        });
+      } else {
+        setRoutines([]);
+      }
       setSearch('');
       setSelectedIndex(0);
       // Aguarda o modal montar antes de focar o campo de busca.
@@ -37,7 +45,7 @@ export function useQuickLauncher({
         inputRef.current?.focus();
       }, 50);
     }
-  }, [isOpen]);
+  }, [isOpen, routinesEnabled]);
 
   const launchRoutine = useCallback(async (fullPath: string) => {
     if (window.electronAPI) {
@@ -55,9 +63,10 @@ export function useQuickLauncher({
         onNavigate,
         onRefreshAll,
         onClose,
-        launchRoutine
+        launchRoutine,
+        disabledModules
       }),
-    [search, routines, projects, onNavigate, onRefreshAll, onClose, launchRoutine]
+    [search, routines, projects, onNavigate, onRefreshAll, onClose, launchRoutine, disabledModules]
   );
 
   // Resetar índice quando os resultados mudarem

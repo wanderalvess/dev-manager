@@ -14,6 +14,7 @@ import {
   Activity,
   LucideIcon
 } from 'lucide-react';
+import { getModulesFaq } from './faq/modulesFaq';
 
 export type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
 
@@ -562,6 +563,39 @@ export function getFaqList({
       )
     },
     {
+      id: 'deploy-selective-step-execution',
+      question: 'Como selecionar quais etapas vão rodar no fluxo automático de deploy ou pular etapas demoradas?',
+      category: 'Deploy & OSGi',
+      tags: ['deploy', 'etapas', 'pular', 'checkbox', 'fluxo automatico', 'daqui em diante', 'clean', 'perfil'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No painel <strong className="text-foreground">Etapas</strong> da tela de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Alt+4</kbd>), cada etapa do perfil ativo agora possui uma caixa de seleção (<strong className="text-foreground">checkbox</strong>) direta para inclusão no fluxo automático:
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
+            <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Controles e Recursos:</span>
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>
+                <strong className="text-foreground">Checkbox por Etapa:</strong> Desmarque qualquer etapa (ex.: uma compilação <code className="font-mono text-primary">mvn clean</code> de 145 segundos que já foi feita) para pulá-la. A etapa ganha o selo visual <code className="font-mono text-muted-foreground font-bold">pulada</code>, nome riscado e será ignorada automaticamente ao clicar em Executar.
+              </li>
+              <li>
+                <strong className="text-foreground">Botão "Daqui em diante":</strong> Passe o mouse sobre qualquer etapa intermediária e clique no botão com ícone de avanço rápido para executar a partir daquela etapa até o final do perfil, sem precisar desmarcar manualmente as anteriores.
+              </li>
+              <li>
+                <strong className="text-foreground">Marcar / Desmarcar Todas:</strong> No topo da lista de etapas, o checkbox mestre e o botão de ação rápida alternam todas as etapas de uma vez e exibem o contador <strong className="text-foreground">Etapas (X/Y)</strong> e o badge de quantas foram puladas.
+              </li>
+              <li>
+                <strong className="text-foreground">Botão Dinâmico no Cabeçalho:</strong> O botão principal atualiza seu texto para <strong className="text-foreground">"Executar Selecionadas (N)"</strong> quando houver etapas puladas, e fica desabilitado se nenhuma etapa estiver marcada, prevenindo disparos vazios.
+              </li>
+              <li>
+                <strong className="text-foreground">Execução Isolada Preservada:</strong> Mesmo se uma etapa estiver desmarcada/pulada para o fluxo em lote, você ainda pode clicar no botão individual <strong className="text-foreground">"Executar"</strong> no card dela para dispará-la isoladamente a qualquer momento.
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+    },
+    {
       id: 'build-executable',
       question: 'Como gerar o executável (.exe) de produção do Hub Manager para o Windows?',
       category: 'Build & Executável',
@@ -586,10 +620,10 @@ export function getFaqList({
             <span className="font-bold text-foreground block pt-1 text-2xs uppercase tracking-wider text-primary">Arquivos gerados na pasta release/:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Hub Manager {appInfo?.appVersion || '1.35.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Hub Manager {appInfo?.appVersion || '1.38.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Hub Manager Setup {appInfo?.appVersion || '1.35.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Hub Manager Setup {appInfo?.appVersion || '1.38.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
               <li>
                 <strong className="text-foreground">LEIA-ME.txt, instalar-extras.cmd e mcp\\:</strong> guia do usuário com os links dos downloads opcionais, script que instala o modelo do RAG e o Oracle Instant Client colocados na pasta, e o servidor MCP pronto para uso. Para regenerar só esses arquivos: <code className="font-mono text-primary">npm run release:folder</code>.
@@ -1176,6 +1210,26 @@ export function getFaqList({
       )
     },
     {
+      id: 'delphi-build-pipeline',
+      question: 'Como compilar um projeto Delphi pelo Hub Manager e publicar o executável?',
+      category: 'Catálogo de Rotinas',
+      tags: ['delphi', 'build', 'msbuild', 'dproj', 'rsvars', 'compilar', 'pipeline', 'publicar', 'bak', 'rad studio'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            No <strong className="text-foreground">Catálogo de Rotinas</strong>, clique em <strong className="text-foreground">Build Delphi</strong>. O app procura as instalações do RAD Studio (cada versão do Delphi aparece pelo nome) e os arquivos <code className="font-mono text-primary">.dproj</code> dentro da <strong className="text-foreground">Pasta de projetos</strong> das Configurações.
+          </p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong className="text-foreground">Compilar:</strong> roda o MSBuild com o <code className="font-mono text-primary">rsvars.bat</code> escolhido e lista os erros (clique em um erro para copiar arquivo, linha e mensagem).</li>
+            <li><strong className="text-foreground">Pipeline completo:</strong> encerra o <code className="font-mono text-primary">.exe</code> em execução, compila, copia o executável para a pasta de publicação (guardando a versão anterior como <code className="font-mono text-primary">.bak</code>) e o abre. Se a compilação falhar, nada é publicado nem aberto.</li>
+          </ul>
+          <p>
+            Se nenhuma instalação for detectada, informe o caminho do <code className="font-mono text-primary">rsvars.bat</code> (em <code className="font-mono text-primary">...\Embarcadero\Studio\&lt;versão&gt;\bin</code>). O executável só é achado e publicado quando a saída do projeto fica dentro da pasta dele.
+          </p>
+        </div>
+      )
+    },
+    {
       id: 'routine-launch-eftype',
       question: 'Por que ao abrir uma rotina aparecia erro "spawn EFTYPE" e como funciona o lançamento seguro?',
       category: 'Catálogo de Rotinas',
@@ -1261,7 +1315,7 @@ export function getFaqList({
             <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Como acessar e navegar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.35.0'}</code>) no topo esquerdo do cockpit para abrir o modal.
+                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.38.0'}</code>) no topo esquerdo do cockpit para abrir o modal.
               </li>
               <li>
                 <strong className="text-foreground">Navegação entre releases:</strong> No cabeçalho do modal, utilize os botões rápidos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&lt;</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&gt;</kbd> (ou os atalhos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + ←</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + →</kbd>) para folhear versão a versão.
@@ -1626,7 +1680,8 @@ export function getFaqList({
           </p>
         </div>
       )
-    }
+    },
+    ...getModulesFaq(onNavigate)
   ];
 }
 
@@ -1652,7 +1707,7 @@ export function getKeyboardShortcuts(debugPort: number) {
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.39.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.40.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '12 Módulos' },

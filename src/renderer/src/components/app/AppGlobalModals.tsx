@@ -1,10 +1,11 @@
 import React, { Suspense, lazy } from 'react';
 import { ToastHost } from '../ToastHost';
 import { ConfirmHost } from '../ui/ConfirmHost';
+import { UpdateNotifier } from './UpdateNotifier';
 import { OnboardingTour } from '../onboarding/OnboardingTour';
 import { WelcomeIntro } from '../onboarding/WelcomeIntro';
 import { PageToursPromptModal } from '../onboarding/PageToursPromptModal';
-import { TOUR_STEPS, TOUR_STORAGE_KEY } from '../onboarding/tourSteps';
+import { TOUR_STORAGE_KEY, type TourStep } from '../onboarding/tourSteps';
 
 // Modal de novidades e histórico de versões do changelog
 const WhatsNewModal = lazy(() => import('../WhatsNewModal').then((m) => ({ default: m.WhatsNewModal })));
@@ -12,6 +13,8 @@ const WhatsNewModal = lazy(() => import('../WhatsNewModal').then((m) => ({ defau
 export interface AppGlobalModalsProps {
   isWelcomeOpen: boolean;
   isTourOpen: boolean;
+  /** Passos do tour global já sem os grupos do Header que sumiram (módulos desligados). */
+  tourSteps: TourStep[];
   isPageToursPromptOpen: boolean;
   isWhatsNewOpen: boolean;
   changelogContent: string;
@@ -25,6 +28,7 @@ export interface AppGlobalModalsProps {
 export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
   isWelcomeOpen,
   isTourOpen,
+  tourSteps,
   isPageToursPromptOpen,
   isWhatsNewOpen,
   changelogContent,
@@ -37,11 +41,12 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
   <>
     <ToastHost />
     <ConfirmHost />
+    <UpdateNotifier />
 
     <WelcomeIntro isOpen={isWelcomeOpen} onFinish={onFinishWelcome} />
 
     <OnboardingTour
-      steps={TOUR_STEPS}
+      steps={tourSteps}
       isOpen={isTourOpen && !isWelcomeOpen}
       onClose={onCloseTour}
       storageKey={TOUR_STORAGE_KEY}

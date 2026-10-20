@@ -67,6 +67,12 @@ import type {
   UpdateBundleVersionRequest,
   Routine801CatalogResponse,
   Routine801InstallRequest,
+  DelphiInstallation,
+  DelphiProject,
+  DelphiBuildRequest,
+  DelphiBuildResult,
+  DelphiPipelineRequest,
+  DelphiPipelineResult,
   Routine801InstallResult,
   GitCommitInfo,
   GitFileStatus,
@@ -79,7 +85,8 @@ import type {
   DeployProfileHistoryEntry,
   DeployProgressEvent,
   OsgiResolutionDiagnosticSummary,
-  TableColumnInfo,
+  DbTableColumnsResult,
+  DbTablesResult,
   DockerContainerStats,
   ComposeServiceStatus,
   LogWatchStatus,
@@ -231,6 +238,14 @@ export interface ElectronAPI {
   routine801CheckServer: (customUrl?: string) => Promise<{ ok: boolean; status: number; message: string; url: string }>;
   routine801InstallFeatures: (request: Routine801InstallRequest) => Promise<Routine801InstallResult>;
 
+  // Build Delphi (MSBuild) e pipeline compilar → publicar → abrir
+  delphiDetectInstallations: () => Promise<DelphiInstallation[]>;
+  delphiFindProjects: (root?: string) => Promise<DelphiProject[]>;
+  delphiBuild: (request: DelphiBuildRequest) => Promise<DelphiBuildResult>;
+  delphiRunPipeline: (request: DelphiPipelineRequest) => Promise<DelphiPipelineResult>;
+  delphiCancelBuild: () => Promise<{ success: boolean }>;
+  onDelphiLogChunk: (callback: (chunk: string) => void) => () => void;
+
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (
     profile: DeployProfile
@@ -311,8 +326,8 @@ export interface ElectronAPI {
   cancelDbSession: (sessionId: string) => Promise<DbSessionState>;
   closeDbSession: (sessionId: string) => Promise<void>;
   explainDbPlan: (config: DatabaseConnectionConfig, sql: string) => Promise<ExplainPlanResult>;
-  listDbTables: (config: DatabaseConnectionConfig) => Promise<string[]>;
-  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<TableColumnInfo[]>;
+  listDbTables: (config: DatabaseConnectionConfig) => Promise<DbTablesResult>;
+  getDbTableColumns: (config: DatabaseConnectionConfig, tableName: string) => Promise<DbTableColumnsResult>;
   insertDbRow: (config: DatabaseConnectionConfig, tableName: string, values: Record<string, any>, sessionId?: string) => Promise<QueryResult>;
   updateDbRow: (config: DatabaseConnectionConfig, tableName: string, changes: Record<string, any>, where: Record<string, any>, sessionId?: string) => Promise<QueryResult>;
   deleteDbRow: (config: DatabaseConnectionConfig, tableName: string, where: Record<string, any>, sessionId?: string) => Promise<QueryResult>;

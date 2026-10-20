@@ -163,7 +163,7 @@ export class HttpCollectionService {
     const env = envs.find((e) => e.id === environmentId) || envs[0];
     if (!env) return false;
 
-    let tokenVar = env.variables.find((v) => v.key.toUpperCase() === 'TOKEN');
+    const tokenVar = env.variables.find((v) => v.key.toUpperCase() === 'TOKEN');
     if (tokenVar) {
       tokenVar.value = token;
       tokenVar.enabled = true;

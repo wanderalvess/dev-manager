@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **159 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **164 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -128,6 +128,8 @@ As ferramentas MCP podem se conectar a bancos configurados localmente e investig
 *   **`db_get_oracle_active_sessions` / `db_get_oracle_recent_statements`**: Statement Tracer do Oracle — lista sessões conectadas com a SQL atual/última de cada uma (`v$session`/`v$sql`) ou as instruções mais recentes no cursor cache, com filtro opcional por schema/texto. Útil para descobrir qual query um app ou rotina disparou, quando vários sistemas compartilham o mesmo banco.
 *   **`db_get_oracle_statement_binds`**: Captura os valores dos parâmetros (`bind variables`) passados na execução de um SQL no Oracle via `v$sql_bind_capture`, retornando tipo de dado, posição, nome e valor capturado, acompanhado do SQL executável interpolado (com os parâmetros substituídos no formato literal correto). Permite inspecionar parâmetros sem precisar habilitar `log:set trace root` no Karaf ou usar ferramentas externas como `OraTracer.exe`.
 *   **`db_start_oracle_capture` / `db_get_oracle_capture_state` / `db_stop_oracle_capture` / `db_clear_oracle_capture`**: Captura contínua do Statement Tracer — consulta `v$session`/`v$sql` em segundo plano (intervalo padrão de 3s, mínimo de 2s, parada automática após 30 minutos) e acumula as SQLs distintas e a linha do tempo de qual sessão passou a rodar qual SQL. A leitura devolve até 50 itens de cada lista por padrão (`limit`). É uma captura própria do servidor MCP: não enxerga a captura iniciada na tela do app, e vice-versa.
+*   **`db_analyze_oracle_capture`**: Analisa a captura contínua **por rotina**: agrupa as SQLs pelo módulo Oracle que as executou (ex.: `PCSIS2075.exe`) e devolve, para cada rotina, as consultas mais lentas (tempo médio por execução), as repetidas (possível N+1: mesma consulta em laço ou variações só de valor literal) e as telas (`ACTION`) tocadas.
+    > "Iniciei a captura e abri o pedido na rotina 2075. Analise por rotina o que foi executado e me diga o que está lento ou repetido."
 *   **`db_list_tns_entries`**: Lê e analisa o arquivo de rede `tnsnames.ora` configurado no Hub Manager (ou informado pontualmente via `filePath`), extraindo aliases, host, porta, SID, SERVICE_NAME e protocolo configurados para conexão ao Oracle.
 
 **Exemplo de como pedir à IA:**
@@ -289,12 +291,27 @@ Executa chamadas HTTP e gerencia coleções estilo Postman com suporte a interpo
 
 ---
 
-## 17. Segurança e modo somente leitura
+## 17. Build Delphi (MSBuild)
+
+Compila projetos Delphi (10.x, 11, 12) pela mesma cadeia da IDE, sem abrir o RAD Studio. As tools começam com `delphi_...`.
+
+*   **`delphi_detect_installations`**: Lista as versões do RAD Studio/Delphi instaladas e o `rsvars.bat` de cada uma.
+    > "Quais versões do Delphi tenho instaladas?"
+*   **`delphi_list_projects`**: Procura arquivos `.dproj` na pasta de projetos configurada (ou na pasta informada).
+    > "Liste os projetos Delphi da minha pasta de projetos."
+*   **`delphi_build`**: Compila um `.dproj` e devolve erros e avisos já estruturados (arquivo, linha, código E/W/H do compilador) e o `.exe` gerado.
+    > "Compile o Rotina2075.dproj em Debug e me diga o que quebrou."
+*   **`delphi_run_pipeline`**: Encerra o `.exe` em execução, compila, publica o executável numa pasta (guardando a versão anterior como `.bak`) e o abre.
+    > "Compile a rotina 2075 e publique em Prod, depois abra para eu testar."
+
+---
+
+## 18. Segurança e modo somente leitura
 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
-*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (82 das 159) são registradas. As demais nem aparecem para o cliente.
+*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (87 das 164) são registradas. As demais nem aparecem para o cliente.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 

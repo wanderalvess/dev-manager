@@ -3,6 +3,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { UsageMetricsService, type UsageSettingsSource } from './UsageMetricsService';
 
 let dir: string;
@@ -320,7 +321,8 @@ describe('UsageMetricsService', () => {
     const PROCESSES = 4;
     const PER_PROCESS = 40;
     const script = path.join(dir, 'worker.mts');
-    const servicePath = path.resolve(__dirname, 'UsageMetricsService.ts').replace(/\\/g, '/');
+    // No Windows o ESM só aceita URL file:// (um caminho D:/... falha com ERR_UNSUPPORTED_ESM_URL_SCHEME).
+    const servicePath = pathToFileURL(path.resolve(__dirname, 'UsageMetricsService.ts')).href;
     fs.writeFileSync(
       script,
       `import { UsageMetricsService } from '${servicePath}';

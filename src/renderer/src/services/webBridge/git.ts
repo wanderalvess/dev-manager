@@ -5,7 +5,12 @@ import type {
   GitCommitInfo,
   GitFileStatus,
   GitDiffResult,
-  GitCommandResult
+  GitCommandResult,
+  AzurePipelineTarget,
+  AzureListBuildsOptions,
+  AzureListBuildsResult,
+  AzureListArtifactsResult,
+  AzureArtifactDownloadResult
 } from '../../../../shared/types';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
@@ -100,6 +105,31 @@ export function createGitApi({ apiFetch }: BridgeDeps) {
 
     getGitUncommittedCounts: async (): Promise<Record<string, number>> => {
       return apiFetch('/api/git/uncommitted-counts');
+    },
+
+    azureListBuilds: async (target: AzurePipelineTarget, options?: AzureListBuildsOptions): Promise<AzureListBuildsResult> => {
+      return apiFetch('/api/azure-pipelines/builds', { method: 'POST', body: JSON.stringify({ target, options }) });
+    },
+
+    azureListArtifacts: async (target: AzurePipelineTarget, buildId: number): Promise<AzureListArtifactsResult> => {
+      return apiFetch('/api/azure-pipelines/artifacts', { method: 'POST', body: JSON.stringify({ target, buildId }) });
+    },
+
+    azureDownloadArtifact: async (
+      target: AzurePipelineTarget,
+      buildId: number,
+      buildNumber: string,
+      artifactName: string
+    ): Promise<AzureArtifactDownloadResult> => {
+      return apiFetch('/api/azure-pipelines/download', {
+        method: 'POST',
+        body: JSON.stringify({ target, buildId, buildNumber, artifactName })
+      });
+    },
+
+    azureGetArtifactsDir: async (): Promise<string> => {
+      const data = await apiFetch<{ dir: string }>('/api/azure-pipelines/artifacts-dir');
+      return data.dir;
     },
 
     openExternal: async (url: string): Promise<boolean> => {

@@ -4,16 +4,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [1.39.0] - 2026-10-17
+## [Não lançado]
+### Adicionado
+- **Statement Tracer — aba "Por rotina"**: a captura passa a trazer tempo decorrido, CPU, leituras de buffer, leituras de disco e linhas do `v$sql` e agrupa as consultas pelo módulo que as executou (ex.: rotina `2075` / `PCSIS2075.exe`), com as telas (`ACTION`) tocadas, as consultas mais lentas por tempo médio e as repetidas — mesma consulta em laço ou variações só de valor literal (SQL concatenado) —, com a dica de correção. Abrir uma consulta leva ao inspetor de binds.
+- **MCP**: nova tool `db_analyze_oracle_capture` entrega essa análise por rotina à IA depois de uma captura.
+- **Build Delphi**: novo botão *"Build Delphi"* no Catálogo de Rotinas compila um `.dproj` pelo MSBuild, com as versões do RAD Studio (Delphi 10.x, 11 e 12) detectadas automaticamente, e mostra erros e avisos do compilador estruturados (arquivo, linha, código), sem abrir a IDE. O formulário lembra a última escolha.
+- **Pipeline Delphi em um clique**: *"Pipeline completo"* encerra o `.exe` em execução, compila, publica o executável numa pasta (com `.bak` da versão anterior) e o abre no diretório correto para carregar DLLs e INIs. Se o build falhar, nada é publicado nem aberto.
+- **MCP**: novas tools `delphi_detect_installations`, `delphi_list_projects`, `delphi_build` e `delphi_run_pipeline` (as duas últimas marcadas como destrutivas). Total: 162 ferramentas.
+- **Hub Git — Artefatos do Azure Pipelines**: novo botão *"Artefatos"* no cabeçalho de repositórios Azure DevOps lista os builds concluídos (filtrados pela branch atual ou por qualquer outra), mostra os artefatos publicados por cada build e baixa o `.zip` com um clique, em pipelines YAML (`PublishPipelineArtifact`/`publish`) e clássicos (`PublishBuildArtifacts`).
+- **Instalar artefato como rotina**: depois do download, o artefato pode ser instalado direto no diretório `Prod` do WinThor pelo mesmo instalador do catálogo de Rotinas, com backup automático da versão atual.
+- **Configurações → Azure**: nova opção *"Pasta de download dos artefatos de pipeline"* (padrão `Downloads\HubManager-Azure`). O PAT existente precisa do escopo `Build (Read)`.
+
+### Segurança
+- O PAT do Azure DevOps só é enviado a `dev.azure.com`; o redirect do PipelineArtifact para o armazenamento de blobs é seguido sem o cabeçalho `Authorization`.
+
+## [1.40.0] - 2026-10-17
 ### Adicionado
 - **Meu impacto (Configurações → Meu uso)**: o Hub Manager passa a calcular quanto tempo as automações economizaram. A conta é *usos com sucesso × o tempo que você levava à mão − o tempo real no app*. Falhas não contam e o resultado nunca é negativo. A tela mostra a economia dos últimos 7 dias, dos últimos 30 dias e desde o início, por módulo e por automação.
 - **Linha de base editável**: para cada automação (preparar ambiente, deploy, backup e restore, regressão de QA, testes Cypress…) você informa quantos minutos levava para fazer à mão. Enquanto não informar, vale um tempo padrão, que é só uma estimativa inicial. A tela separa o tempo **confirmado** (baseado no que você informou) do **estimado** (baseado no padrão), avisa quando parte da economia ainda usa o padrão e sinaliza as automações já usadas que pedem confirmação. Zerar o tempo de uma automação zera a economia dela; o botão de restaurar volta ao padrão. Como as demais configurações, a mudança vale ao clicar em **Salvar**, e a tela mostra o efeito na hora.
 - **Exportar CSV**: baixa a tabela de economia por automação (formato "CSV para Excel Brasil"), com a origem do tempo manual em cada linha (padrão ou informado, e a data), para quem recebe o arquivo saber o que é medição e o que é estimativa.
-- **Nova tool MCP `usage_get_impact`** (de leitura, 159 tools no total) e **API REST** `GET /api/usage/impact` e `GET /api/usage/days`: permitem perguntar a uma IA quanto tempo você economizou. A consulta não conta como uso.
+- **Nova tool MCP `usage_get_impact`** (de leitura, 164 tools no total) e **API REST** `GET /api/usage/impact` e `GET /api/usage/days`: permitem perguntar a uma IA quanto tempo você economizou. A consulta não conta como uso.
 ### Alterado
-- A contagem de uso passa a guardar também o tempo dos usos **com sucesso** (necessário para o cálculo). Contagens gravadas pela 1.38.0 continuam válidas: o tempo dos usos com sucesso é estimado a partir do total quando o campo não existe.
+- A contagem de uso passa a guardar também o tempo dos usos **com sucesso** (necessário para o cálculo). Contagens gravadas pela 1.39.0 continuam válidas: o tempo dos usos com sucesso é estimado a partir do total quando o campo não existe.
 
-## [1.38.0] - 2026-10-17
+## [1.39.0] - 2026-10-17
 ### Adicionado
 - **Meu uso (Configurações → Meu uso)**: o Hub Manager passa a contar, só na sua máquina, quantas vezes você executou cada automação (pipeline de ambiente, deploy, backup e restore, testes de QA, API Studio, consulta à documentação, Assistente IA…), quanto tempo cada execução levou e se terminou com sucesso. A tela mostra os totais, o uso por módulo e por semana e as ações mais usadas, nos últimos 7 dias, 30 dias ou em todo o período.
 - **Privacidade da contagem**: só contadores e durações. Nunca são registrados SQL, nomes de banco ou schema, caminhos, perguntas e respostas da IA, senhas, tokens, nome ou e-mail. Cada instalação tem apenas um identificador aleatório, e nada sai da máquina. A contagem vem **ligada** e pode ser desligada na própria tela (vale ao salvar as configurações); o botão **Apagar histórico** remove tudo.
@@ -22,6 +36,15 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **API REST**: `GET /api/usage/summary` (aceita `from` e `to`) e `POST /api/usage/clear`.
 ### Alterado
 - Contagem de tools MCP atualizada nos textos da Ajuda, do README e do catálogo (`docs/MCP_TOOLS.md`), que estavam desatualizados.
+
+## [1.38.0] - 2026-10-16
+### Adicionado
+- **Perfis de Deploy — Execução Seletiva & Pular Etapas**: caixas de seleção (`checkbox`) interativas em cada etapa do perfil de deploy ativo, permitindo incluir ou desmarcar etapas individuais para pular comandos demorados (como compilações `mvn clean` desnecessárias quando o build já foi feito) na execução automática.
+- **Ação Rápida "Daqui em diante"**: botão dedicado em cada etapa intermediária que fatia o perfil ativo e dispara a execução imediatamente a partir daquela etapa até o final, sem necessidade de desmarcar manualmente as anteriores.
+- **Controles de Seleção em Lote**: checkbox mestre com estado indeterminado e botões de ação rápida *"Marcar todas"* e *"Desmarcar todas"* no cabeçalho do painel de etapas, com contador dinâmico `Etapas (X/Y)` e badge indicando a contagem de etapas puladas.
+- **Botão Dinâmico no Cabeçalho**: o botão principal de execução adapta seu texto para *"Executar Selecionadas (N)"* e tooltip explicativo quando há etapas puladas, desabilitando-se automaticamente quando nenhuma etapa estiver marcada para prevenir disparos vazios.
+- **Editor de Etapas de Deploy**: adicionada a opção *"Habilitar etapa na execução automática do perfil (enabled)"* no modal de configurações avançadas de etapas de deploy.
+- **Central de Ajuda**: novo tópico no FAQ e bullet atualizado no Guia dos Módulos detalhando a seleção e o pulo de etapas em perfis de deploy.
 
 ## [1.37.0] - 2026-10-15
 ### Adicionado

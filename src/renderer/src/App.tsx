@@ -8,6 +8,7 @@ import { useAppShellData } from './hooks/app/useAppShellData';
 import { useAppShellOnboarding } from './hooks/app/useAppShellOnboarding';
 import { useAppShellNotifications } from './hooks/app/useAppShellNotifications';
 import { useGlobalShortcuts } from './hooks/app/useGlobalShortcuts';
+import { useModuleVisibility } from './hooks/app/useModuleVisibility';
 
 export const App: React.FC = () => {
   const {
@@ -21,10 +22,13 @@ export const App: React.FC = () => {
   } = useAppShellNavigation();
   const data = useAppShellData(activeTab);
   const onboarding = useAppShellOnboarding(setActiveTab);
+  // Toda navegação passa por `navigate`, que barra páginas de módulos desligados em Configurações → Módulos.
+  const modules = useModuleVisibility(activeTab, setActiveTab, visitedTabs, data.settingsVersion);
+  const { navigate } = modules;
 
   // Atalhos Alt+N: manter em sincronia com Header, QuickLauncherModal e a tabela da Ajuda
   // (fonte do mapa em utils/appShellNavigation.ts).
-  useGlobalShortcuts(setActiveTab, setIsQuickLauncherOpen);
+  useGlobalShortcuts(navigate, setIsQuickLauncherOpen);
   useAppShellNotifications();
 
   return (
@@ -32,7 +36,8 @@ export const App: React.FC = () => {
       {/* Topo / Header Cockpit */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={navigate}
+        navGroups={modules.navGroups}
         onRefreshAll={data.refreshAll}
         isRefreshing={data.isRefreshing}
         onOpenQuickLauncher={() => setIsQuickLauncherOpen(true)}
@@ -43,7 +48,8 @@ export const App: React.FC = () => {
       <QuickLauncherModal
         isOpen={isQuickLauncherOpen}
         onClose={() => setIsQuickLauncherOpen(false)}
-        onNavigate={(tab) => setActiveTab(tab)}
+        onNavigate={navigate}
+        disabledModules={modules.disabledModules}
         projects={data.projects}
         onRefreshAll={data.refreshAll}
       />
@@ -51,8 +57,8 @@ export const App: React.FC = () => {
       {/* Conteúdo da Aba Ativa */}
       <AppPageHost
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        visitedTabs={visitedTabs}
+        setActiveTab={navigate}
+        visitedTabs={modules.mountedTabs}
         settingsVersion={data.settingsVersion}
         services={data.services}
         projects={data.projects}
@@ -69,6 +75,7 @@ export const App: React.FC = () => {
       <AppGlobalModals
         isWelcomeOpen={onboarding.isWelcomeOpen}
         isTourOpen={onboarding.isTourOpen}
+        tourSteps={modules.tourSteps}
         isPageToursPromptOpen={onboarding.isPageToursPromptOpen}
         isWhatsNewOpen={onboarding.isWhatsNewOpen}
         changelogContent={onboarding.changelogContent}

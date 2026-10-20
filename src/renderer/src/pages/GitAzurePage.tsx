@@ -27,6 +27,8 @@ import { GitCommitModal } from '../components/git/modals/GitCommitModal';
 import { GitHistoryModal } from '../components/git/modals/GitHistoryModal';
 import { GitDiffModal } from '../components/git/modals/GitDiffModal';
 import { GitTaskBranchModal } from '../components/git/modals/GitTaskBranchModal';
+import { AzureArtifactsModal } from '../components/git/modals/AzureArtifactsModal';
+import { useAzureArtifacts } from '../hooks/git/useAzureArtifacts';
 
 interface GitAzurePageProps {
   projects: GitProjectInfo[];
@@ -98,6 +100,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const history = useGitHistory(currentProject);
   const diff = useGitDiff(currentProject);
   const taskBranch = useGitTaskBranch({ currentProject, ...outputControls, refreshAfterGitChange });
+  const artifacts = useAzureArtifacts(currentProject);
 
   return (
     <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
@@ -127,6 +130,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   project={currentProject}
                   onOpenAzurePipelines={ops.handleOpenAzurePipelines}
                   onOpenRemoteRepo={ops.handleOpenRemoteRepo}
+                  onOpenArtifacts={artifacts.canOpen ? artifacts.open : undefined}
                 />
                 <GitBranchActionsBar
                   project={currentProject}
@@ -237,6 +241,8 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
           onCopy={diff.copyDiff}
         />
       )}
+
+      {artifacts.isOpen && currentProject && <AzureArtifactsModal project={currentProject} state={artifacts} />}
 
       <OnboardingTour
         steps={GIT_TOUR_STEPS}

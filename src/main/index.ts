@@ -2,11 +2,12 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session, Notificati
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { ConfigService } from './services/ConfigService';
+import { ConfigService } from './services/ConfigService';
 import { safeSend } from './utils/ipcSend';
 import { WindowsService } from './services/WindowsService';
 import { KarafService } from './services/KarafService';
 import { GitAzureService } from './services/GitAzureService';
+import { AzurePipelineService } from './services/AzurePipelineService';
 import { RoutinesService } from './services/RoutinesService';
 import { DocsIndexService } from './services/DocsIndexService';
 import { DatabaseService } from './services/DatabaseService';
@@ -21,6 +22,8 @@ import { KarafLogPersistenceService } from './services/KarafLogPersistenceServic
 import { AutoUpdateService } from './services/AutoUpdateService';
 import { LlmService } from './services/LlmService';
 import { Routine801Service } from './services/Routine801Service';
+import { DelphiBuildService } from './services/DelphiBuildService';
+import { UsageMetricsService } from './services/UsageMetricsService';
 import { ApmService, getApmReceiverHandlePath } from './services/ApmService';
 import { QaRegressionService } from './services/QaRegressionService';
 import { QaPayloadService } from './services/QaPayloadService';
@@ -28,7 +31,6 @@ import { TestRunnerService } from './services/TestRunnerService';
 import { TautAutomationService } from './services/TautAutomationService';
 import { HttpClientService } from './services/HttpClientService';
 import { HttpCollectionService } from './services/HttpCollectionService';
-import { UsageMetricsService } from './services/UsageMetricsService';
 import { registerIpcHandlers } from './ipc/registerIpc';
 import { notifyUser } from './services/NotificationService';
 
@@ -132,6 +134,7 @@ function createWindow() {
   const networkService = new NetworkService();
   const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
   const gitAzureService = new GitAzureService(configService, karafService);
+  const azurePipelineService = new AzurePipelineService(configService);
   const routinesService = new RoutinesService(configService);
   const docsIndexService = new DocsIndexService(configService, gitAzureService);
   docsIndexService.onWatchReindexComplete = (status) => {
@@ -147,9 +150,16 @@ function createWindow() {
   const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
   const logWatcherService = new LogWatcherService();
   const karafLogPersistenceService = new KarafLogPersistenceService();
-  const autoUpdateService = new AutoUpdateService((status) => {
-    safeSend(mainWindow, 'update:status', status);
-  });
+  const autoUpdateService = new AutoUpdateService(
+    (status) => {
+      safeSend(mainWindow, 'update:status', status);
+    },
+    {
+      portable: Boolean(process.env.PORTABLE_EXECUTABLE_FILE),
+      currentVersion: app.getVersion(),
+      openExternal: (url) => shell.openExternal(url)
+    }
+  );
   const llmService = new LlmService(configService, docsIndexService);
   const routine801Service = new Routine801Service(configService, karafService);
   const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
@@ -159,6 +169,7 @@ function createWindow() {
   const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
   const httpCollectionService = new HttpCollectionService();
   const httpClientService = new HttpClientService(httpCollectionService);
+  const delphiBuildService = new DelphiBuildService(configService, windowsService);
   apmService.onNewTrace = (summary) => {
     safeSend(mainWindow, 'apm:new-trace', summary);
   };
@@ -171,6 +182,7 @@ function createWindow() {
     windowsService,
     karafService,
     gitAzureService,
+    azurePipelineService,
     routinesService,
     configService,
     docsIndexService,
@@ -185,6 +197,7 @@ function createWindow() {
     autoUpdateService,
     llmService,
     routine801Service,
+    delphiBuildService,
     apmService,
     oracleTracerCaptureService,
     qaRegressionService,

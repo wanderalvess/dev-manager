@@ -1,4 +1,4 @@
-export type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality' | 'usage';
+export type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality' | 'usage' | 'modules';
 
 export interface SettingsSearchEntry {
   id: string;
@@ -37,5 +37,6 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-usageMetricsEnabled', tab: 'usage', tabLabel: 'Meu uso', label: 'Contagem de uso (ligar, desligar, apagar histórico)', keywords: 'uso metricas contagem telemetria privacidade historico apagar meu uso impacto horas economizadas' },
   { id: 'field-usageImpact', tab: 'usage', tabLabel: 'Meu uso', label: 'Meu impacto: tempo economizado por automação', keywords: 'impacto tempo economizado horas economia produtividade resultado exportar csv' },
   { id: 'field-usageBaselines', tab: 'usage', tabLabel: 'Meu uso', label: 'Quanto tempo você levava à mão (linha de base)', keywords: 'linha de base tempo manual levava a mao minutos referencia antes economia padrao estimativa confirmar' },
-  { id: 'field-usageSummary', tab: 'usage', tabLabel: 'Meu uso', label: 'Resumo do meu uso (execuções por módulo e semana)', keywords: 'uso resumo execucoes modulo semana sucesso falha tempo meu uso metricas' }
+  { id: 'field-usageSummary', tab: 'usage', tabLabel: 'Meu uso', label: 'Resumo do meu uso (execuções por módulo e semana)', keywords: 'uso resumo execucoes modulo semana sucesso falha tempo meu uso metricas' },
+  { id: 'field-modules', tab: 'modules', tabLabel: 'Módulos', label: 'Ligar / Desligar Módulos da Navegação', keywords: 'modulos paginas navegacao menu cabecalho ocultar esconder desligar ligar perfil dev qa operacao' }
 ];

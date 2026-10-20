@@ -44,6 +44,10 @@ import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { createUsageTrackingMiddleware } from './usageTracking';
 import { createHttpClientRouter } from './routes/httpClientRoutes';
+import { createAzurePipelineRouter } from './routes/azurePipelineRoutes';
+import { createDelphiRouter } from './routes/delphiRoutes';
+import { DelphiBuildService } from '../main/services/DelphiBuildService';
+import { AzurePipelineService } from '../main/services/AzurePipelineService';
 import {
   EnvironmentLog,
   KarafDeployRequest,
@@ -988,8 +992,8 @@ app.post('/api/db/tables', async (req, res) => {
   try {
     const result = await databaseService.listTables(req.body);
     res.json(result);
-  } catch {
-    res.status(500).json([]);
+  } catch (err: any) {
+    res.status(500).json({ tables: [], error: err?.message || 'Erro ao listar tabelas' });
   }
 });
 
@@ -998,8 +1002,8 @@ app.post('/api/db/columns', async (req, res) => {
     const { config, tableName } = req.body;
     const result = await databaseService.getTableColumns(config, tableName);
     res.json(result);
-  } catch {
-    res.status(500).json([]);
+  } catch (err: any) {
+    res.status(500).json({ columns: [], error: err?.message || 'Erro ao obter colunas' });
   }
 });
 
@@ -2201,6 +2205,8 @@ app.post('/api/taut/abort', (_req, res) => {
 });
 
 app.use('/api/http-client', createHttpClientRouter(httpClientService, httpCollectionService));
+app.use('/api/delphi', createDelphiRouter(new DelphiBuildService(configService, windowsService), broadcastWs));
+app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
 
 // Servir Frontend SPA estático se compilado
 const clientDist = path.resolve(__dirname, '../../dist');

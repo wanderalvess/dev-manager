@@ -1,4 +1,5 @@
 import type { UsageBaselineOverrides } from './usageBaselines';
+import type { OracleStatementMetrics } from './oracleTracerAnalysis';
 export type ServiceState = 'RUNNING' | 'STOPPED' | 'START_PENDING' | 'STOP_PENDING' | 'UNKNOWN' | 'NOT_INSTALLED';
 
 export interface ServiceStatus {
@@ -295,7 +296,8 @@ export interface GitProjectInfo {
 /** Status do processo de atualização automática do app (electron-updater / GitHub Releases). */
 export type UpdateStatus =
   | { status: 'checking' }
-  | { status: 'available'; version: string }
+  /** `manual`: build portátil — o botão abre o download no navegador em vez de baixar/instalar no app. */
+  | { status: 'available'; version: string; manual?: boolean }
   | { status: 'not-available' }
   | { status: 'downloading'; percent: number }
   | { status: 'downloaded'; version: string }
@@ -485,6 +487,8 @@ export interface AppSettings {
   projectsPath: string;
   targetPrBranch: string;
   favoriteRoutines: string[];
+  /** Páginas da navegação desligadas pelo usuário (ids de APP_MODULE_IDS em shared/appModules.ts); ausente = todas ligadas */
+  disabledModules?: string[];
   webPort?: number;
   webPath?: string;
   karafSshPort?: number;
@@ -597,6 +601,8 @@ export interface AppSettings {
   usageBaselines?: UsageBaselineOverrides;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
   azureDevOpsToken?: string;
+  /** Pasta onde os artefatos de build do Azure Pipelines são baixados (padrão: Downloads\HubManager-Azure) */
+  azureArtifactsDir?: string;
   /** Fontes externas de qualidade e testes (Zephyr Scale, Zephyr Squad, Jira, Azure Test Plans) */
   qualitySources?: QualitySourceConfig[];
   /** ID da fonte de qualidade ativa */
@@ -1305,6 +1311,18 @@ export interface TableColumnInfo {
   defaultValue?: string;
 }
 
+/** Listagem de tabelas: `error` preenchido distingue falha (permissão, conexão caída) de banco legitimamente vazio. */
+export interface DbTablesResult {
+  tables: string[];
+  error?: string;
+}
+
+/** Colunas de uma tabela: `error` preenchido distingue falha de tabela sem colunas. */
+export interface DbTableColumnsResult {
+  columns: TableColumnInfo[];
+  error?: string;
+}
+
 // ==========================================
 // Módulo de Gerenciamento de Containers (Docker / Podman)
 // ==========================================
@@ -1582,7 +1600,7 @@ export interface OracleActiveSessionsResult {
 }
 
 /** Uma instrução SQL recente no cursor cache do Oracle (v$sql). */
-export interface OracleRecentStatement {
+export interface OracleRecentStatement extends OracleStatementMetrics {
   sqlId: string;
   sqlText: string;
   parsingSchemaName: string | null;
@@ -2816,3 +2834,6 @@ export interface TautEnvSyncResult {
 
 export * from './httpClientTypes';
 export * from './usageMetricsTypes';
+export * from './azurePipelineTypes';
+export * from './oracleTracerAnalysis';
+export * from './delphiTypes';

@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.39.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.40.0';
   } catch {
-    return '1.39.0';
+    return '1.40.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -36,6 +36,8 @@ import { KarafLogPersistenceService } from '../main/services/KarafLogPersistence
 import { LogWatcherService } from '../main/services/LogWatcherService';
 import { LlmService } from '../main/services/LlmService';
 import { Routine801Service } from '../main/services/Routine801Service';
+import { DelphiBuildService } from '../main/services/DelphiBuildService';
+import { registerDelphiTools } from './tools/delphiTools';
 import { OracleTracerCaptureService } from '../main/services/OracleTracerCaptureService';
 import { getApmReceiverHandlePath } from '../main/services/ApmService';
 import { ApmReceiverClient } from '../main/services/ApmReceiverClient';
@@ -48,6 +50,7 @@ import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { mcpUsageInfo } from './usageTracking';
 import { registerHttpClientTools } from './tools/httpClientTools';
+import { registerTracerAnalysisTools } from './tools/tracerAnalysisTools';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
 import { buildCompactTraceDetails } from '../main/utils/apmUtils';
 import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupConfigUtils';
@@ -76,6 +79,7 @@ const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
 const llmService = new LlmService(configService, docsIndexService);
 const routine801Service = new Routine801Service(configService, karafService);
+const delphiBuildService = new DelphiBuildService(configService, windowsService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
 const qaRegressionService = new QaRegressionService(configService, databaseService);
 const qaPayloadService = new QaPayloadService(configService, databaseService);
@@ -1930,7 +1934,8 @@ server.registerTool(
     if (!targetConfig) {
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
     }
-    const tables = await databaseService.listTables(targetConfig);
+    const { tables, error } = await databaseService.listTables(targetConfig);
+    if (error) return fail(`Falha ao listar tabelas: ${error}`);
     return ok({ tables, count: tables.length });
   }
 );
@@ -1951,7 +1956,8 @@ server.registerTool(
     if (!targetConfig) {
       return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
     }
-    const columns = await databaseService.getTableColumns(targetConfig, tableName);
+    const { columns, error } = await databaseService.getTableColumns(targetConfig, tableName);
+    if (error) return fail(`Falha ao obter colunas de ${tableName}: ${error}`);
     return ok({ tableName, columns, count: columns.length });
   }
 );
@@ -2434,6 +2440,9 @@ server.registerTool(
     return success ? ok({ success: true }) : fail('Não foi possível limpar o arquivo (não existe ou sem permissão).');
   }
 );
+
+// --- Delphi: build via MSBuild e pipeline de publicação ---
+registerDelphiTools(server, { delphiBuildService, ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(
@@ -3247,6 +3256,12 @@ server.registerTool(
 );
 
 registerHttpClientTools(server, httpClientService, httpCollectionService);
+registerTracerAnalysisTools(server, {
+  oracleTracerCaptureService,
+  resolveConnection: (connectionId) => resolveDbConfig(connectionId),
+  ok,
+  fail
+});
 
 // --- Inicialização ---
 async function main() {

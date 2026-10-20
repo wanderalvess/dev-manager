@@ -2,6 +2,7 @@ import type { BrowserWindow } from 'electron';
 import type { WindowsService } from '../services/WindowsService';
 import type { KarafService } from '../services/KarafService';
 import type { GitAzureService } from '../services/GitAzureService';
+import type { AzurePipelineService } from '../services/AzurePipelineService';
 import type { RoutinesService } from '../services/RoutinesService';
 import type { ConfigService } from '../services/ConfigService';
 import type { DocsIndexService } from '../services/DocsIndexService';
@@ -25,6 +26,7 @@ import type { QaPayloadService } from '../services/QaPayloadService';
 import type { HttpClientService } from '../services/HttpClientService';
 import type { HttpCollectionService } from '../services/HttpCollectionService';
 import type { UsageMetricsService } from '../services/UsageMetricsService';
+import type { DelphiBuildService } from '../services/DelphiBuildService';
 
 /** Tudo que um grupo de handlers IPC pode precisar: a janela principal e os serviços do app. */
 export interface IpcContext {
@@ -32,6 +34,7 @@ export interface IpcContext {
   windowsService: WindowsService;
   karafService: KarafService;
   gitAzureService: GitAzureService;
+  azurePipelineService: AzurePipelineService;
   routinesService: RoutinesService;
   configService: ConfigService;
   docsIndexService: DocsIndexService;
@@ -55,4 +58,5 @@ export interface IpcContext {
   httpClientService: HttpClientService;
   httpCollectionService: HttpCollectionService;
   usageMetricsService: UsageMetricsService;
+  delphiBuildService: DelphiBuildService;
 }

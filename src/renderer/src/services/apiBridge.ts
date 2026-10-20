@@ -4,6 +4,7 @@ import { createEnvironmentApi } from './webBridge/environment';
 import { createKarafApi } from './webBridge/karaf';
 import { createKarafBundlesApi } from './webBridge/karafBundles';
 import { createRoutine801Api } from './webBridge/routine801';
+import { createDelphiApi } from './webBridge/delphi';
 import { createDeployApi } from './webBridge/deploy';
 import { createGitApi } from './webBridge/git';
 import { createRoutinesApi } from './webBridge/routines';
@@ -36,6 +37,7 @@ export function initApiBridge() {
     ...createKarafApi(deps),
     ...createKarafBundlesApi(deps),
     ...createRoutine801Api(deps),
+    ...createDelphiApi(deps),
     ...createDeployApi(deps),
     ...createGitApi(deps),
     ...createRoutinesApi(deps),

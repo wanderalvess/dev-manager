@@ -8,7 +8,8 @@ import { describe, expect, it } from 'vitest';
  */
 const IPC_DIR = __dirname;
 const MAIN_DIR = path.resolve(__dirname, '..');
-const PRELOAD = path.resolve(__dirname, '../../preload/index.ts');
+// O preload é dividido em módulos (index.ts + delphiApi.ts...): os canais valem para todos os arquivos da pasta.
+const PRELOAD_DIR = path.resolve(__dirname, '../../preload');
 
 function read(file: string): string {
   return fs.readFileSync(file, 'utf-8');
@@ -29,8 +30,9 @@ function matchAll(source: string, pattern: RegExp): string[] {
 
 const handlerSources = listFiles(path.join(IPC_DIR, 'handlers')).map(read).join('\n');
 const registered = matchAll(handlerSources, /ipcMain\.handle\(\s*'([^']+)'/g);
-const invoked = matchAll(read(PRELOAD), /ipcRenderer\.invoke\(\s*'([^']+)'/g);
-const listened = matchAll(read(PRELOAD), /ipcRenderer\.on\(\s*'([^']+)'/g);
+const preloadSources = listFiles(PRELOAD_DIR).map(read).join('\n');
+const invoked = matchAll(preloadSources, /ipcRenderer\.invoke\(\s*'([^']+)'/g);
+const listened = matchAll(preloadSources, /ipcRenderer\.on\(\s*'([^']+)'/g);
 const mainSources = listFiles(MAIN_DIR).map(read).join('\n');
 const sent = new Set(matchAll(mainSources, /(?:(?:safeSend|notifyUser)\(\s*\w+\s*,|webContents\.send\()\s*'([^']+)'/g));
 

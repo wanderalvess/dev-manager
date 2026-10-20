@@ -12,11 +12,13 @@ export function useDatabaseSchema(activeConnection: DatabaseConnectionConfig | n
   const [tablesByConn, setTablesByConn] = useState<Record<string, string[]>>({});
   const [columnsByConn, setColumnsByConn] = useState<Record<string, Record<string, TableColumnInfo[]>>>({});
   const [tableFilter, setTableFilter] = useState<string>('');
+  const [tablesErrorByConn, setTablesErrorByConn] = useState<Record<string, string | null>>({});
   const [isLoadingTables, setIsLoadingTables] = useState<boolean>(false);
   const [expandedTable, setExpandedTable] = useState<string | null>(null);
   const [isLoadingColumns, setIsLoadingColumns] = useState<Record<string, boolean>>({});
 
   const tables = tablesByConn[activeConnectionId] ?? NO_TABLES;
+  const tablesError = tablesErrorByConn[activeConnectionId] ?? null;
   const tableColumns = columnsByConn[activeConnectionId] ?? NO_COLUMNS;
 
   const setTableColumns = useCallback<React.Dispatch<React.SetStateAction<Record<string, TableColumnInfo[]>>>>(
@@ -36,10 +38,13 @@ export function useDatabaseSchema(activeConnection: DatabaseConnectionConfig | n
     const key = activeConnection.id;
     setIsLoadingTables(true);
     try {
-      const list = await window.electronAPI.listDbTables(activeConnection);
+      const { tables: list, error } = await window.electronAPI.listDbTables(activeConnection);
       setTablesByConn((prev) => ({ ...prev, [key]: list || [] }));
+      setTablesErrorByConn((prev) => ({ ...prev, [key]: error ?? null }));
     } catch (err) {
       console.error('Erro ao carregar tabelas:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setTablesErrorByConn((prev) => ({ ...prev, [key]: message }));
     } finally {
       setIsLoadingTables(false);
     }
@@ -61,8 +66,9 @@ export function useDatabaseSchema(activeConnection: DatabaseConnectionConfig | n
     if (!tableColumns[tableName] && activeConnection && window.electronAPI?.getDbTableColumns) {
       setIsLoadingColumns((prev) => ({ ...prev, [tableName]: true }));
       try {
-        const cols = await window.electronAPI.getDbTableColumns(activeConnection, tableName);
-        setTableColumns((prev) => ({ ...prev, [tableName]: cols || [] }));
+        const { columns: cols, error } = await window.electronAPI.getDbTableColumns(activeConnection, tableName);
+        // Falha não entra no cache: reexpandir a tabela tenta de novo.
+        if (!error) setTableColumns((prev) => ({ ...prev, [tableName]: cols || [] }));
       } catch (err) {
         console.error('Erro ao carregar colunas da tabela:', err);
       } finally {
@@ -78,6 +84,7 @@ export function useDatabaseSchema(activeConnection: DatabaseConnectionConfig | n
 
   return {
     tables,
+    tablesError,
     filteredTables,
     tableFilter,
     setTableFilter,
