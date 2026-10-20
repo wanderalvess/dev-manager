@@ -81,7 +81,12 @@ export function buildRecentStatementsQuery(filter?: OracleTracerFilter): OracleT
       q.action AS action,
       q.executions AS executions,
       q.first_load_time AS first_load_time,
-      q.last_active_time AS last_active_time
+      q.last_active_time AS last_active_time,
+      q.elapsed_time AS elapsed_time,
+      q.cpu_time AS cpu_time,
+      q.buffer_gets AS buffer_gets,
+      q.disk_reads AS disk_reads,
+      q.rows_processed AS rows_processed
     FROM v$sql q
     WHERE 1 = 1${extraWhere}
     ORDER BY q.last_active_time DESC
@@ -107,6 +112,15 @@ export function mapActiveSessionRow(row: Record<string, any>): OracleActiveSessi
   };
 }
 
+function numberOrNull(value: unknown): number | null {
+  return value !== null && value !== undefined && Number.isFinite(Number(value)) ? Number(value) : null;
+}
+
+function microsToMs(value: unknown): number | null {
+  const micros = numberOrNull(value);
+  return micros === null ? null : micros / 1000;
+}
+
 export function mapRecentStatementRow(row: Record<string, any>): OracleRecentStatement {
   return {
     sqlId: String(row.SQL_ID ?? ''),
@@ -116,7 +130,13 @@ export function mapRecentStatementRow(row: Record<string, any>): OracleRecentSta
     action: row.ACTION ?? null,
     executions: row.EXECUTIONS !== null && row.EXECUTIONS !== undefined ? Number(row.EXECUTIONS) : null,
     firstLoadTime: row.FIRST_LOAD_TIME ?? null,
-    lastActiveTime: row.LAST_ACTIVE_TIME ?? null
+    lastActiveTime: row.LAST_ACTIVE_TIME ?? null,
+    // ELAPSED_TIME/CPU_TIME vêm em microssegundos.
+    elapsedMs: microsToMs(row.ELAPSED_TIME),
+    cpuMs: microsToMs(row.CPU_TIME),
+    bufferGets: numberOrNull(row.BUFFER_GETS),
+    diskReads: numberOrNull(row.DISK_READS),
+    rowsProcessed: numberOrNull(row.ROWS_PROCESSED)
   };
 }
 

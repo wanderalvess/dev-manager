@@ -18,7 +18,7 @@ export interface SelectedStatementInfo {
   interpolatedSql?: string;
 }
 
-export type TracerView = 'sessions' | 'recent';
+export type TracerView = 'sessions' | 'recent' | 'routines';
 
 export const INTERVAL_OPTIONS = [
   { label: '2s', value: 2000 },

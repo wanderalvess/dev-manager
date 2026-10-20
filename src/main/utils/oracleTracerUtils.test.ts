@@ -113,7 +113,12 @@ describe('oracleTracerUtils', () => {
         ACTION: 'processarPedido',
         EXECUTIONS: '17',
         FIRST_LOAD_TIME: '2026-09-20/10:00:00',
-        LAST_ACTIVE_TIME: '2026-09-23/09:15:30'
+        LAST_ACTIVE_TIME: '2026-09-23/09:15:30',
+        ELAPSED_TIME: '2500000',
+        CPU_TIME: 1500000,
+        BUFFER_GETS: '420',
+        DISK_READS: 3,
+        ROWS_PROCESSED: '17'
       });
 
       expect(row).toEqual({
@@ -124,8 +129,19 @@ describe('oracleTracerUtils', () => {
         action: 'processarPedido',
         executions: 17,
         firstLoadTime: '2026-09-20/10:00:00',
-        lastActiveTime: '2026-09-23/09:15:30'
+        lastActiveTime: '2026-09-23/09:15:30',
+        elapsedMs: 2500,
+        cpuMs: 1500,
+        bufferGets: 420,
+        diskReads: 3,
+        rowsProcessed: 17
       });
+    });
+
+    it('deixa as métricas nulas quando a view não as traz', () => {
+      const row = mapRecentStatementRow({ SQL_ID: 'a', ELAPSED_TIME: null });
+      expect(row.elapsedMs).toBeNull();
+      expect(row.bufferGets).toBeNull();
     });
 
     it('usa string vazia para sqlId/sqlText ausentes em vez de "null"/"undefined"', () => {

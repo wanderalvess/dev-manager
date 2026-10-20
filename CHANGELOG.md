@@ -6,6 +6,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [Não lançado]
 ### Adicionado
+- **Statement Tracer — aba "Por rotina"**: a captura passa a trazer tempo decorrido, CPU, leituras de buffer, leituras de disco e linhas do `v$sql` e agrupa as consultas pelo módulo que as executou (ex.: rotina `2075` / `PCSIS2075.exe`), com as telas (`ACTION`) tocadas, as consultas mais lentas por tempo médio e as repetidas — mesma consulta em laço ou variações só de valor literal (SQL concatenado) —, com a dica de correção. Abrir uma consulta leva ao inspetor de binds.
+- **MCP**: nova tool `db_analyze_oracle_capture` entrega essa análise por rotina à IA depois de uma captura. Total: 158 ferramentas.
 - **Hub Git — Artefatos do Azure Pipelines**: novo botão *"Artefatos"* no cabeçalho de repositórios Azure DevOps lista os builds concluídos (filtrados pela branch atual ou por qualquer outra), mostra os artefatos publicados por cada build e baixa o `.zip` com um clique, em pipelines YAML (`PublishPipelineArtifact`/`publish`) e clássicos (`PublishBuildArtifacts`).
 - **Instalar artefato como rotina**: depois do download, o artefato pode ser instalado direto no diretório `Prod` do WinThor pelo mesmo instalador do catálogo de Rotinas, com backup automático da versão atual.
 - **Configurações → Azure**: nova opção *"Pasta de download dos artefatos de pipeline"* (padrão `Downloads\HubManager-Azure`). O PAT existente precisa do escopo `Build (Read)`.

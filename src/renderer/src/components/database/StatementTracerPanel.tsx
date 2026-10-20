@@ -8,6 +8,7 @@ import { TracerControls } from './tracer/TracerControls';
 import { TracerViewTabs } from './tracer/TracerViewTabs';
 import { SessionsTimeline } from './tracer/SessionsTimeline';
 import { StatementsTable } from './tracer/StatementsTable';
+import { RoutineGroupsPanel } from './tracer/RoutineGroupsPanel';
 import { StatementInspector } from './tracer/StatementInspector';
 
 export type { SelectedStatementInfo } from '../../utils/statementTracerUtils';
@@ -93,6 +94,14 @@ export const StatementTracerPanel: React.FC<StatementTracerPanelProps> = ({ acti
           copiedKey={copiedKey}
           onSelect={tracer.handleSelectSessionEvent}
           selectedSqlId={selectedItem?.sqlId}
+        />
+      ) : view === 'routines' ? (
+        <RoutineGroupsPanel
+          statements={state.statements}
+          onInspect={(sqlId) => {
+            const statement = state.statements.find((s) => s.sqlId === sqlId);
+            if (statement) tracer.handleSelectStatement(statement);
+          }}
         />
       ) : (
         <StatementsTable

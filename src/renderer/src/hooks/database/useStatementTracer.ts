@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   DatabaseConnectionConfig,
   OracleCaptureState,
@@ -28,6 +28,11 @@ export function useStatementTracer(activeConnection: DatabaseConnectionConfig | 
   const [selectedItem, setSelectedItem] = useState<SelectedStatementInfo | null>(null);
   const [isFetchingBinds, setIsFetchingBinds] = useState(false);
 
+  // Ref (e não dependência do useCallback): se `refreshState` mudasse a cada seleção, o efeito de hidratação abaixo
+  // rodaria de novo e limparia o item recém-selecionado, fechando o inspetor na hora.
+  const selectedItemRef = useRef(selectedItem);
+  selectedItemRef.current = selectedItem;
+
   const isOracle = activeConnection?.type === 'oracle';
   const connectionId = activeConnection?.id;
 
@@ -38,7 +43,7 @@ export function useStatementTracer(activeConnection: DatabaseConnectionConfig | 
       setState(res);
 
       // Se há um item selecionado, atualiza binds se disponíveis no novo snapshot
-      const merged = mergeSnapshotBinds(selectedItem, res.statements);
+      const merged = mergeSnapshotBinds(selectedItemRef.current, res.statements);
       if (merged) {
         setSelectedItem((prev) =>
           prev
@@ -53,7 +58,7 @@ export function useStatementTracer(activeConnection: DatabaseConnectionConfig | 
     } catch {
       // Falha pontual de leitura de estado não deve derrubar a UI; a próxima leva tenta de novo.
     }
-  }, [connectionId, selectedItem]);
+  }, [connectionId]);
 
   // Hidrata o estado assim que a conexão muda
   useEffect(() => {

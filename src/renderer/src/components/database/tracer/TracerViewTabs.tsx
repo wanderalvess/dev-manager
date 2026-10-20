@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, History } from 'lucide-react';
+import { Users, History, Layers } from 'lucide-react';
 import type { TracerView } from '../../../utils/statementTracerUtils';
 
 export const TracerViewTabs: React.FC<{
@@ -28,6 +28,17 @@ export const TracerViewTabs: React.FC<{
     >
       <History className="w-3.5 h-3.5" />
       SQL capturado ({statementsCount})
+    </button>
+    <button
+      type="button"
+      onClick={() => onChange('routines')}
+      className={`flex items-center gap-1.5 px-2.5 py-1.5 font-semibold transition cursor-pointer border-l border-border/70 ${
+        view === 'routines' ? 'bg-info/20 text-info' : 'text-muted-foreground hover:text-foreground'
+      }`}
+      title="Agrupa as consultas pela rotina (módulo) que as executou, com as mais lentas e as repetidas"
+    >
+      <Layers className="w-3.5 h-3.5" />
+      Por rotina
     </button>
   </div>
 );

@@ -46,6 +46,7 @@ import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { registerHttpClientTools } from './tools/httpClientTools';
+import { registerTracerAnalysisTools } from './tools/tracerAnalysisTools';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
 import { buildCompactTraceDetails } from '../main/utils/apmUtils';
 import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupConfigUtils';
@@ -3213,6 +3214,12 @@ server.registerTool(
 );
 
 registerHttpClientTools(server, httpClientService, httpCollectionService);
+registerTracerAnalysisTools(server, {
+  oracleTracerCaptureService,
+  resolveConnection: (connectionId) => resolveDbConfig(connectionId),
+  ok,
+  fail
+});
 
 // --- Inicialização ---
 async function main() {

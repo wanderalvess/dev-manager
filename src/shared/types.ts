@@ -1,3 +1,4 @@
+import type { OracleStatementMetrics } from './oracleTracerAnalysis';
 export type ServiceState = 'RUNNING' | 'STOPPED' | 'START_PENDING' | 'STOP_PENDING' | 'UNKNOWN' | 'NOT_INSTALLED';
 
 export interface ServiceStatus {
@@ -1594,7 +1595,7 @@ export interface OracleActiveSessionsResult {
 }
 
 /** Uma instrução SQL recente no cursor cache do Oracle (v$sql). */
-export interface OracleRecentStatement {
+export interface OracleRecentStatement extends OracleStatementMetrics {
   sqlId: string;
   sqlText: string;
   parsingSchemaName: string | null;
@@ -2828,3 +2829,4 @@ export interface TautEnvSyncResult {
 
 export * from './httpClientTypes';
 export * from './azurePipelineTypes';
+export * from './oracleTracerAnalysis';
