@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.41.0] - 2026-10-20
 ### Adicionado
 - **Statement Tracer — aba "Por rotina"**: a captura passa a trazer tempo decorrido, CPU, leituras de buffer, leituras de disco e linhas do `v$sql` e agrupa as consultas pelo módulo que as executou (ex.: rotina `2075` / `PCSIS2075.exe`), com as telas (`ACTION`) tocadas, as consultas mais lentas por tempo médio e as repetidas — mesma consulta em laço ou variações só de valor literal (SQL concatenado) —, com a dica de correção. Abrir uma consulta leva ao inspetor de binds.
 - **MCP**: nova tool `db_analyze_oracle_capture` entrega essa análise por rotina à IA depois de uma captura.
@@ -14,6 +14,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Hub Git — Artefatos do Azure Pipelines**: novo botão *"Artefatos"* no cabeçalho de repositórios Azure DevOps lista os builds concluídos (filtrados pela branch atual ou por qualquer outra), mostra os artefatos publicados por cada build e baixa o `.zip` com um clique, em pipelines YAML (`PublishPipelineArtifact`/`publish`) e clássicos (`PublishBuildArtifacts`).
 - **Instalar artefato como rotina**: depois do download, o artefato pode ser instalado direto no diretório `Prod` do WinThor pelo mesmo instalador do catálogo de Rotinas, com backup automático da versão atual.
 - **Configurações → Azure**: nova opção *"Pasta de download dos artefatos de pipeline"* (padrão `Downloads\HubManager-Azure`). O PAT existente precisa do escopo `Build (Read)`.
+- **Módulos da navegação**: nova aba *Configurações → Módulos* liga e desliga as páginas do menu. Os módulos desligados somem do cabeçalho, da busca rápida (`Ctrl+K`), dos atalhos `Alt+N` e dos tours de página.
+- **Atualização na versão portátil**: o app portátil também consulta as releases do GitHub e avisa, com um toast, quando há versão nova; o `.exe` novo abre no navegador. Os artefatos passam a ter nomes sem espaço (`HubManager-Setup-X.exe`, `HubManager-Portable-X.exe`) para o `latest.yml` casar com o GitHub, e `npm run release:publish` envia instalador, blockmap, `latest.yml` e portátil.
 
 ### Segurança
 - O PAT do Azure DevOps só é enviado a `dev.azure.com`; o redirect do PipelineArtifact para o armazenamento de blobs é seguido sem o cabeçalho `Authorization`.
