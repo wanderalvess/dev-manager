@@ -115,6 +115,17 @@ export class HttpClientService {
       const rawText = await response.text();
       const sizeBytes = Buffer.byteLength(rawText, 'utf-8');
 
+      const responseHeaders: Record<string, string> = {};
+      if (response.headers) {
+        for (const [k, v] of Object.entries(response.headers)) {
+          if (Array.isArray(v)) {
+            responseHeaders[k] = v.join(', ');
+          } else if (v !== undefined) {
+            responseHeaders[k] = String(v);
+          }
+        }
+      }
+
       let isJson = false;
       try {
         JSON.parse(rawText);
@@ -130,10 +141,10 @@ export class HttpClientService {
         statusText: response.statusText,
         durationMs,
         sizeBytes,
-        headers: {},
+        headers: responseHeaders,
         body: rawText,
         isJson,
-        contentType: isJson ? 'application/json' : 'text/plain',
+        contentType: responseHeaders['content-type'] || (isJson ? 'application/json' : 'text/plain'),
         timestamp: Date.now()
       };
 

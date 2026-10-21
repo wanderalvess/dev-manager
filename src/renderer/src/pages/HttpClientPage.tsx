@@ -92,6 +92,7 @@ export const HttpClientPage: React.FC<HttpClientPageProps> = ({
                 response={state.response}
                 isLoading={state.isLoading}
                 onSendToQaRegression={onNavigateToQaRegression}
+                onUpdateActiveToken={state.handleUpdateActiveToken}
               />
             </div>
           </div>

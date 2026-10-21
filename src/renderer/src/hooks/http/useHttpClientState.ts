@@ -168,6 +168,34 @@ export function useHttpClientState() {
     await api.httpSaveEnvironments(envs);
   };
 
+  const handleUpdateActiveToken = async (newToken: string) => {
+    if (!currentEnv) return;
+    const updatedEnvs = environments.map((env) => {
+      if (env.id !== currentEnv.id) return env;
+      const existingTokenIndex = env.variables.findIndex((v) => v.key.toUpperCase() === 'TOKEN');
+      const updatedVars = [...env.variables];
+      if (existingTokenIndex >= 0) {
+        updatedVars[existingTokenIndex] = {
+          ...updatedVars[existingTokenIndex],
+          value: newToken,
+          enabled: true
+        };
+      } else {
+        updatedVars.push({
+          id: Math.random().toString(36).substring(2, 9),
+          key: 'TOKEN',
+          value: newToken,
+          enabled: true
+        });
+      }
+      return { ...env, variables: updatedVars };
+    });
+
+    setEnvironments(updatedEnvs);
+    await api.httpSaveEnvironments(updatedEnvs);
+    showToast('Variável {{TOKEN}} atualizada no ambiente ativo com sucesso!', 'success');
+  };
+
   return {
     collections,
     environments,
@@ -190,6 +218,7 @@ export function useHttpClientState() {
     handleDeleteCollection,
     handleImportSuccess,
     handleSaveEnvironments,
+    handleUpdateActiveToken,
     loadData
   };
 }
