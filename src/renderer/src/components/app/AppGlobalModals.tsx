@@ -3,7 +3,8 @@ import { ToastHost } from '../ToastHost';
 import { ConfirmHost } from '../ui/ConfirmHost';
 import { UpdateNotifier } from './UpdateNotifier';
 import { OnboardingTour } from '../onboarding/OnboardingTour';
-import { WelcomeIntro } from '../onboarding/WelcomeIntro';
+import { SplashScreen } from '../onboarding/SplashScreen';
+import { OnboardingWizard } from '../onboarding/OnboardingWizard';
 import { PageToursPromptModal } from '../onboarding/PageToursPromptModal';
 import { TOUR_STORAGE_KEY, type TourStep } from '../onboarding/tourSteps';
 
@@ -11,6 +12,8 @@ import { TOUR_STORAGE_KEY, type TourStep } from '../onboarding/tourSteps';
 const WhatsNewModal = lazy(() => import('../WhatsNewModal').then((m) => ({ default: m.WhatsNewModal })));
 
 export interface AppGlobalModalsProps {
+  isSplashOpen: boolean;
+  isNewUser: boolean;
   isWelcomeOpen: boolean;
   isTourOpen: boolean;
   /** Passos do tour global já sem os grupos do Header que sumiram (módulos desligados). */
@@ -19,13 +22,21 @@ export interface AppGlobalModalsProps {
   isWhatsNewOpen: boolean;
   changelogContent: string;
   appVersion: string;
-  onFinishWelcome: () => void;
+  onSplashStartOnboarding: () => void;
+  onSplashExplore: () => void;
+  onSplashEnter: () => void;
+  onSplashWhatsNew: () => void;
+  onFinishWelcome: (wantsTour: boolean) => void;
+  onSettingsSaved: () => void;
+  onOpenSettings: () => void;
   onCloseTour: () => void;
   onClosePageToursPrompt: () => void;
   onCloseWhatsNew: () => void;
 }
 
 export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
+  isSplashOpen,
+  isNewUser,
   isWelcomeOpen,
   isTourOpen,
   tourSteps,
@@ -33,7 +44,13 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
   isWhatsNewOpen,
   changelogContent,
   appVersion,
+  onSplashStartOnboarding,
+  onSplashExplore,
+  onSplashEnter,
+  onSplashWhatsNew,
   onFinishWelcome,
+  onSettingsSaved,
+  onOpenSettings,
   onCloseTour,
   onClosePageToursPrompt,
   onCloseWhatsNew
@@ -43,18 +60,28 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
     <ConfirmHost />
     <UpdateNotifier />
 
-    <WelcomeIntro isOpen={isWelcomeOpen} onFinish={onFinishWelcome} />
+    <SplashScreen
+      isOpen={isSplashOpen}
+      isNewUser={isNewUser}
+      appVersion={appVersion}
+      onStartOnboarding={onSplashStartOnboarding}
+      onExplore={onSplashExplore}
+      onEnter={onSplashEnter}
+      onWhatsNew={onSplashWhatsNew}
+    />
+
+    <OnboardingWizard isOpen={isWelcomeOpen} onFinish={onFinishWelcome} onSettingsSaved={onSettingsSaved} onOpenSettings={onOpenSettings} />
 
     <OnboardingTour
       steps={tourSteps}
-      isOpen={isTourOpen && !isWelcomeOpen}
+      isOpen={isTourOpen && !isWelcomeOpen && !isSplashOpen}
       onClose={onCloseTour}
       storageKey={TOUR_STORAGE_KEY}
     />
 
     <PageToursPromptModal isOpen={isPageToursPromptOpen} onSelectChoice={onClosePageToursPrompt} />
 
-    {isWhatsNewOpen && changelogContent && (
+    {isWhatsNewOpen && !isSplashOpen && changelogContent && (
       <Suspense fallback={null}>
         <WhatsNewModal
           isOpen={isWhatsNewOpen}

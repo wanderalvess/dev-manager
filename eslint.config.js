@@ -27,15 +27,17 @@ const DARK_SURFACES = [
   'src/renderer/src/components/karaf/features/KarafFeaturesLogDrawer.tsx', 'src/renderer/src/components/containers/modals/ContainerLogsModal.tsx',
   'src/renderer/src/components/database/grid/ResultsGridCellContent.tsx', 'src/renderer/src/components/database/backup/BackupCustomCommandPanel.tsx',
   'src/renderer/src/components/apm/ApmSetupModal.tsx', 'src/renderer/src/components/apm/dashboard/ApmDashboard{Standby,TimeChart}.tsx',
-  'src/renderer/src/components/onboarding/WelcomeIntro.tsx', 'src/renderer/src/components/settings/dirs/DirsWinthorStartPanel.tsx',
+  'src/renderer/src/components/settings/dirs/DirsWinthorStartPanel.tsx',
   'src/renderer/src/main.tsx', 'src/renderer/src/utils/terminalViewerUtils*.ts'
 ];
 // Menus/dropdowns e o tour usam fixed inset-0 só como camada de clique-fora/spotlight, não como diálogo.
+// Abertura e onboarding já são Modal (modo bare); o fixed inset-0 é o painel de tela cheia deles.
 const CLICK_AWAY_LAYERS = [
   'src/renderer/src/components/database/grid/ResultsGrid*Menu.tsx', 'src/renderer/src/components/database/sqleditor/SqlSnippetsMenu.tsx',
   'src/renderer/src/components/deploy/DeployProfileMenu.tsx', 'src/renderer/src/components/environment/ProfileActionsMenu.tsx',
   'src/renderer/src/components/karaf/KarafHeaderActions.tsx', 'src/renderer/src/components/settings/Settings*.tsx',
   'src/renderer/src/components/onboarding/OnboardingTour.tsx', 'src/renderer/src/components/onboarding/tour/**',
+  'src/renderer/src/components/onboarding/SplashScreen.tsx', 'src/renderer/src/components/onboarding/OnboardingWizard.tsx',
   'src/renderer/src/components/ui/Modal.tsx'
 ];
 

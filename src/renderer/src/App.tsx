@@ -73,6 +73,14 @@ export const App: React.FC = () => {
       />
 
       <AppGlobalModals
+        isSplashOpen={onboarding.isSplashOpen}
+        isNewUser={onboarding.isNewUser}
+        onSplashStartOnboarding={onboarding.handleSplashStartOnboarding}
+        onSplashExplore={onboarding.handleSplashExplore}
+        onSplashEnter={onboarding.handleSplashEnter}
+        onSplashWhatsNew={onboarding.handleSplashWhatsNew}
+        onSettingsSaved={data.handleSettingsSaved}
+        onOpenSettings={onboarding.handleWelcomeOpenSettings}
         isWelcomeOpen={onboarding.isWelcomeOpen}
         isTourOpen={onboarding.isTourOpen}
         tourSteps={modules.tourSteps}

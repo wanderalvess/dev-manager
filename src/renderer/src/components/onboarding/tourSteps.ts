@@ -10,52 +10,52 @@ export const TOUR_STORAGE_KEY = 'devManager:onboardingTourV2';
 export const TOUR_STEPS: TourStep[] = [
   {
     target: null,
-    title: 'Bem-vindo ao Hub Manager 🚀',
-    desc: 'Um tour rápido pelos principais recursos do Cockpit Integrado de Operação, Desenvolvimento e Qualidade. Leva menos de 1 minuto.'
+    title: 'Onde fica cada coisa',
+    desc: 'Um passeio de menos de 1 minuto pelo cabeçalho: os grupos de páginas, a busca e os atalhos que você vai usar todo dia.'
   },
   {
     target: 'nav-infra',
     title: 'Infraestrutura & Ambiente',
-    desc: 'Controle serviços do Windows, containers OSGi Karaf, perfis de deploy e acompanhe logs em tempo real.'
+    desc: 'Serviços e esteira do ambiente, containers, deploy, logs em tempo real e APM.'
   },
   {
     target: 'nav-data',
     title: 'Banco de Dados & Rotinas',
-    desc: 'Conecte a Oracle, MySQL ou Postgres e rode SQL direto daqui. O catálogo de rotinas guarda seus executáveis favoritos.'
+    desc: 'SQL runner e backups de Oracle, MySQL e Postgres, e o catálogo de rotinas WinThor.'
   },
   {
     target: 'nav-dev',
     title: 'Desenvolvimento & DevOps',
-    desc: 'Gerencie repositórios Git, branches e Pull Requests do Azure DevOps, e pesquise na documentação semântica (RAG).'
+    desc: 'Git e Azure DevOps, documentação semântica (RAG) e o API Studio.'
   },
   {
     target: 'nav-qa',
     title: 'Qualidade & Homologação',
-    desc: 'Quatro páginas para QA e homologação: Homologação (matriz e prontidão de release), Validador Regressivo Oracle, Test Runners e TAUT (Cypress).'
+    desc: 'Homologação, Validador Regressivo, Test Runners e TAUT (Cypress).'
   },
   {
     target: 'search',
     title: 'Busca Rápida',
-    desc: 'Ctrl+K abre a busca rápida de rotinas, tabelas e ações — o jeito mais rápido de navegar sem tirar a mão do teclado.'
+    desc: 'Ctrl+K encontra páginas, rotinas, repositórios e ações sem tirar a mão do teclado.'
   },
   {
     target: 'status',
     title: 'Diagnósticos & Rede',
-    desc: 'Veja seu IP local, IP do WSL e uso de CPU/RAM da máquina sem sair do cockpit.'
+    desc: 'IP local, IP do WSL e uso de CPU/RAM da máquina, sempre à vista.'
   },
   {
     target: 'help',
     title: 'Central de Ajuda',
-    desc: 'Acesse documentação detalhada, tutoriais de cada módulo, FAQ e atalhos de teclado.'
+    desc: 'Tutoriais de cada módulo, FAQ, atalhos de teclado — e o botão para refazer este tour.'
   },
   {
     target: 'settings',
     title: 'Configurações',
-    desc: 'Ajuste portas monitoradas, caminhos de ferramentas e conexões — tudo fica salvo localmente.'
+    desc: 'Caminhos, portas, conexões e integrações. Em Módulos você liga ou desliga as páginas do cabeçalho.'
   },
   {
     target: 'refresh',
     title: 'Atualizar Tudo',
-    desc: 'Um clique para recarregar status de serviços, portas e repositórios Git.'
+    desc: 'Recarrega de uma vez o status de serviços, portas e repositórios Git.'
   }
 ];
