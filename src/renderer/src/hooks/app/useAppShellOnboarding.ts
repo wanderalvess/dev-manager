@@ -16,13 +16,18 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
       return false;
     }
   });
-  const [isWelcomeOpen, setIsWelcomeOpen] = useState<boolean>(() => {
+  // Abertura (SplashScreen) a cada vez que o app abre. Quem nunca concluiu o onboarding termina a
+  // abertura com o convite para ele; quem já usa entra direto.
+  const [isSplashOpen, setIsSplashOpen] = useState<boolean>(true);
+  const [isNewUser, setIsNewUser] = useState<boolean>(() => {
     try {
       return !window.localStorage.getItem(WELCOME_STORAGE_KEY);
     } catch {
       return false;
     }
   });
+  // O onboarding em etapas só abre quando a pessoa escolhe "Começar onboarding" na abertura.
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState<boolean>(false);
   // Havia marcadores de onboarding já na abertura? Lido uma vez, antes de o usuário interagir.
   const hadMarkersAtMount = useRef<boolean>(false);
   if (hadMarkersAtMount.current === false) {
@@ -53,10 +58,6 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
     }
     setChangelogContent(changelogRaw);
     setIsWhatsNewOpen(true);
-  }, []);
-
-  const handleFinishWelcome = useCallback(() => {
-    setIsWelcomeOpen(false);
   }, []);
 
   const handleCloseTour = useCallback(() => {
@@ -116,6 +117,62 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
     })();
   }, [setActiveTab]);
 
+  const markWelcomeDone = () => {
+    try {
+      window.localStorage.setItem(WELCOME_STORAGE_KEY, JSON.stringify({ done: true, ts: Date.now() }));
+    } catch {
+      // localStorage indisponível
+    }
+    setIsNewUser(false);
+  };
+
+  const handleSplashStartOnboarding = useCallback(() => {
+    setIsSplashOpen(false);
+    setIsWelcomeOpen(true);
+  }, []);
+
+  // "Explorar sozinho": pula onboarding e tour, mas mantém a detecção de caminhos e o convite dos tours por página.
+  const handleSplashExplore = useCallback(() => {
+    markWelcomeDone();
+    setIsSplashOpen(false);
+    handleCloseTour();
+  }, [handleCloseTour]);
+
+  const handleSplashEnter = useCallback(() => {
+    setIsSplashOpen(false);
+  }, []);
+
+  const handleSplashWhatsNew = useCallback(() => {
+    setIsSplashOpen(false);
+    handleOpenWhatsNew();
+  }, [handleOpenWhatsNew]);
+
+  // Fim do onboarding: com tour, o tour global abre em seguida (isTourOpen); sem tour, marca o tour como visto.
+  const handleFinishWelcome = useCallback(
+    (wantsTour: boolean) => {
+      setIsWelcomeOpen(false);
+      setIsNewUser(false);
+      if (wantsTour) {
+        try {
+          window.localStorage.removeItem(TOUR_STORAGE_KEY);
+        } catch {
+          // localStorage indisponível
+        }
+        setIsTourOpen(true);
+      } else {
+        handleCloseTour();
+      }
+    },
+    [handleCloseTour]
+  );
+
+  const handleWelcomeOpenSettings = useCallback(() => {
+    markWelcomeDone();
+    setIsWelcomeOpen(false);
+    handleCloseTour();
+    setActiveTab('settings');
+  }, [handleCloseTour, setActiveTab]);
+
   // O botão só promete o tour de spotlight — reabrir também a introdução (tema,
   // slides de boas-vindas) surpreendia quem só queria rever onde ficam os recursos.
   const handleRestartTour = useCallback(() => {
@@ -171,6 +228,7 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
           } catch {
             // localStorage indisponível
           }
+          setIsNewUser(true);
         }
         return;
       }
@@ -197,6 +255,13 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
   }, []);
 
   return {
+    isSplashOpen,
+    isNewUser,
+    handleSplashStartOnboarding,
+    handleSplashExplore,
+    handleSplashEnter,
+    handleSplashWhatsNew,
+    handleWelcomeOpenSettings,
     isTourOpen,
     isWelcomeOpen,
     isPageToursPromptOpen,

@@ -571,6 +571,52 @@
   animation: welcome-overlay-in 0.25s ease-out;
 }
 
+/* Abertura (SplashScreen) */
+@keyframes splash-logo {
+  0% { opacity: 0; transform: scale(0.4); }
+  70% { transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-ring {
+  0% { opacity: 0.7; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(2.6); }
+}
+@keyframes splash-letter {
+  from { opacity: 0; transform: translateY(40px) rotate(6deg); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes splash-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes splash-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes splash-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+.animate-splash-logo { animation: splash-logo 0.7s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-splash-ring { animation: splash-ring 1.6s 0.4s ease-out both; }
+.animate-splash-letter { animation: splash-letter 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-splash-rise { animation: splash-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-splash-orbit { animation: splash-orbit 40s linear infinite; }
+.animate-splash-glow { animation: splash-glow 4s ease-in-out infinite; }
+.animate-onboarding-in { animation: splash-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-splash-logo,
+  .animate-splash-ring,
+  .animate-splash-letter,
+  .animate-splash-rise,
+  .animate-splash-orbit,
+  .animate-splash-glow,
+  .animate-onboarding-in {
+    animation: none;
+  }
+}
+
 @keyframes blob-float-a {
   0%,
   100% {

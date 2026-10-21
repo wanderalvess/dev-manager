@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.42.0] - 2026-10-20
+### Adicionado
+- **Abertura**: o app passa a abrir com uma animação de entrada (logo, nome e o carregamento das quatro áreas), que pode ser pulada. Quem está no primeiro uso termina em *"Começar onboarding"* ou *"Explorar sozinho"*; quem já usa entra direto, ou abre *"Ver novidades"*.
+- **Onboarding em etapas**: substitui a introdução de uma tela por sete etapas — Boas-vindas, Módulos (liga e desliga as páginas do menu), Tema (variante e claro/escuro), Ambiente (o que já está configurado, por aba, com a detecção automática de caminhos), Checklist da configuração inicial, IA & MCP (exemplos do que um agente consegue fazer pelo servidor MCP) e Pronto, com o tour guiado opcional.
+
+### Alterado
+- **Logo nova**: o símbolo passa a ser o hub — o centro com as quatro áreas chegando nele, dentro do quadro do cockpit. No app ele acompanha a cor do tema escolhido; os ícones do instalador, da janela e do favicon foram refeitos com o mesmo desenho.
+- **Tour guiado**: textos mais curtos e sem a segunda tela de boas-vindas; o passo de Configurações aponta para a aba Módulos.
+
 ## [1.41.0] - 2026-10-20
 ### Adicionado
 - **Statement Tracer — aba "Por rotina"**: a captura passa a trazer tempo decorrido, CPU, leituras de buffer, leituras de disco e linhas do `v$sql` e agrupa as consultas pelo módulo que as executou (ex.: rotina `2075` / `PCSIS2075.exe`), com as telas (`ACTION`) tocadas, as consultas mais lentas por tempo médio e as repetidas — mesma consulta em laço ou variações só de valor literal (SQL concatenado) —, com a dica de correção. Abrir uma consulta leva ao inspetor de binds.
