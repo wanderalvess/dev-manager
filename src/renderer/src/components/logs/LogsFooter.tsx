@@ -1,11 +1,15 @@
 import React from 'react';
 import { LogFontSize } from './LogLine';
+import { LogSearchMode, LogContextLines } from '../../utils/logsSearchUtils';
 
 interface LogsFooterProps {
   visibleCount: number;
   totalCount: number;
   filterText: string;
   invertFilter: boolean;
+  searchMode?: LogSearchMode;
+  matchCount?: number;
+  contextLines?: LogContextLines;
   fontSize: LogFontSize;
   initialLinesCount: number;
   onFontSizeChange: (size: LogFontSize) => void;
@@ -23,6 +27,9 @@ export const LogsFooter: React.FC<LogsFooterProps> = ({
   totalCount,
   filterText,
   invertFilter,
+  searchMode = 'find',
+  matchCount = 0,
+  contextLines = 0,
   fontSize,
   initialLinesCount,
   onFontSizeChange,
@@ -31,11 +38,15 @@ export const LogsFooter: React.FC<LogsFooterProps> = ({
   <div className="bg-card border-t border-border/80 px-3.5 py-1 flex items-center justify-between text-2xs text-muted-foreground font-mono shrink-0 select-none">
     <div className="flex items-center space-x-3">
       <span>
-        Linhas: <strong className="text-foreground">{visibleCount}</strong> / {totalCount}
+        Linhas exibidas: <strong className="text-foreground">{visibleCount}</strong> / {totalCount}
       </span>
       {filterText && (
-        <span className="text-warning truncate max-w-xs">
-          Filtro: &quot;{filterText}&quot; {invertFilter ? '(invertido)' : ''}
+        <span className="text-warning truncate max-w-sm">
+          {searchMode === 'find'
+            ? `Localizar: "${filterText}" (${matchCount} ocorrência${matchCount === 1 ? '' : 's'})`
+            : `Filtro: "${filterText}" ${invertFilter ? '(invertido)' : ''} ${
+                contextLines > 0 ? `(±${contextLines} linhas de contexto)` : ''
+              }`}
         </span>
       )}
     </div>

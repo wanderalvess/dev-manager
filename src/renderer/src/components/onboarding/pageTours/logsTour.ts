@@ -21,7 +21,7 @@ export const LOGS_TOUR_STEPS: TourStep[] = [
   {
     target: 'campo-busca-logs',
     title: 'Buscar nos Logs',
-    desc: 'Filtre as linhas exibidas digitando um termo, com opções de maiúsculas, regex e inversão.'
+    desc: 'Localize ocorrências mantendo o contexto ao redor (Enter/Shift+Enter) ou filtre com linhas de contexto (±1, ±3, ±5).'
   },
   {
     target: 'filtro-severidade',

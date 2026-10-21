@@ -34,6 +34,9 @@ export function useHttpClientState() {
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isEnvModalOpen, setIsEnvModalOpen] = useState(false);
+  const [isCurlModalOpen, setIsCurlModalOpen] = useState(false);
+  const [curlModalMode, setCurlModalMode] = useState<'export' | 'import'>('export');
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -196,6 +199,44 @@ export function useHttpClientState() {
     showToast('Variável {{TOKEN}} atualizada no ambiente ativo com sucesso!', 'success');
   };
 
+  const handleRestoreHistory = (historyItem: HttpResponseData) => {
+    if (historyItem.requestSnapshot) {
+      setCurrentRequest({
+        id: historyItem.requestId || Math.random().toString(36).substring(2, 9),
+        name: historyItem.requestSnapshot.name || 'Chamada do Histórico',
+        method: historyItem.requestSnapshot.method || 'GET',
+        url: historyItem.requestSnapshot.url || '',
+        params: historyItem.requestSnapshot.params || [],
+        headers: historyItem.requestSnapshot.headers || [],
+        body: historyItem.requestSnapshot.body || { mode: 'none' },
+        auth: historyItem.requestSnapshot.auth || { type: 'none' }
+      });
+    }
+    setResponse(historyItem);
+    showToast('Requisição restaurada do histórico!', 'info');
+  };
+
+  const handleClearHistory = async () => {
+    try {
+      await api.httpClearHistory();
+      setHistory([]);
+      showToast('Histórico limpo com sucesso!', 'info');
+    } catch (err: any) {
+      showToast(err?.message || 'Falha ao limpar histórico.', 'error');
+    }
+  };
+
+  const handleImportCurl = (parsed: Partial<HttpRequestItem>) => {
+    setCurrentRequest((prev) => ({
+      ...prev,
+      method: parsed.method || prev.method,
+      url: parsed.url || prev.url,
+      headers: parsed.headers && parsed.headers.length > 0 ? parsed.headers : prev.headers,
+      body: parsed.body || prev.body,
+      auth: parsed.auth || prev.auth
+    }));
+  };
+
   return {
     collections,
     environments,
@@ -211,6 +252,12 @@ export function useHttpClientState() {
     setIsImportModalOpen,
     isEnvModalOpen,
     setIsEnvModalOpen,
+    isCurlModalOpen,
+    setIsCurlModalOpen,
+    curlModalMode,
+    setCurlModalMode,
+    isAiModalOpen,
+    setIsAiModalOpen,
     handleExecute,
     handleSaveRequest,
     handleNewRequest,
@@ -219,6 +266,9 @@ export function useHttpClientState() {
     handleImportSuccess,
     handleSaveEnvironments,
     handleUpdateActiveToken,
+    handleRestoreHistory,
+    handleClearHistory,
+    handleImportCurl,
     loadData
   };
 }

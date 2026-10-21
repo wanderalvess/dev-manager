@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronUp, ChevronDown, Bug } from 'lucide-react';
 import { LogLevelFilter, LogLevelCounts } from '../../utils/logsFilterUtils';
+import { LogSearchMode, LogContextLines } from '../../utils/logsSearchUtils';
 import { LogsSearchControls } from './LogsSearchControls';
 import { LogsSeverityFilter } from './LogsSeverityFilter';
 import { LogsConsoleControls } from './LogsConsoleControls';
@@ -11,6 +12,10 @@ interface LogsToolbarProps {
   isRegex: boolean;
   isCaseSensitive: boolean;
   invertFilter: boolean;
+  searchMode: LogSearchMode;
+  contextLines: LogContextLines;
+  currentMatchPosition: number;
+  totalMatches: number;
   levelFilter: LogLevelFilter;
   totalLines: number;
   levelCounts: LogLevelCounts;
@@ -24,6 +29,10 @@ interface LogsToolbarProps {
   onToggleCaseSensitive: () => void;
   onToggleRegex: () => void;
   onToggleInvert: () => void;
+  onSearchModeChange: (mode: LogSearchMode) => void;
+  onContextLinesChange: (lines: LogContextLines) => void;
+  onNavigateMatch: (direction: 'next' | 'prev') => void;
+  onClearSearch: () => void;
   onLevelChange: (level: LogLevelFilter) => void;
   onNavigateErrors: (direction: 'next' | 'prev') => void;
   onOpenAnalyzer: () => void;
@@ -43,10 +52,18 @@ export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
       isRegex={props.isRegex}
       isCaseSensitive={props.isCaseSensitive}
       invertFilter={props.invertFilter}
+      searchMode={props.searchMode}
+      contextLines={props.contextLines}
+      currentMatchPosition={props.currentMatchPosition}
+      totalMatches={props.totalMatches}
       onFilterTextChange={props.onFilterTextChange}
       onToggleCaseSensitive={props.onToggleCaseSensitive}
       onToggleRegex={props.onToggleRegex}
       onToggleInvert={props.onToggleInvert}
+      onSearchModeChange={props.onSearchModeChange}
+      onContextLinesChange={props.onContextLinesChange}
+      onNavigateMatch={props.onNavigateMatch}
+      onClearSearch={props.onClearSearch}
     />
 
     <LogsSeverityFilter
@@ -63,14 +80,16 @@ export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
         <button
           onClick={() => props.onNavigateErrors('prev')}
           className="p-0.5 hover:bg-danger/20 rounded transition-colors"
-          title="Ir para o erro anterior" aria-label="Ir para o erro anterior"
+          title="Ir para o erro anterior"
+          aria-label="Ir para o erro anterior"
         >
           <ChevronUp className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => props.onNavigateErrors('next')}
           className="p-0.5 hover:bg-danger/20 rounded transition-colors"
-          title="Ir para o próximo erro" aria-label="Ir para o próximo erro"
+          title="Ir para o próximo erro"
+          aria-label="Ir para o próximo erro"
         >
           <ChevronDown className="w-3.5 h-3.5" />
         </button>

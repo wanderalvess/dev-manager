@@ -185,6 +185,11 @@ para uma versão que embuta `dompurify` ≥3.4.16.
   typecheck sozinho não cobre). Não inclui `build:electron` (empacotamento do instalador),
   que é pesado e específico de plataforma — isso continua só local/release.
 
+- **Integridade de Edições e Prevenção de Código Órfão**: Ao aplicar substituições de código
+  (especialmente em objetos literais, blocos `try/catch` e componentes React), reler obrigatoriamente
+  as linhas ao redor do trecho editado para garantir que nenhuma propriedade duplicada, fechamento
+  extra ou fragmento antigo tenha ficado órfão no arquivo antes de finalizar a resposta.
+
 ## Limite de Linhas e Componentização Estrita (Máximo 300 Linhas)
 
 **Regra mandatória do projeto: nenhum arquivo de código novo ou alterado deve ultrapassar 300 linhas.**

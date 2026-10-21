@@ -1,20 +1,24 @@
 import React from 'react';
 import { ArrowDown } from 'lucide-react';
 import { LogWatchStatus } from '../../../../shared/types';
+import { LogDisplayLine, LogSearchMode } from '../../utils/logsSearchUtils';
 import { LogLine, LogFontSize } from './LogLine';
 import { LogsEmptyState } from './LogsEmptyState';
 
 interface LogsConsoleProps {
   scrollContainerRef: React.RefObject<HTMLDivElement>;
-  lines: string[];
+  displayLines: LogDisplayLine[];
+  activeOriginalIndex: number | null;
+  activeErrorIndex: number;
   hasSources: boolean;
   status: LogWatchStatus | null;
   filePath: string;
   hasNewLinesBelow: boolean;
-  activeErrorIndex: number;
   filterText: string;
   invertFilter: boolean;
   isCaseSensitive: boolean;
+  isRegex: boolean;
+  searchMode: LogSearchMode;
   hasActiveFilter: boolean;
   fontSize: LogFontSize;
   wordWrap: boolean;
@@ -22,9 +26,10 @@ interface LogsConsoleProps {
   onScrollToBottom: () => void;
   onOpenAnalyzer: () => void;
   onOpenManage: () => void;
+  onJumpToLineInContext: (originalIndex: number) => void;
 }
 
-/** Viewport do terminal: linhas filtradas, estado vazio e aviso de novos logs. */
+/** Viewport do terminal: linhas exibidas com contexto, separadores de lacunas e estado vazio. */
 export const LogsConsole: React.FC<LogsConsoleProps> = (props) => (
   <>
     {/* Alerta Flutuante de Novos Logs */}
@@ -45,21 +50,33 @@ export const LogsConsole: React.FC<LogsConsoleProps> = (props) => (
       data-tour="console-live-tail"
       className="flex-1 overflow-y-auto overflow-x-auto p-1.5 font-mono scroll-smooth select-text"
     >
-      {props.lines.length > 0 ? (
+      {props.displayLines.length > 0 ? (
         <div className="min-w-full divide-y divide-slate-900/30">
-          {props.lines.map((line, idx) => (
-            <LogLine
-              key={idx}
-              line={line}
-              index={idx}
-              isTargetedError={idx === props.activeErrorIndex}
-              filterText={props.filterText}
-              invertFilter={props.invertFilter}
-              isCaseSensitive={props.isCaseSensitive}
-              fontSize={props.fontSize}
-              wordWrap={props.wordWrap}
-              onOpenAnalyzer={props.onOpenAnalyzer}
-            />
+          {props.displayLines.map((item, idx) => (
+            <React.Fragment key={`${item.originalIndex}-${idx}`}>
+              {item.gapBeforeCount && item.gapBeforeCount > 0 ? (
+                <div className="flex items-center justify-center py-1 text-2xs text-slate-500 font-mono bg-slate-900/40 border-y border-slate-800/60 select-none">
+                  ··· {item.gapBeforeCount} {item.gapBeforeCount === 1 ? 'linha omitida' : 'linhas omitidas'} ···
+                </div>
+              ) : null}
+              <LogLine
+                line={item.text}
+                originalIndex={item.originalIndex}
+                isTargetedError={item.originalIndex === props.activeErrorIndex}
+                isSearchMatch={item.isMatch}
+                isActiveSearchMatch={item.originalIndex === props.activeOriginalIndex}
+                isContextLine={item.isContext}
+                filterText={props.filterText}
+                invertFilter={props.invertFilter}
+                isCaseSensitive={props.isCaseSensitive}
+                isRegex={props.isRegex}
+                searchMode={props.searchMode}
+                fontSize={props.fontSize}
+                wordWrap={props.wordWrap}
+                onOpenAnalyzer={props.onOpenAnalyzer}
+                onViewInContext={() => props.onJumpToLineInContext(item.originalIndex)}
+              />
+            </React.Fragment>
           ))}
         </div>
       ) : (

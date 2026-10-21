@@ -15,6 +15,7 @@ import {
   LucideIcon
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
+import { getLogsFaq } from './faq/logsFaq';
 
 export type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
 
@@ -1681,7 +1682,8 @@ export function getFaqList({
         </div>
       )
     },
-    ...getModulesFaq(onNavigate)
+    ...getModulesFaq(onNavigate),
+    ...getLogsFaq(onNavigate)
   ];
 }
 
@@ -1707,7 +1709,7 @@ export function getKeyboardShortcuts(debugPort: number) {
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.41.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.43.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '12 Módulos' },

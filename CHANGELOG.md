@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.43.0] - 2026-10-21
+### Adicionado
+- **Logs em Tempo Real — Busca Contextual e Modo Localizar**: a busca por termo (`Ctrl+F`) passa a contar com dois modos integrados para análise profunda de logs:
+  - **Modo Localizar (padrão)**: preserva todas as linhas do arquivo na tela, destaca as ocorrências e rola suavemente até a linha ativa, permitindo inspecionar a linha completa e o contexto ao redor (stack traces, comandos anteriores e saídas subsequentes). Inclui contador de ocorrências (`X de Y`), botões de navegação e atalhos (<kbd>Enter</kbd> para próxima, <kbd>Shift+Enter</kbd> para anterior, <kbd>F3</kbd> e <kbd>Esc</kbd> para limpar).
+  - **Modo Filtrar com Linhas de Contexto**: isola as linhas correspondentes com seletor de linhas de contexto (`±0`, `±1`, `±3` ou `±5` linhas antes e depois da ocorrência). As linhas de contexto vizinhas recebem indicador `CTX`, e blocos separados exibem divisores com o total de linhas omitidas.
+  - **Ação "No contexto"**: no modo Filtrar, qualquer linha permite saltar com 1 clique diretamente para o log completo mantendo a posição e o foco.
+  - **Numeração real de linhas**: a régua do console de log exibe permanentemente o número físico real de cada linha no arquivo.
+
 ## [1.42.0] - 2026-10-20
 ### Adicionado
 - **Abertura**: o app passa a abrir com uma animação de entrada (logo, nome e o carregamento das quatro áreas), que pode ser pulada. Quem está no primeiro uso termina em *"Começar onboarding"* ou *"Explorar sozinho"*; quem já usa entra direto, ou abre *"Ver novidades"*.

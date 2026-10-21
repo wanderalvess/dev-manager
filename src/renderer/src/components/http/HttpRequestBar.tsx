@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Save, RefreshCw, ChevronDown } from 'lucide-react';
+import { Send, Save, RefreshCw, ChevronDown, Terminal } from 'lucide-react';
 import { HttpMethod } from '../../../../shared/types';
 import { HttpBadge } from './HttpBadge';
 
@@ -10,6 +10,7 @@ interface HttpRequestBarProps {
   setUrl: (url: string) => void;
   onSend: () => void;
   onSave?: () => void;
+  onOpenCurlModal?: (mode: 'export' | 'import') => void;
   isLoading: boolean;
 }
 
@@ -22,6 +23,7 @@ export const HttpRequestBar: React.FC<HttpRequestBarProps> = ({
   setUrl,
   onSend,
   onSave,
+  onOpenCurlModal,
   isLoading
 }) => {
   const [isMethodOpen, setIsMethodOpen] = useState(false);
@@ -103,13 +105,26 @@ export const HttpRequestBar: React.FC<HttpRequestBarProps> = ({
         )}
       </button>
 
+      {/* Botão cURL */}
+      {onOpenCurlModal && (
+        <button
+          type="button"
+          onClick={() => onOpenCurlModal('export')}
+          title="Copiar ou importar como comando cURL"
+          className="flex items-center gap-1.5 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs font-medium rounded border border-border transition-colors cursor-pointer"
+        >
+          <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>cURL</span>
+        </button>
+      )}
+
       {/* Botão Salvar */}
       {onSave && (
         <button
           type="button"
           onClick={onSave}
           title="Salvar alterações na requisição"
-          className="flex items-center gap-1.5 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs font-medium rounded border border-border transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs font-medium rounded border border-border transition-colors cursor-pointer"
         >
           <Save className="w-3.5 h-3.5 text-muted-foreground" />
           <span>Salvar</span>

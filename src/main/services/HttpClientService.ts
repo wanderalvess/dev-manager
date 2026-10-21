@@ -134,6 +134,16 @@ export class HttpClientService {
         isJson = false;
       }
 
+      const requestSnapshot = {
+        method: request.method,
+        url: request.url,
+        name: request.name,
+        headers: request.headers,
+        params: request.params,
+        body: request.body,
+        auth: request.auth
+      };
+
       const responseItem: HttpResponseData = {
         id: generateId(),
         requestId: request.id,
@@ -145,7 +155,8 @@ export class HttpClientService {
         body: rawText,
         isJson,
         contentType: responseHeaders['content-type'] || (isJson ? 'application/json' : 'text/plain'),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        requestSnapshot
       };
 
       this.addHistory(responseItem);
@@ -166,7 +177,16 @@ export class HttpClientService {
         isJson: false,
         contentType: 'text/plain',
         error: errorMsg,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        requestSnapshot: {
+          method: request.method,
+          url: request.url,
+          name: request.name,
+          headers: request.headers,
+          params: request.params,
+          body: request.body,
+          auth: request.auth
+        }
       };
 
       this.addHistory(errorResponse);
