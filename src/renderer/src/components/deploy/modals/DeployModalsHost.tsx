@@ -7,10 +7,12 @@ import { DeployHistoryModal } from '../../DeployHistoryModal';
 import { Routine801CatalogModal } from '../../Routine801CatalogModal';
 import { KarafJvmMemoryModal } from '../../KarafJvmMemoryModal';
 import { KarafFeaturesModal } from '../../karaf/modals/KarafFeaturesModal';
+import { DeployQueueBuilderModal } from './DeployQueueBuilderModal';
 
 interface DeployModalsHostProps {
   modals: DeployModalsState;
   projects: GitProjectInfo[];
+  activeProfile: DeployProfile | null;
   onSaveProfile: (profile: DeployProfile) => Promise<void>;
   onDeleteProfile: (id: string) => Promise<void>;
 }
@@ -19,6 +21,7 @@ interface DeployModalsHostProps {
 export const DeployModalsHost: React.FC<DeployModalsHostProps> = ({
   modals,
   projects,
+  activeProfile,
   onSaveProfile,
   onDeleteProfile
 }) => (
@@ -37,6 +40,14 @@ export const DeployModalsHost: React.FC<DeployModalsHostProps> = ({
       isOpen={modals.isBundlesModalOpen}
       onClose={() => modals.setIsBundlesModalOpen(false)}
       projects={projects}
+    />
+
+    {/* Assistente: montar a fila de build a partir dos projetos do workspace */}
+    <DeployQueueBuilderModal
+      isOpen={modals.isQueueModalOpen}
+      activeProfile={activeProfile}
+      onClose={() => modals.setIsQueueModalOpen(false)}
+      onApply={onSaveProfile}
     />
 
     {/* Modal Catálogo Oficial WinThor - Rotina 801 */}

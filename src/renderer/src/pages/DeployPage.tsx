@@ -90,6 +90,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             stepStatuses={runner.stepStatuses}
             stepExecutionTimes={runner.stepExecutionTimes}
             onEditSteps={() => modals.openProfileEditor(activeProfile)}
+            onBuildQueue={() => modals.setIsQueueModalOpen(true)}
             onRunStep={runner.handleRunSingleStep}
             onToggleStep={deployProfiles.handleToggleStep}
             onToggleAllSteps={deployProfiles.handleToggleAllSteps}
@@ -121,6 +122,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
       <DeployModalsHost
         modals={modals}
         projects={projects}
+        activeProfile={activeProfile}
         onSaveProfile={deployProfiles.handleSaveProfile}
         onDeleteProfile={deployProfiles.handleDeleteProfile}
       />

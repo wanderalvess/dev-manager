@@ -47,6 +47,8 @@ import { createHttpClientRouter } from './routes/httpClientRoutes';
 import { createAzurePipelineRouter } from './routes/azurePipelineRoutes';
 import { createDelphiRouter } from './routes/delphiRoutes';
 import { createKarafStreamRouter } from './routes/karafStreamRoutes';
+import { createDeployWorkspaceRouter } from './routes/deployWorkspaceRoutes';
+import { PomGraphService } from '../main/services/PomGraphService';
 import { DelphiBuildService } from '../main/services/DelphiBuildService';
 import { AzurePipelineService } from '../main/services/AzurePipelineService';
 import {
@@ -2207,6 +2209,7 @@ app.post('/api/taut/abort', (_req, res) => {
 
 app.use('/api/http-client', createHttpClientRouter(httpClientService, httpCollectionService));
 app.use('/api/karaf/stream', createKarafStreamRouter(karafService, broadcastWs));
+app.use('/api/deploy', createDeployWorkspaceRouter(new PomGraphService(configService)));
 app.use('/api/delphi', createDelphiRouter(new DelphiBuildService(configService, windowsService), broadcastWs));
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
 

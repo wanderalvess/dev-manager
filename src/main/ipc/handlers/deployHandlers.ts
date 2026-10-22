@@ -2,10 +2,14 @@ import { ipcMain } from 'electron';
 import { DeployProfile, DeployStep } from '../../../shared/types';
 import { safeSend } from '../../utils/ipcSend';
 import type { IpcContext } from '../ipcContext';
+import { PomGraphService } from '../../services/PomGraphService';
 
 /** Perfis de deploy. Canais: deploy:* */
 export function registerDeployHandlers(ctx: IpcContext): void {
   const { mainWindow, deployService } = ctx;
+  const pomGraphService = new PomGraphService(ctx.configService);
+
+  ipcMain.handle('deploy:scan-workspace', async () => pomGraphService.scanWorkspace());
 
   ipcMain.handle('deploy:run-profile', async (_, profile: DeployProfile) => {
     return await deployService.executeProfile(

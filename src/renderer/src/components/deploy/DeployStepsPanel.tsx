@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, RotateCw } from 'lucide-react';
+import { ListOrdered, Pencil, RotateCw } from 'lucide-react';
 import type { DeployProfile, DeployStep } from '../../../../shared/types';
 import type { DeployCurrentProgress, DeployStepStatus } from '../../hooks/deploy/useDeployProgress';
 import { countEnabledSteps } from '../../utils/deployProfileUtils';
@@ -14,6 +14,7 @@ interface DeployStepsPanelProps {
   stepStatuses: Record<string, DeployStepStatus>;
   stepExecutionTimes: Record<string, number>;
   onEditSteps: () => void;
+  onBuildQueue?: () => void;
   onRunStep: (step: DeployStep) => void;
   onToggleStep?: (stepId: string) => void;
   onToggleAllSteps?: (enableAll: boolean) => void;
@@ -30,6 +31,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
   stepStatuses,
   stepExecutionTimes,
   onEditSteps,
+  onBuildQueue,
   onRunStep,
   onToggleStep,
   onToggleAllSteps,
@@ -83,6 +85,16 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
               className="text-2xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               {allEnabled ? 'Desmarcar todas' : 'Marcar todas'}
+            </button>
+          )}
+          {onBuildQueue && (
+            <button
+              onClick={onBuildQueue}
+              disabled={!activeProfile || isBusy}
+              title="Escolher projetos do workspace e gerar as etapas de build na ordem de dependência"
+              className="text-2xs text-primary hover:underline flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+            >
+              <ListOrdered className="w-3 h-3" /> Montar fila
             </button>
           )}
           <button
