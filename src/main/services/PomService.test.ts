@@ -84,6 +84,7 @@ describe('PomService', () => {
 
     expect(res.changed).toBe(true);
     expect(res.oldVersion).toBe('0.39.0');
+    expect(res.previousValue).toBe('0.39.0');
     expect(res.content).toContain('<version>1.0.0.1-SNAPSHOT</version>');
     expect(res.content).toContain('<!-- Dependência de Venda -->');
     expect(res.content).toContain('<version>3.12.0</version>'); // commons-lang3 inalterado
@@ -131,6 +132,7 @@ describe('PomService', () => {
       });
       expect(res.changed).toBe(true);
       expect(res.viaProperty).toBe('matcon.version');
+      expect(res.previousValue).toBe('1.39.23.45');
       expect(res.oldVersion).toBe('${matcon.version}');
       expect(res.content).toContain('<matcon.version>0.0.1-SNAPSHOT</matcon.version>');
       expect(res.content).toContain('<version>${matcon.version}</version>');

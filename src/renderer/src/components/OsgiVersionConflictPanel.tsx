@@ -3,6 +3,7 @@ import { BookOpen, FileEdit, GitCompare, ListTree, Play } from 'lucide-react';
 import type { OsgiResolutionDiagnosticSummary } from '../../../shared/types';
 import { useOsgiVersionConflict } from '../hooks/deploy/useOsgiVersionConflict';
 import { useKarafConsole } from '../hooks/karafConsole/KarafConsoleContext';
+import { recordAlteredPom } from '../hooks/deploy/useAlteredPoms';
 import { requestConfirm } from './ui/confirmService';
 import { showToast } from './ToastHost';
 
@@ -20,6 +21,7 @@ interface PomUpdateOutcome {
   success: boolean;
   targetPomPath: string;
   oldVersion?: string;
+  previousValue?: string;
   backupPath?: string;
   viaProperty?: string;
   error?: string;
@@ -80,13 +82,25 @@ export const OsgiVersionConflictPanel: React.FC<OsgiVersionConflictPanelProps> =
         showToast(res.error || 'Não foi possível alterar o pom.xml.', 'error');
         return;
       }
+      recordAlteredPom({
+        pomPath: res.targetPomPath,
+        projectPath: dependency.projectPath,
+        groupId: dependency.groupId || undefined,
+        artifactId: dependency.artifactId,
+        from: res.oldVersion ?? dependency.version,
+        to: targetVersion.trim(),
+        previousValue: res.previousValue,
+        viaProperty: res.viaProperty,
+        backupPath: res.backupPath
+      });
       const where = res.viaProperty ? ` (propriedade ${res.viaProperty})` : '';
       setLogs((prev) => [
         ...prev,
         `[INFO] pom.xml alterado: ${dependency.artifactId} ${res.oldVersion ?? '?'} → ${targetVersion.trim()}${where}\r\n`,
-        `[INFO] Arquivo: ${res.targetPomPath}${res.backupPath ? ` (backup: ${res.backupPath})` : ''}\r\n`
+        `[INFO] Arquivo: ${res.targetPomPath}${res.backupPath ? ` (backup: ${res.backupPath})` : ''}\r\n`,
+        `[ALERTA] Esta alteração do pom.xml é só para teste local: NÃO COMMITE. Reverta antes de enviar o código.\r\n`
       ]);
-      showToast('pom.xml alterado. Rode o perfil para compilar e instalar.', 'success');
+      showToast('pom.xml alterado só para teste local: NÃO commite esta alteração.', 'info');
       if (thenRunProfile) onRunActiveProfile?.();
     } finally {
       setIsApplying(false);

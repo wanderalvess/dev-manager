@@ -25,6 +25,8 @@ export interface PomUpdateResult {
   backupPath?: string;
   /** Quando o pom usa `${propriedade}`, a propriedade é que foi alterada (vale para tudo que a usa). */
   viaProperty?: string;
+  /** Valor que foi substituído (o literal da dependência ou o da propriedade), para reverter depois. */
+  previousValue?: string;
   error?: string;
 }
 
@@ -206,7 +208,8 @@ export class PomService {
         oldVersion: updated.oldVersion,
         newVersion: dependency.newVersion,
         backupPath,
-        viaProperty: updated.viaProperty
+        viaProperty: updated.viaProperty,
+        previousValue: updated.previousValue
       };
     } catch (err: any) {
       return {
@@ -225,10 +228,18 @@ export class PomService {
   public patchDependencyVersionInXml(
     xml: string,
     dependency: { artifactId: string; newVersion: string; groupId?: string }
-  ): { content: string; changed: boolean; oldVersion?: string; viaProperty?: string; propertyNotInPom?: boolean } {
+  ): {
+    content: string;
+    changed: boolean;
+    oldVersion?: string;
+    previousValue?: string;
+    viaProperty?: string;
+    propertyNotInPom?: boolean;
+  } {
     let changed = false;
     let oldVersion: string | undefined;
     let propertyRef: string | undefined;
+    let previousValue: string | undefined;
 
     // Procura tags <dependency>...</dependency>
     const regex = /<dependency>([\s\S]*?)<\/dependency>/g;
@@ -256,6 +267,7 @@ export class PomService {
         }
         const replacedInner = inner.replace(/<version>[^<]+<\/version>/, `<version>${dependency.newVersion}</version>`);
         changed = true;
+        previousValue = oldVersion;
         return `<dependency>${replacedInner}</dependency>`;
       } else {
         // Se a dependência não tinha tag version declarada diretamente (ex: dependencyManagement), adiciona
@@ -267,15 +279,18 @@ export class PomService {
 
     if (propertyRef && !changed) {
       const escaped = propertyRef.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const propRegex = new RegExp(`(<properties>[\\s\\S]*?<${escaped}>)[^<]*(</${escaped}>)`);
+      const propRegex = new RegExp(`(<properties>[\\s\\S]*?<${escaped}>)([^<]*)(</${escaped}>)`);
       // project.version e afins são do próprio Maven, não de <properties>.
       if (!/^(project|pom|parent)\./.test(propertyRef) && propRegex.test(newXml)) {
-        newXml = newXml.replace(propRegex, (_all, open: string, close: string) => `${open}${dependency.newVersion}${close}`);
-        return { content: newXml, changed: true, oldVersion, viaProperty: propertyRef };
+        newXml = newXml.replace(propRegex, (_all, open: string, oldValue: string, close: string) => {
+          previousValue = oldValue.trim();
+          return `${open}${dependency.newVersion}${close}`;
+        });
+        return { content: newXml, changed: true, oldVersion, previousValue, viaProperty: propertyRef };
       }
       return { content: xml, changed: false, oldVersion, propertyNotInPom: true };
     }
 
-    return { content: newXml, changed, oldVersion };
+    return { content: newXml, changed, oldVersion, previousValue };
   }
 }

@@ -11,6 +11,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Recolher os Diagnósticos**: o painel de diagnósticos tem o botão *Recolher/Expandir* (lembra o estado).
 
 - **Divergência de versão instalada x exigida**: quando o diagnóstico OSGi aponta um pacote fora da faixa e o módulo está instalado em outra versão (ex.: `0.0.1.SNAPSHOT` de uma branch de desenvolvimento contra `[1.39.0, 2.0.0)`), o card identifica o bundle instalado e oferece duas saídas: *Alterar pom* (alinha a dependência do pom.xml à versão instalada, com `.bak` e confirmação, e opcionalmente executa o perfil) ou trocar por uma release (atalhos para Bundles OSGi e Catálogo 801). Nada muda sem o operador confirmar. Ver [decisão 0002](docs/decisions/0002-divergencia-de-versao-osgi-guiada.md).
+- **Alerta para não commitar o pom alterado**: depois de *Alterar pom*, a tela Deploy mostra um alerta fixo ("NÃO COMMITE ESSA ALTERAÇÃO") com a dependência, o de/para e o botão *Reverter* (volta ao valor original, inclusive quando a versão vem de uma propriedade). O alerta sobrevive a reinícios e some ao reverter ou dispensar. O toast e o console também avisam, e o *Commit & Push Rápido* do Git mostra o aviso e só libera o envio depois de marcar "Entendi, quero commitar mesmo assim", quando o pom alterado (ou o `.bak`) está entre os arquivos.
 - **Escolher etapas do perfil sugerido**: o card do diagnóstico OSGi permite rodar só algumas etapas do perfil (*Só esta* / *Executar selecionadas*), em vez do perfil inteiro.
 
 ### Alterado

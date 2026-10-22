@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UploadCloud, X, AlertCircle, Eye } from 'lucide-react';
 import type { GitFileStatus, GitProjectInfo } from '../../../../../shared/types';
 import { fileStatusBadge } from '../../../utils/gitPageUtils';
 import { Modal } from '../../ui/Modal';
+import type { AlteredPom } from '../../../utils/alteredPoms';
 
 interface GitCommitModalProps {
   project: GitProjectInfo;
   commitMessage: string;
   commitError: string | null;
   commitFiles: GitFileStatus[];
+  /** pom.xml alterados só para teste local que estão entre os arquivos deste commit. */
+  alteredPoms?: AlteredPom[];
   isLoadingFiles: boolean;
   isCommitting: boolean;
   onMessageChange: (value: string) => void;
@@ -22,13 +25,17 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
   commitMessage,
   commitError,
   commitFiles,
+  alteredPoms = [],
   isLoadingFiles,
   isCommitting,
   onMessageChange,
   onInspectFile,
   onConfirm,
   onClose
-}) => (
+}) => {
+  const [acknowledged, setAcknowledged] = useState(false);
+  const blockedByPom = alteredPoms.length > 0 && !acknowledged;
+  return (
   <Modal
     open
     onClose={onClose}
@@ -78,6 +85,27 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
         />
       </div>
 
+      {alteredPoms.length > 0 && (
+        <div role="alert" className="p-2.5 rounded-xl bg-danger/10 border border-danger/40 text-2xs text-foreground space-y-1.5">
+          <p className="font-bold text-danger flex items-center gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" /> Este commit inclui pom.xml alterado só para teste local
+          </p>
+          {alteredPoms.map((e) => (
+            <p key={e.id} className="font-mono">
+              {e.artifactId}: {e.from} → <span className="text-warning font-semibold">{e.to}</span>
+            </p>
+          ))}
+          <p className="text-muted-foreground">
+            Isso aponta o projeto para uma versão de desenvolvimento e quebra o build de quem baixar. Cancele e use{' '}
+            <strong>Reverter</strong> no alerta da tela Deploy (o pom.xml.bak ao lado também entra no commit).
+          </p>
+          <label className="flex items-center gap-2 font-semibold cursor-pointer">
+            <input type="checkbox" checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} className="accent-primary" />
+            Entendi, quero commitar mesmo assim
+          </label>
+        </div>
+      )}
+
       {/* git add -A inclui arquivos não rastreados: listar evita subir um .env ou build por engano */}
       <div className="text-2xs text-muted-foreground bg-muted/30 rounded-xl border border-border/60 overflow-hidden">
         <div className="flex items-center justify-between p-2.5 border-b border-border/60">
@@ -123,7 +151,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
         <button
           type="button"
           onClick={onConfirm}
-          disabled={isCommitting || !commitMessage.trim() || (!isLoadingFiles && commitFiles.length === 0)}
+          disabled={isCommitting || blockedByPom || !commitMessage.trim() || (!isLoadingFiles && commitFiles.length === 0)}
           className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs flex items-center space-x-1.5 transition disabled:opacity-50 shadow-md shadow-primary/25 cursor-pointer"
         >
           <UploadCloud className={`w-3.5 h-3.5 ${isCommitting ? 'animate-pulse' : ''}`} />
@@ -132,4 +160,5 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
       </div>
     </div>
   </Modal>
-);
+  );
+};
