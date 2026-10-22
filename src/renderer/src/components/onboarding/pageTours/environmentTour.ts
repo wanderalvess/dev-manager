@@ -34,8 +34,8 @@ export const ENV_TOUR_STEPS: TourStep[] = [
     desc: 'Cada cartão representa um serviço ou comando da esteira, com botões para subir, parar ou reiniciar individualmente.'
   },
   {
-    target: 'console-terminal',
+    target: 'console-dock',
     title: 'Console em Tempo Real',
-    desc: 'Acompanhe os logs de execução e envie comandos diretamente para o console Karaf.'
+    desc: 'O console fica no rodapé de qualquer tela (Ctrl+`): acompanhe os logs e envie comandos diretamente ao Karaf.'
   }
 ];

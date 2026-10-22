@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { GitProjectInfo } from '../../../shared/types';
-import { TerminalViewer } from '../components/TerminalViewer';
 import { OsgiResolutionDiagnosticCard } from '../components/OsgiResolutionDiagnosticCard';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
@@ -23,7 +22,6 @@ interface DeployPageProps {
 
 export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSettings, settingsVersion }) => {
   const tour = usePageTour(DEPLOY_TOUR_STORAGE_KEY);
-  const [isConsoleMaximized, setIsConsoleMaximized] = useState<boolean>(false);
   const modals = useDeployModals();
   const karaf = useKarafStatus();
   const deployProfiles = useDeployProfiles(settingsVersion);
@@ -34,23 +32,10 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
     setActiveProfileId: deployProfiles.setActiveProfileId
   });
 
-  // Atalho Escape para restaurar console se estiver maximizado
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isConsoleMaximized) {
-        setIsConsoleMaximized(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isConsoleMaximized]);
-
   const handleSelectProfile = (id: string) => {
     void deployProfiles.selectProfile(id);
     runner.resetProgress();
   };
-
-  const isRunning = runner.isDeploying || runner.runningStepId !== null || runner.isDiagRunning !== null;
 
   return (
     <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden max-w-full">
@@ -84,10 +69,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         onRun={runner.handleRunActiveProfile}
       />
 
-      {/* Grid Principal */}
+      {/* Grid Principal: o console fica no dock global (Ctrl+`) */}
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 min-w-0">
-        {/* Coluna Esquerda: Etapas do Perfil & Diagnósticos */}
-        <div className={`${isConsoleMaximized ? 'hidden' : 'lg:col-span-4 xl:col-span-4'} flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1`}>
+        <div className="lg:col-span-5 xl:col-span-4 flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1">
           <DeployKarafAlerts
             karafValid={deployProfiles.karafValid}
             karafPath={deployProfiles.karafPath}
@@ -111,23 +95,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             onToggleAllSteps={deployProfiles.handleToggleAllSteps}
             onRunFromStep={runner.handleRunFromStep}
           />
-
-          <DeployDiagnosticsPanel
-            isDeploying={runner.isDeploying}
-            isDiagRunning={runner.isDiagRunning}
-            onRunDiagnostic={runner.handleRunDiagnostic}
-          />
         </div>
 
-        {/* Coluna Direita: Terminal com Streaming de Saída */}
-        <div
-          className={`${
-            isConsoleMaximized
-              ? 'col-span-12 min-h-[calc(100vh-210px)] h-full'
-              : 'lg:col-span-8 xl:col-span-8 min-h-[580px] lg:min-h-full'
-          } flex flex-col min-w-0 transition-all duration-200`}
-          data-tour="deploy-console-output"
-        >
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col space-y-3 min-w-0 lg:min-h-0 overflow-y-auto pr-1">
           {runner.activeResolutionDiag && (
             <OsgiResolutionDiagnosticCard
               diagnostic={runner.activeResolutionDiag}
@@ -140,15 +110,10 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             />
           )}
 
-          <TerminalViewer
-            logs={runner.terminalLogs}
-            onClear={runner.clearConsole}
-            title={isConsoleMaximized ? 'Console de Deploy (Modo Expandido)' : 'Console de Deploy'}
-            isRunning={isRunning}
-            onSendCommand={(cmd) => runner.handleRunDiagnostic(cmd, 'terminal')}
-            inputPlaceholder="Digite um comando Karaf (ex: feature:uninstall -r winthor-integracao-varejo/versao, bundle:diag, la)..."
-            isMaximized={isConsoleMaximized}
-            onToggleMaximize={() => setIsConsoleMaximized((prev) => !prev)}
+          <DeployDiagnosticsPanel
+            isDeploying={runner.isDeploying}
+            isDiagRunning={runner.isDiagRunning}
+            onRunDiagnostic={runner.handleRunDiagnostic}
           />
         </div>
       </div>

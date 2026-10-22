@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { DeployProgressEvent, OsgiResolutionDiagnosticSummary } from '../../../../shared/types';
-import { appendCappedLogLines, splitStreamChunk } from '../../utils/deployProfileUtils';
+import { useKarafConsole } from '../karafConsole/KarafConsoleContext';
 
 export type DeployStepStatus = {
   status: 'running' | 'completed' | 'failed' | 'skipped';
@@ -17,34 +17,13 @@ export function useDeployProgress() {
   const [stepExecutionTimes, setStepExecutionTimes] = useState<Record<string, number>>({});
   const [stepStatuses, setStepStatuses] = useState<Record<string, DeployStepStatus>>({});
   const [currentProgress, setCurrentProgress] = useState<DeployCurrentProgress | null>(null);
-  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
   const [activeResolutionDiag, setActiveResolutionDiag] = useState<OsgiResolutionDiagnosticSummary | null>(null);
-  const streamRemainderRef = useRef<string>('');
+  // O buffer de texto é do console global (dock); aqui ficam só progresso e status das etapas.
+  const { logs: terminalLogs, setLogs: setTerminalLogs, streamRemainderRef, flushRemainder } = useKarafConsole();
 
-  // Descarrega qualquer resto de linha pendente no buffer do stream
-  const flushRemainder = () => {
-    if (streamRemainderRef.current) {
-      const leftover = streamRemainderRef.current;
-      streamRemainderRef.current = '';
-      setTerminalLogs((prev) => appendCappedLogLines(prev, [leftover]));
-    }
-  };
-
-  // Listeners de log e progresso em tempo real
+  // Listener de progresso em tempo real
   useEffect(() => {
     if (!window.electronAPI) return;
-
-    const appendChunks = (chunk: string) => {
-      const { lines, remainder } = splitStreamChunk(streamRemainderRef.current, chunk);
-      streamRemainderRef.current = remainder;
-
-      if (lines.length > 0) {
-        setTerminalLogs((prev) => appendCappedLogLines(prev, lines));
-      }
-    };
-
-    const unsubDeploy = window.electronAPI.onDeployLogChunk(appendChunks);
-    const unsubKaraf = window.electronAPI.onKarafLogChunk(appendChunks);
 
     const unsubProgress = window.electronAPI.onDeployStepProgress
       ? window.electronAPI.onDeployStepProgress((progress: DeployProgressEvent) => {
@@ -81,8 +60,6 @@ export function useDeployProgress() {
       : () => {};
 
     return () => {
-      unsubDeploy();
-      unsubKaraf();
       unsubProgress();
     };
   }, []);

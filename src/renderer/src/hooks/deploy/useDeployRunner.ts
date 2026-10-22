@@ -3,6 +3,7 @@ import type { DeployProfile, DeployStep } from '../../../../shared/types';
 import { showToast } from '../../components/ToastHost';
 import { buildDiagnosticResultLines, sliceProfileFromStep } from '../../utils/deployProfileUtils';
 import { useDeployProgress, type DeployStepStatus } from './useDeployProgress';
+import { useKarafConsole } from '../karafConsole/KarafConsoleContext';
 
 interface UseDeployRunnerArgs {
   profiles: DeployProfile[];
@@ -13,6 +14,7 @@ interface UseDeployRunnerArgs {
 /** Orquestra execução de perfis, etapas isoladas e diagnósticos Karaf. */
 export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }: UseDeployRunnerArgs) {
   const progress = useDeployProgress();
+  const { setOpen: setConsoleOpen } = useKarafConsole();
   const {
     runningStepId,
     setRunningStepId,
@@ -60,6 +62,7 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     }
 
     setIsDeploying(true);
+    setConsoleOpen(true);
     const initialStatuses: Record<string, DeployStepStatus> = {};
     profileToRun.steps.forEach((s) => {
       if (s.enabled === false) {
@@ -103,6 +106,7 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
   const handleRunSingleStep = async (step: DeployStep) => {
     if (isDeploying || runningStepId || isDiagRunning || !window.electronAPI?.runDeployStep) return;
     setRunningStepId(step.id);
+    setConsoleOpen(true);
     setActiveResolutionDiag(null);
     setStepStatuses((prev) => ({
       ...prev,
