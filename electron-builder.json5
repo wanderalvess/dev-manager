@@ -26,9 +26,11 @@
     "target": ["nsis", "portable"],
     "requestedExecutionLevel": "asInvoker",
     "icon": "build/icon.ico",
-    // Certificado interno autoassinado (dev-manager-codesign.pfx).
-    // Sem CA pública no Windows, electron-updater rejeitaria o download com "not signed by application owner".
-    // A integridade do update é garantida pelo hash SHA-512 no latest.yml publicado no GitHub Releases.
+    // Certificado interno autoassinado (dev-manager-codesign.pfx): só é "Valid" no Authenticode das máquinas
+    // que importaram o .cer como Trusted Root; nas demais o electron-updater rejeitaria o download com
+    // "not signed by the application owner". Com false o builder não grava o publisherName no app-update.yml
+    // e o updater pula essa checagem (vale só para apps instalados a partir desta versão).
+    // ATENÇÃO: o SHA-512 do latest.yml só garante integridade; quem publica na release controla o .exe e o hash.
     "verifyUpdateCodeSignature": false
   },
   // Nomes sem espaço: o GitHub troca espaço por "." no upload e o latest.yml (auto-update) deixaria de

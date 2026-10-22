@@ -36,16 +36,6 @@ export class AutoUpdateService {
   ) {
     autoUpdater.autoDownload = false;
 
-    // Em ambiente Windows (NsisUpdater), a checagem nativa exige certificados emitidos por CA pública
-    // instalada na raiz do sistema. Como o cockpit utiliza certificado autoassinado interno
-    // (CN=Dev Manager Internal Code Signing) ou empacota sem CA comercial, a validação Authenticode
-    // do Windows retornaria 'NotTrusted' e lançaria 'is not signed by the application owner'.
-    // A integridade e autenticidade do instalador já são garantidas pelo hash SHA-512 do latest.yml.
-    // Sobrescrever verifyUpdateCodeSignature para resolver null aceita o arquivo baixado.
-    if ('verifyUpdateCodeSignature' in autoUpdater) {
-      (autoUpdater as any).verifyUpdateCodeSignature = async () => null;
-    }
-
     autoUpdater.on('checking-for-update', () => onStatus({ status: 'checking' }));
     autoUpdater.on('update-available', (info) => onStatus({ status: 'available', version: info.version }));
     autoUpdater.on('update-not-available', () => onStatus({ status: 'not-available' }));

@@ -5,7 +5,6 @@ type Handler = (...args: any[]) => void;
 const listeners = new Map<string, Handler>();
 const autoUpdaterMock = {
   autoDownload: true,
-  verifyUpdateCodeSignature: vi.fn(),
   on: vi.fn((event: string, handler: Handler) => {
     listeners.set(event, handler);
   }),
@@ -24,7 +23,6 @@ describe('AutoUpdateService', () => {
   beforeEach(() => {
     listeners.clear();
     autoUpdaterMock.autoDownload = true;
-    autoUpdaterMock.verifyUpdateCodeSignature = vi.fn();
     autoUpdaterMock.checkForUpdates.mockClear();
     autoUpdaterMock.checkForUpdates.mockImplementation(() => Promise.resolve());
     autoUpdaterMock.downloadUpdate.mockClear();
@@ -32,12 +30,9 @@ describe('AutoUpdateService', () => {
     autoUpdaterMock.quitAndInstall.mockClear();
   });
 
-  it('desativa autoDownload e neutraliza verifyUpdateCodeSignature para certificados internos', async () => {
+  it('desativa autoDownload', () => {
     new AutoUpdateService(vi.fn());
     expect(autoUpdaterMock.autoDownload).toBe(false);
-    expect(typeof autoUpdaterMock.verifyUpdateCodeSignature).toBe('function');
-    const result = await autoUpdaterMock.verifyUpdateCodeSignature();
-    expect(result).toBeNull();
   });
 
   it('mapeia cada evento do autoUpdater para o shape UpdateStatus esperado pela UI', () => {
