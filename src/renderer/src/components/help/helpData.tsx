@@ -1708,7 +1708,7 @@ export function getKeyboardShortcuts(debugPort: number) {
   ];
 }
 
-export function getHelpCategories(faqCount: number, appVersion: string = '1.41.0'): HelpCategoryItem[] {
+export function getHelpCategories(faqCount: number, appVersion: string = '1.43.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '12 Módulos' },

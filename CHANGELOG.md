@@ -4,6 +4,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.43.0] - 2026-10-21
+### Adicionado
+- **Console do Karaf no rodapé**: o console agora fica embaixo de qualquer tela (`` Ctrl+` `` abre e fecha) e é o mesmo em *Ambiente Dev* e *Deploy*, sem precisar trocar de página para acompanhar o Karaf. Ele abre sozinho ao executar um deploy e traz o *Histórico* do Karaf embedded.
+- **Tail e watch no console**: a barra do console tem *Tail do log* (`log:tail` ao vivo, com *Parar tail*) e *Watch*, *Parar watch* e *Listar* (`bundle:watch` em todos os bundles, em ids ou em URLs `mvn:`). Também funciona no modo Web/Docker.
+- **Gerenciador de bundles**: cada linha ganhou *Ver o log deste bundle* (abre o console com o tail filtrado pelo nome) e *Monitorar* (`bundle:watch` no bundle). A lista se atualiza sozinha a cada 10 s com o gerenciador aberto.
+- **Montar fila de deploy**: o botão *Montar fila*, no painel de etapas, lê os projetos Maven da *Pasta de projetos*, deixa você marcar quais compilar e gera as etapas de build na ordem de dependência (`pom.xml`: dependências e parent). Os projetos de que os marcados dependem entram sozinhos (opcional), há opção de pular testes e de instalar no Karaf os projetos com packaging `bundle`, e o resultado pode ser acrescentado ou substituir as etapas do perfil. Dependência circular é avisada.
+
+### Alterado
+- **Ambiente Dev e Deploy**: o console saiu das duas páginas, que passaram a usar a largura toda. Rodar um diagnóstico do Karaf não limpa mais o console.
+- **Desinstalar bundle**: o modal já abre no modo *bundle* quando o bundle não pertence a nenhuma feature instalada. Instalar com sucesso fecha o modal.
+
+### Corrigido
+- **Fila de deploy**: marcar etapas em cliques rápidos não desfaz mais a marcação anterior, e trocar de perfil não regrava a lista inteira de perfis. Executar o perfil sugerido por um diagnóstico OSGi roda direto, sem o atraso que podia usar um perfil desatualizado, e executar sem etapas habilitadas agora avisa.
+- **Projeto de contexto das etapas Karaf**: cada etapa usa o projeto dela, ou o da etapa anterior mais próxima, e não mais sempre o primeiro projeto do perfil.
+- **Deploys simultâneos**: uma segunda execução é recusada com aviso, em vez de cancelar a que estava rodando.
+- **Importar perfil**: as etapas recebem ids novos (importar o mesmo arquivo duas vezes gerava ids repetidos) e etapas inválidas são rejeitadas.
+
 ## [1.42.0] - 2026-10-20
 ### Adicionado
 - **Abertura**: o app passa a abrir com uma animação de entrada (logo, nome e o carregamento das quatro áreas), que pode ser pulada. Quem está no primeiro uso termina em *"Começar onboarding"* ou *"Explorar sozinho"*; quem já usa entra direto, ou abre *"Ver novidades"*.
