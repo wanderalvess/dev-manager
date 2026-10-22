@@ -9,7 +9,6 @@ import {
   buildProfileExportFileName,
   buildImportedProfile,
   buildDiagnosticResultLines,
-  navigateCommandHistory,
   countEnabledSteps,
   toggleProfileStep,
   toggleAllProfileSteps,
@@ -81,16 +80,6 @@ describe('deployProfileUtils', () => {
     expect(buildDiagnosticResultLines('log:display', { code: 0 })[0]).toContain('vazio');
     expect(buildDiagnosticResultLines('la', { code: 0 })[0]).toContain('nenhuma saída');
     expect(buildDiagnosticResultLines('la', { code: 0, stdout: 'x' })).toEqual([]);
-  });
-
-  it('navega no histórico de comandos', () => {
-    const h = ['a', 'b'];
-    expect(navigateCommandHistory([], -1, 'up')).toBeNull();
-    expect(navigateCommandHistory(h, -1, 'up')).toEqual({ index: 1, value: 'b' });
-    expect(navigateCommandHistory(h, 0, 'up')).toEqual({ index: 0, value: 'a' });
-    expect(navigateCommandHistory(h, -1, 'down')).toBeNull();
-    expect(navigateCommandHistory(h, 0, 'down')).toEqual({ index: 1, value: 'b' });
-    expect(navigateCommandHistory(h, 1, 'down')).toEqual({ index: -1, value: '' });
   });
 
   it('conta etapas habilitadas e detecta estado indeterminado', () => {

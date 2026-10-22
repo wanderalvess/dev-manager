@@ -1,10 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { ChevronDown, ChevronUp, ListTree, Package, Zap } from 'lucide-react';
+import { ChevronDown, ChevronUp, ListTree, Package, Terminal, Zap } from 'lucide-react';
 import { DeployDiagQuickTab } from './DeployDiagQuickTab';
 import { DeployDiagFeatureTab } from './DeployDiagFeatureTab';
 import { DeployDiagBundleTab } from './DeployDiagBundleTab';
-import { DeployKarafPrompt } from './DeployKarafPrompt';
-import { useKarafCommandPrompt } from '../../hooks/deploy/useKarafCommandPrompt';
+import { useKarafConsole } from '../../hooks/karafConsole/KarafConsoleContext';
 import { confirmKarafCommand } from '../../hooks/karafConsole/useKarafQuickCommands';
 
 type DiagTab = 'quick' | 'feature' | 'bundle';
@@ -43,9 +42,9 @@ export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
   const [diagFeatureName, setDiagFeatureName] = useState('');
   const [diagBundleId, setDiagBundleId] = useState('');
   const disabled = isDeploying || isDiagRunning !== null;
-  const prompt = useKarafCommandPrompt({ isBlocked: disabled, onRun: onRunDiagnostic });
+  const { isOpen: isConsoleOpen, setOpen: setConsoleOpen } = useKarafConsole();
 
-  // Botões prontos pedem confirmação nos comandos que apagam estado; o prompt livre roda direto (o usuário digitou).
+  // Botões prontos pedem confirmação nos comandos que apagam estado; o que o usuário digita no console roda direto.
   const guardedRun = useCallback(
     async (cmd: string, label: string) => {
       if (await confirmKarafCommand(cmd)) onRunDiagnostic(cmd, label);
@@ -118,13 +117,22 @@ export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
             />
           )}
 
-          <DeployKarafPrompt
-            value={prompt.customCommand}
-            disabled={disabled}
-            onChange={prompt.setCustomCommand}
-            onSubmit={prompt.handleCustomCommandSubmit}
-            onKeyDown={prompt.handleCustomCommandKeyDown}
-          />
+          {/* Comando livre: o campo único fica no console (histórico ↑/↓ e Ctrl+C), aqui só o atalho para abri-lo. */}
+          <div className="pt-2.5 border-t border-border/70 flex items-center justify-between gap-2 text-2xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Terminal className="w-3 h-3 text-primary" />
+              Comando livre: digite no campo do Console Karaf (Ctrl+`).
+            </span>
+            {!isConsoleOpen && (
+              <button
+                type="button"
+                onClick={() => setConsoleOpen(true)}
+                className="text-primary hover:underline cursor-pointer shrink-0"
+              >
+                Abrir console
+              </button>
+            )}
+          </div>
         </>
       )}
     </div>

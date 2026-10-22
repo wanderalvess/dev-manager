@@ -143,6 +143,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
               totalSteps={totalCount}
               isRunning={runningStepId === step.id}
               isBusy={isBusy}
+              isProfileRun={isDeploying}
               status={stepStatuses[step.id]}
               executionTimeMs={stepExecutionTimes[step.id]}
               onRun={onRunStep}

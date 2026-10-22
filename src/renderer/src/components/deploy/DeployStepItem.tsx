@@ -19,6 +19,8 @@ interface DeployStepItemProps {
   totalSteps: number;
   isRunning: boolean;
   isBusy: boolean;
+  /** Perfil inteiro em execução: o cancelamento é do perfil (botão do cabeçalho), não de uma etapa. */
+  isProfileRun?: boolean;
   status?: DeployStepStatus;
   executionTimeMs?: number;
   onRun: (step: DeployStep) => void;
@@ -33,6 +35,7 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
   totalSteps,
   isRunning,
   isBusy,
+  isProfileRun,
   status,
   executionTimeMs,
   onRun,
@@ -141,7 +144,11 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
         )}
 
         {/* Executar / Cancelar somente esta etapa */}
-        {isRunning ? (
+        {isRunning && isProfileRun ? (
+          <span className="px-1.5 text-2xs font-semibold text-primary" title="Para interromper, use o Cancelar do cabeçalho">
+            Executando…
+          </span>
+        ) : isRunning ? (
           <button
             type="button"
             onClick={() => onCancel?.(step)}

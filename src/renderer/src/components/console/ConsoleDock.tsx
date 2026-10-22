@@ -25,12 +25,14 @@ export const ConsoleDock: React.FC = () => {
     if (request?.tail) void startTail();
   }, [request, startTail]);
 
-  // Ctrl+C do console: encerra o tail em andamento ou interrompe o comando no Karaf embedded.
+  // Ctrl+C do console: encerra o tail em andamento, interrompe o comando no Karaf embedded ou o do client em execução.
   const handleAbort = tail.isTailing
     ? () => void tail.stop()
     : isEmbeddedRunning
       ? () => void window.electronAPI?.sendKarafInterrupt?.()
-      : undefined;
+      : isBusy
+        ? () => void window.electronAPI?.abortKarafDiagnostic?.()
+        : undefined;
 
   const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
 

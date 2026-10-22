@@ -85,23 +85,6 @@ export function buildDiagnosticResultLines(
   return [];
 }
 
-/** Próximo índice/valor do histórico ao navegar com as setas; null = sem mudança. */
-export function navigateCommandHistory(
-  history: string[],
-  index: number,
-  direction: 'up' | 'down'
-): { index: number; value: string } | null {
-  if (direction === 'up') {
-    if (history.length === 0) return null;
-    const nextIdx = index === -1 ? history.length - 1 : Math.max(0, index - 1);
-    return { index: nextIdx, value: history[nextIdx] || '' };
-  }
-  if (index === -1) return null;
-  const nextIdx = index + 1;
-  if (nextIdx >= history.length) return { index: -1, value: '' };
-  return { index: nextIdx, value: history[nextIdx] || '' };
-}
-
 export interface EnabledStepsCount {
   enabledCount: number;
   totalCount: number;

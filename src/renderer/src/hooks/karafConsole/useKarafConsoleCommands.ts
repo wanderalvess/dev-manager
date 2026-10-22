@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { showToast } from '../../components/ToastHost';
 import { buildDiagnosticResultLines } from '../../utils/deployProfileUtils';
 import { useKarafConsole } from './KarafConsoleContext';
 
@@ -46,7 +47,10 @@ export function useKarafConsoleCommands(pollStatus: boolean) {
         api.sendKarafInput(cmd);
         return;
       }
-      if (isBusy) return;
+      if (isBusy) {
+        showToast('Já há um comando em execução no console. Aguarde ou interrompa com Ctrl+C / Esc.', 'info');
+        return;
+      }
       setIsBusy(true);
       streamRemainderRef.current = '';
       setLogs((prev) => [...prev, `karaf@root()> ${cmd}\r\n`]);
