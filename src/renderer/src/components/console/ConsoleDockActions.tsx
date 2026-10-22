@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, List, Play, Square } from 'lucide-react';
 import { buildWatchCommand } from '../../utils/karafWatchCommand';
 import { showToast } from '../ToastHost';
+import { ConsoleQuickCommandsMenu } from './ConsoleQuickCommandsMenu';
 
 interface ConsoleDockActionsProps {
   isTailing: boolean;
@@ -50,6 +51,8 @@ export const ConsoleDockActions: React.FC<ConsoleDockActionsProps> = ({
         </button>
       )}
 
+      <ConsoleQuickCommandsMenu onRunCommand={onRunCommand} />
+
       <span className="h-4 w-px bg-border" />
 
       <input
@@ -65,8 +68,8 @@ export const ConsoleDockActions: React.FC<ConsoleDockActionsProps> = ({
       <button onClick={() => runWatch('stop')} className={BTN} title="bundle:watch --stop">
         <EyeOff className="w-3 h-3" /> Parar watch
       </button>
-      <button onClick={() => runWatch('list')} className={BTN} title="bundle:watch --list">
-        <List className="w-3 h-3" /> Listar
+      <button onClick={() => runWatch('list')} className={BTN} title="bundle:watch --list: mostra os bundles que estão em watch">
+        <List className="w-3 h-3" /> Listar watches
       </button>
     </div>
   );

@@ -69,25 +69,37 @@ export const ConsoleDock: React.FC = () => {
           className="h-1 cursor-row-resize bg-border/60 hover:bg-primary/60 transition"
         />
       )}
-      <div className="flex items-center gap-2 px-3 h-7 text-2xs font-semibold text-muted-foreground">
-        <button
-          onClick={toggle}
-          title="Abrir/fechar o console (Ctrl+`)"
-          className="flex items-center gap-1.5 hover:text-foreground transition cursor-pointer"
-        >
-          <Terminal className="w-3.5 h-3.5 text-primary" />
-          Console Karaf
-          {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-        </button>
+      {/* A barra inteira alterna o console; o botão Recolher/Expandir é o controle explícito (e o acessível por teclado). */}
+      <div
+        onClick={toggle}
+        className="flex items-center gap-2 px-3 h-8 text-2xs font-semibold text-muted-foreground cursor-pointer hover:bg-muted/40 transition"
+      >
+        <Terminal className="w-3.5 h-3.5 text-primary" />
+        <span>Console Karaf</span>
         <span className={`w-1.5 h-1.5 rounded-full ${isEmbeddedRunning ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`} />
         <span>{isEmbeddedRunning ? 'embedded ativo' : 'sem Karaf embedded'}</span>
         <span className="ml-auto">{logs.length} linhas</span>
         <button
-          onClick={history.open}
+          onClick={(e) => {
+            e.stopPropagation();
+            history.open();
+          }}
           title="Ver histórico persistido do Karaf embedded (sobrevive a reinícios)"
           className="flex items-center gap-1 hover:text-foreground transition cursor-pointer"
         >
           <History className="w-3 h-3" /> Histórico
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggle();
+          }}
+          aria-expanded={isOpen}
+          title="Abrir/fechar o console (Ctrl+`)"
+          className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-border bg-card hover:bg-muted hover:text-foreground transition cursor-pointer"
+        >
+          {isOpen ? 'Recolher' : 'Expandir'}
+          {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
         </button>
       </div>
 

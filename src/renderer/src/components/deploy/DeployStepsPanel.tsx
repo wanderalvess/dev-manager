@@ -40,9 +40,10 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
   onRunFromStep
 }) => {
   const { enabledCount, totalCount, allEnabled, isIndeterminate } = countEnabledSteps(activeProfile);
+  // `current` é a etapa em andamento (1-based): a que está rodando ainda não conta como concluída.
   const percent =
     currentProgress && currentProgress.total > 0
-      ? Math.round((currentProgress.current / currentProgress.total) * 100)
+      ? Math.round(((currentProgress.current - 1) / currentProgress.total) * 100)
       : 0;
   const isBusy = isDeploying || runningStepId !== null || isDiagRunning !== null;
 

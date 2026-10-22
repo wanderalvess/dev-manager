@@ -132,11 +132,11 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
             type="button"
             onClick={() => onRunFromStep(index)}
             disabled={isBusy}
-            className="p-1.5 rounded-lg border text-2xs transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/80 cursor-pointer disabled:opacity-0"
-            title={`Executar o fluxo a partir desta etapa (${step.name}) até o final`}
+            className="p-1.5 rounded-lg border text-2xs transition-all flex items-center gap-1 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            title={`Executar desta etapa (${step.name}) até a última, só as marcadas`}
           >
             <FastForward className="w-3 h-3 text-primary" />
-            <span className="hidden xl:inline">Daqui em diante</span>
+            <span>Daqui em diante</span>
           </button>
         )}
 

@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Comandos rápidos personalizáveis**: na aba *Rápidos* dos Diagnósticos do Deploy, *Personalizar* permite adicionar, remover, renomear e reordenar os comandos Karaf. A mesma lista aparece no novo menu *Comandos* da barra do console (ao lado de *Tail do log*), para rodar `bundle:list`, `feature:list`, `log:display` etc. direto no console. *Restaurar padrão* volta à lista original.
+- **Filtro `| grep`**: o shell Karaf aceita `<comando> | grep [flags] <termo>` (ex.: `feature:repo-list | grep winthor`) no prompt, nos comandos rápidos e nos novos botões *Repos* e *Listar* da aba *Features*. Qualquer outro `|` continua bloqueado.
+- **Recolher os Diagnósticos**: o painel de diagnósticos tem o botão *Recolher/Expandir* (lembra o estado).
+
+### Alterado
+- **Console do Karaf**: a barra inteira abre/fecha o console e ganhou o botão explícito *Recolher/Expandir*. O botão *Listar* do `bundle:watch` agora se chama *Listar watches*.
+- **Diagnósticos**: removidos os botões repetidos das abas *Features* e *Bundles* (já estão em *Rápidos*). Comandos que apagam estado (`log:clear`, `feature:uninstall`, `bundle:uninstall`...) pedem confirmação.
+- **Daqui em diante**: o botão das etapas fica sempre visível, com texto, e não só ao passar o mouse.
+
+### Corrigido
+- **Diagnósticos com o console recolhido**: rodar um diagnóstico agora abre o console, que antes ficava recolhido e escondia a saída, e acrescenta ao que já estava lá em vez de apagar o buffer.
+- **Barra de progresso do Deploy**: mostrava 33% na etapa 1 de 3 antes de concluir qualquer etapa; agora conta só as etapas concluídas.
+
 ## [1.44.0] - 2026-10-22
 ### Adicionado
 - **Ciclos de evolução modernos da CCW**: o modal de download e instalação de rotinas da Central de Controle WinThor (CCW) passa a suportar os ciclos de evolução reais do ecossistema TOTVS WinThor (38.00, 37.00, 36.00...), substituindo o seletor rígido de versões legadas (30, 31, 29).

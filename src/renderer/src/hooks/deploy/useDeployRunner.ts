@@ -155,8 +155,10 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
   const handleRunDiagnostic = async (cmd: string, label: string) => {
     if (isDeploying || isDiagRunning) return;
     setIsDiagRunning(label);
+    // Abre o dock (a saída ficava invisível com o console recolhido) e acrescenta ao buffer, sem apagar o que já estava lá.
+    setConsoleOpen(true);
     streamRemainderRef.current = '';
-    setTerminalLogs([`--- Executando Diagnóstico: ${cmd} ---\r\n`]);
+    setTerminalLogs((prev) => [...prev, `--- Executando Diagnóstico: ${cmd} ---\r\n`]);
 
     try {
       const res = await window.electronAPI.execKarafDiagnostic(cmd);

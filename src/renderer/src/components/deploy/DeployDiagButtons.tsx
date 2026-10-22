@@ -5,7 +5,6 @@ interface DeployDiagCommandButtonProps {
   label: string;
   command: string;
   title?: string;
-  fill?: boolean;
   disabled: boolean;
   onClick: () => void;
 }
@@ -16,7 +15,6 @@ export const DeployDiagCommandButton: React.FC<DeployDiagCommandButtonProps> = (
   label,
   command,
   title,
-  fill,
   disabled,
   onClick
 }) => (
@@ -24,7 +22,7 @@ export const DeployDiagCommandButton: React.FC<DeployDiagCommandButtonProps> = (
     type="button"
     onClick={onClick}
     disabled={disabled}
-    className={`${fill ? 'flex-1 ' : ''}p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer`}
+    className={`p-2 bg-card hover:bg-muted/50 border border-border/70 hover:border-border rounded-lg text-left transition-colors text-xs flex items-center gap-2 text-foreground disabled:opacity-50 cursor-pointer`}
     title={title}
   >
     {icon}
