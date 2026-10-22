@@ -8,6 +8,7 @@ import { KarafInstallOptionsBar } from '../install/KarafInstallOptionsBar';
 import { KarafInstallDepReport } from '../install/KarafInstallDepReport';
 import { KarafInstallModalFooter } from '../install/KarafInstallModalFooter';
 import { Modal } from '../../ui/Modal';
+import { showToast } from '../../ToastHost';
 
 interface KarafInstallModalProps {
   isOpen: boolean;
@@ -34,7 +35,12 @@ export const KarafInstallModal: React.FC<KarafInstallModalProps> = ({
     projects,
     initialCoords,
     initialVersion,
-    onSuccess
+    // Sucesso fecha o modal: a saída completa já ficou no console do dock.
+    onSuccess: async () => {
+      await onSuccess();
+      showToast('Bundle instalado com sucesso.', 'success');
+      onClose();
+    }
   });
 
   if (!isOpen) return null;

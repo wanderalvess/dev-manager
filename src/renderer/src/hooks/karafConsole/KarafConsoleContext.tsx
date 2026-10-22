@@ -9,7 +9,16 @@ export type ConsoleEntry = string | EnvironmentLog;
 /** Eventos que as páginas observam sem precisar assinar o IPC de novo. */
 export type ConsoleEvent = { kind: 'env-log'; log: EnvironmentLog } | { kind: 'karaf-stdout' };
 
+/** Pedido de outras telas ao dock: abrir, filtrar o texto e/ou iniciar o log:tail. O nonce distingue pedidos iguais. */
+export interface ConsoleRequest {
+  nonce: number;
+  filter?: string;
+  tail?: boolean;
+}
+
 interface KarafConsoleValue {
+  request: ConsoleRequest | null;
+  requestConsole: (req: Omit<ConsoleRequest, 'nonce'>) => void;
   logs: ConsoleEntry[];
   setLogs: Dispatch<SetStateAction<ConsoleEntry[]>>;
   streamRemainderRef: React.MutableRefObject<string>;
@@ -38,6 +47,7 @@ function readStored(): { open: boolean; height: number } {
 export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [logs, setLogsState] = useState<ConsoleEntry[]>([]);
   const [dock, setDock] = useState(readStored);
+  const [request, setRequest] = useState<ConsoleRequest | null>(null);
   const streamRemainderRef = useRef('');
   const listenersRef = useRef(new Set<(event: ConsoleEvent) => void>());
 
@@ -85,6 +95,15 @@ export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return () => unsubs.forEach((unsub) => unsub());
   }, []);
 
+  const requestConsole = useCallback((req: Omit<ConsoleRequest, 'nonce'>) => {
+    setDock((prev) => {
+      const next = { ...prev, open: true };
+      persist(next);
+      return next;
+    });
+    setRequest((prev) => ({ ...req, nonce: (prev?.nonce ?? 0) + 1 }));
+  }, []);
+
   const persist = (next: { open: boolean; height: number }) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -119,6 +138,8 @@ export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const value = useMemo<KarafConsoleValue>(
     () => ({
+      request,
+      requestConsole,
       logs,
       setLogs,
       streamRemainderRef,
@@ -130,7 +151,7 @@ export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ 
       toggle,
       setHeight
     }),
-    [logs, setLogs, flushRemainder, subscribe, dock, setOpen, toggle, setHeight]
+    [request, requestConsole, logs, setLogs, flushRemainder, subscribe, dock, setOpen, toggle, setHeight]
   );
 
   return <KarafConsoleContext.Provider value={value}>{children}</KarafConsoleContext.Provider>;

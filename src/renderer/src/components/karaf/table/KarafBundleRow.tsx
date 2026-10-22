@@ -18,6 +18,8 @@ interface KarafBundleRowProps {
   onOpenInstall: (bundle: KarafBundleInfo) => void;
   onOpenDetails: (bundle: KarafBundleInfo) => void;
   onOpenUninstall: (bundle: KarafBundleInfo) => void;
+  onOpenBundleLog: (bundle: KarafBundleInfo) => void;
+  onWatchBundle: (bundle: KarafBundleInfo) => void;
 }
 
 export const KarafBundleRow: React.FC<KarafBundleRowProps> = ({

@@ -34,6 +34,8 @@ interface KarafBundleTableProps {
   onOpenInstall: (bundle: KarafBundleInfo) => void;
   onOpenDetails: (bundle: KarafBundleInfo) => void;
   onOpenUninstall: (bundle: KarafBundleInfo) => void;
+  onOpenBundleLog: (bundle: KarafBundleInfo) => void;
+  onWatchBundle: (bundle: KarafBundleInfo) => void;
   onBatchAction: (action: 'start' | 'stop' | 'restart' | 'refresh' | 'uninstall') => void;
 }
 
@@ -63,6 +65,8 @@ export const KarafBundleTable: React.FC<KarafBundleTableProps> = ({
   onOpenInstall,
   onOpenDetails,
   onOpenUninstall,
+  onOpenBundleLog,
+  onWatchBundle,
   onBatchAction
 }) => {
   const view = resolveKarafBundleTableView({
@@ -120,6 +124,8 @@ export const KarafBundleTable: React.FC<KarafBundleTableProps> = ({
                     onOpenInstall={onOpenInstall}
                     onOpenDetails={onOpenDetails}
                     onOpenUninstall={onOpenUninstall}
+                    onOpenBundleLog={onOpenBundleLog}
+                    onWatchBundle={onWatchBundle}
                   />
                 ))}
               </tbody>

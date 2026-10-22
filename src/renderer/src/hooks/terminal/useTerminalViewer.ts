@@ -7,7 +7,11 @@ import {
   type TerminalLog
 } from '../../utils/terminalViewerUtils';
 
-export function useTerminalViewer(logs: TerminalLog[], defaultWordWrap: boolean) {
+export function useTerminalViewer(
+  logs: TerminalLog[],
+  defaultWordWrap: boolean,
+  externalSearch: { text: string; nonce: number } | null = null
+) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { copy: copyLogs, copiedKey } = useCopyToClipboard(2000);
   const copied = copiedKey === 'logs';
@@ -15,6 +19,10 @@ export function useTerminalViewer(logs: TerminalLog[], defaultWordWrap: boolean)
   const [searchFilter, setSearchFilter] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const [wordWrap, setWordWrap] = useState(defaultWordWrap);
+
+  useEffect(() => {
+    if (externalSearch) setSearchFilter(externalSearch.text);
+  }, [externalSearch]);
 
   // Auto-rolagem para o fim a cada novo log enquanto ativa
   useEffect(() => {

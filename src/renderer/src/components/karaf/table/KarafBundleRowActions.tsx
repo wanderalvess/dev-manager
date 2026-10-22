@@ -7,6 +7,8 @@ import {
   ArrowUpCircle,
   Info,
   Wrench,
+  ScrollText,
+  Eye,
   Square,
   Trash2
 } from 'lucide-react';
@@ -23,6 +25,8 @@ interface KarafBundleRowActionsProps {
   onOpenInstall: (bundle: KarafBundleInfo) => void;
   onOpenDetails: (bundle: KarafBundleInfo) => void;
   onOpenUninstall: (bundle: KarafBundleInfo) => void;
+  onOpenBundleLog: (bundle: KarafBundleInfo) => void;
+  onWatchBundle: (bundle: KarafBundleInfo) => void;
 }
 
 export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
@@ -35,7 +39,9 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
   onOpenReinstall,
   onOpenInstall,
   onOpenDetails,
-  onOpenUninstall
+  onOpenUninstall,
+  onOpenBundleLog,
+  onWatchBundle
 }) => (
   <td className="px-4 py-3 border-b border-border/40 text-right">
     <div className="flex items-center justify-end space-x-1">
@@ -83,6 +89,27 @@ export const KarafBundleRowActions: React.FC<KarafBundleRowActionsProps> = ({
         className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
       >
         <ArrowUpCircle className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Log deste bundle no console (tail filtrado) */}
+      <button
+        type="button"
+        onClick={() => onOpenBundleLog(b)}
+        title="Ver o log deste bundle no console (tail ao vivo filtrado pelo nome)" aria-label="Ver o log deste bundle no console"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+      >
+        <ScrollText className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Monitorar o artefato (bundle:watch) */}
+      <button
+        type="button"
+        onClick={() => onWatchBundle(b)}
+        disabled={isRowLoading}
+        title="Monitorar este bundle (bundle:watch): o Karaf atualiza quando o artefato muda" aria-label="Monitorar este bundle (bundle:watch)"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-50 cursor-pointer"
+      >
+        <Eye className="w-3.5 h-3.5" />
       </button>
 
       {/* Detalhes & Dependências */}

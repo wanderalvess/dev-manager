@@ -17,6 +17,8 @@ interface TerminalViewerProps {
   defaultWordWrap?: boolean;
   onToggleMaximize?: () => void;
   isMaximized?: boolean;
+  /** Aplica um filtro de texto vindo de fora (ex.: "ver log deste bundle"); o nonce reaplica o mesmo texto. */
+  externalSearch?: { text: string; nonce: number } | null;
 }
 
 export const TerminalViewer: React.FC<TerminalViewerProps> = ({
@@ -28,9 +30,10 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   inputPlaceholder = 'Digite um comando OSGi Karaf (ex: bundle:list, la, feature:list, log:tail)...',
   defaultWordWrap = false,
   onToggleMaximize,
-  isMaximized = false
+  isMaximized = false,
+  externalSearch = null
 }) => {
-  const viewer = useTerminalViewer(logs, defaultWordWrap);
+  const viewer = useTerminalViewer(logs, defaultWordWrap, externalSearch);
   const command = useTerminalCommandInput(onSendCommand);
   const { wordWrap, filteredLogs } = viewer;
 

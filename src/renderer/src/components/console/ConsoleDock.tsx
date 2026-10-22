@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronUp, History, Terminal } from 'lucide-react';
 import { TerminalViewer } from '../TerminalViewer';
 import { KarafHistoryModal } from '../environment/modals/KarafHistoryModal';
@@ -11,10 +11,20 @@ import { ConsoleDockActions } from './ConsoleDockActions';
 
 /** Console global do Karaf: fica abaixo de qualquer página, com o mesmo buffer para Ambiente e Deploy. */
 export const ConsoleDock: React.FC = () => {
-  const { logs, setLogs, isOpen, height, toggle, setHeight } = useKarafConsole();
+  const { logs, setLogs, isOpen, height, toggle, setHeight, request } = useKarafConsole();
   const { isEmbeddedRunning, isBusy, sendCommand } = useKarafConsoleCommands(isOpen);
   const tail = useKarafTail();
   const history = useKarafHistory();
+  const { start: startTail } = tail;
+  const filterRequest = useMemo(
+    () => (request && request.filter !== undefined ? { text: request.filter, nonce: request.nonce } : null),
+    [request]
+  );
+
+  useEffect(() => {
+    if (request?.tail) void startTail();
+  }, [request, startTail]);
+
   const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
 
   // Ctrl+` abre/fecha o dock de qualquer página.
@@ -90,6 +100,7 @@ export const ConsoleDock: React.FC = () => {
               title="Console do Karaf"
               isRunning={isEmbeddedRunning || isBusy || tail.isTailing}
               onSendCommand={sendCommand}
+              externalSearch={filterRequest}
               inputPlaceholder="Comando Karaf (ex: bundle:list, la, feature:list, log:display)..."
             />
           </div>
