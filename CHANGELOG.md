@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.44.0] - 2026-10-22
+### Adicionado
+- **Ciclos de evolução modernos da CCW**: o modal de download e instalação de rotinas da Central de Controle WinThor (CCW) passa a suportar os ciclos de evolução reais do ecossistema TOTVS WinThor (38.00, 37.00, 36.00...), substituindo o seletor rígido de versões legadas (30, 31, 29).
+- **Consulta e sincronização de ciclos**: novo botão de sincronização e busca integrada com a API oficial da CCW (`/api/rotinas/listarCicloEvolucaoPaginado`), permitindo consultar automaticamente os ciclos liberados ou digitar qualquer versão livremente via autocomplete.
+- **Download oficial com resolução de dependências**: suporte à rota moderna da CCW (`/api/rotinas/rotinaVersaoComDependencia/{rotina}/{ciclo}/0/P`), com fallback automático transparente para a rota legada (`downloadRotina`) caso a rotina não esteja cadastrada no novo formato.
+- **Ferramenta MCP para ciclos**: adicionada a tool `routines_get_ccw_cycles` ao servidor MCP para permitir que agentes de IA descubram e validem ciclos de evolução disponíveis.
+
+### Alterado
+- **Versão padrão do WinThor**: a versão padrão de download e configuração da CCW agora é `37.00` (ciclo estável padrão), alinhada com as versões atuais da TOTVS.
+
 ## [1.43.0] - 2026-10-21
 ### Adicionado
 - **Console do Karaf no rodapé**: o console agora fica embaixo de qualquer tela (`` Ctrl+` `` abre e fecha) e é o mesmo em *Ambiente Dev* e *Deploy*, sem precisar trocar de página para acompanhar o Karaf. Ele abre sozinho ao executar um deploy e traz o *Histórico* do Karaf embedded.

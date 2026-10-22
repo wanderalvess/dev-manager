@@ -79,7 +79,7 @@ export function createInitialSettings(): AppSettings {
     mysqlPath: '',
     oracleTnsnamesPath: '',
     ccwBaseUrl: DEFAULT_CCW_BASE_URL,
-    ccwWinthorVersion: '30',
+    ccwWinthorVersion: '37.00',
     ccwAuthCookie: ''
   };
 }

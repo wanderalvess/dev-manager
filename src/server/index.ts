@@ -669,6 +669,16 @@ app.get('/api/routines/ccw-catalog', async (req, res) => {
   res.json(result);
 });
 
+app.get('/api/routines/ccw-cycles', async (req, res) => {
+  const authCookie = (req.query.authCookie as string) || undefined;
+  const result = await routinesService.getCcwEvolutionCycles(authCookie);
+  res.json(result);
+});
+  const authCookie = (req.query.authCookie as string) || undefined;
+  const result = await routinesService.getCcwCatalog(authCookie);
+  res.json(result);
+});
+
 app.get('/api/routines/ccw-download-url', (req, res) => {
   const routineName = (req.query.routineName as string) || '';
   const winthorVersion = (req.query.winthorVersion as string) || undefined;

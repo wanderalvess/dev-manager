@@ -7,7 +7,7 @@ export function useCcwBatch(onSuccess: () => void) {
   const [batchTargetType, setBatchTargetType] = useState<'favorites' | 'module' | 'custom'>('favorites');
   const [batchModuleFolder, setBatchModuleFolder] = useState<string>('MOD-001');
   const [batchCustomCodes, setBatchCustomCodes] = useState<string>('');
-  const [batchWinthorVersion, setBatchWinthorVersion] = useState<string>('30');
+  const [batchWinthorVersion, setBatchWinthorVersion] = useState<string>('37.00');
   const [batchBackupExisting, setBatchBackupExisting] = useState<boolean>(true);
   const [isBatchRunning, setIsBatchRunning] = useState<boolean>(false);
   const [batchProgressList, setBatchProgressList] = useState<BatchRoutineItemProgress[]>([]);
@@ -27,7 +27,7 @@ export function useCcwBatch(onSuccess: () => void) {
     try {
       const res = await window.electronAPI.downloadRoutinesBatch({
         targetType: batchTargetType,
-        winthorVersion: batchWinthorVersion.trim() || '30',
+        winthorVersion: batchWinthorVersion.trim() || '37.00',
         moduleFolder: batchTargetType === 'module' ? batchModuleFolder : undefined,
         routineCodes: codes,
         backupExisting: batchBackupExisting

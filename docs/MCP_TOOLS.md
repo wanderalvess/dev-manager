@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **164 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **165 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -198,6 +198,7 @@ Rotinas (.EXE/.PC) descobertas no catálogo local, atualização direta da Centr
 *   **`routines_install_local_file`**: Instala um executável ou pacote ZIP a partir de um arquivo local na máquina diretamente para o diretório de destino sob `Prod`, com criação preventiva de backup `.bak`.
 *   **`routines_get_ccw_catalog`**: Consulta a árvore completa oficial de módulos e rotinas disponibilizada pela Central de Controle do WinThor (requer cookie de sessão CCW).
 *   **`routines_get_ccw_download_link`**: Gera a URL direta oficial de download da CCW para uma rotina e versão específica do WinThor.
+*   **`routines_get_ccw_cycles`**: Consulta os ciclos de evolução e versões oficiais disponíveis para download na Central de Controle WinThor (ex: 38.00, 37.00, 36.00).
 *   **`routines_list_backups`**: Lista todos os arquivos de backup (`.bak`) existentes para uma rotina ou módulo funcional, com data/hora, tamanho e versão PE extraída do executável de backup.
 *   **`routines_restore_backup`**: Restaura uma versão anterior (.bak) para o executável ativo, criando preventivamente um backup de segurança (`_pre_rollback.bak`) antes da substituição.
 *   **`routines_delete_backup`**: Remove um arquivo de backup (`.bak`) de rotina do disco.

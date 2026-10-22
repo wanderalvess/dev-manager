@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { RoutineDownloadResult } from '../../../../shared/types';
-import { normalizeRoutineTarget, buildCcwDownloadUrl } from '../../../../shared/ccwRoutineCommon';
+import {
+  normalizeRoutineTarget,
+  buildCcwDownloadUrl,
+  DEFAULT_CCW_WINTHOR_VERSION,
+  DEFAULT_CCW_WINTHOR_CYCLES
+} from '../../../../shared/ccwRoutineCommon';
 import { getPathBaseName } from '../../utils/ccwModalUtils';
 
 interface UseCcwInstallParams {
@@ -13,7 +18,28 @@ interface UseCcwInstallParams {
 export function useCcwInstall({ onSuccess, setResult, setErrorMsg }: UseCcwInstallParams) {
   // Aba 1: Download Direto
   const [routineInput, setRoutineInput] = useState<string>('');
-  const [winthorVersion, setWinthorVersion] = useState<string>('30');
+  const [winthorVersion, setWinthorVersion] = useState<string>(DEFAULT_CCW_WINTHOR_VERSION);
+  const [cycles, setCycles] = useState<string[]>(DEFAULT_CCW_WINTHOR_CYCLES.map((c) => c.value));
+  const [isLoadingCycles, setIsLoadingCycles] = useState<boolean>(false);
+
+  const fetchCycles = useCallback(async () => {
+    if (!window.electronAPI?.getCcwEvolutionCycles) return;
+    setIsLoadingCycles(true);
+    try {
+      const res = await window.electronAPI.getCcwEvolutionCycles();
+      if (res && res.success && Array.isArray(res.cycles) && res.cycles.length > 0) {
+        setCycles(res.cycles);
+      }
+    } catch (err) {
+      console.warn('[useCcwInstall] Falha ao consultar ciclos CCW:', err);
+    } finally {
+      setIsLoadingCycles(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCycles();
+  }, [fetchCycles]);
   const [targetModule, setTargetModule] = useState<string>('');
   const [backupExisting, setBackupExisting] = useState<boolean>(true);
   const [customDownloadUrl, setCustomDownloadUrl] = useState<string>('');
@@ -43,7 +69,7 @@ export function useCcwInstall({ onSuccess, setResult, setErrorMsg }: UseCcwInsta
       if (window.electronAPI?.downloadCcwRoutine) {
         const res = await window.electronAPI.downloadCcwRoutine({
           routineCodeOrName: routineInput.trim(),
-          winthorVersion: winthorVersion.trim() || '30',
+          winthorVersion: winthorVersion.trim() || DEFAULT_CCW_WINTHOR_VERSION,
           targetModule: targetModule.trim() || undefined,
           backupExisting,
           customDownloadUrl: customDownloadUrl.trim() || undefined
@@ -117,6 +143,9 @@ export function useCcwInstall({ onSuccess, setResult, setErrorMsg }: UseCcwInsta
     setRoutineInput,
     winthorVersion,
     setWinthorVersion,
+    cycles,
+    isLoadingCycles,
+    reloadCycles: fetchCycles,
     targetModule,
     setTargetModule,
     backupExisting,

@@ -31,8 +31,10 @@ import {
   buildCcwDownloadUrl,
   resolveTargetRoutineDirectory,
   createBackupFilePath,
-  processRoutineDownloadBuffer
+  processRoutineDownloadBuffer,
+  DEFAULT_CCW_WINTHOR_VERSION
 } from '../utils/ccwRoutineUtils';
+import { fetchCcwEvolutionCycles, CcwEvolutionCyclesResult } from '../utils/ccwEvolutionUtils';
 import {
   isConnectionRefusedError,
   buildWinthorStartPayload,
@@ -590,7 +592,7 @@ export class RoutinesService {
   public getCcwRoutineDownloadLink(routineCodeOrName: string, winthorVersion?: string): string {
     const settings = this.configService.getSettings();
     const normalized = normalizeRoutineTarget(routineCodeOrName);
-    const version = winthorVersion || settings.ccwWinthorVersion || '30';
+    const version = winthorVersion || settings.ccwWinthorVersion || DEFAULT_CCW_WINTHOR_VERSION;
     return buildCcwDownloadUrl(settings.ccwBaseUrl, normalized.baseName, version);
   }
 
@@ -620,10 +622,10 @@ export class RoutinesService {
         };
       }
 
-      const winthorVersion = req.winthorVersion || settings.ccwWinthorVersion || '30';
+      const winthorVersion = req.winthorVersion || settings.ccwWinthorVersion || DEFAULT_CCW_WINTHOR_VERSION;
       const downloadUrl = req.customDownloadUrl && req.customDownloadUrl.trim()
         ? req.customDownloadUrl.trim()
-        : buildCcwDownloadUrl(settings.ccwBaseUrl, normalized.baseName, winthorVersion);
+        : buildCcwDownloadUrl(settings.ccwBaseUrl, normalized.baseName, winthorVersion, 'dependency');
 
       console.log(`[RoutinesService] Iniciando download da rotina ${normalized.baseName} de: ${downloadUrl}`);
 
@@ -652,6 +654,19 @@ export class RoutinesService {
         });
       } finally {
         clearTimeout(timer);
+      }
+
+      if (!res.ok && res.status === 404 && !req.customDownloadUrl) {
+        const fallbackUrl = buildCcwDownloadUrl(settings.ccwBaseUrl, normalized.baseName, winthorVersion, 'legacy');
+        console.log(`[RoutinesService] Rota com dependência retornou 404. Tentando rota direta legada: ${fallbackUrl}`);
+        const fallbackRes = await fetch(fallbackUrl, {
+          method: 'GET',
+          headers,
+          signal: AbortSignal.timeout(60000)
+        }).catch(() => null);
+        if (fallbackRes && fallbackRes.ok) {
+          res = fallbackRes;
+        }
       }
 
       if (!res.ok) {
@@ -831,6 +846,15 @@ export class RoutinesService {
   }
 
   /**
+   * Consulta os ciclos de evolução disponíveis na Central de Controle.
+   */
+  public async getCcwEvolutionCycles(authCookie?: string): Promise<CcwEvolutionCyclesResult> {
+    const settings = this.configService.getSettings();
+    const activeCookie = authCookie || settings.ccwAuthCookie;
+    return fetchCcwEvolutionCycles(settings.ccwBaseUrl, activeCookie);
+  }
+
+  /**
    * Consulta a árvore completa de rotinas disponibilizada pela Central de Controle (requer autenticação).
    */
   public async getCcwCatalog(customAuthCookie?: string): Promise<CcwCatalogResponse> {
@@ -888,7 +912,7 @@ export class RoutinesService {
         const versaoCorrente = item.versaoCorrente?.versao;
         const versaoAnterior = item.versaoAnterior?.versao;
         const versaoNova = item.versaoNova?.versao;
-        const downloadUrl = buildCcwDownloadUrl(baseUrl, rotina, versaoCorrente || '30');
+        const downloadUrl = buildCcwDownloadUrl(baseUrl, rotina, versaoCorrente || DEFAULT_CCW_WINTHOR_VERSION);
 
         return {
           id: item.id || 0,
@@ -1221,4 +1245,3 @@ export class RoutinesService {
     };
   }
 }
-

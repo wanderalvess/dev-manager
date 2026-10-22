@@ -6,7 +6,10 @@ export {
   normalizeRoutineTarget,
   buildCcwDownloadUrl,
   deduceModuleNumber,
-  formatModuleFolderName
+  formatModuleFolderName,
+  formatCcwCycleVersion,
+  DEFAULT_CCW_WINTHOR_CYCLES,
+  DEFAULT_CCW_WINTHOR_VERSION
 } from '../../shared/ccwRoutineCommon';
 import {
   deduceModuleNumber,

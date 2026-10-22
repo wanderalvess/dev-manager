@@ -89,24 +89,72 @@ export function normalizeRoutineTarget(input: string): NormalizedRoutineTarget {
   };
 }
 
+/** Ciclos de evolução ativos e suportados do WinThor para download na CCW */
+export const DEFAULT_CCW_WINTHOR_CYCLES = [
+  { value: '38.00', label: '38.00' },
+  { value: '37.00', label: '37.00 (Padrão)' },
+  { value: '36.00', label: '36.00' },
+  { value: '35.00', label: '35.00' },
+  { value: '34.00', label: '34.00' },
+  { value: '33.00', label: '33.00' },
+  { value: '32.00', label: '32.00' },
+  { value: '31.00', label: '31.00' },
+  { value: '30.00', label: '30.00' }
+] as const;
+
+export const DEFAULT_CCW_WINTHOR_VERSION = '37.00';
+
 /**
- * Constrói a URL direta de download na API da Central de Controle do WinThor (CCW).
- * Padrão oficial: https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/{rotina}/{versaoWinThor}/
+ * Normaliza uma versão ou ciclo informado para o formato oficial da CCW (ex: "37" -> "37.00", "38" -> "38.00").
+ */
+export function formatCcwCycleVersion(version?: string): string {
+  const clean = (version || '').trim();
+  if (!clean) return DEFAULT_CCW_WINTHOR_VERSION;
+
+  // Se for apenas dígitos inteiros (ex: "37", "38")
+  if (/^\d+$/.test(clean)) {
+    return `${clean}.00`;
+  }
+
+  // Se tiver partes separadas por ponto
+  const parts = clean.split('.');
+  if (parts.length === 1) {
+    return `${parts[0]}.00`;
+  }
+  if (parts.length >= 2) {
+    const major = parts[0];
+    const minor = parts[1].padEnd(2, '0').slice(0, 2);
+    return `${major}.${minor}`;
+  }
+
+  return clean;
+}
+
+/**
+ * Constrói a URL de download na API da Central de Controle do WinThor (CCW).
+ * Padrão moderno com dependências: https://centraldecontrole.pcinformatica.com.br/api/rotinas/rotinaVersaoComDependencia/{rotina}/{versaoCiclo}/0/P
+ * Padrão legado direto: https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/{rotina}/{majorVersion}/
  */
 export function buildCcwDownloadUrl(
   baseUrl: string = 'https://centraldecontrole.pcinformatica.com.br',
   routineBaseName: string,
-  winthorVersion: string = '30'
+  winthorVersion: string = DEFAULT_CCW_WINTHOR_VERSION,
+  mode: 'dependency' | 'legacy' = 'dependency'
 ): string {
   const cleanBase = (baseUrl || 'https://centraldecontrole.pcinformatica.com.br').trim().replace(/\/+$/, '');
   const cleanRoutine = (routineBaseName || '').trim().toUpperCase();
-  // Se a versão for completa (ex: "30.0.12.3"), extrai apenas a major version "30"
-  let cleanVersion = (winthorVersion || '30').trim();
-  const dotIndex = cleanVersion.indexOf('.');
-  if (dotIndex > 0) {
-    cleanVersion = cleanVersion.substring(0, dotIndex);
+
+  if (mode === 'legacy') {
+    let cleanVersion = (winthorVersion || '37').trim();
+    const dotIndex = cleanVersion.indexOf('.');
+    if (dotIndex > 0) {
+      cleanVersion = cleanVersion.substring(0, dotIndex);
+    }
+    return `${cleanBase}/api/rotinas/downloadRotina/${cleanRoutine}/${cleanVersion}/`;
   }
-  return `${cleanBase}/api/rotinas/downloadRotina/${cleanRoutine}/${cleanVersion}/`;
+
+  const cycle = formatCcwCycleVersion(winthorVersion);
+  return `${cleanBase}/api/rotinas/rotinaVersaoComDependencia/${cleanRoutine}/${cycle}/0/P`;
 }
 
 /**

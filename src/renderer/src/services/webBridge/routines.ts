@@ -74,6 +74,14 @@ export function createRoutinesApi({ apiFetch, wsManager }: BridgeDeps) {
       return apiFetch(`/api/routines/ccw-catalog${query}`);
     },
 
+    getCcwEvolutionCycles: async (authCookie?: string): Promise<{ success: boolean; cycles: string[]; message?: string; error?: string }> => {
+      const query = authCookie ? `?authCookie=${encodeURIComponent(authCookie)}` : '';
+      return apiFetch(`/api/routines/ccw-cycles${query}`);
+    },
+      const query = authCookie ? `?authCookie=${encodeURIComponent(authCookie)}` : '';
+      return apiFetch(`/api/routines/ccw-catalog${query}`);
+    },
+
     getCcwDownloadUrl: async (routineName: string, winthorVersion?: string): Promise<string> => {
       const params = new URLSearchParams({ routineName });
       if (winthorVersion) params.set('winthorVersion', winthorVersion);

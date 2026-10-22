@@ -42,10 +42,10 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
         </label>
         <input id="dirs-ccw-panel-2"
           type="text"
-          value={settings.ccwWinthorVersion || '30'}
+          value={settings.ccwWinthorVersion || '37.00'}
           onChange={(e) => setField('ccwWinthorVersion', e.target.value)}
           className={INPUT_CLASS}
-          placeholder="30"
+          placeholder="37.00"
         />
       </div>
     </div>

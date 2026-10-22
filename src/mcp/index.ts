@@ -1459,7 +1459,7 @@ server.registerTool(
       winthorVersion: z
         .string()
         .optional()
-        .describe('Versão major do WinThor na CCW (ex: "30", "31", "29"). Padrão: "30".'),
+        .describe('Ciclo de evolução ou versão WinThor na CCW (ex: "37.00", "38.00", "36.00"). Padrão configurado ou "37.00".'),
       targetModule: z
         .string()
         .optional()
@@ -1529,11 +1529,26 @@ server.registerTool(
     description: 'Retorna a URL oficial direta para download da rotina na Central de Controle do WinThor.',
     inputSchema: {
       routineCodeOrName: z.string().describe('Código numérico ou nome da rotina (ex: "132", "PCSIS132").'),
-      winthorVersion: z.string().optional().describe('Versão major do WinThor (ex: "30", "31"). Padrão: "30".')
+      winthorVersion: z.string().optional().describe('Ciclo de evolução ou versão WinThor (ex: "37.00", "38.00"). Padrão: "37.00".')
     }
   },
   async ({ routineCodeOrName, winthorVersion }) => {
     return ok({ url: routinesService.getCcwRoutineDownloadLink(routineCodeOrName, winthorVersion) });
+  }
+);
+
+server.registerTool(
+  'routines_get_ccw_cycles',
+  {
+    title: 'Listar ciclos de evolução do WinThor na CCW',
+    description: 'Consulta os ciclos de evolução disponíveis para download na Central de Controle WinThor (ex: 38.00, 37.00, 36.00...).',
+    inputSchema: {
+      authCookie: z.string().optional().describe('Cookie de autenticação da CCW, se aplicável.')
+    }
+  },
+  async ({ authCookie }) => {
+    const cycles = await routinesService.getCcwEvolutionCycles(authCookie);
+    return ok({ cycles });
   }
 );
 

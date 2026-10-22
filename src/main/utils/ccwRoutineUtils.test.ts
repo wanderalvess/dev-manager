@@ -62,13 +62,13 @@ describe('ccwRoutineUtils', () => {
   });
 
   describe('buildCcwDownloadUrl', () => {
-    it('constrói a URL correta com valores padrão', () => {
-      const url = buildCcwDownloadUrl(undefined, 'PCSIS132', '30');
-      expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/PCSIS132/30/');
+    it('constrói a URL moderna com dependências por padrão', () => {
+      const url = buildCcwDownloadUrl(undefined, 'PCSIS132', '37.00');
+      expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/rotinaVersaoComDependencia/PCSIS132/37.00/0/P');
     });
 
-    it('extrai major version quando versão vier completa com pontos', () => {
-      const url = buildCcwDownloadUrl('https://centraldecontrole.pcinformatica.com.br/', 'PCSIS529', '30.0.14.2');
+    it('suporta modo legado para download direto', () => {
+      const url = buildCcwDownloadUrl('https://centraldecontrole.pcinformatica.com.br/', 'PCSIS529', '30.0.14.2', 'legacy');
       expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/PCSIS529/30/');
     });
   });
@@ -125,7 +125,6 @@ describe('ccwRoutineUtils', () => {
     });
 
     it('extrai arquivos de buffer ZIP criado com método Stored (sem compressão)', () => {
-      // Monta um ZIP sintético mínimo válido com um arquivo 'PCSIS132.EXE' (método Stored)
       const fileName = 'PCSIS132.EXE';
       const fileData = Buffer.from('CONTEUDO_EXECUTAVEL_WINTHOR');
       const fnLen = Buffer.byteLength(fileName);

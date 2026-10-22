@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizeRoutineTarget,
   buildCcwDownloadUrl,
+  formatCcwCycleVersion,
+  DEFAULT_CCW_WINTHOR_VERSION,
+  DEFAULT_CCW_WINTHOR_CYCLES,
   deduceModuleNumber,
   formatModuleFolderName
 } from './ccwRoutineCommon';
@@ -57,20 +60,41 @@ describe('ccwRoutineCommon', () => {
     });
   });
 
+  describe('formatCcwCycleVersion', () => {
+    it('normaliza número inteiro para XX.00', () => {
+      expect(formatCcwCycleVersion('37')).toBe('37.00');
+      expect(formatCcwCycleVersion('38')).toBe('38.00');
+    });
+
+    it('preserva formato com ponto XX.00', () => {
+      expect(formatCcwCycleVersion('37.00')).toBe('37.00');
+      expect(formatCcwCycleVersion('38.00')).toBe('38.00');
+    });
+
+    it('extrai ciclo a partir de versão completa de 4 dígitos', () => {
+      expect(formatCcwCycleVersion('37.00.00.028')).toBe('37.00');
+      expect(formatCcwCycleVersion('38.00.00.002')).toBe('38.00');
+    });
+
+    it('usa padrão 37.00 quando vazio', () => {
+      expect(formatCcwCycleVersion('')).toBe(DEFAULT_CCW_WINTHOR_VERSION);
+    });
+  });
+
   describe('buildCcwDownloadUrl', () => {
-    it('gera URL oficial da CCW', () => {
-      const url = buildCcwDownloadUrl('https://centraldecontrole.pcinformatica.com.br', 'PCSIS132', '30');
+    it('gera URL oficial da CCW com dependências por padrão', () => {
+      const url = buildCcwDownloadUrl('https://centraldecontrole.pcinformatica.com.br', 'PCSIS301', '37.00');
+      expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/rotinaVersaoComDependencia/PCSIS301/37.00/0/P');
+    });
+
+    it('normaliza número simples na rota moderna com dependência', () => {
+      const url = buildCcwDownloadUrl(undefined, 'PCSIS132', '37');
+      expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/rotinaVersaoComDependencia/PCSIS132/37.00/0/P');
+    });
+
+    it('suporta modo legado para rotinas antigas', () => {
+      const url = buildCcwDownloadUrl('https://centraldecontrole.pcinformatica.com.br', 'PCSIS132', '30', 'legacy');
       expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/PCSIS132/30/');
-    });
-
-    it('usa base padrão se baseUrl for vazio', () => {
-      const url = buildCcwDownloadUrl(undefined, 'PCSIS530', '30');
-      expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/PCSIS530/30/');
-    });
-
-    it('extrai versão major de versões completas', () => {
-      const url = buildCcwDownloadUrl(undefined, 'PC1406', '30.1.2.3');
-      expect(url).toBe('https://centraldecontrole.pcinformatica.com.br/api/rotinas/downloadRotina/PC1406/30/');
     });
   });
 

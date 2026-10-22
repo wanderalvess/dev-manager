@@ -42,6 +42,12 @@ export function registerRoutinesHandlers(ctx: IpcContext): void {
     return routinesService.getCcwCatalog(authCookie);
   });
 
+  ipcMain.handle('routines:get-ccw-cycles', async (_, authCookie?: string) => {
+    return routinesService.getCcwEvolutionCycles(authCookie);
+  });
+    return routinesService.getCcwCatalog(authCookie);
+  });
+
   ipcMain.handle('routines:get-ccw-download-url', async (_, routineName: string, winthorVersion?: string) => {
     return routinesService.getCcwRoutineDownloadLink(routineName, winthorVersion);
   });
