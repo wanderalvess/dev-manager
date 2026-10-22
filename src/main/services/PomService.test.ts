@@ -109,4 +109,66 @@ describe('PomService', () => {
     const backupContent = fs.readFileSync(updateRes.backupPath!, 'utf-8');
     expect(backupContent).toContain('<version>0.39.0</version>');
   });
+  describe('versão declarada por propriedade', () => {
+    const POM_WITH_PROPERTY = `<project>
+  <properties>
+    <matcon.version>1.39.23.45</matcon.version>
+    <outra.version>2.0.0</outra.version>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>br.com.pcsist</groupId>
+      <artifactId>winthor-integracao-matcon-service</artifactId>
+      <version>\${matcon.version}</version>
+    </dependency>
+  </dependencies>
+</project>`;
+
+    it('altera a propriedade e mantém a referência na dependência', () => {
+      const res = pomService.patchDependencyVersionInXml(POM_WITH_PROPERTY, {
+        artifactId: 'winthor-integracao-matcon-service',
+        newVersion: '0.0.1-SNAPSHOT'
+      });
+      expect(res.changed).toBe(true);
+      expect(res.viaProperty).toBe('matcon.version');
+      expect(res.oldVersion).toBe('${matcon.version}');
+      expect(res.content).toContain('<matcon.version>0.0.1-SNAPSHOT</matcon.version>');
+      expect(res.content).toContain('<version>${matcon.version}</version>');
+      expect(res.content).toContain('<outra.version>2.0.0</outra.version>');
+    });
+
+    it('não altera nada quando a propriedade não está neste pom (vem do pai)', () => {
+      const xml = POM_WITH_PROPERTY.replace('<matcon.version>1.39.23.45</matcon.version>', '');
+      const res = pomService.patchDependencyVersionInXml(xml, {
+        artifactId: 'winthor-integracao-matcon-service',
+        newVersion: '0.0.1-SNAPSHOT'
+      });
+      expect(res.changed).toBe(false);
+      expect(res.propertyNotInPom).toBe(true);
+      expect(res.content).toBe(xml);
+    });
+
+    it('não mexe em ${project.version}', () => {
+      const xml = POM_WITH_PROPERTY.replace('${matcon.version}', '${project.version}');
+      const res = pomService.patchDependencyVersionInXml(xml, {
+        artifactId: 'winthor-integracao-matcon-service',
+        newVersion: '0.0.1-SNAPSHOT'
+      });
+      expect(res.changed).toBe(false);
+      expect(res.propertyNotInPom).toBe(true);
+    });
+  });
+
+  it('recusa versão com caracteres que poderiam quebrar o XML', () => {
+    const pomPath = path.join(tempDir, 'pom.xml');
+    fs.writeFileSync(pomPath, SAMPLE_CONSUMER_POM, 'utf-8');
+    const res = pomService.updateDependencyVersion(
+      tempDir,
+      { artifactId: 'winthor-venda-service', newVersion: '1.0</version><x>' },
+      false
+    );
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('Versão inválida');
+    expect(fs.readFileSync(pomPath, 'utf-8')).toBe(SAMPLE_CONSUMER_POM);
+  });
 });

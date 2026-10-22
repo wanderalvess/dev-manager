@@ -12,6 +12,8 @@ import {
   countEnabledSteps,
   toggleProfileStep,
   toggleAllProfileSteps,
+  failedStepContextPath,
+  pickProfileSteps,
   sliceProfileFromStep
 } from './deployProfileUtils';
 
@@ -118,5 +120,37 @@ describe('deployProfileUtils', () => {
     expect(sliced.steps[1].enabled).toBe(true);
     expect(sliced.steps[2].enabled).toBe(true);
     expect(sliced.name).toContain('etapa 2 em diante');
+  });
+
+  it('mantém o projeto de contexto herdado ao rodar só algumas etapas', () => {
+    const p = makeProfile([
+      { id: 's1', enabled: true, projectPath: '/ws/matcon' },
+      { id: 's2', enabled: true },
+      { id: 's3', enabled: true }
+    ]);
+    const picked = pickProfileSteps(p, ['s3']);
+    expect(picked.steps.map((s) => s.enabled)).toEqual([false, false, true]);
+    expect(picked.steps[2].projectPath).toBe('/ws/matcon');
+    expect(picked.name).toContain('etapas selecionadas');
+    expect(sliceProfileFromStep(p, 1).steps[1].projectPath).toBe('/ws/matcon');
+  });
+
+  it('acha o projeto de contexto da etapa que falhou', () => {
+    const p = makeProfile([
+      { id: 's1', enabled: true, projectPath: '/ws/varejo' },
+      { id: 's2', enabled: true },
+      { id: 's3', enabled: true }
+    ]);
+    expect(failedStepContextPath(p, { s3: { status: 'failed' } })).toBe('/ws/varejo');
+    expect(failedStepContextPath(p, {})).toBe('/ws/varejo');
+    expect(failedStepContextPath(null, {})).toBe('');
+  });
+
+  it('permite escolher etapa que estava desmarcada no perfil', () => {
+    const p = makeProfile([
+      { id: 's1', enabled: true },
+      { id: 's2', enabled: false }
+    ]);
+    expect(pickProfileSteps(p, ['s2']).steps.map((s) => s.enabled)).toEqual([false, true]);
   });
 });

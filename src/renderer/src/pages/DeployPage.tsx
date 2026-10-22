@@ -13,6 +13,7 @@ import { useDeployProfiles } from '../hooks/deploy/useDeployProfiles';
 import { useDeployRunner } from '../hooks/deploy/useDeployRunner';
 import { useDeployModals } from '../hooks/deploy/useDeployModals';
 import { useKarafStatus } from '../hooks/deploy/useKarafStatus';
+import { failedStepContextPath } from '../utils/deployProfileUtils';
 
 interface DeployPageProps {
   projects: GitProjectInfo[];
@@ -108,7 +109,17 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               diagnostic={runner.activeResolutionDiag}
               isDeploying={runner.isDeploying}
               runningStepId={runner.runningStepId}
+              matchedProfile={profiles.find(
+                (p) =>
+                  p.id === runner.activeResolutionDiag?.matchedProfileId ||
+                  p.name === runner.activeResolutionDiag?.matchedProfileName
+              )}
               onExecuteMatchedProfile={runner.handleExecuteMatchedProfile}
+              onExecuteMatchedSteps={runner.handleExecuteMatchedSteps}
+              contextProjectPath={failedStepContextPath(activeProfile, runner.stepStatuses)}
+              onRunActiveProfile={runner.handleRunActiveProfile}
+              onOpenBundles={() => modals.setIsBundlesModalOpen(true)}
+              onOpenCatalog={() => modals.setIsRoutine801ModalOpen(true)}
               onInstallReleaseFeature={runner.handleInstallReleaseFeature}
               onRunSuggestedDiagnostic={runner.handleRunSuggestedDiagnostic}
               onDismiss={() => runner.setActiveResolutionDiag(null)}

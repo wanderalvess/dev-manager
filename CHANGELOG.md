@@ -10,6 +10,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Filtro `| grep`**: o shell Karaf aceita `<comando> | grep [flags] <termo>` (ex.: `feature:repo-list | grep winthor`) no prompt, nos comandos rápidos e nos novos botões *Repos* e *Listar* da aba *Features*. Qualquer outro `|` continua bloqueado.
 - **Recolher os Diagnósticos**: o painel de diagnósticos tem o botão *Recolher/Expandir* (lembra o estado).
 
+- **Divergência de versão instalada x exigida**: quando o diagnóstico OSGi aponta um pacote fora da faixa e o módulo está instalado em outra versão (ex.: `0.0.1.SNAPSHOT` de uma branch de desenvolvimento contra `[1.39.0, 2.0.0)`), o card identifica o bundle instalado e oferece duas saídas: *Alterar pom* (alinha a dependência do pom.xml à versão instalada, com `.bak` e confirmação, e opcionalmente executa o perfil) ou trocar por uma release (atalhos para Bundles OSGi e Catálogo 801). Nada muda sem o operador confirmar. Ver [decisão 0002](docs/decisions/0002-divergencia-de-versao-osgi-guiada.md).
+- **Escolher etapas do perfil sugerido**: o card do diagnóstico OSGi permite rodar só algumas etapas do perfil (*Só esta* / *Executar selecionadas*), em vez do perfil inteiro.
+
 ### Alterado
 - **Console do Karaf**: a barra inteira abre/fecha o console e ganhou o botão explícito *Recolher/Expandir*. O botão *Listar* do `bundle:watch` agora se chama *Listar watches*.
 - **Diagnósticos**: removidos os botões repetidos das abas *Features* e *Bundles* (já estão em *Rápidos*). Comandos que apagam estado (`log:clear`, `feature:uninstall`, `bundle:uninstall`...) pedem confirmação.
@@ -18,6 +21,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Daqui em diante**: o botão das etapas fica sempre visível, com texto, e não só ao passar o mouse.
 
 ### Corrigido
+- **Edição de versão no pom**: quando a dependência usa `${propriedade}`, a propriedade é alterada (antes a referência era trocada por um literal); propriedade que vem do pai é recusada com aviso, e versões com caracteres de XML são rejeitadas.
+- **Diagnóstico OSGi**: o comando sugerido era `bundle:list -s | grep` com o pacote sem os pontos (`combrcompcsist…`), que nunca casava; agora é `package:exports | grep <pacote>`. Com vários perfis possíveis, vence o nome mais específico do pacote, não o primeiro da lista.
+- **Rodar de uma etapa em diante / etapas escolhidas** mantêm o projeto de contexto herdado da etapa anterior (antes a etapa Karaf podia perder o projeto do build).
 - **Comando ignorado no console**: com o Karaf embedded parado e outro comando em execução, o comando digitado era descartado em silêncio. Agora avisa, e Ctrl+C / Esc interrompem o comando em execução (antes só funcionava com o embedded ativo ou em tail).
 - **Diagnósticos com o console recolhido**: rodar um diagnóstico agora abre o console, que antes ficava recolhido e escondia a saída, e acrescenta ao que já estava lá em vez de apagar o buffer.
 - **Barra de progresso do Deploy**: mostrava 33% na etapa 1 de 3 antes de concluir qualquer etapa; agora conta só as etapas concluídas.

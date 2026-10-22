@@ -302,6 +302,14 @@ export function correlateWithPomDependencies(
   return bestScore >= 10 ? bestMatch : null;
 }
 
+/** Confere no Karaf se o item faltante existe: quem exporta o pacote (e em que versão) ou o bundle pelo nome. */
+function buildInspectCommand(rootCause: OsgiResolutionCause, keyword: string): string {
+  if (rootCause.requirementType === 'package' && /^[A-Za-z0-9_.]+$/.test(rootCause.missingItem)) {
+    return `package:exports | grep ${rootCause.missingItem}`;
+  }
+  return `bundle:list -s | grep ${keyword}`;
+}
+
 /**
  * Formata um relatório completo em formato de texto para emissão no terminal / console.
  */
@@ -405,8 +413,8 @@ export function formatOsgiResolutionDiagnostic(diag: {
     ? matchedPomDependency.artifactId.replace(/^winthor-integracao-|-service$/g, '')
     : rootCause.missingItem.split('.').slice(-2, -1)[0] || rootCause.missingItem;
 
-  lines.push(`  [${actionIndex++}] Para verificar bundles existentes no Karaf:`);
-  lines.push(`      bundle:list -s | grep ${keyword}`);
+  lines.push(`  [${actionIndex++}] Para verificar no Karaf:`);
+  lines.push(`      ${buildInspectCommand(rootCause, keyword)}`);
 
   lines.push('======================================================================');
   lines.push('');
@@ -443,11 +451,22 @@ export function diagnoseKarafResolutionError(params: {
   let matchedProfileName: string | undefined;
   let matchedProfileId: string | undefined;
   if (params.deployProfiles && searchKeyword) {
-    const foundProfile = params.deployProfiles.find((p) => {
-      const pName = p.name.toLowerCase();
-      if (pName.includes(searchKeyword) || (searchKeyword.length > 3 && searchKeyword.includes(pName))) return true;
-      return (p.steps || []).some((s) => (s.command || '').toLowerCase().includes(searchKeyword));
-    });
+    // Pelo nome (o do perfil contido no pacote ou o contrário). Com vários candidatos vence o mais específico: no pacote
+    // o nível específico vem depois ("...varejo.matcon..."), então ganha o nome que aparece mais à direita (e, no empate,
+    // o mais longo), não o primeiro da lista. Nomes com menos de 3 letras casariam com qualquer pacote.
+    const byName = params.deployProfiles
+      .filter((p) => {
+        const pName = p.name.toLowerCase();
+        return pName.length >= 3 && (pName.includes(searchKeyword) || (searchKeyword.length > 3 && searchKeyword.includes(pName)));
+      })
+      .sort(
+        (a, b) =>
+          Math.max(0, searchKeyword.lastIndexOf(b.name.toLowerCase())) -
+            Math.max(0, searchKeyword.lastIndexOf(a.name.toLowerCase())) || b.name.length - a.name.length
+      )[0];
+    const foundProfile =
+      byName ||
+      params.deployProfiles.find((p) => (p.steps || []).some((s) => (s.command || '').toLowerCase().includes(searchKeyword)));
     if (foundProfile) {
       matchedProfileName = foundProfile.name;
       matchedProfileId = foundProfile.id;
@@ -484,8 +503,9 @@ export function diagnoseKarafResolutionError(params: {
       `feature:repo-add mvn:${matchedPomDependency.groupId}/${matchedPomDependency.artifactId}/${matchedPomDependency.version}/xml/features`;
     suggestedKarafCommands.installCommand = `feature:install -r -u ${featureName}/${matchedPomDependency.version}`;
   }
-  const inspectKeyword = searchKeyword.replace(/[^a-zA-Z0-9_-]/g, '') || 'matcon';
-  suggestedKarafCommands.diagnosticCommand = `bundle:list -s | grep ${inspectKeyword}`;
+  // Mantém pontos e hífens: sem eles o termo vira uma palavra única ("combrcompcsist…") que nunca casa com nada.
+  const inspectKeyword = searchKeyword.replace(/[^a-zA-Z0-9_.-]/g, '') || 'matcon';
+  suggestedKarafCommands.diagnosticCommand = buildInspectCommand(rootCause, inspectKeyword);
 
   const formattedBanner = formatOsgiResolutionDiagnostic({
     rootCause,

@@ -1,4 +1,5 @@
 import type { DeployProfile } from '../../../shared/types';
+import { resolveContextProjectPath } from '../../../shared/deployContext';
 
 export const MAX_TERMINAL_LOG_LINES = 5000;
 
@@ -121,15 +122,39 @@ export function toggleAllProfileSteps(profile: DeployProfile, enableAll: boolean
   };
 }
 
-/** Cria um perfil derivado para executar a partir de um índice em diante (as etapas anteriores são desativadas). */
-export function sliceProfileFromStep(profile: DeployProfile, stepIndex: number): DeployProfile {
+/**
+ * Perfil derivado que executa só as etapas escolhidas. As demais ficam desativadas, e por isso cada etapa escolhida
+ * leva o projeto de contexto já resolvido sobre o perfil original: sem isso, uma etapa Karaf sem projeto próprio
+ * perderia o projeto da etapa anterior (um build Maven alimenta o install seguinte) ao rodar sozinha.
+ */
+export function pickProfileSteps(profile: DeployProfile, stepIds: string[], nameSuffix = 'etapas selecionadas'): DeployProfile {
+  const chosen = new Set(stepIds);
+  const context = profile.steps.filter((s) => s.enabled !== false || chosen.has(s.id));
   return {
     ...profile,
-    name: `${profile.name} (etapa ${stepIndex + 1} em diante)`,
-    steps: profile.steps.map((s, idx) => ({
-      ...s,
-      enabled: idx >= stepIndex && s.enabled !== false
-    }))
+    name: `${profile.name} (${nameSuffix})`,
+    steps: profile.steps.map((s) => {
+      if (!chosen.has(s.id)) return { ...s, enabled: false };
+      const at = context.findIndex((c) => c.id === s.id);
+      return { ...s, enabled: true, projectPath: resolveContextProjectPath(context, at) };
+    })
   };
 }
 
+/** Cria um perfil derivado para executar a partir de um índice em diante (as etapas anteriores são desativadas). */
+export function sliceProfileFromStep(profile: DeployProfile, stepIndex: number): DeployProfile {
+  const ids = profile.steps.filter((s, idx) => idx >= stepIndex && s.enabled !== false).map((s) => s.id);
+  return pickProfileSteps(profile, ids, `etapa ${stepIndex + 1} em diante`);
+}
+
+
+/** Projeto de contexto da etapa que falhou (a que o deploy usou), para localizar o pom do módulo que não instalou. */
+export function failedStepContextPath(
+  profile: DeployProfile | null | undefined,
+  statuses: Record<string, { status: string }>
+): string {
+  if (!profile) return '';
+  const enabled = profile.steps.filter((s) => s.enabled !== false);
+  const at = enabled.findIndex((s) => statuses[s.id]?.status === 'failed');
+  return resolveContextProjectPath(enabled, at < 0 ? enabled.length : at) ?? '';
+}

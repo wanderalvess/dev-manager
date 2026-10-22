@@ -23,6 +23,8 @@ export interface PomUpdateResult {
   oldVersion?: string;
   newVersion: string;
   backupPath?: string;
+  /** Quando o pom usa `${propriedade}`, a propriedade é que foi alterada (vale para tudo que a usa). */
+  viaProperty?: string;
   error?: string;
 }
 
@@ -143,6 +145,16 @@ export class PomService {
     dependency: { artifactId: string; newVersion: string; groupId?: string },
     createBackup: boolean = true
   ): PomUpdateResult {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(dependency.newVersion)) {
+      return {
+        success: false,
+        targetPomPath: targetProjectPath,
+        artifactId: dependency.artifactId,
+        newVersion: dependency.newVersion,
+        error: `Versão inválida "${dependency.newVersion}": use só letras, números, ponto, hífen e underscore.`
+      };
+    }
+
     const pomPath = this.resolvePomPath(targetProjectPath);
     if (!pomPath) {
       return {
@@ -157,6 +169,17 @@ export class PomService {
     try {
       const content = fs.readFileSync(pomPath, 'utf-8');
       const updated = this.patchDependencyVersionInXml(content, dependency);
+
+      if (updated.propertyNotInPom) {
+        return {
+          success: false,
+          targetPomPath: pomPath,
+          artifactId: dependency.artifactId,
+          oldVersion: updated.oldVersion,
+          newVersion: dependency.newVersion,
+          error: `A versão de "${dependency.artifactId}" vem de ${updated.oldVersion}, que não está definida neste pom.xml (provavelmente no pom pai ou em um BOM). Altere lá.`
+        };
+      }
 
       if (!updated.changed) {
         return {
@@ -182,7 +205,8 @@ export class PomService {
         artifactId: dependency.artifactId,
         oldVersion: updated.oldVersion,
         newVersion: dependency.newVersion,
-        backupPath
+        backupPath,
+        viaProperty: updated.viaProperty
       };
     } catch (err: any) {
       return {
@@ -201,14 +225,15 @@ export class PomService {
   public patchDependencyVersionInXml(
     xml: string,
     dependency: { artifactId: string; newVersion: string; groupId?: string }
-  ): { content: string; changed: boolean; oldVersion?: string } {
+  ): { content: string; changed: boolean; oldVersion?: string; viaProperty?: string; propertyNotInPom?: boolean } {
     let changed = false;
     let oldVersion: string | undefined;
+    let propertyRef: string | undefined;
 
     // Procura tags <dependency>...</dependency>
     const regex = /<dependency>([\s\S]*?)<\/dependency>/g;
 
-    const newXml = xml.replace(regex, (fullMatch, inner: string) => {
+    let newXml = xml.replace(regex, (fullMatch, inner: string) => {
       // Se não contém o artifactId desejado, mantém intacto
       const artMatch = inner.match(new RegExp(`<artifactId>\\s*${dependency.artifactId}\\s*<\\/artifactId>`));
       if (!artMatch) return fullMatch;
@@ -223,6 +248,12 @@ export class PomService {
       const verMatch = inner.match(/<version>([^<]+)<\/version>/);
       if (verMatch) {
         oldVersion = verMatch[1].trim();
+        // `${prop}`: mantém a referência e altera a propriedade, para não espalhar um literal pelo pom.
+        const ref = oldVersion.match(/^\$\{([^}]+)\}$/);
+        if (ref) {
+          propertyRef = ref[1];
+          return fullMatch;
+        }
         const replacedInner = inner.replace(/<version>[^<]+<\/version>/, `<version>${dependency.newVersion}</version>`);
         changed = true;
         return `<dependency>${replacedInner}</dependency>`;
@@ -233,6 +264,17 @@ export class PomService {
         return `<dependency>${replacedInner}</dependency>`;
       }
     });
+
+    if (propertyRef && !changed) {
+      const escaped = propertyRef.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const propRegex = new RegExp(`(<properties>[\\s\\S]*?<${escaped}>)[^<]*(</${escaped}>)`);
+      // project.version e afins são do próprio Maven, não de <properties>.
+      if (!/^(project|pom|parent)\./.test(propertyRef) && propRegex.test(newXml)) {
+        newXml = newXml.replace(propRegex, (_all, open: string, close: string) => `${open}${dependency.newVersion}${close}`);
+        return { content: newXml, changed: true, oldVersion, viaProperty: propertyRef };
+      }
+      return { content: xml, changed: false, oldVersion, propertyNotInPom: true };
+    }
 
     return { content: newXml, changed, oldVersion };
   }

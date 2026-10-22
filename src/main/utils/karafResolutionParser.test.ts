@@ -117,6 +117,22 @@ describe('karafResolutionParser', () => {
     expect(diag!.formattedBanner).toContain('🛠️ SOLUÇÃO RECOMENDADA:');
   });
 
+  it('sem pom direto, escolhe o perfil de nome mais específico e sugere package:exports com o pacote inteiro', () => {
+    const diag = diagnoseKarafResolutionError({
+      rawOutput: REAL_KARAF_ERROR,
+      deployProfiles: [
+        { id: 'p-varejo', name: 'varejo', steps: [] },
+        { id: 'p-matcon', name: 'matcon', steps: [] },
+        { id: 'p-br', name: 'br', steps: [] }
+      ]
+    });
+    expect(diag!.matchedPomDependency).toBeUndefined();
+    expect(diag!.matchedProfileId).toBe('p-matcon');
+    expect(diag!.suggestedKarafCommands.diagnosticCommand).toBe(
+      'package:exports | grep com.br.com.pcsist.winthor.varejo.matcon.domain.cancelamentofaturamento'
+    );
+  });
+
   it('diagnoseKarafResolutionError deve retornar null para comandos com saídas normais ou outros erros', () => {
     const normalOutput = 'Refreshing bundles: [102, 103]\nDone.';
     expect(diagnoseKarafResolutionError({ rawOutput: normalOutput })).toBeNull();

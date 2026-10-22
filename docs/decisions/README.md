@@ -5,3 +5,4 @@ Decisões de produto e arquitetura, uma por arquivo, numeradas e datadas (`NNNN-
 | Nº | Data | Decisão |
 |----|------|---------|
 | [0001](0001-medir-adocao-e-impacto.md) | 2026-10-17 | Medir adoção e impacto do Hub Manager (Dev e QA) |
+| [0002](0002-divergencia-de-versao-osgi-guiada.md) | 2026-10-22 | Divergência de versão OSGi: o operador decide e confirma |

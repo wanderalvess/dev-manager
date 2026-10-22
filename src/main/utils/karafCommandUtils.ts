@@ -64,6 +64,8 @@ export function toResolutionSummary(
     missingItem: diag.rootCause.missingItem,
     requirementType: diag.rootCause.requirementType,
     versionRangeDesc: diag.rootCause.versionRangeDesc,
+    versionMin: diag.rootCause.versionMin,
+    versionMax: diag.rootCause.versionMax,
     matchedPomDependency: diag.matchedPomDependency,
     matchedProfileName: diag.matchedProfileName,
     matchedProfileId: diag.matchedProfileId,

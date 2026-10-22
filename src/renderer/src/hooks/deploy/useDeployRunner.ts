@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DeployProfile, DeployStep } from '../../../../shared/types';
 import { showToast } from '../../components/ToastHost';
-import { buildDiagnosticResultLines, sliceProfileFromStep } from '../../utils/deployProfileUtils';
+import { buildDiagnosticResultLines, pickProfileSteps, sliceProfileFromStep } from '../../utils/deployProfileUtils';
 import { useDeployProgress, type DeployStepStatus } from './useDeployProgress';
 import { useKarafConsole } from '../karafConsole/KarafConsoleContext';
 
@@ -111,6 +111,15 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     void runProfileDirect(target);
   };
 
+  /** Roda só as etapas escolhidas do perfil sugerido pelo diagnóstico (em vez do perfil inteiro). */
+  const handleExecuteMatchedSteps = (profileIdOrName: string, stepIds: string[]) => {
+    const target = profiles.find((p) => p.id === profileIdOrName || p.name === profileIdOrName);
+    if (!target || stepIds.length === 0) return;
+    setActiveProfileId(target.id);
+    setActiveResolutionDiag(null);
+    void runProfileDirect(pickProfileSteps(target, stepIds));
+  };
+
   const handleRunSingleStep = async (step: DeployStep) => {
     if (isDeploying || runningStepId || isDiagRunning || !window.electronAPI?.runDeployStep) return;
     setRunningStepId(step.id);
@@ -206,6 +215,7 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     handleRunActiveProfile,
     handleRunFromStep,
     handleExecuteMatchedProfile,
+    handleExecuteMatchedSteps,
     handleRunSingleStep,
     handleRunDiagnostic,
     handleInstallReleaseFeature,
