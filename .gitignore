@@ -11,6 +11,8 @@ build/*
 !build/installer.nsh
 !build/icon.ico
 !build/icon.png
+!build/installerSidebar.bmp
+!build/installerHeader.bmp
 *.exe
 *.dmg
 *.AppImage

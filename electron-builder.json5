@@ -41,6 +41,13 @@
     // para fixar um idioma, liste-o em installerLanguages. "language" é só o LCID dos metadados do .exe.
     "language": "1046",
     "installerLanguages": ["pt_BR"],
+    // Imagens com o logo atual, geradas por scripts/generate-icons.cjs a partir de public/icon.svg
+    // (sidebar 164x314 na boas-vindas/conclusão, header 150x57 nas telas internas).
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "installerSidebar": "build/installerSidebar.bmp",
+    "uninstallerSidebar": "build/installerSidebar.bmp",
+    "installerHeader": "build/installerHeader.bmp",
     // Atalhos explícitos (os padrões já eram true): Desktop recriado só se ainda não existir, e Menu Iniciar
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
