@@ -4,6 +4,35 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Comandos rápidos personalizáveis**: na aba *Rápidos* dos Diagnósticos do Deploy, *Personalizar* permite adicionar, remover, renomear e reordenar os comandos Karaf. A mesma lista aparece no novo menu *Comandos* da barra do console (ao lado de *Tail do log*), para rodar `bundle:list`, `feature:list`, `log:display` etc. direto no console. *Restaurar padrão* volta à lista original.
+- **Filtro `| grep`**: o shell Karaf aceita `<comando> | grep [flags] <termo>` (ex.: `feature:repo-list | grep winthor`) no prompt, nos comandos rápidos e nos novos botões *Repos* e *Listar* da aba *Features*. Qualquer outro `|` continua bloqueado.
+- **Recolher os Diagnósticos**: o painel de diagnósticos tem o botão *Recolher/Expandir* (lembra o estado).
+
+- **Divergência de versão instalada x exigida**: quando o diagnóstico OSGi aponta um pacote fora da faixa e o módulo está instalado em outra versão (ex.: `0.0.1.SNAPSHOT` de uma branch de desenvolvimento contra `[1.39.0, 2.0.0)`), o card identifica o bundle instalado e oferece duas saídas: *Alterar pom* (alinha a dependência do pom.xml à versão instalada, com `.bak` e confirmação, e opcionalmente executa o perfil) ou trocar por uma release (atalhos para Bundles OSGi e Catálogo 801). Nada muda sem o operador confirmar. Ver [decisão 0002](docs/decisions/0002-divergencia-de-versao-osgi-guiada.md).
+- **Alerta para não commitar o pom alterado**: depois de *Alterar pom*, a tela Deploy mostra um alerta fixo ("NÃO COMMITE ESSA ALTERAÇÃO") com a dependência, o de/para e o botão *Reverter* (volta ao valor original, inclusive quando a versão vem de uma propriedade). O alerta sobrevive a reinícios e some ao reverter ou dispensar. O toast e o console também avisam, e o *Commit & Push Rápido* do Git mostra o aviso e só libera o envio depois de marcar "Entendi, quero commitar mesmo assim", quando o pom alterado (ou o `.bak`) está entre os arquivos.
+- **Reverter o pom sozinho depois de instalar**: em *Alterar e executar perfil* há a opção (marcada por padrão) de voltar o pom.xml ao valor original quando o perfil terminar com sucesso. O instalado no Karaf não muda, o alerta some e o `pom.xml.bak` é apagado (reverter até o conteúdo do `.bak` agora o remove, para o `git add -A` não levá-lo). Se o perfil falhar, o pom continua alterado e o alerta fica.
+- **Escolher etapas do perfil sugerido**: o card do diagnóstico OSGi permite rodar só algumas etapas do perfil (*Só esta* / *Executar selecionadas*), em vez do perfil inteiro.
+
+### Alterado
+- **Console do Karaf**: a barra inteira abre/fecha o console e ganhou o botão explícito *Recolher/Expandir*. O botão *Listar* do `bundle:watch` agora se chama *Listar watches*.
+- **Diagnósticos**: removidos os botões repetidos das abas *Features* e *Bundles* (já estão em *Rápidos*). Comandos que apagam estado (`log:clear`, `feature:uninstall`, `bundle:uninstall`...) pedem confirmação.
+- **Prompt Karaf único**: o campo duplicado do painel de Diagnósticos saiu; o comando livre é digitado no campo do Console Karaf (histórico ↑/↓ e Ctrl+C), e o painel traz o atalho *Abrir console*.
+- **Cancelar durante o perfil**: com o perfil inteiro rodando, a etapa em andamento mostra só "Executando…"; o cancelamento fica no *Cancelar* do cabeçalho, que é o que interrompe o deploy. Em execução de etapa isolada o botão da etapa continua.
+- **Daqui em diante**: o botão das etapas fica sempre visível, com texto, e não só ao passar o mouse.
+
+### Corrigido
+- **DB Studio: excluir/alterar linha com data na chave dava `ORA-01861`** (literal does not match format string). A grid recebe `DATE`/`TIMESTAMP` do Oracle como texto ISO UTC e o texto ia como bind contra a coluna, que o Oracle tenta converter pelo `NLS_DATE_FORMAT`. Agora, quando o `WHERE` tem esse tipo de texto, o app consulta os tipos da tabela e compara as colunas `DATE` com `TO_DATE` e as `TIMESTAMP` com `TO_TIMESTAMP` (janela de 1 ms), na hora local em que o driver leu o valor. Colunas de texto continuam comparadas como texto.
+- **DB Studio: exclusão/alteração que não afetou nenhuma linha** era contada como aplicada; agora vira falha explicando que a chave pode não casar (data, número grande ou texto formatado), e a pendência fica para nova tentativa.
+- **Notificações quase transparentes**: os toasts usavam fundo a 10% de opacidade sobre a tela; agora têm fundo opaco (cor do card com um toque do tipo), faixa lateral colorida e texto na cor padrão.
+- **Edição de versão no pom**: quando a dependência usa `${propriedade}`, a propriedade é alterada (antes a referência era trocada por um literal); propriedade que vem do pai é recusada com aviso, e versões com caracteres de XML são rejeitadas.
+- **Diagnóstico OSGi**: o comando sugerido era `bundle:list -s | grep` com o pacote sem os pontos (`combrcompcsist…`), que nunca casava; agora é `package:exports | grep <pacote>`. Com vários perfis possíveis, vence o nome mais específico do pacote, não o primeiro da lista.
+- **Rodar de uma etapa em diante / etapas escolhidas** mantêm o projeto de contexto herdado da etapa anterior (antes a etapa Karaf podia perder o projeto do build).
+- **Comando ignorado no console**: com o Karaf embedded parado e outro comando em execução, o comando digitado era descartado em silêncio. Agora avisa, e Ctrl+C / Esc interrompem o comando em execução (antes só funcionava com o embedded ativo ou em tail).
+- **Diagnósticos com o console recolhido**: rodar um diagnóstico agora abre o console, que antes ficava recolhido e escondia a saída, e acrescenta ao que já estava lá em vez de apagar o buffer.
+- **Barra de progresso do Deploy**: mostrava 33% na etapa 1 de 3 antes de concluir qualquer etapa; agora conta só as etapas concluídas.
+
 ## [1.44.0] - 2026-10-22
 ### Adicionado
 - **Ciclos de evolução modernos da CCW**: o modal de download e instalação de rotinas da Central de Controle WinThor (CCW) passa a suportar os ciclos de evolução reais do ecossistema TOTVS WinThor (38.00, 37.00, 36.00...), substituindo o seletor rígido de versões legadas (30, 31, 29).

@@ -1,6 +1,12 @@
 import type { DatabaseConnectionConfig, QueryResult } from '../../../shared/types';
 import { isValidSqlIdentifier, isValidSqlTableName } from '../../utils/security';
-import { buildEqualityWhereClause, mutationValidationError } from '../../utils/databaseSqlUtils';
+import {
+  buildEqualityWhereClause,
+  isIsoUtcString,
+  mutationValidationError,
+  type TemporalKind
+} from '../../utils/databaseSqlUtils';
+import { getTableColumns } from './databaseMetadata';
 import { ROW_ID_COLUMN, isValidRowIdValue, supportsRowId } from '../../../shared/rowIdentity';
 import type { DatabaseContext } from './databaseContext';
 
@@ -25,14 +31,15 @@ function buildMutationWhere(
   config: DatabaseConnectionConfig,
   where: Record<string, any>,
   binds: Record<string, any>,
-  startIndex: number
+  startIndex: number,
+  temporal?: Record<string, TemporalKind>
 ): WhereResult {
   const keys = Object.keys(where);
   if (!keys.includes(ROW_ID_COLUMN)) {
     for (const col of keys) {
       if (!isValidSqlIdentifier(col)) return { error: mutationValidationError(`Nome de coluna inválido: "${col}".`) };
     }
-    return buildEqualityWhereClause(where, binds, startIndex);
+    return buildEqualityWhereClause(where, binds, startIndex, temporal);
   }
   if (keys.length !== 1) {
     return { error: mutationValidationError('Identificação por ROWID/ctid não pode ser combinada com outras colunas.') };
@@ -47,6 +54,28 @@ function buildMutationWhere(
   const key = `p${startIndex}`;
   binds[key] = value;
   return { clause: `${config.type === 'oracle' ? 'ROWID' : 'ctid'} = :${key}`, nextIndex: startIndex + 1 };
+}
+
+/**
+ * Oracle: a grid recebe DATE/TIMESTAMP como texto ISO e, usado como bind contra a coluna, dá ORA-01861. Só quando o WHERE
+ * tem esse tipo de texto, consulta os tipos da tabela para trocar a comparação por TO_DATE/TO_TIMESTAMP nas colunas
+ * temporais (uma coluna VARCHAR com texto parecido continua comparada como texto).
+ */
+async function temporalColumnsOf(
+  ctx: DatabaseContext,
+  config: DatabaseConnectionConfig,
+  tableName: string,
+  where: Record<string, any>
+): Promise<Record<string, TemporalKind> | undefined> {
+  if (config.type !== 'oracle' || ROW_ID_COLUMN in where) return undefined;
+  if (!Object.values(where).some(isIsoUtcString)) return undefined;
+  const { columns } = await getTableColumns(ctx, config, tableName);
+  const map: Record<string, TemporalKind> = {};
+  for (const col of columns) {
+    if (/^DATE$/i.test(col.type)) map[col.name.toUpperCase()] = 'date';
+    else if (/^TIMESTAMP(\(\d+\))?$/i.test(col.type)) map[col.name.toUpperCase()] = 'timestamp';
+  }
+  return map;
 }
 
 /**
@@ -124,7 +153,7 @@ export async function updateRow(
       return `${col} = :${key}`;
     })
     .join(', ');
-  const built = buildMutationWhere(config, where, binds, idx);
+  const built = buildMutationWhere(config, where, binds, idx, await temporalColumnsOf(ctx, config, tableName, where));
   if ('error' in built) return built.error;
 
   const sql = `UPDATE ${tableName} SET ${setClause} WHERE ${built.clause}`;
@@ -151,7 +180,7 @@ export async function deleteRow(
   }
 
   const binds: Record<string, any> = {};
-  const built = buildMutationWhere(config, where, binds, 0);
+  const built = buildMutationWhere(config, where, binds, 0, await temporalColumnsOf(ctx, config, tableName, where));
   if ('error' in built) return built.error;
 
   const sql = `DELETE FROM ${tableName} WHERE ${built.clause}`;

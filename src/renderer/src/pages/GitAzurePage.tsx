@@ -24,6 +24,8 @@ import { GitOutputConsole } from '../components/git/GitOutputConsole';
 import { GitEmptyState } from '../components/git/GitEmptyState';
 import { GitBranchModal } from '../components/git/modals/GitBranchModal';
 import { GitCommitModal } from '../components/git/modals/GitCommitModal';
+import { useAlteredPoms } from '../hooks/deploy/useAlteredPoms';
+import { alteredPomsInCommit } from '../utils/alteredPoms';
 import { GitHistoryModal } from '../components/git/modals/GitHistoryModal';
 import { GitDiffModal } from '../components/git/modals/GitDiffModal';
 import { GitTaskBranchModal } from '../components/git/modals/GitTaskBranchModal';
@@ -45,6 +47,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   onNavigateToSettings,
   settingsVersion
 }) => {
+  const alteredPoms = useAlteredPoms();
   const tour = usePageTour(GIT_TOUR_STORAGE_KEY);
   const { gitOutput, gitOutputIsError, setGitOutput, setGitOutputIsError, resetOutput } = useGitOutput();
   const outputControls = { setGitOutput, setGitOutputIsError };
@@ -188,6 +191,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
           commitMessage={commit.commitMessage}
           commitError={commit.commitError}
           commitFiles={commit.commitFiles}
+          alteredPoms={alteredPomsInCommit(alteredPoms, currentProject.path, commit.commitFiles.map((f) => f.path))}
           isLoadingFiles={commit.isLoadingCommitFiles}
           isCommitting={commit.isCommitting}
           onMessageChange={commit.setCommitMessage}

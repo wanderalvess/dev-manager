@@ -19,6 +19,8 @@ interface DeployStepItemProps {
   totalSteps: number;
   isRunning: boolean;
   isBusy: boolean;
+  /** Perfil inteiro em execução: o cancelamento é do perfil (botão do cabeçalho), não de uma etapa. */
+  isProfileRun?: boolean;
   status?: DeployStepStatus;
   executionTimeMs?: number;
   onRun: (step: DeployStep) => void;
@@ -33,6 +35,7 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
   totalSteps,
   isRunning,
   isBusy,
+  isProfileRun,
   status,
   executionTimeMs,
   onRun,
@@ -132,16 +135,20 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
             type="button"
             onClick={() => onRunFromStep(index)}
             disabled={isBusy}
-            className="p-1.5 rounded-lg border text-2xs transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/80 cursor-pointer disabled:opacity-0"
-            title={`Executar o fluxo a partir desta etapa (${step.name}) até o final`}
+            className="p-1.5 rounded-lg border text-2xs transition-all flex items-center gap-1 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            title={`Executar desta etapa (${step.name}) até a última, só as marcadas`}
           >
             <FastForward className="w-3 h-3 text-primary" />
-            <span className="hidden xl:inline">Daqui em diante</span>
+            <span>Daqui em diante</span>
           </button>
         )}
 
         {/* Executar / Cancelar somente esta etapa */}
-        {isRunning ? (
+        {isRunning && isProfileRun ? (
+          <span className="px-1.5 text-2xs font-semibold text-primary" title="Para interromper, use o Cancelar do cabeçalho">
+            Executando…
+          </span>
+        ) : isRunning ? (
           <button
             type="button"
             onClick={() => onCancel?.(step)}

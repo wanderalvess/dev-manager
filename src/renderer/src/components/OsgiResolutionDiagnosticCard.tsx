@@ -9,7 +9,9 @@ import {
   Check,
   Package
 } from 'lucide-react';
-import { OsgiResolutionDiagnosticSummary } from '../../../shared/types';
+import { DeployProfile, OsgiResolutionDiagnosticSummary } from '../../../shared/types';
+import { OsgiMatchedProfileSteps } from './OsgiMatchedProfileSteps';
+import { OsgiVersionConflictPanel } from './OsgiVersionConflictPanel';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { buildOsgiDiagnosticExplanation } from '../utils/osgiDiagnosticUtils';
 
@@ -17,7 +19,15 @@ interface OsgiResolutionDiagnosticCardProps {
   diagnostic: OsgiResolutionDiagnosticSummary;
   isDeploying?: boolean;
   runningStepId?: string | null;
+  /** Perfil cadastrado que o diagnóstico associou à dependência; habilita a escolha de etapas. */
+  matchedProfile?: DeployProfile;
   onExecuteMatchedProfile?: (profileIdOrName: string) => void;
+  onExecuteMatchedSteps?: (profileIdOrName: string, stepIds: string[]) => void;
+  /** Divergência de versão instalada x exigida: pasta do projeto que falhou e atalhos para as saídas possíveis. */
+  contextProjectPath?: string;
+  onRunActiveProfile?: () => Promise<boolean> | void;
+  onOpenBundles?: () => void;
+  onOpenCatalog?: () => void;
   onInstallReleaseFeature?: () => void;
   onRunSuggestedDiagnostic?: () => void;
   onDismiss: () => void;
@@ -27,7 +37,13 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
   diagnostic,
   isDeploying = false,
   runningStepId = null,
+  matchedProfile,
   onExecuteMatchedProfile,
+  onExecuteMatchedSteps,
+  contextProjectPath = '',
+  onRunActiveProfile,
+  onOpenBundles,
+  onOpenCatalog,
   onInstallReleaseFeature,
   onRunSuggestedDiagnostic,
   onDismiss
@@ -187,6 +203,23 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               {diagnostic.versionMismatchWarning}
             </div>
           </div>
+        )}
+
+        <OsgiVersionConflictPanel
+          diagnostic={diagnostic}
+          contextProjectPath={contextProjectPath}
+          disabled={isBusy}
+          onRunActiveProfile={onRunActiveProfile}
+          onOpenBundles={onOpenBundles}
+          onOpenCatalog={onOpenCatalog}
+        />
+
+        {matchedProfile && onExecuteMatchedSteps && matchedProfile.steps.length > 1 && (
+          <OsgiMatchedProfileSteps
+            profile={matchedProfile}
+            disabled={isBusy}
+            onExecute={(stepIds) => onExecuteMatchedSteps(matchedProfile.id, stepIds)}
+          />
         )}
 
         {/* Faixa Inferior de Ações Rápidas em 1 Clique */}

@@ -4,6 +4,7 @@ import { OsgiResolutionDiagnosticCard } from '../components/OsgiResolutionDiagno
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DEPLOY_TOUR_STEPS, DEPLOY_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/deployTour';
+import { AlteredPomsBanner } from '../components/deploy/AlteredPomsBanner';
 import { DeployHeader } from '../components/deploy/DeployHeader';
 import { DeployKarafAlerts } from '../components/deploy/DeployKarafAlerts';
 import { DeployStepsPanel } from '../components/deploy/DeployStepsPanel';
@@ -13,6 +14,7 @@ import { useDeployProfiles } from '../hooks/deploy/useDeployProfiles';
 import { useDeployRunner } from '../hooks/deploy/useDeployRunner';
 import { useDeployModals } from '../hooks/deploy/useDeployModals';
 import { useKarafStatus } from '../hooks/deploy/useKarafStatus';
+import { failedStepContextPath } from '../utils/deployProfileUtils';
 
 interface DeployPageProps {
   projects: GitProjectInfo[];
@@ -72,6 +74,8 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         onRun={runner.handleRunActiveProfile}
       />
 
+      <AlteredPomsBanner />
+
       {/* Grid Principal: o console fica no dock global (Ctrl+`) */}
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 min-w-0">
         <div className="lg:col-span-5 xl:col-span-4 flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1">
@@ -108,7 +112,17 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               diagnostic={runner.activeResolutionDiag}
               isDeploying={runner.isDeploying}
               runningStepId={runner.runningStepId}
+              matchedProfile={profiles.find(
+                (p) =>
+                  p.id === runner.activeResolutionDiag?.matchedProfileId ||
+                  p.name === runner.activeResolutionDiag?.matchedProfileName
+              )}
               onExecuteMatchedProfile={runner.handleExecuteMatchedProfile}
+              onExecuteMatchedSteps={runner.handleExecuteMatchedSteps}
+              contextProjectPath={failedStepContextPath(activeProfile, runner.stepStatuses)}
+              onRunActiveProfile={runner.handleRunActiveProfile}
+              onOpenBundles={() => modals.setIsBundlesModalOpen(true)}
+              onOpenCatalog={() => modals.setIsRoutine801ModalOpen(true)}
               onInstallReleaseFeature={runner.handleInstallReleaseFeature}
               onRunSuggestedDiagnostic={runner.handleRunSuggestedDiagnostic}
               onDismiss={() => runner.setActiveResolutionDiag(null)}

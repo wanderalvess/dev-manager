@@ -213,6 +213,9 @@ export interface OsgiResolutionDiagnosticSummary {
   missingItem: string;
   requirementType: 'package' | 'bundle' | 'service' | 'identity' | 'generic';
   versionRangeDesc?: string;
+  /** Limites da faixa exigida (ex.: 1.39.0 e 2.0.0), para comparar com o que está instalado no Karaf. */
+  versionMin?: string;
+  versionMax?: string;
   matchedPomDependency?: {
     groupId: string;
     artifactId: string;

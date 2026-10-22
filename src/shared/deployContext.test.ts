@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DeployStep } from '../../../shared/types';
+import type { DeployStep } from './types';
 import { resolveContextProjectPath } from './deployContext';
 
 const makeStep = (id: string, projectPath?: string): DeployStep =>

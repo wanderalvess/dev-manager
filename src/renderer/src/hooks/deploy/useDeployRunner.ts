@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DeployProfile, DeployStep } from '../../../../shared/types';
 import { showToast } from '../../components/ToastHost';
-import { buildDiagnosticResultLines, sliceProfileFromStep } from '../../utils/deployProfileUtils';
+import { buildDiagnosticResultLines, pickProfileSteps, sliceProfileFromStep } from '../../utils/deployProfileUtils';
 import { useDeployProgress, type DeployStepStatus } from './useDeployProgress';
 import { useKarafConsole } from '../karafConsole/KarafConsoleContext';
 
@@ -61,12 +61,13 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     }
   };
 
-  const runProfileDirect = async (profileToRun: DeployProfile) => {
-    if (isDeploying || isDiagRunning || !profileToRun) return;
+  /** Roda o perfil e diz se terminou com sucesso (false também quando nem começou). */
+  const runProfileDirect = async (profileToRun: DeployProfile): Promise<boolean> => {
+    if (isDeploying || isDiagRunning || !profileToRun) return false;
     const enabledSteps = profileToRun.steps.filter((s) => s.enabled !== false);
     if (enabledSteps.length === 0) {
       showToast('Nenhuma etapa habilitada neste perfil. Marque ao menos uma etapa para executar.', 'info');
-      return;
+      return false;
     }
 
     setIsDeploying(true);
@@ -83,8 +84,10 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     streamRemainderRef.current = '';
     setTerminalLogs([]);
 
+    let succeeded = false;
     try {
       const res = await window.electronAPI.runDeployProfile(profileToRun);
+      succeeded = !!res?.success;
       if (res && !res.success && res.resolutionDiagnostic) {
         setActiveResolutionDiag(res.resolutionDiagnostic);
       }
@@ -96,11 +99,11 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
       setCurrentProgress(null);
       setRunningStepId(null);
     }
+    return succeeded;
   };
 
-  const handleRunActiveProfile = () => {
-    if (activeProfile) runProfileDirect(activeProfile);
-  };
+  const handleRunActiveProfile = (): Promise<boolean> =>
+    activeProfile ? runProfileDirect(activeProfile) : Promise.resolve(false);
 
   const handleExecuteMatchedProfile = (profileIdOrName: string) => {
     const target = profiles.find((p) => p.id === profileIdOrName || p.name === profileIdOrName);
@@ -109,6 +112,15 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     setActiveResolutionDiag(null);
     // Roda o perfil já resolvido, sem esperar a troca de perfil ativo renderizar.
     void runProfileDirect(target);
+  };
+
+  /** Roda só as etapas escolhidas do perfil sugerido pelo diagnóstico (em vez do perfil inteiro). */
+  const handleExecuteMatchedSteps = (profileIdOrName: string, stepIds: string[]) => {
+    const target = profiles.find((p) => p.id === profileIdOrName || p.name === profileIdOrName);
+    if (!target || stepIds.length === 0) return;
+    setActiveProfileId(target.id);
+    setActiveResolutionDiag(null);
+    void runProfileDirect(pickProfileSteps(target, stepIds));
   };
 
   const handleRunSingleStep = async (step: DeployStep) => {
@@ -155,8 +167,10 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
   const handleRunDiagnostic = async (cmd: string, label: string) => {
     if (isDeploying || isDiagRunning) return;
     setIsDiagRunning(label);
+    // Abre o dock (a saída ficava invisível com o console recolhido) e acrescenta ao buffer, sem apagar o que já estava lá.
+    setConsoleOpen(true);
     streamRemainderRef.current = '';
-    setTerminalLogs([`--- Executando Diagnóstico: ${cmd} ---\r\n`]);
+    setTerminalLogs((prev) => [...prev, `--- Executando Diagnóstico: ${cmd} ---\r\n`]);
 
     try {
       const res = await window.electronAPI.execKarafDiagnostic(cmd);
@@ -204,6 +218,7 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     handleRunActiveProfile,
     handleRunFromStep,
     handleExecuteMatchedProfile,
+    handleExecuteMatchedSteps,
     handleRunSingleStep,
     handleRunDiagnostic,
     handleInstallReleaseFeature,

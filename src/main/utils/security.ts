@@ -95,6 +95,23 @@ export function isSafeKarafCommand(command: string): boolean {
   return true;
 }
 
+// Pipe do próprio shell do Karaf (`feature:repo-list | grep termo`): só o formato `<comando> | grep [flags] <termo>`,
+// com termo sem espaço, aspas nem metacaractere. Qualquer outro `|` continua bloqueado.
+const KARAF_GREP_PIPE = /^(?<head>[^|]+?)\s*\|\s*grep(?:\s+-[A-Za-z]+)*\s+[A-Za-z0-9_.:*/@=+,-]+$/;
+
+/**
+ * Como `isSafeKarafCommand`, mas aceita também o filtro `| grep termo` no fim do comando. Use só onde o comando
+ * vai inteiro para o shell do Karaf (diagnósticos e prompt); nomes e versões continuam em `isSafeKarafCommand`.
+ */
+export function isSafeKarafShellCommand(command: string): boolean {
+  if (isSafeKarafCommand(command)) return true;
+  if (!command || typeof command !== 'string') return false;
+  const trimmed = command.trim();
+  if (trimmed.length > 1000) return false;
+  const head = KARAF_GREP_PIPE.exec(trimmed)?.groups?.head;
+  return head !== undefined && isSafeKarafCommand(head);
+}
+
 /**
  * Valida se uma tag/referência de imagem Docker é segura (sem metacaracteres de shell).
  * Aceita registry/namespace/repo:tag (ex: meuregistro.com:5000/ns/app:1.0.0).

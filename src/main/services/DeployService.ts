@@ -16,7 +16,7 @@ import { NetworkService } from './NetworkService';
 import { PomService } from './PomService';
 import { isSafeKarafCommand } from '../utils/security';
 import { runCapturedProcess, killProcessTree } from '../utils/process';
-import { resolveContextProjectPath } from './deploy/deployContext';
+import { resolveContextProjectPath } from '../../shared/deployContext';
 
 const MAX_DEPLOY_HISTORY_ENTRIES = 100;
 

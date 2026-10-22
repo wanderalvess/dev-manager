@@ -1,6 +1,6 @@
 import React from 'react';
-import { Download, Info, Layers, ListTree, Trash2 } from 'lucide-react';
-import { DeployDiagActionButton, DeployDiagCommandButton } from './DeployDiagButtons';
+import { Download, Info, ListTree, Search, Trash2 } from 'lucide-react';
+import { DeployDiagActionButton } from './DeployDiagButtons';
 
 interface DeployDiagFeatureTabProps {
   disabled: boolean;
@@ -21,25 +21,6 @@ export const DeployDiagFeatureTab: React.FC<DeployDiagFeatureTabProps> = ({
 
   return (
     <div className="space-y-2.5">
-      <div className="flex gap-2">
-        <DeployDiagCommandButton
-          fill
-          icon={<ListTree className="w-3.5 h-3.5 text-primary shrink-0" />}
-          label="Listar Instaladas"
-          command="feature:list -i"
-          disabled={disabled}
-          onClick={() => onRun('feature:list -i', 'features-i')}
-        />
-        <DeployDiagCommandButton
-          fill
-          icon={<Layers className="w-3.5 h-3.5 text-primary shrink-0" />}
-          label="Repositórios"
-          command="feature:repo-list"
-          disabled={disabled}
-          onClick={() => onRun('feature:repo-list', 'repos')}
-        />
-      </div>
-
       {/* Ação pontual por Nome da Feature */}
       <div className="p-2.5 bg-muted/20 border border-border/70 rounded-lg space-y-2 text-xs">
         <div className="flex items-center justify-between text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -54,6 +35,20 @@ export const DeployDiagFeatureTab: React.FC<DeployDiagFeatureTabProps> = ({
           className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-hidden focus:border-primary transition"
         />
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+          <DeployDiagActionButton
+            icon={<Search className="w-3 h-3 text-muted-foreground" />}
+            label="Repos"
+            title="feature:repo-list | grep: acha o repositório de features que contém o nome"
+            disabled={actionDisabled}
+            onClick={() => onRun(`feature:repo-list | grep ${name}`, 'feat-repo-grep')}
+          />
+          <DeployDiagActionButton
+            icon={<ListTree className="w-3 h-3 text-muted-foreground" />}
+            label="Listar"
+            title="feature:list | grep: mostra o estado da feature (instalada ou não)"
+            disabled={actionDisabled}
+            onClick={() => onRun(`feature:list | grep ${name}`, 'feat-list-grep')}
+          />
           <DeployDiagActionButton
             icon={<Info className="w-3 h-3 text-muted-foreground" />}
             label="Info"

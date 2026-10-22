@@ -1,4 +1,4 @@
-import type { DeployStep } from '../../../shared/types';
+import type { DeployStep } from './types';
 
 /**
  * Projeto de contexto de uma etapa: o da própria etapa, senão o da etapa anterior mais próxima

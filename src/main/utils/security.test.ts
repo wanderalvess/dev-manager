@@ -5,6 +5,7 @@ import {
   isValidSqlTableName,
   isSafeUrl,
   isSafeKarafCommand,
+  isSafeKarafShellCommand,
   isSafeLocalPath,
   isLogFilePath,
   isInsideDir,
@@ -128,6 +129,32 @@ describe('isSafeKarafCommand', () => {
     expect(isSafeKarafCommand('a $(whoami)')).toBe(false);
     expect(isSafeKarafCommand('')).toBe(false);
     expect(isSafeKarafCommand('a'.repeat(1001))).toBe(false);
+  });
+});
+
+describe('isSafeKarafShellCommand', () => {
+  it('aceita comandos simples e o filtro | grep no fim', () => {
+    expect(isSafeKarafShellCommand('feature:list -i')).toBe(true);
+    expect(isSafeKarafShellCommand('feature:repo-list | grep winthor')).toBe(true);
+    expect(isSafeKarafShellCommand('feature:repo-list|grep winthor-integracao')).toBe(true);
+    expect(isSafeKarafShellCommand('bundle:list -s | grep -i Active')).toBe(true);
+  });
+
+  it('continua bloqueando pipe para outra coisa e metacaracteres', () => {
+    expect(isSafeKarafShellCommand('a | b')).toBe(false);
+    expect(isSafeKarafShellCommand('a | grep')).toBe(false);
+    expect(isSafeKarafShellCommand('a | grep x | grep y')).toBe(false);
+    expect(isSafeKarafShellCommand('a | grep x; shutdown')).toBe(false);
+    expect(isSafeKarafShellCommand('a | grep "x y"')).toBe(false);
+    expect(isSafeKarafShellCommand('a | grep $(whoami)')).toBe(false);
+    expect(isSafeKarafShellCommand('a; b | grep x')).toBe(false);
+    expect(isSafeKarafShellCommand('a && b | grep x')).toBe(false);
+    expect(isSafeKarafShellCommand('| grep x')).toBe(false);
+    expect(isSafeKarafShellCommand('')).toBe(false);
+  });
+
+  it('o isSafeKarafCommand (nomes e versões) segue rejeitando o pipe', () => {
+    expect(isSafeKarafCommand('feature:repo-list | grep x')).toBe(false);
   });
 });
 

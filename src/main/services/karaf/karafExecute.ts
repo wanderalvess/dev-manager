@@ -2,7 +2,7 @@ import { ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { AppSettings, getKarafSshPort, OsgiResolutionDiagnosticSummary } from '../../../shared/types';
-import { isSafeKarafCommand } from '../../utils/security';
+import { isSafeKarafShellCommand } from '../../utils/security';
 import { CapturedProcessResult, runCapturedProcess } from '../../utils/process';
 import { diagnoseKarafResolutionError } from '../../utils/karafResolutionParser';
 import { isWslKaraf, resolveKarafWslClient, resolveKarafWslLogPath, buildWslClientArgs } from '../../utils/karafWslUtils';
@@ -140,8 +140,8 @@ export async function executeKarafCommand(
   context?: { projectPath?: string; pomXmlContent?: string },
   onSpawn?: (child: ChildProcess) => void
 ): Promise<KarafCommandResult> {
-  if (!isSafeKarafCommand(command)) {
-    const errMsg = `[ERRO DE SEGURANÇA] Comando Karaf rejeitado: contém caracteres de controle proibidos ou formato inválido.\r\n`;
+  if (!isSafeKarafShellCommand(command)) {
+    const errMsg = `[ERRO DE SEGURANÇA] Comando Karaf rejeitado: contém caracteres de controle proibidos ou formato inválido. O único pipe aceito é "| grep termo" no fim do comando.\r\n`;
     onChunk(errMsg);
     return { code: 1, stdout: '', stderr: errMsg };
   }

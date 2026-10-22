@@ -1,6 +1,6 @@
 import React from 'react';
-import { AlertTriangle, FileText, Package, RotateCw, Trash2 } from 'lucide-react';
-import { DeployDiagActionButton, DeployDiagCommandButton } from './DeployDiagButtons';
+import { AlertTriangle, FileText, RotateCw, Trash2 } from 'lucide-react';
+import { DeployDiagActionButton } from './DeployDiagButtons';
 
 interface DeployDiagBundleTabProps {
   disabled: boolean;
@@ -21,25 +21,6 @@ export const DeployDiagBundleTab: React.FC<DeployDiagBundleTabProps> = ({
 
   return (
     <div className="space-y-2.5">
-      <div className="flex gap-2">
-        <DeployDiagCommandButton
-          fill
-          icon={<Package className="w-3.5 h-3.5 text-primary shrink-0" />}
-          label="Listar Bundles"
-          command="bundle:list -s"
-          disabled={disabled}
-          onClick={() => onRun('bundle:list -s', 'bundles-s')}
-        />
-        <DeployDiagCommandButton
-          fill
-          icon={<AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />}
-          label="Diag Falhas"
-          command="bundle:diag"
-          disabled={disabled}
-          onClick={() => onRun('bundle:diag', 'bundles-diag')}
-        />
-      </div>
-
       {/* Ação pontual por ID do Bundle */}
       <div className="p-2.5 bg-muted/20 border border-border/70 rounded-lg space-y-2 text-xs">
         <div className="flex items-center justify-between text-2xs font-semibold text-muted-foreground uppercase tracking-wider">

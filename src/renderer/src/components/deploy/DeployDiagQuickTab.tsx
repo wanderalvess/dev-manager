@@ -1,61 +1,73 @@
-import React from 'react';
-import { AlertTriangle, FileText, Layers, ListTree, Package, RotateCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, FileText, Layers, ListTree, Package, Pencil, RotateCcw, Terminal } from 'lucide-react';
+import { useKarafQuickCommands } from '../../hooks/karafConsole/useKarafQuickCommands';
 import { DeployDiagCommandButton } from './DeployDiagButtons';
+import { DeployQuickCommandsEditor } from './DeployQuickCommandsEditor';
 
 interface DeployDiagQuickTabProps {
   disabled: boolean;
   onRun: (cmd: string, label: string) => void;
 }
 
-export const DeployDiagQuickTab: React.FC<DeployDiagQuickTabProps> = ({ disabled, onRun }) => (
-  <div className="grid grid-cols-2 gap-2">
-    <DeployDiagCommandButton
-      icon={<ListTree className="w-3.5 h-3.5 text-primary shrink-0" />}
-      label="Features Ativas"
-      command="feature:list -i"
-      title="feature:list -i"
-      disabled={disabled}
-      onClick={() => onRun('feature:list -i', 'features-i')}
-    />
-    <DeployDiagCommandButton
-      icon={<Package className="w-3.5 h-3.5 text-primary shrink-0" />}
-      label="Bundles Ativos"
-      command="bundle:list -s"
-      title="bundle:list -s"
-      disabled={disabled}
-      onClick={() => onRun('bundle:list -s', 'bundles-s')}
-    />
-    <DeployDiagCommandButton
-      icon={<AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />}
-      label="Diag Falhas"
-      command="bundle:diag"
-      title="bundle:diag (diagnostica todos os bundles com falha de resolução)"
-      disabled={disabled}
-      onClick={() => onRun('bundle:diag', 'bundles-diag')}
-    />
-    <DeployDiagCommandButton
-      icon={<Layers className="w-3.5 h-3.5 text-primary shrink-0" />}
-      label="Repositórios"
-      command="feature:repo-list"
-      title="feature:repo-list"
-      disabled={disabled}
-      onClick={() => onRun('feature:repo-list', 'repos')}
-    />
-    <DeployDiagCommandButton
-      icon={<FileText className="w-3.5 h-3.5 text-primary shrink-0" />}
-      label="Últimos Logs"
-      command="log:display -n 50"
-      title="log:display -n 50"
-      disabled={disabled}
-      onClick={() => onRun('log:display -n 50', 'logs-50')}
-    />
-    <DeployDiagCommandButton
-      icon={<RotateCcw className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-      label="Limpar Logs"
-      command="log:clear"
-      title="log:clear"
-      disabled={disabled}
-      onClick={() => onRun('log:clear', 'clear')}
-    />
-  </div>
-);
+const ICON = 'w-3.5 h-3.5 shrink-0';
+
+function iconFor(command: string) {
+  if (/^bundle:diag/.test(command)) return <AlertTriangle className={`${ICON} text-warning`} />;
+  if (/^feature:repo/.test(command)) return <Layers className={`${ICON} text-primary`} />;
+  if (/^feature:/.test(command)) return <ListTree className={`${ICON} text-primary`} />;
+  if (/^bundle:/.test(command)) return <Package className={`${ICON} text-primary`} />;
+  if (/^log:clear/.test(command)) return <RotateCcw className={`${ICON} text-muted-foreground`} />;
+  if (/^log:/.test(command)) return <FileText className={`${ICON} text-primary`} />;
+  return <Terminal className={`${ICON} text-primary`} />;
+}
+
+/** Atalhos de comandos Karaf que o desenvolvedor personaliza (a lista vale também para o menu do console). */
+export const DeployDiagQuickTab: React.FC<DeployDiagQuickTabProps> = ({ disabled, onRun }) => {
+  const { commands, save, reset } = useKarafQuickCommands();
+  const [editing, setEditing] = useState(false);
+
+  if (editing) {
+    return (
+      <DeployQuickCommandsEditor
+        commands={commands}
+        onSave={save}
+        onRestoreDefaults={reset}
+        onClose={() => setEditing(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {commands.length === 0 ? (
+        <p className="py-3 text-center text-xs text-muted-foreground">
+          Nenhum comando rápido. Use "Personalizar" para adicionar os seus.
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {commands.map((c) => (
+            <DeployDiagCommandButton
+              key={c.id}
+              icon={iconFor(c.command)}
+              label={c.label}
+              command={c.command}
+              title={c.command}
+              disabled={disabled}
+              onClick={() => onRun(c.command, c.id)}
+            />
+          ))}
+        </div>
+      )}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="flex items-center gap-1 text-2xs text-primary hover:underline cursor-pointer"
+          title="Adicionar, remover e reordenar os comandos desta lista"
+        >
+          <Pencil className="w-3 h-3" /> Personalizar
+        </button>
+      </div>
+    </div>
+  );
+};
