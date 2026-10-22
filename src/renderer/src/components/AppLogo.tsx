@@ -20,9 +20,9 @@ const SIZE_CLASSES = {
 };
 
 /**
- * Símbolo do Hub Manager: o hub no centro e as quatro áreas (Infra, Dados, Dev, QA) chegando nele,
- * dentro do quadro do cockpit. Usa a cor `primary` do tema, então acompanha a variante escolhida.
- * Em tamanho pequeno (xs) o anel sai e os traços engrossam para continuar legível.
+ * Símbolo do Hub Manager: um bundle (cubo isométrico em três tons) sobre o quadro arredondado.
+ * O quadro usa a cor `primary` do tema, então acompanha a variante escolhida.
+ * Em tamanho pequeno (xs) o cubo cresce e as juntas engrossam para continuar legível.
  * Os ícones do app (public/icon.svg, icon.png, favicon.ico, build/icon.ico) usam o mesmo desenho.
  */
 export const AppLogo: React.FC<AppLogoProps> = ({ size = 'sm', className = '', showStatusDot = false, alt = 'Hub Manager' }) => {
@@ -32,26 +32,23 @@ export const AppLogo: React.FC<AppLogoProps> = ({ size = 'sm', className = '', s
   const svgContent = (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 48 48"
+      viewBox="0 0 64 64"
       fill="none"
       className={`${sizeClass} ${className} shrink-0 select-none text-primary`}
       role="img"
       aria-label={alt}
     >
-      {small ? (
-        <>
-          <rect x="5" y="5" width="38" height="38" rx="12" stroke="currentColor" strokeWidth="4" />
-          <path d="M24 5v8M24 35v8M5 24h8M35 24h8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-          <circle cx="24" cy="24" r="7" fill="currentColor" />
-        </>
-      ) : (
-        <>
-          <rect x="4" y="4" width="40" height="40" rx="12" stroke="currentColor" strokeWidth="2.5" />
-          <path d="M24 4v9M24 35v9M4 24h9M35 24h9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="24" cy="24" r="6" fill="currentColor" />
-          <circle cx="24" cy="24" r="10.5" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.45" />
-        </>
-      )}
+      <rect width="64" height="64" rx="16" fill="currentColor" />
+      <g
+        transform={small ? 'translate(10 10) scale(.68)' : 'translate(12 12) scale(.625)'}
+        stroke="currentColor"
+        strokeWidth={small ? 5 : 3}
+        strokeLinejoin="round"
+      >
+        <path d="M32 5L55.4 18.5L32 32L8.6 18.5Z" fill="#FFFFFF" />
+        <path d="M8.6 18.5L32 32V59L8.6 45.5Z" fill="#FFFFFF" fillOpacity="0.72" />
+        <path d="M55.4 18.5V45.5L32 59V32Z" fill="#000000" fillOpacity="0.4" />
+      </g>
     </svg>
   );
 

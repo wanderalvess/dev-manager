@@ -406,19 +406,18 @@ function drawRocketScene(ctx, size) {
 /**
  * Renderizador de alta qualidade usando @napi-rs/canvas quando disponível
  */
-function renderWithCanvas() {
-  const { createCanvas, Image } = require('@napi-rs/canvas');
+async function renderWithCanvas() {
+  const { createCanvas, loadImage } = require('@napi-rs/canvas');
   const svgPath = path.join(PUBLIC_DIR, 'icon.svg');
 
   const sizes = [512, 256, 128, 64, 48, 32, 16];
   const rendered = {};
 
+  // O decode do SVG é assíncrono: sem aguardar, width/height vêm 0 e cai no desenho antigo do foguete.
   let svgImage = null;
   try {
     if (fs.existsSync(svgPath)) {
-      const svgBuf = fs.readFileSync(svgPath);
-      svgImage = new Image();
-      svgImage.src = svgBuf;
+      svgImage = await loadImage(fs.readFileSync(svgPath));
     }
   } catch {
     svgImage = null;
@@ -533,7 +532,7 @@ function renderFallback(size) {
   return encodeRgbaToPng(size, size, buf);
 }
 
-function ensureIcons(force = false) {
+async function ensureIcons(force = false) {
   if (!fs.existsSync(BUILD_DIR)) {
     fs.mkdirSync(BUILD_DIR, { recursive: true });
   }
@@ -565,7 +564,7 @@ function ensureIcons(force = false) {
   let usedCanvas = false;
 
   try {
-    pngMap = renderWithCanvas();
+    pngMap = await renderWithCanvas();
     usedCanvas = true;
     console.log('[Icons] Renderizado com sucesso via @napi-rs/canvas.');
   } catch (err) {
@@ -608,12 +607,10 @@ function ensureIcons(force = false) {
 }
 
 if (require.main === module) {
-  try {
-    ensureIcons(true);
-  } catch (e) {
+  ensureIcons(true).catch((e) => {
     console.error('[Icons] Erro ao gerar ícones:', e);
     process.exit(1);
-  }
+  });
 }
 
 module.exports = {
