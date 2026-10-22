@@ -63,6 +63,17 @@ describe('deployProfileUtils', () => {
     expect(imp?.name).toBe('x (Importado)');
   });
 
+  it('importação gera ids de etapa novos e rejeita etapas inválidas', () => {
+    const file = { name: 'x', steps: [{ id: 's1', type: 'command' }, { id: 's2', type: 'command' }] };
+    const first = buildImportedProfile(file, 1);
+    const second = buildImportedProfile(file, 2);
+    const ids = [...(first?.steps || []), ...(second?.steps || [])].map((s) => s.id);
+    expect(new Set(ids).size).toBe(4);
+    expect(ids).not.toContain('s1');
+    expect(buildImportedProfile({ name: 'x', steps: [null] })).toBeNull();
+    expect(buildImportedProfile({ name: 'x', steps: [{ id: 'a' }] })).toBeNull();
+  });
+
   it('monta linhas do resultado de diagnóstico', () => {
     expect(buildDiagnosticResultLines('la', null)).toEqual([]);
     expect(buildDiagnosticResultLines('la', { code: 1, stderr: 'boom' })[0]).toContain('código de saída 1.\r\nboom');

@@ -16,6 +16,10 @@ export function useDeployProfiles(settingsVersion?: number) {
   const [karafPath, setKarafPath] = useState<string>('');
   const [karafValid, setKarafValid] = useState<boolean | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Espelhos síncronos: cliques rápidos precisam partir do último estado gravado, não do fechamento do render.
+  const profilesRef = useRef<DeployProfile[]>([]);
+  const activeIdRef = useRef<string>('');
+  const saveChainRef = useRef<Promise<unknown>>(Promise.resolve());
 
   const activeProfile = useMemo(() => {
     if (!profiles || profiles.length === 0) return null;
@@ -46,40 +50,65 @@ export function useDeployProfiles(settingsVersion?: number) {
           setKarafValid(found);
         }
         if (st.deployProfiles && st.deployProfiles.length > 0) {
+          profilesRef.current = st.deployProfiles;
           setProfiles(st.deployProfiles);
-          setActiveProfileId((curr) => curr || st.activeDeployProfileId || st.deployProfiles?.[0]?.id || '');
+          setActiveProfileId((curr) => {
+            const next = curr || st.activeDeployProfileId || st.deployProfiles?.[0]?.id || '';
+            activeIdRef.current = next;
+            return next;
+          });
         }
       });
     }
   }, [settingsVersion]);
 
   const persistProfiles = async (updated: DeployProfile[], activeId: string) => {
+    profilesRef.current = updated;
+    activeIdRef.current = activeId;
     setProfiles(updated);
     setActiveProfileId(activeId);
     if (window.electronAPI && window.electronAPI.saveSettings) {
-      await window.electronAPI.saveSettings({ deployProfiles: updated, activeDeployProfileId: activeId });
+      // Grava em série: a última chamada sempre carrega o estado mais novo.
+      const save = saveChainRef.current.then(() =>
+        window.electronAPI.saveSettings({ deployProfiles: profilesRef.current, activeDeployProfileId: activeIdRef.current })
+      );
+      saveChainRef.current = save.catch(() => undefined);
+      await save;
+    }
+  };
+
+  /** Troca só o perfil ativo, sem regravar a lista de perfis. */
+  const selectProfile = async (id: string) => {
+    activeIdRef.current = id;
+    setActiveProfileId(id);
+    if (window.electronAPI?.saveSettings) {
+      const save = saveChainRef.current.then(() => window.electronAPI.saveSettings({ activeDeployProfileId: id }));
+      saveChainRef.current = save.catch(() => undefined);
+      await save;
     }
   };
 
   const handleSaveProfile = async (saved: DeployProfile) => {
-    const exists = profiles.some((p) => p.id === saved.id);
-    const updated = exists ? profiles.map((p) => (p.id === saved.id ? saved : p)) : [...profiles, saved];
+    const current = profilesRef.current;
+    const exists = current.some((p) => p.id === saved.id);
+    const updated = exists ? current.map((p) => (p.id === saved.id ? saved : p)) : [...current, saved];
     await persistProfiles(updated, saved.id);
   };
 
   const handleDeleteProfile = async (id: string) => {
-    if (profiles.length <= 1) {
+    const current = profilesRef.current;
+    if (current.length <= 1) {
       showToast('Mantenha ao menos um perfil de deploy.', 'info');
       return;
     }
-    const remaining = profiles.filter((p) => p.id !== id);
+    const remaining = current.filter((p) => p.id !== id);
     await persistProfiles(remaining, remaining[0]?.id || '');
   };
 
   const handleDuplicateProfile = async () => {
     if (!activeProfile) return;
     const duplicated = duplicateDeployProfile(activeProfile);
-    await persistProfiles([...profiles, duplicated], duplicated.id);
+    await persistProfiles([...profilesRef.current, duplicated], duplicated.id);
   };
 
   const handleExportProfile = () => {
@@ -108,7 +137,7 @@ export function useDeployProfiles(settingsVersion?: number) {
         showToast('Arquivo JSON inválido para Perfil de Deploy.', 'info');
         return;
       }
-      await persistProfiles([...profiles, imported], imported.id);
+      await persistProfiles([...profilesRef.current, imported], imported.id);
     } catch (err: any) {
       showToast(`Falha ao importar perfil: ${err?.message || err}`, 'error');
     } finally {
@@ -116,16 +145,22 @@ export function useDeployProfiles(settingsVersion?: number) {
     }
   };
 
+  // Sempre parte do último estado gravado (ref), para que dois cliques seguidos se somem em vez de um desfazer o outro.
+  const latestActiveProfile = () => {
+    const list = profilesRef.current;
+    return list.find((p) => p.id === activeIdRef.current) || list[0] || null;
+  };
+
   const handleToggleStep = async (stepId: string) => {
-    if (!activeProfile) return;
-    const updated = toggleProfileStep(activeProfile, stepId);
-    await handleSaveProfile(updated);
+    const base = latestActiveProfile();
+    if (!base) return;
+    await handleSaveProfile(toggleProfileStep(base, stepId));
   };
 
   const handleToggleAllSteps = async (enableAll: boolean) => {
-    if (!activeProfile) return;
-    const updated = toggleAllProfileSteps(activeProfile, enableAll);
-    await handleSaveProfile(updated);
+    const base = latestActiveProfile();
+    if (!base) return;
+    await handleSaveProfile(toggleAllProfileSteps(base, enableAll));
   };
 
   return {
@@ -138,6 +173,7 @@ export function useDeployProfiles(settingsVersion?: number) {
     karafValid,
     fileInputRef,
     persistProfiles,
+    selectProfile,
     handleSaveProfile,
     handleDeleteProfile,
     handleDuplicateProfile,

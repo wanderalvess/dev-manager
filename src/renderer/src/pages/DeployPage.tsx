@@ -27,7 +27,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   const modals = useDeployModals();
   const karaf = useKarafStatus();
   const deployProfiles = useDeployProfiles(settingsVersion);
-  const { profiles, activeProfile, activeProfileId, persistProfiles } = deployProfiles;
+  const { profiles, activeProfile, activeProfileId } = deployProfiles;
   const runner = useDeployRunner({
     profiles,
     activeProfile,
@@ -46,7 +46,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
   }, [isConsoleMaximized]);
 
   const handleSelectProfile = (id: string) => {
-    persistProfiles(profiles, id);
+    void deployProfiles.selectProfile(id);
     runner.resetProgress();
   };
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { DeployProfile, DeployStep } from '../../../../shared/types';
+import { showToast } from '../../components/ToastHost';
 import { buildDiagnosticResultLines, sliceProfileFromStep } from '../../utils/deployProfileUtils';
 import { useDeployProgress, type DeployStepStatus } from './useDeployProgress';
 
@@ -53,7 +54,10 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
   const runProfileDirect = async (profileToRun: DeployProfile) => {
     if (isDeploying || isDiagRunning || !profileToRun) return;
     const enabledSteps = profileToRun.steps.filter((s) => s.enabled !== false);
-    if (enabledSteps.length === 0) return;
+    if (enabledSteps.length === 0) {
+      showToast('Nenhuma etapa habilitada neste perfil. Marque ao menos uma etapa para executar.', 'info');
+      return;
+    }
 
     setIsDeploying(true);
     const initialStatuses: Record<string, DeployStepStatus> = {};
@@ -92,9 +96,8 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     if (!target) return;
     setActiveProfileId(target.id);
     setActiveResolutionDiag(null);
-    setTimeout(() => {
-      runProfileDirect(target);
-    }, 150);
+    // Roda o perfil já resolvido, sem esperar a troca de perfil ativo renderizar.
+    void runProfileDirect(target);
   };
 
   const handleRunSingleStep = async (step: DeployStep) => {
