@@ -61,12 +61,13 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     }
   };
 
-  const runProfileDirect = async (profileToRun: DeployProfile) => {
-    if (isDeploying || isDiagRunning || !profileToRun) return;
+  /** Roda o perfil e diz se terminou com sucesso (false também quando nem começou). */
+  const runProfileDirect = async (profileToRun: DeployProfile): Promise<boolean> => {
+    if (isDeploying || isDiagRunning || !profileToRun) return false;
     const enabledSteps = profileToRun.steps.filter((s) => s.enabled !== false);
     if (enabledSteps.length === 0) {
       showToast('Nenhuma etapa habilitada neste perfil. Marque ao menos uma etapa para executar.', 'info');
-      return;
+      return false;
     }
 
     setIsDeploying(true);
@@ -83,8 +84,10 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     streamRemainderRef.current = '';
     setTerminalLogs([]);
 
+    let succeeded = false;
     try {
       const res = await window.electronAPI.runDeployProfile(profileToRun);
+      succeeded = !!res?.success;
       if (res && !res.success && res.resolutionDiagnostic) {
         setActiveResolutionDiag(res.resolutionDiagnostic);
       }
@@ -96,11 +99,11 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
       setCurrentProgress(null);
       setRunningStepId(null);
     }
+    return succeeded;
   };
 
-  const handleRunActiveProfile = () => {
-    if (activeProfile) runProfileDirect(activeProfile);
-  };
+  const handleRunActiveProfile = (): Promise<boolean> =>
+    activeProfile ? runProfileDirect(activeProfile) : Promise.resolve(false);
 
   const handleExecuteMatchedProfile = (profileIdOrName: string) => {
     const target = profiles.find((p) => p.id === profileIdOrName || p.name === profileIdOrName);

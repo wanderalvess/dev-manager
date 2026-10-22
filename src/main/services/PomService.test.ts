@@ -173,4 +173,24 @@ describe('PomService', () => {
     expect(res.error).toContain('Versão inválida');
     expect(fs.readFileSync(pomPath, 'utf-8')).toBe(SAMPLE_CONSUMER_POM);
   });
+  it('ao reverter até o conteúdo do .bak, apaga o .bak; com conteúdo diferente, mantém', () => {
+    const pomPath = path.join(tempDir, 'pom.xml');
+    fs.writeFileSync(pomPath, SAMPLE_CONSUMER_POM, 'utf-8');
+    const dep = { artifactId: 'winthor-venda-service' };
+
+    const changed = pomService.updateDependencyVersion(tempDir, { ...dep, newVersion: '0.0.1-SNAPSHOT' }, true);
+    expect(changed.removedBackup).toBeFalsy();
+    expect(fs.existsSync(`${pomPath}.bak`)).toBe(true);
+
+    const reverted = pomService.updateDependencyVersion(tempDir, { ...dep, newVersion: changed.previousValue! }, false);
+    expect(reverted.success).toBe(true);
+    expect(reverted.removedBackup).toBe(true);
+    expect(fs.existsSync(`${pomPath}.bak`)).toBe(false);
+    expect(fs.readFileSync(pomPath, 'utf-8')).toBe(SAMPLE_CONSUMER_POM);
+
+    pomService.updateDependencyVersion(tempDir, { ...dep, newVersion: '0.0.1-SNAPSHOT' }, true);
+    const other = pomService.updateDependencyVersion(tempDir, { ...dep, newVersion: '9.9.9' }, false);
+    expect(other.removedBackup).toBe(false);
+    expect(fs.existsSync(`${pomPath}.bak`)).toBe(true);
+  });
 });

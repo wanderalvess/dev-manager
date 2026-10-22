@@ -27,6 +27,8 @@ export interface PomUpdateResult {
   viaProperty?: string;
   /** Valor que foi substituído (o literal da dependência ou o da propriedade), para reverter depois. */
   previousValue?: string;
+  /** Ao reverter, o .bak ao lado ficou idêntico ao pom e foi apagado (não sobra arquivo para o commit levar). */
+  removedBackup?: boolean;
   error?: string;
 }
 
@@ -201,6 +203,14 @@ export class PomService {
 
       fs.writeFileSync(pomPath, updated.content, 'utf-8');
 
+      // Reverter (sem novo backup) até o conteúdo do .bak: ele não serve mais e o `git add -A` o levaria junto.
+      let removedBackup = false;
+      const existingBackup = `${pomPath}.bak`;
+      if (!createBackup && fs.existsSync(existingBackup) && fs.readFileSync(existingBackup, 'utf-8') === updated.content) {
+        fs.unlinkSync(existingBackup);
+        removedBackup = true;
+      }
+
       return {
         success: true,
         targetPomPath: pomPath,
@@ -209,7 +219,8 @@ export class PomService {
         newVersion: dependency.newVersion,
         backupPath,
         viaProperty: updated.viaProperty,
-        previousValue: updated.previousValue
+        previousValue: updated.previousValue,
+        removedBackup
       };
     } catch (err: any) {
       return {

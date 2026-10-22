@@ -56,3 +56,20 @@ export function dismissAlteredPom(id: string) {
 export function useAlteredPoms(): AlteredPom[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
+
+/** Volta o pom ao valor original e tira o alerta. Sem `previousValue` não há como reverter pelo app. */
+export async function revertAlteredPom(entry: AlteredPom): Promise<{ success: boolean; error?: string; removedBackup?: boolean }> {
+  if (!entry.previousValue) return { success: false, error: 'Valor original desconhecido: restaure o pom.xml.bak manualmente.' };
+  const res = (await window.electronAPI.updatePomDependencyVersion(
+    entry.projectPath,
+    { artifactId: entry.artifactId, groupId: entry.groupId, newVersion: entry.previousValue },
+    false
+  )) as { success: boolean; error?: string; removedBackup?: boolean };
+  if (res.success) dismissAlteredPom(entry.id);
+  return res;
+}
+
+/** Entrada registrada para esse pom/artefato (o painel a lê logo depois de gravar, para reverter sozinho depois). */
+export function findAlteredPom(pomPath: string, artifactId: string): AlteredPom | undefined {
+  return getSnapshot().find((e) => e.pomPath === pomPath && e.artifactId === artifactId);
+}

@@ -25,7 +25,7 @@ interface OsgiResolutionDiagnosticCardProps {
   onExecuteMatchedSteps?: (profileIdOrName: string, stepIds: string[]) => void;
   /** Divergência de versão instalada x exigida: pasta do projeto que falhou e atalhos para as saídas possíveis. */
   contextProjectPath?: string;
-  onRunActiveProfile?: () => void;
+  onRunActiveProfile?: () => Promise<boolean> | void;
   onOpenBundles?: () => void;
   onOpenCatalog?: () => void;
   onInstallReleaseFeature?: () => void;

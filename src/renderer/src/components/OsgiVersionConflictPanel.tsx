@@ -3,7 +3,7 @@ import { BookOpen, FileEdit, GitCompare, ListTree, Play } from 'lucide-react';
 import type { OsgiResolutionDiagnosticSummary } from '../../../shared/types';
 import { useOsgiVersionConflict } from '../hooks/deploy/useOsgiVersionConflict';
 import { useKarafConsole } from '../hooks/karafConsole/KarafConsoleContext';
-import { recordAlteredPom } from '../hooks/deploy/useAlteredPoms';
+import { findAlteredPom, recordAlteredPom, revertAlteredPom } from '../hooks/deploy/useAlteredPoms';
 import { requestConfirm } from './ui/confirmService';
 import { showToast } from './ToastHost';
 
@@ -12,7 +12,8 @@ interface OsgiVersionConflictPanelProps {
   /** Pasta do projeto que estava sendo instalado quando a etapa falhou (onde fica o pom que importa o pacote). */
   contextProjectPath: string;
   disabled?: boolean;
-  onRunActiveProfile?: () => void;
+  /** Executa o perfil atual e resolve `true` se terminou com sucesso. */
+  onRunActiveProfile?: () => Promise<boolean> | void;
   onOpenBundles?: () => void;
   onOpenCatalog?: () => void;
 }
@@ -49,6 +50,7 @@ export const OsgiVersionConflictPanel: React.FC<OsgiVersionConflictPanelProps> =
   const { setLogs } = useKarafConsole();
   const [newVersion, setNewVersion] = useState('');
   const [isApplying, setIsApplying] = useState(false);
+  const [autoRevert, setAutoRevert] = useState(true);
   const { bundle, dependency } = conflict;
   if (conflict.isLoadingBundles || !bundle) return null;
 
@@ -64,7 +66,12 @@ export const OsgiVersionConflictPanel: React.FC<OsgiVersionConflictPanelProps> =
         `(versão de desenvolvimento). Para alinhar, o pom.xml passará a depender de "${dependency.artifactId}" em ${targetVersion}.\n\n` +
         'Isso faz o projeto compilar contra a versão instalada. Será gerado um pom.xml.bak ao lado do arquivo. ' +
         'Não esqueça de reverter a versão antes de commitar, se ela for só para teste local.' +
-        (thenRunProfile ? '\n\nDepois da alteração, o perfil atual será executado (clean install, repositório e instalação).' : ''),
+        (thenRunProfile
+          ? '\n\nDepois da alteração, o perfil atual será executado (clean install, repositório e instalação).' +
+            (autoRevert
+              ? ' Se terminar com sucesso, o pom.xml volta sozinho ao valor original (o que foi instalado no Karaf não muda). Se falhar, ele continua alterado e o alerta fica na tela.'
+              : '')
+          : ''),
       details: `${dependency.projectPath}/pom.xml\n${dependency.artifactId}: ${dependency.version || '(sem versão)'} → ${targetVersion}`,
       confirmLabel: thenRunProfile ? 'Alterar e executar perfil' : 'Alterar pom',
       tone: 'warning'
@@ -101,7 +108,25 @@ export const OsgiVersionConflictPanel: React.FC<OsgiVersionConflictPanelProps> =
         `[ALERTA] Esta alteração do pom.xml é só para teste local: NÃO COMMITE. Reverta antes de enviar o código.\r\n`
       ]);
       showToast('pom.xml alterado só para teste local: NÃO commite esta alteração.', 'info');
-      if (thenRunProfile) onRunActiveProfile?.();
+      if (thenRunProfile) {
+        const succeeded = await onRunActiveProfile?.();
+        if (succeeded === true && autoRevert) {
+          const entry = findAlteredPom(res.targetPomPath, dependency.artifactId);
+          const reverted = entry ? await revertAlteredPom(entry) : { success: false, error: 'alteração não encontrada' };
+          setLogs((prev) => [
+            ...prev,
+            reverted.success
+              ? `[INFO] Perfil concluído: pom.xml revertido automaticamente (${dependency.artifactId} voltou a ${entry?.previousValue}).\r\n`
+              : `[ALERTA] Não consegui reverter o pom.xml sozinho (${reverted.error}). Reverta pelo alerta da tela Deploy: NÃO COMMITE.\r\n`
+          ]);
+          showToast(
+            reverted.success
+              ? 'Instalado e pom.xml revertido automaticamente.'
+              : 'Instalado, mas o pom.xml não foi revertido: reverta antes de commitar.',
+            reverted.success ? 'success' : 'error'
+          );
+        }
+      }
     } finally {
       setIsApplying(false);
     }
@@ -187,6 +212,17 @@ export const OsgiVersionConflictPanel: React.FC<OsgiVersionConflictPanelProps> =
               >
                 <Play className="w-3 h-3 fill-current" /> Alterar e executar perfil
               </button>
+            )}
+            {onRunActiveProfile && (
+              <label className="flex items-center gap-1.5 text-muted-foreground basis-full cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoRevert}
+                  onChange={(e) => setAutoRevert(e.target.checked)}
+                  className="accent-primary"
+                />
+                Reverter o pom sozinho se o perfil terminar com sucesso
+              </label>
             )}
           </div>
         </div>

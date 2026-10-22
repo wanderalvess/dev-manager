@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
 import { AlertTriangle, RotateCcw, X } from 'lucide-react';
-import { dismissAlteredPom, useAlteredPoms } from '../../hooks/deploy/useAlteredPoms';
+import { dismissAlteredPom, revertAlteredPom, useAlteredPoms } from '../../hooks/deploy/useAlteredPoms';
 import type { AlteredPom } from '../../utils/alteredPoms';
 import { requestConfirm } from '../ui/confirmService';
 import { showToast } from '../ToastHost';
-
-interface PomOutcome {
-  success: boolean;
-  error?: string;
-}
 
 /**
  * Alerta fixo enquanto houver pom.xml alterado só para teste local. Some quando o operador reverte pelo app ou diz que
@@ -31,17 +26,12 @@ export const AlteredPomsBanner: React.FC = () => {
     if (!ok) return;
     setBusyId(e.id);
     try {
-      const res = (await window.electronAPI.updatePomDependencyVersion(
-        e.projectPath,
-        { artifactId: e.artifactId, groupId: e.groupId, newVersion: e.previousValue },
-        false
-      )) as PomOutcome;
+      const res = await revertAlteredPom(e);
       if (!res.success) {
         showToast(res.error || 'Não foi possível reverter o pom.xml.', 'error');
         return;
       }
-      dismissAlteredPom(e.id);
-      showToast('pom.xml revertido. O pom.xml.bak ao lado pode ser apagado.', 'success');
+      showToast(res.removedBackup ? 'pom.xml revertido e pom.xml.bak removido.' : 'pom.xml revertido. Apague o pom.xml.bak ao lado, se ainda existir.', 'success');
     } finally {
       setBusyId(null);
     }
