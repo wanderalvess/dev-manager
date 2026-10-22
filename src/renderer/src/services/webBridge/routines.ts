@@ -78,9 +78,6 @@ export function createRoutinesApi({ apiFetch, wsManager }: BridgeDeps) {
       const query = authCookie ? `?authCookie=${encodeURIComponent(authCookie)}` : '';
       return apiFetch(`/api/routines/ccw-cycles${query}`);
     },
-      const query = authCookie ? `?authCookie=${encodeURIComponent(authCookie)}` : '';
-      return apiFetch(`/api/routines/ccw-catalog${query}`);
-    },
 
     getCcwDownloadUrl: async (routineName: string, winthorVersion?: string): Promise<string> => {
       const params = new URLSearchParams({ routineName });

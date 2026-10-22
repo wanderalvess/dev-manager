@@ -674,10 +674,6 @@ app.get('/api/routines/ccw-cycles', async (req, res) => {
   const result = await routinesService.getCcwEvolutionCycles(authCookie);
   res.json(result);
 });
-  const authCookie = (req.query.authCookie as string) || undefined;
-  const result = await routinesService.getCcwCatalog(authCookie);
-  res.json(result);
-});
 
 app.get('/api/routines/ccw-download-url', (req, res) => {
   const routineName = (req.query.routineName as string) || '';

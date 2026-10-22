@@ -447,7 +447,6 @@ const electronAPI = {
     ipcRenderer.invoke('routines:get-ccw-catalog', authCookie),
   getCcwEvolutionCycles: (authCookie?: string): Promise<{ success: boolean; cycles: string[]; message?: string; error?: string }> =>
     ipcRenderer.invoke('routines:get-ccw-cycles', authCookie),
-    ipcRenderer.invoke('routines:get-ccw-catalog', authCookie),
   getCcwDownloadUrl: (routineName: string, winthorVersion?: string): Promise<string> =>
     ipcRenderer.invoke('routines:get-ccw-download-url', routineName, winthorVersion),
   listRoutineBackups: (routineIdOrName: string, moduleFolder?: string): Promise<RoutineBackupEntry[]> =>
