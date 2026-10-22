@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import type { ChildProcess } from 'child_process';
 import { AppSettings, getKarafSshPort, OsgiResolutionDiagnosticSummary } from '../../../shared/types';
 import { isSafeKarafCommand } from '../../utils/security';
 import { CapturedProcessResult, runCapturedProcess } from '../../utils/process';
@@ -15,13 +16,14 @@ import {
 import { listLocalProjectsFast, tryFindPomXml } from './karafProjectFiles';
 import type { ChunkHandler, KarafCommandResult, KarafContext, KarafCredentials } from './karafContext';
 
-async function runClientProcess(
+export async function runClientProcess(
   settings: AppSettings,
   karafClient: string,
   clientArgs: string[],
   childEnv: NodeJS.ProcessEnv,
   onChunk: ChunkHandler,
-  effectiveTimeoutMs: number
+  effectiveTimeoutMs: number | undefined,
+  onSpawn?: (child: ChildProcess) => void
 ): Promise<CapturedProcessResult> {
   const isWin = process.platform === 'win32';
   const isWsl = isWslKaraf(settings);
@@ -31,11 +33,11 @@ async function runClientProcess(
         const targetDistro = wslClient?.distro || settings.karafWslDistro!;
         const targetClient = wslClient?.linuxClientPath || karafClient;
         const wslCmd = buildWslClientArgs(targetDistro, targetClient, clientArgs);
-        return runCapturedProcess(wslCmd.command, wslCmd.args, { env: childEnv }, onChunk, effectiveTimeoutMs);
+        return runCapturedProcess(wslCmd.command, wslCmd.args, { env: childEnv }, onChunk, effectiveTimeoutMs, onSpawn);
       })()
     : isWin
-      ? await runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs)
-      : await runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs);
+      ? await runCapturedProcess('cmd.exe', ['/c', karafClient, ...clientArgs], { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs, onSpawn)
+      : await runCapturedProcess(karafClient, clientArgs, { cwd: path.dirname(karafClient), env: childEnv }, onChunk, effectiveTimeoutMs, onSpawn);
 }
 
 function emitTimeoutHint(command: string, res: CapturedProcessResult, effectiveTimeoutMs: number, onChunk: ChunkHandler): void {

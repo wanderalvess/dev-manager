@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { delphiApi } from './delphiApi';
+import { karafStreamApi } from './karafStreamApi';
 import type {
   AppSettings,
   UsageDays,
@@ -343,6 +344,7 @@ const electronAPI = {
     ipcRenderer.invoke('routine801:install-features', request),
 
   ...delphiApi,
+  ...karafStreamApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (

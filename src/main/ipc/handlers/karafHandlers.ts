@@ -76,6 +76,18 @@ export function registerKarafHandlers(ctx: IpcContext): void {
     }
   );
 
+  ipcMain.handle('karaf:stream-start', async (_, command: string) => {
+    return await karafService.startKarafStream(
+      command,
+      (chunk) => safeSend(mainWindow, 'karaf:log-chunk', chunk),
+      (id, code) => safeSend(mainWindow, 'karaf:stream-end', { id, code })
+    );
+  });
+
+  ipcMain.handle('karaf:stream-stop', async (_, id: string) => {
+    return { success: karafService.stopKarafStream(id) };
+  });
+
   ipcMain.handle('karaf:list-deploy-history', async () => {
     return karafService.getDeployHistory();
   });

@@ -30,6 +30,7 @@ import * as projectFiles from './karaf/karafProjectFiles';
 import * as executables from './karaf/karafExecutables';
 import { getResolvedJavaEnv } from './karaf/karafJavaEnv';
 import { executeKarafCommand } from './karaf/karafExecute';
+import { KarafStreamManager, type KarafStreamStart } from './karaf/karafStream';
 import * as embedded from './karaf/karafEmbedded';
 import * as deployOps from './karaf/karafDeploy';
 import * as bundleQuery from './karaf/karafBundleQuery';
@@ -51,6 +52,7 @@ export class KarafService {
   private configService: ConfigService;
   private embeddedKarafProcess: ChildProcess | null = null;
   private readonly ctx: KarafContext;
+  private readonly streams = new KarafStreamManager();
 
   constructor(configService: ConfigService) {
     this.configService = configService;
@@ -102,6 +104,24 @@ export class KarafService {
     context?: { projectPath?: string; pomXmlContent?: string }
   ): Promise<KarafCommandResult> {
     return executeKarafCommand(this.ctx, command, onChunk, credentials, timeoutMs, context);
+  }
+
+  /** Inicia um comando que fica rodando (log:tail). A saída segue em `onChunk`; `onEnd` avisa quando o processo termina. */
+  public startKarafStream(
+    command: string,
+    onChunk: ChunkHandler,
+    onEnd: (id: string, code: number) => void,
+    credentials?: KarafCredentials
+  ): Promise<KarafStreamStart> {
+    return this.streams.start(this.ctx, command, onChunk, onEnd, credentials);
+  }
+
+  public stopKarafStream(id: string): boolean {
+    return this.streams.stop(id);
+  }
+
+  public stopAllKarafStreams(): void {
+    this.streams.stopAll();
   }
 
   public async verifyInstallation(

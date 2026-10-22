@@ -29,7 +29,7 @@ export const EnvironmentModuleCard: React.FC<EnvironmentModuleCardProps> = ({ de
       <span><strong>Parada dos Serviços:</strong> Interrompe serviços em segundo plano do Windows para liberar portas de rede.</span>
       <span><strong>Encerramento de Travas:</strong> Finaliza processos presos que travam arquivos JAR ou portas TCP.</span>
       <span><strong>Inicialização da IDE:</strong> Abre automaticamente o IntelliJ IDEA, VS Code ou Cursor conforme configurado.</span>
-      <span><strong>Servidor Debug:</strong> Inicia o Karaf em modo JDWP (<code className="font-mono text-primary">:{debugPort}</code>) com Console Integrado interativo ou Janela Externa. O console fica no rodapé de qualquer tela (<code className="font-mono text-primary">Ctrl+`</code>) e é o mesmo do módulo Deploy.</span>
+      <span><strong>Servidor Debug:</strong> Inicia o Karaf em modo JDWP (<code className="font-mono text-primary">:{debugPort}</code>) com Console Integrado interativo ou Janela Externa. O console fica no rodapé de qualquer tela (<code className="font-mono text-primary">Ctrl+`</code>) e é o mesmo do módulo Deploy. Na barra do console: <strong>Tail do log</strong> (log:tail ao vivo, com <em>Parar tail</em>) e <strong>Watch</strong> (bundle:watch em todos os bundles, em ids ou em URLs mvn:).</span>
     </ModuleBullets>
   </ModuleCardShell>
 );

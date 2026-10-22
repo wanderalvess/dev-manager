@@ -756,7 +756,8 @@ client.bat "feature:install -r custom-feature/2.0.0"
         expect.any(Array),
         expect.any(Object),
         expect.any(Function),
-        300000
+        300000,
+        undefined
       );
 
       await karafService.executeKarafCommand('bundle:list', () => {});
@@ -765,7 +766,8 @@ client.bat "feature:install -r custom-feature/2.0.0"
         expect.any(Array),
         expect.any(Object),
         expect.any(Function),
-        60000
+        60000,
+        undefined
       );
     });
 
