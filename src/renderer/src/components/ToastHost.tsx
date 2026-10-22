@@ -24,6 +24,14 @@ export function showToast(message: string, variant: ToastVariant = 'success'): v
   listeners.forEach((listener) => listener(toast));
 }
 
+// Fundo opaco (cor do card com um toque da cor do tipo): o toast flutua sobre a tela e, translúcido, o texto se perdia no conteúdo.
+const TOAST_STYLE: Record<ToastVariant, string> = {
+  success:
+    'bg-[color-mix(in_srgb,var(--color-success)_14%,var(--color-card))] border-success/40 border-l-success',
+  info: 'bg-[color-mix(in_srgb,var(--color-primary)_14%,var(--color-card))] border-primary/40 border-l-primary',
+  error: 'bg-[color-mix(in_srgb,var(--color-danger)_14%,var(--color-card))] border-danger/40 border-l-danger'
+};
+
 const AUTO_DISMISS_MS: Record<ToastVariant, number> = {
   success: 5000,
   error: 10000,
@@ -55,20 +63,15 @@ export const ToastHost: React.FC = () => {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`flex items-start gap-2 p-3 rounded-xl border shadow-2xl text-xs animate-fade-in ${
-            toast.variant === 'success'
-              ? 'bg-success/10 border-success/30 text-success'
-              : toast.variant === 'info'
-                ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-danger/10 border-danger/30 text-danger'
-          }`}
+          role={toast.variant === 'error' ? 'alert' : 'status'}
+          className={`flex items-start gap-2 p-3 rounded-xl border border-l-4 shadow-2xl text-xs text-foreground animate-fade-in ${TOAST_STYLE[toast.variant]}`}
         >
           {toast.variant === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-success" />
           ) : toast.variant === 'info' ? (
-            <Info className="w-4 h-4 shrink-0 mt-0.5" />
+            <Info className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
           ) : (
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
           )}
           <span className="flex-1 wrap-break-word whitespace-pre-line">{toast.message}</span>
           <button

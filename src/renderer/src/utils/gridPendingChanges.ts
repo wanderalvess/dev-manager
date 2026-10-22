@@ -113,6 +113,9 @@ export interface ApplyOutcome {
  * sai da lista; o que falhou (e o resto) continua pendente. UPDATE/DELETE que afetaram mais de uma linha são
  * reportados como falha, pois a chave não identificou uma linha só.
  */
+const NO_ROW_AFFECTED =
+  'nenhuma linha foi afetada. A linha pode ter sido alterada ou excluída por outro usuário, ou um valor da chave não casa (data, número grande ou texto formatado). Recarregue a consulta e tente de novo.';
+
 export async function applyPendingChanges(pending: PendingChanges, exec: PendingExecutor): Promise<ApplyOutcome> {
   let remaining = pending;
   let applied = 0;
@@ -120,6 +123,7 @@ export async function applyPendingChanges(pending: PendingChanges, exec: Pending
   for (const u of pending.updates) {
     const res = await exec.update(u.where, u.changes);
     if (!res.success) return { applied, remaining, failure: { description: `UPDATE (${Object.keys(u.changes).join(', ')})`, error: res.error ?? 'Falha ao atualizar.' } };
+    if (res.affectedRows === 0) return { applied, remaining, failure: { description: `UPDATE (${Object.keys(u.changes).join(', ')})`, error: NO_ROW_AFFECTED } };
     if ((res.affectedRows ?? 1) > 1) {
       return {
         applied: applied + 1,
@@ -134,6 +138,7 @@ export async function applyPendingChanges(pending: PendingChanges, exec: Pending
   for (const d of pending.deletes) {
     const res = await exec.remove(d.where);
     if (!res.success) return { applied, remaining, failure: { description: 'DELETE', error: res.error ?? 'Falha ao excluir.' } };
+    if (res.affectedRows === 0) return { applied, remaining, failure: { description: 'DELETE', error: NO_ROW_AFFECTED } };
     if ((res.affectedRows ?? 1) > 1) {
       return {
         applied: applied + 1,

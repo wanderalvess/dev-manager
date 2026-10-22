@@ -139,6 +139,20 @@ describe('applyPendingChanges', () => {
     expect(out.remaining.updates).toEqual([]);
   });
 
+  it('DELETE ou UPDATE que não afetou nenhuma linha vira falha e a pendência fica para nova tentativa', async () => {
+    const del = makeExec({ remove: vi.fn(async () => ({ success: true, affectedRows: 0 })) });
+    const outDel = await applyPendingChanges({ updates: [], deletes: [{ key: 'k', where: { ID: 1 } }], inserts: [] }, del.exec);
+    expect(outDel.failure?.description).toBe('DELETE');
+    expect(outDel.failure?.error).toMatch(/nenhuma linha foi afetada/);
+    expect(outDel.applied).toBe(0);
+    expect(outDel.remaining.deletes).toHaveLength(1);
+
+    const upd = makeExec({ update: vi.fn(async () => ({ success: true, affectedRows: 0 })) });
+    const outUpd = await applyPendingChanges({ updates: [{ key: 'k', where: { ID: 1 }, changes: { A: 2 } }], deletes: [], inserts: [] }, upd.exec);
+    expect(outUpd.failure?.error).toMatch(/nenhuma linha foi afetada/);
+    expect(outUpd.remaining.updates).toHaveLength(1);
+  });
+
   it('sem pendências não executa nada', async () => {
     const { exec } = makeExec();
     const out = await applyPendingChanges(EMPTY_PENDING, exec);

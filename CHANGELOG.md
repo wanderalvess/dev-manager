@@ -23,6 +23,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Daqui em diante**: o botão das etapas fica sempre visível, com texto, e não só ao passar o mouse.
 
 ### Corrigido
+- **DB Studio: excluir/alterar linha com data na chave dava `ORA-01861`** (literal does not match format string). A grid recebe `DATE`/`TIMESTAMP` do Oracle como texto ISO UTC e o texto ia como bind contra a coluna, que o Oracle tenta converter pelo `NLS_DATE_FORMAT`. Agora, quando o `WHERE` tem esse tipo de texto, o app consulta os tipos da tabela e compara as colunas `DATE` com `TO_DATE` e as `TIMESTAMP` com `TO_TIMESTAMP` (janela de 1 ms), na hora local em que o driver leu o valor. Colunas de texto continuam comparadas como texto.
+- **DB Studio: exclusão/alteração que não afetou nenhuma linha** era contada como aplicada; agora vira falha explicando que a chave pode não casar (data, número grande ou texto formatado), e a pendência fica para nova tentativa.
+- **Notificações quase transparentes**: os toasts usavam fundo a 10% de opacidade sobre a tela; agora têm fundo opaco (cor do card com um toque do tipo), faixa lateral colorida e texto na cor padrão.
 - **Edição de versão no pom**: quando a dependência usa `${propriedade}`, a propriedade é alterada (antes a referência era trocada por um literal); propriedade que vem do pai é recusada com aviso, e versões com caracteres de XML são rejeitadas.
 - **Diagnóstico OSGi**: o comando sugerido era `bundle:list -s | grep` com o pacote sem os pontos (`combrcompcsist…`), que nunca casava; agora é `package:exports | grep <pacote>`. Com vários perfis possíveis, vence o nome mais específico do pacote, não o primeiro da lista.
 - **Rodar de uma etapa em diante / etapas escolhidas** mantêm o projeto de contexto herdado da etapa anterior (antes a etapa Karaf podia perder o projeto do build).
