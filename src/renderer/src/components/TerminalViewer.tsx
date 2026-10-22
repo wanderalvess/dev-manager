@@ -17,6 +17,8 @@ interface TerminalViewerProps {
   defaultWordWrap?: boolean;
   onToggleMaximize?: () => void;
   isMaximized?: boolean;
+  /** Aplica um filtro de texto vindo de fora (ex.: "ver log deste bundle"); o nonce reaplica o mesmo texto. */
+  externalSearch?: { text: string; nonce: number } | null;
   onAbort?: () => void;
   className?: string;
 }
@@ -31,10 +33,11 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   defaultWordWrap = false,
   onToggleMaximize,
   isMaximized = false,
+  externalSearch = null,
   onAbort,
   className = ''
 }) => {
-  const viewer = useTerminalViewer(logs, defaultWordWrap);
+  const viewer = useTerminalViewer(logs, defaultWordWrap, externalSearch);
   const command = useTerminalCommandInput(onSendCommand, onAbort);
   const { wordWrap, filteredLogs } = viewer;
 

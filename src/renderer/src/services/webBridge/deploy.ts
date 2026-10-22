@@ -5,6 +5,7 @@ import type {
   DeployProgressEvent,
   OsgiResolutionDiagnosticSummary
 } from '../../../../shared/types';
+import type { DeployQueueProject } from '../../../../shared/deployQueue';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
 
@@ -29,6 +30,10 @@ export function createDeployApi({ apiFetch, wsManager }: BridgeDeps) {
         method: 'POST',
         body: JSON.stringify({ step, profileName })
       });
+    },
+
+    scanDeployWorkspace: async (): Promise<{ projectsPath: string; projects: DeployQueueProject[] }> => {
+      return apiFetch('/api/deploy/scan-workspace');
     },
 
     abortDeploy: async (): Promise<{ success: boolean }> => {

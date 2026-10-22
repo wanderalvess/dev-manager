@@ -11,15 +11,12 @@ import { QuickLinks } from '../components/environment/QuickLinks';
 import { StepCardsPanel } from '../components/environment/StepCardsPanel';
 import { NetworkInfoCard } from '../components/environment/NetworkInfoCard';
 import { DiagnosticsPanel } from '../components/environment/DiagnosticsPanel';
-import { EnvironmentConsolePanel } from '../components/environment/EnvironmentConsolePanel';
-import { KarafHistoryModal } from '../components/environment/modals/KarafHistoryModal';
 import { useEnvironmentProfiles } from '../hooks/environment/useEnvironmentProfiles';
 import { useEnvironmentStatus } from '../hooks/environment/useEnvironmentStatus';
 import { useEnvironmentLogs } from '../hooks/environment/useEnvironmentLogs';
 import { useEnvironmentProfileRun } from '../hooks/environment/useEnvironmentProfileRun';
 import { useEnvironmentStepActions } from '../hooks/environment/useEnvironmentStepActions';
 import { useEnvironmentServiceActions } from '../hooks/environment/useEnvironmentServiceActions';
-import { useKarafHistory } from '../hooks/environment/useKarafHistory';
 
 interface EnvironmentPageProps {
   services: ServiceStatus[];
@@ -53,11 +50,10 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   });
   const { ports, processes, refreshAllStatus } = status;
 
-  const { logs, setLogs } = useEnvironmentLogs({
+  const { setLogs } = useEnvironmentLogs({
     refreshAllStatus,
     checkKarafRunning: status.checkKarafRunning
   });
-  const karafHistory = useKarafHistory();
 
   const serviceActions = useEnvironmentServiceActions({ services, refreshAllStatus, setLogs });
   const profileRun = useEnvironmentProfileRun({
@@ -67,23 +63,6 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     setActionLoading: serviceActions.setActionLoading
   });
   const stepActions = useEnvironmentStepActions({ activeProfile, refreshAllStatus });
-
-  const handleSendKarafCommand = (cmd: string) => {
-    if (window.electronAPI && window.electronAPI.sendKarafInput) {
-      setLogs((prev) => [...prev, `karaf@root()> ${cmd}\r\n`]);
-      window.electronAPI.sendKarafInput(cmd);
-    }
-  };
-
-  const handleInterruptKaraf = () => {
-    if (window.electronAPI?.sendKarafInterrupt) {
-      setLogs((prev) => [...prev, '^C\r\n']);
-      window.electronAPI.sendKarafInterrupt();
-    } else if (window.electronAPI?.sendKarafInput) {
-      setLogs((prev) => [...prev, '^C\r\n']);
-      window.electronAPI.sendKarafInput('\x03');
-    }
-  };
 
   const handleOpenLink = (url: string) => {
     if (window.electronAPI) {
@@ -146,7 +125,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         />
       </div>
 
-      {/* Grid principal: cartões das etapas à esquerda / console à direita */}
+      {/* Grid principal: etapas à esquerda / rede e diagnósticos à direita (o console fica no dock global) */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-0 min-w-0">
         <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0 lg:overflow-y-auto lg:pr-2 lg:pb-2">
           <StepCardsPanel
@@ -164,7 +143,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             onRestart={stepActions.handleRestartStep}
             onToggleService={stepActions.handleToggleServiceStep}
           />
+        </div>
 
+        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0 lg:overflow-y-auto lg:pr-2 lg:pb-2">
           {status.networkIps && (
             <NetworkInfoCard networkIps={status.networkIps} onRefresh={status.fetchNetworkIps} />
           )}
@@ -181,30 +162,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             onKillProcess={serviceActions.handleKillProcess}
           />
         </div>
-
-        <EnvironmentConsolePanel
-          logs={logs}
-          title={`Console de Operações - ${activeProfile?.name || 'Ambiente'}`}
-          isRunning={profileRun.isRunningProfile || status.isKarafEmbeddedRunning}
-          isKarafEmbeddedRunning={status.isKarafEmbeddedRunning}
-          onClear={() => setLogs([])}
-          onSendKarafCommand={handleSendKarafCommand}
-          onAbort={status.isKarafEmbeddedRunning ? handleInterruptKaraf : undefined}
-          onOpenHistory={karafHistory.open}
-        />
       </div>
-
-      {karafHistory.isOpen && (
-        <KarafHistoryModal
-          output={karafHistory.output}
-          filtered={karafHistory.filtered}
-          search={karafHistory.search}
-          isLoading={karafHistory.isLoading}
-          onSearchChange={karafHistory.setSearch}
-          onClear={karafHistory.clear}
-          onClose={karafHistory.close}
-        />
-      )}
 
       {/* Modal de Criação / Edição de Perfil de Automação */}
       <ProfileEditorModal

@@ -615,6 +615,7 @@ O mesmo conjunto de services alimenta o IPC do Electron, a API REST e o servidor
 | Atalho | Ação |
 | :--- | :--- |
 | `Ctrl + K` / `Cmd + K` | Abre o **Quick Launcher (Spotlight)** com busca unificada e ações rápidas |
+| `` Ctrl + ` `` | Abre/fecha o **Console do Karaf** no rodapé (qualquer tela) |
 | `Alt + 1` | Navega para a aba **Ambiente Dev** |
 | `Alt + 2` | Navega para a aba **Database Studio** |
 | `Alt + 3` | Navega para a aba **Containers** |

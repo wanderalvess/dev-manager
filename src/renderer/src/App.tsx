@@ -3,6 +3,8 @@ import { Header } from './components/Header';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
 import { AppPageHost } from './components/app/AppPageHost';
 import { AppGlobalModals } from './components/app/AppGlobalModals';
+import { ConsoleDock } from './components/console/ConsoleDock';
+import { KarafConsoleProvider } from './hooks/karafConsole/KarafConsoleContext';
 import { useAppShellNavigation } from './hooks/app/useAppShellNavigation';
 import { useAppShellData } from './hooks/app/useAppShellData';
 import { useAppShellOnboarding } from './hooks/app/useAppShellOnboarding';
@@ -32,6 +34,7 @@ export const App: React.FC = () => {
   useAppShellNotifications();
 
   return (
+    <KarafConsoleProvider>
     <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden select-none transition-colors duration-300">
       {/* Topo / Header Cockpit */}
       <Header
@@ -72,6 +75,8 @@ export const App: React.FC = () => {
         onResetPageTours={onboarding.handleResetPageTours}
       />
 
+      <ConsoleDock />
+
       <AppGlobalModals
         isSplashOpen={onboarding.isSplashOpen}
         isNewUser={onboarding.isNewUser}
@@ -94,6 +99,7 @@ export const App: React.FC = () => {
         onCloseWhatsNew={() => onboarding.setIsWhatsNewOpen(false)}
       />
     </div>
+    </KarafConsoleProvider>
   );
 };
 

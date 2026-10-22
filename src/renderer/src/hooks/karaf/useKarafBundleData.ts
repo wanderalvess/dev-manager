@@ -3,6 +3,8 @@ import { KarafBundleInfo } from '../../../../shared/types';
 import { KarafContainerStatus } from '../../utils/karafBundleUtils';
 import { requestConfirm } from '../../components/ui/confirmService';
 
+const BUNDLE_REFRESH_MS = 10000;
+
 /**
  * Lista de bundles, status do container Karaf, polling de inicialização
  * e ações de ciclo de vida (subir/parar).
@@ -80,6 +82,15 @@ export function useKarafBundleData(isOpen: boolean) {
       fetchBundles();
     }
   }, [isOpen, fetchBundles]);
+
+  // Mantém a lista em dia com o que acontece fora da tela (bundle:watch, deploy, comandos do console).
+  useEffect(() => {
+    if (!isOpen || karafStatus !== 'ONLINE') return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') void fetchBundles(true);
+    }, BUNDLE_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [isOpen, karafStatus, fetchBundles]);
 
   const handleLaunchKarafDebug = async () => {
     if (!window.electronAPI?.launchServerDebug) return;

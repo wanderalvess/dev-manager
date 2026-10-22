@@ -16,13 +16,13 @@ import {
 import { listLocalProjectsFast, tryFindPomXml } from './karafProjectFiles';
 import type { ChunkHandler, KarafCommandResult, KarafContext, KarafCredentials } from './karafContext';
 
-async function runClientProcess(
+export async function runClientProcess(
   settings: AppSettings,
   karafClient: string,
   clientArgs: string[],
   childEnv: NodeJS.ProcessEnv,
   onChunk: ChunkHandler,
-  effectiveTimeoutMs: number,
+  effectiveTimeoutMs: number | undefined,
   onSpawn?: (child: ChildProcess) => void
 ): Promise<CapturedProcessResult> {
   const isWin = process.platform === 'win32';

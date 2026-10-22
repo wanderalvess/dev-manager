@@ -216,6 +216,7 @@ function createWindow() {
     backupSchedulerService.stopAll();
     void apmService.stopReceiver().catch(() => undefined);
     void karafService.stopEmbeddedKaraf().catch(() => undefined);
+    karafService.stopAllKarafStreams();
   });
   autoUpdateService.checkForUpdates();
   // Rechecagem periódica: cobre o app que fica dias aberto sem reiniciar, sem depender só do check no boot.

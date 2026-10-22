@@ -34,8 +34,8 @@ export const DEPLOY_TOUR_STEPS: TourStep[] = [
     desc: 'Dispara todas as etapas do perfil ativo em sequência, uma após a outra.'
   },
   {
-    target: 'deploy-console-output',
-    title: 'Console de Saída',
-    desc: 'Exibe em tempo real os logs do deploy ou das etapas sendo executadas.'
+    target: 'console-dock',
+    title: 'Console do Karaf',
+    desc: 'O console fica no rodapé de qualquer tela (Ctrl+`). Ele abre sozinho ao executar o deploy e mostra os logs das etapas.'
   }
 ];

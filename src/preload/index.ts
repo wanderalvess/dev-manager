@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { delphiApi } from './delphiApi';
+import { karafStreamApi } from './karafStreamApi';
+import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
   AppSettings,
   UsageDays,
@@ -345,6 +347,7 @@ const electronAPI = {
     ipcRenderer.invoke('routine801:install-features', request),
 
   ...delphiApi,
+  ...karafStreamApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (
@@ -356,6 +359,8 @@ const electronAPI = {
     profileName?: string
   ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> =>
     ipcRenderer.invoke('deploy:run-step', step, profileName),
+  scanDeployWorkspace: (): Promise<{ projectsPath: string; projects: DeployQueueProject[] }> =>
+    ipcRenderer.invoke('deploy:scan-workspace'),
   abortDeploy: (): Promise<{ success: boolean }> => ipcRenderer.invoke('deploy:abort'),
   getDeployProfileHistory: (): Promise<DeployProfileHistoryEntry[]> =>
     ipcRenderer.invoke('deploy:get-history'),

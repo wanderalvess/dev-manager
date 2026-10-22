@@ -16,6 +16,7 @@ import { NetworkService } from './NetworkService';
 import { PomService } from './PomService';
 import { isSafeKarafCommand } from '../utils/security';
 import { runCapturedProcess, killProcessTree } from '../utils/process';
+import { resolveContextProjectPath } from './deploy/deployContext';
 
 const MAX_DEPLOY_HISTORY_ENTRIES = 100;
 
@@ -489,9 +490,39 @@ export class DeployService {
     }
   }
 
-  public async executeProfile(
+  // Uma execução por vez: abort e processo ativo são da instância, então duas execuções simultâneas se cancelariam.
+  private isExecuting = false;
+
+  private async withExecutionLock<T extends { success: boolean; error?: string }>(
+    onChunk: (chunk: string) => void,
+    run: () => Promise<T>
+  ): Promise<T | { success: false; error: string }> {
+    if (this.isExecuting) {
+      const error = 'Já existe um deploy em execução. Aguarde terminar ou aborte antes de iniciar outro.';
+      onChunk(`
+[ERRO] ${error}
+`);
+      return { success: false, error };
+    }
+    this.isExecuting = true;
+    try {
+      return await run();
+    } finally {
+      this.isExecuting = false;
+    }
+  }
+
+  public executeProfile(
     profile: DeployProfile,
     onChunk: (chunk: string) => void = () => {},
+    onStepProgress?: (event: DeployProgressEvent) => void
+  ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
+    return this.withExecutionLock(onChunk, () => this.executeProfileUnlocked(profile, onChunk, onStepProgress));
+  }
+
+  private async executeProfileUnlocked(
+    profile: DeployProfile,
+    onChunk: (chunk: string) => void,
     onStepProgress?: (event: DeployProgressEvent) => void
   ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     this.isAborted = false;
@@ -499,7 +530,6 @@ export class DeployService {
     const steps = (profile.steps || []).filter((s) => s.enabled !== false);
     const total = steps.length;
     const stepResults: DeployStepResult[] = [];
-    const contextProjectPath = steps.find((s) => s.projectPath)?.projectPath;
 
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`INICIANDO PERFIL DE DEPLOY: "${profile.name}"\r\n`);
@@ -583,7 +613,7 @@ export class DeployService {
       });
 
       const stepStart = Date.now();
-      const result = await this.runStep(step, onChunk, contextProjectPath);
+      const result = await this.runStep(step, onChunk, resolveContextProjectPath(steps, i));
       const stepDuration = Date.now() - stepStart;
 
       if (result.code !== 0) {
@@ -694,9 +724,17 @@ export class DeployService {
     return { success: true };
   }
 
-  public async executeSingleStep(
+  public executeSingleStep(
     step: DeployStep,
     onChunk: (chunk: string) => void = () => {},
+    profileName?: string
+  ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
+    return this.withExecutionLock(onChunk, () => this.executeSingleStepUnlocked(step, onChunk, profileName));
+  }
+
+  private async executeSingleStepUnlocked(
+    step: DeployStep,
+    onChunk: (chunk: string) => void,
     profileName?: string
   ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     this.isAborted = false;
@@ -709,7 +747,9 @@ export class DeployService {
     if (!contextProjectPath && profileName) {
       const profiles = this.configService.getSettings().deployProfiles || [];
       const parentProfile = profiles.find((p) => p.name === profileName || p.id === profileName);
-      contextProjectPath = parentProfile?.steps?.find((s) => s.projectPath)?.projectPath;
+      const parentSteps = (parentProfile?.steps || []).filter((s) => s.enabled !== false);
+      const at = parentSteps.findIndex((s) => s.id === step.id);
+      contextProjectPath = resolveContextProjectPath(parentSteps, at < 0 ? parentSteps.length : at);
     }
 
     const result = await this.runStep(step, onChunk, contextProjectPath);

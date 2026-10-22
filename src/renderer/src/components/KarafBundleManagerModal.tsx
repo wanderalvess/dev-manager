@@ -1,5 +1,9 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { GitProjectInfo } from '../../../shared/types';
+import { GitProjectInfo, KarafBundleInfo } from '../../../shared/types';
+import { buildWatchCommand } from '../utils/karafWatchCommand';
+import { bundleLogFilter } from '../utils/karafBundleLogFilter';
+import { useKarafConsole } from '../hooks/karafConsole/KarafConsoleContext';
+import { showToast } from './ToastHost';
 import {
   computeBundleStats,
   computeScopeCounts,
@@ -34,6 +38,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>('ALL');
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const { requestConsole } = useKarafConsole();
   const data = useKarafBundleData(isOpen);
   const { bundles, fetchBundles } = data;
   const submodals = useKarafBundleSubmodals();
@@ -66,6 +71,23 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
     actions.inlineDiagBundle
   );
   useKarafBundleShortcuts(isOpen, onClose, searchRef, hasOpenSubmodal);
+
+  // O modal cobre a tela e o dock fica atrás dele: fecha o gerenciador (o estado dele é mantido) e mostra o console.
+  const handleOpenBundleLog = (bundle: KarafBundleInfo) => {
+    requestConsole({ filter: bundleLogFilter(bundle), tail: true });
+    onClose();
+  };
+
+  const handleWatchBundle = async (bundle: KarafBundleInfo) => {
+    const cmd = buildWatchCommand('start', bundle.id);
+    if (!cmd) return;
+    try {
+      await window.electronAPI?.execKarafDiagnostic(cmd);
+      showToast(`bundle:watch ativo no bundle ${bundle.id}. Pare em Console Karaf > Parar watch.`, 'success');
+    } catch (err: any) {
+      showToast(`Falha ao monitorar o bundle: ${err?.message || err}`, 'error');
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -148,6 +170,8 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
         onOpenInstall={(b) => submodals.handleOpenInstall(b)}
         onOpenDetails={(b) => submodals.setDetailsTarget(b)}
         onOpenUninstall={(b) => submodals.setUninstallTarget(b)}
+        onOpenBundleLog={handleOpenBundleLog}
+        onWatchBundle={handleWatchBundle}
         onBatchAction={actions.handleBatchAction}
       />
 

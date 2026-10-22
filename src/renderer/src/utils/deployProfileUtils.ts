@@ -48,11 +48,17 @@ export function buildProfileExportFileName(profileName: string): string {
 
 /** Retorna null quando o JSON não tem a forma mínima de um perfil de deploy. */
 export function buildImportedProfile(parsed: any, now: number = Date.now()): DeployProfile | null {
-  if (!parsed || !parsed.name || !Array.isArray(parsed.steps)) return null;
+  if (!parsed || typeof parsed.name !== 'string' || !parsed.name || !Array.isArray(parsed.steps)) return null;
+  if (parsed.steps.some((s: any) => !s || typeof s !== 'object' || typeof s.type !== 'string')) return null;
   return {
     ...parsed,
     id: `deploy-profile-${now}`,
-    name: `${parsed.name} (Importado)`
+    name: `${parsed.name} (Importado)`,
+    // Ids novos: importar o mesmo arquivo duas vezes não pode gerar etapas com id repetido entre perfis.
+    steps: parsed.steps.map((s: any) => ({
+      ...s,
+      id: `deploy-step-${now}-${Math.random().toString(36).substring(2, 7)}`
+    }))
   };
 }
 

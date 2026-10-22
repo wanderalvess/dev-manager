@@ -57,9 +57,19 @@ export function useKarafUninstallModal({ target, onClose, onSuccess }: UseKarafU
           if (matched) {
             setUninstallFeatureName(matched.name);
             if (matched.version) setUninstallFeatureVersion(matched.version);
+          } else {
+            // Bundle que não pertence a nenhuma feature instalada: o modo "feature" não teria o que remover.
+            setUninstallMode('bundle');
           }
+        } else {
+          setUninstallMode('bundle');
         }
-      }).catch((err) => console.error('Erro ao listar features no modal de uninstall:', err));
+      }).catch((err) => {
+        console.error('Erro ao listar features no modal de uninstall:', err);
+        setUninstallMode('bundle');
+      });
+    } else {
+      setUninstallMode('bundle');
     }
 
     if (window.electronAPI?.checkKarafBundleDeps) {
