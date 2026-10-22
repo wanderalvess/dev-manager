@@ -48,6 +48,25 @@ export function createDeployApi({ apiFetch, wsManager }: BridgeDeps) {
       return apiFetch('/api/deploy/history', { method: 'DELETE' });
     },
 
+    getPomCoordinates: async (projectPath: string) => {
+      return apiFetch(`/api/pom/coordinates?path=${encodeURIComponent(projectPath)}`);
+    },
+
+    listPomDependencies: async (projectPath: string) => {
+      return apiFetch(`/api/pom/dependencies?path=${encodeURIComponent(projectPath)}`);
+    },
+
+    updatePomDependencyVersion: async (
+      targetProjectPath: string,
+      dependency: { artifactId: string; newVersion: string; groupId?: string },
+      createBackup?: boolean
+    ) => {
+      return apiFetch('/api/pom/update-dependency-version', {
+        method: 'POST',
+        body: JSON.stringify({ targetProjectPath, dependency, createBackup })
+      });
+    },
+
     onDeployLogChunk: (callback: (chunk: string) => void) => {
       return wsManager.subscribe('deploy:log-chunk', callback);
     },

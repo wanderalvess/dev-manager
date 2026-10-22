@@ -135,7 +135,8 @@ export type DeployStepType =
   | 'command'
   | 'wait'
   | 'http-healthcheck'
-  | 'service-action';
+  | 'service-action'
+  | 'pom-sync-version';
 
 export interface DeployStep {
   id: string;
@@ -173,6 +174,17 @@ export interface DeployStep {
   // service-action
   serviceName?: string;
   serviceAction?: 'start' | 'stop' | 'restart';
+  // pom-sync-version
+  /** Caminho do projeto cuja versão será extraída (origem) */
+  sourceProjectPath?: string;
+  /** Caminho do projeto que receberá a versão da dependência (destino) */
+  targetProjectPath?: string;
+  /** ArtifactId da dependência a ter a versão atualizada no projeto destino */
+  targetDependencyArtifactId?: string;
+  /** GroupId opcional da dependência para desambiguação */
+  targetDependencyGroupId?: string;
+  /** Se deve criar cópia de segurança .bak do pom.xml antes de editar */
+  createPomBackup?: boolean;
 }
 
 export interface DeployProfile {
@@ -180,6 +192,20 @@ export interface DeployProfile {
   name: string;
   description?: string;
   steps: DeployStep[];
+}
+
+export interface DependencyChainNode {
+  id: string;
+  projectPath: string;
+  projectName: string;
+  skipTests?: boolean;
+  deployToKaraf?: boolean;
+}
+
+export interface DependencyChainConfig {
+  name: string;
+  nodes: DependencyChainNode[];
+  createPomBackups?: boolean;
 }
 
 export interface OsgiResolutionDiagnosticSummary {

@@ -42,8 +42,16 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
   };
 
   const handleAbortDeploy = async () => {
-    if (!isDeploying && !runningStepId) return;
+    if (!isDeploying && !runningStepId && !isDiagRunning) return;
     try {
+      if (isDiagRunning) {
+        if (window.electronAPI?.abortKarafDiagnostic) {
+          await window.electronAPI.abortKarafDiagnostic();
+        }
+        setTerminalLogs((prev) => [...prev, '\r\n🛑 [INTERROMPIDO] Comando cancelado pelo usuário.\r\n']);
+        setIsDiagRunning(null);
+        return;
+      }
       if (window.electronAPI?.abortDeploy) {
         await window.electronAPI.abortDeploy();
         setTerminalLogs((prev) => [...prev, '\r\n[INFO] Solicitando cancelamento da execução do deploy...\r\n']);

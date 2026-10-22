@@ -25,8 +25,8 @@ describe('helpData', () => {
   describe('getKeyboardShortcuts', () => {
     it('should generate shortcuts with the custom debugPort', () => {
       const shortcuts = getKeyboardShortcuts(5005);
-      // Alt+1..0 (10) + Alt+Q + Alt+H + Ctrl+K + Ctrl+` + Alt+←/→ + Ctrl+Enter + Shift+F9 + Enter
-      expect(shortcuts.length).toBe(18);
+      // Alt+1..0 (10) + Alt+Q + Alt+H + Ctrl+K + Ctrl+` + Alt+←/→ + Ctrl+C/Esc + Ctrl+Enter + Shift+F9 + Enter
+      expect(shortcuts.length).toBe(19);
 
       const debugShortcut = shortcuts.find((s) => s.key === 'Shift + F9');
       expect(debugShortcut).toBeDefined();

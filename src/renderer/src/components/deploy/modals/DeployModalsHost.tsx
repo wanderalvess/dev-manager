@@ -8,6 +8,7 @@ import { Routine801CatalogModal } from '../../Routine801CatalogModal';
 import { KarafJvmMemoryModal } from '../../KarafJvmMemoryModal';
 import { KarafFeaturesModal } from '../../karaf/modals/KarafFeaturesModal';
 import { DeployQueueBuilderModal } from './DeployQueueBuilderModal';
+import { DependencyChainModal } from './DependencyChainModal';
 
 interface DeployModalsHostProps {
   modals: DeployModalsState;
@@ -15,6 +16,7 @@ interface DeployModalsHostProps {
   activeProfile: DeployProfile | null;
   onSaveProfile: (profile: DeployProfile) => Promise<void>;
   onDeleteProfile: (id: string) => Promise<void>;
+  onRunProfile?: (profile: DeployProfile) => void;
 }
 
 /** Agrupa todos os modais da página de Deploy para manter a página enxuta. */
@@ -23,7 +25,8 @@ export const DeployModalsHost: React.FC<DeployModalsHostProps> = ({
   projects,
   activeProfile,
   onSaveProfile,
-  onDeleteProfile
+  onDeleteProfile,
+  onRunProfile
 }) => (
   <>
     <DeployProfileEditorModal
@@ -74,6 +77,15 @@ export const DeployModalsHost: React.FC<DeployModalsHostProps> = ({
     <KarafJvmMemoryModal
       isOpen={modals.isJvmMemoryModalOpen}
       onClose={() => modals.setIsJvmMemoryModalOpen(false)}
+    />
+
+    {/* Modal Cadeia de Dependências Multi-Camadas */}
+    <DependencyChainModal
+      isOpen={modals.isChainModalOpen}
+      onClose={() => modals.setIsChainModalOpen(false)}
+      projects={projects}
+      onSaveProfile={onSaveProfile}
+      onRunProfile={onRunProfile}
     />
   </>
 );

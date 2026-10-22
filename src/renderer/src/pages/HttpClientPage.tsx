@@ -7,6 +7,8 @@ import { HttpRequestEditorTabs } from '../components/http/HttpRequestEditorTabs'
 import { HttpResponseViewer } from '../components/http/HttpResponseViewer';
 import { HttpEnvironmentModal } from '../components/http/HttpEnvironmentModal';
 import { HttpImportPostmanModal } from '../components/http/HttpImportPostmanModal';
+import { HttpCurlModal } from '../components/http/HttpCurlModal';
+import { HttpAiDiagnosticModal } from '../components/http/HttpAiDiagnosticModal';
 
 interface HttpClientPageProps {
   onNavigateToSettings?: () => void;
@@ -58,6 +60,8 @@ export const HttpClientPage: React.FC<HttpClientPageProps> = ({
           onNewCollection={() => state.setIsImportModalOpen(true)}
           onDeleteRequest={state.handleDeleteRequest}
           onDeleteCollection={state.handleDeleteCollection}
+          onRestoreHistory={state.handleRestoreHistory}
+          onClearHistory={state.handleClearHistory}
           history={state.history}
         />
 
@@ -71,6 +75,10 @@ export const HttpClientPage: React.FC<HttpClientPageProps> = ({
             setUrl={(url) => state.setCurrentRequest({ ...state.currentRequest, url })}
             onSend={state.handleExecute}
             onSave={state.handleSaveRequest}
+            onOpenCurlModal={(mode) => {
+              state.setCurlModalMode(mode);
+              state.setIsCurlModalOpen(true);
+            }}
             isLoading={state.isLoading}
           />
 
@@ -92,6 +100,8 @@ export const HttpClientPage: React.FC<HttpClientPageProps> = ({
                 response={state.response}
                 isLoading={state.isLoading}
                 onSendToQaRegression={onNavigateToQaRegression}
+                onUpdateActiveToken={state.handleUpdateActiveToken}
+                onOpenAiDiagnostic={() => state.setIsAiModalOpen(true)}
               />
             </div>
           </div>
@@ -116,6 +126,24 @@ export const HttpClientPage: React.FC<HttpClientPageProps> = ({
         onClose={() => state.setIsImportModalOpen(false)}
         onImportSuccess={state.handleImportSuccess}
       />
+
+      <HttpCurlModal
+        isOpen={state.isCurlModalOpen}
+        onClose={() => state.setIsCurlModalOpen(false)}
+        mode={state.curlModalMode}
+        currentRequest={state.currentRequest}
+        activeToken={state.activeToken}
+        onImportSuccess={state.handleImportCurl}
+      />
+
+      {state.response && (
+        <HttpAiDiagnosticModal
+          isOpen={state.isAiModalOpen}
+          onClose={() => state.setIsAiModalOpen(false)}
+          request={state.currentRequest}
+          response={state.response}
+        />
+      )}
     </div>
   );
 };

@@ -19,6 +19,8 @@ interface TerminalViewerProps {
   isMaximized?: boolean;
   /** Aplica um filtro de texto vindo de fora (ex.: "ver log deste bundle"); o nonce reaplica o mesmo texto. */
   externalSearch?: { text: string; nonce: number } | null;
+  onAbort?: () => void;
+  className?: string;
 }
 
 export const TerminalViewer: React.FC<TerminalViewerProps> = ({
@@ -27,18 +29,20 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   title = 'Console de Execução',
   isRunning = false,
   onSendCommand,
-  inputPlaceholder = 'Digite um comando OSGi Karaf (ex: bundle:list, la, feature:list, log:tail)...',
+  inputPlaceholder = 'Digite um comando OSGi Karaf (ex: bundle:list, la, feature:list, log:display)...',
   defaultWordWrap = false,
   onToggleMaximize,
   isMaximized = false,
-  externalSearch = null
+  externalSearch = null,
+  onAbort,
+  className = ''
 }) => {
   const viewer = useTerminalViewer(logs, defaultWordWrap, externalSearch);
-  const command = useTerminalCommandInput(onSendCommand);
+  const command = useTerminalCommandInput(onSendCommand, onAbort);
   const { wordWrap, filteredLogs } = viewer;
 
   return (
-    <div className="flex flex-col bg-[#070b12] border border-border/80 rounded-xl overflow-hidden shadow-xl h-full w-full min-w-0">
+    <div className={`flex flex-col bg-[#070b12] border border-border/80 rounded-xl overflow-hidden shadow-xl h-full flex-1 min-h-0 w-full min-w-0 ${className}`}>
       <TerminalToolbar
         title={title}
         lineCount={filteredLogs.length}
@@ -57,6 +61,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
         onCopy={viewer.handleCopy}
         onClear={onClear}
         hasLogs={logs.length > 0}
+        onAbort={onAbort}
       />
 
       {/* Conteúdo com Estilo Phosphor Terminal */}
@@ -88,6 +93,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
           onChange={command.setInputCommand}
           onKeyDown={command.handleKeyDown}
           onSubmit={command.handleSend}
+          onAbort={isRunning ? onAbort : undefined}
         />
       )}
     </div>

@@ -13,6 +13,7 @@ import { KarafService } from './KarafService';
 import { DockerService } from './DockerService';
 import { WindowsService } from './WindowsService';
 import { NetworkService } from './NetworkService';
+import { PomService } from './PomService';
 import { isSafeKarafCommand } from '../utils/security';
 import { runCapturedProcess, killProcessTree } from '../utils/process';
 import { resolveContextProjectPath } from './deploy/deployContext';
@@ -25,6 +26,7 @@ export class DeployService {
   private dockerService: DockerService;
   private windowsService: WindowsService;
   private networkService?: NetworkService;
+  private pomService: PomService;
 
   private isAborted = false;
   private activeChildProcess: ChildProcess | null = null;
@@ -34,13 +36,15 @@ export class DeployService {
     karafService: KarafService,
     dockerService: DockerService,
     windowsService: WindowsService,
-    networkService?: NetworkService
+    networkService?: NetworkService,
+    pomService?: PomService
   ) {
     this.configService = configService;
     this.karafService = karafService;
     this.dockerService = dockerService;
     this.windowsService = windowsService;
     this.networkService = networkService;
+    this.pomService = pomService || new PomService();
   }
 
   /**
@@ -78,12 +82,14 @@ export class DeployService {
       }
       this.activeChildProcess = null;
     }
+    this.karafService.abortCurrentCommand();
+    this.dockerService.abortCurrentProcess();
   }
 
   private runGenericCommand(
     cwd: string,
     command: string,
-    onChunk: (chunk: string) => void,
+    onChunk: (chunk: string) => void = () => {},
     timeoutSeconds?: number
   ): Promise<{ code: number; stdout: string; stderr: string }> {
     const interpolatedCmd = this.substituteVariables(command);
@@ -108,7 +114,7 @@ export class DeployService {
 
   private async runStep(
     step: DeployStep,
-    onChunk: (chunk: string) => void,
+    onChunk: (chunk: string) => void = () => {},
     contextProjectPath?: string
   ): Promise<{ code: number; stderr?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     if (this.isAborted) {
@@ -123,7 +129,13 @@ export class DeployService {
       case 'maven-build': {
         const rawPath = this.substituteVariables(step.projectPath || '');
         const resolvedPath = this.windowsService.resolveWorkingDir(rawPath);
-        const res = await this.karafService.runMavenBuild(resolvedPath, step.skipTests ?? true, onChunk);
+        const res = await this.karafService
+          .runMavenBuild(resolvedPath, step.skipTests ?? true, onChunk, (child) => {
+            this.activeChildProcess = child;
+          })
+          .finally(() => {
+            this.activeChildProcess = null;
+          });
         return { code: res.code, stderr: res.stderr };
       }
 
@@ -134,17 +146,24 @@ export class DeployService {
           onChunk(err);
           return { code: 1, stderr: err };
         }
-        const res = await this.karafService.executeKarafCommand(
-          cmd,
-          onChunk,
-          {
-            user: settings.karafUser,
-            pass: settings.karafPass,
-            port: getKarafSshPort(settings)
-          },
-          step.timeoutSeconds ? step.timeoutSeconds * 1000 : undefined,
-          { projectPath: contextProjectPath }
-        );
+        const res = await this.karafService
+          .executeKarafCommand(
+            cmd,
+            onChunk,
+            {
+              user: settings.karafUser,
+              pass: settings.karafPass,
+              port: getKarafSshPort(settings)
+            },
+            step.timeoutSeconds ? step.timeoutSeconds * 1000 : undefined,
+            { projectPath: contextProjectPath },
+            (child) => {
+              this.activeChildProcess = child;
+            }
+          )
+          .finally(() => {
+            this.activeChildProcess = null;
+          });
         const combinedOutput = `${res.stdout}\n${res.stderr || ''}`;
         if (res.code !== 0 && combinedOutput.includes('already registered')) {
           onChunk(`\r\n[AVISO] "${step.name}" já registrado, prosseguindo...\r\n`);
@@ -186,8 +205,7 @@ export class DeployService {
 
         if (action === 'update') {
           if (!bundleId || !location) {
-            const err = `[ERRO] Etapa "${step.name}": ID do bundle e nova versão/localização são obrigatórios para atualização.
-`;
+            const err = `[ERRO] Etapa "${step.name}": ID do bundle e nova versão/localização são obrigatórios para atualização.\r\n`;
             onChunk(err);
             return { code: 1, stderr: err };
           }
@@ -229,7 +247,13 @@ export class DeployService {
           onChunk(err);
           return { code: 1, stderr: err };
         }
-        const res = await this.dockerService.buildImage(contextPath, imageTag, dockerFile, onChunk);
+        const res = await this.dockerService
+          .buildImage(contextPath, imageTag, dockerFile, onChunk, (child) => {
+            this.activeChildProcess = child;
+          })
+          .finally(() => {
+            this.activeChildProcess = null;
+          });
         return { code: res.code, stderr: res.stderr };
       }
 
@@ -240,7 +264,13 @@ export class DeployService {
           onChunk(err);
           return { code: 1, stderr: err };
         }
-        const res = await this.dockerService.pushImage(imageTag, onChunk);
+        const res = await this.dockerService
+          .pushImage(imageTag, onChunk, (child) => {
+            this.activeChildProcess = child;
+          })
+          .finally(() => {
+            this.activeChildProcess = null;
+          });
         return { code: res.code, stderr: res.stderr };
       }
 
@@ -404,6 +434,57 @@ export class DeployService {
         return { code: 1, stderr: `Ação de serviço desconhecida: ${action}` };
       }
 
+      case 'pom-sync-version': {
+        const sourcePath = this.substituteVariables(step.sourceProjectPath || '');
+        const targetPath = this.substituteVariables(step.targetProjectPath || '');
+        const artifactId = this.substituteVariables(step.targetDependencyArtifactId || '');
+        const groupId = step.targetDependencyGroupId ? this.substituteVariables(step.targetDependencyGroupId) : undefined;
+        const createBackup = step.createPomBackup ?? true;
+
+        if (!sourcePath || !targetPath) {
+          const err = `[ERRO] Etapa "${step.name}": Diretório de origem ou destino não informado.\r\n`;
+          onChunk(err);
+          return { code: 1, stderr: err };
+        }
+
+        onChunk(`> Lendo coordenadas do projeto de origem: ${sourcePath}...\r\n`);
+        const sourceCoords = this.pomService.readCoordinates(sourcePath);
+        if (!sourceCoords) {
+          const err = `[ERRO] Não foi possível ler o pom.xml do projeto de origem "${sourcePath}".\r\n`;
+          onChunk(err);
+          return { code: 1, stderr: err };
+        }
+
+        const newVersion = sourceCoords.version;
+        const targetArtifact = artifactId || sourceCoords.artifactId;
+        onChunk(`[INFO] Versão detectada na origem (${sourceCoords.artifactId}): ${newVersion}\r\n`);
+        onChunk(`> Atualizando dependência "${targetArtifact}" no pom.xml de destino: ${targetPath}...\r\n`);
+
+        const patchRes = this.pomService.updateDependencyVersion(
+          targetPath,
+          {
+            artifactId: targetArtifact,
+            newVersion,
+            groupId
+          },
+          createBackup
+        );
+
+        if (!patchRes.success) {
+          const err = `[ERRO] Falha ao atualizar pom.xml de destino: ${patchRes.error}\r\n`;
+          onChunk(err);
+          return { code: 1, stderr: err };
+        }
+
+        if (patchRes.backupPath) {
+          onChunk(`[BACKUP] Cópia de segurança criada em: ${patchRes.backupPath}\r\n`);
+        }
+        onChunk(
+          `[SUCESSO] Dependência "${targetArtifact}" atualizada: ${patchRes.oldVersion || 'indefinida'} -> ${newVersion}\r\n`
+        );
+        return { code: 0 };
+      }
+
       default:
         return { code: 1, stderr: `Tipo de etapa desconhecido: ${step.type}` };
     }
@@ -418,7 +499,9 @@ export class DeployService {
   ): Promise<T | { success: false; error: string }> {
     if (this.isExecuting) {
       const error = 'Já existe um deploy em execução. Aguarde terminar ou aborte antes de iniciar outro.';
-      onChunk(`\r\n[ERRO] ${error}\r\n`);
+      onChunk(`
+[ERRO] ${error}
+`);
       return { success: false, error };
     }
     this.isExecuting = true;
@@ -431,7 +514,7 @@ export class DeployService {
 
   public executeProfile(
     profile: DeployProfile,
-    onChunk: (chunk: string) => void,
+    onChunk: (chunk: string) => void = () => {},
     onStepProgress?: (event: DeployProgressEvent) => void
   ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     return this.withExecutionLock(onChunk, () => this.executeProfileUnlocked(profile, onChunk, onStepProgress));
@@ -457,10 +540,6 @@ export class DeployService {
       return { success: true };
     }
 
-    // Se o perfil depende do Karaf (etapas karaf-command ou karaf-bundle) e NÃO possui nenhuma
-    // etapa que inicie o container previamente (ex: service start ou karaf.bat), valida se o
-    // container está online antes de começar a executar (evitando aguardar builds Maven demorados
-    // para falhar no deploy ou ter falsos positivos com client.bat offline).
     const hasKarafSteps = steps.some((s) => s.type === 'karaf-command' || s.type === 'karaf-bundle');
     const hasStepThatStartsKaraf = steps.some((s) => {
       if (s.type === 'service-action' && s.serviceAction === 'start') return true;
@@ -647,7 +726,7 @@ export class DeployService {
 
   public executeSingleStep(
     step: DeployStep,
-    onChunk: (chunk: string) => void,
+    onChunk: (chunk: string) => void = () => {},
     profileName?: string
   ): Promise<{ success: boolean; error?: string; resolutionDiagnostic?: OsgiResolutionDiagnosticSummary }> {
     return this.withExecutionLock(onChunk, () => this.executeSingleStepUnlocked(step, onChunk, profileName));
@@ -674,6 +753,16 @@ export class DeployService {
     }
 
     const result = await this.runStep(step, onChunk, contextProjectPath);
+    if (this.isAborted) {
+      onChunk(`\r\n==========================================\r\n`);
+      onChunk(`🛑 ETAPA "${step.name}" CANCELADA PELO USUÁRIO.\r\n`);
+      onChunk(`==========================================\r\n`);
+      return {
+        success: false,
+        error: 'Cancelado pelo usuário.'
+      };
+    }
+
     if (result.code !== 0) {
       if (step.continueOnError) {
         onChunk(`\r\n⚠️ [AVISO] Etapa "${step.name}" finalizou com código ${result.code}, mas "continueOnError" está ativado.\r\n`);
@@ -704,6 +793,10 @@ export class DeployService {
     this.configService.saveSettings({ deployProfileHistory: [] });
   }
 
+  public getPomService(): PomService {
+    return this.pomService;
+  }
+
   private saveHistoryEntry(entry: DeployProfileHistoryEntry): void {
     try {
       const current = this.getHistory();
@@ -714,4 +807,3 @@ export class DeployService {
     }
   }
 }
-

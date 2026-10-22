@@ -17,6 +17,7 @@ import {
   DeployWaitFields
 } from './DeployRuntimeFields';
 import { DeployStepAdvancedSettings } from './DeployStepAdvancedSettings';
+import { DeployPomSyncFields } from './DeployPomSyncFields';
 
 interface DeployStepEditorProps {
   step: DeployStep | null;
@@ -143,6 +144,7 @@ export const DeployStepEditor: React.FC<DeployStepEditorProps> = ({
       {step.type === 'wait' && <DeployWaitFields step={step} onUpdate={onUpdate} />}
       {step.type === 'http-healthcheck' && <DeployHealthcheckFields step={step} onUpdate={onUpdate} />}
       {step.type === 'service-action' && <DeployServiceFields step={step} onUpdate={onUpdate} />}
+      {step.type === 'pom-sync-version' && <DeployPomSyncFields {...fieldProps} projects={projects} />}
 
       <DeployStepAdvancedSettings step={step} onUpdate={onUpdate} />
     </div>

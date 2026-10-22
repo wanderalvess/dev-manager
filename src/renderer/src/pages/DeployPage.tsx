@@ -53,6 +53,8 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         activeProfile={activeProfile}
         activeProfileId={activeProfileId}
         isDeploying={runner.isDeploying}
+        runningStepId={runner.runningStepId}
+        isDiagRunning={runner.isDiagRunning}
         onOpenTour={tour.open}
         onSelectProfile={handleSelectProfile}
         onEditProfile={() => modals.openProfileEditor(activeProfile)}
@@ -65,6 +67,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         onOpenRoutine801={() => modals.setIsRoutine801ModalOpen(true)}
         onOpenFeatures={() => modals.setIsFeaturesModalOpen(true)}
         onOpenJvmMemory={() => modals.setIsJvmMemoryModalOpen(true)}
+        onOpenChainModal={() => modals.setIsChainModalOpen(true)}
         onAbort={runner.handleAbortDeploy}
         onRun={runner.handleRunActiveProfile}
       />
@@ -92,6 +95,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
             onEditSteps={() => modals.openProfileEditor(activeProfile)}
             onBuildQueue={() => modals.setIsQueueModalOpen(true)}
             onRunStep={runner.handleRunSingleStep}
+            onCancelStep={runner.handleAbortDeploy}
             onToggleStep={deployProfiles.handleToggleStep}
             onToggleAllSteps={deployProfiles.handleToggleAllSteps}
             onRunFromStep={runner.handleRunFromStep}
@@ -125,6 +129,10 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         activeProfile={activeProfile}
         onSaveProfile={deployProfiles.handleSaveProfile}
         onDeleteProfile={deployProfiles.handleDeleteProfile}
+        onRunProfile={(profile) => {
+          handleSelectProfile(profile.id);
+          setTimeout(() => runner.handleRunActiveProfile(), 100);
+        }}
       />
 
       <OnboardingTour

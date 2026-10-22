@@ -115,6 +115,17 @@ export class HttpClientService {
       const rawText = await response.text();
       const sizeBytes = Buffer.byteLength(rawText, 'utf-8');
 
+      const responseHeaders: Record<string, string> = {};
+      if (response.headers) {
+        for (const [k, v] of Object.entries(response.headers)) {
+          if (Array.isArray(v)) {
+            responseHeaders[k] = v.join(', ');
+          } else if (v !== undefined) {
+            responseHeaders[k] = String(v);
+          }
+        }
+      }
+
       let isJson = false;
       try {
         JSON.parse(rawText);
@@ -123,6 +134,16 @@ export class HttpClientService {
         isJson = false;
       }
 
+      const requestSnapshot = {
+        method: request.method,
+        url: request.url,
+        name: request.name,
+        headers: request.headers,
+        params: request.params,
+        body: request.body,
+        auth: request.auth
+      };
+
       const responseItem: HttpResponseData = {
         id: generateId(),
         requestId: request.id,
@@ -130,11 +151,12 @@ export class HttpClientService {
         statusText: response.statusText,
         durationMs,
         sizeBytes,
-        headers: {},
+        headers: responseHeaders,
         body: rawText,
         isJson,
-        contentType: isJson ? 'application/json' : 'text/plain',
-        timestamp: Date.now()
+        contentType: responseHeaders['content-type'] || (isJson ? 'application/json' : 'text/plain'),
+        timestamp: Date.now(),
+        requestSnapshot
       };
 
       this.addHistory(responseItem);
@@ -155,7 +177,16 @@ export class HttpClientService {
         isJson: false,
         contentType: 'text/plain',
         error: errorMsg,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        requestSnapshot: {
+          method: request.method,
+          url: request.url,
+          name: request.name,
+          headers: request.headers,
+          params: request.params,
+          body: request.body,
+          auth: request.auth
+        }
       };
 
       this.addHistory(errorResponse);

@@ -22,6 +22,8 @@ export const stepTypeDefaultName = (type: DeployStepType): string => {
       return 'Healthcheck HTTP';
     case 'service-action':
       return 'Ação de Serviço Windows';
+    case 'pom-sync-version':
+      return 'Sincronizar Versão POM Downstream';
     default:
       return 'Nova Etapa';
   }

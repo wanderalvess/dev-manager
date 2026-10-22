@@ -16,6 +16,7 @@ import {
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
 import { analyzeLogText } from '../../shared/logAnalyzerUtils';
+import { killProcessTree } from '../utils/process';
 import type {
   BundleAction,
   ChunkHandler,
@@ -51,6 +52,7 @@ export { parseClauseList, parseManifestHeaders, parseCapabilitiesWiredBundles } 
 export class KarafService {
   private configService: ConfigService;
   private embeddedKarafProcess: ChildProcess | null = null;
+  private activeClientProcess: ChildProcess | null = null;
   private readonly ctx: KarafContext;
   private readonly streams = new KarafStreamManager();
 
@@ -63,13 +65,15 @@ export class KarafService {
       saveSettings: (patch) => self.configService.saveSettings(patch),
       get embeddedKarafProcess() { return self.embeddedKarafProcess; },
       set embeddedKarafProcess(proc) { self.embeddedKarafProcess = proc; },
+      get activeClientProcess() { return self.activeClientProcess; },
+      set activeClientProcess(proc) { self.activeClientProcess = proc; },
       parseProjectPomOrBat: (p) => self.parseProjectPomOrBat(p),
       getKarafClientExecutable: () => self.getKarafClientExecutable(),
       getKarafServerExecutable: () => self.getKarafServerExecutable(),
       getResolvedJavaEnv: (port, isClient) => self.getResolvedJavaEnv(port, isClient),
       isKarafRunning: (port) => self.isKarafRunning(port),
       executeKarafCommand: (...args) => self.executeKarafCommand(...args),
-      runMavenBuild: (p, skip, onChunk) => self.runMavenBuild(p, skip, onChunk),
+      runMavenBuild: (p, skip, onChunk, onSpawn) => self.runMavenBuild(p, skip, onChunk, onSpawn),
       deploy: (...args) => self.deploy(...args),
       listBundlesParsed: (c) => self.listBundlesParsed(c),
       getBundleDetails: (id, c) => self.getBundleDetails(id, c)
@@ -101,9 +105,22 @@ export class KarafService {
     onChunk: ChunkHandler,
     credentials?: KarafCredentials,
     timeoutMs?: number,
-    context?: { projectPath?: string; pomXmlContent?: string }
+    context?: { projectPath?: string; pomXmlContent?: string },
+    onSpawn?: (child: ChildProcess) => void
   ): Promise<KarafCommandResult> {
-    return executeKarafCommand(this.ctx, command, onChunk, credentials, timeoutMs, context);
+    return executeKarafCommand(this.ctx, command, onChunk, credentials, timeoutMs, context, onSpawn);
+  }
+
+  /** Interrompe o processo client Karaf / diagnóstico em execução imediata. */
+  public abortCurrentCommand(): void {
+    if (this.activeClientProcess?.pid) {
+      try {
+        killProcessTree(this.activeClientProcess.pid);
+      } catch (err) {
+        console.warn('Erro ao finalizar comando Karaf abortado:', err);
+      }
+      this.activeClientProcess = null;
+    }
   }
 
   /** Inicia um comando que fica rodando (log:tail). A saída segue em `onChunk`; `onEnd` avisa quando o processo termina. */
@@ -145,6 +162,10 @@ export class KarafService {
     return embedded.sendEmbeddedInput(this.ctx, input);
   }
 
+  public sendEmbeddedInterrupt(): boolean {
+    return embedded.sendEmbeddedInterrupt(this.ctx);
+  }
+
   public async stopEmbeddedKaraf(): Promise<boolean> {
     return embedded.stopEmbeddedKaraf(this.ctx);
   }
@@ -162,8 +183,13 @@ export class KarafService {
     return deployOps.deploy(this.ctx, request, onChunk, trigger, projectPath);
   }
 
-  public async runMavenBuild(projectPath: string, skipTests: boolean = true, onChunk: ChunkHandler): Promise<{ code: number; stdout: string; stderr: string }> {
-    return deployOps.runMavenBuild(projectPath, skipTests, onChunk);
+  public async runMavenBuild(
+    projectPath: string,
+    skipTests: boolean = true,
+    onChunk: ChunkHandler = () => {},
+    onSpawn?: (child: ChildProcess) => void
+  ): Promise<{ code: number; stdout: string; stderr: string }> {
+    return deployOps.runMavenBuild(projectPath, skipTests, onChunk, onSpawn);
   }
 
   public async buildAndDeployMaven(
@@ -238,24 +264,6 @@ export class KarafService {
     return bundleActions.uninstallBundle(this.ctx, bundleId, credentials, onChunk);
   }
 
-  public async uninstallFeature(
-    featureName: string,
-    version?: string,
-    credentials?: KarafCredentials,
-    onChunk: ChunkHandler = () => {}
-  ): Promise<KarafActionResult> {
-    return features.uninstallFeature(this.ctx, featureName, version, credentials, onChunk);
-  }
-
-  public async installFeature(
-    featureName: string,
-    version?: string,
-    credentials?: KarafCredentials,
-    onChunk: ChunkHandler = () => {}
-  ): Promise<KarafActionResult> {
-    return features.installFeature(this.ctx, featureName, version, credentials, onChunk);
-  }
-
   public async reinstallBundle(request: ReinstallBundleRequest, onChunk: ChunkHandler = () => {}): Promise<{ success: boolean; state?: string; diag?: string; output: string }> {
     return bundleActions.reinstallBundle(this.ctx, request, onChunk);
   }
@@ -276,28 +284,24 @@ export class KarafService {
     return features.listFeatureRepositories(this.ctx, credentials);
   }
 
-  public async addFeatureRepository(
-    url: string,
-    credentials?: KarafCredentials,
-    onChunk: ChunkHandler = () => {}
-  ): Promise<KarafActionResult> {
+  public async addFeatureRepository(url: string, credentials?: KarafCredentials, onChunk: ChunkHandler = () => {}): Promise<KarafActionResult> {
     return features.addFeatureRepository(this.ctx, url, credentials, onChunk);
   }
 
-  public async removeFeatureRepository(
-    nameOrUrl: string,
-    credentials?: KarafCredentials,
-    onChunk: ChunkHandler = () => {}
-  ): Promise<KarafActionResult> {
+  public async removeFeatureRepository(nameOrUrl: string, credentials?: KarafCredentials, onChunk: ChunkHandler = () => {}): Promise<KarafActionResult> {
     return features.removeFeatureRepository(this.ctx, nameOrUrl, credentials, onChunk);
   }
 
-  public async refreshFeatureRepository(
-    nameOrUrl?: string,
-    credentials?: KarafCredentials,
-    onChunk: ChunkHandler = () => {}
-  ): Promise<KarafActionResult> {
+  public async refreshFeatureRepository(nameOrUrl?: string, credentials?: KarafCredentials, onChunk: ChunkHandler = () => {}): Promise<KarafActionResult> {
     return features.refreshFeatureRepository(this.ctx, nameOrUrl, credentials, onChunk);
+  }
+
+  public async uninstallFeature(featureName: string, version?: string, credentials?: KarafCredentials, onChunk: ChunkHandler = () => {}): Promise<KarafActionResult> {
+    return features.uninstallFeature(this.ctx, featureName, version, credentials, onChunk);
+  }
+
+  public async installFeature(featureName: string, version?: string, credentials?: KarafCredentials, onChunk: ChunkHandler = () => {}): Promise<KarafActionResult> {
+    return features.installFeature(this.ctx, featureName, version, credentials, onChunk);
   }
 
   public async listAllFeatures(installedOnly: boolean = false, credentials?: KarafCredentials): Promise<KarafFeatureInfo[]> {

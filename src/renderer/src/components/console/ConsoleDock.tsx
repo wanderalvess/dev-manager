@@ -25,6 +25,13 @@ export const ConsoleDock: React.FC = () => {
     if (request?.tail) void startTail();
   }, [request, startTail]);
 
+  // Ctrl+C do console: encerra o tail em andamento ou interrompe o comando no Karaf embedded.
+  const handleAbort = tail.isTailing
+    ? () => void tail.stop()
+    : isEmbeddedRunning
+      ? () => void window.electronAPI?.sendKarafInterrupt?.()
+      : undefined;
+
   const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
 
   // Ctrl+` abre/fecha o dock de qualquer página.
@@ -101,6 +108,7 @@ export const ConsoleDock: React.FC = () => {
               isRunning={isEmbeddedRunning || isBusy || tail.isTailing}
               onSendCommand={sendCommand}
               externalSearch={filterRequest}
+              onAbort={handleAbort}
               inputPlaceholder="Comando Karaf (ex: bundle:list, la, feature:list, log:display)..."
             />
           </div>

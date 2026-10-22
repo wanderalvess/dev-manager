@@ -7,7 +7,8 @@ import {
 } from '../../../../shared/types';
 import { HttpKeyValueEditor } from './HttpKeyValueEditor';
 import { MonacoJsonViewer } from './MonacoJsonViewer';
-import { Wand2, Key, ShieldCheck, Lock } from 'lucide-react';
+import { Wand2, Key, ShieldCheck, Lock, Copy, Check } from 'lucide-react';
+import { showToast } from '../ToastHost';
 
 interface HttpRequestEditorTabsProps {
   request: HttpRequestItem;
@@ -25,6 +26,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
   onLoginWinThorPrompt
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('params');
+  const [bodyCopied, setBodyCopied] = useState(false);
 
   const updateField = <K extends keyof HttpRequestItem>(field: K, value: HttpRequestItem[K]) => {
     onRequestChange({ ...request, [field]: value });
@@ -36,10 +38,19 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
         const parsed = JSON.parse(request.body.raw);
         const formatted = JSON.stringify(parsed, null, 2);
         updateField('body', { ...request.body, raw: formatted });
+        showToast('JSON formatado com sucesso!', 'success');
       } catch {
-        // Ignora erro se não for JSON válido
+        showToast('JSON inválido. Verifique a sintaxe antes de formatar.', 'info');
       }
     }
+  };
+
+  const handleCopyBody = () => {
+    if (!request.body?.raw) return;
+    navigator.clipboard.writeText(request.body.raw);
+    setBodyCopied(true);
+    showToast('Corpo da requisição copiado!', 'success');
+    setTimeout(() => setBodyCopied(false), 2000);
   };
 
   const paramsCount = request.params?.filter((p) => p.enabled).length || 0;
@@ -220,16 +231,31 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
                 </select>
               </div>
 
-              {request.body?.mode === 'raw-json' && (
-                <button
-                  type="button"
-                  onClick={handleBeautifyJson}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs bg-muted hover:bg-muted/80 text-foreground rounded border border-border transition-colors"
-                >
-                  <Wand2 className="w-3 h-3 text-primary" />
-                  <span>Formatar JSON</span>
-                </button>
-              )}
+              <div className="flex items-center gap-1.5">
+                {request.body?.mode === 'raw-json' && (
+                  <button
+                    type="button"
+                    onClick={handleBeautifyJson}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs bg-muted hover:bg-muted/80 text-foreground rounded border border-border transition-colors cursor-pointer"
+                    title="Formatar e indentar JSON automaticamente"
+                  >
+                    <Wand2 className="w-3 h-3 text-primary" />
+                    <span>Formatar JSON</span>
+                  </button>
+                )}
+
+                {request.body?.raw && (
+                  <button
+                    type="button"
+                    onClick={handleCopyBody}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs bg-muted hover:bg-muted/80 text-foreground rounded border border-border transition-colors cursor-pointer"
+                    title="Copiar corpo da requisição"
+                  >
+                    {bodyCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                    <span>{bodyCopied ? 'Copiado!' : 'Copiar'}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex-1 overflow-hidden p-2">

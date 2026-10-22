@@ -227,6 +227,8 @@ wss.on('connection', (ws, req) => {
       const parsed = JSON.parse(message.toString());
       if (parsed.type === 'karaf:input' && typeof parsed.data === 'string') {
         karafService.sendEmbeddedInput(parsed.data);
+      } else if (parsed.type === 'karaf:interrupt') {
+        karafService.sendEmbeddedInterrupt();
       }
     } catch {
       // Mensagem não formatada em JSON
@@ -483,6 +485,11 @@ app.post('/api/karaf/deploy', async (req, res) => {
   });
   broadcastWs('karaf:deploy-result', result);
   res.json(result);
+});
+
+app.post('/api/karaf/abort-diagnostic', (_req, res) => {
+  karafService.abortCurrentCommand();
+  res.json({ success: true });
 });
 
 app.post('/api/karaf/exec', async (req, res) => {

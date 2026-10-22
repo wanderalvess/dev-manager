@@ -1,6 +1,6 @@
+import { ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import type { ChildProcess } from 'child_process';
 import { AppSettings, getKarafSshPort, OsgiResolutionDiagnosticSummary } from '../../../shared/types';
 import { isSafeKarafCommand } from '../../utils/security';
 import { CapturedProcessResult, runCapturedProcess } from '../../utils/process';
@@ -128,7 +128,6 @@ function buildLogDisplayFallback(settings: AppSettings, command: string, onChunk
   }
   const emptyNote = `[INFO] O buffer de logs em memória do Karaf está vazio no momento (nenhum registro recente).\r\n`;
   onChunk(emptyNote);
-  // A nota vai só para o terminal: como stdout, getKarafLog/analyze_log tratariam o aviso como log real
   return { code: 0, stdout: '', stderr: '' };
 }
 
@@ -138,7 +137,8 @@ export async function executeKarafCommand(
   onChunk: ChunkHandler,
   credentials?: KarafCredentials,
   timeoutMs?: number,
-  context?: { projectPath?: string; pomXmlContent?: string }
+  context?: { projectPath?: string; pomXmlContent?: string },
+  onSpawn?: (child: ChildProcess) => void
 ): Promise<KarafCommandResult> {
   if (!isSafeKarafCommand(command)) {
     const errMsg = `[ERRO DE SEGURANÇA] Comando Karaf rejeitado: contém caracteres de controle proibidos ou formato inválido.\r\n`;
@@ -158,14 +158,15 @@ export async function executeKarafCommand(
     return { code: 1, stdout: '', stderr: errMsg };
   }
 
-  // Valida se o contêiner OSGi está de fato em execução antes de acionar client.bat.
-  // client.bat frequentemente retorna exit code 0 com "Failed to get the session." quando
-  // o Karaf está offline, gerando falsos positivos na automação.
   const isOnline = await ctx.isKarafRunning(sshPort);
   if (!isOnline) {
     const errMsg = `[ERRO] O contêiner Apache Karaf/OSGi não está em execução (porta SSH ${sshPort} inacessível).\r\n💡 [DICA] Inicie o Karaf pelo Cockpit (Console Karaf ou pipeline de ambiente) antes de executar comandos ou deploys.\r\n`;
     onChunk(errMsg);
     return { code: 1, stdout: '', stderr: `Karaf OSGi offline: porta SSH ${sshPort} fechada` };
+  }
+
+  if (command.trim() === 'log:tail' || command.startsWith('log:tail ')) {
+    onChunk(`💡 [DICA] "log:tail" transmite logs continuamente. Para sair, clique no botão Interromper ou pressione Ctrl+C. Para visualizar os logs e sair automaticamente, use "log:display".\r\n\r\n`);
   }
 
   const scriptName = path.basename(karafClient);
@@ -176,51 +177,51 @@ export async function executeKarafCommand(
     ? ['-u', user, '-p', pass, '-a', String(sshPort), command]
     : ['-u', user, '-p', pass, command];
 
-  // isClient: true garante que o client.bat não carregue o agente OpenTelemetry APM nem depuração JDWP
   const childEnv = ctx.getResolvedJavaEnv(undefined, true);
-
-  // Comandos de instalação/repositório baixam dependências via rede (Nexus/Maven) e resolvem OSGi,
-  // necessitando de timeout estendido para não abortar precocemente.
   const isHeavyCommand = isHeavyKarafCommand(command);
   const effectiveTimeoutMs = timeoutMs ?? (isHeavyCommand ? 300000 : 60000);
 
-  const res = await runClientProcess(settings, karafClient, clientArgs, childEnv, onChunk, effectiveTimeoutMs);
-  emitTimeoutHint(command, res, effectiveTimeoutMs, onChunk);
-
-  // Karaf client.bat no Windows ou SSH shell frequentemente retorna exit code 0 mesmo
-  // quando o comando falha no contêiner OSGi (ex: "Error executing command: No matching features...").
-  // Limpamos sequências de escape ANSI e inspecionamos stdout/stderr para detectar falhas reais.
-  const cleanStdout = stripAnsiSequences(res.stdout || '');
-  const rawCleanStderr = stripAnsiSequences(res.stderr || '');
-  const cleanStderr = filterBenignStderr(rawCleanStderr);
-  const cleanCombined = `${cleanStdout}\n${cleanStderr}`;
-
-  const karafErrorMatch = findKarafErrorMatch(command, cleanCombined);
-  if (karafErrorMatch) {
-    return buildErrorResult(ctx, settings, command, context, onChunk, res, cleanStderr, cleanCombined, karafErrorMatch);
-  }
-
-  if (command.startsWith('log:display') && res.code === 0 && !res.stdout.trim() && settings.karafPath) {
-    return buildLogDisplayFallback(settings, command, onChunk);
-  }
-
-  // Se o comando for log:clear e executou com sucesso (saída normalmente vazia), envia mensagem de confirmação
-  if (command.trim() === 'log:clear' && res.code === 0 && !res.stdout.trim()) {
-    const confirmMsg = `[ OK ] Buffer de logs em memória do Karaf (log:clear) limpo com sucesso.\r\n`;
-    onChunk(confirmMsg);
-    return { code: 0, stdout: confirmMsg, stderr: '' };
-  }
-
-  // Feedback para qualquer outro comando que executou com sucesso sem produzir saída
-  if (res.code === 0 && !res.stdout.trim() && !cleanStderr.trim()) {
-    const okMsg = `[ OK ] Comando "${command}" executado com sucesso no Karaf (sem saída no console).\r\n`;
-    onChunk(okMsg);
-    return { code: 0, stdout: okMsg, stderr: '' };
-  }
-
-  return {
-    code: res.code,
-    stdout: res.stdout,
-    stderr: cleanStderr
+  const handleSpawn = (child: ChildProcess) => {
+    ctx.activeClientProcess = child;
+    onSpawn?.(child);
   };
+
+  try {
+    const res = await runClientProcess(settings, karafClient, clientArgs, childEnv, onChunk, effectiveTimeoutMs, handleSpawn);
+    emitTimeoutHint(command, res, effectiveTimeoutMs, onChunk);
+
+    const cleanStdout = stripAnsiSequences(res.stdout || '');
+    const rawCleanStderr = stripAnsiSequences(res.stderr || '');
+    const cleanStderr = filterBenignStderr(rawCleanStderr);
+    const cleanCombined = `${cleanStdout}\n${cleanStderr}`;
+
+    const karafErrorMatch = findKarafErrorMatch(command, cleanCombined);
+    if (karafErrorMatch) {
+      return buildErrorResult(ctx, settings, command, context, onChunk, res, cleanStderr, cleanCombined, karafErrorMatch);
+    }
+
+    if (command.startsWith('log:display') && res.code === 0 && !res.stdout.trim() && settings.karafPath) {
+      return buildLogDisplayFallback(settings, command, onChunk);
+    }
+
+    if (command.trim() === 'log:clear' && res.code === 0 && !res.stdout.trim()) {
+      const confirmMsg = `[ OK ] Buffer de logs em memória do Karaf (log:clear) limpo com sucesso.\r\n`;
+      onChunk(confirmMsg);
+      return { code: 0, stdout: confirmMsg, stderr: '' };
+    }
+
+    if (res.code === 0 && !res.stdout.trim() && !cleanStderr.trim()) {
+      const okMsg = `[ OK ] Comando "${command}" executado com sucesso no Karaf (sem saída no console).\r\n`;
+      onChunk(okMsg);
+      return { code: 0, stdout: okMsg, stderr: '' };
+    }
+
+    return {
+      code: res.code,
+      stdout: res.stdout,
+      stderr: cleanStderr
+    };
+  } finally {
+    ctx.activeClientProcess = null;
+  }
 }

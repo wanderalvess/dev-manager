@@ -33,6 +33,10 @@ export function registerKarafHandlers(ctx: IpcContext): void {
     return karafService.sendEmbeddedInput(input);
   });
 
+  ipcMain.handle('karaf:send-interrupt', async () => {
+    return karafService.sendEmbeddedInterrupt();
+  });
+
   ipcMain.handle('karaf:stop-embedded', async () => {
     return await karafService.stopEmbeddedKaraf();
   });
@@ -60,6 +64,11 @@ export function registerKarafHandlers(ctx: IpcContext): void {
     return await karafService.executeKarafCommand(command, (chunk) => {
       safeSend(mainWindow, 'karaf:log-chunk', chunk);
     });
+  });
+
+  ipcMain.handle('karaf:abort-diagnostic', async () => {
+    karafService.abortCurrentCommand();
+    return { success: true };
   });
 
   ipcMain.handle(

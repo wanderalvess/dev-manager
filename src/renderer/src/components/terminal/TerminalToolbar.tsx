@@ -9,7 +9,8 @@ import {
   WrapText,
   AlignLeft,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Square
 } from 'lucide-react';
 import type { TerminalFilterType } from '../../utils/terminalViewerUtils';
 
@@ -31,6 +32,7 @@ interface TerminalToolbarProps {
   onCopy: () => void;
   onClear: () => void;
   hasLogs: boolean;
+  onAbort?: () => void;
 }
 
 export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
@@ -50,7 +52,8 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
   copied,
   onCopy,
   onClear,
-  hasLogs
+  hasLogs,
+  onAbort
 }) => (
   <div className="flex flex-wrap items-center justify-between px-3.5 py-2 bg-[#0e1422] border-b border-[#1b283f] gap-2 shrink-0">
     <div className="flex items-center space-x-2.5">
@@ -69,6 +72,17 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
           <span>Execução Ativa</span>
         </span>
+      )}
+      {onAbort && isRunning && (
+        <button
+          type="button"
+          onClick={onAbort}
+          className="flex items-center space-x-1 text-2xs text-destructive-foreground bg-destructive hover:bg-destructive/90 px-2 py-0.5 rounded-md font-semibold transition cursor-pointer shadow-xs animate-fade-in"
+          title="Interromper execução ativa (Ctrl+C ou Esc)"
+        >
+          <Square className="w-3 h-3 fill-current" />
+          <span>Interromper</span>
+        </button>
       )}
     </div>
 

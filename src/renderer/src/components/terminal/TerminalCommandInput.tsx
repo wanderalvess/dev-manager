@@ -7,6 +7,7 @@ interface TerminalCommandInputProps {
   onChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onSubmit: (e?: React.FormEvent) => void;
+  onAbort?: () => void;
 }
 
 /** Linha interativa de comando CLI. */
@@ -15,7 +16,8 @@ export const TerminalCommandInput: React.FC<TerminalCommandInputProps> = ({
   placeholder,
   onChange,
   onKeyDown,
-  onSubmit
+  onSubmit,
+  onAbort
 }) => (
   <form
     onSubmit={onSubmit}
@@ -32,10 +34,20 @@ export const TerminalCommandInput: React.FC<TerminalCommandInputProps> = ({
       placeholder={placeholder}
       className="flex-1 bg-transparent border-none text-xs text-slate-200 font-mono focus:outline-hidden placeholder-slate-600"
     />
+    {onAbort && (
+      <button
+        type="button"
+        onClick={onAbort}
+        className="px-2 py-1 bg-destructive/15 hover:bg-destructive/25 text-destructive border border-destructive/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+        title="Interromper execução ativa (Ctrl+C)"
+      >
+        <span>^C</span>
+      </button>
+    )}
     <button
       type="submit"
       disabled={!value.trim()}
-      className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors disabled:opacity-50"
+      className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors disabled:opacity-50 cursor-pointer"
     >
       <span>Enviar</span>
       <CornerDownLeft className="w-3 h-3" />

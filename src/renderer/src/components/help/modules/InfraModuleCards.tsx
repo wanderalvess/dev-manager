@@ -109,6 +109,7 @@ export const LogsModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       checkClass="text-warning"
     >
       <span><strong>Log Analyzer WinThor:</strong> Classificação instantânea de falhas críticas (ORA-XXXXX, NullPointerException, BundleException, OutOfMemoryError).</span>
+      <span><strong>Busca Contextual &amp; Modos:</strong> Localização no log completo (Enter/Shift+Enter mantendo o contexto ao redor), modo filtro com linhas de contexto (±1, ±3, ±5) e ação "No contexto".</span>
       <span><strong>Gaveta de Diagnóstico:</strong> Sugestão contextual de queries e ações corretivas em 1 clique.</span>
       <span><strong>Filtros por Nível:</strong> Destaque colorido para INFO, WARN e ERROR.</span>
     </ModuleBullets>

@@ -103,6 +103,9 @@ Exemplos: `karafBundleUtils.ts` extraído de `KarafBundleManagerModal.tsx`,
   `__tests__` separada.
 - Fixtures via pequenas factory functions (`makeBundle`, `makeProject`, etc.), não mocks
   pesados.
+- **Tipagem estrita em spies/mocks do Vitest**:
+  - `vi.spyOn(service, 'metodoQueRetornaVoid').mockReturnValue(...)` causa erro TS2345 (`Argument of type '...' is not assignable to parameter of type 'void'`). Métodos com retorno `void` devem ser mockados com `.mockImplementation(() => {})` ou apenas `vi.spyOn(...)`.
+  - Ao invocar métodos de services nos testes (ex.: `executeSingleStep`, `executeProfile`), sempre forneça os callbacks esperados pela assinatura (ex.: `onChunk`, `onProgress`) usando `vi.fn()` como dublê, e garanta que as assinaturas no service definam valores padrão (`onChunk: (chunk: string) => void = () => {}`) para maior resiliência.
 
 Ao pedir para "refatorar" ou "adicionar teste" em um arquivo grande, considere primeiro se a
 extração para `utils/` é o caminho certo antes de testar a peça monolítica.
@@ -184,6 +187,11 @@ para uma versão que embuta `dompurify` ≥3.4.16.
   **build** (`npm run build`, adicionado para pegar import quebrado/`import()` dinâmico que o
   typecheck sozinho não cobre). Não inclui `build:electron` (empacotamento do instalador),
   que é pesado e específico de plataforma — isso continua só local/release.
+
+- **Integridade de Edições e Prevenção de Código Órfão**: Ao aplicar substituições de código
+  (especialmente em objetos literais, blocos `try/catch` e componentes React), reler obrigatoriamente
+  as linhas ao redor do trecho editado para garantir que nenhuma propriedade duplicada, fechamento
+  extra ou fragmento antigo tenha ficado órfão no arquivo antes de finalizar a resposta.
 
 ## Limite de Linhas e Componentização Estrita (Máximo 300 Linhas)
 

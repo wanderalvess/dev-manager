@@ -216,6 +216,7 @@ const electronAPI = {
   // Karaf Deployer & Console Embutido
   startEmbeddedKaraf: (): Promise<boolean> => ipcRenderer.invoke('karaf:start-embedded'),
   sendKarafInput: (input: string): Promise<boolean> => ipcRenderer.invoke('karaf:send-input', input),
+  sendKarafInterrupt: (): Promise<boolean> => ipcRenderer.invoke('karaf:send-interrupt'),
   stopEmbeddedKaraf: (): Promise<boolean> => ipcRenderer.invoke('karaf:stop-embedded'),
   isEmbeddedKarafRunning: (): Promise<boolean> => ipcRenderer.invoke('karaf:is-embedded-running'),
   isKarafRunning: (sshPort?: number): Promise<boolean> => ipcRenderer.invoke('karaf:is-running', sshPort),
@@ -244,6 +245,7 @@ const electronAPI = {
     ipcRenderer.invoke('karaf:run-maven-build', projectPath, skipTests),
   execKarafDiagnostic: (command: string): Promise<{ code: number; stdout: string; stderr: string }> =>
     ipcRenderer.invoke('karaf:exec-diagnostic', command),
+  abortKarafDiagnostic: (): Promise<{ success: boolean }> => ipcRenderer.invoke('karaf:abort-diagnostic'),
   getKarafDeployHistory: (): Promise<KarafDeployHistoryEntry[]> => ipcRenderer.invoke('karaf:list-deploy-history'),
   onKarafDeployResult: (callback: (result: { success: boolean; error?: string }) => void) => {
     const subscription = (_: any, result: { success: boolean; error?: string }) => callback(result);
@@ -364,6 +366,13 @@ const electronAPI = {
     ipcRenderer.invoke('deploy:get-history'),
   clearDeployProfileHistory: (): Promise<{ success: boolean }> =>
     ipcRenderer.invoke('deploy:clear-history'),
+  getPomCoordinates: (projectPath: string) => ipcRenderer.invoke('pom:get-coordinates', projectPath),
+  listPomDependencies: (projectPath: string) => ipcRenderer.invoke('pom:list-dependencies', projectPath),
+  updatePomDependencyVersion: (
+    targetProjectPath: string,
+    dependency: { artifactId: string; newVersion: string; groupId?: string },
+    createBackup?: boolean
+  ) => ipcRenderer.invoke('pom:update-dependency-version', targetProjectPath, dependency, createBackup),
   onDeployLogChunk: (callback: (chunk: string) => void) => {
     const subscription = (_: any, chunk: string) => callback(chunk);
     ipcRenderer.on('deploy:log-chunk', subscription);

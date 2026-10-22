@@ -35,6 +35,7 @@ export interface KarafContext {
   getSettings(): AppSettings;
   saveSettings(patch: Partial<AppSettings>): AppSettings;
   embeddedKarafProcess: ChildProcess | null;
+  activeClientProcess?: ChildProcess | null;
   parseProjectPomOrBat(projectPath: string): PomInfo | null;
   getKarafClientExecutable(): string | null;
   getKarafServerExecutable(): string | null;
@@ -45,12 +46,14 @@ export interface KarafContext {
     onChunk: ChunkHandler,
     credentials?: KarafCredentials,
     timeoutMs?: number,
-    context?: { projectPath?: string; pomXmlContent?: string }
+    context?: { projectPath?: string; pomXmlContent?: string },
+    onSpawn?: (child: ChildProcess) => void
   ): Promise<KarafCommandResult>;
   runMavenBuild(
     projectPath: string,
     skipTests: boolean,
-    onChunk: ChunkHandler
+    onChunk: ChunkHandler,
+    onSpawn?: (child: ChildProcess) => void
   ): Promise<{ code: number; stdout: string; stderr: string }>;
   deploy(
     request: KarafDeployRequest,

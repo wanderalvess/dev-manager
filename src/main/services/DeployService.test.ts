@@ -446,6 +446,8 @@ describe('DeployService', () => {
           expect.objectContaining({ stepId: 's2', status: 'completed' })
         ])
       );
+
+
     });
   });
 
@@ -477,6 +479,34 @@ describe('DeployService', () => {
           expect.objectContaining({ stepId: 's2', status: 'skipped' })
         ])
       );
+
+
+    });
+
+    it('cancela a execução de uma etapa isolada (executeSingleStep) quando abortCurrentExecution é chamado', async () => {
+      vi.spyOn(windowsService, 'resolveWorkingDir').mockReturnValue('/mock/project');
+      vi.spyOn(karafService, 'runMavenBuild').mockImplementation(async () => {
+        deployService.abortCurrentExecution();
+        return { code: 0, stdout: 'Build finalizou', stderr: '' };
+      });
+
+      const step = { id: 's1', name: 'Passo Isolado', type: 'maven-build' as const, enabled: true, projectPath: '/mock/project' };
+      const result = await deployService.executeSingleStep(step, vi.fn());
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Cancelado pelo usuário');
+    });
+
+    it('interrompe processos ativos no karafService e dockerService ao abortar execução', () => {
+      const karafAbortSpy = vi.spyOn(karafService, 'abortCurrentCommand').mockImplementation(() => {});
+      const dockerAbortSpy = vi.spyOn(dockerService, 'abortCurrentProcess').mockImplementation(() => {});
+
+      deployService.abortCurrentExecution();
+
+      expect(karafAbortSpy).toHaveBeenCalled();
+      expect(dockerAbortSpy).toHaveBeenCalled();
+
+
     });
   });
 

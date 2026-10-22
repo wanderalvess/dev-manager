@@ -96,6 +96,16 @@ export interface HttpEnvironment {
   variables: HttpEnvironmentVariable[];
 }
 
+export interface HttpRequestSnapshot {
+  method: HttpMethod;
+  url: string;
+  name?: string;
+  headers?: HttpKeyValueItem[];
+  params?: HttpKeyValueItem[];
+  body?: HttpRequestBody;
+  auth?: HttpAuthConfig;
+}
+
 export interface HttpResponseData {
   id: string;
   requestId?: string;
@@ -109,6 +119,7 @@ export interface HttpResponseData {
   contentType: string;
   error?: string;
   timestamp: number;
+  requestSnapshot?: HttpRequestSnapshot;
 }
 
 export interface HttpExecutionRequest {

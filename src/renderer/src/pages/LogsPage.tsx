@@ -1,13 +1,10 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
-import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
-import { LOGS_TOUR_STEPS, LOGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/logsTour';
-import { LogExceptionAnalyzerDrawer } from '../components/LogExceptionAnalyzerDrawer';
+import { LOGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/logsTour';
 import { analyzeLogLine } from '../../../shared/logAnalyzerUtils';
 import {
   LogLevelFilter,
-  filterLogLines,
   findErrorIndices,
   countLogLevels,
   pickNextErrorIndex,
@@ -18,13 +15,13 @@ import { useLogScroll } from '../hooks/logs/useLogScroll';
 import { useLogStream } from '../hooks/logs/useLogStream';
 import { useLogShortcuts } from '../hooks/logs/useLogShortcuts';
 import { useLogSourceEditor } from '../hooks/logs/useLogSourceEditor';
+import { useLogSearch } from '../hooks/logs/useLogSearch';
 import { LogsHeader } from '../components/logs/LogsHeader';
 import { LogsToolbar } from '../components/logs/LogsToolbar';
 import { LogsConsole } from '../components/logs/LogsConsole';
 import { LogsFooter } from '../components/logs/LogsFooter';
+import { LogsModalsHost } from '../components/logs/LogsModalsHost';
 import { LogFontSize } from '../components/logs/LogLine';
-import { ManageLogSourcesModal } from '../components/logs/modals/ManageLogSourcesModal';
-import { ClearLogFileModal } from '../components/logs/modals/ClearLogFileModal';
 
 interface LogsPageProps {
   onNavigateToSettings?: () => void;
@@ -38,10 +35,6 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
   const [initialLinesCount, setInitialLinesCount] = useState<number>(500);
   const [wordWrap, setWordWrap] = useState<boolean>(true);
   const [fontSize, setFontSize] = useState<LogFontSize>('xs');
-  const [filterText, setFilterText] = useState<string>('');
-  const [isRegex, setIsRegex] = useState<boolean>(false);
-  const [isCaseSensitive, setIsCaseSensitive] = useState<boolean>(false);
-  const [invertFilter, setInvertFilter] = useState<boolean>(false);
   const [levelFilter, setLevelFilter] = useState<LogLevelFilter>('ALL');
   const [activeErrorIndex, setActiveErrorIndex] = useState<number>(-1);
 
@@ -81,16 +74,28 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
     persistSources
   );
 
-  useLogShortcuts({ isActive, searchInputRef, setFilterText, setLines });
+  const logSearch = useLogSearch({
+    lines,
+    levelFilter,
+    scrollToLine
+  });
 
-  const filteredLines = useMemo(
-    () => filterLogLines(lines, { levelFilter, filterText, isRegex, isCaseSensitive, invertFilter }),
-    [lines, levelFilter, filterText, isRegex, isCaseSensitive, invertFilter]
+  useLogShortcuts({
+    isActive,
+    searchInputRef,
+    setFilterText: logSearch.setFilterText,
+    setLines,
+    onNextMatch: logSearch.goToNextMatch,
+    onPrevMatch: logSearch.goToPrevMatch,
+    onClearSearch: logSearch.clearSearch
+  });
+
+  const errorIndices = useMemo(
+    () => findErrorIndices(logSearch.displayLines.map((l) => l.text)),
+    [logSearch.displayLines]
   );
-  const errorIndices = useMemo(() => findErrorIndices(filteredLines), [filteredLines]);
   const levelCounts = useMemo(() => countLogLevels(lines), [lines]);
 
-  // Contagem de exceções críticas identificadas pelo analisador WinThor
   const detectedExceptionsCount = useMemo(() => {
     let count = 0;
     for (let i = 0; i < lines.length; i++) {
@@ -103,16 +108,17 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
     if (errorIndices.length === 0) return;
     const nextTarget = pickNextErrorIndex(errorIndices, activeErrorIndex, direction);
     setActiveErrorIndex(nextTarget);
-    scrollToLine(nextTarget);
+    const targetItem = logSearch.displayLines[nextTarget];
+    if (targetItem) {
+      scrollToLine(targetItem.originalIndex);
+    }
   };
 
-  // Usado pelo Log Analyzer Drawer
   const handleScrollToLine = (targetLineIndex: number) => {
     setActiveErrorIndex(targetLineIndex);
-    scrollToLine(targetLineIndex);
+    logSearch.jumpToLineInContext(targetLineIndex);
   };
 
-  // Zerar arquivo no disco
   const handleConfirmClearFile = async () => {
     if (!window.electronAPI?.clearLogFile || !activeSource.filePath) return;
     setIsClearFileConfirmOpen(false);
@@ -132,7 +138,7 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
   };
 
   const handleExportLogs = () => {
-    const content = filteredLines.join('\n');
+    const content = logSearch.displayLines.map((l) => l.text).join('\n');
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -142,11 +148,6 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
-
-  const openManageModal = () => {
-    setEditingSource(null);
-    setIsManageModalOpen(true);
   };
 
   return (
@@ -160,7 +161,10 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
         isPaused={isPaused}
         copyFeedback={copyFeedback}
         onSelectSource={setActiveSourceId}
-        onOpenManage={openManageModal}
+        onOpenManage={() => {
+          setEditingSource(null);
+          setIsManageModalOpen(true);
+        }}
         onOpenTour={tour.open}
         onCopyPath={() => copyToClipboard(activeSource.filePath, 'path')}
         onRequestClearFile={() => setIsClearFileConfirmOpen(true)}
@@ -168,10 +172,14 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
 
       <LogsToolbar
         searchInputRef={searchInputRef}
-        filterText={filterText}
-        isRegex={isRegex}
-        isCaseSensitive={isCaseSensitive}
-        invertFilter={invertFilter}
+        filterText={logSearch.filterText}
+        isRegex={logSearch.isRegex}
+        isCaseSensitive={logSearch.isCaseSensitive}
+        invertFilter={logSearch.invertFilter}
+        searchMode={logSearch.searchMode}
+        contextLines={logSearch.contextLines}
+        currentMatchPosition={logSearch.currentMatchPosition}
+        totalMatches={logSearch.totalMatches}
         levelFilter={levelFilter}
         totalLines={lines.length}
         levelCounts={levelCounts}
@@ -181,10 +189,14 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
         isAutoScroll={isAutoScroll}
         wordWrap={wordWrap}
         copyFeedback={copyFeedback}
-        onFilterTextChange={setFilterText}
-        onToggleCaseSensitive={() => setIsCaseSensitive((prev) => !prev)}
-        onToggleRegex={() => setIsRegex((prev) => !prev)}
-        onToggleInvert={() => setInvertFilter((prev) => !prev)}
+        onFilterTextChange={logSearch.setFilterText}
+        onToggleCaseSensitive={() => logSearch.setIsCaseSensitive((prev) => !prev)}
+        onToggleRegex={() => logSearch.setIsRegex((prev) => !prev)}
+        onToggleInvert={() => logSearch.setInvertFilter((prev) => !prev)}
+        onSearchModeChange={logSearch.setSearchMode}
+        onContextLinesChange={logSearch.setContextLines}
+        onNavigateMatch={(dir) => (dir === 'next' ? logSearch.goToNextMatch() : logSearch.goToPrevMatch())}
+        onClearSearch={logSearch.clearSearch}
         onLevelChange={setLevelFilter}
         onNavigateErrors={navigateErrors}
         onOpenAnalyzer={() => setIsAnalyzerOpen(true)}
@@ -195,36 +207,45 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
         }}
         onToggleWrap={() => setWordWrap((prev) => !prev)}
         onClearScreen={() => setLines([])}
-        onCopyFiltered={() => copyToClipboard(filteredLines.join('\n'), 'all')}
+        onCopyFiltered={() => copyToClipboard(logSearch.displayLines.map((l) => l.text).join('\n'), 'all')}
         onExport={handleExportLogs}
       />
 
-      {/* Canvas do terminal (Deep Black #05080E) */}
       <div className="flex-1 relative bg-[#05080E] overflow-hidden flex flex-col">
         <LogsConsole
           scrollContainerRef={scrollContainerRef}
-          lines={filteredLines}
+          displayLines={logSearch.displayLines}
+          activeOriginalIndex={logSearch.activeOriginalIndex}
+          activeErrorIndex={activeErrorIndex}
           hasSources={sources.length > 0}
           status={status}
           filePath={activeSource.filePath}
           hasNewLinesBelow={hasNewLinesBelow}
-          activeErrorIndex={activeErrorIndex}
-          filterText={filterText}
-          invertFilter={invertFilter}
-          isCaseSensitive={isCaseSensitive}
-          hasActiveFilter={Boolean(filterText) || levelFilter !== 'ALL'}
+          filterText={logSearch.filterText}
+          invertFilter={logSearch.invertFilter}
+          isCaseSensitive={logSearch.isCaseSensitive}
+          isRegex={logSearch.isRegex}
+          searchMode={logSearch.searchMode}
+          hasActiveFilter={Boolean(logSearch.filterText) || levelFilter !== 'ALL'}
           fontSize={fontSize}
           wordWrap={wordWrap}
           onScroll={handleScroll}
           onScrollToBottom={scrollToBottom}
           onOpenAnalyzer={() => setIsAnalyzerOpen(true)}
-          onOpenManage={openManageModal}
+          onOpenManage={() => {
+            setEditingSource(null);
+            setIsManageModalOpen(true);
+          }}
+          onJumpToLineInContext={logSearch.jumpToLineInContext}
         />
         <LogsFooter
-          visibleCount={filteredLines.length}
+          visibleCount={logSearch.displayLines.length}
           totalCount={lines.length}
-          filterText={filterText}
-          invertFilter={invertFilter}
+          filterText={logSearch.filterText}
+          invertFilter={logSearch.invertFilter}
+          searchMode={logSearch.searchMode}
+          matchCount={logSearch.totalMatches}
+          contextLines={logSearch.contextLines}
           fontSize={fontSize}
           initialLinesCount={initialLinesCount}
           onFontSizeChange={setFontSize}
@@ -232,39 +253,25 @@ export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNav
         />
       </div>
 
-      {isManageModalOpen && (
-        <ManageLogSourcesModal
-          sources={sources}
-          editingSource={editingSource}
-          setEditingSource={setEditingSource}
-          persistSources={persistSources}
-          onBrowse={handleBrowseLogFile}
-          onSave={handleSaveSource}
-          onClose={() => setIsManageModalOpen(false)}
-        />
-      )}
-
-      {isClearFileConfirmOpen && (
-        <ClearLogFileModal
-          filePath={activeSource.filePath}
-          onCancel={() => setIsClearFileConfirmOpen(false)}
-          onConfirm={handleConfirmClearFile}
-        />
-      )}
-
-      {/* Drawer do Analisador de Exceções WinThor */}
-      <LogExceptionAnalyzerDrawer
-        isOpen={isAnalyzerOpen}
-        onClose={() => setIsAnalyzerOpen(false)}
+      <LogsModalsHost
+        isManageModalOpen={isManageModalOpen}
+        isClearFileConfirmOpen={isClearFileConfirmOpen}
+        isAnalyzerOpen={isAnalyzerOpen}
+        isTourOpen={tour.isOpen}
+        sources={sources}
+        activeSource={activeSource}
+        editingSource={editingSource}
         lines={lines}
+        setEditingSource={setEditingSource}
+        persistSources={persistSources}
+        onBrowseLogFile={handleBrowseLogFile}
+        onSaveSource={handleSaveSource}
+        onConfirmClearFile={handleConfirmClearFile}
         onScrollToLine={handleScrollToLine}
-      />
-
-      <OnboardingTour
-        steps={LOGS_TOUR_STEPS}
-        isOpen={tour.isOpen}
-        onClose={tour.close}
-        storageKey={LOGS_TOUR_STORAGE_KEY}
+        onCloseManage={() => setIsManageModalOpen(false)}
+        onCloseClearFile={() => setIsClearFileConfirmOpen(false)}
+        onCloseAnalyzer={() => setIsAnalyzerOpen(false)}
+        onCloseTour={tour.close}
       />
     </div>
   );

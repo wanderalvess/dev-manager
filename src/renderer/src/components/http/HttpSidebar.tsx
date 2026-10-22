@@ -5,7 +5,8 @@ import {
   Settings,
   Search,
   Clock,
-  Layers
+  Layers,
+  Trash2
 } from 'lucide-react';
 import {
   HttpCollection,
@@ -14,6 +15,7 @@ import {
   HttpResponseData
 } from '../../../../shared/types';
 import { HttpCollectionTreeItem } from './HttpCollectionTreeItem';
+import { HttpBadge } from './HttpBadge';
 
 interface HttpSidebarProps {
   collections: HttpCollection[];
@@ -28,6 +30,8 @@ interface HttpSidebarProps {
   onNewCollection: () => void;
   onDeleteRequest: (collectionId: string, requestId: string) => void;
   onDeleteCollection: (id: string) => void;
+  onRestoreHistory?: (item: HttpResponseData) => void;
+  onClearHistory?: () => void;
   history: HttpResponseData[];
 }
 
@@ -44,6 +48,8 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
   onNewCollection,
   onDeleteRequest,
   onDeleteCollection,
+  onRestoreHistory,
+  onClearHistory,
   history
 }) => {
   const [activeTab, setActiveTab] = useState<'collections' | 'history'>('collections');
@@ -180,31 +186,62 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
             ))
           )
         ) : (
-          /* Histórico Recente */
-          history.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground text-[11px]">Nenhuma chamada no histórico.</div>
-          ) : (
-            history.map((item) => (
-              <div
-                key={item.id}
-                className="p-2 rounded border border-border/60 bg-background/50 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`font-mono text-[10px] font-bold ${
-                      item.status >= 200 && item.status < 300 ? 'text-emerald-400' : 'text-red-400'
-                    }`}
-                  >
-                    {item.status || 'ERR'}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-mono">{item.durationMs}ms</span>
-                </div>
-                <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                  {new Date(item.timestamp).toLocaleTimeString()}
-                </div>
+          /* Histórico Recente Interativo */
+          <div className="space-y-1.5">
+            {history.length > 0 && onClearHistory && (
+              <div className="flex items-center justify-between px-1 pb-1 mb-1 border-b border-border/40">
+                <span className="text-[10px] uppercase font-semibold text-muted-foreground/80 tracking-wider">
+                  Execuções ({history.length})
+                </span>
+                <button
+                  type="button"
+                  onClick={onClearHistory}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-red-400 transition-colors cursor-pointer"
+                  title="Limpar todo o histórico"
+                >
+                  <Trash2 className="w-2.5 h-2.5" />
+                  <span>Limpar</span>
+                </button>
               </div>
-            ))
-          )
+            )}
+
+            {history.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground text-[11px]">Nenhuma chamada no histórico.</div>
+            ) : (
+              history.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => onRestoreHistory?.(item)}
+                  className="p-2 rounded border border-border/60 bg-background/50 hover:bg-muted/40 transition-colors cursor-pointer group"
+                  title="Clique para restaurar esta chamada no workspace"
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-1.5 truncate">
+                      {item.requestSnapshot?.method ? (
+                        <HttpBadge method={item.requestSnapshot.method} size="sm" />
+                      ) : (
+                        <span className="font-mono text-[10px] text-muted-foreground">HTTP</span>
+                      )}
+                      <span
+                        className={`font-mono text-[10px] font-bold ${
+                          item.status >= 200 && item.status < 300 ? 'text-emerald-400' : 'text-red-400'
+                        }`}
+                      >
+                        {item.status || 'ERR'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-mono">{item.durationMs}ms</span>
+                  </div>
+                  <div className="text-[11px] text-foreground font-mono truncate mt-1">
+                    {item.requestSnapshot?.url || 'URL não gravada'}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground/60 truncate mt-0.5">
+                    {new Date(item.timestamp).toLocaleTimeString()}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         )}
       </div>
     </div>
