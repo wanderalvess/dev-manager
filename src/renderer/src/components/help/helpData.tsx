@@ -17,6 +17,7 @@ import {
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
+import { getUpdateFaq } from './faq/updateFaq';
 
 export type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
 
@@ -465,6 +466,9 @@ export function getFaqList({
               </li>
               <li>
                 <strong className="text-foreground">Atualização Rápida no Cartão:</strong> No card de qualquer rotina existente, clique no ícone de nuvem (<Download className="w-3 h-3 inline text-primary" />) para abrir o diálogo já com o código da rotina e versão preenchidos.
+              </li>
+              <li>
+                <strong className="text-foreground">Ciclos de Evolução Atuais:</strong> A CCW adota ciclos de evolução modernos (ex: <code className="font-mono text-primary font-bold">37.00</code> padrão, <code className="font-mono text-primary">38.00</code>, <code className="font-mono text-primary">36.00</code>). O download utiliza o endpoint oficial <code className="font-mono text-primary">rotinaVersaoComDependencia</code> trazendo a rotina com dependências, com fallback inteligente e opção de sincronizar os ciclos da CCW.
               </li>
               <li>
                 <strong className="text-foreground">Backup Automático (.bak):</strong> Sempre que um executável já existir no diretório de destino (ex.: <code className="font-mono text-primary">C:\\Winthor\\Prod\\MOD-001\\PCSIS101.EXE</code>), o Hub Manager cria automaticamente uma cópia de segurança renomeada com timestamp (ex.: <code className="font-mono text-primary">PCSIS101.EXE.20260929_120000.bak</code>).
@@ -1685,7 +1689,8 @@ export function getFaqList({
     },
     ...getModulesFaq(onNavigate),
     ...getLogsFaq(onNavigate),
-    ...getDeployCancellationFaq(onNavigate)
+    ...getDeployCancellationFaq(onNavigate),
+    ...getUpdateFaq(handleOpenLink)
   ];
 }
 

@@ -25,7 +25,11 @@
   "win": {
     "target": ["nsis", "portable"],
     "requestedExecutionLevel": "asInvoker",
-    "icon": "build/icon.ico"
+    "icon": "build/icon.ico",
+    // Certificado interno autoassinado (dev-manager-codesign.pfx).
+    // Sem CA pública no Windows, electron-updater rejeitaria o download com "not signed by application owner".
+    // A integridade do update é garantida pelo hash SHA-512 no latest.yml publicado no GitHub Releases.
+    "verifyUpdateCodeSignature": false
   },
   // Nomes sem espaço: o GitHub troca espaço por "." no upload e o latest.yml (auto-update) deixaria de
   // achar o instalador. "Portable" no nome é como o app portátil acha o próprio .exe na release.

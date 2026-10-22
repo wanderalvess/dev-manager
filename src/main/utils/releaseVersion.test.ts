@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { compareVersions, parseVersion, pickPortableAsset } from './releaseVersion';
+import {
+  compareVersions,
+  formatUpdateErrorMessage,
+  isSignatureVerificationError,
+  parseVersion,
+  pickPortableAsset
+} from './releaseVersion';
 
 describe('releaseVersion', () => {
   it('parseVersion ignora o prefixo v e o sufixo de pré-release', () => {
@@ -26,5 +32,29 @@ describe('releaseVersion', () => {
     };
     expect(pickPortableAsset(release)?.browser_download_url).toBe('b');
     expect(pickPortableAsset({ ...release, assets: [] })).toBeUndefined();
+  });
+
+  describe('formatUpdateErrorMessage e isSignatureVerificationError', () => {
+    it('detecta e formata erro de assinatura de código (publisherNames / not signed by application owner)', () => {
+      const err = new Error(
+        'New version 1.43.0 is not signed by the application owner: publisherNames: Dev Manager Internal Code Signing'
+      );
+      expect(isSignatureVerificationError(err)).toBe(true);
+      expect(formatUpdateErrorMessage(err)).toContain('assinatura digital da nova versão não é reconhecida como confiável pelo Windows');
+    });
+
+    it('detecta falha de conexão de rede', () => {
+      const err = 'net::ERR_INTERNET_DISCONNECTED';
+      expect(formatUpdateErrorMessage(err)).toBe('Sem conexão com a internet. Verifique sua conexão de rede e tente novamente.');
+    });
+
+    it('detecta timeout de rede', () => {
+      const err = new Error('connect ETIMEDOUT');
+      expect(formatUpdateErrorMessage(err)).toBe('Tempo limite esgotado ao conectar aos servidores do GitHub Releases. Tente novamente.');
+    });
+
+    it('retorna a mensagem original para outros erros genéricos', () => {
+      expect(formatUpdateErrorMessage('Erro qualquer')).toBe('Erro qualquer');
+    });
   });
 });

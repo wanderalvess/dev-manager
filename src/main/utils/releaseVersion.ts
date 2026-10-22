@@ -3,6 +3,8 @@
  * GitHub Releases diretamente — o electron-updater não atualiza o executável portátil.
  */
 
+export const GITHUB_LATEST_RELEASE_PAGE_URL = 'https://github.com/wanderalvess/dev-manager/releases/latest';
+
 export interface GithubReleaseAsset {
   name: string;
   browser_download_url: string;
@@ -44,4 +46,31 @@ export function compareVersions(a: string, b: string): number {
 /** Escolhe o .exe portátil da release (nome contém "portable"); senão nenhum. */
 export function pickPortableAsset(release: GithubRelease): GithubReleaseAsset | undefined {
   return release.assets?.find((a) => /portable/i.test(a.name) && a.name.toLowerCase().endsWith('.exe'));
+}
+
+/** Identifica se o erro é decorrente de validação de assinatura digital Authenticode. */
+export function isSignatureVerificationError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err || '');
+  return /not signed by the application owner|publisherNames|ERR_UPDATER_INVALID_SIGNATURE/i.test(msg);
+}
+
+/**
+ * Converte erros técnicos do electron-updater (ex.: falha de assinatura de código em certificado
+ * auto-assinado ou instabilidades de rede) em mensagens legíveis e explicativas para o usuário.
+ */
+export function formatUpdateErrorMessage(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err || '');
+  if (isSignatureVerificationError(msg)) {
+    return 'A assinatura digital da nova versão não é reconhecida como confiável pelo Windows (certificado interno). O instalador pode ser baixado manualmente pelo GitHub Releases.';
+  }
+  if (/net::ERR_INTERNET_DISCONNECTED|ENOTFOUND|EAI_AGAIN/i.test(msg)) {
+    return 'Sem conexão com a internet. Verifique sua conexão de rede e tente novamente.';
+  }
+  if (/ETIMEDOUT|ESOCKETTIMEDOUT|timeout/i.test(msg)) {
+    return 'Tempo limite esgotado ao conectar aos servidores do GitHub Releases. Tente novamente.';
+  }
+  if (/ERR_UPDATER_WEB_INSTALLER_DISABLED/i.test(msg)) {
+    return 'Instalador web desativado na configuração da aplicação.';
+  }
+  return msg || 'Erro desconhecido ao processar atualização.';
 }

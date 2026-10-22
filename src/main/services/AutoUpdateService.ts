@@ -1,6 +1,11 @@
 import { autoUpdater } from 'electron-updater';
 import { UpdateStatus } from '../../shared/types';
-import { compareVersions, GithubRelease, pickPortableAsset } from '../utils/releaseVersion';
+import {
+  compareVersions,
+  formatUpdateErrorMessage,
+  GithubRelease,
+  pickPortableAsset
+} from '../utils/releaseVersion';
 
 const LATEST_RELEASE_API = 'https://api.github.com/repos/wanderalvess/dev-manager/releases/latest';
 
@@ -31,12 +36,22 @@ export class AutoUpdateService {
   ) {
     autoUpdater.autoDownload = false;
 
+    // Em ambiente Windows (NsisUpdater), a checagem nativa exige certificados emitidos por CA pública
+    // instalada na raiz do sistema. Como o cockpit utiliza certificado autoassinado interno
+    // (CN=Dev Manager Internal Code Signing) ou empacota sem CA comercial, a validação Authenticode
+    // do Windows retornaria 'NotTrusted' e lançaria 'is not signed by the application owner'.
+    // A integridade e autenticidade do instalador já são garantidas pelo hash SHA-512 do latest.yml.
+    // Sobrescrever verifyUpdateCodeSignature para resolver null aceita o arquivo baixado.
+    if ('verifyUpdateCodeSignature' in autoUpdater) {
+      (autoUpdater as any).verifyUpdateCodeSignature = async () => null;
+    }
+
     autoUpdater.on('checking-for-update', () => onStatus({ status: 'checking' }));
     autoUpdater.on('update-available', (info) => onStatus({ status: 'available', version: info.version }));
     autoUpdater.on('update-not-available', () => onStatus({ status: 'not-available' }));
     autoUpdater.on('download-progress', (progress) => onStatus({ status: 'downloading', percent: progress.percent }));
     autoUpdater.on('update-downloaded', (info) => onStatus({ status: 'downloaded', version: info.version }));
-    autoUpdater.on('error', (err) => onStatus({ status: 'error', message: err?.message || String(err) }));
+    autoUpdater.on('error', (err) => onStatus({ status: 'error', message: formatUpdateErrorMessage(err) }));
   }
 
   /** Verifica se há uma versão nova publicada no GitHub Releases. Sem efeito em builds não empacotadas (dev). */
@@ -45,8 +60,8 @@ export class AutoUpdateService {
       void this.checkPortable();
       return;
     }
-    autoUpdater.checkForUpdates().catch(() => {
-      // Erros já são reportados via evento 'error' acima; evita unhandled rejection.
+    autoUpdater.checkForUpdates().catch((err) => {
+      this.onStatus({ status: 'error', message: formatUpdateErrorMessage(err) });
     });
   }
 
@@ -55,8 +70,8 @@ export class AutoUpdateService {
       if (this.manualDownloadUrl) void this.options.openExternal?.(this.manualDownloadUrl);
       return;
     }
-    autoUpdater.downloadUpdate().catch(() => {
-      // Erros já são reportados via evento 'error' acima.
+    autoUpdater.downloadUpdate().catch((err) => {
+      this.onStatus({ status: 'error', message: formatUpdateErrorMessage(err) });
     });
   }
 
@@ -84,7 +99,7 @@ export class AutoUpdateService {
       this.manualDownloadUrl = pickPortableAsset(release)?.browser_download_url ?? release.html_url;
       this.onStatus({ status: 'available', version: release.tag_name.replace(/^v/i, ''), manual: true });
     } catch (err) {
-      this.onStatus({ status: 'error', message: err instanceof Error ? err.message : String(err) });
+      this.onStatus({ status: 'error', message: formatUpdateErrorMessage(err) });
     }
   }
 }

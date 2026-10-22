@@ -5,6 +5,7 @@ type Handler = (...args: any[]) => void;
 const listeners = new Map<string, Handler>();
 const autoUpdaterMock = {
   autoDownload: true,
+  verifyUpdateCodeSignature: vi.fn(),
   on: vi.fn((event: string, handler: Handler) => {
     listeners.set(event, handler);
   }),
@@ -23,6 +24,7 @@ describe('AutoUpdateService', () => {
   beforeEach(() => {
     listeners.clear();
     autoUpdaterMock.autoDownload = true;
+    autoUpdaterMock.verifyUpdateCodeSignature = vi.fn();
     autoUpdaterMock.checkForUpdates.mockClear();
     autoUpdaterMock.checkForUpdates.mockImplementation(() => Promise.resolve());
     autoUpdaterMock.downloadUpdate.mockClear();
@@ -30,9 +32,12 @@ describe('AutoUpdateService', () => {
     autoUpdaterMock.quitAndInstall.mockClear();
   });
 
-  it('desativa autoDownload na construção (download só começa sob pedido explícito do usuário)', () => {
+  it('desativa autoDownload e neutraliza verifyUpdateCodeSignature para certificados internos', async () => {
     new AutoUpdateService(vi.fn());
     expect(autoUpdaterMock.autoDownload).toBe(false);
+    expect(typeof autoUpdaterMock.verifyUpdateCodeSignature).toBe('function');
+    const result = await autoUpdaterMock.verifyUpdateCodeSignature();
+    expect(result).toBeNull();
   });
 
   it('mapeia cada evento do autoUpdater para o shape UpdateStatus esperado pela UI', () => {
@@ -61,6 +66,19 @@ describe('AutoUpdateService', () => {
     expect(onStatus).toHaveBeenLastCalledWith({ status: 'error', message: 'erro sem propriedade message' });
   });
 
+  it('formata erro de assinatura para mensagem amigável no evento error', () => {
+    const onStatus = vi.fn();
+    new AutoUpdateService(onStatus);
+
+    listeners.get('error')?.(
+      new Error('New version 1.43.0 is not signed by the application owner: publisherNames: Dev Manager')
+    );
+    expect(onStatus).toHaveBeenLastCalledWith({
+      status: 'error',
+      message: expect.stringContaining('assinatura digital')
+    });
+  });
+
   it('checkForUpdates() delega para autoUpdater.checkForUpdates()', () => {
     const service = new AutoUpdateService(vi.fn());
     service.checkForUpdates();
@@ -79,18 +97,28 @@ describe('AutoUpdateService', () => {
     expect(autoUpdaterMock.quitAndInstall).toHaveBeenCalledTimes(1);
   });
 
-  it('checkForUpdates() não lança quando a promise rejeita, evitando unhandled rejection', async () => {
+  it('checkForUpdates() reporta erro quando a promise rejeita', async () => {
     autoUpdaterMock.checkForUpdates.mockImplementationOnce(() => Promise.reject(new Error('falha de rede')));
-    const service = new AutoUpdateService(vi.fn());
-    expect(() => service.checkForUpdates()).not.toThrow();
+    const onStatus = vi.fn();
+    const service = new AutoUpdateService(onStatus);
+    service.checkForUpdates();
     await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(onStatus).toHaveBeenLastCalledWith({
+      status: 'error',
+      message: 'falha de rede'
+    });
   });
 
-  it('downloadUpdate() não lança quando a promise rejeita, evitando unhandled rejection', async () => {
+  it('downloadUpdate() reporta erro quando a promise rejeita', async () => {
     autoUpdaterMock.downloadUpdate.mockImplementationOnce(() => Promise.reject(new Error('falha de rede')));
-    const service = new AutoUpdateService(vi.fn());
-    expect(() => service.downloadUpdate()).not.toThrow();
+    const onStatus = vi.fn();
+    const service = new AutoUpdateService(onStatus);
+    service.downloadUpdate();
     await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(onStatus).toHaveBeenLastCalledWith({
+      status: 'error',
+      message: 'falha de rede'
+    });
   });
 
   describe('modo portátil (GitHub API direta)', () => {
