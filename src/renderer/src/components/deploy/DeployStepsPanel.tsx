@@ -15,6 +15,7 @@ interface DeployStepsPanelProps {
   stepExecutionTimes: Record<string, number>;
   onEditSteps: () => void;
   onRunStep: (step: DeployStep) => void;
+  onCancelStep?: (step: DeployStep) => void;
   onToggleStep?: (stepId: string) => void;
   onToggleAllSteps?: (enableAll: boolean) => void;
   onRunFromStep?: (index: number) => void;
@@ -31,6 +32,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
   stepExecutionTimes,
   onEditSteps,
   onRunStep,
+  onCancelStep,
   onToggleStep,
   onToggleAllSteps,
   onRunFromStep
@@ -131,6 +133,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
               status={stepStatuses[step.id]}
               executionTimeMs={stepExecutionTimes[step.id]}
               onRun={onRunStep}
+              onCancel={onCancelStep}
               onToggle={onToggleStep}
               onRunFromStep={onRunFromStep}
             />

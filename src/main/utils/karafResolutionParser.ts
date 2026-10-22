@@ -347,6 +347,34 @@ export function formatOsgiResolutionDiagnostic(diag: {
     lines.push(`  📦 ${matchedPomDependency.groupId}:${matchedPomDependency.artifactId}:${matchedPomDependency.version || 'não especificada'}`);
   }
 
+  const reqShortLabel =
+    rootCause.requirementType === 'package'
+      ? 'pacote Java'
+      : rootCause.requirementType === 'bundle'
+      ? 'bundle OSGi'
+      : rootCause.requirementType === 'service'
+      ? 'serviço OSGi'
+      : 'requisito';
+
+  const rangeInfo = rootCause.versionRangeDesc ? ` (${rootCause.versionRangeDesc})` : '';
+
+  lines.push('');
+  lines.push('📌 CAUSA IDENTIFICADA:');
+  lines.push(`   O bundle "${rootCause.bundleName}" exige que o ${reqShortLabel} "${rootCause.missingItem}"${rangeInfo} esteja ativo no Karaf, mas ele ainda não foi publicado ou iniciado no contêiner local.`);
+
+  lines.push('');
+  lines.push('🛠️ SOLUÇÃO RECOMENDADA:');
+  if (matchedProfileName) {
+    lines.push(`   Execute o perfil de deploy cadastrado "${matchedProfileName}" para publicar este módulo no Karaf.`);
+    lines.push('   Após a conclusão do deploy, execute novamente este perfil atual.');
+  } else if (matchedProjectName) {
+    lines.push(`   Compile e faça o deploy do projeto local "${matchedProjectName}" para registrar a versão necessária no Karaf.`);
+  } else if (matchedPomDependency?.version && !matchedPomDependency.version.toUpperCase().includes('SNAPSHOT')) {
+    lines.push(`   Instale a versão de release oficial (${matchedPomDependency.version}) diretamente do Nexus via feature:install.`);
+  } else {
+    lines.push(`   Verifique se o bundle que fornece "${rootCause.missingItem}" está instalado e ativo no Karaf (bundle:list).`);
+  }
+
   if (versionMismatchWarning) {
     lines.push('');
     lines.push(`⚠️ [ALERTA DE VERSÃO] ${versionMismatchWarning}`);

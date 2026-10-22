@@ -73,10 +73,6 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
       : spawn(exeFile, ['debug'], {
           cwd: karafBin,
           shell: false,
-          // detached: true cria o processo em seu próprio grupo, permitindo que
-          // stopEmbeddedKaraf mate a árvore inteira via process.kill(-pid) no
-          // Linux/macOS (sem isso, o kill de grupo falhava silenciosamente e
-          // os subprocessos JVM/OSGi filhos sobreviviam).
           detached: true,
           env: childEnv
         });
@@ -110,9 +106,27 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
 export function sendEmbeddedInput(ctx: KarafContext, input: string): boolean {
   if (ctx.embeddedKarafProcess && ctx.embeddedKarafProcess.stdin) {
     if (!input || typeof input !== 'string') return false;
+    // Permite interrupção (Ctrl+C / ETX \x03) para cancelar comandos em execução como log:tail
+    if (input === '\x03' || input === '^C') {
+      ctx.embeddedKarafProcess.stdin.write('\x03');
+      return true;
+    }
     // eslint-disable-next-line no-control-regex -- remove intencionalmente caracteres de controle do input do terminal
     ctx.embeddedKarafProcess.stdin.write(input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '') + '\n');
     return true;
+  }
+  return false;
+}
+
+/** Envia sinal de interrupção (Ctrl+C / ETX \x03) para o processo do console embutido Karaf. */
+export function sendEmbeddedInterrupt(ctx: KarafContext): boolean {
+  if (ctx.embeddedKarafProcess && ctx.embeddedKarafProcess.stdin) {
+    try {
+      ctx.embeddedKarafProcess.stdin.write('\x03');
+      return true;
+    } catch {
+      return false;
+    }
   }
   return false;
 }

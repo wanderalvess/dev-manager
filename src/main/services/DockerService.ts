@@ -1,3 +1,4 @@
+import { ChildProcess } from 'child_process';
 import {
   DockerContainerInfo,
   DockerDaemonStatus,
@@ -8,6 +9,7 @@ import {
   OracleDataPumpParams
 } from '../../shared/types';
 import { isValidIdentifier } from '../utils/security';
+import { killProcessTree } from '../utils/process';
 import type { DockerContext } from './docker/dockerContext';
 import * as engine from './docker/dockerEngine';
 import * as status from './docker/dockerStatus';
@@ -23,14 +25,14 @@ import * as oracle from './docker/dockerOracle';
 /**
  * Fachada fina: mantém o estado (motor detectado, distro WSL) e a API pública; a lógica vive em
  * ./docker/*. Os módulos recebem `this.ctx`, cujas chamadas voltam pela instância (late-binding),
- * preservando a interceptação por atribuição nos métodos (inclusive privados, como
- * resolveCommandAndArgs e isValidContainerId).
+ * preservando a interceptação por atribuição nos métodos.
  */
 export class DockerService {
   private detectedEngine: 'docker' | 'podman' | null = null;
   private targetWslDistro: string | null = null;
   private useWsl = false;
   private autoDetectedWsl = false;
+  private activeProcess: ChildProcess | null = null;
   private readonly ctx: DockerContext;
 
   constructor() {
@@ -111,7 +113,6 @@ export class DockerService {
     return queries.listContainers(this.ctx);
   }
 
-  // Mesmo objeto definido em ./docker/dockerAliases (os testes leem DockerService.CONTAINER_ALIASES).
   private static readonly CONTAINER_ALIASES: Record<string, string[]> = aliases.CONTAINER_ALIASES;
 
   public async resolveContainerAlias(targetName: string): Promise<string | null> {
@@ -180,20 +181,45 @@ export class DockerService {
     return sequence.stopContainerSequence(this.ctx, containers, onProgress);
   }
 
+  public abortCurrentProcess(): void {
+    if (this.activeProcess?.pid) {
+      try {
+        killProcessTree(this.activeProcess.pid);
+      } catch (err) {
+        console.warn('Erro ao finalizar processo Docker abortado:', err);
+      }
+      this.activeProcess = null;
+    }
+  }
+
   public async buildImage(
     contextPath: string,
     imageTag: string,
     dockerfile: string | undefined,
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    onSpawn?: (child: ChildProcess) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
-    return images.buildImage(this.ctx, contextPath, imageTag, dockerfile, onChunk);
+    const handleSpawn = (child: ChildProcess) => {
+      this.activeProcess = child;
+      onSpawn?.(child);
+    };
+    return images.buildImage(this.ctx, contextPath, imageTag, dockerfile, onChunk, handleSpawn).finally(() => {
+      this.activeProcess = null;
+    });
   }
 
   public async pushImage(
     imageTag: string,
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    onSpawn?: (child: ChildProcess) => void
   ): Promise<{ code: number; stdout: string; stderr: string }> {
-    return images.pushImage(this.ctx, imageTag, onChunk);
+    const handleSpawn = (child: ChildProcess) => {
+      this.activeProcess = child;
+      onSpawn?.(child);
+    };
+    return images.pushImage(this.ctx, imageTag, onChunk, handleSpawn).finally(() => {
+      this.activeProcess = null;
+    });
   }
 
   public async composeUp(

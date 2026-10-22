@@ -113,6 +113,8 @@ describe('karafResolutionParser', () => {
     expect(diag!.formattedBanner).toContain('DIAGNÓSTICO INTELIGENTE DE DEPENDÊNCIA OSGi');
     expect(diag!.formattedBanner).toContain('winthor-integracao-matcon-service:1.39.23.45');
     expect(diag!.formattedBanner).toContain('Perfil de Deploy cadastrado: "matcon"');
+    expect(diag!.formattedBanner).toContain('📌 CAUSA IDENTIFICADA:');
+    expect(diag!.formattedBanner).toContain('🛠️ SOLUÇÃO RECOMENDADA:');
   });
 
   it('diagnoseKarafResolutionError deve retornar null para comandos com saídas normais ou outros erros', () => {

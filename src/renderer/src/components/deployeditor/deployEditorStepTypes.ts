@@ -9,7 +9,8 @@ import {
   Terminal,
   Clock,
   Globe,
-  Server
+  Server,
+  GitMerge
 } from 'lucide-react';
 import type { DeployStep, DeployStepType } from '../../../../shared/types';
 
@@ -86,5 +87,11 @@ export const STEP_TYPE_OPTIONS: StepTypeOption[] = [
     label: 'Serviço Windows (Iniciar/Parar)',
     desc: 'Controla inicialização ou parada de serviços do Windows (ex: Oracle, Postgres)',
     icon: Server
+  },
+  {
+    type: 'pom-sync-version',
+    label: 'POM: Sincronizar Versão Downstream',
+    desc: 'Lê a versão do projeto de origem e atualiza a dependência no pom.xml de destino',
+    icon: GitMerge
   }
 ];

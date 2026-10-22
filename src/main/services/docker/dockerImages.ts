@@ -1,3 +1,4 @@
+import { ChildProcess } from 'child_process';
 import fs from 'fs';
 import { isSafeDockerImageTag, isSafeLocalPath } from '../../utils/security';
 import { runCapturedProcess } from '../../utils/process';
@@ -11,7 +12,8 @@ export async function buildImage(
   contextPath: string,
   imageTag: string,
   dockerfile: string | undefined,
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  onSpawn?: (child: ChildProcess) => void
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   if (!isSafeLocalPath(contextPath) || !fs.existsSync(contextPath)) {
     const err = `[ERRO] Diretório de contexto do container não encontrado: ${contextPath}\r\n`;
@@ -32,7 +34,7 @@ export async function buildImage(
   ]);
 
   onChunk(`> ${binary} ${finalArgs.join(' ')}\r\n\r\n`);
-  const result = await runCapturedProcess(binary, finalArgs, { cwd: contextPath, windowsHide: true }, onChunk);
+  const result = await runCapturedProcess(binary, finalArgs, { cwd: contextPath, windowsHide: true }, onChunk, undefined, onSpawn);
   onChunk(
     result.code === 0
       ? `\r\n[SUCESSO] Imagem "${imageTag}" construída com sucesso!\r\n`
@@ -47,7 +49,8 @@ export async function buildImage(
 export async function pushImage(
   ctx: DockerContext,
   imageTag: string,
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  onSpawn?: (child: ChildProcess) => void
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   if (!isSafeDockerImageTag(imageTag)) {
     const err = `[ERRO] Tag de imagem de container inválida: ${imageTag}\r\n`;
@@ -58,7 +61,7 @@ export async function pushImage(
   const { binary, finalArgs } = await ctx.resolveCommandAndArgs('push', [imageTag]);
   onChunk(`> ${binary} ${finalArgs.join(' ')}\r\n\r\n`);
 
-  const result = await runCapturedProcess(binary, finalArgs, { windowsHide: true }, onChunk);
+  const result = await runCapturedProcess(binary, finalArgs, { windowsHide: true }, onChunk, undefined, onSpawn);
   onChunk(
     result.code === 0
       ? `\r\n[SUCESSO] Imagem "${imageTag}" enviada com sucesso!\r\n`

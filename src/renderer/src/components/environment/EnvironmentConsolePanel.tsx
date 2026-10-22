@@ -11,6 +11,7 @@ interface EnvironmentConsolePanelProps {
   onClear: () => void;
   onSendKarafCommand: (cmd: string) => void;
   onOpenHistory: () => void;
+  onAbort?: () => void;
 }
 
 /** Console / terminal integrado com atalho para o histórico persistido do Karaf. */
@@ -21,7 +22,8 @@ export const EnvironmentConsolePanel: React.FC<EnvironmentConsolePanelProps> = (
   isKarafEmbeddedRunning,
   onClear,
   onSendKarafCommand,
-  onOpenHistory
+  onOpenHistory,
+  onAbort
 }) => (
   <div className="lg:col-span-6 flex flex-col relative min-w-0 min-h-[400px] lg:min-h-0" data-tour="console-terminal">
     <button
@@ -37,6 +39,7 @@ export const EnvironmentConsolePanel: React.FC<EnvironmentConsolePanelProps> = (
       title={title}
       isRunning={isRunning}
       onSendCommand={isKarafEmbeddedRunning ? onSendKarafCommand : undefined}
+      onAbort={onAbort}
       inputPlaceholder="Digite um comando OSGi Karaf ou comando direto..."
     />
   </div>

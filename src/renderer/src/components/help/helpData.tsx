@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
+import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 
 export type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
 
@@ -1683,7 +1684,8 @@ export function getFaqList({
       )
     },
     ...getModulesFaq(onNavigate),
-    ...getLogsFaq(onNavigate)
+    ...getLogsFaq(onNavigate),
+    ...getDeployCancellationFaq(onNavigate)
   ];
 }
 
@@ -1705,7 +1707,8 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Alt + ← / →', desc: 'Navegar entre versões anterior e seguinte no modal de Novidades', category: 'Navegação' },
     { key: 'Ctrl + Enter', desc: 'Enviar requisição no API Studio / Executar SQL no Database Studio', category: 'Produtividade' },
     { key: 'Shift + F9', desc: `Depuração Remota JVM no IntelliJ IDEA (Porta :${debugPort})`, category: 'Desenvolvimento' },
-    { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' }
+    { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' },
+    { key: 'Ctrl + C / Esc', desc: 'Interromper comando ou diagnóstico em execução no terminal (ou botão Interromper)', category: 'Terminal' }
   ];
 }
 

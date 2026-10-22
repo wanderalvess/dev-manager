@@ -22,6 +22,11 @@ export function createKarafApi({ apiFetch, wsManager }: BridgeDeps) {
       return true;
     },
 
+    sendKarafInterrupt: async (): Promise<boolean> => {
+      wsManager.send('karaf:interrupt', '');
+      return true;
+    },
+
     stopEmbeddedKaraf: async (): Promise<boolean> => {
       const data = await apiFetch<{ success: boolean }>('/api/karaf/embedded/stop', {
         method: 'POST'
@@ -84,6 +89,10 @@ export function createKarafApi({ apiFetch, wsManager }: BridgeDeps) {
         method: 'POST',
         body: JSON.stringify({ command })
       });
+    },
+
+    abortKarafDiagnostic: async (): Promise<{ success: boolean }> => {
+      return apiFetch('/api/karaf/abort-diagnostic', { method: 'POST' });
     },
 
     getKarafDeployHistory: async (): Promise<KarafDeployHistoryEntry[]> => {

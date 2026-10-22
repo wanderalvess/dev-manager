@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { OsgiResolutionDiagnosticSummary } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { buildOsgiDiagnosticExplanation } from '../utils/osgiDiagnosticUtils';
 
 interface OsgiResolutionDiagnosticCardProps {
   diagnostic: OsgiResolutionDiagnosticSummary;
@@ -34,10 +35,11 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
   const { copy, copiedKey } = useCopyToClipboard(2000);
   const isCopied = copiedKey === 'missing-item';
   const isBusy = isDeploying || runningStepId !== null;
+  const explanation = buildOsgiDiagnosticExplanation(diagnostic);
 
   return (
     <div
-      className="mb-3 rounded-xl bg-card border border-warning/35 border-l-4 border-l-amber-500 shadow-md text-foreground overflow-hidden animate-fade-in"
+      className="mb-3 rounded-xl bg-card border border-warning/35 border-l-4 border-l-amber-500 shadow-md text-foreground overflow-hidden animate-fade-in shrink-0"
       role="alert"
       aria-label="Diagnóstico de Resolução OSGi"
     >
@@ -73,8 +75,30 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
         </button>
       </div>
 
-      {/* Grid de Telemetria Técnica */}
+      {/* Corpo do Diagnóstico */}
       <div className="p-3.5 space-y-2.5">
+        {/* Explicação Clara: Causa e Solução */}
+        <div className="p-3 rounded-lg bg-background/70 border border-border/90 space-y-2 text-xs">
+          <div className="flex items-start gap-2">
+            <span className="font-bold text-amber-500 uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
+              Causa:
+            </span>
+            <span className="text-foreground/90 leading-relaxed">
+              O bundle <strong className="font-mono text-foreground font-semibold">{diagnostic.failingBundle}</strong> exige que o {explanation.requirementLabel} <strong className="font-mono text-warning font-semibold">{diagnostic.missingItem}</strong>{diagnostic.versionRangeDesc ? ` (faixa ${diagnostic.versionRangeDesc})` : ''} esteja ativo no Karaf, mas ele ainda não foi publicado ou iniciado no contêiner local.
+            </span>
+          </div>
+
+          <div className="flex items-start gap-2 pt-2 border-t border-border/50">
+            <span className="font-bold text-emerald-500 uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
+              Solução:
+            </span>
+            <span className="text-foreground/90 leading-relaxed font-medium">
+              {explanation.solutionText}
+            </span>
+          </div>
+        </div>
+
+        {/* Grid de Telemetria Técnica */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {/* Card 1: Requisito Ausente */}
           <div className="p-2.5 rounded-lg bg-background/60 border border-border flex flex-col justify-between space-y-1.5">
@@ -173,12 +197,12 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                 type="button"
                 onClick={() => onExecuteMatchedProfile(diagnostic.matchedProfileId || diagnostic.matchedProfileName!)}
                 disabled={isBusy}
-                className="px-3.5 py-1.5 rounded-lg bg-success hover:bg-success active:bg-success text-background font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all duration-150 cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all duration-150 cursor-pointer disabled:opacity-50"
                 title={`Disparar imediatamente o perfil de deploy "${diagnostic.matchedProfileName}" para construir e registrar a versão necessária no Karaf`}
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Executar Perfil "{diagnostic.matchedProfileName}"</span>
-                <span className="ml-1 text-2xs font-mono bg-success/60 text-success border border-success/40 px-1 py-0.2 rounded font-semibold uppercase tracking-wider">
+                <span className="ml-1 text-2xs font-mono bg-black/25 text-white border border-white/20 px-1 py-0.2 rounded font-semibold uppercase tracking-wider">
                   Recomendado
                 </span>
               </button>

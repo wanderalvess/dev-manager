@@ -75,6 +75,16 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     }
   };
 
+  const handleInterruptKaraf = () => {
+    if (window.electronAPI?.sendKarafInterrupt) {
+      setLogs((prev) => [...prev, '^C\r\n']);
+      window.electronAPI.sendKarafInterrupt();
+    } else if (window.electronAPI?.sendKarafInput) {
+      setLogs((prev) => [...prev, '^C\r\n']);
+      window.electronAPI.sendKarafInput('\x03');
+    }
+  };
+
   const handleOpenLink = (url: string) => {
     if (window.electronAPI) {
       window.electronAPI.openExternal(url);
@@ -179,6 +189,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           isKarafEmbeddedRunning={status.isKarafEmbeddedRunning}
           onClear={() => setLogs([])}
           onSendKarafCommand={handleSendKarafCommand}
+          onAbort={status.isKarafEmbeddedRunning ? handleInterruptKaraf : undefined}
           onOpenHistory={karafHistory.open}
         />
       </div>

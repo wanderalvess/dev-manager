@@ -7,6 +7,7 @@ import {
   Play,
   RotateCw,
   SkipForward,
+  Square,
   XCircle
 } from 'lucide-react';
 import type { DeployStep } from '../../../../shared/types';
@@ -21,6 +22,7 @@ interface DeployStepItemProps {
   status?: DeployStepStatus;
   executionTimeMs?: number;
   onRun: (step: DeployStep) => void;
+  onCancel?: (step: DeployStep) => void;
   onToggle?: (stepId: string) => void;
   onRunFromStep?: (index: number) => void;
 }
@@ -34,6 +36,7 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
   status,
   executionTimeMs,
   onRun,
+  onCancel,
   onToggle,
   onRunFromStep
 }) => {
@@ -137,24 +140,34 @@ export const DeployStepItem: React.FC<DeployStepItemProps> = ({
           </button>
         )}
 
-        {/* Executar somente esta etapa */}
-        <button
-          type="button"
-          data-tour="run-single-step"
-          onClick={() => onRun(step)}
-          disabled={isBusy}
-          className={`p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
-            isRunning
-              ? 'bg-primary text-primary-foreground border-primary animate-pulse'
-              : 'bg-card hover:bg-primary/15 text-primary border-border hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed'
-          }`}
-          title={isRunning ? 'Executando esta etapa...' : `Executar somente esta etapa (${step.name})`}
-        >
-          {isRunning ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-          <span className="text-2xs font-semibold hidden group-hover:inline sm:inline">
-            {isRunning ? 'Rodando...' : 'Executar'}
-          </span>
-        </button>
+        {/* Executar / Cancelar somente esta etapa */}
+        {isRunning ? (
+          <button
+            type="button"
+            onClick={() => onCancel?.(step)}
+            className="p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer bg-destructive hover:bg-destructive/90 text-destructive-foreground border-destructive shadow-2xs"
+            title={`Interromper execução desta etapa (${step.name}) imediatamente`}
+          >
+            <Square className="w-3.5 h-3.5 fill-current" />
+            <span className="text-2xs font-semibold hidden group-hover:inline sm:inline">
+              Cancelar
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            data-tour="run-single-step"
+            onClick={() => onRun(step)}
+            disabled={isBusy}
+            className="p-1.5 rounded-lg border text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer bg-card hover:bg-primary/15 text-primary border-border hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={`Executar somente esta etapa (${step.name})`}
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span className="text-2xs font-semibold hidden group-hover:inline sm:inline">
+              Executar
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

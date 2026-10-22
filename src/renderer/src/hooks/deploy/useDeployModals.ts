@@ -9,6 +9,7 @@ export function useDeployModals() {
   const [isRoutine801ModalOpen, setIsRoutine801ModalOpen] = useState<boolean>(false);
   const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState<boolean>(false);
   const [isJvmMemoryModalOpen, setIsJvmMemoryModalOpen] = useState<boolean>(false);
+  const [isChainModalOpen, setIsChainModalOpen] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<DeployProfileHistoryEntry[]>([]);
 
   const openProfileEditor = (profile: DeployProfile | null) => {
@@ -51,6 +52,8 @@ export function useDeployModals() {
     setIsFeaturesModalOpen,
     isJvmMemoryModalOpen,
     setIsJvmMemoryModalOpen,
+    isChainModalOpen,
+    setIsChainModalOpen,
     historyList,
     handleOpenHistory,
     handleClearHistory

@@ -1,3 +1,4 @@
+import { ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { KarafDeployHistoryEntry, KarafDeployRequest, getKarafSshPort } from '../../../shared/types';
@@ -120,7 +121,8 @@ export async function deploy(
 export async function runMavenBuild(
   projectPath: string,
   skipTests: boolean,
-  onChunk: ChunkHandler
+  onChunk: ChunkHandler,
+  onSpawn?: (child: ChildProcess) => void
 ): Promise<{ code: number; stdout: string; stderr: string }> {
   onChunk(`\r\n==========================================\r\n`);
   onChunk(`🔨 EXECUTANDO COMPILAÇÃO MAVEN (mvn clean install)\r\n`);
@@ -152,8 +154,8 @@ export async function runMavenBuild(
   onChunk(`> ${cmd} ${args.join(' ')}\r\n\r\n`);
 
   const result = isWin
-    ? await runCapturedProcess('cmd.exe', ['/c', cmd, ...args], { cwd: projectPath }, onChunk)
-    : await runCapturedProcess(cmd, args, { cwd: projectPath }, onChunk);
+    ? await runCapturedProcess('cmd.exe', ['/c', cmd, ...args], { cwd: projectPath }, onChunk, undefined, onSpawn)
+    : await runCapturedProcess(cmd, args, { cwd: projectPath }, onChunk, undefined, onSpawn);
 
   onChunk(
     result.code === 0
