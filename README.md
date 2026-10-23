@@ -564,6 +564,16 @@ Se desejar compilar apenas um dos formatos para economizar tempo de empacotament
   npm run build && npx electron-builder --win nsis
   ```
 
+#### Build atrás de proxy corporativo (TLS e mirrors)
+
+Por padrão o build **valida o certificado TLS** e baixa o Electron e os binários do `electron-builder` dos hosts oficiais. Se a sua rede faz *SSL inspection* (certificado autoassinado) e o download falha com erro de certificado, rode com `CORP_PROXY_INSECURE=1`:
+
+```powershell
+$env:CORP_PROXY_INSECURE = '1'; npm run build:electron
+```
+
+Esse modo **desliga a validação de TLS** durante o build (o script avisa no console) e usa o mirror `npmmirror.com`; use só atrás de um proxy confiável. Para usar outro mirror, defina `ELECTRON_MIRROR` e/ou `ELECTRON_BUILDER_BINARIES_MIRROR` (com ou sem `CORP_PROXY_INSECURE`); eles têm prioridade sobre o padrão.
+
 ---
 
 ### 🛡️ Permissões (UAC):

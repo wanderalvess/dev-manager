@@ -168,6 +168,12 @@ para uma versão que embuta `dompurify` ≥3.4.16.
   O override `tar ^7.5.21` continua valendo contra a CVE.
 - `electron-builder.json5`: build só para Windows (nsis + portable), com `asarUnpack` para os
   binários nativos do onnxruntime/tokenizers.
+- **TLS e mirrors do build**: o padrão é seguro (certificado validado, hosts oficiais). Só
+  `CORP_PROXY_INSECURE=1` (proxy com SSL inspection) desliga `NODE_TLS_REJECT_UNAUTHORIZED` e usa o
+  mirror `npmmirror.com`; `ELECTRON_MIRROR` / `ELECTRON_BUILDER_BINARIES_MIRROR` sempre têm
+  prioridade. Nunca reintroduza `electronDownload.strictSSL: false` no `electron-builder.json5` nem um
+  padrão `'0'` para `NODE_TLS_REJECT_UNAUTHORIZED` em [scripts/build-electron.cjs](scripts/build-electron.cjs):
+  o relaxamento é opt-in e fica só no script.
 - Ao fim do `build:electron`, [scripts/prepare-release.cjs](scripts/prepare-release.cjs) completa
   `release/` com `LEIA-ME.txt`, `instalar-extras.cmd` (templates em
   [scripts/release-templates/](scripts/release-templates)) e `mcp/`. O `mcp/` é gerado por
