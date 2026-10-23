@@ -1,6 +1,5 @@
 import React from 'react';
 import type { DockerDataState } from '../../hooks/containers/useDockerData';
-import type { WslDistroControlsState } from '../../hooks/containers/useWslDistroControls';
 import type { ContainerEnvironmentsState } from '../../hooks/containers/useContainerEnvironments';
 import type { SequenceProgressState } from '../../hooks/containers/useContainerSequenceProgress';
 import type { ContainerBatchState } from '../../hooks/containers/useContainerBatch';
@@ -9,8 +8,6 @@ import type { ContainerLogsState } from '../../hooks/containers/useContainerLogs
 import type { ContainerToolModalsState } from '../../hooks/containers/useContainerToolModals';
 import type { DockerComposeState } from '../../hooks/containers/useDockerCompose';
 import type { DockerContainerInfo } from '../../../../shared/types';
-import type { computeStackTopology } from '../../utils/dockerContainerUtils';
-import { ContainerTopologyBus } from './topology/ContainerTopologyBus';
 import { DockerComposePanel } from './compose/DockerComposePanel';
 import { ContainerGroupsBar } from './groups/ContainerGroupsBar';
 import { ContainerBatchBar } from './batch/ContainerBatchBar';
@@ -19,7 +16,6 @@ import { ContainerListSection } from './ContainerListSection';
 
 interface ContainersMainAreaProps {
   data: DockerDataState;
-  wsl: WslDistroControlsState;
   envs: ContainerEnvironmentsState;
   sequence: SequenceProgressState;
   batch: ContainerBatchState;
@@ -28,15 +24,11 @@ interface ContainersMainAreaProps {
   tools: ContainerToolModalsState;
   compose: DockerComposeState;
   filteredContainers: DockerContainerInfo[];
-  stackTopology: ReturnType<typeof computeStackTopology>;
-  showTopologyBus: boolean;
-  onHideTopologyBus: () => void;
 }
 
-/** Área rolável: topologia, compose, grupos, barra de status/lote e lista de containers. */
+/** Área rolável: compose, grupos, barra de status/lote e lista de containers. */
 export const ContainersMainArea: React.FC<ContainersMainAreaProps> = ({
   data,
-  wsl,
   envs,
   sequence,
   batch,
@@ -44,10 +36,7 @@ export const ContainersMainArea: React.FC<ContainersMainAreaProps> = ({
   logs,
   tools,
   compose,
-  filteredContainers,
-  stackTopology,
-  showTopologyBus,
-  onHideTopologyBus
+  filteredContainers
 }) => {
   const { containers } = data;
   const runningCount = containers.filter((c) => c.state === 'running').length;
@@ -56,22 +45,6 @@ export const ContainersMainArea: React.FC<ContainersMainAreaProps> = ({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-3 pb-8">
-      {/* Barramento de Topologia do Ambiente WinThor */}
-      <ContainerTopologyBus
-        showTopologyBus={showTopologyBus}
-        onClose={onHideTopologyBus}
-        stackTopology={stackTopology}
-        selectedDistro={data.selectedDistro}
-        daemonStatus={data.daemonStatus}
-        onOpenWslTerminal={() => wsl.handleOpenWslTerminal()}
-        onOpenOracleTools={tools.openOracleTools}
-        onOpenWtaTools={tools.openWtaTools}
-        onOpenWshTools={(c) => tools.openWshTools(c)}
-        copyFeedback={logs.copyFeedback}
-        onCopyText={(text, key) => logs.copyToClipboard(text, key)}
-        containers={containers}
-      />
-
       <DockerComposePanel
         composeFilePath={compose.composeFilePath}
         setComposeFilePath={compose.setComposeFilePath}

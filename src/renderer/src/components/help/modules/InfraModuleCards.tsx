@@ -54,6 +54,7 @@ export const ContainersModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) 
       intro="Controle intuitivo dos containers de apoio do seu ecossistema (bancos de dados, filas, caches):"
       checkClass="text-blue-700 dark:text-blue-400"
     >
+      <span><strong>Tela WinThor &amp; WSL:</strong> a topologia da stack (Oracle XE, WTA, WSH), o botão <em>Subir WinThor</em>, os snapshots do WSL e o Assistente INFR ficam na tela própria <em>WinThor &amp; WSL</em> (menu Infra).</span>
       <span><strong>Status em Tempo Real:</strong> Identifica containers ativos, portas expostas e consumo.</span>
       <span><strong>Grupos de Containers:</strong> Organize containers em grupos personalizados (ex: Bancos, APIs, Mensageria), configure ordem e tempos de warm-up/delay e suba ou pare todos de uma vez com 1 clique.</span>
       <span><strong>Ações em Lote e Seleção Múltipla:</strong> Marque múltiplos containers via checkboxes para subir, parar ou reiniciar em lote, ou salvar a seleção em um novo grupo permanente.</span>

@@ -1,6 +1,7 @@
 import {
   Terminal,
   Cpu,
+  Network,
   HardDriveDownload,
   Boxes,
   Database,
@@ -55,6 +56,15 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Containers Docker',
     description: 'Gestão de ciclo de vida de containers, streaming de logs e status.',
     shortcut: 'Alt+3',
+    hoverBorderClass: 'hover:border-blue-400/50',
+    iconClass: 'text-blue-400',
+    titleHoverClass: 'group-hover:text-blue-400'
+  },
+  {
+    navTarget: 'winthor',
+    icon: Network,
+    title: 'WinThor & WSL',
+    description: 'Stack Oracle XE, WTA e WSH, distros WSL2, snapshots e bootstrap INFR.',
     hoverBorderClass: 'hover:border-blue-400/50',
     iconClass: 'text-blue-400',
     titleHoverClass: 'group-hover:text-blue-400'

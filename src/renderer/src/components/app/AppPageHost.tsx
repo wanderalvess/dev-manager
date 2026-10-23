@@ -10,6 +10,7 @@ const EnvironmentPage = lazy(() => import('../../pages/EnvironmentPage').then((m
 const DatabasePage = lazy(() => import('../../pages/DatabasePage').then((m) => ({ default: m.DatabasePage })));
 const BackupsPage = lazy(() => import('../../pages/BackupsPage').then((m) => ({ default: m.BackupsPage })));
 const ContainersPage = lazy(() => import('../../pages/ContainersPage').then((m) => ({ default: m.ContainersPage })));
+const WinthorPage = lazy(() => import('../../pages/WinthorPage').then((m) => ({ default: m.WinthorPage })));
 const DeployPage = lazy(() => import('../../pages/DeployPage').then((m) => ({ default: m.DeployPage })));
 const KarafPage = lazy(() => import('../../pages/KarafPage').then((m) => ({ default: m.KarafPage })));
 const GitAzurePage = lazy(() => import('../../pages/GitAzurePage').then((m) => ({ default: m.GitAzurePage })));
@@ -111,6 +112,9 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
         </PageSlot>
         <PageSlot id="containers" {...slot}>
           <ContainersPage isActive={activeTab === 'containers'} settingsVersion={settingsVersion} />
+        </PageSlot>
+        <PageSlot id="winthor" {...slot}>
+          <WinthorPage isActive={activeTab === 'winthor'} />
         </PageSlot>
         <PageSlot id="deploy" {...slot}>
           <DeployPage

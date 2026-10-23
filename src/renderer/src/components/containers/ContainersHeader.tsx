@@ -27,7 +27,6 @@ export interface ContainersHeaderProps {
   onSelectEnvId: (id: string) => void;
   onStartEnvironment: (env: ContainerEnvironment) => void;
   onDeleteEnvironmentClick: (env: ContainerEnvironment) => void;
-  onStartWinThorSequence: () => void;
   sequenceProgress: {
     running: boolean;
     currentName?: string;
@@ -37,10 +36,6 @@ export interface ContainersHeaderProps {
   };
   containersCount: number;
   onOpenSaveEnvModal: () => void;
-  onOpenSnapshotsModal: () => void;
-  onOpenInfrModal: () => void;
-  showTopologyBus: boolean;
-  onToggleTopologyBus: () => void;
   filter: string;
   onFilterChange: (value: string) => void;
   isLoading: boolean;
@@ -67,14 +62,9 @@ export const ContainersHeader: React.FC<ContainersHeaderProps> = ({
   onSelectEnvId,
   onStartEnvironment,
   onDeleteEnvironmentClick,
-  onStartWinThorSequence,
   sequenceProgress,
   containersCount,
   onOpenSaveEnvModal,
-  onOpenSnapshotsModal,
-  onOpenInfrModal,
-  showTopologyBus,
-  onToggleTopologyBus,
   filter,
   onFilterChange,
   isLoading,
@@ -116,14 +106,8 @@ export const ContainersHeader: React.FC<ContainersHeaderProps> = ({
             sequenceRunning={sequenceProgress.running}
           />
           <ContainersActionsBar
-            sequenceRunning={sequenceProgress.running}
             containersCount={containersCount}
-            onStartWinThorSequence={onStartWinThorSequence}
             onOpenSaveEnvModal={onOpenSaveEnvModal}
-            onOpenSnapshotsModal={onOpenSnapshotsModal}
-            onOpenInfrModal={onOpenInfrModal}
-            showTopologyBus={showTopologyBus}
-            onToggleTopologyBus={onToggleTopologyBus}
             filter={filter}
             onFilterChange={onFilterChange}
             isLoading={isLoading}

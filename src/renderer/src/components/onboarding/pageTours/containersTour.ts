@@ -5,8 +5,8 @@ export const CONTAINERS_TOUR_STORAGE_KEY = 'devManager:tour:containers';
 export const CONTAINERS_TOUR_STEPS: TourStep[] = [
   {
     target: 'page-header',
-    title: 'Painel de Containers e WSL',
-    desc: 'Aqui você acompanha o status do Docker/Podman e gerencia containers e distros WSL do seu ambiente de desenvolvimento.'
+    title: 'Painel de Containers',
+    desc: 'Aqui você acompanha o status do Docker/Podman e gerencia containers, grupos e Compose. A stack WinThor e as distros WSL ficam na tela WinThor & WSL.'
   },
   {
     target: 'compose-panel',

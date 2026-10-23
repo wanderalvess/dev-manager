@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { CONTAINERS_TOUR_STEPS, CONTAINERS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/containersTour';
-import { computeStackTopology, filterContainers } from '../utils/dockerContainerUtils';
+import { filterContainers } from '../utils/dockerContainerUtils';
 import { ContainersHeader } from '../components/containers/ContainersHeader';
 import { ContainersMainArea } from '../components/containers/ContainersMainArea';
 import { ContainersModals } from '../components/containers/ContainersModals';
@@ -15,11 +15,8 @@ import { useContainerBatch } from '../hooks/containers/useContainerBatch';
 import { useContainerActions } from '../hooks/containers/useContainerActions';
 import { useContainerLogs } from '../hooks/containers/useContainerLogs';
 import { useContainerToolModals } from '../hooks/containers/useContainerToolModals';
-import { useWslSnapshots } from '../hooks/containers/useWslSnapshots';
-import { useInfrBootstrap } from '../hooks/containers/useInfrBootstrap';
 import { useDockerCompose } from '../hooks/containers/useDockerCompose';
 import { useContainersSettingsSync } from '../hooks/containers/useContainersSettingsSync';
-import { useTopologyBusVisibility } from '../hooks/containers/useTopologyBusVisibility';
 
 interface ContainersPageProps {
   isActive?: boolean;
@@ -40,15 +37,10 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
   const actions = useContainerActions(data, errors);
   const logs = useContainerLogs();
   const tools = useContainerToolModals(data, errors);
-  const snapshots = useWslSnapshots(data);
-  const infr = useInfrBootstrap(data);
   const compose = useDockerCompose(data);
-  const topologyBus = useTopologyBusVisibility();
   useContainersSettingsSync(settingsVersion, data, compose, envs.loadEnvironments);
 
   const stoppedCount = useMemo(() => data.containers.filter((c) => c.state !== 'running').length, [data.containers]);
-  // Topologia do Ambiente WinThor (WSL2 -> Oracle -> WTA -> WSH)
-  const stackTopology = useMemo(() => computeStackTopology(data.containers), [data.containers]);
 
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
@@ -69,14 +61,9 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
         onSelectEnvId={envs.setSelectedEnvId}
         onStartEnvironment={envs.handleStartEnvironment}
         onDeleteEnvironmentClick={(env) => envs.setEnvToDelete(env)}
-        onStartWinThorSequence={envs.handleStartWinThorSequence}
         sequenceProgress={sequence.sequenceProgress}
         containersCount={data.containers.length}
         onOpenSaveEnvModal={() => envs.openCreateGroup()}
-        onOpenSnapshotsModal={snapshots.openSnapshotsModal}
-        onOpenInfrModal={infr.openInfrModal}
-        showTopologyBus={topologyBus.showTopologyBus}
-        onToggleTopologyBus={topologyBus.toggleTopologyBus}
         filter={filter}
         onFilterChange={setFilter}
         isLoading={data.isLoading}
@@ -88,7 +75,6 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
 
       <ContainersMainArea
         data={data}
-        wsl={wsl}
         envs={envs}
         sequence={sequence}
         batch={batch}
@@ -97,9 +83,6 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
         tools={tools}
         compose={compose}
         filteredContainers={filteredContainers}
-        stackTopology={stackTopology}
-        showTopologyBus={topologyBus.showTopologyBus}
-        onHideTopologyBus={topologyBus.hideTopologyBus}
       />
 
       <ContainersModals
@@ -110,8 +93,6 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
         actions={actions}
         logs={logs}
         tools={tools}
-        snapshots={snapshots}
-        infr={infr}
         stoppedCount={stoppedCount}
       />
 

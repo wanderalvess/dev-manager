@@ -8,13 +8,17 @@ interface ContainersHeaderTitleProps {
   onOpenTour: () => void;
   copyWslIp: (text: string, key: string) => void;
   wslIpFeedback: string | null;
+  title?: string;
+  subtitle?: string;
 }
 
 export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
   daemonStatus,
   onOpenTour,
   copyWslIp,
-  wslIpFeedback
+  wslIpFeedback,
+  title = 'Containers',
+  subtitle = 'Docker/Podman: lista, grupos, lote, Compose e métricas'
 }) => (
   <div className="flex items-center space-x-3.5">
     <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0 shadow-2xs">
@@ -22,7 +26,7 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
     </div>
     <div>
       <div className="flex items-center space-x-2.5">
-        <h1 className="text-lg font-bold text-foreground tracking-tight">Containers & WSL</h1>
+        <h1 className="text-lg font-bold text-foreground tracking-tight">{title}</h1>
         <button
           type="button"
           onClick={onOpenTour}
@@ -61,7 +65,7 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
           ))}
       </div>
       <p className="text-2xs text-muted-foreground">
-        Orquestração de microsserviços, distros WSL2 e isolamento de runtime
+        {subtitle}
       </p>
     </div>
   </div>

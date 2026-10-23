@@ -20,7 +20,7 @@ describe('filterNavGroups', () => {
   it('remove as páginas desligadas e o grupo que fica vazio', () => {
     const groups = filterNavGroups(NAV_THEME_GROUPS, ['database', 'db-backups', 'routines', 'apm']);
     expect(groups.map((g) => g.id)).toEqual(['infra', 'dev', 'qa']);
-    expect(groups[0].items.map((i) => i.id)).toEqual(['env', 'containers', 'deploy', 'karaf', 'logs']);
+    expect(groups[0].items.map((i) => i.id)).toEqual(['env', 'containers', 'winthor', 'deploy', 'karaf', 'logs']);
   });
 
   it('não altera os grupos originais', () => {
@@ -38,7 +38,7 @@ describe('resolveFallbackTab', () => {
 
   it('leva para a primeira página ligada quando a atual foi desligada', () => {
     expect(resolveFallbackTab('env', ['env'])).toBe('containers');
-    expect(resolveFallbackTab('apm', ['env', 'containers', 'deploy', 'karaf', 'logs', 'apm'])).toBe('database');
+    expect(resolveFallbackTab('apm', ['env', 'containers', 'winthor', 'deploy', 'karaf', 'logs', 'apm'])).toBe('database');
     expect(resolveFallbackTab('env', allButOne('quality-taut'))).toBe('quality-taut');
   });
 });
