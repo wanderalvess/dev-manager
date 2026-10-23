@@ -4,6 +4,7 @@
 export const APP_MODULE_IDS = [
   'env',
   'containers',
+  'winthor',
   'deploy',
   'karaf',
   'logs',

@@ -13,8 +13,8 @@ import { TopologyWtaNode } from '../bus/TopologyWtaNode';
 import { TopologyWshNode } from '../bus/TopologyWshNode';
 
 export interface ContainerTopologyBusProps {
-  showTopologyBus: boolean;
-  onClose: () => void;
+  showTopologyBus?: boolean;
+  onClose?: () => void;
   stackTopology: ReturnType<typeof computeStackTopology>;
   selectedDistro?: string;
   daemonStatus: DockerDaemonStatus | null;
@@ -28,7 +28,7 @@ export interface ContainerTopologyBusProps {
 }
 
 export const ContainerTopologyBus: React.FC<ContainerTopologyBusProps> = ({
-  showTopologyBus,
+  showTopologyBus = true,
   onClose,
   stackTopology,
   selectedDistro,
@@ -59,6 +59,7 @@ export const ContainerTopologyBus: React.FC<ContainerTopologyBusProps> = ({
         <div className="flex items-center gap-2">
           <TopologyStackBadge state={topologyBusStackState(stackTopology)} />
 
+          {onClose && (
           <button
             type="button"
             onClick={onClose}
@@ -67,6 +68,7 @@ export const ContainerTopologyBus: React.FC<ContainerTopologyBusProps> = ({
           >
             <X className="w-3.5 h-3.5" />
           </button>
+          )}
         </div>
       </div>
 

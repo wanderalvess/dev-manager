@@ -6,6 +6,7 @@ import {
   Terminal,
   Layers,
   Cpu,
+  Network,
   HardDriveDownload,
   Settings,
   HelpCircle,
@@ -85,6 +86,13 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     subtitle: 'Gerenciamento de containers (Docker / Podman), métricas e logs',
     badge: 'Alt+3',
     icon: Box
+  },
+  {
+    id: 'act-winthor',
+    tab: 'winthor',
+    title: 'WinThor & WSL',
+    subtitle: 'Stack WinThor (Oracle XE, WTA, WSH), distros WSL2, snapshots e INFR',
+    icon: Network
   },
   {
     id: 'act-deploy',

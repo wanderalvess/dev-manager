@@ -6,18 +6,12 @@ import type { ContainerEnvironmentsState } from '../../hooks/containers/useConta
 import type { ContainerActionsState } from '../../hooks/containers/useContainerActions';
 import type { ContainerLogsState } from '../../hooks/containers/useContainerLogs';
 import type { ContainerToolModalsState } from '../../hooks/containers/useContainerToolModals';
-import type { WslSnapshotsState } from '../../hooks/containers/useWslSnapshots';
-import type { InfrBootstrapState } from '../../hooks/containers/useInfrBootstrap';
 import { getStateBadge } from './ContainerStateBadge';
 import { ContainerLogsModal } from './modals/ContainerLogsModal';
 import { SaveEnvironmentModal } from './modals/SaveEnvironmentModal';
 import { ContainerRemoveConfirmModal } from './modals/ContainerRemoveConfirmModal';
 import { EnvironmentDeleteConfirmModal } from './modals/EnvironmentDeleteConfirmModal';
-import { OracleMaintenanceModal } from './modals/OracleMaintenanceModal';
-import { WshUtilsModal } from './modals/WshUtilsModal';
-import { WtaUtilsModal } from './modals/WtaUtilsModal';
-import { WslSnapshotsModal } from './modals/WslSnapshotsModal';
-import { InfrBootstrapModal } from './modals/InfrBootstrapModal';
+import { ContainerToolModals } from './ContainerToolModals';
 import { ContainerSmartErrorModal } from './modals/ContainerSmartErrorModal';
 import { ContainerPruneModal } from './modals/ContainerPruneModal';
 import { ContainerInspectModal } from './modals/ContainerInspectModal';
@@ -30,8 +24,6 @@ interface ContainersModalsProps {
   actions: ContainerActionsState;
   logs: ContainerLogsState;
   tools: ContainerToolModalsState;
-  snapshots: WslSnapshotsState;
-  infr: InfrBootstrapState;
   stoppedCount: number;
 }
 
@@ -44,8 +36,6 @@ export const ContainersModals: React.FC<ContainersModalsProps> = ({
   actions,
   logs,
   tools,
-  snapshots,
-  infr,
   stoppedCount
 }) => (
   <>
@@ -92,64 +82,7 @@ export const ContainersModals: React.FC<ContainersModalsProps> = ({
       }}
     />
 
-    <OracleMaintenanceModal
-      container={tools.oracleModalContainer}
-      availableDumps={tools.availableDumps}
-      isLoadingDumps={tools.isLoadingDumps}
-      isOpeningDumpsFolder={tools.isOpeningDumpsFolder}
-      onRefreshDumps={tools.loadAvailableDumps}
-      onOpenDumpsFolder={tools.handleOpenDumpsFolder}
-      onClose={tools.closeOracleModal}
-      onError={errors.setErrorMessage}
-    />
-
-    <WshUtilsModal
-      container={tools.wshModalContainer}
-      wshPrereqs={tools.wshPrereqs}
-      isLoadingWshPrereqs={tools.isLoadingWshPrereqs}
-      isOpeningOptFolder={tools.isOpeningOptFolder}
-      onLoadWshPrereqs={tools.loadWshPrereqs}
-      onOpenOptFolder={tools.handleOpenOptFolder}
-      onClose={tools.closeWshModal}
-    />
-
-    <WtaUtilsModal
-      container={tools.wtaModalContainer}
-      onClose={tools.closeWtaModal}
-      onOpenKarafClient={tools.handleOpenKarafClient}
-      isOpeningKarafClient={tools.isOpeningKarafClient}
-    />
-
-    <WslSnapshotsModal
-      isOpen={snapshots.isSnapshotsModalOpen}
-      onClose={snapshots.closeSnapshotsModal}
-      snapshotsList={snapshots.snapshotsList}
-      snapshotsDirInput={snapshots.snapshotsDirInput}
-      setSnapshotsDirInput={snapshots.setSnapshotsDirInput}
-      isLoadingSnapshots={snapshots.isLoadingSnapshots}
-      availableDistros={data.availableDistros}
-      onLoadSnapshots={snapshots.loadSnapshots}
-      onSaveSnapshotsDir={snapshots.handleSaveSnapshotsDir}
-      onImportSnapshot={snapshots.handleImportSnapshot}
-      onExportSnapshot={snapshots.handleExportSnapshot}
-      onUnregisterDistro={snapshots.handleUnregisterDistro}
-      snapshotImporting={snapshots.snapshotImporting}
-      snapshotExporting={snapshots.snapshotExporting}
-      snapshotUnregistering={snapshots.snapshotUnregistering}
-      snapshotFeedback={snapshots.snapshotFeedback}
-      setSnapshotFeedback={snapshots.setSnapshotFeedback}
-    />
-
-    <InfrBootstrapModal
-      isOpen={infr.isInfrModalOpen}
-      onClose={infr.closeInfrModal}
-      infrScripts={infr.infrScripts}
-      isLoadingInfrScripts={infr.isLoadingInfrScripts}
-      onLoadInfrScripts={infr.loadInfrScripts}
-      onRunInfrScript={infr.handleRunInfrScript}
-      isExecutingInfr={infr.isExecutingInfr}
-      infrOutput={infr.infrOutput}
-    />
+    <ContainerToolModals tools={tools} errors={errors} />
 
     <ContainerSmartErrorModal
       smartError={errors.smartError}

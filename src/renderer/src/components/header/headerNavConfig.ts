@@ -3,6 +3,7 @@ import {
   Box,
   Layers,
   Cpu,
+  Network,
   HardDriveDownload,
   ScrollText,
   Activity,
@@ -59,6 +60,13 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         icon: Box,
         description: 'Gerenciador de containers, instâncias & logs',
         shortcut: 'Alt+3'
+      },
+      {
+        id: 'winthor',
+        label: 'WinThor & WSL',
+        shortLabel: 'WinThor',
+        icon: Network,
+        description: 'Stack WinThor (Oracle XE, WTA, WSH), distros WSL2, snapshots e bootstrap INFR'
       },
       {
         id: 'deploy',

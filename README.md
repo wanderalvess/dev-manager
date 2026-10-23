@@ -136,6 +136,7 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 ---
 
 ### 3. 📦 Gerenciador de Containers (Docker & Podman)
+> A stack WinThor (topologia Oracle XE → WTA → WSH, **Subir WinThor**, snapshots do WSL e Assistente INFR) fica na tela própria **WinThor & WSL** (menu *Infra*); a tela **Containers** cuida da lista, dos grupos, do lote e do Compose.
 * **Compatibilidade Corporativa Multimotor (Docker & Podman):**
   * Auto-detecção inteligente do motor disponível (`docker` ou `podman`), permitindo operação completa em redes corporativas com restrições ao Docker Desktop.
 * **Métricas de Recursos em Tempo Real:**
