@@ -38,7 +38,7 @@ export function coercePortFieldValue(field: string, value: unknown): unknown {
 }
 
 export interface SetupChecklistItemStatus {
-  id: 'dirs' | 'ide' | 'karaf-creds' | 'database';
+  id: 'dirs' | 'karaf-path' | 'ide' | 'karaf-creds' | 'database';
   label: string;
   done: boolean;
 }
@@ -51,8 +51,13 @@ export function computeSetupChecklistStatus(
   return [
     {
       id: 'dirs',
-      label: 'Diretórios de Repositórios & Karaf',
-      done: Boolean(pathStatuses.projectsPath?.exists && pathStatuses.karafPath?.exists)
+      label: 'Diretório de Repositórios',
+      done: Boolean(pathStatuses.projectsPath?.exists)
+    },
+    {
+      id: 'karaf-path',
+      label: 'Diretório do Karaf',
+      done: Boolean(pathStatuses.karafPath?.exists)
     },
     {
       id: 'ide',

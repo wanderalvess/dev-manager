@@ -12,6 +12,7 @@ import {
   CheckCheck,
   BarChart3,
   LayoutGrid,
+  PackageOpen,
   LucideIcon
 } from 'lucide-react';
 import type { SettingsTab } from './settingsSearchData';
@@ -28,26 +29,41 @@ interface TabDef {
   icon: LucideIcon;
 }
 
-// Grupos separados por divisor sutil: o que aparece, onde configurar, o que monitorar e o que automatizar.
-const TAB_GROUPS: TabDef[][] = [
-  [{ id: 'modules', label: 'Módulos', icon: LayoutGrid }],
-  [
-    { id: 'dirs', label: 'Diretórios & IDE', icon: Folder },
-    { id: 'karaf', label: 'Karaf', icon: KeyRound },
-    { id: 'azure', label: 'Azure & Git', icon: GitBranch }
-  ],
-  [
-    { id: 'services', label: 'Serviços & Processos', icon: Server },
-    { id: 'ports', label: 'Portas', icon: Radio },
-    { id: 'logs', label: 'Logs', icon: ScrollText }
-  ],
-  [
-    { id: 'automation', label: 'Automação', icon: Zap },
-    { id: 'backup', label: 'Backup', icon: HardDriveDownload },
-    { id: 'ai', label: 'IA & LLM', icon: Bot },
-    { id: 'quality', label: 'Qualidade & QA', icon: CheckCheck },
-    { id: 'usage', label: 'Meu uso', icon: BarChart3 }
-  ]
+interface TabGroup {
+  title: string;
+  tabs: TabDef[];
+}
+
+// Grupos nomeados e separados por divisor sutil: o que aparece, onde as coisas estão, o que monitorar e o que automatizar.
+const TAB_GROUPS: TabGroup[] = [
+  { title: 'Geral', tabs: [{ id: 'modules', label: 'Módulos', icon: LayoutGrid }] },
+  {
+    title: 'Ambiente',
+    tabs: [
+      { id: 'dirs', label: 'Diretórios & IDE', icon: Folder },
+      { id: 'karaf', label: 'Karaf', icon: KeyRound },
+      { id: 'routines', label: 'Rotinas WinThor', icon: PackageOpen },
+      { id: 'azure', label: 'Azure & Git', icon: GitBranch }
+    ]
+  },
+  {
+    title: 'Monitoramento',
+    tabs: [
+      { id: 'services', label: 'Serviços & Processos', icon: Server },
+      { id: 'ports', label: 'Portas', icon: Radio },
+      { id: 'logs', label: 'Logs', icon: ScrollText }
+    ]
+  },
+  {
+    title: 'Recursos',
+    tabs: [
+      { id: 'automation', label: 'Automação', icon: Zap },
+      { id: 'backup', label: 'Backup', icon: HardDriveDownload },
+      { id: 'ai', label: 'IA & LLM', icon: Bot },
+      { id: 'quality', label: 'Qualidade & QA', icon: CheckCheck },
+      { id: 'usage', label: 'Meu uso', icon: BarChart3 }
+    ]
+  }
 ];
 
 export const SettingsTabsNav: React.FC<SettingsTabsNavProps> = ({ activeTab, onTabChange, counts }) => (
@@ -58,9 +74,12 @@ export const SettingsTabsNav: React.FC<SettingsTabsNavProps> = ({ activeTab, onT
     data-tour="tabs-nav-dirs"
   >
     {TAB_GROUPS.map((group, groupIndex) => (
-      <React.Fragment key={group[0].id}>
+      <React.Fragment key={group.title}>
         {groupIndex > 0 && <span aria-hidden="true" className="h-4 w-px bg-border mx-2" />}
-        {group.map(({ id, label, icon: Icon }) => {
+        <span aria-hidden="true" className="hidden xl:inline text-2xs uppercase tracking-wider text-muted-foreground/70 font-mono mr-1">
+          {group.title}
+        </span>
+        {group.tabs.map(({ id, label, icon: Icon }) => {
           const count = counts[id] ?? 0;
           const active = activeTab === id;
           return (

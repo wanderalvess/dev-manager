@@ -11,6 +11,7 @@ import { SettingsSearchBar } from '../components/settings/SettingsSearchBar';
 import { SetupChecklistCard } from '../components/settings/SetupChecklistCard';
 import { DirsTab } from '../components/settings/tabs/DirsTab';
 import { KarafTab } from '../components/settings/tabs/KarafTab';
+import { RoutinesTab } from '../components/settings/tabs/RoutinesTab';
 import { AzureTab } from '../components/settings/tabs/AzureTab';
 import { ServicesTab } from '../components/settings/tabs/ServicesTab';
 import { PortsTab } from '../components/settings/tabs/PortsTab';
@@ -138,6 +139,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             newEnvironmentProfileLabel={envProfiles.newEnvironmentProfileLabel}
             setNewEnvironmentProfileLabel={envProfiles.setNewEnvironmentProfileLabel}
             handleSaveCurrentAsEnvironmentProfile={envProfiles.handleSaveCurrentAsEnvironmentProfile}
+          />
+        )}
+
+        {activeTab === 'routines' && (
+          <RoutinesTab
+            settings={settings}
+            setSettings={setSettings}
+            renderPathStatusBadge={renderPathStatusBadge}
+            validateSinglePath={paths.validateSinglePath}
+            handleBrowseDirectory={paths.handleBrowseDirectory}
             launcherRows={launcher.launcherRows}
             handleAddLauncherRow={launcher.handleAddLauncherRow}
             handleUpdateLauncherRow={launcher.handleUpdateLauncherRow}
@@ -149,7 +160,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         )}
 
         {activeTab === 'karaf' && (
-          <KarafTab settings={settings} setSettings={setSettings} showPassword={showPassword} setShowPassword={setShowPassword} />
+          <KarafTab
+            settings={settings}
+            setSettings={setSettings}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            renderPathStatusBadge={renderPathStatusBadge}
+            validateSinglePath={paths.validateSinglePath}
+            handleBrowseDirectory={paths.handleBrowseDirectory}
+            handleBrowseFile={paths.handleBrowseFile}
+          />
         )}
 
         {activeTab === 'azure' && (
@@ -229,6 +249,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             handleTestQualityConnection={quality.handleTestQualityConnection}
             testingQualityId={quality.testingQualityId}
             testResults={quality.qualityTestResults}
+            renderPathStatusBadge={renderPathStatusBadge}
+            validateSinglePath={paths.validateSinglePath}
+            handleBrowseDirectory={paths.handleBrowseDirectory}
           />
         )}
 

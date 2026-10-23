@@ -15,6 +15,7 @@ export function useSetupChecklist(
   const checklist = useMemo(() => {
     const actionsById: Record<string, () => void> = {
       dirs: () => setActiveTab('dirs'),
+      'karaf-path': () => setActiveTab('karaf'),
       ide: () => setActiveTab('dirs'),
       'karaf-creds': () => setActiveTab('karaf'),
       database: () => onNavigate?.('database')

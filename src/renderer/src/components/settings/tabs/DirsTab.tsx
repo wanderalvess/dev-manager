@@ -1,12 +1,9 @@
 import React from 'react';
-import { Folder, FolderOpen, HardDrive, Layers, FileCode2, Code2, TestTube } from 'lucide-react';
+import { Folder, FolderOpen, HardDrive, FileCode2, Code2 } from 'lucide-react';
 import { AppSettings, EnvironmentProfile } from '../../../../../shared/types';
 import { useDirsTabFields } from '../../../hooks/settings/useDirsTabFields';
 import { DirsPathField } from '../dirs/DirsPathField';
 import { DirsEnvironmentProfilesPanel } from '../dirs/DirsEnvironmentProfilesPanel';
-import { DirsRoutineExtensionsFields } from '../dirs/DirsRoutineExtensionsFields';
-import { DirsWinthorStartPanel } from '../dirs/DirsWinthorStartPanel';
-import { DirsCcwPanel } from '../dirs/DirsCcwPanel';
 import { DirsIdeNameField } from '../dirs/DirsIdeNameField';
 
 interface DirsTabProps {
@@ -21,15 +18,9 @@ interface DirsTabProps {
   newEnvironmentProfileLabel: string;
   setNewEnvironmentProfileLabel: (label: string) => void;
   handleSaveCurrentAsEnvironmentProfile: () => void;
-  launcherRows: { ext: string; path: string }[];
-  handleAddLauncherRow: () => void;
-  handleUpdateLauncherRow: (index: number, field: 'ext' | 'path', value: string) => void;
-  handleRemoveLauncherRow: (index: number) => void;
-  handleBrowseLauncherPath: (index: number) => Promise<void>;
-  showWtaPassword: boolean;
-  setShowWtaPassword: (show: boolean) => void;
 }
 
+/** Repositórios, JDK e IDE. Karaf, rotinas e testes automatizados têm abas próprias. */
 export const DirsTab: React.FC<DirsTabProps> = ({
   settings,
   setSettings,
@@ -41,21 +32,14 @@ export const DirsTab: React.FC<DirsTabProps> = ({
   handleDeleteEnvironmentProfile,
   newEnvironmentProfileLabel,
   setNewEnvironmentProfileLabel,
-  handleSaveCurrentAsEnvironmentProfile,
-  launcherRows,
-  handleAddLauncherRow,
-  handleUpdateLauncherRow,
-  handleRemoveLauncherRow,
-  handleBrowseLauncherPath,
-  showWtaPassword,
-  setShowWtaPassword
+  handleSaveCurrentAsEnvironmentProfile
 }) => {
   const { setField, setPathField } = useDirsTabFields({ settings, setSettings, validateSinglePath });
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
-        {/* Diretórios e Executáveis Locais */}
+        {/* Repositórios, JDK e IDE */}
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
@@ -81,21 +65,6 @@ export const DirsTab: React.FC<DirsTabProps> = ({
             />
 
             <DirsPathField
-              fieldId="field-karafPath"
-              labelIcon={<Layers className="w-3.5 h-3.5 text-warning" />}
-              labelText="Diretório do Servidor Apache Karaf (OSGi):"
-              labelTitle="Raiz da instalação do servidor Apache Karaf (a pasta que contém bin/client.bat). Usado para iniciar/parar o Karaf, abrir o console e rodar deploys."
-              statusBadge={renderPathStatusBadge('karafPath')}
-              inputValue={settings.karafPath}
-              inputTourId="dirs-karaf-path"
-              placeholder="Ex: C:\servers\runtime ou C:\app\server"
-              onChange={(val) => setPathField('karafPath', val)}
-              onBrowse={() => handleBrowseDirectory('karafPath')}
-              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-warning" />}
-              browseTitle="Selecionar pasta do Karaf"
-            />
-
-            <DirsPathField
               fieldId="field-jdkPath"
               labelIcon={<HardDrive className="w-3.5 h-3.5 text-orange-500" />}
               labelText="Diretório Java JDK (JAVA_HOME):"
@@ -114,55 +83,6 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               }
             />
 
-            {/* Script de Inicialização Customizado do Karaf (sem validação de caminho, como antes) */}
-            <DirsPathField
-              labelIcon={<FileCode2 className="w-3.5 h-3.5 text-warning" />}
-              labelText="Script de Inicialização do Karaf (Opcional):"
-              inputValue={settings.karafScript || ''}
-              placeholder="Ex: start.bat, run.bat ou caminho completo"
-              onChange={(val) => setField('karafScript', val)}
-              onBrowse={() => handleBrowseFile('karafScript')}
-              browseIcon={<FileCode2 className="w-3.5 h-3.5 text-warning" />}
-              browseTitle="Selecionar script .bat / .cmd"
-              hint={
-                <p className="text-2xs text-muted-foreground">
-                  Script usado para subir o servidor na automação. Se vazio, prioriza os scripts padrão detectados na raiz.
-                </p>
-              }
-            />
-
-            <DirsPathField
-              fieldId="field-appPath"
-              labelIcon={<Folder className="w-3.5 h-3.5 text-success" />}
-              labelText="Diretório Raiz das Rotinas / Binários (Prod):"
-              statusBadge={renderPathStatusBadge('appPath')}
-              inputValue={settings.appPath}
-              placeholder="Ex: C:\app ou C:\ERP"
-              onChange={(val) => setPathField('appPath', val)}
-              onBrowse={() => handleBrowseDirectory('appPath')}
-              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-success" />}
-              browseTitle="Selecionar pasta das Rotinas"
-            />
-
-            <DirsRoutineExtensionsFields
-              settings={settings}
-              onExtensionsChange={(list) => setField('routineFileExtensions', list)}
-              launcherRows={launcherRows}
-              handleAddLauncherRow={handleAddLauncherRow}
-              handleUpdateLauncherRow={handleUpdateLauncherRow}
-              handleRemoveLauncherRow={handleRemoveLauncherRow}
-              handleBrowseLauncherPath={handleBrowseLauncherPath}
-            />
-
-            <DirsWinthorStartPanel
-              settings={settings}
-              setField={setField}
-              showWtaPassword={showWtaPassword}
-              setShowWtaPassword={setShowWtaPassword}
-            />
-
-            <DirsCcwPanel settings={settings} setField={setField} />
-
             {/* Executável da IDE */}
             <DirsPathField
               fieldId="field-intellijPath"
@@ -179,43 +99,6 @@ export const DirsTab: React.FC<DirsTabProps> = ({
             />
 
             <DirsIdeNameField settings={settings} onChange={(val) => setField('ideName', val)} />
-
-            {/* Diretório do Projeto de Testes Automatizados (Cypress / E2E) */}
-            <DirsPathField
-              fieldId="field-tautProjectPath"
-              wrapperClassName="md:col-span-2 space-y-1.5 pt-2 border-t border-border/50"
-              labelIcon={<TestTube className="w-3.5 h-3.5 text-success" />}
-              labelText="Diretório do Projeto de Testes Automatizados (Cypress):"
-              labelTitle="Caminho do repositório de testes automatizados (Cypress / TAUT). Se deixado em branco, o Hub Manager tenta autodetectar automaticamente dentro da pasta de Projetos."
-              statusBadge={renderPathStatusBadge('tautProjectPath')}
-              inputValue={settings.tautProjectPath || ''}
-              placeholder="Ex: C:\Projetos\taut ou C:\Projetos\testes-cypress (Vazio: autodetecta na pasta de projetos)"
-              onChange={(val) => setPathField('tautProjectPath', val)}
-              onBrowse={() => handleBrowseDirectory('tautProjectPath')}
-              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-success" />}
-              browseTitle="Selecionar pasta do projeto de testes"
-              hint={
-                <p className="text-2xs text-muted-foreground">
-                  Utilizado pelo módulo <strong>Automação de Testes</strong> na Central de Qualidade e pelas ferramentas MCP da IA. Se não preenchido, o Hub Manager procura automaticamente uma pasta de testes (<code>taut*</code>, <code>cypress-tests</code>, <code>cypress</code> ou <code>e2e-tests</code>) no Diretório Base dos Repositórios Git ou pastas irmãs.
-                </p>
-              }
-            />
-
-            <div id="field-tautKeyPrefix" className="md:col-span-2 space-y-1.5">
-              <label htmlFor="dirs-tab-1"
-                className="text-xs font-semibold text-foreground"
-                title="Prefixo das chaves de cenário do Zephyr no seu projeto (ex.: PROJ-T para PROJ-T123). Vazio aceita qualquer chave no formato ABC-T123."
-              >
-                Prefixo das chaves de cenário Zephyr (TAUT):
-              </label>
-              <input id="dirs-tab-1"
-                type="text"
-                value={settings.tautKeyPrefix || ''}
-                onChange={(e) => setField('tautKeyPrefix', e.target.value)}
-                placeholder="Ex: PROJ-T (Vazio: aceita qualquer chave no formato ABC-T123)"
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
-              />
-            </div>
           </div>
         </div>
 

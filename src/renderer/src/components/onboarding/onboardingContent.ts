@@ -101,9 +101,7 @@ export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSect
       rows: [
         row('Diretório de Repositórios Git', 'obrigatório', text(s.projectsPath)),
         row('IDE / Editor de Código', 'obrigatório', text(s.intellijPath)),
-        row('JDK', 'opcional', text(s.jdkPath)),
-        row('Aplicação WinThor', 'opcional', text(s.appPath)),
-        row('Projeto TAUT (Cypress)', 'opcional · QA', text(s.tautProjectPath))
+        row('JDK', 'opcional', text(s.jdkPath))
       ]
     },
     {
@@ -122,8 +120,9 @@ export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSect
     },
     {
       id: 'winthor',
-      title: 'WinThor & CCW',
+      title: 'Rotinas WinThor',
       rows: [
+        row('Pasta das rotinas', 'binários do catálogo', text(s.appPath)),
         row('Central de Controle WinThor', 'URL do CCW', text(s.ccwBaseUrl)),
         row('Versão do WinThor', 'usada no catálogo de rotinas', text(s.ccwWinthorVersion)),
         row('WTA', 'URL e login', text(s.wtaUrl) && text(s.wtaLogin) ? `${text(s.wtaLogin)} @ ${text(s.wtaUrl)}` : '')
@@ -136,6 +135,11 @@ export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSect
         row('Azure DevOps', 'Personal Access Token', text(s.azureDevOpsToken) ? 'configurado' : ''),
         row('Banco de Dados', 'conexões salvas', count(s.databaseConnections, 'conexão(ões)'))
       ]
+    },
+    {
+      id: 'quality',
+      title: 'Qualidade & QA',
+      rows: [row('Projeto TAUT (Cypress)', 'testes automatizados', text(s.tautProjectPath))]
     },
     {
       id: 'services',

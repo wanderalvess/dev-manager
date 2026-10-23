@@ -6,7 +6,7 @@ export const SETTINGS_TOUR_STEPS: TourStep[] = [
   {
     target: 'tabs-nav-dirs',
     title: 'Abas de Configuração',
-    desc: 'Aqui você navega entre as categorias: diretórios, credenciais Karaf, Azure DevOps, serviços, portas, automação, logs e backup.'
+    desc: 'Aqui você navega entre as categorias, agrupadas por tema: Ambiente (diretórios, Karaf, rotinas WinThor, Azure), Monitoramento (serviços, portas, logs) e Recursos (automação, backup, IA, qualidade, uso).'
   },
   {
     target: 'dirs-projects-path',
@@ -14,14 +14,9 @@ export const SETTINGS_TOUR_STEPS: TourStep[] = [
     desc: 'Informe a pasta onde ficam seus repositórios Git; o painel escaneia essa pasta para listar seus projetos.'
   },
   {
-    target: 'dirs-karaf-path',
-    title: 'Diretório do Apache Karaf',
-    desc: 'Aponte a raiz da instalação do Karaf para permitir iniciar/parar o servidor e rodar deploys.'
-  },
-  {
     target: 'auto-detect-button',
     title: 'Auto-Detectar Caminhos',
-    desc: 'Escaneia seu computador automaticamente e tenta preencher os diretórios (Karaf, JDK, IDE) para você.'
+    desc: 'Escaneia seu computador automaticamente e tenta preencher os diretórios (Karaf, JDK, IDE) para você nas respectivas abas.'
   },
   {
     target: 'environment-profiles',

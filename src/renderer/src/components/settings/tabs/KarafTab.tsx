@@ -2,24 +2,42 @@ import React from 'react';
 import { KeyRound, Terminal, Eye, EyeOff, Activity, ShieldCheck } from 'lucide-react';
 import { AppSettings } from '../../../../../shared/types';
 import { KarafWslSection } from './KarafWslSection';
+import { KarafPathsPanel } from '../karaf/KarafPathsPanel';
 
 interface KarafTabProps {
   settings: AppSettings;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
   showPassword: boolean;
   setShowPassword: (show: boolean) => void;
+  renderPathStatusBadge: (field: keyof AppSettings) => React.ReactNode;
+  validateSinglePath: (field: keyof AppSettings, value: string) => Promise<void>;
+  handleBrowseDirectory: (field: keyof AppSettings) => Promise<void>;
+  handleBrowseFile: (field: keyof AppSettings) => Promise<void>;
 }
 
 export const KarafTab: React.FC<KarafTabProps> = ({
   settings,
   setSettings,
   showPassword,
-  setShowPassword
+  setShowPassword,
+  renderPathStatusBadge,
+  validateSinglePath,
+  handleBrowseDirectory,
+  handleBrowseFile
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
         <KarafWslSection settings={settings} setSettings={setSettings} />
+
+        <KarafPathsPanel
+          settings={settings}
+          setSettings={setSettings}
+          renderPathStatusBadge={renderPathStatusBadge}
+          validateSinglePath={validateSinglePath}
+          handleBrowseDirectory={handleBrowseDirectory}
+          handleBrowseFile={handleBrowseFile}
+        />
 
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">

@@ -1,4 +1,4 @@
-export type SettingsTab = 'dirs' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality' | 'usage' | 'modules';
+export type SettingsTab = 'dirs' | 'routines' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality' | 'usage' | 'modules';
 
 export interface SettingsSearchEntry {
   id: string;
@@ -10,16 +10,17 @@ export interface SettingsSearchEntry {
 
 /** Índice curado de campos-chave para a busca da tela de Configurações (não cobre 100% dos campos). */
 export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
-  { id: 'field-appPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório Raiz das Rotinas / Binários (Prod)', keywords: 'app path diretorio pasta rotinas binarios prod' },
-  { id: 'field-karafPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório do Apache Karaf', keywords: 'karaf path diretorio pasta osgi' },
+  { id: 'field-appPath', tab: 'routines', tabLabel: 'Rotinas WinThor', label: 'Diretório Raiz das Rotinas / Binários (Prod)', keywords: 'app path diretorio pasta rotinas binarios prod' },
+  { id: 'field-karafPath', tab: 'karaf', tabLabel: 'Karaf', label: 'Diretório do Apache Karaf', keywords: 'karaf path diretorio pasta osgi' },
   { id: 'field-jdkPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório do JDK', keywords: 'jdk java path diretorio' },
   { id: 'field-intellijPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Executável do IntelliJ / IDE', keywords: 'intellij ide editor idea' },
   { id: 'field-projectsPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório de Projetos', keywords: 'projetos path diretorio workspace' },
-  { id: 'field-tautProjectPath', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Diretório do Projeto de Testes Automatizados (Cypress)', keywords: 'testes cypress automacao e2e taut qa path diretorio pasta zephyr' },
-  { id: 'field-tautKeyPrefix', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Prefixo das chaves de cenário Zephyr (TAUT)', keywords: 'taut zephyr chave prefixo cenario cypress csv intake cobertura' },
-  { id: 'field-wtaLogin', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Usuário WTA (Login Automático)', keywords: 'wta login usuario winthor' },
-  { id: 'field-wtaPassword', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Senha / Hash WTA', keywords: 'wta senha password hash winthor' },
-  { id: 'field-wtaAuthToken', tab: 'dirs', tabLabel: 'Diretórios & IDE', label: 'Cookie de Autenticação WTA (suukie)', keywords: 'wta cookie token suukie sessao autenticacao' },
+  { id: 'field-tautProjectPath', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Diretório do Projeto de Testes Automatizados (Cypress)', keywords: 'testes cypress automacao e2e taut qa path diretorio pasta zephyr' },
+  { id: 'field-tautKeyPrefix', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Prefixo das chaves de cenário Zephyr (TAUT)', keywords: 'taut zephyr chave prefixo cenario cypress csv intake cobertura' },
+  { id: 'field-wtaLogin', tab: 'routines', tabLabel: 'Rotinas WinThor', label: 'Usuário WTA (Login Automático)', keywords: 'wta login usuario winthor' },
+  { id: 'field-wtaPassword', tab: 'routines', tabLabel: 'Rotinas WinThor', label: 'Senha / Hash WTA', keywords: 'wta senha password hash winthor' },
+  { id: 'field-wtaAuthToken', tab: 'routines', tabLabel: 'Rotinas WinThor', label: 'Cookie de Autenticação WTA (suukie)', keywords: 'wta cookie token suukie sessao autenticacao' },
+  { id: 'field-ccw', tab: 'routines', tabLabel: 'Rotinas WinThor', label: 'Central de Controle WinThor (CCW): URL, versão e cookie', keywords: 'ccw central controle winthor download atualizar rotina versao url cookie auth token' },
   { id: 'field-karafWsl', tab: 'karaf', tabLabel: 'Apache Karaf', label: 'Ambiente de Execução do Karaf (Local / WSL)', keywords: 'karaf wsl linux ubuntu debian ambiente execucao' },
   { id: 'field-karafUser', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Usuário Karaf (SSH)', keywords: 'karaf usuario ssh client.bat' },
   { id: 'field-karafPass', tab: 'karaf', tabLabel: 'Credenciais Karaf', label: 'Senha Karaf', keywords: 'karaf senha password ssh' },

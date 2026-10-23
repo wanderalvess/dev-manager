@@ -27,7 +27,7 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
       <span className="text-2xs text-muted-foreground font-mono">Alterna caminhos e portas de uma vez</span>
     </div>
     <p className="text-2xs text-muted-foreground -mt-1">
-      Salve o estado atual dos diretórios e portas abaixo como um preset nomeado, e alterne entre eles com um clique — útil pra quem trabalha com múltiplos clientes/ambientes na mesma máquina.
+      Salve o estado atual dos diretórios (repositórios, Karaf, rotinas, JDK, IDE) e das portas como um preset nomeado, e alterne entre eles com um clique — útil pra quem trabalha com múltiplos clientes/ambientes na mesma máquina.
     </p>
 
     {(settings.environmentProfiles || []).length > 0 && (
