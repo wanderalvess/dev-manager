@@ -36,6 +36,6 @@ export const GIT_TOUR_STEPS: TourStep[] = [
   {
     target: 'criar-pull-request',
     title: 'Criar Pull Request',
-    desc: 'Abre o formulário de Pull Request (ou Merge Request) direto no Azure DevOps, GitHub ou GitLab.'
+    desc: 'Abre o formulário de Pull Request (ou Merge Request) direto no Azure DevOps, GitHub ou GitLab. Se a branch ainda estiver só no seu computador, o Hub oferece publicá-la no origin antes.'
   }
 ];

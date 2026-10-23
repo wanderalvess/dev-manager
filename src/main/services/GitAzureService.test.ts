@@ -326,11 +326,35 @@ describe('GitAzureService', () => {
       const repoDir = path.join(tmpDir, 'repo-chk');
       fs.mkdirSync(repoDir);
 
-      mockExecFileAsync.mockResolvedValueOnce({ stdout: "Switched to a new branch 'feature/task-1'", stderr: '' });
+      mockExecFileAsync
+        .mockResolvedValueOnce({ stdout: 'abc123', stderr: '' })
+        .mockResolvedValueOnce({ stdout: "Switched to a new branch 'feature/task-1'", stderr: '' });
 
       const res = await gitService.checkoutBranch(repoDir, 'feature/task-1', true, 'develop');
       expect(res.success).toBe(true);
-      expect(mockExecFileAsync).toHaveBeenCalledWith('git', ['checkout', '-b', 'feature/task-1', 'develop'], { cwd: repoDir });
+      expect(mockExecFileAsync).toHaveBeenLastCalledWith(
+        'git',
+        ['checkout', '--no-track', '-b', 'feature/task-1', 'develop'],
+        { cwd: repoDir }
+      );
+    });
+
+    it('parte de origin/<base> quando a base existe só no remoto, sem herdar o upstream', async () => {
+      const repoDir = path.join(tmpDir, 'repo-chk-remote');
+      fs.mkdirSync(repoDir);
+
+      mockExecFileAsync
+        .mockRejectedValueOnce(new Error('sem branch local'))
+        .mockResolvedValueOnce({ stdout: 'abc123', stderr: '' })
+        .mockResolvedValueOnce({ stdout: "Switched to a new branch 'bugfix/x'", stderr: '' });
+
+      const res = await gitService.checkoutBranch(repoDir, 'bugfix/x', true, 'release/39.0');
+      expect(res.success).toBe(true);
+      expect(mockExecFileAsync).toHaveBeenLastCalledWith(
+        'git',
+        ['checkout', '--no-track', '-b', 'bugfix/x', 'origin/release/39.0'],
+        { cwd: repoDir }
+      );
     });
   });
 
@@ -596,7 +620,9 @@ describe('GitAzureService', () => {
       const repoDir = path.join(tmpDir, 'repo-task-branch');
       fs.mkdirSync(repoDir);
 
-      mockExecFileAsync.mockResolvedValueOnce({ stdout: "Switched to a new branch 'feature/12345-ajuste-calculo'", stderr: '' });
+      mockExecFileAsync
+        .mockResolvedValueOnce({ stdout: 'abc123', stderr: '' }) // rev-parse da base
+        .mockResolvedValueOnce({ stdout: "Switched to a new branch 'feature/12345-ajuste-calculo'", stderr: '' });
 
       const res = await gitService.createTaskBranch(repoDir, {
         prefix: 'feature/',
@@ -607,9 +633,9 @@ describe('GitAzureService', () => {
 
       expect(res.success).toBe(true);
       expect(res.branchName).toBe('feature/12345-ajuste-calculo');
-      expect(mockExecFileAsync).toHaveBeenCalledWith(
+      expect(mockExecFileAsync).toHaveBeenLastCalledWith(
         'git',
-        ['checkout', '-b', 'feature/12345-ajuste-calculo', 'develop'],
+        ['checkout', '--no-track', '-b', 'feature/12345-ajuste-calculo', 'develop'],
         { cwd: repoDir }
       );
     });

@@ -96,7 +96,10 @@ export function useGitTaskBranch({ currentProject, setGitOutput, setGitOutputIsE
         setTaskBranchId('');
         setTaskBranchTitle('');
         setSelectedTask(null);
-        setGitOutput(`Branch '${res.branchName}' criada com sucesso a partir de '${taskBaseBranch}'!`);
+        setGitOutput(
+          `Branch '${res.branchName}' criada com sucesso a partir de '${taskBaseBranch}'!\n` +
+            "Ela existe só neste computador: use 'Publicar' para enviá-la ao origin (ou abra o Pull Request, que oferece a publicação)."
+        );
         setGitOutputIsError(false);
         await refreshAfterGitChange(currentProject.path);
       } else {

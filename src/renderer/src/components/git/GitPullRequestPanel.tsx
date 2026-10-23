@@ -1,13 +1,18 @@
 import React from 'react';
-import { GitMerge, ArrowRight, ExternalLink } from 'lucide-react';
+import { GitMerge, ArrowRight, ExternalLink, Upload, Loader2, Info } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../shared/types';
-import { getPrButtonLabel, getPrPanelTitle } from '../../utils/gitViewUtils';
+import { getPrPanelTitle } from '../../utils/gitViewUtils';
+import { getPrActionLabel } from '../../utils/gitPublishViewUtils';
 
 interface GitPullRequestPanelProps {
   project: GitProjectInfo;
   targetBranch: string;
   targetBranchOptions: string[];
   prBlockedReason: string | null;
+  /** A branch atual ainda não existe no origin: o botão publica antes de abrir o formulário. */
+  isLocalOnly: boolean;
+  /** Verificando/publicando a branch ou abrindo o formulário. */
+  isBusy: boolean;
   onTargetBranchChange: (value: string) => void;
   onOpenPr: () => void;
 }
@@ -17,6 +22,8 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
   targetBranch,
   targetBranchOptions,
   prBlockedReason,
+  isLocalOnly,
+  isBusy,
   onTargetBranchChange,
   onOpenPr
 }) => (
@@ -32,7 +39,9 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
         <select
           value={targetBranch}
           onChange={(e) => onTargetBranchChange(e.target.value)}
-          className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary"
+          disabled={isBusy}
+          aria-label="Branch de destino do Pull Request"
+          className="bg-card border border-border rounded-lg px-2.5 py-1 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary disabled:opacity-60"
         >
           {targetBranchOptions.map((b) => (
             <option key={b} value={b}>
@@ -47,9 +56,14 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
     <div className="bg-muted/40 border border-border/80 rounded-xl p-3 flex items-center justify-between text-xs font-mono">
       <div className="flex items-center space-x-2 truncate">
         <span className="w-2 h-2 rounded-full bg-success animate-pulse shrink-0" />
-        <span className="text-success font-bold truncate max-w-[200px]">
+        <span className="text-success font-bold truncate max-w-[200px]" title={project.currentBranch}>
           {project.currentBranch}
         </span>
+        {isLocalOnly && (
+          <span className="text-2xs bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.5 rounded font-bold shrink-0">
+            SÓ LOCAL
+          </span>
+        )}
       </div>
 
       <div className="flex items-center space-x-2 text-muted-foreground shrink-0 px-3">
@@ -64,19 +78,37 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
       </div>
     </div>
 
+    {isLocalOnly && !prBlockedReason && (
+      <p className="flex items-start gap-2 text-2xs text-muted-foreground bg-warning/5 border border-warning/25 rounded-lg px-3 py-2">
+        <Info className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
+        <span>
+          Esta branch ainda não está no origin. Ao abrir o PR ela é publicada antes (
+          <code className="font-mono text-foreground">git push --set-upstream origin {project.currentBranch}</code>
+          ), senão o provedor não encontra a branch de origem.
+        </span>
+      </p>
+    )}
+
     {/* Botão de Criação de PR */}
     <button
+      type="button"
       data-tour="criar-pull-request"
       onClick={onOpenPr}
-      disabled={Boolean(prBlockedReason)}
+      disabled={Boolean(prBlockedReason) || isBusy}
       className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-lg ${
-        !prBlockedReason
-          ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.01] border border-primary/40'
-          : 'bg-muted text-muted-foreground cursor-not-allowed border border-border'
+        !prBlockedReason && !isBusy
+          ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.01] border border-primary/40 cursor-pointer'
+          : 'bg-muted text-muted-foreground cursor-not-allowed border border-border shadow-none'
       }`}
     >
-      <ExternalLink className="w-4 h-4" />
-      <span>{prBlockedReason ? prBlockedReason : getPrButtonLabel(project.provider)}</span>
+      {isBusy ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : isLocalOnly && !prBlockedReason ? (
+        <Upload className="w-4 h-4" />
+      ) : (
+        <ExternalLink className="w-4 h-4" />
+      )}
+      <span>{prBlockedReason ? prBlockedReason : isBusy ? 'Preparando Pull Request...' : getPrActionLabel(project.provider, isLocalOnly)}</span>
     </button>
   </div>
 );

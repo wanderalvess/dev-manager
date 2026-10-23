@@ -9,6 +9,8 @@ import { useGitOutput } from '../hooks/git/useGitOutput';
 import { useGitSettingsSync } from '../hooks/git/useGitSettingsSync';
 import { useGitProjectState } from '../hooks/git/useGitProjectState';
 import { useGitOperations } from '../hooks/git/useGitOperations';
+import { useGitPublish } from '../hooks/git/useGitPublish';
+import { isBranchLocalOnly } from '../utils/gitPublishViewUtils';
 import { useGitBranchModal } from '../hooks/git/useGitBranchModal';
 import { useGitCommit } from '../hooks/git/useGitCommit';
 import { useGitHistory } from '../hooks/git/useGitHistory';
@@ -83,11 +85,15 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
   const prBlockedReason = getPrBlockedReason(currentProject, targetBranch);
 
+  const publish = useGitPublish({ currentProject, ...outputControls, refreshAfterGitChange });
+  const isLocalOnly = isBranchLocalOnly(currentProject);
+
   const ops = useGitOperations({
     currentProject,
     selectedPath,
     targetBranch,
     prBlockedReason,
+    ensurePublishedForPr: publish.ensurePublishedForPr,
     ...outputControls,
     refreshAfterGitChange,
     refreshUncommittedCounts
@@ -137,7 +143,11 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                 />
                 <GitBranchActionsBar
                   project={currentProject}
-                  isExecutingGit={ops.isExecutingGit}
+                  isExecutingGit={ops.isExecutingGit || publish.isPublishing}
+                  isPublishing={publish.isPublishing}
+                  isLocalOnly={isLocalOnly}
+                  hasPendingChanges={pendingChanges.length > 0}
+                  onPublish={publish.handlePublish}
                   onOpenBranchModal={() => branchModal.setIsBranchModalOpen(true)}
                   onOpenTaskBranchModal={taskBranch.openTaskBranchModal}
                   onOpenDiff={() => diff.handleOpenDiff()}
@@ -158,6 +168,8 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   targetBranch={targetBranch}
                   targetBranchOptions={targetBranchOptions}
                   prBlockedReason={prBlockedReason}
+                  isLocalOnly={isLocalOnly}
+                  isBusy={ops.isOpeningPr || publish.isPublishing}
                   onTargetBranchChange={setTargetBranch}
                   onOpenPr={ops.handleOpenPr}
                 />

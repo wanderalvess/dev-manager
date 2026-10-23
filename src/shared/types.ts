@@ -2866,3 +2866,4 @@ export * from './usageMetricsTypes';
 export * from './azurePipelineTypes';
 export * from './oracleTracerAnalysis';
 export * from './delphiTypes';
+export * from './gitPublishTypes';
