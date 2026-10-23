@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-
-const BOTTOM_THRESHOLD_PX = 24;
+import { isNearBottom } from '../utils/stickToBottom';
 
 /**
  * Mantém um contêiner rolável colado no fim enquanto `deps` mudam, pausando se o usuário rolar para cima
@@ -13,7 +12,7 @@ export function useStickToBottom<T extends HTMLElement>(deps: readonly unknown[]
   const onScroll = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    stuck.current = el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_THRESHOLD_PX;
+    stuck.current = isNearBottom(el.scrollHeight, el.scrollTop, el.clientHeight);
   }, []);
 
   useEffect(() => {
