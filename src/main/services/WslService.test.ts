@@ -30,7 +30,8 @@ describe('WslService', () => {
 
     const ip = await service.getDistroIp('non-existent-distro-xyz-999');
     expect(ip).toBeNull();
-  });
+    // Dispara o wsl.exe de verdade (~1,4s isolado); sob carga da suíte paralela passava dos 5s padrão.
+  }, 30000);
 
   it('gera hash MD5 minúsculo e maiúsculo para senhas WSH', () => {
     const service = new WslService();

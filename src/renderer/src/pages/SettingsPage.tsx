@@ -157,8 +157,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             settings={settings}
             setSettings={setSettings}
             renderPathStatusBadge={renderPathStatusBadge}
-            validateSinglePath={paths.validateSinglePath}
-            handleBrowseDirectory={paths.handleBrowseDirectory}
+            onGoToDirs={() => setActiveTab('dirs')}
           />
         )}
 

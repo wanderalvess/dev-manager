@@ -6,8 +6,7 @@ interface AzureTabProps {
   settings: AppSettings;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
   renderPathStatusBadge: (field: keyof AppSettings) => React.ReactNode;
-  validateSinglePath: (field: keyof AppSettings, value: string) => Promise<void>;
-  handleBrowseDirectory: (field: keyof AppSettings) => Promise<void>;
+  onGoToDirs?: () => void;
 }
 
 const PRESET_BRANCHES = ['develop', 'master', 'main', 'release/37.0', 'release/38.0'];
@@ -16,8 +15,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
   settings,
   setSettings,
   renderPathStatusBadge,
-  validateSinglePath,
-  handleBrowseDirectory
+  onGoToDirs
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-azure">
@@ -74,42 +72,26 @@ export const AzureTab: React.FC<AzureTabProps> = ({
               </p>
             </div>
 
-            {/* Diretório de Repositórios Git */}
+            {/* O diretório base dos repositórios é editado só em Diretórios & IDE */}
             <div className="space-y-1.5 pt-2 border-t border-border/60">
               <div className="flex items-center justify-between">
-                <label htmlFor="azure-tab-2"
-                  className="font-bold text-foreground flex items-center gap-1.5"
-                  title="Pasta onde ficam (ou vão ficar) os repositórios Git clonados. O Hub Manager escaneia essa pasta para listar seus projetos na aba Git & Azure DevOps."
-                >
+                <span className="font-bold text-foreground flex items-center gap-1.5">
                   <HardDrive className="w-3.5 h-3.5 text-primary" />
                   Diretório Base dos Repositórios Git:
-                </label>
+                </span>
                 {renderPathStatusBadge('projectsPath')}
               </div>
-              <div className="flex items-center space-x-2">
-                <input id="azure-tab-2"
-                  type="text"
-                  value={settings.projectsPath}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSettings({ ...settings, projectsPath: val });
-                    validateSinglePath('projectsPath', val);
-                  }}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
-                  placeholder="Ex: C:\Projetos ou C:\Users\seu.usuario\Projetos"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleBrowseDirectory('projectsPath')}
-                  className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-xs"
-                  title="Selecionar pasta no Windows Explorer"
-                >
-                  <FolderOpen className="w-3.5 h-3.5 text-primary" />
-                  <span>Procurar...</span>
-                </button>
-              </div>
+              <p className="font-mono text-xs text-foreground break-all">{settings.projectsPath || 'Não configurado'}</p>
               <p className="text-2xs text-muted-foreground">
-                O Hub Manager realiza a varredura das pastas contidas neste diretório procurando por projetos Git com remote do Azure DevOps.
+                O Hub Manager varre esta pasta procurando projetos Git com remote do Azure DevOps.
+                {onGoToDirs && (
+                  <>
+                    {' '}
+                    <button type="button" onClick={onGoToDirs} className="text-primary font-semibold hover:underline cursor-pointer">
+                      Alterar em Diretórios &amp; IDE
+                    </button>
+                  </>
+                )}
               </p>
             </div>
 

@@ -22,9 +22,9 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
   <div className="cockpit-panel rounded-xl p-5 space-y-3 shadow-xl border border-border">
     <div className="flex items-center justify-between pb-1 border-b border-border/60">
       <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
-        <Layers className="w-3.5 h-3.5 text-primary" /> Perfis de Ambiente
+        <Layers className="w-3.5 h-3.5 text-primary" /> Presets de Ambiente
       </h3>
-      <span className="text-2xs text-muted-foreground font-mono">Presets de paths/portas</span>
+      <span className="text-2xs text-muted-foreground font-mono">Alterna caminhos e portas de uma vez</span>
     </div>
     <p className="text-2xs text-muted-foreground -mt-1">
       Salve o estado atual dos diretórios e portas abaixo como um preset nomeado, e alterne entre eles com um clique — útil pra quem trabalha com múltiplos clientes/ambientes na mesma máquina.

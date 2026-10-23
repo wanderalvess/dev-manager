@@ -25,7 +25,7 @@ export const SETTINGS_TOUR_STEPS: TourStep[] = [
   },
   {
     target: 'environment-profiles',
-    title: 'Perfis de Ambiente',
+    title: 'Presets de Ambiente',
     desc: 'Salve o conjunto atual de caminhos e portas como um preset nomeado para alternar rapidamente entre clientes/ambientes.'
   },
   {
