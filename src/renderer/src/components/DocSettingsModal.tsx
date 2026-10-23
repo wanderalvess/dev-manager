@@ -4,14 +4,12 @@ import {
   ConfluenceSourceConfig,
   JiraSourceConfig,
   LlmProviderConfig,
-  LlmTestResult,
   DocsIndexStatus
 } from '../../../shared/types';
 import { resolveActiveLlmProvider } from '../utils/llmProviderUtils';
 import { useEscapeToClose } from '../hooks/docsettings/useEscapeToClose';
 import { useDocSettingsFolderActions } from '../hooks/docsettings/useDocSettingsFolderActions';
 import { useAtlassianSourceEditors } from '../hooks/docsettings/useAtlassianSourceEditors';
-import { useLlmProviderEditor } from '../hooks/docsettings/useLlmProviderEditor';
 import { DocSettingsHeader } from './docsettings/DocSettingsHeader';
 import { DocSettingsTabs, type DocSettingsTab } from './docsettings/DocSettingsTabs';
 import { DocSettingsFooter } from './docsettings/DocSettingsFooter';
@@ -47,13 +45,10 @@ interface DocSettingsModalProps {
   onDeleteJiraSource: (id: string) => Promise<void>;
   onToggleJiraEnabled: (source: JiraSourceConfig, enabled: boolean) => Promise<void>;
   onTestJiraConnection: (source: JiraSourceConfig) => Promise<{ success: boolean; message: string }>;
-  // LLM
+  // LLM (somente leitura aqui; a edição fica em Configurações → IA & LLM)
   llmProviders: LlmProviderConfig[];
   activeLlmProviderId?: string;
-  onSaveLlmProvider: (provider: LlmProviderConfig) => Promise<void>;
-  onDeleteLlmProvider: (id: string) => Promise<void>;
-  onSetActiveLlmProvider: (id: string) => Promise<void>;
-  onTestLlmConnection: (provider: LlmProviderConfig) => Promise<LlmTestResult>;
+  onOpenAiSettings?: () => void;
 }
 
 export const DocSettingsModal: React.FC<DocSettingsModalProps> = (props) => {
@@ -62,7 +57,6 @@ export const DocSettingsModal: React.FC<DocSettingsModalProps> = (props) => {
 
   const folderActions = useDocSettingsFolderActions();
   const atlassian = useAtlassianSourceEditors(props);
-  const llm = useLlmProviderEditor(props);
   useEscapeToClose(isOpen, onClose);
 
   if (!isOpen) return null;
@@ -134,19 +128,7 @@ export const DocSettingsModal: React.FC<DocSettingsModalProps> = (props) => {
           <DocSettingsLlmTab
             llmProviders={llmProviders}
             activeLlmProviderId={activeLlmProviderId}
-            editingLlmProvider={llm.editingLlmProvider}
-            setEditingLlmProvider={llm.setEditingLlmProvider}
-            showApiKey={llm.showApiKey}
-            setShowApiKey={llm.setShowApiKey}
-            isTestingLlm={llm.isTestingLlm}
-            llmTestResult={llm.llmTestResult}
-            llmSaveSuccess={llm.llmSaveSuccess}
-            onStartNew={llm.handleStartNewLlmProvider}
-            onSelectPreset={llm.handleSelectPreset}
-            onSubmit={llm.handleSaveLlm}
-            onTest={llm.handleTestLlm}
-            onDeleteLlmProvider={props.onDeleteLlmProvider}
-            onSetActiveLlmProvider={props.onSetActiveLlmProvider}
+            onOpenAiSettings={props.onOpenAiSettings}
           />
         )}
       </div>

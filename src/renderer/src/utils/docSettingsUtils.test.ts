@@ -2,13 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   getFolderDisplayTitle,
   buildConfluenceSource,
-  buildJiraSource,
-  applyProviderPreset,
-  createNewLlmDraft,
-  buildLlmProvider,
-  buildLlmTestConfig
+  buildJiraSource
 } from './docSettingsUtils';
-import { DEFAULT_SYSTEM_PROMPT, PROVIDER_PRESETS } from './docSettingsPresets';
 
 describe('getFolderDisplayTitle', () => {
   it('usa o label quando presente', () => {
@@ -33,26 +28,5 @@ describe('buildConfluenceSource / buildJiraSource', () => {
     expect(c!.id).toMatch(/^confluence_/);
     const j = buildJiraSource({ id: 'j1', name: 'J', baseUrl: 'u', authToken: 't', jql: ' q ', enabled: false });
     expect(j).toMatchObject({ id: 'j1', jql: 'q', enabled: false });
-  });
-});
-
-describe('LLM helpers', () => {
-  it('applyProviderPreset preserva nome e parâmetros existentes', () => {
-    const r = applyProviderPreset({ name: 'Meu', temperature: 0.7 }, PROVIDER_PRESETS[1]);
-    expect(r).toMatchObject({ name: 'Meu', provider: 'gemini', temperature: 0.7, maxTokens: 2048 });
-    expect(r.systemPrompt).toBe(DEFAULT_SYSTEM_PROMPT);
-  });
-  it('createNewLlmDraft usa o primeiro preset', () => {
-    const d = createNewLlmDraft();
-    expect(d.provider).toBe('openai');
-    expect(d.baseUrl).toBe(PROVIDER_PRESETS[0].baseUrl);
-  });
-  it('buildLlmProvider exige nome e modelo e faz trim', () => {
-    expect(buildLlmProvider({ name: 'a' })).toBeNull();
-    const p = buildLlmProvider({ name: ' a ', model: ' m ', apiKey: ' k ' });
-    expect(p).toMatchObject({ name: 'a', model: 'm', apiKey: 'k', provider: 'openai', enabled: true });
-  });
-  it('buildLlmTestConfig aplica defaults sem trim', () => {
-    expect(buildLlmTestConfig({})).toMatchObject({ id: 'test', name: 'Teste', model: 'gpt-4o-mini', enabled: true });
   });
 });

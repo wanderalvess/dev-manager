@@ -121,35 +121,6 @@ export function useDocsSettings() {
     return await tester(source);
   };
 
-  const handleSaveLlmProvider = async (provider: LlmProviderConfig) => {
-    const updated = upsertById(llmProviders, provider);
-    const newActiveId = activeLlmProviderId || provider.id;
-    setLlmProviders(updated);
-    setActiveLlmProviderId(newActiveId);
-    await window.electronAPI?.saveSettings({ llmProviders: updated, activeLlmProviderId: newActiveId });
-  };
-
-  const handleDeleteLlmProvider = async (id: string) => {
-    const updated = llmProviders.filter((p) => p.id !== id);
-    const newActiveId = activeLlmProviderId === id ? updated[0]?.id : activeLlmProviderId;
-    setLlmProviders(updated);
-    setActiveLlmProviderId(newActiveId);
-    await window.electronAPI?.saveSettings({ llmProviders: updated, activeLlmProviderId: newActiveId });
-  };
-
-  const handleSetActiveLlmProvider = async (id: string) => {
-    setActiveLlmProviderId(id);
-    await window.electronAPI?.saveSettings({ activeLlmProviderId: id });
-  };
-
-  const handleTestLlmConnection = async (provider: LlmProviderConfig) => {
-    const tester = window.electronAPI?.testLlmConnection;
-    if (tester) {
-      return await tester(provider);
-    }
-    return { success: false, message: 'API não disponível.' };
-  };
-
   return {
     docFolders,
     indexProjectsDocs,
@@ -173,10 +144,6 @@ export function useDocsSettings() {
     handleSaveJiraSource,
     handleDeleteJiraSource,
     handleToggleJiraEnabled,
-    handleTestJiraConnection,
-    handleSaveLlmProvider,
-    handleDeleteLlmProvider,
-    handleSetActiveLlmProvider,
-    handleTestLlmConnection
+    handleTestJiraConnection
   };
 }

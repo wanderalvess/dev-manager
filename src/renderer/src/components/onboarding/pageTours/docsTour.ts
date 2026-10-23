@@ -6,7 +6,7 @@ export const DOCS_TOUR_STEPS: TourStep[] = [
   {
     target: 'doc-settings-button',
     title: 'Configurações de Documentação & IA',
-    desc: 'Abra este painel para configurar pastas locais, fontes Confluence/Jira e o assistente de IA / LLM.'
+    desc: 'Abra este painel para configurar pastas locais e fontes Confluence/Jira, e ver o provedor de IA ativo (a edição fica em Configurações → IA & LLM).'
   },
   {
     target: 'reindex-button',
