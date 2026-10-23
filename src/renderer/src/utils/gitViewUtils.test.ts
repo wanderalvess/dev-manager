@@ -3,7 +3,6 @@ import {
   buildBranchEntries,
   classifyDiffLine,
   getPrBlockedReason,
-  getPrButtonLabel,
   getPrPanelTitle,
   getRemoteProviderLabel,
   taskBranchPrefixForType
@@ -52,7 +51,6 @@ describe('rótulos de provedor e bloqueio de PR', () => {
     expect(getRemoteProviderLabel('github')).toBe('Ver no GitHub');
     expect(getRemoteProviderLabel()).toBe('Ver Remoto');
     expect(getPrPanelTitle('gitlab')).toBe('Criar Merge Request no GitLab');
-    expect(getPrButtonLabel('azure')).toContain('Azure DevOps');
   });
 
   it('retorna o motivo de bloqueio na ordem de prioridade', () => {

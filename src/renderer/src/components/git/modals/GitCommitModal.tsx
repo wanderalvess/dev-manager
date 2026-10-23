@@ -4,6 +4,7 @@ import type { GitFileStatus, GitProjectInfo } from '../../../../../shared/types'
 import { fileStatusBadge } from '../../../utils/gitPageUtils';
 import { Modal } from '../../ui/Modal';
 import type { AlteredPom } from '../../../utils/alteredPoms';
+import { isBranchLocalOnly } from '../../../utils/gitPublishViewUtils';
 
 interface GitCommitModalProps {
   project: GitProjectInfo;
@@ -114,7 +115,12 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
               ? 'Carregando arquivos alterados...'
               : `${commitFiles.length} arquivo(s) serão incluídos (inclusive não rastreados).`}
           </span>
-          <span className="text-primary font-mono font-bold">git push origin</span>
+          <span
+            className="text-primary font-mono font-bold"
+            title={isBranchLocalOnly(project) ? 'A branch ainda não existe no origin; o push a publica' : undefined}
+          >
+            {isBranchLocalOnly(project) ? 'git push -u origin' : 'git push'}
+          </span>
         </div>
         {!isLoadingFiles && commitFiles.length > 0 && (
           <div className="max-h-36 overflow-y-auto p-1.5 space-y-0.5">

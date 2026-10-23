@@ -6,6 +6,7 @@ import type {
   GitFileStatus,
   GitDiffResult,
   GitCommandResult,
+  GitBranchPublishStatus,
   AzurePipelineTarget,
   AzureListBuildsOptions,
   AzureListBuildsResult,
@@ -88,6 +89,14 @@ export function createGitApi({ apiFetch }: BridgeDeps) {
         method: 'POST',
         body: JSON.stringify({ projectPath, message })
       });
+    },
+
+    getBranchPublishStatus: async (projectPath: string): Promise<GitBranchPublishStatus | null> => {
+      return apiFetch(`/api/git/branch-publish-status?path=${encodeURIComponent(projectPath)}`);
+    },
+
+    publishBranch: async (projectPath: string): Promise<GitCommandResult> => {
+      return apiFetch('/api/git/publish-branch', { method: 'POST', body: JSON.stringify({ projectPath }) });
     },
 
     getCommitHistory: async (projectPath: string, limit?: number): Promise<GitCommitInfo[]> => {

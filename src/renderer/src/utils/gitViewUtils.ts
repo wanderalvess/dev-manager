@@ -75,9 +75,3 @@ export function getPrPanelTitle(provider?: GitProjectInfo['provider']): string {
   if (provider === 'gitlab') return 'Criar Merge Request no GitLab';
   return 'Criar Pull Request no Azure DevOps';
 }
-
-export function getPrButtonLabel(provider?: GitProjectInfo['provider']): string {
-  if (provider === 'azure') return 'Abrir Formulário de Pull Request no Azure DevOps';
-  if (provider === 'github') return 'Abrir Formulário de Pull Request no GitHub';
-  return 'Abrir Formulário de Merge Request no GitLab';
-}

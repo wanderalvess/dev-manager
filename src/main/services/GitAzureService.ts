@@ -7,6 +7,7 @@ import {
   GitDiffResult,
   GitCommandResult,
   GitTaskItem,
+  GitBranchPublishStatus,
   CreateTaskBranchOptions
 } from '../../shared/types';
 import { ConfigService } from './ConfigService';
@@ -14,6 +15,8 @@ import { KarafService } from './KarafService';
 import { execFileAsync, isSafeLocalPath, isSafePath } from '../utils/security';
 import { killProcessTree } from '../utils/process';
 import { httpRequest } from '../utils/httpRequest';
+import { publishCurrentBranch, readBranchPublishStatus } from './gitBranchPublish';
+import { resolveStartPoint } from './gitBranchStart';
 import { launchProcessSafely } from '../utils/routineLaunchUtils';
 import {
   GIT_LOG_FIELD_SEPARATOR,
@@ -411,9 +414,12 @@ export class GitAzureService {
 
       // O "--" final obriga o git a tratar o nome como branch: sem ele, "git checkout ." ou
       // "git checkout src" (sem branch com esse nome) descarta as alterações locais desses caminhos.
+      // "--no-track": partindo de uma ref remota o git configuraria o upstream da branch nova para a
+      // branch base, e o push seguinte (sem upstream próprio) deixaria de publicar a branch com o nome dela.
+      const startPoint = createNew && cleanBase ? await resolveStartPoint((a) => execFileAsync('git', a, { cwd: projectPath }), cleanBase) : '';
       const args = createNew
-        ? cleanBase
-          ? ['checkout', '-b', cleanBranch, cleanBase]
+        ? startPoint
+          ? ['checkout', '--no-track', '-b', cleanBranch, startPoint]
           : ['checkout', '-b', cleanBranch]
         : ['checkout', cleanBranch, '--'];
       const { stdout, stderr } = await execFileAsync('git', args, { cwd: projectPath });
@@ -497,6 +503,28 @@ export class GitAzureService {
         success: false,
         output: gitErrorOutput(err, 'Erro ao realizar commit')
       };
+    }
+  }
+
+  /** Consulta o origin para saber se a branch atual já foi publicada (pré-requisito do Pull Request). */
+  public async getBranchPublishStatus(projectPath: string): Promise<GitBranchPublishStatus | null> {
+    if (!this.isUsableProjectPath(projectPath)) return null;
+    return readBranchPublishStatus((args, timeoutMs) => this.runGitWithTimeout(projectPath, args, timeoutMs));
+  }
+
+  /** Publica a branch atual em origin (`git push --set-upstream origin <branch>`), sem criar commit. */
+  public async publishBranch(projectPath: string): Promise<GitCommandResult> {
+    if (!this.isUsableProjectPath(projectPath)) {
+      return { success: false, output: 'Diretório do projeto não encontrado.' };
+    }
+    try {
+      const output = await publishCurrentBranch(
+        (args, timeoutMs) => this.runGitWithTimeout(projectPath, args, timeoutMs),
+        GIT_NETWORK_TIMEOUT_MS
+      );
+      return { success: true, output };
+    } catch (err: any) {
+      return { success: false, output: gitErrorOutput(err, 'Erro ao publicar a branch') };
     }
   }
 

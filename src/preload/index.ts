@@ -21,6 +21,8 @@ import type {
   AutomationStep,
   ProfileExecutionResult,
   GitProjectInfo,
+  GitBranchPublishStatus,
+  GitCommandResult,
   GitTaskItem,
   AzurePipelineTarget,
   AzureListBuildsOptions,
@@ -408,6 +410,10 @@ const electronAPI = {
     ipcRenderer.invoke('git:fetch-tasks', projectPath, query),
   commitAndPush: (projectPath: string, message: string) =>
     ipcRenderer.invoke('git:commit-and-push', projectPath, message),
+  getBranchPublishStatus: (projectPath: string): Promise<GitBranchPublishStatus | null> =>
+    ipcRenderer.invoke('git:get-branch-publish-status', projectPath),
+  publishBranch: (projectPath: string): Promise<GitCommandResult> =>
+    ipcRenderer.invoke('git:publish-branch', projectPath),
   getCommitHistory: (projectPath: string, limit?: number) =>
     ipcRenderer.invoke('git:get-commit-history', projectPath, limit),
   getGitStatusDetails: (projectPath: string) =>

@@ -7,6 +7,8 @@ interface Params extends GitOutputControls {
   selectedPath: string;
   targetBranch: string;
   prBlockedReason: string | null;
+  /** Confere/publica a branch no origin antes do PR; false cancela a abertura. */
+  ensurePublishedForPr: (targetBranch: string) => Promise<boolean>;
   refreshAfterGitChange: (projectPath: string) => Promise<void>;
   refreshUncommittedCounts: () => Promise<void>;
 }
@@ -17,6 +19,7 @@ export function useGitOperations({
   selectedPath,
   targetBranch,
   prBlockedReason,
+  ensurePublishedForPr,
   setGitOutput,
   setGitOutputIsError,
   refreshAfterGitChange,
@@ -24,6 +27,7 @@ export function useGitOperations({
 }: Params) {
   const [isExecutingGit, setIsExecutingGit] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isOpeningPr, setIsOpeningPr] = useState<boolean>(false);
   const [ideFeedback, setIdeFeedback] = useState<string | null>(null);
 
   const handleOpenFileInIde = async (filePath: string) => {
@@ -44,13 +48,25 @@ export function useGitOperations({
   };
 
   const handleOpenPr = async () => {
-    if (!currentProject || prBlockedReason) return;
-    const url = await window.electronAPI.buildPrUrl(currentProject.path, targetBranch);
-    if (url) {
-      await window.electronAPI.openExternal(url);
-    } else {
+    if (!currentProject || prBlockedReason || isOpeningPr) return;
+    setIsOpeningPr(true);
+    try {
+      // Sem a branch no origin o Azure DevOps responde TF401175 ao abrir o formulário.
+      if (!(await ensurePublishedForPr(targetBranch))) return;
+      const url = await window.electronAPI.buildPrUrl(currentProject.path, targetBranch);
+      if (url) {
+        await window.electronAPI.openExternal(url);
+        setGitOutputIsError(false);
+        setGitOutput(`Formulário aberto no navegador: '${currentProject.currentBranch}' → '${targetBranch}'.`);
+      } else {
+        setGitOutputIsError(true);
+        setGitOutput('Não foi possível montar a URL do Pull Request para este repositório.');
+      }
+    } catch (err: any) {
       setGitOutputIsError(true);
-      setGitOutput('Não foi possível montar a URL do Pull Request para este repositório.');
+      setGitOutput(`Erro ao abrir o Pull Request: ${err?.message || err}`);
+    } finally {
+      setIsOpeningPr(false);
     }
   };
 
@@ -97,6 +113,7 @@ export function useGitOperations({
     isExecutingGit,
     setIsExecutingGit,
     isSyncing,
+    isOpeningPr,
     ideFeedback,
     handleOpenFileInIde,
     handleOpenPr,

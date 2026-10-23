@@ -1859,6 +1859,22 @@ app.post('/api/git/commit-push', async (req, res) => {
   res.json(result);
 });
 
+app.get('/api/git/branch-publish-status', async (req, res) => {
+  const projectPath = String(req.query.path || '');
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json(null);
+  }
+  res.json(await gitAzureService.getBranchPublishStatus(projectPath));
+});
+
+app.post('/api/git/publish-branch', async (req, res) => {
+  const { projectPath } = req.body;
+  if (!isSafeLocalPath(projectPath)) {
+    return res.status(400).json({ success: false, output: 'Caminho de projeto inválido.' });
+  }
+  res.json(await gitAzureService.publishBranch(projectPath));
+});
+
 app.get('/api/git/commits', async (req, res) => {
   const projectPath = String(req.query.path || '');
   const limit = Number(req.query.limit) || 10;

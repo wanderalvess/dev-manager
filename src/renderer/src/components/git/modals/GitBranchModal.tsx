@@ -66,11 +66,18 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
             <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Plus className="w-3.5 h-3.5 text-primary" /> Criar e alternar para nova branch:
             </label>
+            <p className="text-2xs text-muted-foreground">
+              A nova branch parte de <span className="font-mono text-foreground">{project.currentBranch}</span> e fica só
+              local até ser publicada. Para escolher outra base, use <strong>Branch por Tarefa</strong>.
+            </p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={newBranchName}
                 onChange={(e) => onNewBranchNameChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isExecutingGit && newBranchName.trim()) onCheckout(newBranchName, true);
+                }}
                 placeholder="ex: feature/rotina-1400"
                 className="flex-1 bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary"
               />

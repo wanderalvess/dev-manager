@@ -45,6 +45,14 @@ export function registerGitHandlers(ctx: IpcContext): void {
     return await gitAzureService.commitAndPush(projectPath, message);
   });
 
+  ipcMain.handle('git:get-branch-publish-status', async (_, projectPath: string) => {
+    return await gitAzureService.getBranchPublishStatus(projectPath);
+  });
+
+  ipcMain.handle('git:publish-branch', async (_, projectPath: string) => {
+    return await gitAzureService.publishBranch(projectPath);
+  });
+
   ipcMain.handle('git:get-commit-history', async (_, projectPath: string, limit?: number) => {
     return await gitAzureService.getCommitHistory(projectPath, limit);
   });

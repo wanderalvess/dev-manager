@@ -334,7 +334,10 @@ export function getFaqList({
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
             <p>
-              Ao clicar em <strong className="text-foreground">"Abrir Criação de Pull Request no Azure DevOps"</strong>, seu navegador padrão é aberto diretamente na URL de criação de PR já com o <em>Source Branch</em> (sua branch) e o <em>Target Branch</em> (ex: <code className="font-mono text-primary font-bold">develop</code>) pré-configurados.
+              Ao clicar em <strong className="text-foreground">"Abrir Formulário de Pull Request no Azure DevOps"</strong>, seu navegador padrão é aberto diretamente na URL de criação de PR já com o <em>Source Branch</em> (sua branch) e o <em>Target Branch</em> (ex: <code className="font-mono text-primary font-bold">develop</code>) pré-configurados.
+            </p>
+            <p>
+              Antes de abrir, o Hub consulta o <code className="font-mono text-primary font-bold">origin</code>: se a branch ainda existe só no seu computador (selo <strong className="text-foreground">SÓ LOCAL</strong>), o botão vira <strong className="text-foreground">"Publicar Branch e Abrir Pull Request"</strong> e pede confirmação para publicá-la (<code className="font-mono text-primary font-bold">git push --set-upstream origin</code>). Sem isso o Azure DevOps responde <em>TF401175: The version descriptor ... could not be resolved</em>. Também avisa quando há commits locais ainda sem push. O botão <strong className="text-foreground">Publicar/Push</strong> da barra da branch faz o mesmo envio sem abrir o PR.
             </p>
           </div>
         </div>

@@ -16,6 +16,7 @@ import type {
   AutomationStep,
   ProfileExecutionResult,
   GitProjectInfo,
+  GitBranchPublishStatus,
   RoutineItem,
   RoutineLaunchResult,
   KarafWtaStatusResult,
@@ -268,8 +269,10 @@ export interface ElectronAPI {
     projectPath: string,
     command: 'fetch' | 'pull' | 'status' | 'stash' | 'stash-pop'
   ) => Promise<GitCommandResult>;
-  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean) => Promise<GitCommandResult>;
+  checkoutBranch: (projectPath: string, branchName: string, createNew?: boolean, baseBranch?: string) => Promise<GitCommandResult>;
   commitAndPush: (projectPath: string, message: string) => Promise<GitCommandResult>;
+  getBranchPublishStatus: (projectPath: string) => Promise<GitBranchPublishStatus | null>;
+  publishBranch: (projectPath: string) => Promise<GitCommandResult>;
   getCommitHistory: (projectPath: string, limit?: number) => Promise<GitCommitInfo[]>;
   getGitStatusDetails: (projectPath: string) => Promise<GitFileStatus[]>;
   getGitDiff: (projectPath: string, targetFile?: string) => Promise<GitDiffResult>;

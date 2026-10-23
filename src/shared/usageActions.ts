@@ -44,6 +44,7 @@ export const TRACKED_USAGE_ACTIONS: readonly TrackedUsageAction[] = [
   { module: 'routines', action: 'download-ccw', ipc: 'routines:download-ccw', rest: 'POST /api/routines/download-ccw' },
   // Git
   { module: 'git', action: 'create-task-branch', ipc: 'git:create-task-branch', rest: 'POST /api/git/create-task-branch' },
+  { module: 'git', action: 'publish-branch', ipc: 'git:publish-branch', rest: 'POST /api/git/publish-branch' },
   { module: 'git', action: 'commit-and-push', ipc: 'git:commit-and-push', rest: 'POST /api/git/commit-push' },
   // Qualidade (QA)
   { module: 'qa', action: 'regression-execute', ipc: 'qa:execute-suite', rest: 'POST /api/qa/execute' },
