@@ -8,8 +8,10 @@ import { QualityValidationProvider } from '../../hooks/quality/page/QualityValid
 // download antecipado de todas as ~10 páginas no startup do app).
 const EnvironmentPage = lazy(() => import('../../pages/EnvironmentPage').then((m) => ({ default: m.EnvironmentPage })));
 const DatabasePage = lazy(() => import('../../pages/DatabasePage').then((m) => ({ default: m.DatabasePage })));
+const BackupsPage = lazy(() => import('../../pages/BackupsPage').then((m) => ({ default: m.BackupsPage })));
 const ContainersPage = lazy(() => import('../../pages/ContainersPage').then((m) => ({ default: m.ContainersPage })));
 const DeployPage = lazy(() => import('../../pages/DeployPage').then((m) => ({ default: m.DeployPage })));
+const KarafPage = lazy(() => import('../../pages/KarafPage').then((m) => ({ default: m.KarafPage })));
 const GitAzurePage = lazy(() => import('../../pages/GitAzurePage').then((m) => ({ default: m.GitAzurePage })));
 const RoutinesPage = lazy(() => import('../../pages/RoutinesPage').then((m) => ({ default: m.RoutinesPage })));
 const DocsPage = lazy(() => import('../../pages/DocsPage').then((m) => ({ default: m.DocsPage })));
@@ -94,13 +96,32 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
           />
         </PageSlot>
         <PageSlot id="database" {...slot}>
-          <DatabasePage settingsVersion={settingsVersion} onNavigateToSettings={goSettings} />
+          <DatabasePage
+            settingsVersion={settingsVersion}
+            onNavigateToSettings={goSettings}
+            onNavigateToBackups={() => setActiveTab('db-backups')}
+          />
+        </PageSlot>
+        <PageSlot id="db-backups" {...slot}>
+          <BackupsPage
+            isActive={activeTab === 'db-backups'}
+            settingsVersion={settingsVersion}
+            onNavigateToDatabase={() => setActiveTab('database')}
+          />
         </PageSlot>
         <PageSlot id="containers" {...slot}>
           <ContainersPage isActive={activeTab === 'containers'} settingsVersion={settingsVersion} />
         </PageSlot>
         <PageSlot id="deploy" {...slot}>
-          <DeployPage projects={projects} onNavigateToSettings={goSettings} settingsVersion={settingsVersion} />
+          <DeployPage
+            projects={projects}
+            onNavigateToSettings={goSettings}
+            onNavigateToKaraf={() => setActiveTab('karaf')}
+            settingsVersion={settingsVersion}
+          />
+        </PageSlot>
+        <PageSlot id="karaf" {...slot}>
+          <KarafPage projects={projects} />
         </PageSlot>
         <PageSlot id="git" {...slot}>
           <GitAzurePage

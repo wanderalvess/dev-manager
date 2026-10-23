@@ -7,8 +7,6 @@ export function useDeployModals() {
   const [isBundlesModalOpen, setIsBundlesModalOpen] = useState<boolean>(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isRoutine801ModalOpen, setIsRoutine801ModalOpen] = useState<boolean>(false);
-  const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState<boolean>(false);
-  const [isJvmMemoryModalOpen, setIsJvmMemoryModalOpen] = useState<boolean>(false);
   const [isQueueModalOpen, setIsQueueModalOpen] = useState<boolean>(false);
   const [isChainModalOpen, setIsChainModalOpen] = useState<boolean>(false);
   const [historyList, setHistoryList] = useState<DeployProfileHistoryEntry[]>([]);
@@ -49,10 +47,6 @@ export function useDeployModals() {
     setIsHistoryModalOpen,
     isRoutine801ModalOpen,
     setIsRoutine801ModalOpen,
-    isFeaturesModalOpen,
-    setIsFeaturesModalOpen,
-    isJvmMemoryModalOpen,
-    setIsJvmMemoryModalOpen,
     isQueueModalOpen,
     setIsQueueModalOpen,
     isChainModalOpen,

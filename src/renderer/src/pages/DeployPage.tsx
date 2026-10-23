@@ -8,7 +8,6 @@ import { AlteredPomsBanner } from '../components/deploy/AlteredPomsBanner';
 import { DeployHeader } from '../components/deploy/DeployHeader';
 import { DeployKarafAlerts } from '../components/deploy/DeployKarafAlerts';
 import { DeployStepsPanel } from '../components/deploy/DeployStepsPanel';
-import { DeployDiagnosticsPanel } from '../components/deploy/DeployDiagnosticsPanel';
 import { DeployModalsHost } from '../components/deploy/modals/DeployModalsHost';
 import { useDeployProfiles } from '../hooks/deploy/useDeployProfiles';
 import { useDeployRunner } from '../hooks/deploy/useDeployRunner';
@@ -19,10 +18,16 @@ import { failedStepContextPath } from '../utils/deployProfileUtils';
 interface DeployPageProps {
   projects: GitProjectInfo[];
   onNavigateToSettings?: () => void;
+  onNavigateToKaraf?: () => void;
   settingsVersion?: number;
 }
 
-export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSettings, settingsVersion }) => {
+export const DeployPage: React.FC<DeployPageProps> = ({
+  projects,
+  onNavigateToSettings,
+  onNavigateToKaraf,
+  settingsVersion
+}) => {
   const tour = usePageTour(DEPLOY_TOUR_STORAGE_KEY);
   const modals = useDeployModals();
   const karaf = useKarafStatus();
@@ -65,10 +70,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
         onExportProfile={deployProfiles.handleExportProfile}
         onImportProfile={deployProfiles.handleImportProfileClick}
         onOpenHistory={modals.handleOpenHistory}
-        onOpenBundles={() => modals.setIsBundlesModalOpen(true)}
-        onOpenRoutine801={() => modals.setIsRoutine801ModalOpen(true)}
-        onOpenFeatures={() => modals.setIsFeaturesModalOpen(true)}
-        onOpenJvmMemory={() => modals.setIsJvmMemoryModalOpen(true)}
+        onOpenKaraf={() => onNavigateToKaraf?.()}
         onOpenChainModal={() => modals.setIsChainModalOpen(true)}
         onAbort={runner.handleAbortDeploy}
         onRun={runner.handleRunActiveProfile}
@@ -78,7 +80,9 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
 
       {/* Grid Principal: o console fica no dock global (Ctrl+`) */}
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 min-w-0">
-        <div className="lg:col-span-5 xl:col-span-4 flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1">
+        <div
+          className={`${runner.activeResolutionDiag ? 'lg:col-span-5 xl:col-span-4' : 'lg:col-span-12'} flex flex-col space-y-3 min-w-0 min-h-[320px] lg:min-h-0 overflow-y-auto pr-1`}
+        >
           <DeployKarafAlerts
             karafValid={deployProfiles.karafValid}
             karafPath={deployProfiles.karafPath}
@@ -106,8 +110,8 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
           />
         </div>
 
-        <div className="lg:col-span-7 xl:col-span-8 flex flex-col space-y-3 min-w-0 lg:min-h-0 overflow-y-auto pr-1">
-          {runner.activeResolutionDiag && (
+        {runner.activeResolutionDiag && (
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col space-y-3 min-w-0 lg:min-h-0 overflow-y-auto pr-1">
             <OsgiResolutionDiagnosticCard
               diagnostic={runner.activeResolutionDiag}
               isDeploying={runner.isDeploying}
@@ -127,14 +131,8 @@ export const DeployPage: React.FC<DeployPageProps> = ({ projects, onNavigateToSe
               onRunSuggestedDiagnostic={runner.handleRunSuggestedDiagnostic}
               onDismiss={() => runner.setActiveResolutionDiag(null)}
             />
-          )}
-
-          <DeployDiagnosticsPanel
-            isDeploying={runner.isDeploying}
-            isDiagRunning={runner.isDiagRunning}
-            onRunDiagnostic={runner.handleRunDiagnostic}
-          />
-        </div>
+          </div>
+        )}
       </div>
 
       <DeployModalsHost

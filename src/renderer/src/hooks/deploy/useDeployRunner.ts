@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { DeployProfile, DeployStep } from '../../../../shared/types';
 import { showToast } from '../../components/ToastHost';
-import { buildDiagnosticResultLines, pickProfileSteps, sliceProfileFromStep } from '../../utils/deployProfileUtils';
+import { pickProfileSteps, sliceProfileFromStep } from '../../utils/deployProfileUtils';
 import { useDeployProgress, type DeployStepStatus } from './useDeployProgress';
+import { useKarafDiagnostics } from './useKarafDiagnostics';
 import { useKarafConsole } from '../karafConsole/KarafConsoleContext';
 
 interface UseDeployRunnerArgs {
@@ -28,7 +29,7 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     flushRemainder
   } = progress;
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
-  const [isDiagRunning, setIsDiagRunning] = useState<string | null>(null);
+  const { isDiagRunning, runDiagnostic: handleRunDiagnostic, abortDiagnostic } = useKarafDiagnostics(isDeploying);
 
   const resetProgress = () => {
     setStepStatuses({});
@@ -45,11 +46,7 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     if (!isDeploying && !runningStepId && !isDiagRunning) return;
     try {
       if (isDiagRunning) {
-        if (window.electronAPI?.abortKarafDiagnostic) {
-          await window.electronAPI.abortKarafDiagnostic();
-        }
-        setTerminalLogs((prev) => [...prev, '\r\n🛑 [INTERROMPIDO] Comando cancelado pelo usuário.\r\n']);
-        setIsDiagRunning(null);
+        await abortDiagnostic();
         return;
       }
       if (window.electronAPI?.abortDeploy) {
@@ -161,26 +158,6 @@ export function useDeployRunner({ profiles, activeProfile, setActiveProfileId }:
     } finally {
       flushRemainder();
       setRunningStepId(null);
-    }
-  };
-
-  const handleRunDiagnostic = async (cmd: string, label: string) => {
-    if (isDeploying || isDiagRunning) return;
-    setIsDiagRunning(label);
-    // Abre o dock (a saída ficava invisível com o console recolhido) e acrescenta ao buffer, sem apagar o que já estava lá.
-    setConsoleOpen(true);
-    streamRemainderRef.current = '';
-    setTerminalLogs((prev) => [...prev, `--- Executando Diagnóstico: ${cmd} ---\r\n`]);
-
-    try {
-      const res = await window.electronAPI.execKarafDiagnostic(cmd);
-      const extra = buildDiagnosticResultLines(cmd, res);
-      if (extra.length > 0) setTerminalLogs((prev) => [...prev, ...extra]);
-    } catch (err: any) {
-      setTerminalLogs((prev) => [...prev, `[ERRO] ${err?.message || err}\r\n`]);
-    } finally {
-      flushRemainder();
-      setIsDiagRunning(null);
     }
   };
 

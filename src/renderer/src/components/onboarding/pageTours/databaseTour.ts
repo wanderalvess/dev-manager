@@ -36,6 +36,6 @@ export const DATABASE_TOUR_STEPS: TourStep[] = [
   {
     target: 'backup-button',
     title: 'Backup e Agendamento',
-    desc: 'Abre o gerenciador de backups, permitindo rodar backups manuais, agendar execuções automáticas e restaurar arquivos.'
+    desc: 'Abre a tela Backups de Banco (já na conexão ativa), para rodar backups manuais, agendar execuções automáticas e restaurar arquivos.'
   }
 ];

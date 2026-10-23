@@ -5,6 +5,8 @@ import {
   GitPullRequest,
   Terminal,
   Layers,
+  Cpu,
+  HardDriveDownload,
   Settings,
   HelpCircle,
   RefreshCw,
@@ -70,6 +72,13 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     icon: Database
   },
   {
+    id: 'act-db-backups',
+    tab: 'db-backups',
+    title: 'Backups de Banco',
+    subtitle: 'Backup, restauração, agendamento e histórico dos bancos',
+    icon: HardDriveDownload
+  },
+  {
     id: 'act-containers',
     tab: 'containers',
     title: 'Containers',
@@ -84,6 +93,13 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     subtitle: 'Perfis de deploy sequenciais — Karaf, Containers ou comando genérico',
     badge: 'Alt+4',
     icon: Layers
+  },
+  {
+    id: 'act-karaf',
+    tab: 'karaf',
+    title: 'Karaf & OSGi',
+    subtitle: 'Bundles, features, catálogo 801, memória da JVM e diagnósticos',
+    icon: Cpu
   },
   {
     id: 'act-git',

@@ -1,5 +1,7 @@
 import {
   Terminal,
+  Cpu,
+  HardDriveDownload,
   Boxes,
   Database,
   Layers,
@@ -41,7 +43,7 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     navTarget: 'database',
     icon: Database,
     title: 'Banco de Dados',
-    description: 'Database Studio Oracle, PostgreSQL, MySQL e Backups agendados.',
+    description: 'Database Studio SQL para Oracle, PostgreSQL e MySQL.',
     shortcut: 'Alt+2',
     hoverBorderClass: 'hover:border-emerald-500/50',
     iconClass: 'text-emerald-500',
@@ -60,12 +62,30 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
   {
     navTarget: 'deploy',
     icon: Layers,
-    title: 'Deploy & OSGi',
-    description: 'Pipelines Karaf, Maven builds, Docker compose e scripts custom.',
+    title: 'Deploy & Esteiras',
+    description: 'Perfis de build e deploy: Karaf, Maven, Docker compose e scripts custom.',
     shortcut: 'Alt+4',
     hoverBorderClass: 'hover:border-amber-500/50',
     iconClass: 'text-amber-500',
     titleHoverClass: 'group-hover:text-amber-500'
+  },
+  {
+    navTarget: 'karaf',
+    icon: Cpu,
+    title: 'Karaf & OSGi',
+    description: 'Bundles, features, catálogo 801, memória da JVM e diagnósticos do servidor.',
+    hoverBorderClass: 'hover:border-amber-500/50',
+    iconClass: 'text-amber-500',
+    titleHoverClass: 'group-hover:text-amber-500'
+  },
+  {
+    navTarget: 'db-backups',
+    icon: HardDriveDownload,
+    title: 'Backups de Banco',
+    description: 'Backup, restauração, agendamento, arquivos, histórico e webhooks.',
+    hoverBorderClass: 'hover:border-emerald-500/50',
+    iconClass: 'text-emerald-500',
+    titleHoverClass: 'group-hover:text-emerald-500'
   },
   {
     navTarget: 'git',
