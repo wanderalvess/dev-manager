@@ -1,14 +1,28 @@
 /**
  * Script de empacotamento com suporte a proxy corporativo (SSL inspection / certificados autoassinados e mirrors estáveis).
  */
-// Por padrão em ambiente com proxy corporativo (SSL inspection / certificados autoassinados da TOTVS),
-// desativa a rejeição estrita de TLS para o electron-builder e dependências nativas.
+// Padrão seguro: o certificado TLS é validado e os downloads (Electron, binários do electron-builder) vêm dos
+// hosts oficiais. Atrás de proxy corporativo com SSL inspection (certificado autoassinado), rode com
+// CORP_PROXY_INSECURE=1: isso desliga a validação de TLS e usa o mirror npmmirror.com. Em qualquer modo,
+// ELECTRON_MIRROR e ELECTRON_BUILDER_BINARIES_MIRROR, se definidos, têm prioridade.
 if (process.env.CORP_PROXY_INSECURE === '1') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  process.env.ELECTRON_MIRROR = process.env.ELECTRON_MIRROR || 'https://npmmirror.com/mirrors/electron/';
+  process.env.ELECTRON_BUILDER_BINARIES_MIRROR =
+    process.env.ELECTRON_BUILDER_BINARIES_MIRROR || 'https://npmmirror.com/mirrors/electron-builder-binaries/';
+  console.warn(
+    '[Build] CORP_PROXY_INSECURE=1: validação de certificado TLS DESLIGADA neste build. Use só atrás de proxy corporativo confiável.'
+  );
 }
-process.env.ELECTRON_MIRROR = process.env.ELECTRON_MIRROR || 'https://npmmirror.com/mirrors/electron/';
-process.env.ELECTRON_BUILDER_BINARIES_MIRROR =
-  process.env.ELECTRON_BUILDER_BINARIES_MIRROR || 'https://npmmirror.com/mirrors/electron-builder-binaries/';
+
+/** Variáveis herdadas pelos processos filhos, sem as não definidas (evita virarem a string "undefined"). */
+function buildChildEnv() {
+  const env = { ...process.env };
+  for (const key of ['NODE_TLS_REJECT_UNAUTHORIZED', 'ELECTRON_MIRROR', 'ELECTRON_BUILDER_BINARIES_MIRROR']) {
+    if (env[key] === undefined) delete env[key];
+  }
+  return env;
+}
 
 const fs = require('fs');
 const path = require('path');
@@ -89,10 +103,12 @@ async function ensureNsisResources() {
   }
 
   console.log('[Build] Pré-baixando nsis-resources-3.4.1.7z diretamente...');
-  const urls = [
-    'https://npmmirror.com/mirrors/electron-builder-binaries/nsis-resources-3.4.1.7z',
-    'https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z'
-  ];
+  const officialUrl =
+    'https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z';
+  const binariesMirror = process.env.ELECTRON_BUILDER_BINARIES_MIRROR;
+  const urls = binariesMirror
+    ? [`${binariesMirror.replace(/\/?$/, '/')}nsis-resources-3.4.1.7z`, officialUrl]
+    : [officialUrl];
 
   for (const url of urls) {
     try {
@@ -121,11 +137,7 @@ async function ensureElectronBinary() {
       const { spawnSync } = require('child_process');
       const res = spawnSync(process.execPath, [installJs], {
         stdio: 'inherit',
-        env: {
-          ...process.env,
-          NODE_TLS_REJECT_UNAUTHORIZED: process.env.NODE_TLS_REJECT_UNAUTHORIZED || '0',
-          ELECTRON_MIRROR: process.env.ELECTRON_MIRROR || 'https://npmmirror.com/mirrors/electron/'
-        }
+        env: buildChildEnv()
       });
       if (res.status === 0) {
         console.log('[Build] Binário do Electron local instalado com sucesso.');
@@ -164,12 +176,7 @@ async function start() {
   const child = spawn(cmd, ['electron-builder', ...args], {
     stdio: 'inherit',
     shell: true,
-    env: {
-      ...process.env,
-      NODE_TLS_REJECT_UNAUTHORIZED: process.env.NODE_TLS_REJECT_UNAUTHORIZED,
-      ELECTRON_MIRROR: process.env.ELECTRON_MIRROR,
-      ELECTRON_BUILDER_BINARIES_MIRROR: process.env.ELECTRON_BUILDER_BINARIES_MIRROR
-    }
+    env: buildChildEnv()
   });
 
   child.on('close', async (code) => {
