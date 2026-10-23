@@ -22,6 +22,7 @@ import { registerUpdateHandlers } from './handlers/updateHandlers';
 import { registerApmHandlers } from './handlers/apmHandlers';
 import { registerQualityHandlers } from './handlers/qualityHandlers';
 import { registerHttpClientHandlers } from './handlers/httpClientHandlers';
+import { registerRemoteControlHandlers } from './handlers/remoteControlHandlers';
 
 export type { IpcContext } from './ipcContext';
 
@@ -51,6 +52,7 @@ export function registerIpcHandlers(ctx: IpcContext): void {
     registerQualityHandlers(ctx);
     registerHttpClientHandlers(ctx);
     registerUsageHandlers(ctx);
+    registerRemoteControlHandlers(ctx);
   } finally {
     restoreIpc();
   }

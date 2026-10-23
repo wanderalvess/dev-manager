@@ -27,6 +27,7 @@ import type { HttpClientService } from '../services/HttpClientService';
 import type { HttpCollectionService } from '../services/HttpCollectionService';
 import type { UsageMetricsService } from '../services/UsageMetricsService';
 import type { DelphiBuildService } from '../services/DelphiBuildService';
+import type { RemoteControlService } from '../services/RemoteControlService';
 
 /** Tudo que um grupo de handlers IPC pode precisar: a janela principal e os serviços do app. */
 export interface IpcContext {
@@ -59,4 +60,5 @@ export interface IpcContext {
   httpCollectionService: HttpCollectionService;
   usageMetricsService: UsageMetricsService;
   delphiBuildService: DelphiBuildService;
+  remoteControlService: RemoteControlService;
 }

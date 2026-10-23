@@ -2,6 +2,7 @@ import React from 'react';
 import { AppSettings, MonitoredPortConfig } from '../../../../../shared/types';
 import { PortsMainCard } from '../ports/PortsMainCard';
 import { PortsMonitoredCard } from '../ports/PortsMonitoredCard';
+import { RemoteControlCard } from '../ports/RemoteControlCard';
 
 interface PortsTabProps {
   settings: AppSettings;
@@ -25,6 +26,7 @@ export const PortsTab: React.FC<PortsTabProps> = ({
   return (
     <div className="space-y-4 flex-1 flex flex-col" id="field-ports">
       <PortsMainCard settings={settings} setSettings={setSettings} />
+      <RemoteControlCard />
       <PortsMonitoredCard
         ports={settings.monitoredPorts || defaultPorts}
         onReset={handleResetPorts}

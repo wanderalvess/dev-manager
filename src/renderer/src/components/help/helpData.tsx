@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
+import { getRemoteControlFaq } from './faq/remoteControlFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 import { getUpdateFaq } from './faq/updateFaq';
 
@@ -1688,6 +1689,7 @@ export function getFaqList({
       )
     },
     ...getModulesFaq(onNavigate),
+    ...getRemoteControlFaq(onNavigate),
     ...getLogsFaq(onNavigate),
     ...getDeployCancellationFaq(onNavigate),
     ...getUpdateFaq(handleOpenLink)

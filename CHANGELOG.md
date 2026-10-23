@@ -15,6 +15,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Reverter o pom sozinho depois de instalar**: em *Alterar e executar perfil* há a opção (marcada por padrão) de voltar o pom.xml ao valor original quando o perfil terminar com sucesso. O instalado no Karaf não muda, o alerta some e o `pom.xml.bak` é apagado (reverter até o conteúdo do `.bak` agora o remove, para o `git add -A` não levá-lo). Se o perfil falhar, o pom continua alterado e o alerta fica.
 - **Escolher etapas do perfil sugerido**: o card do diagnóstico OSGi permite rodar só algumas etapas do perfil (*Só esta* / *Executar selecionadas*), em vez do perfil inteiro.
 
+- **Controle remoto pelo celular**: em *Configurações → Portas*, o cartão *Controle Remoto pelo Celular* liga um servidor na rede local e mostra um QR. O celular (mesmo Wi-Fi ou Tailscale) abre uma página leve, sem instalar nada, para preparar o ambiente, abrir a IDE e o servidor debug, ver portas e serviços, iniciar/parar o Karaf com log ao vivo, controlar containers Docker, rodar perfis de deploy e fazer backup de banco. Ações destrutivas pedem confirmação no celular. Só no app desktop.
+
 ### Alterado
 - **Console do Karaf**: a barra inteira abre/fecha o console e ganhou o botão explícito *Recolher/Expandir*. O botão *Listar* do `bundle:watch` agora se chama *Listar watches*.
 - **Diagnósticos**: removidos os botões repetidos das abas *Features* e *Bundles* (já estão em *Rápidos*). Comandos que apagam estado (`log:clear`, `feature:uninstall`, `bundle:uninstall`...) pedem confirmação.
@@ -32,6 +34,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Comando ignorado no console**: com o Karaf embedded parado e outro comando em execução, o comando digitado era descartado em silêncio. Agora avisa, e Ctrl+C / Esc interrompem o comando em execução (antes só funcionava com o embedded ativo ou em tail).
 - **Diagnósticos com o console recolhido**: rodar um diagnóstico agora abre o console, que antes ficava recolhido e escondia a saída, e acrescenta ao que já estava lá em vez de apagar o buffer.
 - **Barra de progresso do Deploy**: mostrava 33% na etapa 1 de 3 antes de concluir qualquer etapa; agora conta só as etapas concluídas.
+
+### Segurança
+- **Controle remoto**: chave aleatória no endereço (nova a cada vez que liga), só origem da rede local, `Host` com nome de domínio recusado (DNS rebinding), checagem de `Origin` e lista fechada de ações, sem comando livre.
 
 ## [1.44.0] - 2026-10-22
 ### Adicionado
