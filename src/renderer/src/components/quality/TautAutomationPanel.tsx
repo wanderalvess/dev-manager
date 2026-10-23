@@ -70,7 +70,6 @@ export const TautAutomationPanel: React.FC<TautAutomationPanelProps> = ({
             isRunning={runner.isRunning}
             activeOutput={runner.activeOutput}
             lastExecutionResult={runner.lastExecutionResult}
-            terminalRef={runner.terminalBottomRef}
             copiedKey={copiedKey}
             onCopy={copyToClipboard}
             onClear={() => runner.setActiveOutput('')}

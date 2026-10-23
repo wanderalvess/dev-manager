@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { TestExecutionResult } from '../../../../../shared/types';
 import { api } from '../../../services/apiBridge';
 import { showToast } from '../../../components/ToastHost';
@@ -13,16 +13,11 @@ export function useTautRunner() {
   const [activeOutput, setActiveOutput] = useState<string>('');
   const [lastExecutionResult, setLastExecutionResult] = useState<TestExecutionResult | null>(null);
 
-  const terminalBottomRef = useRef<HTMLDivElement | null>(null);
-
   // Listener para chunks de console em tempo real
   useEffect(() => {
     if (api.onTautChunk) {
       const unsub = api.onTautChunk((data) => {
         setActiveOutput((prev) => prev + data.chunk);
-        if (terminalBottomRef.current) {
-          terminalBottomRef.current.scrollTop = terminalBottomRef.current.scrollHeight;
-        }
       });
       return () => {
         unsub?.();
@@ -114,7 +109,6 @@ export function useTautRunner() {
     activeOutput,
     setActiveOutput,
     lastExecutionResult,
-    terminalBottomRef,
     effectiveTagsString,
     toggleTag,
     handleRunTests,

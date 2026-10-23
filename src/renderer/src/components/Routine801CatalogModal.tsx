@@ -201,7 +201,6 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
           consoleLogs={consoleState.consoleLogs}
           displayedLogs={consoleState.displayedLogs}
           logFilter={consoleState.logFilter}
-          consoleEndRef={consoleState.consoleEndRef}
           onChangeFilter={consoleState.setLogFilter}
           onClear={() => consoleState.setConsoleLogs([])}
           onCollapse={() => consoleState.setIsConsoleExpanded(false)}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Terminal, RotateCw, ChevronDown } from 'lucide-react';
 import { getLogLineClass } from '../../utils/routine801ModalUtils';
+import { ConsoleBody } from '../console/ConsoleBody';
 
 interface Routine801ConsoleProps {
   isExecuting: boolean;
@@ -8,7 +9,6 @@ interface Routine801ConsoleProps {
   consoleLogs: string[];
   displayedLogs: string[];
   logFilter: 'ALL' | 'ERRORS';
-  consoleEndRef: React.RefObject<HTMLDivElement>;
   onChangeFilter: (filter: 'ALL' | 'ERRORS') => void;
   onClear: () => void;
   onCollapse: () => void;
@@ -20,7 +20,6 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
   consoleLogs,
   displayedLogs,
   logFilter,
-  consoleEndRef,
   onChangeFilter,
   onClear,
   onCollapse
@@ -75,19 +74,15 @@ export const Routine801Console: React.FC<Routine801ConsoleProps> = ({
     </div>
 
     {/* Linhas de Log */}
-    <div className="p-3 overflow-y-auto font-mono text-2xs leading-relaxed text-foreground/90 bg-background select-text flex-1">
-      {displayedLogs.length === 0 ? (
+    <ConsoleBody
+      lines={displayedLogs}
+      getLineClass={getLogLineClass}
+      className="p-3 text-2xs text-foreground/90 bg-background"
+      empty={
         <div className="text-muted-foreground italic text-center py-4">
           Nenhum log registrado para este filtro. Dispare uma instalação para acompanhar a telemetria do Karaf em tempo real.
         </div>
-      ) : (
-        displayedLogs.map((log, idx) => (
-          <div key={idx} className={`whitespace-pre-wrap ${getLogLineClass(log)}`}>
-            {log}
-          </div>
-        ))
-      )}
-      <div ref={consoleEndRef} />
-    </div>
+      }
+    />
   </div>
 );

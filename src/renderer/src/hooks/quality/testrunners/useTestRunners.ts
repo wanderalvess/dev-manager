@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { TestRunnerConfig, TestExecutionResult, TestRunnerPreset } from '../../../../../shared/types';
 import { api } from '../../../services/apiBridge';
 import { showToast } from '../../../components/ToastHost';
@@ -27,7 +27,6 @@ export function useTestRunners() {
   const [isEditorModalOpen, setIsEditorModalOpen] = useState<boolean>(false);
   const [editingRunner, setEditingRunner] = useState<Partial<TestRunnerConfig>>(createEmptyRunner());
 
-  const terminalBottomRef = useRef<HTMLDivElement | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -56,9 +55,6 @@ export function useTestRunners() {
     if (api.onTestRunnerChunk) {
       const unsub = api.onTestRunnerChunk((data) => {
         setActiveOutput((prev) => prev + data.chunk);
-        if (terminalBottomRef.current) {
-          terminalBottomRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
       });
       return () => {
         if (unsub) unsub();
@@ -196,7 +192,6 @@ export function useTestRunners() {
     isEditorModalOpen,
     editingRunner,
     setEditingRunner,
-    terminalBottomRef,
     handleExecute,
     handleAbort,
     openNewRunner,

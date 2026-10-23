@@ -2,6 +2,7 @@ import React from 'react';
 import { Square, Terminal, RotateCcw, History } from 'lucide-react';
 import type { TestExecutionResult } from '../../../../../shared/types';
 import type { TestRunnersRightTab } from '../../../hooks/quality/testrunners/useTestRunners';
+import { ConsoleBody } from '../../console/ConsoleBody';
 import { ExecutionResultBanner } from './ExecutionResultBanner';
 import { HistoryList } from './HistoryList';
 
@@ -12,7 +13,6 @@ interface ConsolePanelProps {
   runningRunnerId: string | null;
   activeOutput: string;
   activeExecutionResult: TestExecutionResult | null;
-  terminalBottomRef: React.MutableRefObject<HTMLDivElement | null>;
   canSync: boolean;
   onAbort: () => void;
   onClearConsole: () => void;
@@ -33,7 +33,6 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
   runningRunnerId,
   activeOutput,
   activeExecutionResult,
-  terminalBottomRef,
   canSync,
   onAbort,
   onClearConsole,
@@ -97,17 +96,16 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
 
     {/* Conteúdo: Console ou Histórico */}
     {activeTab === 'console' ? (
-      <div className="flex-1 overflow-y-auto p-4 font-mono text-xs leading-relaxed select-text whitespace-pre-wrap break-all text-zinc-300">
-        {activeOutput ? (
-          activeOutput
-        ) : (
+      <ConsoleBody
+        text={activeOutput}
+        className="p-4 text-xs whitespace-pre-wrap break-all text-zinc-300"
+        empty={
           <div className="h-full flex flex-col items-center justify-center text-zinc-600">
             <Terminal className="w-8 h-8 mb-2 opacity-40" />
             <span>Nenhuma saída de execução. Clique em &quot;Executar Agora&quot; em um runner.</span>
           </div>
-        )}
-        <div ref={terminalBottomRef} />
-      </div>
+        }
+      />
     ) : (
       <HistoryList history={history} canSync={canSync} onViewLog={onViewLog} onSync={onSync} />
     )}

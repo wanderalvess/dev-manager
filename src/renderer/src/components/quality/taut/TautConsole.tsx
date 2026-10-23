@@ -1,12 +1,12 @@
 import React from 'react';
 import { Play, Terminal, Check, Copy } from 'lucide-react';
 import type { TestExecutionResult } from '../../../../../shared/types';
+import { ConsoleBody } from '../../console/ConsoleBody';
 
 interface TautConsoleProps {
   isRunning: boolean;
   activeOutput: string;
   lastExecutionResult: TestExecutionResult | null;
-  terminalRef: React.RefObject<HTMLDivElement>;
   copiedKey: string | null;
   onCopy: (text: string, key: string) => void;
   onClear: () => void;
@@ -16,7 +16,6 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
   isRunning,
   activeOutput,
   lastExecutionResult,
-  terminalRef,
   copiedKey,
   onCopy,
   onClear
@@ -63,13 +62,10 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
     </div>
 
     {/* Corpo do Terminal com Log em Streaming */}
-    <div
-      ref={terminalRef}
-      className="flex-1 p-3 font-mono text-2xs leading-relaxed bg-[#0B0F17] text-slate-200 overflow-y-auto select-text whitespace-pre-wrap"
-    >
-      {activeOutput ? (
-        activeOutput
-      ) : (
+    <ConsoleBody
+      text={activeOutput}
+      className="p-3 text-2xs bg-[#0B0F17] text-slate-200 whitespace-pre-wrap"
+      empty={
         <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-2 select-none">
           <Play className="w-8 h-8 opacity-30" />
           <p className="text-xs">Nenhuma execução em andamento.</p>
@@ -77,8 +73,8 @@ export const TautConsole: React.FC<TautConsoleProps> = ({
             Selecione as tags ou arquivos de teste à esquerda e clique em &quot;Rodar Headless&quot;.
           </p>
         </div>
-      )}
-    </div>
+      }
+    />
 
     {/* Rodapé com Resumo da Execução (se finalizada) */}
     {lastExecutionResult && (
