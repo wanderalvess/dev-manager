@@ -4,15 +4,9 @@ import {
   buildInitialEditorState,
   createDeployStep,
   duplicateStepAt,
-  moveTargetIndex,
   parseIntMin,
   parseOptionalInt,
-  patchStepAt,
-  removeStepAt,
-  selectionAfterMove,
-  selectionAfterRemove,
-  stepTypeDefaultName,
-  swapSteps
+  stepTypeDefaultName
 } from './deployEditorUtils';
 
 const makeStep = (id: string, name = id): DeployStep => ({
@@ -49,36 +43,11 @@ describe('deployEditorUtils', () => {
     expect(buildInitialEditorState({ id: 'p', name: '', steps: [] }, 1).editingStepIndex).toBeNull();
   });
 
-  it('ajusta seleção ao remover', () => {
-    expect(selectionAfterRemove(1, 1)).toBeNull();
-    expect(selectionAfterRemove(2, 1)).toBe(1);
-    expect(selectionAfterRemove(0, 1)).toBe(0);
-    expect(selectionAfterRemove(null, 1)).toBeNull();
-    expect(removeStepAt([makeStep('a'), makeStep('b')], 0).map((s) => s.id)).toEqual(['b']);
-  });
-
   it('duplica inserindo logo após o original', () => {
     const result = duplicateStepAt([makeStep('a'), makeStep('b')], 0, 'n');
     expect(result?.map((s) => s.id)).toEqual(['a', 'n', 'b']);
     expect(result?.[1].name).toBe('a (Cópia)');
     expect(duplicateStepAt([], 0, 'n')).toBeNull();
-  });
-
-  it('move respeitando limites e acompanha seleção', () => {
-    expect(moveTargetIndex(0, 'up', 3)).toBeNull();
-    expect(moveTargetIndex(2, 'down', 3)).toBeNull();
-    expect(moveTargetIndex(1, 'down', 3)).toBe(2);
-    expect(swapSteps([makeStep('a'), makeStep('b')], 0, 1).map((s) => s.id)).toEqual(['b', 'a']);
-    expect(selectionAfterMove(1, 1, 2)).toBe(2);
-    expect(selectionAfterMove(2, 1, 2)).toBe(1);
-    expect(selectionAfterMove(0, 1, 2)).toBe(0);
-  });
-
-  it('aplica patch sem mutar o original', () => {
-    const steps = [makeStep('a')];
-    const next = patchStepAt(steps, 0, { name: 'Z' });
-    expect(next[0].name).toBe('Z');
-    expect(steps[0].name).toBe('a');
   });
 
   it('interpreta inteiros dos campos numéricos', () => {

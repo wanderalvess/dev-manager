@@ -113,32 +113,6 @@ export const normalizeStepForSave = (step: AutomationStep): AutomationStep => {
   return cleaned;
 };
 
-export const swapSteps = (steps: AutomationStep[], index: number, targetIndex: number): AutomationStep[] => {
-  const copy = [...steps];
-  const temp = copy[index];
-  copy[index] = copy[targetIndex];
-  copy[targetIndex] = temp;
-  return copy;
-};
-
-/** Índice selecionado após remover a etapa `removedIndex`; null se a removida era a selecionada. */
-export const selectedIndexAfterRemove = (selected: number | null, removedIndex: number): number | null => {
-  if (selected === removedIndex) return null;
-  if (selected !== null && selected > removedIndex) return selected - 1;
-  return selected;
-};
-
-/** Índice selecionado após trocar `index` com `targetIndex`. */
-export const selectedIndexAfterMove = (
-  selected: number | null,
-  index: number,
-  targetIndex: number
-): number | null => {
-  if (selected === index) return targetIndex;
-  if (selected === targetIndex) return index;
-  return selected;
-};
-
 export const describeStepSubtitle = (step: AutomationStep, globalDebugPort: number): string => {
   const portPart = step.type === 'karaf' ? ` • :${step.port ?? globalDebugPort}` : step.port ? ` • :${step.port}` : '';
   const targetPart = isNamedTargetStep(step.type) && (step.targetName || step.name) ? ` • ${step.targetName || step.name}` : '';

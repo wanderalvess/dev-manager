@@ -47,7 +47,6 @@ export const AutomatedTestRunners: React.FC<AutomatedTestRunnersProps> = ({
         runningRunnerId={state.runningRunnerId}
         activeOutput={state.activeOutput}
         activeExecutionResult={state.activeExecutionResult}
-        terminalBottomRef={state.terminalBottomRef}
         canSync={!!onSyncWithValidationMatrix}
         onAbort={state.handleAbort}
         onClearConsole={state.clearConsole}

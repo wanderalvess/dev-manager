@@ -191,10 +191,14 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
         onTestJiraConnection={settings.handleTestJiraConnection}
         llmProviders={settings.llmProviders}
         activeLlmProviderId={settings.activeLlmProviderId}
-        onSaveLlmProvider={settings.handleSaveLlmProvider}
-        onDeleteLlmProvider={settings.handleDeleteLlmProvider}
-        onSetActiveLlmProvider={settings.handleSetActiveLlmProvider}
-        onTestLlmConnection={settings.handleTestLlmConnection}
+        onOpenAiSettings={
+          onNavigateToSettings
+            ? () => {
+                setShowDocSettingsModal(false);
+                onNavigateToSettings();
+              }
+            : undefined
+        }
       />
 
       <OnboardingTour

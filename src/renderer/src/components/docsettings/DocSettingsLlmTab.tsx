@@ -1,59 +1,56 @@
 import React from 'react';
-import { Check } from 'lucide-react';
-import type { LlmProviderConfig, LlmTestResult } from '../../../../shared/types';
-import type { ProviderPreset } from '../../utils/docSettingsPresets';
-import { DocSettingsLlmProviderList } from './DocSettingsLlmProviderList';
-import { DocSettingsLlmProviderForm } from './DocSettingsLlmProviderForm';
+import { Settings, Sparkles } from 'lucide-react';
+import type { LlmProviderConfig } from '../../../../shared/types';
+import { resolveActiveLlmProvider } from '../../utils/llmProviderUtils';
 
 interface DocSettingsLlmTabProps {
   llmProviders: LlmProviderConfig[];
   activeLlmProviderId?: string;
-  editingLlmProvider: Partial<LlmProviderConfig> | null;
-  setEditingLlmProvider: (value: Partial<LlmProviderConfig> | null) => void;
-  showApiKey: boolean;
-  setShowApiKey: (value: boolean) => void;
-  isTestingLlm: boolean;
-  llmTestResult: LlmTestResult | null;
-  llmSaveSuccess: boolean;
-  onStartNew: () => void;
-  onSelectPreset: (preset: ProviderPreset) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onTest: () => void;
-  onDeleteLlmProvider: (id: string) => Promise<void>;
-  onSetActiveLlmProvider: (id: string) => Promise<void>;
+  /** Leva para Configurações → IA & LLM, onde os provedores são editados. */
+  onOpenAiSettings?: () => void;
 }
 
-export const DocSettingsLlmTab: React.FC<DocSettingsLlmTabProps> = (p) => (
-  <div className="space-y-4">
-    <DocSettingsLlmProviderList
-      llmProviders={p.llmProviders}
-      activeLlmProviderId={p.activeLlmProviderId}
-      isEditing={!!p.editingLlmProvider}
-      onStartNew={p.onStartNew}
-      onEdit={p.setEditingLlmProvider}
-      onDelete={p.onDeleteLlmProvider}
-      onSetActive={p.onSetActiveLlmProvider}
-    />
+/** Resumo somente leitura do provedor de IA ativo; a edição fica só em Configurações → IA & LLM. */
+export const DocSettingsLlmTab: React.FC<DocSettingsLlmTabProps> = ({
+  llmProviders,
+  activeLlmProviderId,
+  onOpenAiSettings
+}) => {
+  const active = resolveActiveLlmProvider(llmProviders, activeLlmProviderId);
 
-    {p.llmSaveSuccess && (
-      <div className="p-3 rounded-xl bg-success/10 border border-success/30 text-success text-xs flex items-center gap-2">
-        <Check className="w-4 h-4 text-success shrink-0" />
-        <span>Configuração do modelo de IA salva com sucesso!</span>
+  return (
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl border border-border bg-muted/30 flex items-start gap-3">
+        <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div className="space-y-1 text-xs">
+          {active && active.enabled ? (
+            <>
+              <p className="font-bold text-foreground">
+                {active.name} <span className="font-mono text-muted-foreground">({active.model})</span>
+              </p>
+              <p className="text-muted-foreground">
+                Provedor ativo do Assistente IA. {llmProviders.length} provedor(es) cadastrado(s).
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-bold text-foreground">Nenhum provedor de IA ativo</p>
+              <p className="text-muted-foreground">Cadastre um provedor para usar &quot;Perguntar à IA&quot;.</p>
+            </>
+          )}
+        </div>
       </div>
-    )}
 
-    {p.editingLlmProvider && (
-      <DocSettingsLlmProviderForm
-        editing={p.editingLlmProvider}
-        setEditing={p.setEditingLlmProvider}
-        showApiKey={p.showApiKey}
-        setShowApiKey={p.setShowApiKey}
-        isTesting={p.isTestingLlm}
-        testResult={p.llmTestResult}
-        onSelectPreset={p.onSelectPreset}
-        onSubmit={p.onSubmit}
-        onTest={p.onTest}
-      />
-    )}
-  </div>
-);
+      {onOpenAiSettings && (
+        <button
+          type="button"
+          onClick={onOpenAiSettings}
+          className="px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          <span>Abrir Configurações → IA &amp; LLM</span>
+        </button>
+      )}
+    </div>
+  );
+};

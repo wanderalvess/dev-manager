@@ -6,9 +6,6 @@ import {
   describeStepSubtitle,
   isStepIncomplete,
   normalizeStepForSave,
-  selectedIndexAfterMove,
-  selectedIndexAfterRemove,
-  swapSteps
 } from './profileEditorSteps';
 
 const makeStep = (overrides: Partial<AutomationStep> = {}): AutomationStep => ({
@@ -65,23 +62,6 @@ describe('profileEditorSteps', () => {
     const out = normalizeStepForSave(makeStep({ type: 'browser' }));
     expect(out.cwd).toBe('C:\\x');
     expect(out.command).toBeUndefined();
-  });
-
-  it('troca posições e ajusta seleção', () => {
-    const a = makeStep({ id: 'a' });
-    const b = makeStep({ id: 'b' });
-    expect(swapSteps([a, b], 0, 1).map((s) => s.id)).toEqual(['b', 'a']);
-    expect(selectedIndexAfterMove(0, 0, 1)).toBe(1);
-    expect(selectedIndexAfterMove(1, 0, 1)).toBe(0);
-    expect(selectedIndexAfterMove(2, 0, 1)).toBe(2);
-    expect(selectedIndexAfterMove(null, 0, 1)).toBeNull();
-  });
-
-  it('ajusta seleção após remoção', () => {
-    expect(selectedIndexAfterRemove(1, 1)).toBeNull();
-    expect(selectedIndexAfterRemove(3, 1)).toBe(2);
-    expect(selectedIndexAfterRemove(0, 1)).toBe(0);
-    expect(selectedIndexAfterRemove(null, 1)).toBeNull();
   });
 
   it('descreve subtítulo com porta global para karaf', () => {
