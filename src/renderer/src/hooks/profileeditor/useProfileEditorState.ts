@@ -6,11 +6,9 @@ import {
   createDefaultProfileSteps,
   createProfileEditorStep,
   isStepIncomplete,
-  normalizeStepForSave,
-  selectedIndexAfterMove,
-  selectedIndexAfterRemove,
-  swapSteps
+  normalizeStepForSave
 } from '../../utils/profileEditorSteps';
+import { useStepListEditor } from '../useStepListEditor';
 
 interface UseProfileEditorStateParams {
   isOpen: boolean;
@@ -29,52 +27,39 @@ export function useProfileEditorState({
 }: UseProfileEditorStateParams) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [steps, setSteps] = useState<AutomationStep[]>([]);
-  const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const {
+    steps,
+    editingStep,
+    editingStepIndex,
+    setEditingStepIndex,
+    reset,
+    addStep,
+    removeStep: handleRemoveStep,
+    moveStep: handleMoveStep,
+    updateCurrentStep
+  } = useStepListEditor<AutomationStep>();
 
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
       setDescription(profile.description || '');
-      setSteps(profile.steps ? structuredClone(profile.steps) : []);
-      setEditingStepIndex(profile.steps && profile.steps.length > 0 ? 0 : null);
+      reset(
+        profile.steps ? structuredClone(profile.steps) : [],
+        profile.steps && profile.steps.length > 0 ? 0 : null
+      );
     } else {
       setName('Novo Perfil de Ambiente');
       setDescription('Descrição das automações e serviços');
-      setSteps(createDefaultProfileSteps());
-      setEditingStepIndex(0);
+      reset(createDefaultProfileSteps(), 0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, isOpen]);
 
-  const editingStep = editingStepIndex !== null ? steps[editingStepIndex] : null;
+  const handleAddStep = (type: AutomationStepType = 'command') => addStep(createProfileEditorStep(type));
 
-  const handleAddStep = (type: AutomationStepType = 'command') => {
-    setSteps((prev) => [...prev, createProfileEditorStep(type)]);
-    setEditingStepIndex(steps.length);
-  };
-
-  const handleRemoveStep = (index: number) => {
-    setSteps((prev) => prev.filter((_, i) => i !== index));
-    setEditingStepIndex(selectedIndexAfterRemove(editingStepIndex, index));
-  };
-
-  const handleMoveStep = (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= steps.length) return;
-
-    setSteps((prev) => swapSteps(prev, index, targetIndex));
-    setEditingStepIndex(selectedIndexAfterMove(editingStepIndex, index, targetIndex));
-  };
-
-  const handleUpdateCurrentStep = (fields: Partial<AutomationStep>) => {
-    if (editingStepIndex === null || !steps[editingStepIndex]) return;
-    setSteps((prev) => {
-      const copy = [...prev];
-      copy[editingStepIndex] = applyStepUpdate(copy[editingStepIndex], fields);
-      return copy;
-    });
-  };
+  const handleUpdateCurrentStep = (fields: Partial<AutomationStep>) =>
+    updateCurrentStep((step) => applyStepUpdate(step, fields));
 
   const handleSelectDirectory = async () => {
     if (window.electronAPI && window.electronAPI.selectDirectory) {

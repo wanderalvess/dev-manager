@@ -9,14 +9,9 @@ import {
   buildInitialEditorState,
   createDeployStep,
   duplicateStepAt,
-  generateStepId,
-  moveTargetIndex,
-  patchStepAt,
-  removeStepAt,
-  selectionAfterMove,
-  selectionAfterRemove,
-  swapSteps
+  generateStepId
 } from '../../utils/deployEditorUtils';
+import { useStepListEditor } from '../useStepListEditor';
 
 interface UseDeployProfileEditorParams {
   profile: DeployProfile | null;
@@ -35,32 +30,32 @@ export function useDeployProfileEditor({
 }: UseDeployProfileEditorParams) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [steps, setSteps] = useState<DeployStep[]>([]);
-  const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [suggestProjectPath, setSuggestProjectPath] = useState('');
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const {
+    steps,
+    setSteps,
+    editingStep,
+    editingStepIndex,
+    setEditingStepIndex,
+    reset,
+    addStep: appendStep,
+    removeStep,
+    moveStep,
+    updateCurrentStep: patchCurrentStep
+  } = useStepListEditor<DeployStep>();
 
   useEffect(() => {
     const initial = buildInitialEditorState(profile, Date.now());
     setName(initial.name);
     setDescription(initial.description);
-    setSteps(initial.steps);
-    setEditingStepIndex(initial.editingStepIndex);
+    reset(initial.steps, initial.editingStepIndex);
     setSuggestProjectPath('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, isOpen]);
 
-  const editingStep = editingStepIndex !== null ? steps[editingStepIndex] : null;
-
-  const addStep = (type: DeployStepType = 'command') => {
-    setSteps((prev) => [...prev, createDeployStep(type, generateStepId())]);
-    setEditingStepIndex(steps.length);
-  };
-
-  const removeStep = (index: number) => {
-    setSteps((prev) => removeStepAt(prev, index));
-    setEditingStepIndex(selectionAfterRemove(editingStepIndex, index));
-  };
+  const addStep = (type: DeployStepType = 'command') => appendStep(createDeployStep(type, generateStepId()));
 
   const duplicateStep = (index: number) => {
     const next = duplicateStepAt(steps, index, generateStepId());
@@ -69,17 +64,7 @@ export function useDeployProfileEditor({
     setEditingStepIndex(index + 1);
   };
 
-  const moveStep = (index: number, direction: 'up' | 'down') => {
-    const target = moveTargetIndex(index, direction, steps.length);
-    if (target === null) return;
-    setSteps((prev) => swapSteps(prev, index, target));
-    setEditingStepIndex(selectionAfterMove(editingStepIndex, index, target));
-  };
-
-  const updateCurrentStep = (fields: Partial<DeployStep>) => {
-    if (editingStepIndex === null || !steps[editingStepIndex]) return;
-    setSteps((prev) => patchStepAt(prev, editingStepIndex, fields));
-  };
+  const updateCurrentStep = (fields: Partial<DeployStep>) => patchCurrentStep((step) => ({ ...step, ...fields }));
 
   const selectDirectory = async (field: DeployDirectoryField) => {
     if (window.electronAPI && window.electronAPI.selectDirectory) {

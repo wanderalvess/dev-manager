@@ -78,16 +78,6 @@ export const buildInitialEditorState = (
   };
 };
 
-// Índice selecionado depois de remover o passo `removedIndex`.
-export const selectionAfterRemove = (editing: number | null, removedIndex: number): number | null => {
-  if (editing === removedIndex) return null;
-  if (editing !== null && editing > removedIndex) return editing - 1;
-  return editing;
-};
-
-export const removeStepAt = (steps: DeployStep[], index: number): DeployStep[] =>
-  steps.filter((_, i) => i !== index);
-
 export const duplicateStepAt = (
   steps: DeployStep[],
   index: number,
@@ -105,43 +95,6 @@ export const duplicateStepAt = (
   return next;
 };
 
-export const moveTargetIndex = (
-  index: number,
-  direction: 'up' | 'down',
-  length: number
-): number | null => {
-  const target = direction === 'up' ? index - 1 : index + 1;
-  return target < 0 || target >= length ? null : target;
-};
-
-export const swapSteps = (steps: DeployStep[], a: number, b: number): DeployStep[] => {
-  const copy = [...steps];
-  const temp = copy[a];
-  copy[a] = copy[b];
-  copy[b] = temp;
-  return copy;
-};
-
-// Mantém a seleção seguindo o passo que foi movido (ou o que trocou de lugar com ele).
-export const selectionAfterMove = (
-  editing: number | null,
-  index: number,
-  target: number
-): number | null => {
-  if (editing === index) return target;
-  if (editing === target) return index;
-  return editing;
-};
-
-export const patchStepAt = (
-  steps: DeployStep[],
-  index: number,
-  fields: Partial<DeployStep>
-): DeployStep[] => {
-  const copy = [...steps];
-  copy[index] = { ...copy[index], ...fields };
-  return copy;
-};
 
 export const parseIntMin = (value: string, fallback: number, min = 1): number =>
   Math.max(min, parseInt(value) || fallback);
