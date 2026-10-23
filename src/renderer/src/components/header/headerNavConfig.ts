@@ -2,6 +2,8 @@ import {
   Terminal,
   Box,
   Layers,
+  Cpu,
+  HardDriveDownload,
   ScrollText,
   Activity,
   Database,
@@ -67,6 +69,13 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         shortcut: 'Alt+4'
       },
       {
+        id: 'karaf',
+        label: 'Karaf & OSGi',
+        shortLabel: 'Karaf',
+        icon: Cpu,
+        description: 'Bundles, features, catálogo 801, memória da JVM & diagnósticos do servidor OSGi'
+      },
+      {
         id: 'logs',
         label: 'Logs em Tempo Real',
         shortLabel: 'Logs',
@@ -98,6 +107,13 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         icon: Database,
         description: 'Conexão e SQL runner Oracle, MySQL, Postgres',
         shortcut: 'Alt+2'
+      },
+      {
+        id: 'db-backups',
+        label: 'Backups de Banco',
+        shortLabel: 'Backups',
+        icon: HardDriveDownload,
+        description: 'Backup, restauração, agendamento, arquivos, histórico e webhooks dos bancos'
       },
       {
         id: 'routines',

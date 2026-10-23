@@ -66,7 +66,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Hub Manage
   * **Inspetor Dedicado (`StatementInspector`)**: Tabela de binds com botões *"Copiar SQL"* e *"Usar no Editor"*, transferindo a query já interpolada direto para a aba de execução SQL.
 
 #### 🛡️ Central de Backup & Restauração Integrada (5 Abas de Controle)
-O Hub Manager conta com uma central avançada de backup acessível pelo botão **Backup & Restore**:
+O Hub Manager conta com uma central avançada de backup, na tela própria **Backups de Banco** (menu *Dados*; o botão **Backup** do Studio SQL abre lá, já na conexão ativa):
 1. **Executar Backup:**
    * Seleção de banco/schema, escolha da pasta de destino com seletor nativo e alternância entre **Modo Padrão** e **Comando Personalizado**.
    * Console de terminal integrado com streaming de log ao vivo da saída da ferramenta CLI (`expdp`, `exp`, `pg_dump`, `mysqldump`).
@@ -148,6 +148,8 @@ Antes de descartar cópias antigas ou aplicar rotinas de produção, utilize a f
 ---
 
 ### 4. 📦 Deployer OSGi Apache Karaf & Gerenciador de Bundles
+> O deploy (perfis, etapas e fila de build) fica na tela **Deploy**; o gerenciamento do servidor (bundles, features, catálogo 801, memória da JVM e diagnósticos rápidos) fica na tela **Karaf & OSGi** (menu *Infra*).
+
 * **Auto-Detecção Inteligente via `pom.xml` e `deploy-local.bat`:**
   * Lê automaticamente `groupId`, `artifactId`, `version` e módulos ao selecionar qualquer projeto Git.
 * **Snapshots de Estado e Comparativo Pós-Deploy (Diff):**

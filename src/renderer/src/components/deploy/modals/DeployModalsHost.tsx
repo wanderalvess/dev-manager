@@ -5,8 +5,6 @@ import { DeployProfileEditorModal } from '../../DeployProfileEditorModal';
 import { KarafBundleManagerModal } from '../../KarafBundleManagerModal';
 import { DeployHistoryModal } from '../../DeployHistoryModal';
 import { Routine801CatalogModal } from '../../Routine801CatalogModal';
-import { KarafJvmMemoryModal } from '../../KarafJvmMemoryModal';
-import { KarafFeaturesModal } from '../../karaf/modals/KarafFeaturesModal';
 import { DeployQueueBuilderModal } from './DeployQueueBuilderModal';
 import { DependencyChainModal } from './DependencyChainModal';
 
@@ -65,18 +63,6 @@ export const DeployModalsHost: React.FC<DeployModalsHostProps> = ({
       onClose={() => modals.setIsHistoryModalOpen(false)}
       history={modals.historyList}
       onClear={modals.handleClearHistory}
-    />
-
-    {/* Modal Gerenciador de Features & Repositórios Maven */}
-    <KarafFeaturesModal
-      isOpen={modals.isFeaturesModalOpen}
-      onClose={() => modals.setIsFeaturesModalOpen(false)}
-    />
-
-    {/* Modal Monitor de Memória JVM (Heap/Non-Heap/GC) */}
-    <KarafJvmMemoryModal
-      isOpen={modals.isJvmMemoryModalOpen}
-      onClose={() => modals.setIsJvmMemoryModalOpen(false)}
     />
 
     {/* Modal Cadeia de Dependências Multi-Camadas */}

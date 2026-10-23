@@ -1,49 +1,40 @@
 import React from 'react';
 import type { DatabaseConnectionConfig, AppSettings } from '../../../../shared/types';
-import { useBackupModal } from '../../hooks/database/useBackupModal';
-import { BackupModalHeader } from './backup/BackupModalHeader';
+import { useBackupPanel } from '../../hooks/database/useBackupPanel';
+import { BackupPanelHeader } from './backup/BackupPanelHeader';
 import { BackupTabNav } from './backup/BackupTabNav';
 import { BackupRunTab } from './backup/BackupRunTab';
 import { BackupScheduleTab } from './backup/BackupScheduleTab';
 import { BackupFilesTab } from './backup/BackupFilesTab';
 import { BackupHistoryTab } from './backup/BackupHistoryTab';
 import { BackupWebhooksTab } from './backup/BackupWebhooksTab';
-import { Modal } from '../ui/Modal';
 
-export interface BackupModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+
+export interface BackupPanelProps {
+  isActive: boolean;
   activeConnection: DatabaseConnectionConfig | null;
   connections: DatabaseConnectionConfig[];
   settings: AppSettings | null;
   onSettingsUpdate?: (updater: (prev: AppSettings | null) => AppSettings | null) => void;
 }
 
-export const BackupModal: React.FC<BackupModalProps> = ({
-  isOpen,
-  onClose,
+export const BackupPanel: React.FC<BackupPanelProps> = ({
+  isActive,
   activeConnection,
   connections,
   settings,
   onSettingsUpdate
 }) => {
   const { form, data, webhooks, actions, copyCellToClipboard, copyFeedback, handleExportBackupHistoryCsv } =
-    useBackupModal({ isOpen, activeConnection, connections, settings, onSettingsUpdate });
+    useBackupPanel({ isActive, activeConnection, connections, settings, onSettingsUpdate });
 
-  if (!isOpen || !activeConnection) return null;
+  if (!activeConnection) return null;
 
   const { backupActiveTab } = form;
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      bare
-      panelClassName="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in flex flex-col max-h-[92vh]"
-      closeOnBackdrop={false}
-      closeOnEscape={false}
-    >
-      <BackupModalHeader activeConnection={activeConnection} onClose={onClose} />
+    <div className="bg-card border border-border/80 rounded-xl shadow-xs w-full max-w-5xl overflow-hidden flex flex-col">
+      <BackupPanelHeader activeConnection={activeConnection} />
 
       <BackupTabNav
         activeTab={backupActiveTab}
@@ -122,6 +113,6 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           />
         )}
       </div>
-    </Modal>
+    </div>
   );
 };

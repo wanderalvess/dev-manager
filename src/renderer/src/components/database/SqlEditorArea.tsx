@@ -29,7 +29,7 @@ export interface SqlEditorAreaProps {
   maxRows: number;
   setMaxRows: (n: number) => void;
   onOpenBindModal: () => void;
-  onOpenBackupModal: () => void;
+  onOpenBackups: () => void;
   onOpenCreateSnippet: (initialSql?: string) => void;
   customSnippets: SqlSnippet[];
   onSelectSnippet: (snippet: SqlSnippet) => void;
@@ -63,7 +63,7 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
   maxRows,
   setMaxRows,
   onOpenBindModal,
-  onOpenBackupModal,
+  onOpenBackups,
   onOpenCreateSnippet,
   customSnippets,
   onSelectSnippet,
@@ -115,7 +115,7 @@ export const SqlEditorArea: React.FC<SqlEditorAreaProps> = ({
         maxRows={maxRows}
         setMaxRows={setMaxRows}
         onOpenBindModal={onOpenBindModal}
-        onOpenBackupModal={onOpenBackupModal}
+        onOpenBackups={onOpenBackups}
         onOpenCreateSnippet={onOpenCreateSnippet}
         customSnippets={customSnippets}
         onSelectSnippet={onSelectSnippet}

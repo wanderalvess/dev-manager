@@ -7,22 +7,22 @@ import { useBackupData } from './useBackupData';
 import { useBackupForm } from './useBackupForm';
 import { useBackupWebhooks } from './useBackupWebhooks';
 
-interface UseBackupModalParams {
-  isOpen: boolean;
+interface UseBackupPanelParams {
+  isActive: boolean;
   activeConnection: DatabaseConnectionConfig | null;
   connections: DatabaseConnectionConfig[];
   settings: AppSettings | null;
   onSettingsUpdate?: (updater: (prev: AppSettings | null) => AppSettings | null) => void;
 }
 
-/** Orquestra formulário, dados, ações e webhooks do modal de Backup & Restauração. */
-export function useBackupModal({
-  isOpen,
+/** Orquestra formulário, dados, ações e webhooks da tela de Backup & Restauração. */
+export function useBackupPanel({
+  isActive,
   activeConnection,
   connections,
   settings,
   onSettingsUpdate
-}: UseBackupModalParams) {
+}: UseBackupPanelParams) {
   const form = useBackupForm(activeConnection);
   const data = useBackupData();
   const webhooks = useBackupWebhooks({ onSettingsUpdate });
@@ -53,7 +53,7 @@ export function useBackupModal({
   // Inicializa valores ao abrir o modal com base na conexão ativa
   useEffect(() => {
     const connection = activeConnectionRef.current;
-    if (!isOpen || !connection) return;
+    if (!isActive || !connection) return;
 
     loadWebhooks(settingsRef.current?.backupWebhooks || []);
     const folder = resetFormFromSettings(connection, settingsRef.current);
@@ -62,7 +62,7 @@ export function useBackupModal({
     if (folder) refreshBackupFiles(folder);
     else clearBackupFiles();
     refreshBackupHistory(connection.id);
-  }, [isOpen, activeConnectionId, loadWebhooks, resetFormFromSettings, resetResults, refreshBackupFiles, clearBackupFiles, refreshBackupHistory]);
+  }, [isActive, activeConnectionId, loadWebhooks, resetFormFromSettings, resetResults, refreshBackupFiles, clearBackupFiles, refreshBackupHistory]);
 
   const handleExportBackupHistoryCsv = () => {
     if (data.backupHistory.length === 0) return;

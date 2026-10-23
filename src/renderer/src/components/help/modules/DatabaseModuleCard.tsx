@@ -6,7 +6,7 @@ export const DatabaseModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) =>
   <ModuleCardShell
     icon={<Database className="w-4 h-4" />}
     iconBoxClass="p-2 rounded-xl bg-success/10 text-success border border-success/20"
-    title="2. Banco de Dados &amp; Backups"
+    title="2. Banco de Dados"
     subtitle="Oracle · PostgreSQL · MySQL · CLI Custom"
     shortcut="Alt+2"
     footer={
@@ -24,6 +24,7 @@ export const DatabaseModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) =>
     >
       <span><strong>Modo Personalizado Oracle:</strong> Alternância entre <em>expdp padrão</em>, <em>expdp com VERSION=11.2</em> e <em>exp clássico</em> (sem depender de pasta remota).</span>
       <span><strong>Tokens Dinâmicos:</strong> Marcadores automáticos como <code className="font-mono text-primary">{'{filePath}'}</code>, <code className="font-mono text-primary">{'{user}'}</code>, <code className="font-mono text-primary">{'{connectString}'}</code>.</span>
+      <span><strong>Tela Backups de Banco:</strong> backup, restauração, agendamento, arquivos, histórico e webhooks ficam na tela própria <em>Backups de Banco</em> (menu Dados); o botão <em>Backup</em> do Studio abre lá, já na conexão ativa.</span>
       <span><strong>Cron &amp; Retenção:</strong> Backups recorrentes automáticos com expurgo por idade ou limite de arquivos.</span>
       <span><strong>Restore Drill &amp; Webhooks:</strong> Teste de restauração em base temporária e avisos no Discord/Slack.</span>
       <span><strong>Editor SQL para Queries Grandes:</strong> Split redimensionável por arrasto vertical, modo Maximizar (tela cheia para foco total em queries grandes), gutter com números de linha sincronizado, quebra automática (Word Wrap), zoom da fonte (A-/A+) e botão para Formatar SQL automaticamente.</span>

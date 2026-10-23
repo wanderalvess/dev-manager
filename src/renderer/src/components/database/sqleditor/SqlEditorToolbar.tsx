@@ -26,7 +26,7 @@ interface SqlEditorToolbarProps {
   maxRows: number;
   setMaxRows: (n: number) => void;
   onOpenBindModal: () => void;
-  onOpenBackupModal: () => void;
+  onOpenBackups: () => void;
   onOpenCreateSnippet: (initialSql?: string) => void;
   customSnippets: SqlSnippet[];
   onSelectSnippet: (snippet: SqlSnippet) => void;
@@ -50,7 +50,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
   maxRows,
   setMaxRows,
   onOpenBindModal,
-  onOpenBackupModal,
+  onOpenBackups,
   onOpenCreateSnippet,
   customSnippets,
   onSelectSnippet,
@@ -106,7 +106,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
       <button
         type="button"
         data-tour="backup-button"
-        onClick={onOpenBackupModal}
+        onClick={onOpenBackups}
         disabled={!activeConnection}
         className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/70 rounded-lg text-xs font-medium text-foreground transition shadow-2xs disabled:opacity-50 cursor-pointer"
         title="Fazer backup do banco de dados conectado"

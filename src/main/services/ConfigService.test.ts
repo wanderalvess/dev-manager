@@ -119,7 +119,7 @@ describe('ConfigService', () => {
 
   it('nunca grava todos os módulos desligados e preserva a lista em saves de outros campos', () => {
     const service = new ConfigService();
-    const all = ['env', 'containers', 'deploy', 'logs', 'apm', 'database', 'routines', 'git', 'docs', 'http-client',
+    const all = ['env', 'containers', 'deploy', 'karaf', 'logs', 'apm', 'database', 'db-backups', 'routines', 'git', 'docs', 'http-client',
       'quality', 'quality-regression', 'quality-runners', 'quality-taut'];
     service.saveSettings({ disabledModules: all });
     expect(service.getSettings().disabledModules).not.toContain('env');

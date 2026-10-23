@@ -198,7 +198,7 @@ export function getFaqList({
               </li>
             </ul>
             <p className="pt-1 text-2xs">
-              Acesse o monitor pelo botão <strong className="text-foreground">"Memória JVM"</strong> no cabeçalho da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Alt+4</kbd>).
+              Acesse o monitor pelo cartão <strong className="text-foreground">"Memória JVM"</strong> da tela <strong className="text-foreground">Karaf &amp; OSGi</strong> (menu Infra, ou Ctrl+K).
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export function getFaqList({
               </li>
             </ul>
             <p className="pt-1 text-2xs">
-              Acesse pelo botão <strong className="text-foreground">"Features Karaf"</strong> na barra de ferramentas da página de Deploy (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Alt+4</kbd>).
+              Acesse pelo cartão <strong className="text-foreground">"Features &amp; Repositórios"</strong> da tela <strong className="text-foreground">Karaf &amp; OSGi</strong> (menu Infra, ou Ctrl+K).
             </p>
           </div>
         </div>

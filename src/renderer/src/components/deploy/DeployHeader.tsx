@@ -1,12 +1,9 @@
 import React from 'react';
 import {
-  Activity,
-  Boxes,
-  Download,
+  Cpu,
   GitMerge,
   History,
   Layers,
-  ListTree,
   Pencil,
   Play,
   Sparkles,
@@ -31,10 +28,7 @@ interface DeployHeaderProps {
   onExportProfile: () => void;
   onImportProfile: () => void;
   onOpenHistory: () => void;
-  onOpenBundles: () => void;
-  onOpenRoutine801: () => void;
-  onOpenFeatures: () => void;
-  onOpenJvmMemory: () => void;
+  onOpenKaraf: () => void;
   onOpenChainModal?: () => void;
   onAbort: () => void;
   onRun: () => void;
@@ -58,10 +52,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
   onExportProfile,
   onImportProfile,
   onOpenHistory,
-  onOpenBundles,
-  onOpenRoutine801,
-  onOpenFeatures,
-  onOpenJvmMemory,
+  onOpenKaraf,
   onOpenChainModal,
   onAbort,
   onRun
@@ -143,42 +134,12 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
 
           <button
             type="button"
-            onClick={onOpenBundles}
+            onClick={onOpenKaraf}
             className={`${toolbarBtn} border-border`}
-            title="Abrir gerenciador visual de bundles OSGi"
+            title="Bundles, features, catálogo 801, memória da JVM e diagnósticos do Karaf"
           >
-            <ListTree className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Bundles OSGi</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onOpenRoutine801}
-            className={`${toolbarBtn} border-primary/30`}
-            title="Abrir catálogo oficial de serviços e rotinas (Rotina 801 - Atualização de Serviços Web)"
-          >
-            <Download className="w-3.5 h-3.5 text-primary" />
-            <span>Catálogo 801</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onOpenFeatures}
-            className={`${toolbarBtn} border-border`}
-            title="Gerenciador de Features Maven/Karaf e repositórios (feature:repo-list)"
-          >
-            <Boxes className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Features Karaf</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onOpenJvmMemory}
-            className={`${toolbarBtn} border-border`}
-            title="Monitor de Memória Heap e Non-Heap da JVM em tempo real (JMX / Karaf)"
-          >
-            <Activity className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Memória JVM</span>
+            <Cpu className="w-3.5 h-3.5 text-muted-foreground" />
+            <span>Karaf</span>
           </button>
 
           {onOpenChainModal && (

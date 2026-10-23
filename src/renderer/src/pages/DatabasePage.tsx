@@ -32,12 +32,12 @@ import {
 import { DatabaseSidebar } from '../components/database/DatabaseSidebar';
 import { DEFAULT_SQL_SNIPPETS } from '../components/database/SqlEditorArea';
 import { ConnectionModal } from '../components/database/ConnectionModal';
-import { BackupModal } from '../components/database/BackupModal';
 import { getDbBadge } from '../components/database/DatabaseBadge';
 import { DatabaseFirstUseBanner } from '../components/database/DatabaseFirstUseBanner';
 import { DatabaseTabsBar } from '../components/database/DatabaseTabsBar';
 import { DatabaseWorkspace, type WorkspaceStatus } from '../components/database/DatabaseWorkspace';
 import { requestConfirm } from '../components/ui/confirmService';
+import { storePendingBackupConnection } from '../utils/backupsHandoff';
 
 export { DEFAULT_SQL_SNIPPETS };
 export type { ExecutionHistoryItem };
@@ -45,16 +45,16 @@ export type { ExecutionHistoryItem };
 export interface DatabasePageProps {
   settingsVersion?: number;
   onNavigateToSettings?: () => void;
+  onNavigateToBackups?: () => void;
 }
 
 // Identidade estável: useDatabaseConnections usa setSql nas dependências de loadSettings; uma função nova
 // a cada render fazia as configurações serem recarregadas em loop (re-render infinito e formulários zerando).
 const NOOP_SET_SQL = (): void => undefined;
 
-export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onNavigateToSettings }) => {
+export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onNavigateToSettings, onNavigateToBackups }) => {
   const tour = usePageTour(DATABASE_TOUR_STORAGE_KEY);
   const [customSnippets, setCustomSnippets] = useState<SqlSnippet[]>(readStoredSnippets);
-  const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
   // "Descrever tabela": alvo aberto no painel de especificação (null = fechado)
   const [specTarget, setSpecTarget] = useState<SpecTarget | null>(null);
 
@@ -174,7 +174,10 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
   };
 
   const handleDescribeObject = useCallback((name: string) => setSpecTarget({ name, type: 'TABLE' }), []);
-  const handleOpenBackup = useCallback(() => setIsBackupModalOpen(true), []);
+  const handleOpenBackups = useCallback(() => {
+    if (activeConnectionId) storePendingBackupConnection(activeConnectionId);
+    onNavigateToBackups?.();
+  }, [activeConnectionId, onNavigateToBackups]);
 
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
@@ -254,7 +257,7 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
                   setCustomSnippets={setCustomSnippets}
                   historyState={historyState}
                   layout={layoutProps}
-                  onOpenBackup={handleOpenBackup}
+                  onOpenBackups={handleOpenBackups}
                   onDescribeObject={handleDescribeObject}
                   onStatusChange={handleStatusChange}
                 />
@@ -287,15 +290,6 @@ export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onN
         defaultPorts={DEFAULT_PORTS}
       />
 
-      {/* Modal de Backup & Restore */}
-      <BackupModal
-        isOpen={isBackupModalOpen}
-        onClose={() => setIsBackupModalOpen(false)}
-        activeConnection={activeConnection}
-        connections={conn.connections}
-        settings={conn.settings}
-        onSettingsUpdate={(updater) => conn.setSettings(updater)}
-      />
 
       <OnboardingTour
         steps={DATABASE_TOUR_STEPS}

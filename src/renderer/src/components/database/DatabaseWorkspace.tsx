@@ -39,7 +39,7 @@ export interface DatabaseWorkspaceProps {
     isSidebarCollapsed: boolean;
     toggleSidebar: () => void;
   };
-  onOpenBackup: () => void;
+  onOpenBackups: () => void;
   onDescribeObject: (name: string) => void;
   onStatusChange: (tabId: string, status: WorkspaceStatus) => void;
 }
@@ -59,7 +59,7 @@ export const DatabaseWorkspace: React.FC<DatabaseWorkspaceProps> = ({
   setCustomSnippets,
   historyState,
   layout,
-  onOpenBackup,
+  onOpenBackups,
   onDescribeObject,
   onStatusChange
 }) => {
@@ -183,7 +183,7 @@ export const DatabaseWorkspace: React.FC<DatabaseWorkspaceProps> = ({
         maxRows={query.maxRows}
         setMaxRows={query.setMaxRows}
         onOpenBindModal={binds.handleOpenBindModalManually}
-        onOpenBackupModal={onOpenBackup}
+        onOpenBackups={onOpenBackups}
         onOpenCreateSnippet={snippets.handleOpenCreateSnippet}
         customSnippets={customSnippets}
         onSelectSnippet={snippets.handleSelectSnippet}
