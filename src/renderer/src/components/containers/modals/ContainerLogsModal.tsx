@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { DockerContainerInfo } from '../../../../../shared/types';
 import { Modal } from '../../ui/Modal';
+import { useLineFilter } from '../../../hooks/useLineFilter';
 
 export interface ContainerLogsModalProps {
   container: DockerContainerInfo;
@@ -36,7 +37,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
   copyFeedback,
   onClose
 }) => {
-  const [logSearchQuery, setLogSearchQuery] = useState('');
+  const { query: logSearchQuery, setQuery: setLogSearchQuery, filtered } = useLineFilter(logs);
   const [isLogAutoRefresh, setIsLogAutoRefresh] = useState(false);
   const [isLogWrap, setIsLogWrap] = useState(true);
 
@@ -49,14 +50,8 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
     return () => clearInterval(timer);
   }, [isLogAutoRefresh, onRefreshLogs]);
 
-  const filteredLogs = React.useMemo(() => {
-    if (!logSearchQuery.trim()) return logs;
-    const query = logSearchQuery.toLowerCase();
-    const filtered = logs.split('\n').filter((l) => l.toLowerCase().includes(query));
-    return filtered.length > 0
-      ? filtered.join('\n')
-      : `(Nenhuma linha corresponde ao filtro "${logSearchQuery}")`;
-  }, [logs, logSearchQuery]);
+  const filteredLogs =
+    logSearchQuery.trim() && !filtered ? `(Nenhuma linha corresponde ao filtro "${logSearchQuery}")` : filtered;
 
   return (
     <Modal

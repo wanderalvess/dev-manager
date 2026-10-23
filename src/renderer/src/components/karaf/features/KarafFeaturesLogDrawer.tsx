@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Terminal, Trash2 } from 'lucide-react';
+import { LogPre } from '../../ui/LogPre';
 
 interface KarafFeaturesLogDrawerProps {
   logs: string | null;
@@ -10,14 +11,6 @@ export const KarafFeaturesLogDrawer: React.FC<KarafFeaturesLogDrawerProps> = ({
   logs,
   onClear
 }) => {
-  const logContainerRef = useRef<HTMLPreElement>(null);
-
-  useEffect(() => {
-    if (logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-    }
-  }, [logs]);
-
   if (!logs) return null;
 
   return (
@@ -41,12 +34,7 @@ export const KarafFeaturesLogDrawer: React.FC<KarafFeaturesLogDrawerProps> = ({
         </div>
       </div>
 
-      <pre
-        ref={logContainerRef}
-        className="p-3 text-2xs font-mono whitespace-pre-wrap break-all overflow-y-auto leading-relaxed select-text"
-      >
-        {logs}
-      </pre>
+      <LogPre text={logs} wrap autoScroll className="p-3 overflow-y-auto leading-relaxed" />
     </div>
   );
 };

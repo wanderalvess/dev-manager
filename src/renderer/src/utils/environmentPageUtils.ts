@@ -61,16 +61,6 @@ export function shouldClearStaleOnboarding(isFirstRun: boolean | undefined, hadM
   return !!isFirstRun && hadMarkersAtMount;
 }
 
-/** Filtra um texto multi-linha (ex: log persistido) pelas linhas que contêm `searchTerm`, case-insensitive. */
-export function filterLogLines(text: string, searchTerm: string): string {
-  if (!searchTerm.trim()) return text;
-  const needle = searchTerm.trim().toLowerCase();
-  return text
-    .split(/\r?\n/)
-    .filter((line) => line.toLowerCase().includes(needle))
-    .join('\n');
-}
-
 export interface StepRuntimeTarget {
   /** Porta de debug efetiva de um step tipo 'karaf' (porta do step, senão a global, senão 5005). */
   effectiveKarafPort?: number;
