@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.45.0] - 2026-10-23
 ### Adicionado
 - **Filtros e alertas na lista de repositórios (Git)**: chips *Todos*, *Com alterações*, *Só locais* e *Sem push*, cada um com a contagem, combinados com a busca. Os cartões mostram `SÓ LOCAL`, `↑ N sem push` e `● N alterações`, e o cabeçalho resume quantos repositórios estão só locais ou com alterações. A contagem de commits sem push lê as refs já baixadas (sem rede); use *Fetch* para atualizá-la.
 - **Etapas do Pull Request**: o painel de PR mostra *Branch local → Publicar no origin → Abrir Pull Request*, deixando claro quando falta publicar a branch ou enviar commits antes de abrir o formulário.
