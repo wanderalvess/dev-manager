@@ -5,9 +5,6 @@
     "output": "release",
     "buildResources": "build"
   },
-  "electronDownload": {
-    "strictSSL": false
-  },
   "files": [
     "dist/**/*",
     "dist-electron/**/*",
