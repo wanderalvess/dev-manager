@@ -5,7 +5,6 @@ import {
   shouldClearStaleOnboarding,
   resolveActiveProfile,
   getMissingRequiredPaths,
-  filterLogLines,
   resolveStepRuntimeTarget
 } from './environmentPageUtils';
 import type { AppSettings, AutomationProfile, AutomationStep, PortStatus, ProcessStatus, ServiceStatus } from '../../../shared/types';
@@ -57,22 +56,6 @@ describe('getMissingRequiredPaths', () => {
   });
 });
 
-describe('filterLogLines', () => {
-  const text = 'linha 1: iniciando\nlinha 2: ERRO ao conectar\nlinha 3: finalizado';
-
-  it('retorna o texto original quando não há termo de busca', () => {
-    expect(filterLogLines(text, '')).toBe(text);
-    expect(filterLogLines(text, '   ')).toBe(text);
-  });
-
-  it('filtra só as linhas que contêm o termo, case-insensitive', () => {
-    expect(filterLogLines(text, 'erro')).toBe('linha 2: ERRO ao conectar');
-  });
-
-  it('retorna string vazia quando nenhuma linha bate', () => {
-    expect(filterLogLines(text, 'inexistente')).toBe('');
-  });
-});
 
 describe('resolveStepRuntimeTarget', () => {
   const services: ServiceStatus[] = [{ name: 'MeuServico', displayName: 'Meu Serviço', state: 'RUNNING' }];

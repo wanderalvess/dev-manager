@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Terminal, X, Search, RotateCw } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
+import { LogPre } from '../../ui/LogPre';
+import { useLineFilter } from '../../../hooks/useLineFilter';
 
 interface KarafLogModalProps {
   isOpen: boolean;
@@ -14,7 +16,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
   const [karafLog, setKarafLog] = useState('');
   const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [logLines, setLogLines] = useState(200);
-  const [logSearch, setLogSearch] = useState('');
+  const { query: logSearch, setQuery: setLogSearch, filtered: filteredKarafLog } = useLineFilter(karafLog);
 
   const handleRefreshLog = useCallback(async () => {
     if (!window.electronAPI?.getKarafLog) return;
@@ -34,15 +36,6 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
       handleRefreshLog();
     }
   }, [isOpen, handleRefreshLog]);
-
-  const filteredKarafLog = useMemo(() => {
-    if (!logSearch.trim()) return karafLog;
-    const needle = logSearch.trim().toLowerCase();
-    return karafLog
-      .split(/\r?\n/)
-      .filter((line) => line.toLowerCase().includes(needle))
-      .join('\n');
-  }, [karafLog, logSearch]);
 
   if (!isOpen) return null;
 
@@ -116,7 +109,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
             <span>Lendo log:display via client.bat...</span>
           </div>
         ) : filteredKarafLog ? (
-          <pre className="text-2xs font-mono whitespace-pre text-slate-200 overflow-x-auto min-w-full selection:bg-slate-800">{filteredKarafLog}</pre>
+          <LogPre text={filteredKarafLog} className="text-slate-200 overflow-x-auto min-w-full selection:bg-slate-800" />
         ) : karafLog ? (
           <p className="text-xs text-slate-400 text-center py-8">
             Nenhuma linha corresponde ao filtro "{logSearch}".

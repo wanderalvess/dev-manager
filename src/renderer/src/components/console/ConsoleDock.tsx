@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronUp, History, Terminal } from 'lucide-react';
 import { TerminalViewer } from '../TerminalViewer';
-import { KarafHistoryModal } from '../environment/modals/KarafHistoryModal';
+import { KarafEmbeddedOutputModal } from '../environment/modals/KarafEmbeddedOutputModal';
 import { useKarafConsole } from '../../hooks/karafConsole/KarafConsoleContext';
 import { useKarafConsoleCommands } from '../../hooks/karafConsole/useKarafConsoleCommands';
 import { useKarafTail } from '../../hooks/karafConsole/useKarafTail';
@@ -130,7 +130,7 @@ export const ConsoleDock: React.FC = () => {
       )}
 
       {history.isOpen && (
-        <KarafHistoryModal
+        <KarafEmbeddedOutputModal
           output={history.output}
           filtered={history.filtered}
           search={history.search}

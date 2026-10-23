@@ -1,8 +1,9 @@
 import React from 'react';
 import { History, RefreshCw, X } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
+import { LogPre } from '../../ui/LogPre';
 
-interface KarafHistoryModalProps {
+interface KarafEmbeddedOutputModalProps {
   output: string;
   filtered: string;
   search: string;
@@ -12,8 +13,8 @@ interface KarafHistoryModalProps {
   onClose: () => void;
 }
 
-/** Modal de histórico persistido do Karaf embedded, com filtro por linha. */
-export const KarafHistoryModal: React.FC<KarafHistoryModalProps> = ({
+/** Modal da saída persistida do Karaf embedded (log bruto, não o histórico de deploys), com filtro por linha. */
+export const KarafEmbeddedOutputModal: React.FC<KarafEmbeddedOutputModalProps> = ({
   output,
   filtered,
   search,
@@ -65,7 +66,7 @@ export const KarafHistoryModal: React.FC<KarafHistoryModalProps> = ({
         </div>
       ) : output ? (
         filtered ? (
-          <pre className="text-2xs font-mono whitespace-pre-wrap text-foreground">{filtered}</pre>
+          <LogPre text={filtered} wrap className="text-foreground" />
         ) : (
           <p className="text-xs text-muted-foreground text-center py-8">
             Nenhuma linha corresponde ao filtro "{search}".

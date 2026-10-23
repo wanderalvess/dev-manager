@@ -31,6 +31,8 @@ import { TestRunnerService } from './services/TestRunnerService';
 import { TautAutomationService } from './services/TautAutomationService';
 import { HttpClientService } from './services/HttpClientService';
 import { HttpCollectionService } from './services/HttpCollectionService';
+import { RemoteControlService } from './services/RemoteControlService';
+import { createRemoteBackend } from './services/remoteControl/remoteBackend';
 import { registerIpcHandlers } from './ipc/registerIpc';
 import { notifyUser } from './services/NotificationService';
 
@@ -170,6 +172,18 @@ function createWindow() {
   const httpCollectionService = new HttpCollectionService();
   const httpClientService = new HttpClientService(httpCollectionService);
   const delphiBuildService = new DelphiBuildService(configService, windowsService);
+  const remoteControlService = new RemoteControlService(
+    createRemoteBackend({
+      configService,
+      windowsService,
+      karafService,
+      dockerService,
+      deployService,
+      backupSchedulerService,
+      karafLogPersistenceService,
+      sendToWindow: (channel, ...args) => safeSend(mainWindow, channel, ...args)
+    })
+  );
   apmService.onNewTrace = (summary) => {
     safeSend(mainWindow, 'apm:new-trace', summary);
   };
@@ -206,7 +220,8 @@ function createWindow() {
     qaPayloadService,
     httpClientService,
     httpCollectionService,
-    usageMetricsService
+    usageMetricsService,
+    remoteControlService
   });
 
   backupSchedulerService.rescheduleAll();
@@ -215,6 +230,7 @@ function createWindow() {
     usageMetricsService.dispose();
     backupSchedulerService.stopAll();
     void apmService.stopReceiver().catch(() => undefined);
+    void remoteControlService.stop().catch(() => undefined);
     void karafService.stopEmbeddedKaraf().catch(() => undefined);
     karafService.stopAllKarafStreams();
   });

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { filterLogLines } from '../../utils/environmentPageUtils';
+import { filterTextLines } from '../../utils/textLineFilter';
 
 /** Histórico persistido do console Karaf embedded (sobrevive a reinícios, diferente do console ao vivo). */
 export function useKarafHistory() {
@@ -8,7 +8,7 @@ export function useKarafHistory() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
 
-  const filtered = useMemo(() => filterLogLines(output, search), [output, search]);
+  const filtered = useMemo(() => filterTextLines(output, search), [output, search]);
 
   const open = async () => {
     setIsOpen(true);
