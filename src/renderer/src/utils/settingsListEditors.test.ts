@@ -115,18 +115,17 @@ describe('computeSetupChecklistStatus', () => {
   it('marca todos os itens como pendentes quando nada está configurado', () => {
     const status = computeSetupChecklistStatus({}, {});
     expect(status.every((item) => !item.done)).toBe(true);
-    expect(status.map((item) => item.id)).toEqual(['dirs', 'ide', 'karaf-creds', 'database']);
+    expect(status.map((item) => item.id)).toEqual(['dirs', 'karaf-path', 'ide', 'karaf-creds', 'database']);
   });
 
-  it('marca "dirs" como feito somente quando projectsPath E karafPath existem', () => {
-    const onlyOne = computeSetupChecklistStatus({}, { projectsPath: makePathStatus(true) });
-    expect(onlyOne.find((i) => i.id === 'dirs')?.done).toBe(false);
+  it('marca "dirs" e "karaf-path" de forma independente, cada um pelo seu caminho', () => {
+    const onlyProjects = computeSetupChecklistStatus({}, { projectsPath: makePathStatus(true) });
+    expect(onlyProjects.find((i) => i.id === 'dirs')?.done).toBe(true);
+    expect(onlyProjects.find((i) => i.id === 'karaf-path')?.done).toBe(false);
 
-    const both = computeSetupChecklistStatus(
-      {},
-      { projectsPath: makePathStatus(true), karafPath: makePathStatus(true) }
-    );
-    expect(both.find((i) => i.id === 'dirs')?.done).toBe(true);
+    const onlyKaraf = computeSetupChecklistStatus({}, { karafPath: makePathStatus(true) });
+    expect(onlyKaraf.find((i) => i.id === 'dirs')?.done).toBe(false);
+    expect(onlyKaraf.find((i) => i.id === 'karaf-path')?.done).toBe(true);
   });
 
   it('marca "karaf-creds" como feito somente quando usuário E senha estão preenchidos (não apenas espaços)', () => {

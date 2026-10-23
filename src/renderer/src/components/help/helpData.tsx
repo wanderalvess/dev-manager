@@ -1210,7 +1210,7 @@ export function getFaqList({
               </li>
             </ul>
             <p>
-              Configure em <strong className="text-foreground">Configurações → Diretórios → Integração WinThor Start (DataSnap) &amp; WTA</strong>. As portas 9195 e 8889 aparecem nas portas monitoradas.
+              Configure em <strong className="text-foreground">Configurações → Rotinas WinThor → Integração WinThor Start (DataSnap) &amp; WTA</strong>. As portas 9195 e 8889 aparecem nas portas monitoradas.
             </p>
           </div>
         </div>
@@ -1520,7 +1520,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O <strong className="text-foreground">Hub Manager</strong> integra com o seu projeto de testes Cypress (pasta definida em <strong className="text-foreground">Configurações &gt; Diretórios &amp; IDE</strong> ou detectada automaticamente: <code className="font-mono text-primary font-bold">taut*</code>, <code className="font-mono text-primary font-bold">cypress-tests</code>, <code className="font-mono text-primary font-bold">cypress</code> ou <code className="font-mono text-primary font-bold">e2e-tests</code>) na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
+            O <strong className="text-foreground">Hub Manager</strong> integra com o seu projeto de testes Cypress (pasta definida em <strong className="text-foreground">Configurações &gt; Qualidade &amp; QA</strong> ou detectada automaticamente: <code className="font-mono text-primary font-bold">taut*</code>, <code className="font-mono text-primary font-bold">cypress-tests</code>, <code className="font-mono text-primary font-bold">cypress</code> ou <code className="font-mono text-primary font-bold">e2e-tests</code>) na aba <strong className="text-foreground">Qualidade (Alt+Q) &gt; Automação TAUT (Cypress)</strong>:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Recursos Integrados:</span>

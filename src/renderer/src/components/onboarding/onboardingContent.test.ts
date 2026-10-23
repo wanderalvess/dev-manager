@@ -23,7 +23,7 @@ describe('onboardingContent', () => {
   describe('buildEnvSections', () => {
     it('sem configurações: tudo pendente', () => {
       const sections = buildEnvSections(null);
-      expect(sections.map((s) => s.id)).toEqual(['dirs', 'karaf', 'winthor', 'azure', 'services']);
+      expect(sections.map((s) => s.id)).toEqual(['dirs', 'karaf', 'winthor', 'azure', 'quality', 'services']);
       expect(sections.flatMap((s) => s.rows).every((r) => !r.done && r.value === '')).toBe(true);
     });
 

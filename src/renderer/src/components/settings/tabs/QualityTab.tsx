@@ -5,6 +5,7 @@ import {
   QualitySourceTemplate
 } from '../../../../../shared/types';
 import { createNewQualitySourceDraft, findActiveQualitySource } from '../../../utils/qualityTabUtils';
+import { QualityTautPanel } from '../quality/QualityTautPanel';
 import { QualityTabHeader } from '../quality/QualityTabHeader';
 import { QualityTemplateGrid } from '../quality/QualityTemplateGrid';
 import { QualitySourceForm } from '../quality/QualitySourceForm';
@@ -25,10 +26,17 @@ interface QualityTabProps {
   handleTestQualityConnection: (source: QualitySourceConfig) => void;
   testingQualityId: string | null;
   testResults: Record<string, { success: boolean; message: string }>;
+  renderPathStatusBadge: (field: keyof AppSettings) => React.ReactNode;
+  validateSinglePath: (field: keyof AppSettings, value: string) => Promise<void>;
+  handleBrowseDirectory: (field: keyof AppSettings) => Promise<void>;
 }
 
 export const QualityTab: React.FC<QualityTabProps> = ({
   settings,
+  setSettings,
+  renderPathStatusBadge,
+  validateSinglePath,
+  handleBrowseDirectory,
   editingQualitySource,
   setEditingQualitySource,
   showQualityToken,
@@ -48,6 +56,14 @@ export const QualityTab: React.FC<QualityTabProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-quality">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
+        <QualityTautPanel
+          settings={settings}
+          setSettings={setSettings}
+          renderPathStatusBadge={renderPathStatusBadge}
+          validateSinglePath={validateSinglePath}
+          handleBrowseDirectory={handleBrowseDirectory}
+        />
+
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border bg-card">
           <QualityTabHeader
             activeSource={findActiveQualitySource(sources, activeSourceId)}
