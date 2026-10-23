@@ -17,6 +17,7 @@ import { killProcessTree } from '../utils/process';
 import { httpRequest } from '../utils/httpRequest';
 import { publishCurrentBranch, readBranchPublishStatus } from './gitBranchPublish';
 import { resolveStartPoint } from './gitBranchStart';
+import { collectUnpushedCounts } from './gitUnpushedCounts';
 import { launchProcessSafely } from '../utils/routineLaunchUtils';
 import {
   GIT_LOG_FIELD_SEPARATOR,
@@ -504,6 +505,14 @@ export class GitAzureService {
         output: gitErrorOutput(err, 'Erro ao realizar commit')
       };
     }
+  }
+
+  /** Commits locais sem push de cada repositório (refs já baixadas, sem rede); alimenta o filtro "Sem push". */
+  public async getUnpushedCounts(): Promise<Record<string, number>> {
+    const projects = await this.listProjects();
+    return collectUnpushedCounts(projects, (projectPath, args, timeoutMs) =>
+      this.runGitWithTimeout(projectPath, args, timeoutMs)
+    );
   }
 
   /** Consulta o origin para saber se a branch atual já foi publicada (pré-requisito do Pull Request). */

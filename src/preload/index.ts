@@ -421,6 +421,7 @@ const electronAPI = {
   getGitDiff: (projectPath: string, targetFile?: string) =>
     ipcRenderer.invoke('git:get-diff', projectPath, targetFile),
   getGitUncommittedCounts: (): Promise<Record<string, number>> => ipcRenderer.invoke('git:get-uncommitted-counts'),
+  getGitUnpushedCounts: (): Promise<Record<string, number>> => ipcRenderer.invoke('git:get-unpushed-counts'),
   azureListBuilds: (target: AzurePipelineTarget, options?: AzureListBuildsOptions): Promise<AzureListBuildsResult> =>
     ipcRenderer.invoke('git:azure-list-builds', target, options),
   azureListArtifacts: (target: AzurePipelineTarget, buildId: number): Promise<AzureListArtifactsResult> =>

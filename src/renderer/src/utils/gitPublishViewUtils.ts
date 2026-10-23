@@ -53,3 +53,41 @@ export function getPrActionLabel(
     ? `Publicar Branch e Abrir ${kind} no ${where}`
     : `Abrir Formulário de ${kind} no ${where}`;
 }
+
+export type PrStepState = 'done' | 'current' | 'pending' | 'blocked';
+
+export interface PrStep {
+  id: 'branch' | 'publish' | 'pr';
+  label: string;
+  hint: string;
+  state: PrStepState;
+}
+
+/** Passo a passo do painel de PR: branch → publicada no origin → formulário do PR. */
+export function getPrSteps(input: {
+  branch: string;
+  localOnly: boolean;
+  unpushedCommits: number;
+  blockedReason: string | null;
+}): PrStep[] {
+  const { branch, localOnly, unpushedCommits, blockedReason } = input;
+  const needsPush = localOnly || unpushedCommits > 0;
+
+  const publishHint = localOnly
+    ? 'pendente: a branch só existe neste computador'
+    : unpushedCommits > 0
+      ? `${unpushedCommits} ${unpushedCommits === 1 ? 'commit' : 'commits'} sem push`
+      : 'branch em dia com o origin';
+
+  const prStep: PrStep = blockedReason
+    ? { id: 'pr', label: 'Abrir Pull Request', hint: blockedReason, state: 'blocked' }
+    : needsPush
+      ? { id: 'pr', label: 'Abrir Pull Request', hint: 'o botão publica antes de abrir', state: 'pending' }
+      : { id: 'pr', label: 'Abrir Pull Request', hint: 'pronto para abrir', state: 'current' };
+
+  return [
+    { id: 'branch', label: 'Branch local', hint: branch, state: 'done' },
+    { id: 'publish', label: 'Publicar no origin', hint: publishHint, state: needsPush ? 'current' : 'done' },
+    prStep
+  ];
+}

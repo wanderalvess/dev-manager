@@ -2,7 +2,8 @@ import React from 'react';
 import { GitMerge, ArrowRight, ExternalLink, Upload, Loader2, Info } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../shared/types';
 import { getPrPanelTitle } from '../../utils/gitViewUtils';
-import { getPrActionLabel } from '../../utils/gitPublishViewUtils';
+import { getPrActionLabel, getPrSteps } from '../../utils/gitPublishViewUtils';
+import { GitPrSteps } from './GitPrSteps';
 
 interface GitPullRequestPanelProps {
   project: GitProjectInfo;
@@ -11,6 +12,8 @@ interface GitPullRequestPanelProps {
   prBlockedReason: string | null;
   /** A branch atual ainda não existe no origin: o botão publica antes de abrir o formulário. */
   isLocalOnly: boolean;
+  /** Commits locais que o origin ainda não tem (0 quando em dia ou desconhecido). */
+  unpushedCount: number;
   /** Verificando/publicando a branch ou abrindo o formulário. */
   isBusy: boolean;
   onTargetBranchChange: (value: string) => void;
@@ -23,6 +26,7 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
   targetBranchOptions,
   prBlockedReason,
   isLocalOnly,
+  unpushedCount,
   isBusy,
   onTargetBranchChange,
   onOpenPr
@@ -51,6 +55,15 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
         </select>
       </div>
     </div>
+
+    <GitPrSteps
+      steps={getPrSteps({
+        branch: project.currentBranch,
+        localOnly: isLocalOnly,
+        unpushedCommits: unpushedCount,
+        blockedReason: prBlockedReason
+      })}
+    />
 
     {/* Diagrama Visual das Branches */}
     <div className="bg-muted/40 border border-border/80 rounded-xl p-3 flex items-center justify-between text-xs font-mono">

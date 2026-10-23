@@ -5,10 +5,17 @@ interface Params {
   projects: GitProjectInfo[];
   settingsVersion?: number;
   onRefreshProjects: () => void | Promise<void>;
+  refreshUnpushedCounts: () => Promise<void>;
   resetOutput: () => void;
 }
 
-export function useGitProjectState({ projects, settingsVersion, onRefreshProjects, resetOutput }: Params) {
+export function useGitProjectState({
+  projects,
+  settingsVersion,
+  onRefreshProjects,
+  refreshUnpushedCounts,
+  resetOutput
+}: Params) {
   const [selectedPath, setSelectedPath] = useState<string>(projects[0]?.path || '');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -95,6 +102,7 @@ export function useGitProjectState({ projects, settingsVersion, onRefreshProject
     await Promise.all([
       refreshSelectedProject(projectPath),
       refreshPendingChanges(projectPath),
+      refreshUnpushedCounts(),
       onRefreshProjects()
     ]);
   };

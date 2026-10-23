@@ -1908,6 +1908,10 @@ app.get('/api/git/uncommitted-counts', async (_req, res) => {
   res.json(await gitAzureService.getUncommittedCounts());
 });
 
+app.get('/api/git/unpushed-counts', async (_req, res) => {
+  res.json(await gitAzureService.getUnpushedCounts());
+});
+
 // 14. Exportação / Importação de Configurações
 app.get('/api/settings/export', async (req, res) => {
   const sanitize = req.query.sanitize !== 'false';
