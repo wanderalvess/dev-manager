@@ -6,7 +6,7 @@ export const GIT_TOUR_STEPS: TourStep[] = [
   {
     target: 'repo-list',
     title: 'Lista de Repositórios',
-    desc: 'Aqui você escolhe qual repositório Git deseja gerenciar clicando em um item da lista.'
+    desc: 'Escolha o repositório clicando em um item. Os chips (Todos, Com alterações, Só locais, Sem push) filtram a lista, e cada cartão mostra se a branch é só local, quantos commits estão sem push e quantas alterações pendentes há.'
   },
   {
     target: 'branch-atual',

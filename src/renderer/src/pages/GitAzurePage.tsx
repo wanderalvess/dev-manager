@@ -10,6 +10,8 @@ import { useGitSettingsSync } from '../hooks/git/useGitSettingsSync';
 import { useGitProjectState } from '../hooks/git/useGitProjectState';
 import { useGitOperations } from '../hooks/git/useGitOperations';
 import { useGitPublish } from '../hooks/git/useGitPublish';
+import { useGitUnpushedCounts } from '../hooks/git/useGitUnpushedCounts';
+import { useGitRepoFilter } from '../hooks/git/useGitRepoFilter';
 import { isBranchLocalOnly } from '../utils/gitPublishViewUtils';
 import { useGitBranchModal } from '../hooks/git/useGitBranchModal';
 import { useGitCommit } from '../hooks/git/useGitCommit';
@@ -56,6 +58,8 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
   const { targetBranch, setTargetBranch, preferredTarget } = useGitSettingsSync(settingsVersion, onRefreshProjects);
 
+  const { unpushedCounts, refreshUnpushedCounts } = useGitUnpushedCounts(settingsVersion);
+
   const {
     selectedPath,
     setSelectedPath,
@@ -68,7 +72,19 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
     isLoadingPendingChanges,
     refreshUncommittedCounts,
     refreshAfterGitChange
-  } = useGitProjectState({ projects, settingsVersion, onRefreshProjects, resetOutput });
+  } = useGitProjectState({
+    projects,
+    settingsVersion,
+    onRefreshProjects,
+    refreshUnpushedCounts,
+    resetOutput
+  });
+  const repoFilter = useGitRepoFilter({
+    projects,
+    searchedProjects: filteredProjects,
+    uncommittedCounts,
+    unpushedCounts
+  });
 
   const targetBranchOptions = useMemo(
     () =>
@@ -115,6 +131,8 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
     <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
       <GitPageHeader
         projectCount={projects.length}
+        localOnlyCount={repoFilter.filterCounts['local-only']}
+        changesCount={repoFilter.filterCounts.changes}
         isBusy={isRefreshing || ops.isSyncing}
         onOpenTour={tour.open}
         onSync={ops.handleSyncRepositories}
@@ -122,11 +140,15 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
         <GitRepoList
-          projects={filteredProjects}
+          projects={repoFilter.visibleProjects}
           selectedPath={currentProject?.path}
           uncommittedCounts={uncommittedCounts}
+          unpushedCounts={unpushedCounts}
+          filter={repoFilter.filter}
+          filterCounts={repoFilter.filterCounts}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          onFilterChange={repoFilter.setFilter}
           onSelect={setSelectedPath}
         />
 
@@ -169,6 +191,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   targetBranchOptions={targetBranchOptions}
                   prBlockedReason={prBlockedReason}
                   isLocalOnly={isLocalOnly}
+                  unpushedCount={unpushedCounts[currentProject.path] ?? 0}
                   isBusy={ops.isOpeningPr || publish.isPublishing}
                   onTargetBranchChange={setTargetBranch}
                   onOpenPr={ops.handleOpenPr}

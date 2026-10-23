@@ -1,13 +1,20 @@
 import React from 'react';
 import { Search, GitBranch } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../shared/types';
+import type { GitRepoFilter } from '../../utils/gitRepoFilters';
+import { isBranchLocalOnly } from '../../utils/gitPublishViewUtils';
+import { GitRepoFilterChips } from './GitRepoFilterChips';
 
 interface GitRepoListProps {
   projects: GitProjectInfo[];
   selectedPath: string | undefined;
   uncommittedCounts: Record<string, number>;
+  unpushedCounts: Record<string, number>;
+  filter: GitRepoFilter;
+  filterCounts: Record<GitRepoFilter, number>;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  onFilterChange: (filter: GitRepoFilter) => void;
   onSelect: (path: string) => void;
 }
 
@@ -15,8 +22,12 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
   projects,
   selectedPath,
   uncommittedCounts,
+  unpushedCounts,
+  filter,
+  filterCounts,
   searchTerm,
   onSearchChange,
+  onFilterChange,
   onSelect
 }) => (
   <div className="lg:col-span-4 flex flex-col space-y-3 cockpit-panel rounded-xl p-3 overflow-hidden border border-border">
@@ -32,12 +43,19 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
       />
     </div>
 
+    <GitRepoFilterChips filter={filter} counts={filterCounts} onChange={onFilterChange} />
+
     {/* Lista Rolável */}
     <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5" data-tour="repo-list">
+      {projects.length === 0 && (
+        <p className="text-2xs text-muted-foreground text-center py-6">Nenhum repositório neste filtro.</p>
+      )}
       {projects.map((p) => {
         const isSelected = selectedPath === p.path;
         const pendingCount = uncommittedCounts[p.path] ?? p.uncommittedCount ?? 0;
         const hasChanges = pendingCount > 0;
+        const unpushed = unpushedCounts[p.path] ?? 0;
+        const localOnly = isBranchLocalOnly(p);
 
         return (
           <button
@@ -54,14 +72,6 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
                 {p.name}
               </span>
               <div className="flex items-center space-x-1.5">
-                {hasChanges && (
-                  <span
-                    className="text-2xs bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.2 rounded font-mono font-bold"
-                    title={`${pendingCount} arquivo(s) modificado(s)`}
-                  >
-                    ● {pendingCount}
-                  </span>
-                )}
                 {p.isAzure && (
                   <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-1.5 py-0.2 rounded font-mono font-bold">
                     AZURE
@@ -69,11 +79,35 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-1.5 mt-1.5 text-2xs text-muted-foreground truncate">
+            <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-2xs text-muted-foreground">
               <GitBranch className="w-3 h-3 text-success shrink-0" />
-              <span className="truncate font-mono text-success font-medium">
+              <span className="truncate font-mono text-success font-medium" title={p.currentBranch}>
                 {p.currentBranch}
               </span>
+              {localOnly && (
+                <span
+                  className="bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.5 rounded font-bold"
+                  title="A branch atual ainda não existe no origin"
+                >
+                  SÓ LOCAL
+                </span>
+              )}
+              {unpushed > 0 && (
+                <span
+                  className="bg-info/15 text-info border border-info/30 px-1.5 py-0.5 rounded font-bold"
+                  title={`${unpushed} commit(s) local(is) que o origin ainda não tem`}
+                >
+                  ↑ {unpushed} sem push
+                </span>
+              )}
+              {hasChanges && (
+                <span
+                  className="bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.5 rounded font-bold"
+                  title={`${pendingCount} arquivo(s) modificado(s)`}
+                >
+                  ● {pendingCount} {pendingCount === 1 ? 'alteração' : 'alterações'}
+                </span>
+              )}
             </div>
           </button>
         );

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GitBranchPublishStatus } from '../../../shared/types';
-import { describePublishPrompt, getPrActionLabel, isBranchLocalOnly } from './gitPublishViewUtils';
+import { describePublishPrompt, getPrActionLabel, getPrSteps, isBranchLocalOnly } from './gitPublishViewUtils';
 
 function makeStatus(overrides: Partial<GitBranchPublishStatus> = {}): GitBranchPublishStatus {
   return { branch: 'bugfix/x', publishedOnRemote: true, verifiedOnRemote: true, unpushedCommits: 0, ...overrides };
@@ -51,5 +51,32 @@ describe('getPrActionLabel', () => {
     expect(getPrActionLabel('azure', true)).toBe('Publicar Branch e Abrir Pull Request no Azure DevOps');
     expect(getPrActionLabel('gitlab', false)).toBe('Abrir Formulário de Merge Request no GitLab');
     expect(getPrActionLabel('github', true)).toBe('Publicar Branch e Abrir Pull Request no GitHub');
+  });
+});
+
+describe('getPrSteps', () => {
+  const base = { branch: 'bugfix/x', localOnly: false, unpushedCommits: 0, blockedReason: null };
+
+  it('branch só local: publicar é o passo atual e o PR depende dele', () => {
+    const steps = getPrSteps({ ...base, localOnly: true });
+    expect(steps.map((s) => s.state)).toEqual(['done', 'current', 'pending']);
+    expect(steps[1].hint).toContain('só existe neste computador');
+  });
+
+  it('commits sem push mantêm a publicação como passo atual', () => {
+    const steps = getPrSteps({ ...base, unpushedCommits: 2 });
+    expect(steps.map((s) => s.state)).toEqual(['done', 'current', 'pending']);
+    expect(steps[1].hint).toBe('2 commits sem push');
+    expect(getPrSteps({ ...base, unpushedCommits: 1 })[1].hint).toBe('1 commit sem push');
+  });
+
+  it('branch em dia libera o PR', () => {
+    const steps = getPrSteps(base);
+    expect(steps.map((s) => s.state)).toEqual(['done', 'done', 'current']);
+  });
+
+  it('motivo de bloqueio marca o PR como bloqueado', () => {
+    const steps = getPrSteps({ ...base, blockedReason: 'HEAD destacado' });
+    expect(steps[2]).toMatchObject({ state: 'blocked', hint: 'HEAD destacado' });
   });
 });

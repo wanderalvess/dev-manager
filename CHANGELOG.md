@@ -6,6 +6,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [Não lançado]
 ### Adicionado
+- **Filtros e alertas na lista de repositórios (Git)**: chips *Todos*, *Com alterações*, *Só locais* e *Sem push*, cada um com a contagem, combinados com a busca. Os cartões mostram `SÓ LOCAL`, `↑ N sem push` e `● N alterações`, e o cabeçalho resume quantos repositórios estão só locais ou com alterações. A contagem de commits sem push lê as refs já baixadas (sem rede); use *Fetch* para atualizá-la.
+- **Etapas do Pull Request**: o painel de PR mostra *Branch local → Publicar no origin → Abrir Pull Request*, deixando claro quando falta publicar a branch ou enviar commits antes de abrir o formulário.
 - **PR só depois de publicar a branch (corrige o erro TF401175 do Azure DevOps)**: ao abrir o Pull Request, o Hub consulta o `origin` (`git ls-remote`); se a branch existe só no seu computador, pergunta e publica com `git push --set-upstream origin` antes de abrir o formulário, e avisa quando há commits locais sem push. O botão do painel vira *Publicar Branch e Abrir Pull Request* e a branch ganha o selo *SÓ LOCAL*.
 - **Botão Publicar / Push**: na barra da branch, envia a branch (ou os commits já feitos) para o `origin` sem criar commit novo. *Commit & Push* passa a ficar desativado quando não há alterações pendentes.
 - **Comandos rápidos personalizáveis**: na aba *Rápidos* dos Diagnósticos do Deploy, *Personalizar* permite adicionar, remover, renomear e reordenar os comandos Karaf. A mesma lista aparece no novo menu *Comandos* da barra do console (ao lado de *Tail do log*), para rodar `bundle:list`, `feature:list`, `log:display` etc. direto no console. *Restaurar padrão* volta à lista original.

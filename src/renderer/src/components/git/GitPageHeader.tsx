@@ -3,12 +3,22 @@ import { GitPullRequest, RefreshCw, HelpCircle } from 'lucide-react';
 
 interface GitPageHeaderProps {
   projectCount: number;
+  /** Repositórios com a branch atual só local e com alterações pendentes: chips de atenção (some quando zero). */
+  localOnlyCount: number;
+  changesCount: number;
   isBusy: boolean;
   onOpenTour: () => void;
   onSync: () => void;
 }
 
-export const GitPageHeader: React.FC<GitPageHeaderProps> = ({ projectCount, isBusy, onOpenTour, onSync }) => (
+export const GitPageHeader: React.FC<GitPageHeaderProps> = ({
+  projectCount,
+  localOnlyCount,
+  changesCount,
+  isBusy,
+  onOpenTour,
+  onSync
+}) => (
   <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center space-x-3">
@@ -21,6 +31,22 @@ export const GitPageHeader: React.FC<GitPageHeaderProps> = ({ projectCount, isBu
             <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
               {projectCount} {projectCount === 1 ? 'Repositório Ativo' : 'Repositórios Ativos'}
             </span>
+            {localOnlyCount > 0 && (
+              <span
+                className="text-2xs bg-warning/15 text-warning border border-warning/30 px-2 py-0.5 rounded-full font-mono font-bold"
+                title="Repositórios cuja branch atual ainda não existe no origin"
+              >
+                {localOnlyCount} {localOnlyCount === 1 ? 'só local' : 'só locais'}
+              </span>
+            )}
+            {changesCount > 0 && (
+              <span
+                className="text-2xs bg-warning/15 text-warning border border-warning/30 px-2 py-0.5 rounded-full font-mono font-bold"
+                title="Repositórios com alterações pendentes"
+              >
+                {changesCount} com alterações
+              </span>
+            )}
             <button
               type="button"
               onClick={onOpenTour}

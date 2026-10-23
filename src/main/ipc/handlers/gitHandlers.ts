@@ -69,6 +69,10 @@ export function registerGitHandlers(ctx: IpcContext): void {
     return await gitAzureService.getUncommittedCounts();
   });
 
+  ipcMain.handle('git:get-unpushed-counts', async () => {
+    return await gitAzureService.getUnpushedCounts();
+  });
+
   // Artefatos do Azure Pipelines
   ipcMain.handle('git:azure-list-builds', async (_, target: AzurePipelineTarget, options?: AzureListBuildsOptions) => {
     return await azurePipelineService.listBuilds(target, options);

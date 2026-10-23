@@ -278,6 +278,7 @@ export interface ElectronAPI {
   getGitDiff: (projectPath: string, targetFile?: string) => Promise<GitDiffResult>;
   /** Alterações pendentes por caminho de repositório (roda git status em lote; chamar sob demanda). */
   getGitUncommittedCounts: () => Promise<Record<string, number>>;
+  getGitUnpushedCounts: () => Promise<Record<string, number>>;
   openExternal: (url: string) => Promise<boolean>;
 
   // Catálogo de Rotinas

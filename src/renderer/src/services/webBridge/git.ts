@@ -116,6 +116,10 @@ export function createGitApi({ apiFetch }: BridgeDeps) {
       return apiFetch('/api/git/uncommitted-counts');
     },
 
+    getGitUnpushedCounts: async (): Promise<Record<string, number>> => {
+      return apiFetch('/api/git/unpushed-counts');
+    },
+
     azureListBuilds: async (target: AzurePipelineTarget, options?: AzureListBuildsOptions): Promise<AzureListBuildsResult> => {
       return apiFetch('/api/azure-pipelines/builds', { method: 'POST', body: JSON.stringify({ target, options }) });
     },
