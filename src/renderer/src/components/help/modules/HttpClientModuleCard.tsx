@@ -19,7 +19,7 @@ export const HttpClientModuleCard: React.FC<HttpClientModuleCardProps> = ({ onNa
               <span className="text-xs text-muted-foreground">Postman Integrado • Atalho Alt+9</span>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-primary/15 text-primary border border-primary/25">
+          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-primary/10 text-primary">
             REST &amp; Tokens
           </span>
         </div>

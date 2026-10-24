@@ -36,7 +36,7 @@ export const ProfileActionsMenu: React.FC<ProfileActionsMenuProps> = ({
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <EscapeToClose onEscape={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-60 origin-top-right rounded-xl bg-card border border-border shadow-2xl p-1.5 z-50 flex flex-col space-y-1">
+          <div className="absolute right-0 mt-2 w-60 origin-top-right rounded-xl bg-card border border-border shadow-lg p-1.5 z-50 flex flex-col space-y-1">
             <button
               type="button"
               onClick={() => {

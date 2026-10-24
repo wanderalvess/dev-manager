@@ -12,7 +12,7 @@ export const ApmErrorSpans: React.FC<{
     {spans.map((span) => {
       const exceptionHeadline = [span.exception?.type, span.exception?.message].filter(Boolean).join(': ');
       return (
-        <div key={span.spanId} className="p-3 rounded-lg border border-danger/30 bg-danger/10 flex flex-col gap-2">
+        <div key={span.spanId} className="p-3 rounded-lg bg-danger/10 flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2 text-2xs text-danger font-bold">
             <span className="flex items-center gap-1.5 min-w-0">
               <AlertCircle className="w-3.5 h-3.5 text-danger shrink-0" />
@@ -22,7 +22,7 @@ export const ApmErrorSpans: React.FC<{
             <button
               type="button"
               onClick={() => copyToClipboard(formatSpanErrorForClipboard(span), `err-${span.spanId}`)}
-              className="px-2 py-0.5 rounded border border-danger/30 bg-danger/15 text-2xs text-danger hover:bg-danger/25 cursor-pointer flex items-center gap-1 shrink-0"
+              className="px-2 py-0.5 rounded bg-danger/10 text-2xs text-danger hover:bg-danger/25 cursor-pointer flex items-center gap-1 shrink-0"
             >
               {copyFeedback === `err-${span.spanId}` ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
               Copiar Erro

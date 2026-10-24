@@ -13,7 +13,7 @@ interface QaRunnerAssertionsTableProps {
 export const QaRunnerAssertionsTable: React.FC<QaRunnerAssertionsTableProps> = ({ step }) => {
   if (step.error) {
     return (
-      <div className="p-3 rounded-md bg-danger/10 border border-danger/20 text-danger text-xs font-mono">
+      <div className="p-3 rounded-md bg-danger/10 text-danger text-xs font-mono">
         <b className="font-bold">Erro na Execução da Query:</b> {step.error}
       </div>
     );
@@ -47,7 +47,7 @@ export const QaRunnerAssertionsTable: React.FC<QaRunnerAssertionsTableProps> = (
               <td className="py-1.5 px-2 font-semibold text-foreground">{ass.actualDisplay}</td>
               <td className="py-1.5 px-2 text-center">
                 <span
-                  className={`px-1.5 py-0.2 rounded text-2xs font-mono font-bold uppercase inline-block border ${getAssertionBadgeClass(ass.status)}`}
+                  className={`px-1.5 py-0.2 rounded text-xs font-semibold inline-block border ${getAssertionBadgeClass(ass.status)}`}
                 >
                   {getAssertionBadgeLabel(ass.status)}
                 </span>

@@ -40,7 +40,7 @@ export const HttpKeyValueEditor: React.FC<HttpKeyValueEditorProps> = ({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/30">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <span className="text-xs font-medium text-muted-foreground">
           Itens ({items.filter((i) => i.enabled).length}/{items.length} ativos)
         </span>
         <button

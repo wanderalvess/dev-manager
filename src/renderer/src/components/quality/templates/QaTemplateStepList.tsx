@@ -19,7 +19,7 @@ export const QaTemplateStepList: React.FC<QaTemplateStepListProps> = ({
 }) => (
   <div className="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-border bg-card/40 flex flex-col shrink-0 overflow-hidden">
     <div className="p-3 border-b border-border flex items-center justify-between shrink-0">
-      <span className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider">
+      <span className="text-xs font-semibold text-muted-foreground">
         Passos / Queries ({steps.length})
       </span>
       <button

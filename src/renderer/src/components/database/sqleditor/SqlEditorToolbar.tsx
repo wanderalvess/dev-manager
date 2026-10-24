@@ -153,7 +153,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         onClick={onOpenBindModal}
         className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           detectedVariables.length > 0
-            ? 'bg-primary/15 hover:bg-primary/25 border border-primary/40 text-primary'
+            ? 'bg-primary/10 hover:bg-primary/25 text-primary'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
         }`}
         title={

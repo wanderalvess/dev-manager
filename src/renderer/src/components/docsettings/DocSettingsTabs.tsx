@@ -46,7 +46,7 @@ export const DocSettingsTabs: React.FC<DocSettingsTabsProps> = ({
       <Sparkles className={`w-3.5 h-3.5 ${activeTab === 'llm' ? 'text-primary' : 'text-muted-foreground'}`} />
       <span>Assistente IA / LLM</span>
       {activeProvider && activeProvider.enabled && (
-        <span className="flex items-center gap-1 text-2xs font-mono px-1.5 py-0.2 rounded-full bg-success/10 text-success font-bold border border-success/25">
+        <span className="flex items-center gap-1 text-2xs font-mono px-1.5 py-0.2 rounded-full bg-success/10 text-success font-bold">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           <span>{activeProvider.model}</span>
         </span>

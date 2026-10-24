@@ -25,7 +25,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Flame className="w-4 h-4 text-warning" />
-          <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-foreground">
+          <h4 className="text-xs font-semibold text-foreground">
             Top Slow Queries (Oracle / Banco)
           </h4>
         </div>
@@ -52,10 +52,10 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                     <span
                       className={`text-2xs font-mono px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
                         severity === 'critical'
-                          ? 'bg-danger/15 text-danger border border-danger/30'
+                          ? 'bg-danger/10 text-danger'
                           : severity === 'slow'
-                          ? 'bg-warning/15 text-warning border border-warning/30'
-                          : 'bg-success/15 text-success border border-success/30'
+                          ? 'bg-warning/10 text-warning'
+                          : 'bg-success/10 text-success'
                       }`}
                     >
                       {severity === 'critical' ? 'Crítica' : severity === 'slow' ? 'Lenta' : 'Normal'}
@@ -85,7 +85,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                       type="button"
                       onClick={() => onOpenInDbStudio(sq.statement)}
                       title="Abrir query no DB Studio para executar ou Explain Plan"
-                      className="px-2 py-0.5 rounded bg-warning/15 text-warning hover:bg-warning/25 border border-warning/30 text-2xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                      className="px-2 py-0.5 rounded bg-warning/10 text-warning hover:bg-warning/25 text-2xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       <Database className="w-3 h-3 text-warning" />
                       DB Studio

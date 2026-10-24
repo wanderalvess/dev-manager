@@ -46,7 +46,7 @@ export const UsageBaselineTable: React.FC<UsageBaselineTableProps> = ({ rows, on
   <div className="overflow-x-auto" id="field-usageBaselines">
     <table className="w-full text-xs">
       <thead>
-        <tr className="text-left text-2xs uppercase tracking-wider text-muted-foreground border-b border-border/60">
+        <tr className="text-left text-xs text-muted-foreground border-b border-border/60">
           <th className="py-1 pr-2 font-bold">Automação</th>
           <th className="py-1 pr-2 font-bold text-right">Usos</th>
           <th className="py-1 pr-2 font-bold text-right">Levava à mão (min)</th>

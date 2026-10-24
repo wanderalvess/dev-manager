@@ -139,7 +139,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
           className={`px-3 py-1.5 rounded-lg font-mono font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
             isInstallDrawerOpen
               ? 'bg-primary text-white shadow-2xs'
-              : 'bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary'
+              : 'bg-primary/10 hover:bg-primary/20 text-primary'
           }`}
           title="Abrir painel de instalação de feature"
         >

@@ -47,8 +47,8 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
           {/* Status Pill */}
           <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${
             entry.success
-              ? 'bg-success/10 text-success border border-success/30'
-              : 'bg-danger/10 text-danger border border-danger/30'
+              ? 'bg-success/10 text-success'
+              : 'bg-danger/10 text-danger'
           }`}>
             {entry.success ? (
               <CheckCircle className="w-4 h-4" />
@@ -65,7 +65,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               </span>
 
               {entry.version && (
-                <span className="text-2xs font-mono text-info bg-info/10 border border-info/20 px-1.5 py-0.5 rounded font-semibold">
+                <span className="text-2xs font-mono text-info bg-info/10 px-1.5 py-0.5 rounded font-semibold">
                   v{entry.version}
                 </span>
               )}

@@ -145,7 +145,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
         <div className="w-52 border-r border-border pr-3 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Ambientes</span>
+              <span className="font-semibold text-muted-foreground text-xs">Ambientes</span>
               <button
                 type="button"
                 onClick={handleAddEnv}
@@ -208,7 +208,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
                     type="button"
                     onClick={handleWinThorLogin}
                     disabled={isLoggingIn}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-success/15 hover:bg-success/25 text-success border border-success/30 rounded text-xs font-medium transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-success/10 hover:bg-success/25 text-success rounded text-xs font-medium transition-colors"
                     title="Faz POST /winthor/autenticacao/v1/login e atualiza a variável TOKEN"
                   >
                     {isLoggingIn ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Lock className="w-3 h-3" />}

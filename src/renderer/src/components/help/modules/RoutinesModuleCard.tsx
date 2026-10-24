@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const RoutinesModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Grid className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20"
+    iconBoxClass="p-2 rounded-xl bg-primary/10 text-primary"
     title="6. Catálogo de Rotinas WinThor"
     subtitle="Executáveis Delphi .exe e .pc"
     shortcut="Alt+6"
@@ -13,7 +13,7 @@ export const RoutinesModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) =>
       <ModuleNavButton
         onNavigate={onNavigate}
         target="routines"
-        colorClass="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30"
+        colorClass="bg-primary/10 hover:bg-primary/20 text-primary"
         label="Abrir Catálogo de Rotinas"
       />
     }

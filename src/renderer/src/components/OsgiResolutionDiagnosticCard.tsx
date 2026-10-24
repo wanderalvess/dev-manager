@@ -62,7 +62,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
       {/* Topo / Cabeçalho do Card */}
       <div className="px-3.5 py-2.5 bg-muted/50 border-b border-border/80 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1 rounded-md bg-warning/15 border border-warning/30 text-warning shrink-0">
+          <div className="p-1 rounded-md bg-warning/10 text-warning shrink-0">
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -70,7 +70,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               <span className="text-xs font-bold text-foreground tracking-tight">
                 Dependência OSGi Não Resolvida
               </span>
-              <span className="text-2xs px-1.5 py-0.5 rounded bg-warning/15 border border-warning/30 text-warning font-mono font-semibold uppercase tracking-wider">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-warning/10 text-warning font-semibold">
                 {diagnostic.requirementType}
               </span>
             </div>
@@ -96,7 +96,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
         {/* Explicação Clara: Causa e Solução */}
         <div className="p-3 rounded-lg bg-background/70 border border-border/90 space-y-2 text-xs">
           <div className="flex items-start gap-2">
-            <span className="font-bold text-warning uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
+            <span className="font-semibold text-warning text-xs shrink-0 mt-0.5">
               Causa:
             </span>
             <span className="text-foreground/90 leading-relaxed">
@@ -105,7 +105,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
           </div>
 
           <div className="flex items-start gap-2 pt-2 border-t border-border/50">
-            <span className="font-bold text-success uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
+            <span className="font-semibold text-success text-xs shrink-0 mt-0.5">
               Solução:
             </span>
             <span className="text-foreground/90 leading-relaxed font-medium">
@@ -119,7 +119,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
           {/* Card 1: Requisito Ausente */}
           <div className="p-2.5 rounded-lg bg-background/60 border border-border flex flex-col justify-between space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-2xs font-mono uppercase tracking-wider text-muted-foreground font-bold">
+              <span className="text-xs text-muted-foreground font-semibold">
                 Pacote / Requisito Faltante:
               </span>
               <button
@@ -148,7 +148,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
 
             {diagnostic.versionRangeDesc && (
               <div className="flex items-center gap-1.5 text-2xs font-mono text-muted-foreground pt-0.5">
-                <span className="text-muted-foreground text-2xs uppercase font-bold">Faixa Exigida:</span>
+                <span className="text-muted-foreground text-xs font-semibold">Faixa Exigida:</span>
                 <span className="text-info font-semibold">{diagnostic.versionRangeDesc}</span>
               </div>
             )}
@@ -157,11 +157,11 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
           {/* Card 2: Origem POM.XML */}
           <div className="p-2.5 rounded-lg bg-background/60 border border-border flex flex-col justify-between space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-2xs font-mono uppercase tracking-wider text-muted-foreground font-bold">
+              <span className="text-xs text-muted-foreground font-semibold">
                 Módulo Maven Declarado (pom.xml):
               </span>
               {diagnostic.matchedProfileName && (
-                <span className="text-2xs px-1.5 py-0.2 rounded bg-success/10 text-success border border-success/25 font-mono font-semibold">
+                <span className="text-2xs px-1.5 py-0.2 rounded bg-success/10 text-success font-mono font-semibold">
                   Perfil Mapeado
                 </span>
               )}
@@ -188,7 +188,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
 
             {diagnostic.matchedProjectName && (
               <div className="text-2xs font-mono text-muted-foreground flex items-center gap-1 truncate pt-0.5">
-                <span className="text-muted-foreground uppercase font-bold">Projeto Local:</span>
+                <span className="text-muted-foreground font-semibold">Projeto Local:</span>
                 <span className="text-foreground truncate font-medium">{diagnostic.matchedProjectName}</span>
               </div>
             )}
@@ -197,7 +197,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
 
         {/* Alerta de Divergência de Versão (Release vs Snapshot) */}
         {diagnostic.versionMismatchWarning && (
-          <div className="p-2 rounded-lg bg-warning/10 border border-warning/25 text-2xs text-warning/90 flex items-start gap-2">
+          <div className="p-2 rounded-lg bg-warning/10 text-2xs text-warning/90 flex items-start gap-2">
             <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
             <div className="leading-snug">
               {diagnostic.versionMismatchWarning}
@@ -235,7 +235,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Executar Perfil "{diagnostic.matchedProfileName}"</span>
-                <span className="ml-1 text-2xs font-mono bg-black/25 text-white border border-white/20 px-1 py-0.2 rounded font-semibold uppercase tracking-wider">
+                <span className="ml-1 text-xs bg-black/25 text-white border border-white/20 px-1 py-0.2 rounded font-semibold">
                   Recomendado
                 </span>
               </button>

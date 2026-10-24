@@ -50,7 +50,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
               {routine.module}
             </span>
             {extension && (
-              <span className="text-2xs font-mono font-bold px-1 py-0.5 rounded bg-info/10 text-info border border-info/25 shrink-0">
+              <span className="text-2xs font-mono font-bold px-1 py-0.5 rounded bg-info/10 text-info shrink-0">
                 {extension}
               </span>
             )}

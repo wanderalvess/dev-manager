@@ -106,7 +106,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
             value={effectiveTagsString}
             onChange={(e) => onCustomTagChange(e.target.value)}
             placeholder="ex: critico,winthor-pedido-venda,-develop"
-            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary mt-1"
+            className="w-full px-2.5 py-2.5 rounded-[10px] bg-background border border-input text-foreground font-mono text-sm focus:outline-hidden focus:ring-2 focus:ring-ring mt-1"
           />
         </div>
 
@@ -117,7 +117,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
             value={customSpecInput}
             onChange={(e) => onCustomSpecChange(e.target.value)}
             placeholder="cypress/e2e/api/Pedido/**/*"
-            className="w-full px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-hidden focus:ring-1 focus:ring-primary mt-1"
+            className="w-full px-2.5 py-2.5 rounded-[10px] bg-background border border-input text-foreground font-mono text-sm focus:outline-hidden focus:ring-2 focus:ring-ring mt-1"
           />
         </div>
 

@@ -132,7 +132,7 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
       )}
 
       {isError && (
-        <div className="p-2.5 rounded-lg bg-danger/10 border border-danger/20 text-danger text-2xs space-y-1.5">
+        <div className="p-2.5 rounded-lg bg-danger/10 text-danger text-2xs space-y-1.5">
           <div className="flex items-start gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 text-danger shrink-0 mt-0.5" />
             <div className="min-w-0 flex-1">

@@ -24,7 +24,7 @@ export const ApmDashboardTimeChart: React.FC<ApmDashboardTimeChartProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-foreground">
+          <h4 className="text-xs font-semibold text-foreground">
             Volume & Latência nos Últimos 15 Minutos
           </h4>
         </div>

@@ -45,7 +45,7 @@ export const DocSettingsLlmTab: React.FC<DocSettingsLlmTabProps> = ({
         <button
           type="button"
           onClick={onOpenAiSettings}
-          className="px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          className="px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
         >
           <Settings className="w-3.5 h-3.5" />
           <span>Abrir Configurações → IA &amp; LLM</span>

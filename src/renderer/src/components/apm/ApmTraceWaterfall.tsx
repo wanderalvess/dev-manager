@@ -72,7 +72,7 @@ export const ApmTraceWaterfall: React.FC<ApmTraceWaterfallProps> = ({
           </div>
         )}
         {(activeSpan.statusMessage || activeSpan.exception) && (
-          <div className="p-2.5 rounded bg-danger/10 border border-danger/30 text-danger text-2xs flex items-start justify-between gap-2">
+          <div className="p-2.5 rounded bg-danger/10 text-danger text-2xs flex items-start justify-between gap-2">
             <span className="wrap-break-word min-w-0">
               <strong>Erro:</strong>{' '}
               {activeSpan.statusMessage || [activeSpan.exception?.type, activeSpan.exception?.message].filter(Boolean).join(': ')}

@@ -22,7 +22,7 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
     <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1" id="field-modules">
       <div className="flex items-center justify-between gap-3 pb-1 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
             <LayoutGrid className="w-4 h-4 text-primary" /> Módulos da Navegação
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">
@@ -52,7 +52,7 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
           return (
             <div key={group.id} className="space-y-2 bg-muted/30 p-4 rounded-xl border border-border">
               <div className="flex items-center justify-between">
-                <h4 className="font-bold text-foreground uppercase tracking-wider text-2xs flex items-center gap-1.5">
+                <h4 className="font-semibold text-foreground text-xs flex items-center gap-1.5">
                   <GroupIcon className="w-3.5 h-3.5 text-primary" /> {group.title}
                 </h4>
                 <span className="text-2xs font-mono text-muted-foreground">

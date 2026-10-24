@@ -47,12 +47,12 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
   onClose,
   onExecute
 }) => (
-  <div className="w-[380px] lg:w-[420px] bg-card border-l border-border flex flex-col z-20 shadow-2xl animate-in slide-in-from-right-4 duration-150 overflow-hidden shrink-0">
+  <div className="w-[380px] lg:w-[420px] bg-card border-l border-border flex flex-col z-20 shadow-lg animate-in slide-in-from-right-4 duration-150 overflow-hidden shrink-0">
     {/* Top bar do Drawer */}
     <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/20">
       <div className="flex items-center gap-2">
         <Info className="w-4 h-4 text-primary" />
-        <span className="text-xs font-semibold uppercase tracking-wider font-mono">
+        <span className="text-xs font-semibold">
           Feature Inspector HUD
         </span>
       </div>
@@ -97,7 +97,7 @@ export const Routine801Inspector: React.FC<Routine801InspectorProps> = ({
 
       {/* Bloco de Versão */}
       <div className="p-2.5 rounded-md border border-border bg-muted/30 font-mono text-2xs space-y-2">
-        <div className="text-muted-foreground text-2xs uppercase tracking-wider">
+        <div className="text-muted-foreground text-xs">
           Versão do Artefato
         </div>
         <div className="flex items-center justify-between">

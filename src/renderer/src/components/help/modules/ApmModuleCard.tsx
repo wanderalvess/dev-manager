@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const ApmModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Activity className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-danger/10 text-danger border border-danger/20"
+    iconBoxClass="p-2 rounded-xl bg-danger/10 text-danger"
     title="8. APM &amp; Traces (OpenTelemetry)"
     subtitle="Receptor OTLP/HTTP embutido · porta 4318"
     shortcut="Alt+0"
@@ -13,7 +13,7 @@ export const ApmModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       <ModuleNavButton
         onNavigate={onNavigate}
         target="apm"
-        colorClass="bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30"
+        colorClass="bg-danger/10 hover:bg-danger/20 text-danger"
         label="Abrir APM &amp; Traces"
       />
     }

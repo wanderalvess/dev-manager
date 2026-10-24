@@ -12,7 +12,7 @@ interface DocsSyncTargetFormProps {
 }
 
 const INPUT_BASE =
-  'w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary';
+  'w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring';
 
 const modeButtonClass = (active: boolean) =>
   `p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${

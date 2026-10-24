@@ -16,7 +16,7 @@ export const DeployPomSyncFields: React.FC<DeployPomSyncFieldsProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-xs text-foreground flex items-start gap-2.5">
+      <div className="p-3 rounded-lg bg-primary/10 text-xs text-foreground flex items-start gap-2.5">
         <GitMerge className="w-4 h-4 text-primary shrink-0 mt-0.5" />
         <div className="space-y-1">
           <p className="font-semibold text-primary">Sincronização Automática de Versões entre Projetos (POM)</p>

@@ -30,7 +30,7 @@ export function getUpdateFaq(handleOpenLink: (url: string) => void): FaqItem[] {
           </p>
 
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
-            <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">
+            <span className="font-semibold text-foreground block text-xs text-primary">
               1. Atualização Automática no Cockpit:
             </span>
             <ul className="list-disc pl-4 space-y-1">
@@ -45,10 +45,10 @@ export function getUpdateFaq(handleOpenLink: (url: string) => void): FaqItem[] {
               </li>
             </ul>
 
-            <span className="font-bold text-foreground block pt-1 text-2xs uppercase tracking-wider text-primary">
+            <span className="font-semibold text-foreground block pt-1 text-xs text-primary">
               2. Falha de Assinatura (&quot;not signed by the application owner&quot;):
             </span>
-            <div className="p-2.5 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs space-y-1">
+            <div className="p-2.5 rounded-lg bg-warning/10 text-warning text-xs space-y-1">
               <div className="flex items-start gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
                 <p className="text-2xs leading-relaxed text-warning/90">
@@ -57,7 +57,7 @@ export function getUpdateFaq(handleOpenLink: (url: string) => void): FaqItem[] {
               </div>
             </div>
 
-            <span className="font-bold text-foreground block pt-1 text-2xs uppercase tracking-wider text-primary">
+            <span className="font-semibold text-foreground block pt-1 text-xs text-primary">
               3. Alternativa 100% Confiável (Download Manual):
             </span>
             <p>
@@ -67,7 +67,7 @@ export function getUpdateFaq(handleOpenLink: (url: string) => void): FaqItem[] {
             <button
               type="button"
               onClick={() => handleOpenLink(GITHUB_RELEASES_URL)}
-              className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 w-fit cursor-pointer"
+              className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 w-fit cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Acessar GitHub Releases (Download Oficial)</span>

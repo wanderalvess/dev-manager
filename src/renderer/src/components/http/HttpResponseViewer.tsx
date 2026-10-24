@@ -215,7 +215,7 @@ export const HttpResponseViewer: React.FC<HttpResponseViewerProps> = ({
       {/* Conteúdo da Resposta */}
       <div className="flex-1 overflow-hidden p-2">
         {response.error && (
-          <div className="mb-2 p-2.5 rounded bg-danger/10 border border-danger/30 text-xs text-danger flex items-start gap-2">
+          <div className="mb-2 p-2.5 rounded bg-danger/10 text-xs text-danger flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold">Erro ao processar requisição</p>

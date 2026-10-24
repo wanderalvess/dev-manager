@@ -8,7 +8,7 @@ interface DocSettingsHeaderProps {
 export const DocSettingsHeader: React.FC<DocSettingsHeaderProps> = ({ onClose }) => (
   <div className="p-4 px-5 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
     <div className="flex items-center space-x-3">
-      <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0 shadow-2xs">
+      <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0 shadow-2xs">
         <Sliders className="w-5 h-5" />
       </div>
       <div>
@@ -16,7 +16,7 @@ export const DocSettingsHeader: React.FC<DocSettingsHeaderProps> = ({ onClose })
           <h3 className="text-sm font-bold text-foreground tracking-tight">
             Configurações de Documentação & IA
           </h3>
-          <span className="text-2xs bg-primary/15 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
+          <span className="text-2xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-mono font-bold">
             Cockpit RAG
           </span>
         </div>

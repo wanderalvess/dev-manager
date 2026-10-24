@@ -17,7 +17,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
   <div className="cockpit-panel rounded-[14px] p-5 sm:p-6 border border-border space-y-3.5 shadow-xs">
     <div className="flex items-center justify-between pb-2 border-b border-border flex-wrap gap-2">
       <div className="flex items-center space-x-2">
-        <div className="p-2 rounded-xl bg-success/10 text-success border border-success/20">
+        <div className="p-2 rounded-xl bg-success/10 text-success">
           <Laptop className="w-4 h-4" />
         </div>
         <div>
@@ -29,7 +29,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
       </div>
       <button
         onClick={() => copyToClipboard('npm run build:electron', 'btn-copy-build')}
-        className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-semibold transition-all flex items-center space-x-1.5 shadow-xs cursor-pointer"
+        className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-semibold transition-all flex items-center space-x-1.5 shadow-xs cursor-pointer"
         title="Copiar comando de build"
       >
         {copiedItem === 'btn-copy-build' ? (
@@ -78,7 +78,7 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
         </div>
       </div>
 
-      <div className="p-3 rounded-xl bg-success/10 border border-success/20 text-2xs text-success flex items-center gap-2">
+      <div className="p-3 rounded-xl bg-success/10 text-2xs text-success flex items-center gap-2">
         <ShieldCheck className="w-4 h-4 shrink-0 text-success" />
         <span>Ambos os executáveis solicitam elevação de Administrador (UAC) automaticamente ao abrir.</span>
       </div>

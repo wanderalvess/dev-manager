@@ -56,7 +56,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border/80 rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95"
+    panelClassName="bg-card border border-border/80 rounded-xl shadow-lg max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95"
     closeOnBackdrop={false}
     closeOnEscape={false}
     ariaLabel="Sincronização de Documentação"
@@ -64,7 +64,7 @@ export const DocsSyncModal: React.FC<DocsSyncModalProps> = ({
     {/* Cabeçalho do Modal com identidade clara de Cockpit */}
     <div className="p-4 border-b border-border/80 flex items-center justify-between bg-muted/40 shrink-0">
       <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-2xs">
+        <div className="p-2.5 rounded-xl bg-primary/10 text-primary shadow-2xs">
           <Radio className="w-4 h-4 animate-pulse" />
         </div>
         <div>

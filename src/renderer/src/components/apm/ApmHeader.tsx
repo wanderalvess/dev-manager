@@ -42,7 +42,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
               }`}
             />
             <span className="font-semibold">:{receiverPort}</span>
-            <span className="text-2xs uppercase tracking-wider text-foreground/80 font-sans font-medium">OTLP</span>
+            <span className="text-xs text-foreground/80 font-sans font-medium">OTLP</span>
           </button>
 
           <div className="h-4 w-px bg-border shrink-0" />
@@ -184,7 +184,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
             type="button"
             onClick={onOpenSetup}
             title="Instruções para conectar o Karaf ou outras aplicações no receptor OpenTelemetry"
-            className="h-7 px-2.5 rounded border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary text-2xs font-semibold flex items-center gap-1 cursor-pointer transition"
+            className="h-7 px-2.5 rounded bg-primary/10 hover:bg-primary/20 text-primary text-2xs font-semibold flex items-center gap-1 cursor-pointer transition"
           >
             <Terminal className="w-3 h-3" />
             <span>Como Conectar</span>

@@ -106,7 +106,7 @@ export const JvmHeapChart: React.FC<JvmHeapChartProps> = ({ history, isNearOom, 
 
       <div className="flex justify-between items-center text-2xs text-muted-foreground px-1 pt-1 font-mono tabular-nums">
         <span>{history[0]?.time}</span>
-        <span className="text-muted-foreground/70 uppercase tracking-widest text-2xs">
+        <span className="text-muted-foreground/70 text-xs">
           Janela Contínua ({history.length} amostras)
         </span>
         <span className="font-semibold text-foreground/90">{history[history.length - 1]?.time}</span>

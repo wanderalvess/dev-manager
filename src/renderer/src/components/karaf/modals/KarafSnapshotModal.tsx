@@ -45,7 +45,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
         <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary">
             <Camera className="w-5 h-5" />
           </div>
           <div>

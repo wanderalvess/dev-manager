@@ -61,7 +61,7 @@ export const ApmSlowPicker: React.FC<ApmSlowPickerProps> = ({
         </div>
         {summary.topSlowEndpoints.length > 0 && (
           <div className="flex flex-col gap-1">
-            <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground">Endpoints Mais Lentos (p95)</span>
+            <span className="text-xs font-semibold text-muted-foreground">Endpoints Mais Lentos (p95)</span>
             <div className="flex flex-col gap-1 max-h-36 overflow-y-auto no-scrollbar">
               {summary.topSlowEndpoints.map((endpoint, index) => (
                 <button

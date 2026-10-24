@@ -11,7 +11,7 @@ interface McpModuleCardProps {
 export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs, copyToClipboard, copiedItem }) => (
   <ModuleCardShell
     icon={<Bot className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20"
+    iconBoxClass="p-2 rounded-xl bg-primary/10 text-primary"
     title="9. Servidor MCP (Automação por IA)"
     subtitle="159 Tools via stdio · IntelliJ · VS Code · Claude"
     footer={
@@ -41,7 +41,7 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
     </ModuleBullets>
 
     <div className="p-2.5 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-inner">
-      <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">Exemplo de Prompt no IntelliJ / VS Code Copilot:</span>
+      <span className="font-semibold text-foreground block text-xs text-primary">Exemplo de Prompt no IntelliJ / VS Code Copilot:</span>
       <p className="font-mono text-2xs text-foreground bg-muted/80 p-2 rounded-lg border border-border/50">
         "Execute os testes críticos de Pedido do projeto TAUT e analise a cobertura de testes do Zephyr."
       </p>
@@ -49,7 +49,7 @@ export const McpModuleCard: React.FC<McpModuleCardProps> = ({ handleOpenMcpDocs,
 
     <button
       onClick={handleOpenMcpDocs}
-      className="w-full mt-2 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+      className="w-full mt-2 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
     >
       <BookOpen className="w-3.5 h-3.5" />
       <span>Ver Catálogo Completo das 159 Ferramentas MCP</span>

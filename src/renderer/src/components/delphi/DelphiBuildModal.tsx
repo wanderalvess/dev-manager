@@ -29,7 +29,7 @@ export const DelphiBuildModal: React.FC<DelphiBuildModalProps> = ({ open, onClos
       </button>
       <div className="flex items-center gap-2">
         {d.running && (
-          <button type="button" onClick={d.cancel} className={`${BUTTON_CLASS} bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30`}>
+          <button type="button" onClick={d.cancel} className={`${BUTTON_CLASS} bg-danger/10 hover:bg-danger/20 text-danger`}>
             <Square className="w-3.5 h-3.5" /> Cancelar
           </button>
         )}
@@ -46,7 +46,7 @@ export const DelphiBuildModal: React.FC<DelphiBuildModalProps> = ({ open, onClos
           type="button"
           onClick={d.runPipeline}
           disabled={!ready || d.running}
-          className={`${BUTTON_CLASS} bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30`}
+          className={`${BUTTON_CLASS} bg-primary/10 hover:bg-primary/20 text-primary`}
           title="Encerra o processo, compila, publica e abre, conforme as opções marcadas"
         >
           <Rocket className="w-3.5 h-3.5" /> Pipeline completo
@@ -71,7 +71,7 @@ export const DelphiBuildModal: React.FC<DelphiBuildModalProps> = ({ open, onClos
       <div className="space-y-3">
         <DelphiBuildForm form={d.form} installations={d.installations} projects={d.projects} disabled={d.running} onChange={d.updateForm} />
 
-        {d.error && <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">{d.error}</div>}
+        {d.error && <div className="rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger">{d.error}</div>}
 
         <DelphiBuildResultPanel build={d.build} pipeline={d.pipeline} />
 

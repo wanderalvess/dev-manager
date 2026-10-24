@@ -64,7 +64,7 @@ export const ToastHost: React.FC = () => {
         <div
           key={toast.id}
           role={toast.variant === 'error' ? 'alert' : 'status'}
-          className={`flex items-start gap-2 p-3 rounded-xl border border-l-4 shadow-2xl text-xs text-foreground animate-fade-in ${TOAST_STYLE[toast.variant]}`}
+          className={`flex items-start gap-2 p-3 rounded-xl border border-l-4 shadow-lg text-xs text-foreground animate-fade-in ${TOAST_STYLE[toast.variant]}`}
         >
           {toast.variant === 'success' ? (
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-success" />

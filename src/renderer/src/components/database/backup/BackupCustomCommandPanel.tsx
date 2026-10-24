@@ -44,12 +44,12 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
 
           <div className="flex items-center gap-2">
             {hasBackupFileTag(customBackupCommand) ? (
-              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-success/15 text-success border border-success/30 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-success/10 text-success flex items-center gap-1">
                 <Check className="w-3 h-3" />
                 <span>Sintaxe Válida</span>
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-warning/15 text-warning border border-warning/30 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-warning/10 text-warning flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 <span>Requer {'{filePath}'}</span>
               </span>

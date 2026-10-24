@@ -16,7 +16,7 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
     }`}
     title="Clique em uma faixa de latência para filtrar a tabela"
   >
-    <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground flex items-center gap-1">
+    <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
       <Filter className="w-3 h-3" />
       <span>Espectro:</span>
     </span>
@@ -38,10 +38,10 @@ export const ApmLatencySpectrum: React.FC<ApmLatencySpectrumProps> = ({ spectrum
     </div>
     <div className="flex items-center gap-1.5 text-2xs">
       {([
-        { bracket: 'FAST', count: spectrum.fast, title: 'Filtrar < 100ms', active: 'bg-success/20 text-success font-bold border border-success/50', idle: 'text-success hover:underline' },
-        { bracket: 'NORMAL', count: spectrum.normal, title: 'Filtrar 100 - 400ms', active: 'bg-info/20 text-info font-bold border border-info/50', idle: 'text-info hover:underline' },
-        { bracket: 'SLOW', count: spectrum.slow, title: 'Filtrar 400 - 1000ms', active: 'bg-warning/20 text-warning font-bold border border-warning/50', idle: 'text-warning hover:underline' },
-        { bracket: 'CRITICAL', count: spectrum.critical, title: 'Filtrar > 1000ms', active: 'bg-danger/20 text-danger font-bold border border-danger/50', idle: 'text-danger font-bold hover:underline' }
+        { bracket: 'FAST', count: spectrum.fast, title: 'Filtrar < 100ms', active: 'bg-success/20 text-success font-bold', idle: 'text-success hover:underline' },
+        { bracket: 'NORMAL', count: spectrum.normal, title: 'Filtrar 100 - 400ms', active: 'bg-info/20 text-info font-bold', idle: 'text-info hover:underline' },
+        { bracket: 'SLOW', count: spectrum.slow, title: 'Filtrar 400 - 1000ms', active: 'bg-warning/20 text-warning font-bold', idle: 'text-warning hover:underline' },
+        { bracket: 'CRITICAL', count: spectrum.critical, title: 'Filtrar > 1000ms', active: 'bg-danger/20 text-danger font-bold', idle: 'text-danger font-bold hover:underline' }
       ] as const).map(({ bracket, count, title, active, idle }, index) => (
         <React.Fragment key={bracket}>
           {index > 0 && <span className="text-border">/</span>}

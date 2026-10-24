@@ -44,7 +44,7 @@ export const ColumnsTab: React.FC<{ details: TableDetails }> = ({ details }) => 
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filtrar colunas por nome, tipo ou comentário..."
           aria-label="Filtrar colunas"
-          className="w-full pl-8 pr-3 py-1.5 text-xs bg-background border border-border/70 rounded-md focus:outline-hidden focus:border-primary text-foreground"
+          className="w-full pl-8 pr-3 py-2.5 text-sm bg-background border border-input/70 rounded-[10px] focus:outline-hidden text-foreground"
         />
       </div>
       <table className="w-full text-xs">

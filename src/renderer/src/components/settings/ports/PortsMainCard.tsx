@@ -12,7 +12,7 @@ export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSetti
   <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
     <div className="flex items-center justify-between pb-1 border-b border-border/60">
       <div>
-        <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+        <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
           <Globe className="w-4 h-4 text-primary" /> Portas Principais de Integração
         </h3>
         <p className="text-2xs text-muted-foreground mt-0.5">

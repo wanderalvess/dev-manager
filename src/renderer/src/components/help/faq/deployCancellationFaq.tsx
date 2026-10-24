@@ -15,7 +15,7 @@ export function getDeployCancellationFaq(onNavigate?: (tab: string) => void): Fa
             O Hub Manager oferece controle completo para interromper comandos em execução contínua e cancelar etapas de deploy:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
-            <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">
+            <span className="font-semibold text-foreground block text-xs text-primary">
               1. Interromper Comandos no Terminal (Ctrl+C / Interromper):
             </span>
             <ul className="list-disc pl-4 space-y-1">
@@ -30,7 +30,7 @@ export function getDeployCancellationFaq(onNavigate?: (tab: string) => void): Fa
               </li>
             </ul>
 
-            <span className="font-bold text-foreground block pt-1 text-2xs uppercase tracking-wider text-primary">
+            <span className="font-semibold text-foreground block pt-1 text-xs text-primary">
               2. Cancelar Execução de Etapas de Deploy:
             </span>
             <ul className="list-disc pl-4 space-y-1">
@@ -78,7 +78,7 @@ export function getDeployCancellationFaq(onNavigate?: (tab: string) => void): Fa
             Módulos WinThor frequentemente possuem dependências em cascata (ex: <code className="font-mono text-primary">winthor-venda</code> &rarr; <code className="font-mono text-primary">winthor-pedido-venda</code> &rarr; <code className="font-mono text-primary">winthor-integracao-varejo</code>).
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
-            <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">
+            <span className="font-semibold text-foreground block text-xs text-primary">
               Automação do Pipeline de Dependências:
             </span>
             <ul className="list-disc pl-4 space-y-1">
