@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MCP_TOOL_COUNT } from '../../../shared/mcpCatalog';
 import { buildIntegrations, filterIntegrations } from './integrationsStatus';
 
 const byId = (items: ReturnType<typeof buildIntegrations>, id: string) => items.find((i) => i.id === id)!;
@@ -9,7 +10,7 @@ describe('integrationsStatus', () => {
     expect(byId(items, 'llm').status).toBe('unconfigured');
     expect(byId(items, 'azure').status).toBe('unconfigured');
     expect(byId(items, 'webhooks').statusLabel).toBe('Nenhum');
-    expect(byId(items, 'mcp').status).toBe('none');
+    expect(byId(items, 'mcp')).toMatchObject({ status: 'none', statusLabel: `${MCP_TOOL_COUNT} tools` });
   });
 
   it('mostra o provedor de LLM ativo pelo nome', () => {

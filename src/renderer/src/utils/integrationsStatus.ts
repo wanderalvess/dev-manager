@@ -1,3 +1,4 @@
+import { MCP_TOOL_COUNT } from '../../../shared/mcpCatalog';
 import type { AppSettings, GitProjectInfo } from '../../../shared/types';
 
 export type IntegrationStatus = 'active' | 'unconfigured' | 'detected' | 'none';
@@ -15,7 +16,7 @@ export interface IntegrationItem {
   title: string;
   description: string;
   status: IntegrationStatus;
-  /** Texto do selo de status; vazio quando não há o que dizer (ex.: MCP, sempre disponível). */
+  /** Texto do selo de status; vazio quando não há o que dizer. */
   statusLabel: string;
   actionLabel: string;
   target: IntegrationTarget;
@@ -52,7 +53,7 @@ export function buildIntegrations(
       description:
         'Deixa Claude Code, Copilot (VS Code e IntelliJ), Cursor e Antigravity usarem as automações do app pelo chat.',
       status: 'none',
-      statusLabel: '',
+      statusLabel: `${MCP_TOOL_COUNT} tools`,
       actionLabel: 'Ver como conectar',
       target: { kind: 'help', search: 'MCP' }
     },
