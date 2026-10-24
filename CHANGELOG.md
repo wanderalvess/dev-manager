@@ -40,6 +40,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Comando ignorado no console**: com o Karaf embedded parado e outro comando em execução, o comando digitado era descartado em silêncio. Agora avisa, e Ctrl+C / Esc interrompem o comando em execução (antes só funcionava com o embedded ativo ou em tail).
 - **Diagnósticos com o console recolhido**: rodar um diagnóstico agora abre o console, que antes ficava recolhido e escondia a saída, e acrescenta ao que já estava lá em vez de apagar o buffer.
 - **Barra de progresso do Deploy**: mostrava 33% na etapa 1 de 3 antes de concluir qualquer etapa; agora conta só as etapas concluídas.
+- **Ajuda do MCP**: a Central de Ajuda e o README citavam 159 tools; são 165. O card do MCP no *Guia dos Módulos* mandava copiar `npm run mcp`, que só funciona com o código-fonte; agora copia o comando de registro do release (`claude mcp add ... dev-manager-mcp.cmd`). O card e a pergunta frequente do MCP explicam o que a IA pode fazer: modo completo (as 25 tools destrutivas pedem aprovação), modo somente leitura (`HUB_MCP_MODE=readonly`, 86 tools, com o comando pronto para copiar) e bloqueio de SQL de escrita em conexão de produção. A contagem fica em `src/shared/mcpCatalog.ts`, com um teste que falha se divergir das tools registradas.
 
 ### Segurança
 - **Controle remoto**: chave aleatória no endereço (nova a cada vez que liga), só origem da rede local, `Host` com nome de domínio recusado (DNS rebinding), checagem de `Origin` e lista fechada de ações, sem comando livre.

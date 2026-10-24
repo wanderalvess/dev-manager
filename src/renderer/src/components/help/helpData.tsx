@@ -19,6 +19,8 @@ import { getLogsFaq } from './faq/logsFaq';
 import { getRemoteControlFaq } from './faq/remoteControlFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 import { getUpdateFaq } from './faq/updateFaq';
+import { McpSafetyNote } from './modules/McpSafetyNote';
+import { MCP_TOOL_COUNT } from '../../../../shared/mcpCatalog';
 
 export type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
 
@@ -712,7 +714,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">159 tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
+            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">{MCP_TOOL_COUNT} tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div>
@@ -731,7 +733,7 @@ export function getFaqList({
                 className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-2 w-fit cursor-pointer"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Ver Catálogo Completo das 159 Ferramentas e Prompts</span>
+                <span>Ver Catálogo Completo das {MCP_TOOL_COUNT} Ferramentas e Prompts</span>
               </button>
             </div>
             
@@ -754,6 +756,8 @@ export function getFaqList({
                 No VS Code/Copilot e no Antigravity, use <code className="font-mono text-primary">"command": "cmd"</code> com <code className="font-mono text-primary">"args": ["/c", "C:\\\\DevManager\\\\mcp\\\\dev-manager-mcp.cmd"]</code>. Se instalou o app fora da pasta padrão, defina a variável <code className="font-mono text-primary">DEV_MANAGER_EXE</code> com o caminho do executável no campo <code className="font-mono text-primary">env</code>. O <code className="font-mono text-primary">LEIA-ME.txt</code> do release traz os exemplos completos. A versão portátil não serve de runtime: sem o Setup, é preciso ter Node.js 20+ no PATH.
               </p>
             </div>
+
+            <McpSafetyNote copyToClipboard={copyToClipboard} copiedItem={copiedItem} copyKey="cmd-mcp-readonly-faq" />
 
             <div className="pt-2 border-t border-border/50">
               <span className="font-bold text-foreground block text-2xs uppercase tracking-wider text-primary">A partir do código-fonte (Claude Code):</span>
@@ -925,7 +929,7 @@ export function getFaqList({
               <ol className="list-decimal pl-4 space-y-1 text-2xs">
                 <li>Abra o Copilot Chat (<kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono text-2xs text-foreground font-bold shadow-2xs">Ctrl+Alt+I</kbd>).</li>
                 <li>Selecione o modo <strong className="text-foreground">Agent</strong> (ou digite <code className="font-mono text-primary">@agent</code> no campo de mensagem).</li>
-                <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as 159 tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
+                <li>No campo de chat, clique no ícone de ferramentas / anexos (🛠️) para conferir que as {MCP_TOOL_COUNT} tools do <code className="font-mono text-primary">dev-manager</code> estão ativas.</li>
                 <li>Envie sua solicitação diretamente (ex.: <em>"Faça o clean install (pulando testes) do projeto atual e instale a feature no Karaf. No final, confirme se ela ficou ativa."</em>).</li>
               </ol>
             </div>
