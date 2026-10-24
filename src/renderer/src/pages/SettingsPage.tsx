@@ -75,7 +75,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   const renderPathStatusBadge = (fieldKey: string) => <PathStatusBadge status={paths.pathStatuses[fieldKey]} />;
 
   return (
-    <div className="h-full w-full flex flex-col p-4 md:p-5 space-y-4 overflow-hidden">
+    <div className="h-full w-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden">
       <SettingsHeader
         onOpenTour={tour.open}
         importExport={importExport}

@@ -70,13 +70,13 @@ export const SettingsTabsNav: React.FC<SettingsTabsNavProps> = ({ activeTab, onT
   <div
     role="tablist"
     aria-label="Seções das Configurações"
-    className="flex items-center border-b border-border text-xs flex-wrap gap-y-1"
+    className="flex items-center border-b border-border text-sm flex-wrap gap-y-1"
     data-tour="tabs-nav-dirs"
   >
     {TAB_GROUPS.map((group, groupIndex) => (
       <React.Fragment key={group.title}>
         {groupIndex > 0 && <span aria-hidden="true" className="h-4 w-px bg-border mx-2" />}
-        <span aria-hidden="true" className="hidden xl:inline text-2xs uppercase tracking-wider text-muted-foreground/70 font-mono mr-1">
+        <span aria-hidden="true" className="hidden xl:inline text-[13px] text-muted-foreground mr-1">
           {group.title}
         </span>
         {group.tabs.map(({ id, label, icon: Icon }) => {
@@ -89,7 +89,7 @@ export const SettingsTabsNav: React.FC<SettingsTabsNavProps> = ({ activeTab, onT
               role="tab"
               aria-selected={active}
               onClick={() => onTabChange(id)}
-              className={`flex items-center space-x-1.5 px-3 py-2 font-semibold whitespace-nowrap transition-colors border-b-2 -mb-px ${
+              className={`flex items-center space-x-1.5 px-3 py-2.5 font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
                 active
                   ? 'border-primary text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -98,7 +98,7 @@ export const SettingsTabsNav: React.FC<SettingsTabsNavProps> = ({ activeTab, onT
               <Icon className="w-3.5 h-3.5" />
               <span>{label}</span>
               {count > 0 && (
-                <span className="px-1.5 rounded text-2xs font-mono bg-muted text-muted-foreground">{count}</span>
+                <span className="px-2 rounded-full text-xs font-medium bg-muted text-muted-foreground">{count}</span>
               )}
             </button>
           );

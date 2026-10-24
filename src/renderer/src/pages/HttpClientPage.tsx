@@ -25,20 +25,13 @@ export const HttpClientPage: React.FC<HttpClientPageProps> = ({
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-background">
       {/* Topo / Header do Módulo */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-card/70 border-b border-border select-none">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-card border-b border-border select-none">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-md bg-primary/10 border border-primary/20 text-primary">
-            <Globe className="w-5 h-5" />
-          </div>
+          <Globe className="w-5 h-5 text-muted-foreground" />
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-foreground tracking-tight">API Studio</h1>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase bg-primary/20 text-primary border border-primary/30">
-                HTTP Client
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Teste e homologação de APIs REST WinThor/Karaf com coleções Postman, variáveis e auto-autenticação.
+            <h1 className="text-xl font-semibold text-foreground tracking-tight leading-tight">API Studio</h1>
+            <p className="text-[13px] text-muted-foreground">
+              Teste e homologação de APIs REST WinThor/Karaf com coleções Postman, variáveis e autenticação automática.
             </p>
           </div>
         </div>

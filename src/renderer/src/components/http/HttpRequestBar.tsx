@@ -36,13 +36,13 @@ export const HttpRequestBar: React.FC<HttpRequestBarProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2 p-3 bg-card/60 border-b border-border">
+    <div className="flex items-center gap-2 p-4 bg-card border-b border-border">
       {/* Seletor de Método HTTP */}
       <div className="relative">
         <button
           type="button"
           onClick={() => setIsMethodOpen(!isMethodOpen)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-background border border-border rounded-l hover:bg-muted/50 transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+          className="flex items-center gap-1.5 px-3 h-10 bg-background border border-input rounded-l-[10px] hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <HttpBadge method={method} size="md" />
           <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -80,7 +80,7 @@ export const HttpRequestBar: React.FC<HttpRequestBarProps> = ({
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="http://{{host}}:{{port}}/winthor/autenticacao/v1/login"
-          className="w-full px-3 py-2 bg-background border border-border rounded-r font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full px-3 h-10 bg-background border border-input rounded-r-[10px] font-mono text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -90,7 +90,7 @@ export const HttpRequestBar: React.FC<HttpRequestBarProps> = ({
         onClick={onSend}
         disabled={isLoading}
         title="Enviar requisição (Ctrl + Enter)"
-        className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium text-xs rounded hover:opacity-90 disabled:opacity-50 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="flex items-center gap-2 px-4 h-10 bg-primary text-primary-foreground font-medium text-sm rounded-[10px] hover:bg-primary/90 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
       >
         {isLoading ? (
           <>
@@ -111,7 +111,7 @@ export const HttpRequestBar: React.FC<HttpRequestBarProps> = ({
           type="button"
           onClick={() => onOpenCurlModal('export')}
           title="Copiar ou importar como comando cURL"
-          className="flex items-center gap-1.5 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs font-medium rounded border border-border transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 h-10 bg-card hover:bg-muted text-foreground text-sm font-medium rounded-[10px] border border-border transition-colors cursor-pointer"
         >
           <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
           <span>cURL</span>
@@ -124,7 +124,7 @@ export const HttpRequestBar: React.FC<HttpRequestBarProps> = ({
           type="button"
           onClick={onSave}
           title="Salvar alterações na requisição"
-          className="flex items-center gap-1.5 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground text-xs font-medium rounded border border-border transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3 h-10 bg-card hover:bg-muted text-foreground text-sm font-medium rounded-[10px] border border-border transition-colors cursor-pointer"
         >
           <Save className="w-3.5 h-3.5 text-muted-foreground" />
           <span>Salvar</span>

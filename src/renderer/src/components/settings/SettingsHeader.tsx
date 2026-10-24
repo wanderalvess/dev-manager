@@ -1,9 +1,9 @@
 import React from 'react';
-import { CheckCircle2, HelpCircle, RotateCcw, Save, Settings, Upload } from 'lucide-react';
+import { CheckCircle2, HelpCircle, RotateCcw, Save, Upload } from 'lucide-react';
 import { SettingsExportMenu } from './SettingsExportMenu';
 
 const SECONDARY_BUTTON =
-  'px-3 py-2 bg-card hover:bg-muted text-foreground border border-border hover:border-border rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5';
+  'h-10 px-3 bg-card hover:bg-muted text-foreground border border-border rounded-[10px] text-sm font-medium transition-colors flex items-center space-x-1.5';
 
 interface SettingsHeaderProps {
   onOpenTour: () => void;
@@ -33,13 +33,10 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
   savedSuccess,
   onSave
 }) => (
-  <div className="cockpit-panel rounded-xl p-4 shadow-xs border border-border flex flex-wrap items-center justify-between gap-3">
+  <div className="flex flex-wrap items-end justify-between gap-4">
     <div className="flex items-center space-x-3">
-      <div className="p-2 rounded-lg bg-muted border border-border/80 text-muted-foreground shrink-0">
-        <Settings className="w-4 h-4" />
-      </div>
       <div>
-        <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
+        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-2">
           Configurações do Ambiente &amp; Diretórios
           <button
             type="button"
@@ -48,10 +45,10 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
             title="Rever o tour guiado desta página"
             aria-label="Rever o tour guiado desta página"
           >
-            <HelpCircle className="w-3.5 h-3.5" />
+            <HelpCircle className="w-4 h-4" />
           </button>
         </h1>
-        <p className="text-2xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-1">
           Configure os diretórios base, serviços Windows, processos de encerramento, portas e preferências de automação.
         </p>
       </div>
@@ -92,13 +89,13 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
         className={`${SECONDARY_BUTTON} disabled:opacity-50`}
       >
         <RotateCcw className={`w-3.5 h-3.5 text-muted-foreground ${isDetecting ? 'animate-spin' : ''}`} />
-        <span>{isDetecting ? 'Detectando...' : 'Auto-Detectar'}</span>
+        <span>{isDetecting ? 'Detectando...' : 'Auto-detectar'}</span>
       </button>
 
       <div className="relative flex items-center">
         {hasUnsavedChanges && !isSaving && (
           <span
-            className="mr-2 flex items-center gap-1 text-2xs font-semibold text-warning bg-warning/10 border border-warning/30 px-2 py-1 rounded-md"
+            className="mr-2 flex items-center gap-1.5 text-[13px] font-medium text-warning bg-warning/10 px-2.5 py-1 rounded-full"
             title="Existem alterações que ainda não foram salvas"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-warning" />
@@ -111,7 +108,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
           onClick={onSave}
           disabled={isSaving}
           aria-busy={isSaving}
-          className="px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs rounded-lg shadow-xs transition-colors flex items-center space-x-2 disabled:opacity-60"
+          className="h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm rounded-[10px] transition-colors flex items-center space-x-2 disabled:opacity-60"
         >
           {savedSuccess ? (
             <>
