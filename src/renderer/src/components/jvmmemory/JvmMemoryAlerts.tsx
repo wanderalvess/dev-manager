@@ -20,15 +20,15 @@ export const JvmMemoryAlerts: React.FC<JvmMemoryAlertsProps> = ({
   <>
     {/* Alerta de OutOfMemory / Nível Crítico */}
     {isNearOom && (
-      <div className="p-3 bg-danger/10 border border-danger/50 rounded-lg flex items-start space-x-3">
+      <div className="p-3 bg-danger/10 rounded-lg flex items-start space-x-3">
         <AlertTriangle className="w-5 h-5 text-danger shrink-0 mt-0.5 animate-bounce" />
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold font-mono uppercase tracking-wide text-danger">
+            <h4 className="text-xs font-semibold text-danger">
               Alerta Crítico: Risco Iminente de OutOfMemoryError
             </h4>
             <span className="text-xs font-mono font-bold text-danger">
-              {metrics?.heapUsagePercent.toFixed(1)}% USADO
+              {metrics?.heapUsagePercent.toFixed(1)}% em uso
             </span>
           </div>
           <p className="text-2xs text-danger/90 mt-1 leading-relaxed">
@@ -43,7 +43,7 @@ export const JvmMemoryAlerts: React.FC<JvmMemoryAlertsProps> = ({
     )}
 
     {alertLevel === 'WARNING' && !isNearOom && (
-      <div className="p-2.5 bg-warning/10 border border-warning/30 rounded-lg flex items-center space-x-2.5 text-warning text-xs font-mono">
+      <div className="p-2.5 bg-warning/10 rounded-lg flex items-center space-x-2.5 text-warning text-xs font-mono">
         <AlertTriangle className="w-4 h-4 shrink-0 text-warning" />
         <span>
           Consumo de Heap elevado ({metrics?.heapUsagePercent.toFixed(1)}%). Verifique se o GC está liberando
@@ -53,14 +53,14 @@ export const JvmMemoryAlerts: React.FC<JvmMemoryAlertsProps> = ({
     )}
 
     {fetchError && (
-      <div className="p-2.5 bg-danger/10 border border-danger/30 rounded-lg text-xs text-danger font-mono flex items-center gap-2">
+      <div className="p-2.5 bg-danger/10 rounded-lg text-xs text-danger font-mono flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 shrink-0" />
         <span>{fetchError}</span>
       </div>
     )}
 
     {gcFeedback && (
-      <div className="p-2.5 bg-success/10 border border-success/30 rounded-lg text-xs text-success font-mono flex items-center gap-2">
+      <div className="p-2.5 bg-success/10 rounded-lg text-xs text-success font-mono flex items-center gap-2">
         <CheckCircle2 className="w-4 h-4 shrink-0" />
         <span>{gcFeedback}</span>
       </div>

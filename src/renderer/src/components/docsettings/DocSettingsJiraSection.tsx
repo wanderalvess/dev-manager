@@ -15,7 +15,7 @@ interface DocSettingsJiraSectionProps {
 }
 
 const INPUT_BASE =
-  'w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/20 focus:border-primary';
+  'w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/20';
 
 export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
   sources,

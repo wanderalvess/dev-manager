@@ -55,7 +55,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           </div>
           <div className="min-w-0">
             <span className="font-bold text-sm text-foreground truncate block">{provider.name}</span>
-            <span className="text-2xs font-mono text-muted-foreground uppercase">{provider.provider}</span>
+            <span className="text-xs text-muted-foreground">{provider.provider}</span>
           </div>
         </div>
 

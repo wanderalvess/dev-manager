@@ -36,7 +36,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >

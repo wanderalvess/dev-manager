@@ -19,7 +19,8 @@ import {
   CheckCheck,
   PlayCircle,
   Zap,
-  Globe
+  Globe,
+  Plug
 } from 'lucide-react';
 
 export interface QuickLauncherItem {
@@ -193,6 +194,13 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     subtitle: 'FAQ, diagnósticos de rede e atalhos de teclado',
     badge: 'Alt+H',
     icon: HelpCircle
+  },
+  {
+    id: 'act-integrations',
+    tab: 'integrations',
+    title: 'Integrações',
+    subtitle: 'MCP, LLM, Azure DevOps, Jira, Confluence, CCW, OpenTelemetry e webhooks',
+    icon: Plug
   },
   {
     id: 'act-settings',

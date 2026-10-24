@@ -7,7 +7,7 @@ interface PortsQuickPresetsProps {
 
 export const PortsQuickPresets: React.FC<PortsQuickPresetsProps> = ({ onAddPort }) => (
   <div className="bg-card border border-border rounded-xl p-3 space-y-2 shadow-xs">
-    <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block">
+    <span className="text-xs font-semibold text-muted-foreground block">
       Atalhos Rápidos de Adição:
     </span>
     <div className="flex flex-wrap gap-1.5 text-2xs font-mono">

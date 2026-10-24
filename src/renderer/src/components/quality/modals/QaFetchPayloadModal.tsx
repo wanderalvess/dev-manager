@@ -58,7 +58,7 @@ export const QaFetchPayloadModal: React.FC<QaFetchPayloadModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="flex flex-col w-full max-w-4xl h-[620px] bg-card border border-border rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      panelClassName="flex flex-col w-full max-w-4xl h-[620px] bg-card border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       closeOnBackdrop={false}
       closeOnEscape={false}
       ariaLabel="Obter Payload de Entrada"

@@ -79,7 +79,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
       placement="right"
       closeOnBackdrop={false}
       ariaLabel="Diagnóstico de Exceções e Logs"
-      panelClassName="relative w-full max-w-xl h-full bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200"
+      panelClassName="relative w-full max-w-xl h-full bg-card border-l border-border shadow-lg flex flex-col animate-in slide-in-from-right duration-200"
     >
         {/* Header do Drawer */}
         <div className="p-3.5 border-b border-border bg-muted/20 flex items-center justify-between shrink-0">
@@ -87,10 +87,10 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
             <Bug className="w-5 h-5 text-danger shrink-0" />
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold font-mono tracking-tight uppercase text-foreground">
+                <h3 className="text-xs font-semibold tracking-tight text-foreground">
                   Diagnóstico de Exceções & Logs
                 </h3>
-                <span className="text-2xs font-mono px-2 py-0.2 rounded bg-danger/10 text-danger border border-danger/20 font-bold tabular-nums">
+                <span className="text-2xs font-mono px-2 py-0.2 rounded bg-danger/10 text-danger font-bold tabular-nums">
                   {summary.totalErrors} DETECTADAS
                 </span>
               </div>
@@ -127,7 +127,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
               onClick={() => setFilterType('ORA')}
               className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
                 filterType === 'ORA'
-                  ? 'bg-danger/20 text-danger border border-danger/40 shadow-2xs'
+                  ? 'bg-danger/20 text-danger shadow-2xs'
                   : 'text-danger hover:text-danger'
               }`}
             >
@@ -140,7 +140,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
               onClick={() => setFilterType('OOM')}
               className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
                 filterType === 'OOM'
-                  ? 'bg-danger/20 text-danger border border-danger/40 shadow-2xs'
+                  ? 'bg-danger/20 text-danger shadow-2xs'
                   : 'text-danger hover:text-danger'
               }`}
             >
@@ -153,7 +153,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
               onClick={() => setFilterType('NPE')}
               className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
                 filterType === 'NPE'
-                  ? 'bg-warning/20 text-warning border border-warning/40 shadow-2xs'
+                  ? 'bg-warning/20 text-warning shadow-2xs'
                   : 'text-warning hover:text-warning'
               }`}
             >
@@ -211,7 +211,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center space-x-2">
                       <span
-                        className={`text-2xs font-bold font-mono px-1.5 py-0.2 rounded border uppercase ${badge.bg}`}
+                        className={`text-xs font-semibold px-1.5 py-0.2 rounded border ${badge.bg}`}
                       >
                         {badge.label}
                       </span>
@@ -246,7 +246,7 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
                   {/* Comandos Sugeridos */}
                   {err.suggestedCommands && err.suggestedCommands.length > 0 && (
                     <div className="pt-1.5 border-t border-border/40 space-y-1">
-                      <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground font-mono flex items-center gap-1">
+                      <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                         <Terminal className="w-3 h-3 text-primary" /> Diagnóstico sugerido:
                       </span>
                       {err.suggestedCommands.map((cmd, cIdx) => {

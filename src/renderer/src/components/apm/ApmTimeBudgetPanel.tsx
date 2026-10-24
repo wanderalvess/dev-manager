@@ -33,7 +33,7 @@ export const ApmTimeBudgetPanel: React.FC<ApmTimeBudgetPanelProps> = ({
       {timeBudget.jdbcPct > 0 && <div style={{ width: `${timeBudget.jdbcPct}%` }} className="bg-warning h-full transition-all" title={`Queries JDBC no Banco: ${timeBudget.jdbcMs}ms (${timeBudget.jdbcPct}%) — ${timeBudget.jdbcSpansCount} spans`} />}
     </div>
     {timeBudget.hasDbBottleneck ? (
-      <div className="px-2.5 py-1.5 rounded bg-warning/10 border border-warning/30 text-2xs font-mono text-warning flex items-center justify-between">
+      <div className="px-2.5 py-1.5 rounded bg-warning/10 text-2xs font-mono text-warning flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Database className="w-3.5 h-3.5 text-warning shrink-0" />
           <span>Gargalo no Banco: <strong>{timeBudget.jdbcPct}%</strong> ({timeBudget.jdbcMs}ms) consumidos em queries JDBC</span>
@@ -41,7 +41,7 @@ export const ApmTimeBudgetPanel: React.FC<ApmTimeBudgetPanelProps> = ({
         {hasSqlTab && <button type="button" onClick={() => onSelectTab('sql')} className="text-xs text-warning hover:text-warning underline font-bold cursor-pointer">Inspecionar SQL &rarr;</button>}
       </div>
     ) : timeBudget.hasJavaBottleneck ? (
-      <div className="px-2.5 py-1.5 rounded bg-primary/10 border border-primary/30 text-2xs font-mono text-primary flex items-center justify-between">
+      <div className="px-2.5 py-1.5 rounded bg-primary/10 text-2xs font-mono text-primary flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Code2 className="w-3.5 h-3.5 text-primary shrink-0" />
           <span>Gargalo em Java: <strong>{timeBudget.javaPct}%</strong> ({timeBudget.javaMs}ms) em processamento interno / OSGi</span>

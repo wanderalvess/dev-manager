@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const QualityModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<CheckCheck className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-success/10 text-success border border-success/20"
+    iconBoxClass="p-2 rounded-xl bg-success/10 text-success"
     title="11. Central de Qualidade (QA &amp; PO)"
     subtitle="Matriz de Testes · Critérios de Aceite · Prontidão"
     shortcut="Alt+Q"
@@ -13,7 +13,7 @@ export const QualityModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => 
       <ModuleNavButton
         onNavigate={onNavigate}
         target="quality"
-        colorClass="bg-success/10 hover:bg-success/20 text-success border border-success/30"
+        colorClass="bg-success/10 hover:bg-success/20 text-success"
         label="Abrir Central de Qualidade"
       />
     }

@@ -113,7 +113,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
           <div className="flex items-center space-x-1.5 text-2xs font-mono text-muted-foreground">
             <ChevronRight className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>Comando:</span>
-            <code className="text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
+            <code className="text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">
               feature:install -r -u {targetIdentifier}
             </code>
           </div>

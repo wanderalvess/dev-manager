@@ -9,7 +9,7 @@ interface EnvironmentModuleCardProps extends ModuleCardProps {
 export const EnvironmentModuleCard: React.FC<EnvironmentModuleCardProps> = ({ debugPort, onNavigate }) => (
   <ModuleCardShell
     icon={<Terminal className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-info/10 text-info border border-info/20"
+    iconBoxClass="p-2 rounded-xl bg-info/10 text-info"
     title="1. Gestor de Ambiente &amp; Automação"
     subtitle="Servidor OSGi Debug, Portas &amp; Serviços"
     shortcut="Alt+1"
@@ -17,7 +17,7 @@ export const EnvironmentModuleCard: React.FC<EnvironmentModuleCardProps> = ({ de
       <ModuleNavButton
         onNavigate={onNavigate}
         target="env"
-        colorClass="bg-info/10 hover:bg-info/20 text-info border border-info/30"
+        colorClass="bg-info/10 hover:bg-info/20 text-info"
         label="Abrir Módulo de Ambiente"
       />
     }
@@ -37,7 +37,7 @@ export const EnvironmentModuleCard: React.FC<EnvironmentModuleCardProps> = ({ de
 export const ContainersModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Boxes className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-info/10 text-info border border-info/20"
+    iconBoxClass="p-2 rounded-xl bg-info/10 text-info"
     title="3. Containers Docker"
     subtitle="Gerenciador do Daemon Docker Local"
     shortcut="Alt+3"
@@ -45,7 +45,7 @@ export const ContainersModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) 
       <ModuleNavButton
         onNavigate={onNavigate}
         target="containers"
-        colorClass="bg-info/10 hover:bg-info/20 text-info border border-info/30"
+        colorClass="bg-info/10 hover:bg-info/20 text-info"
         label="Abrir Módulo de Containers"
       />
     }
@@ -66,7 +66,7 @@ export const ContainersModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) 
 export const DocsRagModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<FileSearch className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20"
+    iconBoxClass="p-2 rounded-xl bg-primary/10 text-primary"
     title="7. Documentação Semântica (RAG Local)"
     subtitle="IA Local com Embeddings FastEmbed"
     shortcut="Alt+7"
@@ -74,7 +74,7 @@ export const DocsRagModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => 
       <ModuleNavButton
         onNavigate={onNavigate}
         target="docs"
-        colorClass="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30"
+        colorClass="bg-primary/10 hover:bg-primary/20 text-primary"
         label="Abrir Documentação Semântica"
       />
     }
@@ -92,7 +92,7 @@ export const DocsRagModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => 
 export const LogsModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<ScrollText className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-warning/10 text-warning border border-warning/20"
+    iconBoxClass="p-2 rounded-xl bg-warning/10 text-warning"
     title="10. Logs em Tempo Real &amp; Log Analyzer"
     subtitle="Tail -f · Diagnóstico ORA / NPE / OSGi"
     shortcut="Alt+8"
@@ -100,7 +100,7 @@ export const LogsModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       <ModuleNavButton
         onNavigate={onNavigate}
         target="logs"
-        colorClass="bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30"
+        colorClass="bg-warning/10 hover:bg-warning/20 text-warning"
         label="Abrir Módulo de Logs"
       />
     }

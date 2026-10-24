@@ -48,7 +48,7 @@ export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
           value={csvFileName}
           onChange={(e) => onCsvFileNameChange(e.target.value)}
           placeholder="ex: Insumo/pedido.csv ou pedido.csv"
-          className="w-full pl-9 pr-3 py-2 rounded-lg bg-background border border-border text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full pl-9 pr-3 py-2.5 rounded-[10px] bg-background border border-input text-sm text-foreground font-mono focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -68,7 +68,7 @@ export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
       <div className="space-y-3 pt-2 border-t border-border/60">
         {/* Avisos e Bloqueantes */}
         {intakeResult.checklistBlockers.length > 0 && (
-          <div className="p-3 rounded-lg bg-danger/10 border border-danger/30 text-danger text-xs space-y-1">
+          <div className="p-3 rounded-lg bg-danger/10 text-danger text-xs space-y-1">
             <div className="font-bold flex items-center gap-1.5 text-danger">
               <XCircle className="w-4 h-4" />
               <span>Bloqueantes Identificados (Impedem Implementação):</span>
@@ -82,7 +82,7 @@ export const TautIntakeTab: React.FC<TautIntakeTabProps> = ({
         )}
 
         {intakeResult.checklistWarnings.length > 0 && (
-          <div className="p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning text-xs space-y-1">
+          <div className="p-3 rounded-lg bg-warning/10 text-warning text-xs space-y-1">
             <div className="font-bold flex items-center gap-1.5 text-warning">
               <AlertTriangle className="w-4 h-4" />
               <span>Avisos de Atenção:</span>

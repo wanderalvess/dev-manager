@@ -8,6 +8,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ### Adicionado
 - **Estilo visual "Papel"** (novo padrão em instalações novas): cinza neutro, cartões limpos, azul como único acento e texto secundário mais escuro, no modo claro e no escuro. Quem já escolheu outro estilo continua com ele; para trocar, use o seletor de tema do cabeçalho.
 - **Menu lateral com todos os módulos**: a partir de telas largas (lg), os módulos ficam sempre visíveis à esquerda, agrupados em Infraestrutura, Dados & Rotinas, Desenvolvimento e Qualidade, com os atalhos Alt+N ao lado. Substitui os quatro menus suspensos do cabeçalho; em janelas estreitas continua o seletor compacto. Os módulos desligados em Configurações → Módulos seguem fora do menu.
+- **Tela Integrações**: novo item no fim do menu lateral (e no Ctrl+K) que reúne MCP, provedores de LLM, Confluence, Jira, Azure DevOps, GitLab/GitHub, WinThor CCW, fontes de teste, OpenTelemetry e webhooks, cada um com o estado atual e um atalho direto para a aba certa de Configurações.
+- **Ajuda e acabamento**: cartão da tela Integrações no Guia dos Módulos (agora 13) e o restante dos modais e painéis (Memória JVM, APM, Docs, API Studio, Homologação e os modais da raiz) com rótulos em frase, campos de 40 px e selos sem borda colorida.
 
 ### Alterado
 - **Telas Rotinas, Backups, Logs e APM no visual Papel**: título sem cartão, *Atualizar rotina (CCW)* como ação principal em Rotinas, abas sublinhadas em Backups, barras de Logs e APM com fundo sólido e estado do receptor OTLP com a ação *Trocar porta do receptor* em destaque. Os selos do Karaf (WTA) em Rotinas passam a usar as cores semânticas de sucesso e perigo.

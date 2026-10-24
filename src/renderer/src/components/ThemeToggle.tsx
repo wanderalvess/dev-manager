@@ -141,7 +141,7 @@ export const ThemeToggle: React.FC = () => {
       {isOpen && (
         <div
           style={{ backgroundColor: 'hsl(var(--card))' }}
-          className="absolute right-0 mt-2 w-80 max-h-[85vh] overflow-y-auto origin-top-right rounded-xl bg-card border border-border/80 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-80 max-h-[85vh] overflow-y-auto origin-top-right rounded-xl bg-card border border-border/80 shadow-lg p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
           role="menu"
         >
           {/* Cabeçalho */}
@@ -152,14 +152,14 @@ export const ThemeToggle: React.FC = () => {
                 Aparência & Tema
               </span>
             </div>
-            <span className="text-2xs font-mono font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
               {variant}
             </span>
           </div>
 
           {/* Seção 1: Modo de Exibição */}
           <div className="mb-3">
-            <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
               Modo de Exibição
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-muted/60 rounded-lg border border-border/40">
@@ -193,7 +193,7 @@ export const ThemeToggle: React.FC = () => {
 
           {/* Seção 2: Estilo Visual */}
           <div>
-            <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
               Estilo Visual
             </label>
             <div className="space-y-1.5">

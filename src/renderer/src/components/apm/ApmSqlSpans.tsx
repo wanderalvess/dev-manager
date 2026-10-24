@@ -36,7 +36,7 @@ export const ApmSqlSpans: React.FC<ApmSqlSpansProps> = ({
                   copyToClipboard(span.dbStatement!, 'toDb');
                   onNavigateToDatabase();
                 }}
-                className="px-2 py-0.5 rounded border border-primary/40 bg-primary/10 hover:bg-primary/20 text-2xs text-primary cursor-pointer flex items-center gap-1 font-semibold"
+                className="px-2 py-0.5 rounded bg-primary/10 hover:bg-primary/20 text-2xs text-primary cursor-pointer flex items-center gap-1 font-semibold"
               >
                 <ExternalLink className="w-3 h-3" />
                 Abrir no DB Studio

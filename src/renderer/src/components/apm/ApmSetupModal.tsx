@@ -52,7 +52,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
           open
           onClose={onClose}
           bare
-          panelClassName="w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden font-sans"
+          panelClassName="w-full max-w-2xl bg-card border border-border rounded-xl shadow-lg flex flex-col overflow-hidden font-sans"
           closeOnBackdrop={false}
           closeOnEscape={false}
           ariaLabel="Como Conectar no Receptor OpenTelemetry (APM)"
@@ -103,7 +103,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
               </label>
 
               {overview && !overview.receiverStatus.listening && (
-                <div className="px-3 py-2 rounded-lg border border-danger/30 bg-danger/10 text-danger font-sans text-xs leading-relaxed">
+                <div className="px-3 py-2 rounded-lg bg-danger/10 text-danger font-sans text-xs leading-relaxed">
                   <strong>Receptor inativo:</strong> {overview.receiverStatus.error || 'não foi possível abrir a porta'}.
                   Se outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o e
                   aplique a porta de novo — ou escolha outra porta abaixo.

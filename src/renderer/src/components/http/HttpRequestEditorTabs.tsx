@@ -165,7 +165,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
                   <button
                     type="button"
                     onClick={onLoginWinThorPrompt}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded text-xs font-medium transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary rounded text-xs font-medium transition-colors"
                   >
                     <Lock className="w-3.5 h-3.5" />
                     <span>Obter Novo Token WinThor</span>

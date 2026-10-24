@@ -20,7 +20,7 @@ export const HelpAboutAppHeader: React.FC<HelpAboutAppHeaderProps> = ({
       <div>
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           Hub <span className="text-primary font-bold">Manager</span>
-          <span className="text-2xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold border border-primary/30">
+          <span className="text-2xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-bold">
             v{appInfo?.appVersion || '1.31.0'}
           </span>
         </h3>
@@ -35,7 +35,7 @@ export const HelpAboutAppHeader: React.FC<HelpAboutAppHeaderProps> = ({
 
     <button
       onClick={handleCopyDiagnostic}
-      className="px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer shrink-0"
+      className="px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer shrink-0"
       title="Copiar relatório completo de diagnóstico para a área de transferência" aria-label="Copiar relatório completo de diagnóstico para a área de transferência"
     >
       {copiedDiag ? (

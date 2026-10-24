@@ -13,6 +13,7 @@ import { ApmModuleCard } from '../modules/ApmModuleCard';
 import { McpModuleCard } from '../modules/McpModuleCard';
 import { QualityModuleCard } from '../modules/QualityModuleCard';
 import { HttpClientModuleCard } from '../modules/HttpClientModuleCard';
+import { IntegrationsModuleCard } from '../modules/IntegrationsModuleCard';
 
 interface HelpModulesTabProps {
   debugPort: number;
@@ -47,6 +48,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
       <LogsModuleCard onNavigate={onNavigate} />
       <QualityModuleCard onNavigate={onNavigate} />
       <HttpClientModuleCard onNavigate={onNavigate} />
+      <IntegrationsModuleCard onNavigate={onNavigate} />
     </div>
   );
 };

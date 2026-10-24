@@ -91,7 +91,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                   <button
                     type="button"
                     onClick={() => copyInstallCmd('sudo apt update && sudo apt install -y docker.io', 'install-box')}
-                    className="ml-2 px-2 py-1 bg-warning/10 hover:bg-warning/20 text-warning rounded border border-warning/30 text-2xs font-sans font-semibold flex items-center gap-1 cursor-pointer transition"
+                    className="ml-2 px-2 py-1 bg-warning/10 hover:bg-warning/20 text-warning rounded text-2xs font-sans font-semibold flex items-center gap-1 cursor-pointer transition"
                   >
                     {installCmdFeedback === 'install-box' ? (
                       <>

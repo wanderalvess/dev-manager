@@ -15,7 +15,7 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
   <div className="p-2.5 bg-muted/40 rounded-lg border border-border flex flex-col gap-2 select-none">
     <div className="flex items-center justify-between gap-2 flex-wrap">
       <div className="flex items-center gap-1 text-2xs font-mono">
-        <span className="text-2xs uppercase font-bold tracking-wider text-muted-foreground mr-1">Camada:</span>
+        <span className="text-xs font-semibold text-muted-foreground mr-1">Camada:</span>
         <button
           type="button"
           onClick={() => onTierFilterChange('ALL')}
@@ -26,9 +26,9 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
           Todas ({details?.spans.length || 0})
         </button>
         {([
-          { tier: 'http', label: '🌐 HTTP', count: timeBudget?.httpSpansCount, duration: timeBudget?.httpMs, active: 'bg-info text-background shadow-2xs', inactive: 'bg-info/10 border border-info/30 text-info hover:bg-info/20' },
-          { tier: 'java', label: '☕ Java', count: timeBudget?.javaSpansCount, duration: timeBudget?.javaMs, active: 'bg-primary text-white shadow-2xs', inactive: 'bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20' },
-          { tier: 'jdbc', label: '🗄️ JDBC', count: timeBudget?.jdbcSpansCount, duration: timeBudget?.jdbcMs, active: 'bg-warning text-background shadow-2xs', inactive: 'bg-warning/10 border border-warning/30 text-warning hover:bg-warning/20' }
+          { tier: 'http', label: '🌐 HTTP', count: timeBudget?.httpSpansCount, duration: timeBudget?.httpMs, active: 'bg-info text-background shadow-2xs', inactive: 'bg-info/10 text-info hover:bg-info/20' },
+          { tier: 'java', label: '☕ Java', count: timeBudget?.javaSpansCount, duration: timeBudget?.javaMs, active: 'bg-primary text-white shadow-2xs', inactive: 'bg-primary/10 text-primary hover:bg-primary/20' },
+          { tier: 'jdbc', label: '🗄️ JDBC', count: timeBudget?.jdbcSpansCount, duration: timeBudget?.jdbcMs, active: 'bg-warning text-background shadow-2xs', inactive: 'bg-warning/10 text-warning hover:bg-warning/20' }
         ] as const).map(({ tier, label, count, duration, active, inactive }) => (
           <button
             key={tier}

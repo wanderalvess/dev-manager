@@ -89,7 +89,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
         {/* Banner com a rota e status */}
         <div className="flex items-center justify-between p-3 rounded-lg bg-card/60 border border-border">
           <div className="flex items-center gap-2 truncate">
-            <span className="font-mono font-bold text-danger bg-danger/10 border border-danger/30 px-2 py-0.5 rounded">
+            <span className="font-mono font-bold text-danger bg-danger/10 px-2 py-0.5 rounded">
               {response.status > 0 ? `${response.status} ${response.statusText}` : 'Falha na Conexão'}
             </span>
             <span className="font-mono text-muted-foreground truncate">{request.method} {request.url}</span>
@@ -118,7 +118,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
               <p className="text-xs text-muted-foreground/60">Cruzando com regras comuns do Karaf e WinThor REST</p>
             </div>
           ) : error ? (
-            <div className="p-4 rounded bg-danger/10 border border-danger/30 text-danger space-y-2">
+            <div className="p-4 rounded bg-danger/10 text-danger space-y-2">
               <div className="flex items-center gap-2 font-semibold">
                 <AlertTriangle className="w-4 h-4" />
                 <span>Não foi possível gerar o diagnóstico</span>

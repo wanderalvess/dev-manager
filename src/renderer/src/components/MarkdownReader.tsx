@@ -52,7 +52,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
       bare
       closeOnBackdrop={false}
       ariaLabel={title || 'Leitor de documento'}
-      panelClassName={`bg-card border border-border/80 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
+      panelClassName={`bg-card border border-border/80 shadow-lg flex flex-col overflow-hidden transition-all duration-300 ${
         reader.isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-5xl h-[90vh] rounded-3xl'
       }`}
     >
@@ -102,7 +102,7 @@ export const MarkdownReader: React.FC<MarkdownReaderProps> = ({
             {isLoading ? (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <span className="text-xs font-bold uppercase tracking-widest text-primary">Carregando documento...</span>
+                <span className="text-xs font-semibold text-primary">Carregando documento...</span>
               </div>
             ) : viewMode === 'raw' ? (
               <div className="font-mono text-xs leading-relaxed text-foreground bg-muted/20 p-5 rounded-xl border border-border/80 select-text whitespace-pre-wrap">

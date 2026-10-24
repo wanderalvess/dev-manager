@@ -23,14 +23,14 @@ export const AzureTab: React.FC<AzureTabProps> = ({
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
-              <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+              <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
                 <GitBranch className="w-4 h-4 text-info" /> Configurações do Git & Azure DevOps
               </h3>
               <p className="text-2xs text-muted-foreground mt-0.5">
                 Parâmetros para criação automatizada de Pull Requests e rastreamento de repositórios.
               </p>
             </div>
-            <span className="text-2xs bg-info/10 text-info border border-info/30 px-2 py-0.5 rounded font-mono font-bold">
+            <span className="text-2xs bg-info/10 text-info px-2 py-0.5 rounded font-mono font-bold">
               dev.azure.com
             </span>
           </div>
@@ -141,7 +141,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
           </div>
 
           {/* Box Informativo de Integração Azure */}
-          <div className="bg-info/10 border border-info/30 rounded-xl p-3 text-xs text-foreground space-y-1">
+          <div className="bg-info/10 rounded-xl p-3 text-xs text-foreground space-y-1">
             <span className="font-bold text-info block flex items-center gap-1.5">
               <GitBranch className="w-4 h-4" /> Integração com o Azure DevOps (dev.azure.com)
             </span>

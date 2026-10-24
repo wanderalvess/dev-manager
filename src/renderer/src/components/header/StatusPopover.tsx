@@ -43,7 +43,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
       {isOpen && (
         <div
           style={{ backgroundColor: 'hsl(var(--card))' }}
-          className="absolute right-0 mt-2 w-80 bg-card text-card-foreground rounded-xl border border-border shadow-2xl z-50 p-3 space-y-3 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-80 bg-card text-card-foreground rounded-xl border border-border shadow-lg z-50 p-3 space-y-3 animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Cabeçalho */}
           <div className="flex items-center justify-between pb-2 border-b border-border/60">
@@ -51,14 +51,14 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
               <Activity className="w-4 h-4 text-primary" />
               <span className="text-xs font-bold text-foreground">Diagnósticos & Rede</span>
             </div>
-            <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/30 font-bold">
+            <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-success/10 text-success font-bold">
               Online
             </span>
           </div>
 
           {/* Seção de Endereços IP */}
           <div className="space-y-1.5">
-            <div className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+            <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
               <Wifi className="w-3 h-3 text-primary" />
               <span>Endereços IP</span>
             </div>
@@ -123,7 +123,7 @@ export const StatusPopover: React.FC<StatusPopoverProps> = ({
 
             return (
               <div className="space-y-2">
-                <div className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                   <Cpu className="w-3 h-3 text-primary" />
                   <span>Uso da Máquina</span>
                 </div>

@@ -63,7 +63,7 @@ export const HttpResponseTopBar: React.FC<HttpResponseTopBarProps> = ({
           <button
             type="button"
             onClick={onOpenAiDiagnostic}
-            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-primary/15 hover:bg-primary/25 text-primary rounded border border-primary/30 transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-primary/10 hover:bg-primary/25 text-primary rounded transition-colors cursor-pointer"
             title="Diagnosticar a causa raiz deste erro com IA"
           >
             <Bot className="w-3 h-3 text-primary" />
@@ -75,7 +75,7 @@ export const HttpResponseTopBar: React.FC<HttpResponseTopBarProps> = ({
           <button
             type="button"
             onClick={() => onUpdateActiveToken(extractedToken)}
-            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-success/15 hover:bg-success/25 text-success rounded border border-success/30 transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-success/10 hover:bg-success/25 text-success rounded transition-colors cursor-pointer"
             title="Salvar este token na variável {{TOKEN}} do ambiente ativo"
           >
             <Key className="w-3 h-3 text-warning" />

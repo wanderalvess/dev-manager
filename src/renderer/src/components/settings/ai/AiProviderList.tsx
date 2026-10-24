@@ -29,7 +29,7 @@ export const AiProviderList: React.FC<AiProviderListProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+        <span className="text-xs font-semibold text-foreground flex items-center gap-2">
           <Activity className="w-3.5 h-3.5 text-primary" />
           Motores Configurados ({providers.length})
         </span>

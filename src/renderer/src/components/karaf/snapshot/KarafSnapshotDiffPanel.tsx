@@ -46,7 +46,7 @@ export const KarafSnapshotDiffPanel: React.FC<KarafSnapshotDiffPanelProps> = ({
             </span>
           )}
           {(snapshotDiff?.stateChanged.length || 0) > 0 && (
-            <span className="px-2.5 py-1 rounded-lg bg-info/15 text-info border border-info/30 font-bold">
+            <span className="px-2.5 py-1 rounded-lg bg-info/10 text-info font-bold">
               {snapshotDiff?.stateChanged.length} estados alterados
             </span>
           )}

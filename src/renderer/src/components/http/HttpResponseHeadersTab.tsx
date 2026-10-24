@@ -30,7 +30,7 @@ export const HttpResponseHeadersTab: React.FC<HttpResponseHeadersTabProps> = ({ 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-[#0d1117] rounded border border-border/40">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40 bg-card/20">
-        <span className="text-xs uppercase font-semibold text-muted-foreground tracking-wider font-mono">
+        <span className="text-xs font-semibold text-muted-foreground">
           Cabeçalhos ({entries.length})
         </span>
         <button

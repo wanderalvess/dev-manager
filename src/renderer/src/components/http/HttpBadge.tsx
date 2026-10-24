@@ -22,7 +22,7 @@ export const HttpBadge: React.FC<HttpBadgeProps> = ({ method, size = 'sm' }) => 
   const sizeClass = size === 'sm' ? 'px-1.5 py-0.5 text-xs' : 'px-2.5 py-1 text-xs';
 
   return (
-    <span className={`inline-flex items-center font-mono font-bold rounded border uppercase tracking-wider ${sizeClass} ${style}`}>
+    <span className={`inline-flex items-center font-semibold rounded border ${sizeClass} ${style}`}>
       {m}
     </span>
   );

@@ -42,7 +42,7 @@ export const QuickLauncherModal: React.FC<QuickLauncherModalProps> = ({
       bare
       placement="top"
       ariaLabel="Paleta de comandos"
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[75vh]"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-2xl overflow-hidden flex flex-col max-h-[75vh]"
     >
       <div className="contents" onKeyDown={handleKeyDown}>
         <QuickLauncherSearchBar search={search} onSearchChange={setSearch} inputRef={inputRef} />

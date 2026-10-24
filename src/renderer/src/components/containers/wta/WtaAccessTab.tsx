@@ -47,7 +47,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
           <button
             type="button"
             onClick={() => window.electronAPI?.openExternal?.(portalUrl)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/30 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
           >
             <ExternalLink className="w-3 h-3" />
             <span>Abrir Portal no Navegador</span>

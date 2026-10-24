@@ -25,7 +25,7 @@ export const DatabaseExplainPanel: React.FC<DatabaseExplainPanelProps> = ({ expl
         </span>
       </div>
     ) : !explainResult.success ? (
-      <div className="p-4 bg-danger/10 border border-danger/30 rounded-xl text-danger text-xs">
+      <div className="p-4 bg-danger/10 rounded-xl text-danger text-xs">
         <div className="flex items-center space-x-2 font-bold mb-1">
           <AlertCircle className="w-4 h-4 text-danger shrink-0" />
           <span>Falha ao gerar Explain Plan:</span>

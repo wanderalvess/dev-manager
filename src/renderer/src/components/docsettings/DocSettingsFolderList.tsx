@@ -78,13 +78,13 @@ export const DocSettingsFolderList: React.FC<DocSettingsFolderListProps> = ({
             className="group p-3 rounded-xl bg-muted/30 hover:bg-muted/50 border border-border/80 hover:border-primary/40 transition-all flex items-center justify-between gap-3 shadow-2xs"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0 group-hover:scale-105 transition-transform">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 group-hover:scale-105 transition-transform">
                 <FolderOpen className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-foreground truncate">{getFolderDisplayTitle(folder)}</span>
-                  <span className="text-2xs font-mono uppercase font-bold px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground border border-border/60 shrink-0">
+                  <span className="text-xs font-semibold px-1.5 py-0.2 rounded-md bg-muted text-muted-foreground border border-border/60 shrink-0">
                     Pasta Local
                   </span>
                 </div>

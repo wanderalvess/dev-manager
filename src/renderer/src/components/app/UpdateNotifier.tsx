@@ -41,7 +41,7 @@ export const UpdateNotifier: React.FC = () => {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 right-4 z-101 w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-border bg-card p-5 shadow-2xl animate-fade-in"
+      className="fixed bottom-4 right-4 z-101 w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-border bg-card p-5 shadow-lg animate-fade-in"
     >
       <h2 className="m-0 text-sm font-bold text-foreground">{notice.title}</h2>
       <p className="mt-2 mb-0 text-xs leading-relaxed text-muted-foreground">{notice.description}</p>

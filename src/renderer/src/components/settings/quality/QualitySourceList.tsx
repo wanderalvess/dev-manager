@@ -26,7 +26,7 @@ export const QualitySourceList: React.FC<QualitySourceListProps> = ({
   onDelete
 }) => (
   <div className="space-y-2">
-    <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider block">
+    <span className="text-xs font-semibold text-muted-foreground block">
       Fontes Configuradas ({sources.length}):
     </span>
 

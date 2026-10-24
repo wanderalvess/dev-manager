@@ -180,7 +180,7 @@ export const Modal: React.FC<ModalProps> = ({
         className={
           bare
             ? `${panelClassName} outline-hidden`
-            : `bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-2xl w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-hidden animate-fade-in`
+            : `bg-card border ${TONE_BORDER[tone]} rounded-xl shadow-lg w-full ${SIZE_CLASS[size]} max-h-[90vh] flex flex-col outline-hidden animate-fade-in`
         }
       >
         {bare && children}

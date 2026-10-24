@@ -61,7 +61,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
       {isOpen && query.trim() && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => onOpenChange(false)} />
-          <div className="absolute left-0 right-0 mt-1.5 rounded-xl bg-card border border-border shadow-2xl z-50 overflow-hidden">
+          <div className="absolute left-0 right-0 mt-1.5 rounded-xl bg-card border border-border shadow-lg z-50 overflow-hidden">
             {results.length === 0 ? (
               <div className="px-3.5 py-3 text-xs text-muted-foreground">Nenhum campo encontrado para "{query}".</div>
             ) : (

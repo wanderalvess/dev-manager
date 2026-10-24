@@ -30,7 +30,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
 }) => (
   <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/20 shrink-0">
     <div className="flex items-center gap-3">
-      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 border border-primary/25 text-primary">
+      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary">
         <Layers2 className="w-4 h-4" />
       </div>
       <div>
@@ -38,7 +38,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
           <h2 className="text-sm font-semibold tracking-tight">
             Catálogo Oficial WinThor — Rotina 801
           </h2>
-          <span className="px-1.5 py-0.5 text-2xs font-mono font-medium uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 rounded">
+          <span className="px-1.5 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
             WTA Serviços
           </span>
           {connectionHealth && (
@@ -93,7 +93,7 @@ export const Routine801Header: React.FC<Routine801HeaderProps> = ({
 
       <button
         onClick={onOpenDirectInstall}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors cursor-pointer"
         title="Instalar ou registrar versão específica diretamente no Karaf"
       >
         <Plus className="w-3.5 h-3.5" />

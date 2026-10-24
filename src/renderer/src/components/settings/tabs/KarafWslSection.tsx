@@ -42,7 +42,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
     <div id="field-karafWsl" className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
             <Terminal className="w-4 h-4 text-primary" /> Ambiente de Execução do Karaf
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">

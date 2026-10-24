@@ -14,8 +14,8 @@ interface StepActionsProps {
   onToggleService: (step: AutomationStep, isRunning: boolean) => void;
 }
 
-const STOP_CLASS = 'p-1 px-2 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
-const START_CLASS = 'p-1 px-2 bg-success/10 hover:bg-success/20 text-success border border-success/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
+const STOP_CLASS = 'p-1 px-2 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
+const START_CLASS = 'p-1 px-2 bg-success/10 hover:bg-success/20 text-success rounded-lg text-2xs font-bold flex items-center gap-1 transition-all';
 
 /** Badge de porta/debug e botões individuais de uma etapa. */
 export const StepActions: React.FC<StepActionsProps> = ({
@@ -37,7 +37,7 @@ export const StepActions: React.FC<StepActionsProps> = ({
         <span
           className={`text-2xs font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
             isPortActive
-              ? 'bg-success/10 text-success border border-success/30'
+              ? 'bg-success/10 text-success'
               : 'bg-muted/40 text-muted-foreground border border-border/60'
           }`}
         >
@@ -103,7 +103,7 @@ export const StepActions: React.FC<StepActionsProps> = ({
               type="button"
               onClick={() => onRestart(step)}
               disabled={loadingAction === 'restart' || isRunningProfile}
-              className="p-1 px-2 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-2xs font-bold flex items-center gap-1 transition-all"
+              className="p-1 px-2 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-2xs font-bold flex items-center gap-1 transition-all"
               title="Reiniciar esta etapa" aria-label="Reiniciar esta etapa"
             >
               <RefreshCw className={`w-3 h-3 ${loadingAction === 'restart' ? 'animate-spin' : ''}`} />

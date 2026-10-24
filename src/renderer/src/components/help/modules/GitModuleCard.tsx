@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const GitModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<GitPullRequest className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-info/10 text-info border border-info/20"
+    iconBoxClass="p-2 rounded-xl bg-info/10 text-info"
     title="5. Git &amp; Azure DevOps Hub"
     subtitle="Gestão de Branches &amp; Pull Requests"
     shortcut="Alt+5"
@@ -13,7 +13,7 @@ export const GitModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       <ModuleNavButton
         onNavigate={onNavigate}
         target="git"
-        colorClass="bg-info/10 hover:bg-info/20 text-info border border-info/30"
+        colorClass="bg-info/10 hover:bg-info/20 text-info"
         label="Abrir Git &amp; Azure DevOps"
       />
     }

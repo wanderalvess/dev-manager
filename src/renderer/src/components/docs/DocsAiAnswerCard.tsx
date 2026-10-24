@@ -33,7 +33,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
     <div className="cockpit-card rounded-xl p-4.5 border border-primary/40 bg-card shadow-md space-y-3.5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="relative w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+          <div className="relative w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
             <Bot className="w-4.5 h-4.5" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-success animate-pulse" />
           </div>
@@ -43,7 +43,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
                 Copilot Técnico WinThor {activeLlmProvider ? `· ${activeLlmProvider.name}` : ''}
               </span>
               {activeLlmProvider && (
-                <span className="text-2xs font-mono px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/25 font-bold shrink-0">
+                <span className="text-2xs font-mono px-2 py-0.5 rounded-lg bg-primary/10 text-primary font-bold shrink-0">
                   {activeLlmProvider.model}
                 </span>
               )}
@@ -111,7 +111,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
               <span>Consultando {activeLlmProvider?.name || 'modelo de IA'} ({activeLlmProvider?.model || 'LLM'})...</span>
             </div>
-            <span className="text-2xs font-mono text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs text-muted-foreground">
               RAG Vector Search
             </span>
           </div>
@@ -125,7 +125,7 @@ export const DocsAiAnswerCard: React.FC<DocsAiAnswerCardProps> = ({
       )}
 
       {llmError && !isAskingLlm && (
-        <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/25 text-xs space-y-2 font-mono">
+        <div className="p-3 rounded-xl bg-destructive/10 text-xs space-y-2 font-mono">
           <div className="flex items-center justify-between text-destructive font-semibold">
             <span className="flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />

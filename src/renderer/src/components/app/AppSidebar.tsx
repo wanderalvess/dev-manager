@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import { Plug, type LucideIcon } from 'lucide-react';
 import { AppLogo } from '../AppLogo';
 import type { NavThemeGroup } from '../header/headerNavConfig';
 
@@ -82,6 +82,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ activeTab, setActiveTab,
             ))}
           </div>
         ))}
+        <div data-tour="nav-integrations" className="pt-2 border-t border-border/80">
+          <SidebarItem
+            icon={Plug}
+            label="Integrações"
+            isActive={activeTab === 'integrations'}
+            onClick={() => setActiveTab('integrations')}
+          />
+        </div>
       </nav>
     </aside>
   );

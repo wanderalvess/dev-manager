@@ -40,8 +40,8 @@ export const ApmTraceDetails: React.FC<ApmTraceDetailsProps> = ({
     aria-label="Inspeção de Trace"
     className={
       isExpanded
-        ? 'fixed inset-3 z-50 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200'
-        : 'w-[44%] h-full flex flex-col bg-card/95 backdrop-blur-xs border-l border-border shadow-2xl z-20 overflow-hidden animate-in slide-in-from-right duration-200'
+        ? 'fixed inset-3 z-50 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200'
+        : 'w-[44%] h-full flex flex-col bg-card/95 backdrop-blur-xs border-l border-border shadow-lg z-20 overflow-hidden animate-in slide-in-from-right duration-200'
     }
   >
     <div className="px-3.5 py-2.5 border-b border-border flex items-center justify-between gap-2 shrink-0 bg-muted/20">

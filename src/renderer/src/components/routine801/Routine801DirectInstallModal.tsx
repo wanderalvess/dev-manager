@@ -40,14 +40,14 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
     onClose={onCancel}
     bare
     zIndexClass="z-60"
-    panelClassName="bg-card text-card-foreground border border-border rounded-lg shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150"
+    panelClassName="bg-card text-card-foreground border border-border rounded-lg shadow-lg w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150"
     closeOnBackdrop={false}
     closeOnEscape={false}
     ariaLabel="Instalação Direta de Pacote (Versão Específica)"
   >
     <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/20">
       <div className="flex items-center gap-2">
-        <div className="p-1 rounded bg-primary/10 border border-primary/20 text-primary">
+        <div className="p-1 rounded bg-primary/10 text-primary">
           <Plus className="w-4 h-4" />
         </div>
         <h3 className="text-sm font-semibold">Instalação Direta de Pacote (Versão Específica)</h3>
@@ -152,7 +152,7 @@ export const Routine801DirectInstallModal: React.FC<Routine801DirectInstallModal
 
       {/* Preview dos comandos gerados */}
       <div className="p-2.5 rounded border border-border bg-muted/30 font-mono text-2xs space-y-1">
-        <div className="text-muted-foreground uppercase text-2xs tracking-wider">Preview dos Comandos Karaf:</div>
+        <div className="text-muted-foreground text-xs">Preview dos Comandos Karaf:</div>
         <div className="text-primary truncate">
           $ feature:repo-add mvn:br.com.pcsist.winthor.{tipo === 'ROTINA' ? 'rotina' : 'servico'}/{nome.trim()}-features/{versao.trim()}/xml/features
         </div>

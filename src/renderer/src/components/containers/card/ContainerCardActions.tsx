@@ -62,7 +62,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenOracleTools(container)}
           title="Ferramentas Especializadas Oracle (db_health, SQL*Plus, Data Pump, TNS)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Database className="w-3.5 h-3.5 text-warning" />
           <span>Ferramentas Oracle</span>
@@ -88,7 +88,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenWtaTools(container)}
           title="Utilitários WTA (Portal, Instalador, Console Karaf, Modo Desenvolvedor)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-info/10 hover:bg-info/20 text-info rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Globe className="w-3.5 h-3.5 text-info" />
           <span>Utilitários WTA</span>
@@ -99,7 +99,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenWshTools(container)}
           title="Utilitários Especializados WSH (Gerador MD5, Checagem de /opt, Rotina 2650)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Key className="w-3.5 h-3.5 text-primary" />
           <span>Utilitários WSH</span>

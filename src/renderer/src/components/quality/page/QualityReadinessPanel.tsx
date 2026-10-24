@@ -38,7 +38,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
         </div>
 
         <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-2 text-xs">
-          <div className="font-bold text-foreground text-2xs uppercase tracking-wider">Recomendações para o PO:</div>
+          <div className="font-semibold text-foreground text-xs">Recomendações para o PO:</div>
           <ul className="space-y-1 text-muted-foreground list-disc pl-4">
             <li>Validar os critérios de aceite junto às áreas de negócio.</li>
             <li>Conferir logs de homologação na aba <strong className="text-foreground">Logs</strong> antes da subida.</li>

@@ -93,7 +93,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                     {/* Tag WinThor */}
                     {feat.isWinthor && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/25">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-primary/10 text-primary">
                         <ShieldCheck className="w-3 h-3" />
                         WinThor
                       </span>

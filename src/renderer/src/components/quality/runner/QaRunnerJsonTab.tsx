@@ -26,7 +26,7 @@ export const QaRunnerJsonTab: React.FC<QaRunnerJsonTabProps> = ({
           <button
             type="button"
             onClick={onOpenFetchPayload}
-            className="text-2xs text-primary font-semibold hover:text-primary/80 flex items-center gap-1 cursor-pointer transition-colors px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20"
+            className="text-2xs text-primary font-semibold hover:text-primary/80 flex items-center gap-1 cursor-pointer transition-colors px-1.5 py-0.5 rounded bg-primary/10"
             title="Obter payload JSON gravado no banco (PCINTEGRACAOCORE) ou via API REST externa"
           >
             <Database className="w-3 h-3 text-primary" />
