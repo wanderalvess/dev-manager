@@ -145,7 +145,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
         <div className="w-52 border-r border-border pr-3 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">Ambientes</span>
+              <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Ambientes</span>
               <button
                 type="button"
                 onClick={handleAddEnv}

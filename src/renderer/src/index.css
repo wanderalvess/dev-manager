@@ -64,7 +64,7 @@
   /* Mesma pilha do Tailwind 3 (a 4.x padrão começa por -apple-system). */
   --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
-  --text-2xs: 0.6875rem;
+  --text-2xs: 0.75rem;
   --text-2xs--line-height: 1rem;
 
   --radius-lg: var(--radius);

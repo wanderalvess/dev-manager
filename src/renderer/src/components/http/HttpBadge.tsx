@@ -19,7 +19,7 @@ const METHOD_STYLES: Record<string, string> = {
 export const HttpBadge: React.FC<HttpBadgeProps> = ({ method, size = 'sm' }) => {
   const m = (method || 'GET').toUpperCase();
   const style = METHOD_STYLES[m] || 'bg-slate-500/15 text-slate-400 border-slate-500/30';
-  const sizeClass = size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+  const sizeClass = size === 'sm' ? 'px-1.5 py-0.5 text-xs' : 'px-2.5 py-1 text-xs';
 
   return (
     <span className={`inline-flex items-center font-mono font-bold rounded border uppercase tracking-wider ${sizeClass} ${style}`}>

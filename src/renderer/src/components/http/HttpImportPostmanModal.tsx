@@ -86,7 +86,7 @@ export const HttpImportPostmanModal: React.FC<HttpImportPostmanModalProps> = ({
             <span className="font-semibold text-foreground">
               {fileName ? fileName : 'Clique aqui para selecionar o arquivo .json da Coleção'}
             </span>
-            <span className="text-[11px] text-muted-foreground mt-0.5">
+            <span className="text-xs text-muted-foreground mt-0.5">
               Exportado como Collection v2.1 (recomendado) ou v2.0
             </span>
           </label>
@@ -103,7 +103,7 @@ export const HttpImportPostmanModal: React.FC<HttpImportPostmanModalProps> = ({
             }}
             placeholder='{ "info": { "name": "Minha Coleção" }, "item": [...] }'
             rows={8}
-            className="w-full px-3 py-2 bg-background border border-border rounded font-mono text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full px-3 py-2 bg-background border border-border rounded font-mono text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 

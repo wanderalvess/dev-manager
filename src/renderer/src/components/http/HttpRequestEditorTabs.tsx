@@ -69,7 +69,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Params {paramsCount > 0 && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px]">{paramsCount}</span>}
+          Params {paramsCount > 0 && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-xs">{paramsCount}</span>}
         </button>
 
         <button
@@ -81,7 +81,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Headers {headersCount > 0 && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px]">{headersCount}</span>}
+          Headers {headersCount > 0 && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-xs">{headersCount}</span>}
         </button>
 
         <button
@@ -93,7 +93,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Auth {request.auth?.type !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px]">•</span>}
+          Auth {request.auth?.type !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">•</span>}
         </button>
 
         <button
@@ -105,7 +105,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Body {request.body?.mode !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-400 text-[10px]">•</span>}
+          Body {request.body?.mode !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-400 text-xs">•</span>}
         </button>
       </div>
 
@@ -152,11 +152,11 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
                   <ShieldCheck className="w-4 h-4" />
                   <span>Autenticação Integrada com WinThor</span>
                 </div>
-                <p className="text-muted-foreground text-[11px]">
+                <p className="text-muted-foreground text-xs">
                   Utiliza automaticamente a variável de ambiente <code className="text-primary font-mono font-semibold">TOKEN</code> injetando no header <code className="font-mono">Authorization: Bearer &lt;token&gt;</code>.
                 </p>
                 {activeToken && (
-                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Key className="w-3.5 h-3.5 text-amber-400" />
                     <span>Token ativo atual: <code className="text-xs font-mono text-foreground">{activeToken.substring(0, 16)}...</code></span>
                   </div>

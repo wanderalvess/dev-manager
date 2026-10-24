@@ -22,6 +22,19 @@ export async function listBundlesParsed(
 }
 
 /**
+ * Variante de listBundlesParsed para a interface: falha com erro quando o comando não executa,
+ * para que a tela distinga "Karaf inacessível" de "nenhum bundle instalado".
+ */
+export async function listBundlesOrThrow(
+  ctx: KarafContext,
+  credentials?: KarafCredentials
+): Promise<KarafBundleInfo[]> {
+  const res = await ctx.executeKarafCommand('bundle:list -s', noopChunk, credentials);
+  if (res.code !== 0) throw new Error(res.stderr?.trim() || 'Karaf inacessível');
+  return res.stdout ? parseBundleListOutput(res.stdout) : [];
+}
+
+/**
  * Obtém detalhes estruturados do bundle inspecionando cabeçalhos do manifesto
  * e fiações de capacidades OSGi.
  */

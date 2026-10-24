@@ -115,7 +115,7 @@ export function registerKarafHandlers(ctx: IpcContext): void {
   });
 
   ipcMain.handle('karaf:list-bundles', async (_, credentials?: { user?: string; pass?: string; port?: number }) => {
-    return await karafService.listBundlesParsed(credentials);
+    return await karafService.listBundlesOrThrow(credentials);
   });
 
   ipcMain.handle(

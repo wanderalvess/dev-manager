@@ -159,7 +159,7 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
       <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
         {activeTab === 'collections' ? (
           collections.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground text-[11px] px-4">
+            <div className="py-8 text-center text-muted-foreground text-xs px-4">
               <p>Nenhuma coleção cadastrada.</p>
               <button
                 type="button"
@@ -196,7 +196,7 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
                 <button
                   type="button"
                   onClick={onClearHistory}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-red-400 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors cursor-pointer"
                   title="Limpar todo o histórico"
                 >
                   <Trash2 className="w-2.5 h-2.5" />
@@ -206,7 +206,7 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
             )}
 
             {history.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground text-[11px]">Nenhuma chamada no histórico.</div>
+              <div className="py-8 text-center text-muted-foreground text-xs">Nenhuma chamada no histórico.</div>
             ) : (
               history.map((item) => (
                 <div
@@ -220,22 +220,22 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
                       {item.requestSnapshot?.method ? (
                         <HttpBadge method={item.requestSnapshot.method} size="sm" />
                       ) : (
-                        <span className="font-mono text-[10px] text-muted-foreground">HTTP</span>
+                        <span className="font-mono text-xs text-muted-foreground">HTTP</span>
                       )}
                       <span
-                        className={`font-mono text-[10px] font-bold ${
+                        className={`font-mono text-xs font-bold ${
                           item.status >= 200 && item.status < 300 ? 'text-emerald-400' : 'text-red-400'
                         }`}
                       >
                         {item.status || 'ERR'}
                       </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-mono">{item.durationMs}ms</span>
+                    <span className="text-xs text-muted-foreground font-mono">{item.durationMs}ms</span>
                   </div>
-                  <div className="text-[11px] text-foreground font-mono truncate mt-1">
+                  <div className="text-xs text-foreground font-mono truncate mt-1">
                     {item.requestSnapshot?.url || 'URL não gravada'}
                   </div>
-                  <div className="text-[10px] text-muted-foreground/60 truncate mt-0.5">
+                  <div className="text-xs text-muted-foreground/60 truncate mt-0.5">
                     {new Date(item.timestamp).toLocaleTimeString()}
                   </div>
                 </div>

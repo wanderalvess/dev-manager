@@ -115,7 +115,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
                 <Sparkles className="w-4 h-4 text-amber-400 absolute -top-1 -right-1 animate-spin" />
               </div>
               <p className="font-medium text-xs">Analisando causa raiz e stacktrace com o Assistente de IA...</p>
-              <p className="text-[11px] text-muted-foreground/60">Cruzando com regras comuns do Karaf e WinThor REST</p>
+              <p className="text-xs text-muted-foreground/60">Cruzando com regras comuns do Karaf e WinThor REST</p>
             </div>
           ) : error ? (
             <div className="p-4 rounded bg-red-500/10 border border-red-500/30 text-red-400 space-y-2">
@@ -123,7 +123,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
                 <AlertTriangle className="w-4 h-4" />
                 <span>Não foi possível gerar o diagnóstico</span>
               </div>
-              <p className="text-[11px] leading-relaxed">{error}</p>
+              <p className="text-xs leading-relaxed">{error}</p>
             </div>
           ) : diagnostic ? (
             <div className="prose prose-invert prose-xs max-w-none text-foreground leading-relaxed">
@@ -142,7 +142,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
 
         {/* Rodapé com Ações */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             Diagnóstico gerado pelo modelo configurado em Configurações &rarr; IA.
           </span>
           <div className="flex items-center gap-2">

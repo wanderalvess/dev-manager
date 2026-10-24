@@ -86,7 +86,7 @@ export const HttpCollectionTreeItem: React.FC<HttpCollectionTreeItemProps> = ({
                 {isOpen ? <FolderOpen className="w-3.5 h-3.5 text-amber-400" /> : <Folder className="w-3.5 h-3.5 text-amber-400" />}
                 <span className="truncate font-medium">{folder.name}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground/60">{folderRequests.length}</span>
+              <span className="text-xs text-muted-foreground/60">{folderRequests.length}</span>
             </div>
 
             {isOpen && (
