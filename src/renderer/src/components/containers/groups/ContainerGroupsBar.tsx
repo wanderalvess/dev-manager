@@ -45,16 +45,16 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   return (
-    <div className="mx-4 mt-3 p-3 bg-card/75 border border-border/80 rounded-xl shadow-2xs transition-all">
+    <div className="mx-7 mt-3 p-3 bg-card border border-border rounded-[14px] shadow-xs transition-all">
       {/* Topo do Painel de Grupos */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">
-          <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
             <Layers className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-foreground">Grupos de Containers</h3>
+              <h3 className="text-base font-semibold text-foreground">Grupos de Containers</h3>
               <span className="text-2xs px-2 py-0.2 rounded-full font-semibold bg-muted text-muted-foreground border border-border/60">
                 {environments.length} {environments.length === 1 ? 'grupo' : 'grupos'}
               </span>
@@ -70,7 +70,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
             type="button"
             onClick={onCreateGroup}
             disabled={sequenceProgress.running}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-98 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-bold transition cursor-pointer active:scale-98 disabled:opacity-50"
             title="Criar novo grupo personalizado de containers"
           >
             <Plus className="w-3.5 h-3.5" />

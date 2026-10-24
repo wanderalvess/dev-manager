@@ -38,7 +38,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
         type="button"
         onClick={onStart}
         disabled={isBusy}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-success/15 hover:bg-success/25 text-success border border-success/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 hover:bg-success/25 text-success rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
       >
         <Play className="w-3.5 h-3.5" />
         Iniciar Captura
@@ -48,7 +48,7 @@ export const TracerControls: React.FC<TracerControlsProps> = ({
         type="button"
         onClick={onStop}
         disabled={isBusy}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-danger/15 hover:bg-danger/25 text-danger border border-danger/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-danger/10 hover:bg-danger/25 text-danger rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
       >
         <Square className="w-3.5 h-3.5" />
         Parar Captura

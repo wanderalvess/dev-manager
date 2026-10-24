@@ -38,7 +38,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-6xl xl:max-w-7xl h-[88vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -71,7 +71,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
           value={newSnapshotLabel}
           onChange={(e) => setNewSnapshotLabel(e.target.value)}
           placeholder="Rótulo do snapshot (ex: Pré-deploy v1.4.2)..."
-          className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
+          className="flex-1 bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground focus:outline-hidden"
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleCreateSnapshot();
           }}

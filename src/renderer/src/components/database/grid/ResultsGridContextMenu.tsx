@@ -42,7 +42,7 @@ export const ResultsGridContextMenu: React.FC<ResultsGridContextMenuProps> = ({
     <EscapeToClose onEscape={onClose} />
     <div
       style={clampContextMenuPosition(menu.x, menu.y, window.innerWidth, window.innerHeight)}
-      className="fixed z-50 w-60 bg-popover text-popover-foreground rounded-lg shadow-2xl border border-border p-1.5 text-xs font-sans animate-fade-in space-y-1"
+      className="fixed z-50 w-60 bg-popover text-popover-foreground rounded-lg shadow-lg border border-border p-1.5 text-xs font-sans animate-fade-in space-y-1"
     >
       <div className="px-2 py-1 text-2xs font-bold text-muted-foreground border-b border-border/60">
         Célula: {menu.column}

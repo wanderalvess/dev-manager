@@ -40,7 +40,7 @@ export const AlteredPomsBanner: React.FC = () => {
   return (
     <div
       role="alert"
-      className="shrink-0 rounded-xl border border-danger/50 bg-danger/10 p-3 space-y-2 text-xs"
+      className="shrink-0 rounded-xl bg-danger/10 p-3 space-y-2 text-xs"
       data-testid="altered-poms-banner"
     >
       <p className="font-bold text-danger flex items-center gap-1.5">

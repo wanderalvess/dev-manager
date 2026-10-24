@@ -73,7 +73,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
             value={objectType}
             onChange={(e) => onObjectTypeChange(e.target.value as ExplorerObjectType)}
             aria-label="Tipo de objeto"
-            className="min-w-0 bg-transparent text-2xs font-bold text-muted-foreground uppercase focus:outline-hidden cursor-pointer"
+            className="min-w-0 bg-transparent text-[13px] font-semibold text-foreground focus:outline-hidden cursor-pointer"
           >
             {EXPLORER_TYPE_OPTIONS.map((o) => {
               const n = countOf(o.type);
@@ -164,7 +164,7 @@ export const DatabaseSidebarTableExplorer: React.FC<DatabaseSidebarTableExplorer
                   onClick={onFetchTables}
                   className="mt-1.5 text-2xs text-primary font-bold hover:underline cursor-pointer"
                 >
-                  Buscar Tabelas
+                  Buscar tabelas
                 </button>
               </div>
             )}

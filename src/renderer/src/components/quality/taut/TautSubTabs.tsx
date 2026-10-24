@@ -12,10 +12,10 @@ interface TautSubTabsProps {
 }
 
 const tabClass = (active: boolean) =>
-  `px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
+  `py-3 text-sm transition-colors cursor-pointer flex items-center space-x-1.5 border-b-2 -mb-px ${
     active
-      ? 'bg-primary text-primary-foreground shadow-2xs'
-      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+      ? 'text-foreground font-medium border-primary'
+      : 'text-muted-foreground hover:text-foreground border-transparent'
   }`;
 
 export const TautSubTabs: React.FC<TautSubTabsProps> = ({
@@ -24,7 +24,7 @@ export const TautSubTabs: React.FC<TautSubTabsProps> = ({
   coverageReport,
   specsCount
 }) => (
-  <div className="flex items-center space-x-1.5 border-b border-border/70 pb-1">
+  <div className="flex items-center gap-6 border-b border-border">
     <button type="button" onClick={() => onChange('runner')} className={tabClass(activeSubTab === 'runner')}>
       <Play className="w-3.5 h-3.5" />
       <span>Disparador & Tags</span>
@@ -34,7 +34,7 @@ export const TautSubTabs: React.FC<TautSubTabsProps> = ({
       <ShieldCheck className="w-3.5 h-3.5" />
       <span>Cobertura Zephyr Scale</span>
       {coverageReport && (
-        <span className="ml-1 px-1.5 py-0.2 rounded text-2xs font-mono font-bold bg-primary-foreground/20">
+        <span className="ml-1 px-2 rounded-full text-xs font-medium bg-muted text-muted-foreground">
           {coverageReport.coveragePercentage}%
         </span>
       )}
@@ -46,7 +46,7 @@ export const TautSubTabs: React.FC<TautSubTabsProps> = ({
     </button>
 
     <button type="button" onClick={() => onChange('intake')} className={tabClass(activeSubTab === 'intake')}>
-      <Sparkles className="w-3.5 h-3.5 text-warning" />
+      <Sparkles className="w-3.5 h-3.5" />
       <span>Orquestrador de Intake CSV (IA)</span>
     </button>
   </div>

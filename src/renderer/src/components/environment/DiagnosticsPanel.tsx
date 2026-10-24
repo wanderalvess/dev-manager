@@ -31,15 +31,15 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
   const runningProcessesCount = processes.filter((p) => p.isRunning).length;
 
   return (
-    <div className="cockpit-panel rounded-xl p-3 border border-border flex flex-col space-y-2">
+    <div className="bg-card border border-border rounded-[14px] shadow-xs px-5 py-4 flex flex-col space-y-2">
       <button
         type="button"
         onClick={() => setShowDiagnostics(!showDiagnostics)}
-        className="flex items-center justify-between text-[13px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center justify-between text-base font-semibold text-foreground cursor-pointer"
       >
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
-          <span>Serviços Windows e Travas do Sistema ({services.length} monitorados)</span>
+          <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+          <span>Serviços Windows e travas <span className="text-muted-foreground font-normal">({services.length})</span></span>
         </div>
         {showDiagnostics ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </button>

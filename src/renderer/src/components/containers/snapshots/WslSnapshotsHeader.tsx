@@ -8,13 +8,13 @@ interface WslSnapshotsHeaderProps {
 export const WslSnapshotsHeader: React.FC<WslSnapshotsHeaderProps> = ({ onClose }) => (
   <div className="px-5 py-4 border-b border-border/80 flex items-center justify-between bg-muted/20">
     <div className="flex items-center space-x-3">
-      <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
         <Archive className="w-5 h-5" />
       </div>
       <div>
         <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
           <span>Snapshots WSL (.tar)</span>
-          <span className="text-2xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">
             WSL2 Backup & Restore
           </span>
         </h3>

@@ -61,7 +61,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
             placeholder="Ex: 132, PCSIS132, PC1406, PCINFTAB"
             value={routineInput}
             onChange={(e) => onRoutineInputChange(e.target.value)}
-            className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+            className="w-full bg-card border border-input rounded-[10px] px-3.5 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
           />
           {normalized.baseName && (
             <p className="text-2xs text-muted-foreground font-mono">
@@ -96,7 +96,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
               placeholder="Ex: 37.00 ou 38.00"
               value={winthorVersion}
               onChange={(e) => onWinthorVersionChange(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+              className="w-full bg-card border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
             />
             <datalist id="ccw-cycles-options">
               {effectiveCycles.map((c) => (
@@ -122,7 +122,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
             placeholder="Auto-detectar (ex: MOD-001, Raiz)"
             value={targetModule}
             onChange={(e) => onTargetModuleChange(e.target.value)}
-            className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+            className="w-full bg-card border border-input rounded-[10px] px-3.5 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
           />
           <p className="text-2xs text-muted-foreground">
             Se vazio, o Hub Manager detecta automaticamente se a rotina já existe em alguma subpasta ou calcula pelo código.
@@ -138,7 +138,7 @@ export const CcwDownloadTab: React.FC<CcwDownloadTabProps> = ({
             placeholder="Deixe em branco para usar URL oficial da CCW"
             value={customDownloadUrl}
             onChange={(e) => onCustomDownloadUrlChange(e.target.value)}
-            className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+            className="w-full bg-card border border-input rounded-[10px] px-3.5 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
           />
           <p className="text-2xs text-muted-foreground truncate" title={estimatedDownloadUrl}>
             URL padrão: {estimatedDownloadUrl || 'https://centraldecontrole.pcinformatica.com.br/api/rotinas/rotinaVersaoComDependencia/...'}

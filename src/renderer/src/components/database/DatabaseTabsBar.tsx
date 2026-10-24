@@ -24,7 +24,7 @@ interface DatabaseTabsBarProps {
 
 /** Abas de consulta: cada uma com a sua conexão, o seu texto e o seu resultado. */
 export const DatabaseTabsBar: React.FC<DatabaseTabsBarProps> = ({ tabs, activeId, connections, status, onSelect, onClose, onNew, canAdd }) => (
-  <div className="flex items-end gap-1 px-2 pt-1.5 border-b border-border/70 bg-card/40 shrink-0 overflow-x-auto" data-tour="query-tabs">
+  <div className="flex items-end gap-1 px-2 pt-1.5 border-b border-border bg-card shrink-0 overflow-x-auto" data-tour="query-tabs">
     <div role="tablist" aria-label="Abas de consulta" className="flex items-end gap-1 min-w-0">
       {tabs.map((tab) => {
         const conn = connections.find((c) => c.id === tab.connectionId);
@@ -53,8 +53,8 @@ export const DatabaseTabsBar: React.FC<DatabaseTabsBarProps> = ({ tabs, activeId
             title={`${conn ? `${conn.name} (${formatConnectionTarget(conn)})` : 'Conexão removida'} · ${tab.title}${pending ? ' (alterações pendentes)' : ''}`}
             className={`group flex items-center gap-1.5 max-w-[220px] pl-2.5 pr-1.5 py-1.5 rounded-t-md border border-b-0 text-xs cursor-pointer select-none transition-colors ${
               active
-                ? 'bg-background border-border text-foreground font-semibold'
-                : 'bg-muted/40 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/70'
+                ? 'bg-background border-border text-foreground font-medium'
+                : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             <span className={`w-2 h-2 rounded-full shrink-0 ${conn ? TYPE_DOT[conn.type] : 'bg-muted-foreground'}`} aria-hidden="true" />

@@ -19,9 +19,9 @@ interface KarafPageProps {
 }
 
 const STATUS_STYLE: Record<'online' | 'offline' | 'checking', { label: string; className: string }> = {
-  online: { label: 'Online', className: 'bg-success/10 text-success border-success/30' },
-  offline: { label: 'Offline', className: 'bg-danger/10 text-danger border-danger/30' },
-  checking: { label: 'Verificando…', className: 'bg-muted text-muted-foreground border-border' }
+  online: { label: 'Online', className: 'bg-success/10 text-success' },
+  offline: { label: 'Offline', className: 'bg-danger/10 text-danger' },
+  checking: { label: 'Verificando…', className: 'bg-muted text-muted-foreground' }
 };
 
 /** Gestão e diagnóstico do Apache Karaf: bundles, features, catálogo 801, memória da JVM e diagnósticos rápidos. */
@@ -37,20 +37,17 @@ export const KarafPage: React.FC<KarafPageProps> = ({ projects }) => {
   const closeTool = () => setOpenTool(null);
 
   return (
-    <div className="h-full flex flex-col p-5 space-y-4 overflow-y-auto max-w-full">
-      <div className="cockpit-panel rounded-xl p-4 border border-border shadow-xs flex flex-wrap items-center justify-between gap-3">
+    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-y-auto max-w-full">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2.5 rounded-xl bg-warning/10 border border-warning/30 text-warning shrink-0">
-            <Terminal className="w-5 h-5" />
-          </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-3">
               Karaf
-              <span className={`text-2xs font-mono font-bold px-2 py-0.5 rounded border ${status.className}`}>
+              <span className={`text-[13px] font-medium px-2.5 py-0.5 rounded-full ${status.className}`}>
                 {status.label}
               </span>
             </h1>
-            <p className="text-2xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-1">
               Bundles, features, catálogo 801, memória da JVM e diagnósticos do servidor OSGi.
             </p>
           </div>
@@ -61,7 +58,7 @@ export const KarafPage: React.FC<KarafPageProps> = ({ projects }) => {
             <button
               type="button"
               onClick={() => void diagnostics.abortDiagnostic()}
-              className="px-3 py-1.5 rounded-lg bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+              className="px-3 h-10 rounded-[10px] bg-danger/10 hover:bg-danger/20 text-danger text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Square className="w-3 h-3" />
               Interromper diagnóstico
@@ -72,7 +69,7 @@ export const KarafPage: React.FC<KarafPageProps> = ({ projects }) => {
               type="button"
               onClick={() => void karaf.handleStartEmbeddedKaraf()}
               disabled={karaf.isStartingKaraf}
-              className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+              className="px-4 h-10 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             >
               {karaf.isStartingKaraf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               Iniciar Karaf embedded
@@ -81,16 +78,16 @@ export const KarafPage: React.FC<KarafPageProps> = ({ projects }) => {
           <button
             type="button"
             onClick={() => setConsoleOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-card hover:bg-muted text-foreground border border-border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Abrir o Console Karaf (Ctrl+`)"
           >
-            <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
+            <Terminal className="w-4 h-4 text-muted-foreground" />
             Console
           </button>
           <button
             type="button"
             onClick={tour.open}
-            className="px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
+            className="px-3 h-10 rounded-[10px] text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
             title="Rever o tour guiado desta tela"
           >
             Tour

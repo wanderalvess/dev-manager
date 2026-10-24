@@ -112,7 +112,7 @@ export const TableSpecModal: React.FC<TableSpecModalProps> = ({ target, connecti
       onClose={onClose}
       bare
       ariaLabel={`Especificação de ${current.name}`}
-      panelClassName="bg-card w-full max-w-4xl h-[80vh] rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden"
+      panelClassName="bg-card w-full max-w-4xl h-[80vh] rounded-xl border border-border shadow-lg flex flex-col overflow-hidden"
     >
         <div className="px-4 py-3 border-b border-border flex items-start justify-between gap-3 shrink-0">
           <div className="min-w-0 flex items-start gap-2.5">
@@ -130,7 +130,7 @@ export const TableSpecModal: React.FC<TableSpecModalProps> = ({ target, connecti
             <Table2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-sm font-bold text-foreground font-mono truncate">{fullName}</h3>
+                <h3 className="text-base font-semibold text-foreground font-mono truncate">{fullName}</h3>
                 <span className="px-1.5 py-0.5 rounded bg-muted text-2xs font-bold text-muted-foreground">
                   {details?.objectType ?? current.type}
                 </span>

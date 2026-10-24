@@ -49,14 +49,14 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
                     {feat.version || 'latest'}
                   </span>
                   {feat.name.toLowerCase().includes('winthor') && (
-                    <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
+                    <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary">
                       WinThor
                     </span>
                   )}
                   <span
                     className={`text-2xs font-mono font-bold px-1.5 py-0.2 rounded uppercase ${
                       isInstalled
-                        ? 'bg-success/10 text-success border border-success/30'
+                        ? 'bg-success/10 text-success'
                         : 'text-muted-foreground/80 border border-border/40'
                     }`}
                   >
@@ -78,8 +78,8 @@ export const KarafFeaturesManagerFeatureList: React.FC<KarafFeaturesManagerFeatu
                 disabled={isBusy}
                 className={`px-2.5 py-1 rounded-md text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-50 ${
                   isInstalled
-                    ? 'bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30'
-                    : 'bg-success/10 hover:bg-success/20 text-success border border-success/30'
+                    ? 'bg-danger/10 hover:bg-danger/20 text-danger'
+                    : 'bg-success/10 hover:bg-success/20 text-success'
                 }`}
                 title={isInstalled ? 'Desinstalar feature do Karaf' : 'Instalar feature no Karaf'}
               >

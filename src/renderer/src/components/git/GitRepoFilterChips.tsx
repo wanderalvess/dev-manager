@@ -18,14 +18,14 @@ export const GitRepoFilterChips: React.FC<GitRepoFilterChipsProps> = ({ filter, 
           aria-pressed={active}
           title={hint}
           onClick={() => onChange(id)}
-          className={`px-2.5 py-1 rounded-full border text-2xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+          className={`px-2.5 py-1 rounded-full text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
             active
-              ? 'bg-primary/10 border-primary text-primary'
-              : 'bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              ? 'bg-accent text-accent-foreground'
+              : 'bg-muted text-muted-foreground hover:text-foreground'
           }`}
         >
           <span>{label}</span>
-          <span className="font-mono opacity-80">{counts[id]}</span>
+          <span className="opacity-80">{counts[id]}</span>
         </button>
       );
     })}

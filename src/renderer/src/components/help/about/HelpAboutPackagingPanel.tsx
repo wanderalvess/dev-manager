@@ -14,17 +14,17 @@ export const HelpAboutPackagingPanel: React.FC<HelpAboutPackagingPanelProps> = (
   copiedItem,
   copyToClipboard
 }) => (
-  <div className="cockpit-panel rounded-xl p-5 sm:p-6 border border-border space-y-3.5 shadow-md">
+  <div className="cockpit-panel rounded-[14px] p-5 sm:p-6 border border-border space-y-3.5 shadow-xs">
     <div className="flex items-center justify-between pb-2 border-b border-border flex-wrap gap-2">
       <div className="flex items-center space-x-2">
         <div className="p-2 rounded-xl bg-success/10 text-success border border-success/20">
           <Laptop className="w-4 h-4" />
         </div>
         <div>
-          <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-foreground">
+          <h3 className="text-base font-semibold text-foreground">
             Empacotamento &amp; Geração de Executável (.exe)
           </h3>
-          <span className="text-2xs text-muted-foreground font-mono">Electron Builder • Windows Release</span>
+          <span className="text-[13px] text-muted-foreground">Electron Builder • Windows Release</span>
         </div>
       </div>
       <button

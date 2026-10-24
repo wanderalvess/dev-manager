@@ -20,7 +20,7 @@ interface OracleDataPumpTabProps {
 const codclipcButtonClass = (active: boolean) =>
   `text-2xs px-1.5 py-0.2 rounded font-mono cursor-pointer transition ${
     active
-      ? 'bg-primary/20 text-primary border border-primary/40 font-bold'
+      ? 'bg-primary/20 text-primary font-bold'
       : 'bg-muted hover:bg-muted/80 text-muted-foreground'
   }`;
 
@@ -50,7 +50,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
         type="button"
         onClick={onOpenDumpsFolder}
         disabled={isOpeningDumpsFolder}
-        className="flex items-center space-x-1.5 px-3 py-1.5 bg-success/20 hover:bg-success/30 text-success border border-success/40 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 active:scale-98"
+        className="flex items-center space-x-1.5 px-3 py-1.5 bg-success/20 hover:bg-success/30 text-success rounded-lg text-xs font-bold transition cursor-pointer shrink-0 active:scale-98"
         title="Abre a pasta \\wsl$\distro\opt\dumps no Windows Explorer para copiar dumps"
       >
         <FolderOpen className="w-3.5 h-3.5" />
@@ -98,7 +98,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           value={dp.dumpfile}
           onChange={(e) => dp.setDumpfile(e.target.value)}
           placeholder="ex: backup.dmp"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
         <p className="text-2xs text-muted-foreground mt-1">
           Pasta WSL: <code className="font-mono text-foreground font-semibold">/opt/dumps</code> ↔ Container: <code className="font-mono text-foreground">/home/oracle/dumps</code>.
@@ -131,7 +131,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           value={dp.codclipc}
           onChange={(e) => dp.setCodclipc(e.target.value)}
           placeholder="-999"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
       <div>
@@ -141,7 +141,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           value={dp.schemaOrig}
           onChange={(e) => dp.setSchemaOrig(e.target.value)}
           placeholder="LOCAL"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground uppercase focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
       <div>
@@ -151,7 +151,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           value={dp.schemaDest}
           onChange={(e) => dp.setSchemaDest(e.target.value)}
           placeholder="Vazio = substitui schema de origem"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground uppercase focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
       <div>
@@ -160,7 +160,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           type="text"
           value={dp.user}
           onChange={(e) => dp.setUser(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
       <div>
@@ -169,7 +169,7 @@ export const OracleDataPumpTab: React.FC<OracleDataPumpTabProps> = ({
           type="password"
           value={dp.pass}
           onChange={(e) => dp.setPass(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
     </div>

@@ -4,6 +4,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Estilo visual "Papel"** (novo padrão em instalações novas): cinza neutro, cartões limpos, azul como único acento e texto secundário mais escuro, no modo claro e no escuro. Quem já escolheu outro estilo continua com ele; para trocar, use o seletor de tema do cabeçalho.
+- **Menu lateral com todos os módulos**: a partir de telas largas (lg), os módulos ficam sempre visíveis à esquerda, agrupados em Infraestrutura, Dados & Rotinas, Desenvolvimento e Qualidade, com os atalhos Alt+N ao lado. Substitui os quatro menus suspensos do cabeçalho; em janelas estreitas continua o seletor compacto. Os módulos desligados em Configurações → Módulos seguem fora do menu.
+
+### Alterado
+- **Telas Rotinas, Backups, Logs e APM no visual Papel**: título sem cartão, *Atualizar rotina (CCW)* como ação principal em Rotinas, abas sublinhadas em Backups, barras de Logs e APM com fundo sólido e estado do receptor OTLP com a ação *Trocar porta do receptor* em destaque. Os selos do Karaf (WTA) em Rotinas passam a usar as cores semânticas de sucesso e perigo.
+- **Telas Docs, API Studio, Homologação e Configurações no visual Papel**: títulos sem cartão, botões e campos de 40 px com anel de foco, abas sublinhadas (Homologação e Configurações), indicadores de Homologação com rótulos em frase e números maiores, checklist de configuração em chips com cor e palavra. A mudança vale também para Regressivo, Runners e TAUT, que compartilham o cabeçalho de Homologação.
+- **Telas WinThor, Karaf, Regressivo, Runners, TAUT e Ajuda no visual Papel**: títulos sem cartão, botões e campos de 40 px, status do Karaf em selo com palavra, atalhos das ferramentas Karaf em cartões simples, abas sublinhadas na Ajuda e no TAUT, controles do Validador Regressivo e do TAUT com a ação principal em azul, selos de tipo dos Runners nas cores semânticas e rótulos da Ajuda em frase, sem maiúsculas.
+- **Ajustes após revisão com dados reais**: barra do Validador Regressivo passa a quebrar linha sem sobrepor botões, rótulo "Branch de destino" do Git não quebra mais, painel de topologia do WinThor/Containers e listas de Rotinas e Runners no visual Papel.
+- **Modais e painéis internos no visual Papel**: Karaf (bundles, features, histórico, desinstalação), Central de Controle WinThor, Git, Deploy, Containers e Configurações. Rótulos em frase em vez de maiúsculas mono, selos sem borda colorida, campos de formulário de 40 px com anel de foco, títulos de modal maiores e selos de status do Karaf/WSH nas cores semânticas.
+- **Telas Containers, Deploy e Banco de Dados no visual Papel**: mesmo padrão do Ambiente e do Git (título sem cartão, ação principal única, botões secundários discretos, avisos em palavras). Em Containers, *Novo grupo* é a ação em destaque; em Deploy, *Executar perfil*; no Banco, o aviso de primeiro uso e a barra lateral de conexões e tabelas.
+- **Telas Ambiente Dev e Git no visual Papel**: título de página sem cartão, uma única ação principal por tela (*Subir ambiente*, *Commit e push*), botões secundários discretos, status escritos em palavras (*Aberta*, *Fechada*, *só local*) em vez de chips em maiúsculas, e portas e rede como listas na coluna da direita do Ambiente. Nenhuma ação mudou de lugar de forma que quebre o tour guiado.
+
 ## [1.45.0] - 2026-10-23
 ### Adicionado
 - **Filtros e alertas na lista de repositórios (Git)**: chips *Todos*, *Com alterações*, *Só locais* e *Sem push*, cada um com a contagem, combinados com a busca. Os cartões mostram `SÓ LOCAL`, `↑ N sem push` e `● N alterações`, e o cabeçalho resume quantos repositórios estão só locais ou com alterações. A contagem de commits sem push lê as refs já baixadas (sem rede); use *Fetch* para atualizá-la.

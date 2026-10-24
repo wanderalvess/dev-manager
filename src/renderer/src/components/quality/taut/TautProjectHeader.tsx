@@ -30,20 +30,20 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
   onReload,
   onNavigateToSettings
 }) => (
-  <div className="p-4 rounded-xl bg-card border border-border shadow-2xs space-y-3">
+  <div className="p-4 rounded-[14px] bg-card border border-border shadow-xs space-y-3">
     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
       <div className="space-y-1">
         <div className="flex items-center space-x-2">
-          <Zap className="w-5 h-5 text-success" />
-          <h2 className="text-sm font-semibold text-foreground">
+          <Zap className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-base font-semibold text-foreground">
             Testes Automatizados (Cypress / TAUT) — Automação de API &amp; Integração
           </h2>
           {projectStatus?.exists ? (
-            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-success/10 text-success border border-success/20">
+            <span className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-success/10 text-success">
               Online
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded text-2xs font-mono font-bold bg-danger/10 text-danger border border-danger/20">
+            <span className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-danger/10 text-danger">
               Não Localizado
             </span>
           )}
@@ -58,7 +58,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
           <button
             type="button"
             onClick={onNavigateToSettings}
-            className="px-3 py-1.5 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/70 text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer"
+            className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
             title="Configurar diretório do projeto TAUT nas Configurações"
           >
             <Settings className="w-3.5 h-3.5" />
@@ -70,7 +70,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
           type="button"
           onClick={onSyncEnv}
           disabled={syncingEnv || !projectStatus?.exists}
-          className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50 text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer disabled:opacity-50"
+          className="px-4 h-10 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium flex items-center space-x-1.5 transition-colors cursor-pointer disabled:opacity-50"
           title="Gera ou atualiza as variáveis de ambiente (.env) do TAUT com a conexão Oracle ativa no Hub Manager"
         >
           <Database className={`w-3.5 h-3.5 ${syncingEnv ? 'animate-spin' : ''}`} />
@@ -81,7 +81,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
           type="button"
           onClick={onReload}
           disabled={loading}
-          className="p-2 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/70 transition cursor-pointer"
+          className="h-10 w-10 flex items-center justify-center rounded-[10px] bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border transition-colors cursor-pointer"
           title="Recarregar integridade do projeto" aria-label="Recarregar integridade do projeto"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -91,7 +91,7 @@ export const TautProjectHeader: React.FC<TautProjectHeaderProps> = ({
 
     {/* Alerta quando o projeto não for localizado */}
     {!projectStatus?.exists && (
-      <div className="p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning text-xs flex items-center justify-between gap-2">
+      <div className="p-3.5 rounded-xl bg-warning/10 text-foreground text-[13px] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>

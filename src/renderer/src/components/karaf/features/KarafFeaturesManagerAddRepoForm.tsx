@@ -21,7 +21,7 @@ export const KarafFeaturesManagerAddRepoForm: React.FC<KarafFeaturesManagerAddRe
     className="p-3.5 bg-muted/20 border-b border-border flex flex-col space-y-2.5 animate-in fade-in duration-150"
   >
     <div className="flex items-center justify-between">
-      <span className="text-xs font-bold text-foreground font-mono uppercase tracking-wide flex items-center gap-1.5">
+      <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
         <Plus className="w-3.5 h-3.5 text-primary" /> Registrar Repositório Maven
       </span>
       <button
@@ -34,7 +34,7 @@ export const KarafFeaturesManagerAddRepoForm: React.FC<KarafFeaturesManagerAddRe
     </div>
 
     <div className="flex flex-col space-y-1">
-      <label className="text-2xs font-mono uppercase tracking-wider text-muted-foreground">
+      <label className="text-xs text-muted-foreground">
         Coordenada Maven (mvn:groupId/artifactId/version/xml/features) ou URI:
       </label>
       <input
@@ -42,7 +42,7 @@ export const KarafFeaturesManagerAddRepoForm: React.FC<KarafFeaturesManagerAddRe
         placeholder="mvn:br.com.totvs.winthor/features/1.0.0/xml/features"
         value={newRepoUrl}
         onChange={(e) => onUrlChange(e.target.value)}
-        className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-xs font-mono text-foreground focus:outline-hidden focus:border-primary"
+        className="w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm font-mono text-foreground focus:outline-hidden"
         autoFocus
       />
     </div>

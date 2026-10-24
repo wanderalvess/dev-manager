@@ -20,7 +20,7 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
 }) => (
   <>
     {karafValid === false && (
-      <div className="bg-danger/10 border border-danger/40 rounded-lg p-3 flex items-start space-x-2.5 text-xs text-danger">
+      <div className="bg-danger/10 rounded-xl p-3.5 flex items-start space-x-2.5 text-[13px] text-foreground">
         <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
         <div className="flex-1">
           <span className="font-bold block">Executável client.bat não localizado</span>
@@ -31,7 +31,7 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
             <button
               type="button"
               onClick={onNavigateToSettings}
-              className="mt-2 px-2.5 py-1 bg-danger/20 hover:bg-danger/30 border border-danger/40 rounded-md text-2xs font-semibold text-danger flex items-center gap-1 transition-all"
+              className="mt-2 px-2.5 py-1 bg-danger/20 hover:bg-danger/30 rounded-md text-2xs font-semibold text-danger flex items-center gap-1 transition-all"
             >
               <Settings className="w-3 h-3" />
               <span>Ajustar Diretório nas Configurações</span>
@@ -42,7 +42,7 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
     )}
 
     {showOfflineAlert && (
-      <div className="bg-warning/10 border border-warning/40 rounded-lg p-3 flex items-start space-x-2.5 text-xs text-warning">
+      <div className="bg-warning/10 rounded-xl p-3.5 flex items-start space-x-2.5 text-[13px] text-foreground">
         <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
         <div className="flex-1">
           <span className="font-bold block">Karaf / OSGi offline</span>
@@ -53,7 +53,7 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
             type="button"
             onClick={onStartKaraf}
             disabled={isStartingKaraf}
-            className="mt-2 px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-md text-2xs font-semibold text-warning flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+            className="mt-2 px-2.5 py-1 bg-warning/20 hover:bg-warning/30 rounded-md text-2xs font-semibold text-warning flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
           >
             <Play className={`w-3 h-3 ${isStartingKaraf ? 'animate-spin' : ''}`} />
             <span>{isStartingKaraf ? 'Iniciando Karaf...' : 'Iniciar Karaf Embutido'}</span>

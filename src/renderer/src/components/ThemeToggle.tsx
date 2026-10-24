@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sun, Moon, Flame, Zap, Cpu, Sparkles, Snowflake, Check, Palette } from 'lucide-react';
+import { Sun, Moon, Flame, Zap, Cpu, Sparkles, Snowflake, Check, Palette, FileText } from 'lucide-react';
 import { useTheme, ThemeVariant } from '../context/ThemeContext';
 
 export const ThemeToggle: React.FC = () => {
@@ -33,6 +33,8 @@ export const ThemeToggle: React.FC = () => {
 
   const getIndicatorDot = (v: ThemeVariant) => {
     switch (v) {
+      case 'paper':
+        return 'bg-blue-600';
       case 'midnight':
         return 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]';
       case 'cyberpunk':
@@ -55,6 +57,14 @@ export const ThemeToggle: React.FC = () => {
     colorClass: string;
     bgPreview: string;
   }[] = [
+    {
+      id: 'paper',
+      label: 'Papel',
+      description: mode === 'light' ? 'Azul sobre cinza-claro, leitura confortável' : 'Azul sobre grafite, sem brilho',
+      icon: FileText,
+      colorClass: mode === 'light' ? 'text-blue-600' : 'text-blue-400',
+      bgPreview: 'bg-blue-600'
+    },
     {
       id: 'default',
       label: 'Cockpit Âmbar',

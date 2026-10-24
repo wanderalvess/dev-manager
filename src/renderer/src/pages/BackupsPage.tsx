@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { DatabaseZap, HardDriveDownload } from 'lucide-react';
+import { DatabaseZap } from 'lucide-react';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { BACKUPS_TOUR_STEPS, BACKUPS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/backupsTour';
@@ -30,18 +30,13 @@ export const BackupsPage: React.FC<BackupsPageProps> = ({ isActive, settingsVers
   }, [isActive, connections, setActiveConnectionId]);
 
   return (
-    <div className="h-full flex flex-col p-5 space-y-4 overflow-y-auto max-w-full">
-      <div className="cockpit-panel rounded-xl p-4 border border-border shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2.5 rounded-xl bg-info/10 border border-info/30 text-info shrink-0">
-            <HardDriveDownload className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg font-bold text-foreground">Backups de Banco</h1>
-            <p className="text-2xs text-muted-foreground">
-              Backup e restauração, agendamento, arquivos gerados, histórico e webhooks.
-            </p>
-          </div>
+    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-y-auto max-w-full">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">Backups</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Backup e restauração dos bancos, com agendamento, arquivos gerados, histórico e webhooks.
+          </p>
         </div>
 
         <div className="flex items-center gap-2" data-tour="backups-connection">
@@ -50,7 +45,7 @@ export const BackupsPage: React.FC<BackupsPageProps> = ({ isActive, settingsVers
               value={conn.activeConnection?.id ?? ''}
               onChange={(e) => setActiveConnectionId(e.target.value)}
               aria-label="Conexão do backup"
-              className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:border-primary font-mono max-w-[260px]"
+              className="h-10 bg-card border border-input rounded-[10px] px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring max-w-[280px]"
             >
               {connections.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -62,7 +57,7 @@ export const BackupsPage: React.FC<BackupsPageProps> = ({ isActive, settingsVers
           <button
             type="button"
             onClick={tour.open}
-            className="px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
+            className="h-10 px-3 rounded-[10px] text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
             title="Rever o tour guiado desta tela"
           >
             Tour
@@ -71,18 +66,18 @@ export const BackupsPage: React.FC<BackupsPageProps> = ({ isActive, settingsVers
       </div>
 
       {conn.settings && connections.length === 0 ? (
-        <div className="cockpit-panel rounded-xl p-8 border border-border flex flex-col items-center gap-3 text-center">
+        <div className="bg-card rounded-[14px] p-12 border border-border shadow-xs flex flex-col items-center gap-3 text-center">
           <DatabaseZap className="w-8 h-8 text-muted-foreground" />
-          <p className="text-sm font-bold text-foreground">Nenhuma conexão de banco cadastrada</p>
-          <p className="text-xs text-muted-foreground max-w-md">
+          <p className="text-base font-semibold text-foreground">Cadastre uma conexão de banco primeiro</p>
+          <p className="text-[13px] text-muted-foreground max-w-md">
             Cadastre uma conexão Oracle, PostgreSQL ou MySQL na tela Banco de Dados para poder fazer backups.
           </p>
           <button
             type="button"
             onClick={onNavigateToDatabase}
-            className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-bold transition cursor-pointer"
+            className="h-10 px-4 rounded-[10px] bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium transition cursor-pointer"
           >
-            Ir para Banco de Dados
+            Ir para Banco de dados
           </button>
         </div>
       ) : (

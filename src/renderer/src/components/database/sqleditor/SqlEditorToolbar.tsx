@@ -121,7 +121,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         onClick={toggleMaximize}
         className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           isMaximizedActual
-            ? 'bg-primary/20 text-primary border border-primary/40'
+            ? 'bg-primary/20 text-primary'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
         }`}
         title={

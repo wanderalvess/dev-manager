@@ -31,7 +31,7 @@ export const RoutineGroupCard: React.FC<RoutineGroupCardProps> = ({ group, defau
         <Chevron className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-bold text-foreground">{routineHeading(group.label, group.routineCode)}</span>
         {group.isExecutable && (
-          <span className="text-2xs px-1.5 py-0.5 rounded border border-info/30 bg-info/10 text-info font-mono uppercase">exe</span>
+          <span className="text-xs px-1.5 py-0.5 rounded bg-info/10 text-info">exe</span>
         )}
         <Stat label="SQLs" value={String(group.statementCount)} />
         <Stat label="Execuções" value={String(group.totalExecutions)} />
@@ -56,7 +56,7 @@ export const RoutineGroupCard: React.FC<RoutineGroupCardProps> = ({ group, defau
           )}
 
           <section>
-            <h4 className="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+            <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1">
               <Timer className="w-3 h-3" /> Mais lentas (tempo médio por execução)
             </h4>
             {group.slowest.length === 0 ? (
@@ -86,7 +86,7 @@ export const RoutineGroupCard: React.FC<RoutineGroupCardProps> = ({ group, defau
 
           {group.repeated.length > 0 && (
             <section>
-              <h4 className="flex items-center gap-1.5 text-2xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+              <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1">
                 <Repeat className="w-3 h-3" /> Repetidas (possível N+1)
               </h4>
               <ul className="space-y-1">

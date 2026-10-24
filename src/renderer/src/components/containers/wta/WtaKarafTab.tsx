@@ -45,25 +45,25 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-2xs uppercase font-bold text-muted-foreground">HTTP Web</span>
+          <span className="text-xs font-semibold text-muted-foreground">HTTP Web</span>
           <div className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">8080</div>
           <p className="text-2xs text-muted-foreground">Portal & APIs</p>
         </div>
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-2xs uppercase font-bold text-muted-foreground">SSH Karaf</span>
+          <span className="text-xs font-semibold text-muted-foreground">SSH Karaf</span>
           <div className="text-xs font-mono font-bold text-success">8101</div>
           <p className="text-2xs text-muted-foreground">user/pass: karaf</p>
         </div>
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-2xs uppercase font-bold text-muted-foreground">JMX RMI</span>
+          <span className="text-xs font-semibold text-muted-foreground">JMX RMI</span>
           <div className="text-xs font-mono font-bold text-warning">1099</div>
           <p className="text-2xs text-muted-foreground">Monitoramento</p>
         </div>
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-          <span className="text-2xs uppercase font-bold text-muted-foreground">Artemis JMS</span>
+          <span className="text-xs font-semibold text-muted-foreground">Artemis JMS</span>
           <div className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">61616</div>
           <p className="text-2xs text-muted-foreground">Broker de Filas</p>
         </div>

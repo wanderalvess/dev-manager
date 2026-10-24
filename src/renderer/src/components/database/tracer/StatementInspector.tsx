@@ -63,7 +63,7 @@ export const StatementInspector: React.FC<{
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-sky-400" />
               <span>Parâmetros de Execução (V$SQL_BIND_CAPTURE)</span>
             </span>
@@ -90,7 +90,7 @@ export const StatementInspector: React.FC<{
       {/* Seção 2: SQL com Parâmetros Aplicados (Pronto para Execução) */}
       <div className="space-y-1.5 pt-1">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             <span>{interpolatedSql ? 'SQL Montado com Parâmetros Aplicados' : 'Instrução SQL'}</span>
             {interpolatedSql && (
@@ -104,7 +104,7 @@ export const StatementInspector: React.FC<{
             <button
               type="button"
               onClick={() => onCopy(interpolatedSql || item.sqlText, `interpolated-${item.sqlId}`)}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 rounded-lg transition cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-primary/10 hover:bg-primary/25 text-primary rounded-lg transition cursor-pointer"
               title="Copiar SQL com parâmetros para colar no SQL Developer ou DB Studio"
             >
               {copiedKey === `interpolated-${item.sqlId}` ? (

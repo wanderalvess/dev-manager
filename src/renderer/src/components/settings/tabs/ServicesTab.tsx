@@ -60,7 +60,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
               <button
                 type="button"
                 onClick={handleResetServices}
-                className="px-2.5 py-1 bg-card hover:bg-danger/10 text-danger border border-danger/40 hover:border-danger/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
+                className="px-2.5 py-1 bg-card hover:bg-danger/10 text-danger hover:border-danger/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
                 title="Restaurar lista de serviços padrão"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -173,7 +173,7 @@ export const ServicesTab: React.FC<ServicesTabProps> = ({
               <button
                 type="button"
                 onClick={handleResetProcesses}
-                className="px-2.5 py-1 bg-card hover:bg-danger/10 text-danger border border-danger/40 hover:border-danger/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
+                className="px-2.5 py-1 bg-card hover:bg-danger/10 text-danger hover:border-danger/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
                 title="Restaurar padrões de processos"
               >
                 <RotateCcw className="w-3 h-3" />

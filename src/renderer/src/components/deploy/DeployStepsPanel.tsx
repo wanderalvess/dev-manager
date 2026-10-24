@@ -48,7 +48,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
   const isBusy = isDeploying || runningStepId !== null || isDiagRunning !== null;
 
   return (
-    <div className="cockpit-panel rounded-xl p-3 space-y-2.5 border border-border/80 shadow-2xs" data-tour="steps-list-panel">
+    <div className="bg-card rounded-[14px] p-5 space-y-3 border border-border shadow-xs" data-tour="steps-list-panel">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           {totalCount > 0 && onToggleAllSteps && (
@@ -69,10 +69,10 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
               aria-label="Marcar ou desmarcar todas as etapas"
             />
           )}
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             Etapas ({enabledCount}/{totalCount})
             {totalCount > 0 && enabledCount < totalCount && (
-              <span className="text-2xs font-normal lowercase bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.2 rounded font-mono font-bold">
+              <span className="text-2xs font-normal lowercase bg-warning/10 text-warning px-1.5 py-0.2 rounded font-mono font-bold">
                 {totalCount - enabledCount} pulada{totalCount - enabledCount > 1 ? 's' : ''}
               </span>
             )}
@@ -105,14 +105,14 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
             disabled={!activeProfile || isDeploying}
             className="text-2xs text-primary hover:underline flex items-center gap-1 disabled:opacity-50 cursor-pointer"
           >
-            <Pencil className="w-3 h-3" /> Editar Etapas
+            <Pencil className="w-3 h-3" /> Editar etapas
           </button>
         </div>
       </div>
 
       {/* Barra de Progresso Durante Execução Geral */}
       {currentProgress && (
-        <div className="bg-primary/10 border border-primary/30 rounded-xl p-2.5 space-y-1.5 animate-fade-in">
+        <div className="bg-primary/10 rounded-xl p-2.5 space-y-1.5 animate-fade-in">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-foreground flex items-center gap-1.5">
               <RotateCw className="w-3.5 h-3.5 animate-spin text-primary" />

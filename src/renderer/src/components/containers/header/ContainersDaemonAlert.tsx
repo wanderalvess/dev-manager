@@ -21,11 +21,11 @@ export const ContainersDaemonAlert: React.FC<ContainersDaemonAlertProps> = ({
   onOpenWslTerminal,
   onRefreshData
 }) => (
-  <div className="p-3 mx-4 mt-3 bg-warning/10 border border-warning/30 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-warning shadow-2xs">
+  <div className="p-3.5 mx-7 mt-1 bg-warning/10 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[13px] text-foreground">
     <div className="flex items-start sm:items-center space-x-2.5">
       <AlertCircle className="w-4 h-4 text-warning shrink-0 mt-0.5 sm:mt-0" />
       <div className="leading-snug">
-        <span className="font-bold block sm:inline mr-1">Docker Engine offline:</span>
+        <span className="font-semibold block sm:inline mr-1">Docker Engine parado:</span>
         <span>{containersHeaderOfflineMessage(daemonStatus.error, selectedDistro)}</span>
       </div>
     </div>
@@ -36,7 +36,7 @@ export const ContainersDaemonAlert: React.FC<ContainersDaemonAlertProps> = ({
             type="button"
             onClick={() => onStartDockerDaemon(selectedDistro)}
             disabled={isStartingDaemon}
-            className="flex items-center gap-1.5 px-3 py-1 bg-warning hover:bg-warning/90 text-background rounded-lg text-xs font-bold transition cursor-pointer shadow-2xs disabled:opacity-50 active:scale-98"
+            className="flex items-center gap-1.5 h-8 px-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-[13px] font-medium transition cursor-pointer disabled:opacity-50"
           >
             {isStartingDaemon ? (
               <RotateCw className="w-3 h-3 animate-spin" />
@@ -48,15 +48,15 @@ export const ContainersDaemonAlert: React.FC<ContainersDaemonAlertProps> = ({
           <button
             type="button"
             onClick={() => onOpenWslTerminal(selectedDistro)}
-            className="px-2.5 py-1 bg-card hover:bg-muted text-foreground border border-border/80 rounded-lg text-xs font-semibold transition cursor-pointer"
+            className="h-8 px-3 bg-card hover:bg-muted text-foreground border border-border rounded-lg text-[13px] font-medium transition cursor-pointer"
           >
-            Abrir Terminal WSL
+            Abrir terminal WSL
           </button>
         </>
       )}
       <button
         onClick={onRefreshData}
-        className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 text-warning border border-warning/35 rounded-lg font-semibold transition cursor-pointer shrink-0"
+        className="h-8 px-3 bg-card hover:bg-muted text-foreground border border-border rounded-lg text-[13px] font-medium transition cursor-pointer shrink-0"
       >
         Recarregar
       </button>

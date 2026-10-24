@@ -20,14 +20,12 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
   onOpenCommit,
   onOpenFileInIde
 }) => (
-  <div className="bg-card border border-border/80 rounded-xl p-3 space-y-3">
+  <div className="space-y-3 pt-4 border-t border-border">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <FileEdit className="w-4 h-4 text-warning" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-          Alterações Pendentes
-        </span>
-        <span className="text-2xs bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded font-mono font-medium">
+        <FileEdit className="w-4 h-4 text-muted-foreground" />
+        <h3 className="text-base font-semibold text-foreground">Alterações pendentes</h3>
+        <span className="text-[13px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-medium">
           {files.length} {files.length === 1 ? 'arquivo' : 'arquivos'}
         </span>
         {ideFeedback && (
@@ -42,20 +40,20 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
           type="button"
           onClick={() => onOpenDiff()}
           disabled={files.length === 0}
-          className="px-2.5 py-1 bg-card hover:bg-muted border border-border text-foreground rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+          className="h-8 px-3 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
           title="Abrir visualizador de diff completo"
         >
           <Split className="w-3.5 h-3.5 text-muted-foreground" />
-          <span>Ver Diff Geral</span>
+          <span>Ver diff geral</span>
         </button>
         <button
           type="button"
           onClick={onOpenCommit}
           disabled={files.length === 0}
-          className="px-2.5 py-1 bg-success/15 hover:bg-success/25 border border-success/30 text-success rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+          className="h-8 px-3 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
           title="Prosseguir para commit"
         >
-          <UploadCloud className="w-3.5 h-3.5" />
+          <UploadCloud className="w-3.5 h-3.5 text-muted-foreground" />
           <span>Commitar</span>
         </button>
       </div>
@@ -67,12 +65,12 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
         <span>Verificando status dos arquivos...</span>
       </div>
     ) : files.length === 0 ? (
-      <div className="py-3 px-3 bg-muted/20 border border-border/50 rounded-lg flex items-center justify-between text-xs text-muted-foreground">
+      <div className="py-3 px-4 bg-success/10 rounded-[10px] flex items-center justify-between text-[13px] text-foreground">
         <div className="flex items-center gap-2">
           <Check className="w-4 h-4 text-success" />
           <span>Árvore de trabalho limpa. Nenhuma modificação pendente neste repositório.</span>
         </div>
-        <span className="text-2xs font-mono opacity-60">git status limpo</span>
+        <span className="text-xs font-mono text-muted-foreground">git status limpo</span>
       </div>
     ) : (
       <div className="max-h-56 overflow-y-auto space-y-1 pr-1">

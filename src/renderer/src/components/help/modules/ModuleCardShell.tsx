@@ -25,14 +25,14 @@ export const ModuleCardShell: React.FC<ModuleCardShellProps> = ({
   children,
   footer
 }) => (
-  <div className="cockpit-panel rounded-xl p-5 border border-border space-y-3.5 shadow-md flex flex-col justify-between">
+  <div className="cockpit-panel rounded-[14px] p-5 border border-border space-y-3.5 shadow-xs flex flex-col justify-between">
     <div className="space-y-3">
       <div className="flex items-center justify-between pb-2 border-b border-border">
         <div className="flex items-center space-x-2.5">
           <div className={iconBoxClass}>{icon}</div>
           <div>
             <h3 className="text-xs sm:text-sm font-extrabold text-foreground">{title}</h3>
-            <span className="text-2xs text-muted-foreground font-mono">{subtitle}</span>
+            <span className="text-[13px] text-muted-foreground">{subtitle}</span>
           </div>
         </div>
         {shortcut && (

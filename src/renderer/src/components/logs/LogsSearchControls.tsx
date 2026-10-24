@@ -54,7 +54,7 @@ export const LogsSearchControls: React.FC<LogsSearchControlsProps> = ({
         value={filterText}
         onChange={(e) => onFilterTextChange(e.target.value)}
         placeholder={searchMode === 'find' ? 'Localizar no log (Ctrl+F)...' : 'Filtrar linhas (Ctrl+F)...'}
-        className="w-full pl-8 pr-28 py-1 bg-background border border-border/80 rounded-lg text-xs font-mono focus:outline-hidden focus:border-primary transition-colors"
+        className="w-full pl-8 pr-28 h-9 bg-card border border-input rounded-[10px] text-[13px] font-mono focus:outline-hidden focus:ring-2 focus:ring-ring transition-colors"
       />
 
       {/* Controles internos do input: Contador + Navegacao + Limpar */}
@@ -115,7 +115,7 @@ export const LogsSearchControls: React.FC<LogsSearchControlsProps> = ({
     </div>
 
     {/* Seletor de Modo: Localizar vs Filtrar */}
-    <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-2xs font-mono">
+    <div className="flex items-center bg-muted p-0.5 rounded-[10px] border border-border text-[13px]">
       <button
         type="button"
         onClick={() => onSearchModeChange('find')}
@@ -147,7 +147,7 @@ export const LogsSearchControls: React.FC<LogsSearchControlsProps> = ({
 
     {/* Seletor de Contexto (exibido apenas no modo Filtrar) */}
     {searchMode === 'filter' && (
-      <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-2xs font-mono">
+      <div className="flex items-center bg-muted p-0.5 rounded-[10px] border border-border text-[13px]">
         <span className="text-muted-foreground px-1 select-none" title="Linhas de contexto ao redor do match">
           Contexto:
         </span>
@@ -170,7 +170,7 @@ export const LogsSearchControls: React.FC<LogsSearchControlsProps> = ({
     )}
 
     {/* Modificadores de Expressão: Inverter, Case sensitive, Regex */}
-    <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/60 text-2xs font-mono">
+    <div className="flex items-center bg-muted p-0.5 rounded-[10px] border border-border text-[13px]">
       <button
         type="button"
         onClick={onToggleCaseSensitive}

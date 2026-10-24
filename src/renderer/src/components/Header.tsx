@@ -105,7 +105,8 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-card/95 border-b border-border/80 px-2.5 sm:px-3 lg:px-4 py-2 flex items-center justify-between shadow-md relative z-30 backdrop-blur-md transition-colors duration-300 gap-2.5 shrink-0 h-14 w-full">
       {/* 1. Identidade do Aplicativo (Esquerda) */}
-      <div className="flex items-center gap-2.5 shrink-0">
+      {/* A partir de lg a identidade fica no menu lateral (AppSidebar); aqui só no layout compacto. */}
+      <div className="flex items-center gap-2.5 shrink-0 lg:hidden">
         <AppLogo size="sm" showStatusDot />
 
         <div className="flex flex-col">

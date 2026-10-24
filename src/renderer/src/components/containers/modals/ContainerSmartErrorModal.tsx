@@ -47,7 +47,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg p-5 animate-fade-in space-y-4"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-lg p-5 animate-fade-in space-y-4"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -70,7 +70,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
               <span>{smartError.title}</span>
               {smartError.distroName && (
                 <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted border border-border text-muted-foreground font-normal">
@@ -122,7 +122,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
 
         {/* Detalhes Técnicos do Erro */}
         <div className="space-y-1.5">
-          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Detalhes técnicos:</span>
+          <span className="text-xs font-semibold text-muted-foreground">Detalhes técnicos:</span>
           <pre className="max-h-36 overflow-auto bg-[#090D14] p-3 text-2xs font-mono text-rose-400/90 rounded-xl border border-border/50 whitespace-pre-wrap select-text leading-relaxed scrollbar-thin">
             {smartError.message}
           </pre>

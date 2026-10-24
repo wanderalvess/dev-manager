@@ -12,17 +12,17 @@ export const QualityTabHeader: React.FC<QualityTabHeaderProps> = ({ activeSource
   <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
     <div className="space-y-1">
       <div className="flex items-center gap-2.5">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
           <CheckCheck className="w-5 h-5 text-primary" />
           Fontes de Informação de Qualidade &amp; Testes (QA / PO)
         </h3>
         {activeSource ? (
-          <span className="px-2.5 py-0.5 rounded-full bg-success/10 border border-success/25 text-success font-mono text-2xs font-bold flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-success/10 text-success font-mono text-2xs font-bold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             SELECIONADA · {activeSource.name} ({getQualityProviderBadge(activeSource.type).label})
           </span>
         ) : (
-          <span className="px-2.5 py-0.5 rounded-full bg-warning/10 border border-warning/25 text-warning font-mono text-2xs font-bold flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-warning/10 text-warning font-mono text-2xs font-bold flex items-center gap-1.5">
             <AlertTriangle className="w-3 h-3" />
             NENHUMA FONTE ATIVA
           </span>

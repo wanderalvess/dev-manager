@@ -92,13 +92,13 @@ export const KarafReinstallModal: React.FC<KarafReinstallModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-2xl flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
         <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary">
             <RotateCcw className="w-5 h-5" />
           </div>
           <div>

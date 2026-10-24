@@ -48,14 +48,14 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
         {/* Seletor de Conexão */}
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-            <Database className="w-3.5 h-3.5 text-primary" />
+            <Database className="w-3.5 h-3.5 text-muted-foreground" />
             Banco:
           </span>
           {dbConnections.length > 0 ? (
             <select
               value={selectedConnectionId}
               onChange={(e) => onSelectConnection(e.target.value)}
-              className="bg-background border border-border text-foreground text-xs rounded-md px-2.5 py-1.5 font-medium focus:outline-hidden focus:ring-1 focus:ring-primary min-w-[180px]"
+              className="bg-background border border-input text-foreground text-sm rounded-[10px] px-3 h-10 font-medium focus:outline-hidden focus:ring-2 focus:ring-ring min-w-[180px]"
             >
               {dbConnections.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -81,15 +81,15 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
         </div>
 
         {/* Seletor de Cenário / Template */}
-        <div className="flex items-center gap-2 flex-1 min-w-[280px]">
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
           <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-primary" />
+            <Layers className="w-3.5 h-3.5 text-muted-foreground" />
             Cenário:
           </span>
           <select
             value={selectedTemplateId}
             onChange={(e) => onSelectTemplate(e.target.value)}
-            className="bg-background border border-border text-foreground text-xs rounded-md px-2.5 py-1.5 font-medium focus:outline-hidden focus:ring-1 focus:ring-primary flex-1 max-w-md truncate"
+            className="bg-background border border-input text-foreground text-sm rounded-[10px] px-3 h-10 font-medium focus:outline-hidden focus:ring-2 focus:ring-ring flex-1 min-w-[200px] max-w-md truncate"
           >
             {templates.map((t) => (
               <option key={t.id} value={t.id}>
@@ -102,10 +102,10 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
             type="button"
             onClick={onExportTemplate}
             disabled={!selectedTemplate}
-            className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+            className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
             title="Exportar template selecionado para arquivo JSON"
           >
-            <Download className="w-3.5 h-3.5 text-primary" />
+            <Download className="w-3.5 h-3.5 text-muted-foreground" />
             <span>Exportar Template</span>
           </button>
 
@@ -113,7 +113,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
             <button
               type="button"
               onClick={onOpenTemplatesManager}
-              className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Abrir Gerenciador de Templates para criar ou editar queries"
             >
               <Code2 className="w-3.5 h-3.5" />
@@ -124,10 +124,10 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
           <button
             type="button"
             onClick={onOpenHelp}
-            className="px-2.5 py-1.5 rounded-md bg-background hover:bg-muted text-muted-foreground hover:text-foreground border border-border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Guia Prático: Como usar, configurar asserções e exportar templates"
           >
-            <HelpCircle className="w-3.5 h-3.5 text-primary" />
+            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
             <span>Como Usar</span>
           </button>
         </div>
@@ -137,7 +137,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
           type="button"
           onClick={onRun}
           disabled={isRunning || !selectedConnectionId || !selectedTemplate}
-          className="px-3.5 py-1.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+          className="px-4 h-10 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
         >
           {isRunning ? (
             <>
@@ -155,7 +155,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
 
       {/* Descrição do Template Ativo */}
       {selectedTemplate?.description && (
-        <p className="text-2xs text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5 font-mono">
+        <p className="text-[13px] text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5">
           {selectedTemplate.description}
         </p>
       )}

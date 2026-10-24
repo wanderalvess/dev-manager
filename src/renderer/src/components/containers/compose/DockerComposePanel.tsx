@@ -62,7 +62,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
 }) => {
   return (
     <div
-      className="mx-4 mt-3 p-3 bg-card/60 backdrop-blur-sm border border-border/70 rounded-xl shrink-0 space-y-2.5 shadow-2xs"
+      className="mx-7 mt-3 p-3 bg-card border border-border rounded-[14px] shrink-0 space-y-2.5 shadow-xs"
       data-tour="compose-panel"
     >
       <div className="flex items-center justify-between">
@@ -114,7 +114,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
             value={composeFilePath}
             onChange={(e) => setComposeFilePath(e.target.value)}
             placeholder="Caminho do docker-compose.yml"
-            className="flex-1 min-w-[220px] bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary shadow-2xs placeholder:text-muted-foreground/60"
+            className="flex-1 min-w-[220px] bg-background border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm font-mono text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/60"
           />
           <button
             onClick={onSelectComposeFile}
@@ -156,7 +156,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
         <button
           onClick={onComposeUp}
           disabled={!composeFilePath.trim() || isComposeRunning !== null}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success border border-success/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
         >
           {isComposeRunning === 'up' ? (
             <RotateCw className="w-3 h-3 animate-spin" />
@@ -168,7 +168,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
         <button
           onClick={onComposeDown}
           disabled={!composeFilePath.trim() || isComposeRunning !== null}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
         >
           {isComposeRunning === 'down' ? (
             <RotateCw className="w-3 h-3 animate-spin" />
@@ -180,7 +180,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
         <button
           onClick={onComposeRestart}
           disabled={!composeFilePath.trim() || isComposeRestarting}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
           title="Reiniciar serviços do Compose"
         >
           <RotateCw className={`w-3 h-3 ${isComposeRestarting ? 'animate-spin text-warning' : ''}`} />
@@ -189,7 +189,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
         <button
           onClick={onComposeLogs}
           disabled={!composeFilePath.trim()}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-info/10 hover:bg-info/20 text-info rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98 shadow-2xs"
           title="Buscar últimos logs do Compose"
         >
           <Terminal className="w-3 h-3" />

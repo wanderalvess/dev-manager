@@ -76,7 +76,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 pb-4 space-y-3.5 overflow-y-auto lg:overflow-hidden max-w-full overflow-x-hidden">
+    <div className="h-full flex flex-col p-5 md:p-7 pb-5 space-y-5 overflow-y-auto lg:overflow-hidden max-w-full overflow-x-hidden">
       <EnvironmentConfigWarning
         missingPaths={profilesState.missingRequiredPaths}
         onNavigateToSettings={onNavigateToSettings}
@@ -108,26 +108,9 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         onOpenTour={tour.open}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 shrink-0">
-        <PortsMonitor
-          ports={ports}
-          isChecking={status.isCheckingPorts}
-          onNavigateToSettings={onNavigateToSettings}
-          onNavigateToHelp={onNavigateToHelp}
-        />
-        <QuickLinks
-          webPort={getWebPort(settings, ports)}
-          webPortalUrl={getWebUrl(settings, '', ports)}
-          karafConsoleUrl={getWebUrl(settings, '/system/console', ports)}
-          hasKarafPath={!!settings?.karafPath}
-          webHealth={status.webHealth}
-          onOpenLink={handleOpenLink}
-        />
-      </div>
-
-      {/* Grid principal: etapas à esquerda / rede e diagnósticos à direita (o console fica no dock global) */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 min-h-0 min-w-0">
-        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0 lg:overflow-y-auto lg:pr-2 lg:pb-2">
+      {/* Grid principal: etapas à esquerda / portas, rede e diagnósticos à direita (o console fica no dock global) */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0 min-w-0">
+        <div className="lg:col-span-7 flex flex-col space-y-4 min-w-0 lg:overflow-y-auto lg:pr-2 lg:pb-2">
           <StepCardsPanel
             activeProfile={activeProfile}
             services={services}
@@ -145,7 +128,23 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           />
         </div>
 
-        <div className="lg:col-span-6 flex flex-col space-y-3 min-w-0 lg:overflow-y-auto lg:pr-2 lg:pb-2">
+        <div className="lg:col-span-5 flex flex-col space-y-4 min-w-0 lg:overflow-y-auto lg:pr-2 lg:pb-2">
+          <PortsMonitor
+            ports={ports}
+            isChecking={status.isCheckingPorts}
+            onNavigateToSettings={onNavigateToSettings}
+            onNavigateToHelp={onNavigateToHelp}
+          />
+
+          <QuickLinks
+            webPort={getWebPort(settings, ports)}
+            webPortalUrl={getWebUrl(settings, '', ports)}
+            karafConsoleUrl={getWebUrl(settings, '/system/console', ports)}
+            hasKarafPath={!!settings?.karafPath}
+            webHealth={status.webHealth}
+            onOpenLink={handleOpenLink}
+          />
+
           {status.networkIps && (
             <NetworkInfoCard networkIps={status.networkIps} onRefresh={status.fetchNetworkIps} />
           )}

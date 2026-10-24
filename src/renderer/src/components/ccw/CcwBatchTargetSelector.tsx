@@ -20,10 +20,10 @@ export const CcwBatchTargetSelector: React.FC<CcwBatchTargetSelectorProps> = ({ 
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
     <button type="button" onClick={() => onChange('favorites')} className={cardClass(value === 'favorites')}>
       <div className="flex items-center justify-between">
-        <div className="p-1 rounded-md bg-warning/10 text-warning border border-warning/30">
+        <div className="p-1 rounded-md bg-warning/10 text-warning">
           <Star className="w-3.5 h-3.5 fill-warning" />
         </div>
-        <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20 uppercase tracking-wider">
+        <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
           Recomendado
         </span>
       </div>
@@ -37,7 +37,7 @@ export const CcwBatchTargetSelector: React.FC<CcwBatchTargetSelectorProps> = ({ 
 
     <button type="button" onClick={() => onChange('module')} className={cardClass(value === 'module')}>
       <div className="flex items-center justify-between">
-        <div className="p-1 rounded-md bg-primary/10 text-primary border border-primary/30">
+        <div className="p-1 rounded-md bg-primary/10 text-primary">
           <Layers className="w-3.5 h-3.5" />
         </div>
       </div>
@@ -51,7 +51,7 @@ export const CcwBatchTargetSelector: React.FC<CcwBatchTargetSelectorProps> = ({ 
 
     <button type="button" onClick={() => onChange('custom')} className={cardClass(value === 'custom')}>
       <div className="flex items-center justify-between">
-        <div className="p-1 rounded-md bg-primary/10 text-primary border border-primary/30">
+        <div className="p-1 rounded-md bg-primary/10 text-primary">
           <Search className="w-3.5 h-3.5" />
         </div>
       </div>

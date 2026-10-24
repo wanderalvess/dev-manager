@@ -60,7 +60,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
   const openModelHelp = () => setShowModelHelp(true);
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 space-y-4 overflow-hidden">
+    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden">
       <DocsHeaderPanel
         status={status}
         hasIndex={hasIndex}

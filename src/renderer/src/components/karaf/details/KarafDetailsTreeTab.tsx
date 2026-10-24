@@ -53,7 +53,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
         <div>
           <div className="text-xs font-bold text-foreground flex items-center gap-2">
             <span>[{target.id}] {target.name}</span>
-            <span className="px-2 py-0.5 text-2xs rounded-full bg-success/15 text-success border border-success/30 font-mono font-bold">
+            <span className="px-2 py-0.5 text-2xs rounded-full bg-success/10 text-success font-mono font-bold">
               {target.state}
             </span>
           </div>

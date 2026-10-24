@@ -33,7 +33,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
         <button
           type="button"
           onClick={onReset}
-          className="px-2.5 py-1 bg-card hover:bg-danger/10 text-danger border border-danger/40 hover:border-danger/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
+          className="px-2.5 py-1 bg-card hover:bg-danger/10 text-danger hover:border-danger/70 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-xs"
           title="Restaurar portas padrão (:8889, :8101, :5005, :1521)"
         >
           <RotateCcw className="w-3 h-3" />
@@ -95,7 +95,7 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
               type="text"
               value={portCfg.label}
               onChange={(e) => onUpdatePort(index, 'label', e.target.value)}
-              className="w-full bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
+              className="w-full bg-card border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground focus:outline-hidden"
               placeholder="Descrição do serviço (ex: Portal Web, Banco de Dados...)"
             />
           </div>

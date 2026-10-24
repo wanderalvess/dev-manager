@@ -21,9 +21,9 @@ const TABS: TabDef[] = [
   { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck }
 ];
 
-const INACTIVE_CLASS = 'text-muted-foreground hover:text-foreground hover:bg-muted/60';
+const INACTIVE_CLASS = 'text-muted-foreground hover:text-foreground border-transparent';
 const TAB_BASE =
-  'px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer';
+  'py-3 text-sm whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer border-b-2 -mb-px';
 
 export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
   tabMode,
@@ -35,7 +35,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
   const renderBadge = (id: QualityTabMode, active: boolean): React.ReactNode => {
     if (id === 'matrix') {
       return (
-        <span className={`px-1.5 rounded text-2xs font-mono ${active ? 'bg-background/20' : 'bg-muted'}`}>
+        <span className={`px-2 rounded-full text-xs font-medium ${active ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'}`}>
           {itemsCount}
         </span>
       );
@@ -44,12 +44,8 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
       const healthy = readinessScore >= 80;
       return (
         <span
-          className={`px-1.5 rounded text-2xs font-mono font-semibold ${
-            active
-              ? 'bg-background/20'
-              : healthy
-                ? 'bg-success/15 text-success'
-                : 'bg-warning/15 text-warning'
+          className={`px-2 rounded-full text-xs font-medium ${
+            healthy ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
           }`}
         >
           {readinessScore}%
@@ -60,8 +56,8 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
   };
 
   return (
-    <div className="border-b border-border bg-card px-6 py-2 flex items-center justify-between gap-4 shrink-0">
-      <div role="tablist" aria-label="Seções de Homologação" className="flex items-center gap-1 overflow-x-auto">
+    <div className="border-b border-border bg-card px-7 flex items-center justify-between gap-4 shrink-0">
+      <div role="tablist" aria-label="Seções de Homologação" className="flex items-center gap-6 overflow-x-auto">
         {TABS.map(({ id, label, icon: Icon }) => {
           const active = tabMode === id;
           return (
@@ -71,7 +67,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
               role="tab"
               aria-selected={active}
               onClick={() => onTabChange(id)}
-              className={`${TAB_BASE} ${active ? 'bg-primary text-primary-foreground' : INACTIVE_CLASS}`}
+              className={`${TAB_BASE} ${active ? 'text-foreground font-medium border-primary' : INACTIVE_CLASS}`}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{label}</span>
@@ -84,14 +80,14 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
       {/* Atalhos para Ecossistema de Testes */}
       {onNavigate && (
         <div className="hidden xl:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
-          <span className="text-2xs font-mono">Atalhos:</span>
+          <span className="text-[13px]">Atalhos</span>
           <button
             type="button"
             onClick={() => onNavigate('routines')}
             className="hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors"
             title="Abrir Catálogo de Rotinas"
           >
-            <Grid className="w-3 h-3 text-primary" />
+            <Grid className="w-3.5 h-3.5" />
             <span>Rotinas</span>
           </button>
           <span className="text-border">|</span>
@@ -101,7 +97,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
             className="hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors"
             title="Abrir Database Studio para consultar massa de dados"
           >
-            <Database className="w-3 h-3 text-success" />
+            <Database className="w-3.5 h-3.5" />
             <span>Banco</span>
           </button>
           <span className="text-border">|</span>
@@ -111,7 +107,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
             className="hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors"
             title="Acompanhar Logs em Tempo Real"
           >
-            <ScrollText className="w-3 h-3 text-warning" />
+            <ScrollText className="w-3.5 h-3.5" />
             <span>Logs</span>
           </button>
         </div>

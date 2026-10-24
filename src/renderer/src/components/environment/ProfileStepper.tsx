@@ -23,13 +23,13 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
   activeStepIndex,
   currentRunningStepId
 }) => (
-  <div className="pt-2 border-t border-border/50" data-tour="profile-stepper">
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-        <Clock className="w-3.5 h-3.5 text-primary" /> Esteira Sequencial de Inicialização ({profile.steps.filter((s) => s.enabled !== false).length} etapas)
+  <div className="pt-3 border-t border-border" data-tour="profile-stepper">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 mb-2.5">
+      <span className="text-[13px] font-medium text-foreground flex items-center gap-1.5">
+        <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Esteira de inicialização ({profile.steps.filter((s) => s.enabled !== false).length} etapas)
       </span>
-      <span className="text-2xs font-mono text-muted-foreground">
-        Ordem de subida: 1º ao último com intervalo e monitoramento de porta
+      <span className="text-xs text-muted-foreground">
+        Sobe na ordem, com intervalo e monitoramento de porta
       </span>
     </div>
 
@@ -54,9 +54,9 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
 
         let dotStyle = 'bg-muted text-muted-foreground border-border';
         if (isCurrent) {
-          dotStyle = 'bg-primary text-primary-foreground border-primary animate-pulse glow-primary';
+          dotStyle = 'bg-card text-primary border-primary animate-pulse';
         } else if (isDone) {
-          dotStyle = 'bg-success text-background border-success';
+          dotStyle = 'bg-success text-card border-success';
         }
 
         return (
@@ -75,13 +75,13 @@ export const ProfileStepper: React.FC<ProfileStepperProps> = ({
               title={`${stepNum}. ${step.name}${step.port ? ` — porta ${step.port} ${isPortUp ? 'ativa' : 'inativa'}` : ` — ${step.type}`}`}
             >
               <div
-                className={`w-6 h-6 rounded-lg border flex items-center justify-center font-bold text-2xs transition-all ${dotStyle}`}
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center font-semibold text-2xs transition-all ${dotStyle}`}
               >
                 {isDone ? <CheckCircle2 className="w-3.5 h-3.5 stroke-3" /> : stepNum}
               </div>
               <span
-                className={`text-2xs font-semibold truncate max-w-[140px] ${
-                  isCurrent ? 'text-primary font-bold' : isDone ? 'text-success' : 'text-muted-foreground'
+                className={`text-xs truncate max-w-[140px] ${
+                  isCurrent ? 'text-primary font-semibold' : isDone ? 'text-foreground' : 'text-muted-foreground'
                 }`}
               >
                 {step.name}

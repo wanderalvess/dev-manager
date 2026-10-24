@@ -56,7 +56,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
             )}
             {routine.fileVersion && (
               <span
-                className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-success/15 text-success border border-success/30 flex items-center gap-1 shadow-2xs shrink-0"
+                className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-success/10 text-success flex items-center gap-1 shadow-2xs shrink-0"
                 title={`Versão PE do Executável: FileVersion ${routine.fileVersion}${
                   routine.productVersion ? ` / ProductVersion ${routine.productVersion}` : ''
                 }`}
@@ -117,7 +117,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
             <span className="truncate opacity-80" title={routine.fullPath}>
               {routine.sizeMb}
             </span>
-            <span className="text-2xs uppercase tracking-wider text-muted-foreground/60 font-mono">
+            <span className="text-xs text-muted-foreground/60">
               Binário Local
             </span>
           </div>
@@ -132,7 +132,7 @@ export const RoutineCard: React.FC<RoutineCardProps> = ({
         disabled={isRunning}
         className={`w-full py-1.5 px-3 rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
           isRunning
-            ? 'bg-primary/20 text-primary border border-primary/40 animate-pulse cursor-wait'
+            ? 'bg-primary/20 text-primary animate-pulse cursor-wait'
             : 'bg-muted/40 hover:bg-primary text-foreground hover:text-primary-foreground border border-border/80 hover:border-primary shadow-2xs'
         }`}
         title="Executar esta rotina no Windows" aria-label="Executar esta rotina no Windows"

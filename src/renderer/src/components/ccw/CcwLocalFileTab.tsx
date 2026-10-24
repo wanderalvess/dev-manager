@@ -41,7 +41,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
           readOnly
           placeholder="Selecione o arquivo no computador..."
           value={localFilePath}
-          className="flex-1 bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground font-mono shadow-2xs"
+          className="flex-1 bg-card border border-input rounded-[10px] px-3.5 py-2.5 text-sm text-foreground placeholder-muted-foreground font-mono"
         />
         <button
           type="button"
@@ -67,7 +67,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
           placeholder="Ex: PCSIS132 (auto-detectado se vazio)"
           value={localRoutineName}
           onChange={(e) => onLocalRoutineNameChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-input rounded-[10px] px-3.5 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
         />
       </div>
 
@@ -80,7 +80,7 @@ export const CcwLocalFileTab: React.FC<CcwLocalFileTabProps> = ({
           placeholder="Auto-detectar (ex: MOD-001)"
           value={localTargetModule}
           onChange={(e) => onLocalTargetModuleChange(e.target.value)}
-          className="w-full bg-card border border-border rounded-xl px-3.5 py-2 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-input rounded-[10px] px-3.5 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
         />
       </div>
     </div>

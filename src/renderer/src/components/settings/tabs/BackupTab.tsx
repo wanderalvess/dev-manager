@@ -45,7 +45,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.pgDumpPath || ''}
                   onChange={(e) => setSettings({ ...settings, pgDumpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\PostgreSQL\17\bin\pg_dump.exe"
                 />
                 <button
@@ -69,7 +69,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.expdpPath || ''}
                   onChange={(e) => setSettings({ ...settings, expdpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
                   placeholder="Ex: C:\oracle\instantclient\expdp.exe"
                 />
                 <button
@@ -93,7 +93,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.mysqldumpPath || ''}
                   onChange={(e) => setSettings({ ...settings, mysqldumpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe"
                 />
                 <button
@@ -128,7 +128,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.psqlPath || ''}
                   onChange={(e) => setSettings({ ...settings, psqlPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\PostgreSQL\17\bin\psql.exe"
                 />
                 <button
@@ -152,7 +152,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.impdpPath || ''}
                   onChange={(e) => setSettings({ ...settings, impdpPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
                   placeholder="Ex: C:\oracle\instantclient\impdp.exe"
                 />
                 <button
@@ -176,7 +176,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                   type="text"
                   value={settings.mysqlPath || ''}
                   onChange={(e) => setSettings({ ...settings, mysqlPath: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
                   placeholder="Ex: C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
                 />
                 <button
@@ -213,7 +213,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                 type="text"
                 value={settings.oracleTnsnamesPath || ''}
                 onChange={(e) => setSettings({ ...settings, oracleTnsnamesPath: e.target.value })}
-                className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+                className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
                 placeholder="Ex: C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora"
               />
               <button

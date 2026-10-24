@@ -12,9 +12,9 @@ export const TYPE_ICONS: Record<TestRunnerType, React.ReactNode> = {
 };
 
 export const TYPE_BADGES: Record<TestRunnerType, { label: string; badgeClass: string }> = {
-  maven: { label: 'Maven / Java', badgeClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
-  playwright: { label: 'Playwright E2E', badgeClass: 'bg-success/10 text-success border-success/20' },
-  cypress: { label: 'Cypress E2E', badgeClass: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
-  newman: { label: 'Newman API', badgeClass: 'bg-warning/10 text-warning border-warning/20' },
-  custom: { label: 'Script Custom', badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20' }
+  maven: { label: 'Maven / Java', badgeClass: 'bg-warning/10 text-warning' },
+  playwright: { label: 'Playwright E2E', badgeClass: 'bg-success/10 text-success' },
+  cypress: { label: 'Cypress E2E', badgeClass: 'bg-success/10 text-success' },
+  newman: { label: 'Newman API', badgeClass: 'bg-warning/10 text-warning' },
+  custom: { label: 'Script Custom', badgeClass: 'bg-info/10 text-info' }
 };

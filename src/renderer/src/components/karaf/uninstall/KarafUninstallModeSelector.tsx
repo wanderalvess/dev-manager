@@ -15,7 +15,7 @@ const cardClass = (active: boolean) =>
 
 export const KarafUninstallModeSelector: React.FC<KarafUninstallModeSelectorProps> = ({ mode, onChange }) => (
   <div className="space-y-2">
-    <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
+    <label className="text-xs font-semibold text-muted-foreground">
       Tipo de Desinstalação
     </label>
     <div className="grid grid-cols-2 gap-2">
@@ -25,7 +25,7 @@ export const KarafUninstallModeSelector: React.FC<KarafUninstallModeSelectorProp
             <Layers className="w-3.5 h-3.5 text-danger" />
             Desinstalação Permanente
           </span>
-          <span className="text-2xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-danger/20 text-danger">
+          <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-danger/20 text-danger">
             Recomendado
           </span>
         </div>
@@ -40,7 +40,7 @@ export const KarafUninstallModeSelector: React.FC<KarafUninstallModeSelectorProp
             <Package className="w-3.5 h-3.5 text-warning" />
             Apenas Bundle (Memória)
           </span>
-          <span className="text-2xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+          <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
             OSGi
           </span>
         </div>

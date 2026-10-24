@@ -39,7 +39,7 @@ const SortableTh: React.FC<{
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className="inline-flex items-center gap-1 uppercase font-bold tracking-wider hover:text-foreground cursor-pointer"
+        className="inline-flex items-center gap-1 font-medium hover:text-foreground cursor-pointer"
       >
         {label}
         <Icon className={`w-3 h-3 ${isActive ? 'text-primary' : 'opacity-50'}`} />
@@ -78,7 +78,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
   return (
   <div className="space-y-4">
     {qualitySources.length === 0 && (
-      <div className="p-3.5 rounded-md bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-4 rounded-xl bg-accent flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
           <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
           <span>
@@ -89,7 +89,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('settings')}
-            className="px-3 py-1.5 rounded-md bg-background hover:bg-muted text-foreground border border-border text-xs font-medium shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
+            className="px-3 h-9 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-[13px] font-medium shrink-0 transition-colors cursor-pointer self-start sm:self-auto flex items-center"
           >
             Ver Configurações
           </button>
@@ -98,7 +98,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
     )}
 
     {/* Barra de Filtro e Busca */}
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-[14px] border border-border shadow-xs">
       <div className="relative flex-1 w-full">
         <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
         <input
@@ -107,7 +107,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           onChange={(e) => onSearchTermChange(e.target.value)}
           aria-label="Buscar cenários"
           placeholder="Buscar por cenário, rotina, alvo ou anotações..."
-          className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 border border-border/80 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:border-primary/50"
+          className="w-full pl-9 pr-3 h-9 text-sm bg-card border border-input rounded-[10px] text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
 
@@ -116,7 +116,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           value={statusFilter}
           aria-label="Filtrar por status"
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-hidden"
+          className="px-2.5 h-9 rounded-[10px] text-sm bg-card border border-input text-foreground cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-ring"
         >
           <option value="all">Todos os Status</option>
           <option value="pending">Pendente</option>
@@ -130,7 +130,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           value={categoryFilter}
           aria-label="Filtrar por categoria"
           onChange={(e) => onCategoryFilterChange(e.target.value)}
-          className="px-2.5 py-1.5 rounded-lg text-xs bg-muted border border-border text-foreground cursor-pointer focus:outline-hidden"
+          className="px-2.5 h-9 rounded-[10px] text-sm bg-card border border-input text-foreground cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-ring"
         >
           <option value="all">Todas Categorias</option>
           <option value="routine">Rotinas Delphi</option>
@@ -144,7 +144,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           onClick={onResetDefaults}
           title="Restaurar cenários padrão de teste"
           aria-label="Restaurar cenários padrão de teste"
-          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground border border-border cursor-pointer transition"
+          className="h-9 w-9 flex items-center justify-center rounded-[10px] hover:bg-muted text-muted-foreground hover:text-foreground border border-border cursor-pointer transition"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -154,7 +154,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
           onClick={onExportCsv}
           title="Exportar cenários exibidos em CSV"
           aria-label="Exportar cenários exibidos em CSV"
-          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground border border-border cursor-pointer transition"
+          className="h-9 w-9 flex items-center justify-center rounded-[10px] hover:bg-muted text-muted-foreground hover:text-foreground border border-border cursor-pointer transition"
         >
           <Download className="w-4 h-4" />
         </button>
