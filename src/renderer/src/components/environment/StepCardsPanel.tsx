@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, Edit3 } from 'lucide-react';
+import { Edit3 } from 'lucide-react';
 import type {
   AutomationProfile,
   AutomationStep,
@@ -42,24 +42,19 @@ export const StepCardsPanel: React.FC<StepCardsPanelProps> = ({
   onRestart,
   onToggleService
 }) => (
-  <div className="cockpit-panel rounded-xl p-4 flex flex-col border border-border space-y-3" data-tour="step-cards-panel">
-    <div className="flex items-center justify-between border-b border-border/60 pb-2">
-      <div className="flex items-center space-x-2">
-        <Zap className="w-4 h-4 text-primary" />
-        <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
-          Projetos e Serviços da Stack ({activeProfile?.steps?.length || 0})
-        </h3>
-      </div>
+  <div className="bg-card border border-border rounded-[14px] shadow-xs p-5 flex flex-col gap-3" data-tour="step-cards-panel">
+    <div className="flex items-center justify-between">
+      <h2 className="text-base font-semibold text-foreground">
+        Projetos e serviços da stack <span className="text-muted-foreground font-normal">({activeProfile?.steps?.length || 0})</span>
+      </h2>
 
-      <div className="flex items-center space-x-2">
-        <button
-          type="button"
-          onClick={onConfigureSteps}
-          className="text-xs text-primary hover:underline font-semibold flex items-center gap-1"
-        >
-          <Edit3 className="w-3 h-3" /> Configurar Etapas
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onConfigureSteps}
+        className="h-8 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+      >
+        <Edit3 className="w-3.5 h-3.5" /> Configurar etapas
+      </button>
     </div>
 
     <div className="space-y-2.5">
@@ -81,7 +76,7 @@ export const StepCardsPanel: React.FC<StepCardsPanelProps> = ({
         ))
       ) : (
         <div className="text-center py-8 text-xs text-muted-foreground">
-          Nenhum passo cadastrado neste perfil. Clique em "Configurar Etapas" acima para adicionar!
+          Nenhum passo cadastrado neste perfil. Clique em "Configurar etapas" acima para adicionar.
         </div>
       )}
     </div>

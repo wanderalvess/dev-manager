@@ -9,7 +9,7 @@ interface HelpOverviewWorkflowProps {
 }
 
 export const HelpOverviewWorkflow: React.FC<HelpOverviewWorkflowProps> = ({ debugPort, onNavigate }) => (
-  <div className="cockpit-panel rounded-xl p-5 border border-border shadow-xl space-y-3.5">
+  <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs space-y-3.5">
     <HelpOverviewSectionHeader
       icon={Workflow}
       title="Fluxo de Trabalho Diário Recomendado"

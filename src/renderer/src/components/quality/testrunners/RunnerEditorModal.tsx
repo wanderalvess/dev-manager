@@ -13,7 +13,7 @@ interface RunnerEditorModalProps {
   onSave: () => void;
 }
 
-const labelClass = 'block text-2xs font-mono text-muted-foreground mb-1 uppercase tracking-wider';
+const labelClass = 'block text-[13px] text-muted-foreground mb-1';
 const monoInputClass =
   'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary/80';
 const textInputClass =
@@ -37,7 +37,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
     <div className="flex items-center justify-between border-b border-border/60 pb-3">
       <div className="flex items-center gap-2">
         <Sliders className="w-3.5 h-3.5 text-muted-foreground" />
-        <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
+        <h3 className="text-base font-semibold text-foreground">
           {runner.id ? 'Configuração do Runner' : 'Novo Runner de Teste'}
         </h3>
       </div>

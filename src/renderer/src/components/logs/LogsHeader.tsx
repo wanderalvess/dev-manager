@@ -40,13 +40,13 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
   onCopyPath,
   onRequestClearFile
 }) => (
-  <div className="bg-card/95 border-b border-border/80 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2.5 shrink-0 z-10 backdrop-blur-xs">
+  <div className="bg-card border-b border-border px-5 py-3 flex flex-wrap items-center justify-between gap-2.5 shrink-0 z-10">
     {/* Esquerda: Seletor de Fontes em Pílulas */}
     <div className="flex items-center space-x-2">
-      <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/30 text-primary shrink-0" title="Logs em Tempo Real (Tail -f)">
-        <ScrollText className="w-4 h-4" />
+      <div className="p-1.5 text-muted-foreground shrink-0" title="Logs em Tempo Real (Tail -f)">
+        <ScrollText className="w-5 h-5" />
       </div>
-      <div className="flex items-center space-x-1 bg-muted/60 p-0.5 rounded-xl border border-border/60">
+      <div className="flex items-center space-x-1 bg-muted p-0.5 rounded-[10px] border border-border">
         {sources.map((src) => {
           const isSelected = src.id === activeSourceId;
           return (
@@ -54,16 +54,16 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
               key={src.id}
               data-tour="selecionar-fonte-log"
               onClick={() => onSelectSource(src.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+              className={`px-3 py-1 rounded-lg text-[13px] font-medium transition-all flex items-center space-x-1.5 ${
                 isSelected
-                  ? 'bg-card text-foreground shadow-2xs font-bold border border-border'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
               title={src.filePath}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isSelected && status?.exists ? 'bg-success animate-pulse' : 'bg-muted-foreground'
+                  isSelected && status?.exists ? 'bg-success' : 'bg-muted-foreground'
                 }`}
               />
               <span>{src.name}</span>
@@ -75,7 +75,7 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
       <button
         data-tour="gerenciar-fontes"
         onClick={onOpenManage}
-        className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted border border-border/50 transition-colors"
+        className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
         title="Gerenciar Fontes de Log" aria-label="Gerenciar Fontes de Log"
       >
         <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -84,7 +84,7 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
       <button
         type="button"
         onClick={onOpenTour}
-        className="p-1.5 text-muted-foreground hover:text-primary rounded-lg hover:bg-muted border border-border/50 transition-colors"
+        className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
         title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
       >
         <Sparkles className="w-3.5 h-3.5" />
@@ -93,7 +93,7 @@ export const LogsHeader: React.FC<LogsHeaderProps> = ({
 
     {/* Centro: Telemetria do Arquivo Ativo */}
     {sources.length > 0 && (
-      <div className="hidden lg:flex items-center space-x-3 text-xs font-mono text-muted-foreground bg-muted/30 px-3 py-1 rounded-xl border border-border/50">
+      <div className="hidden lg:flex items-center space-x-3 text-xs font-mono text-muted-foreground bg-muted/60 px-3 py-1 rounded-[10px]">
         <div className="flex items-center space-x-1.5 max-w-sm xl:max-w-md truncate">
           <span className="truncate text-muted-foreground text-2xs" title={activeSource.filePath}>
             {activeSource.filePath}

@@ -20,7 +20,7 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
 }) => (
   <>
     {karafValid === false && (
-      <div className="bg-danger/10 border border-danger/40 rounded-lg p-3 flex items-start space-x-2.5 text-xs text-danger">
+      <div className="bg-danger/10 rounded-xl p-3.5 flex items-start space-x-2.5 text-[13px] text-foreground">
         <AlertTriangle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
         <div className="flex-1">
           <span className="font-bold block">Executável client.bat não localizado</span>
@@ -42,7 +42,7 @@ export const DeployKarafAlerts: React.FC<DeployKarafAlertsProps> = ({
     )}
 
     {showOfflineAlert && (
-      <div className="bg-warning/10 border border-warning/40 rounded-lg p-3 flex items-start space-x-2.5 text-xs text-warning">
+      <div className="bg-warning/10 rounded-xl p-3.5 flex items-start space-x-2.5 text-[13px] text-foreground">
         <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
         <div className="flex-1">
           <span className="font-bold block">Karaf / OSGi offline</span>

@@ -45,7 +45,7 @@ interface LogsToolbarProps {
 }
 
 export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
-  <div className="bg-card/75 border-b border-border/70 px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 text-xs select-none">
+  <div className="bg-card border-b border-border px-5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 text-xs select-none">
     <LogsSearchControls
       searchInputRef={props.searchInputRef}
       filterText={props.filterText}
@@ -75,8 +75,8 @@ export const LogsToolbar: React.FC<LogsToolbarProps> = (props) => (
 
     {/* Navegador Rápido de Erros (Signature Element) */}
     {props.errorCount > 0 && (
-      <div className="flex items-center space-x-1 bg-danger/10 border border-danger/30 px-2 py-0.5 rounded-lg text-danger text-2xs font-mono">
-        <span className="font-bold mr-1">Erros: {props.errorCount}</span>
+      <div className="flex items-center space-x-1 bg-danger/10 px-2.5 py-0.5 rounded-full text-danger text-[13px] font-medium">
+        <span className="mr-1">Erros: {props.errorCount}</span>
         <button
           onClick={() => props.onNavigateErrors('prev')}
           className="p-0.5 hover:bg-danger/20 rounded transition-colors"

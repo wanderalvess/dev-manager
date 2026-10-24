@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ChangeEvent, RefObject } from 'react';
-import { Play, RefreshCw, Terminal, Sparkles } from 'lucide-react';
+import { Play, RefreshCw, Sparkles } from 'lucide-react';
 import type {
   AutomationProfile,
   PortStatus,
@@ -66,46 +66,61 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
   const isRunDisabled = isRunningProfile || !activeProfile?.steps || activeProfile.steps.length === 0;
 
   return (
-    <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border flex flex-col space-y-3.5 shrink-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
-            <Terminal className="w-5 h-5" />
+    <div className="flex flex-col gap-4 shrink-0">
+      {/* Título da página (sem cartão) + perfil e ação principal */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">Ambiente Dev</h1>
+            {isRunningProfile && (
+              <span className="text-xs bg-accent text-accent-foreground px-2.5 py-0.5 rounded-full font-medium animate-pulse flex items-center gap-1.5">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Executando {activeStepIndex} de {activeStepTotal}
+              </span>
+            )}
           </div>
-          <div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-lg font-bold text-foreground">
-                Preparação de Ambiente &amp; Workflows
-              </h1>
-
-              <div className="relative inline-block" data-tour="profile-selector">
-                <select
-                  value={activeProfileId}
-                  onChange={(e) => onSelectProfile(e.target.value)}
-                  className="bg-card border border-primary/40 rounded-lg px-3 py-1 text-xs font-bold text-primary focus:outline-hidden focus:ring-2 focus:ring-primary shadow-xs cursor-pointer"
-                >
-                  {profiles.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-card text-foreground font-medium">
-                      📁 {p.name} ({p.steps?.length || 0} passos)
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {isRunningProfile && (
-                <span className="text-2xs bg-warning/10 text-warning border border-warning/30 px-2.5 py-0.5 rounded-full font-bold animate-pulse flex items-center gap-1">
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                  Executando [{activeStepIndex}/{activeStepTotal}]...
-                </span>
-              )}
-            </div>
-            <p className="text-2xs text-muted-foreground mt-0.5">
-              {activeProfile?.description || 'Ambiente 100% configurável sem nomes fixos. Suba projetos e libere portas em sequência.'}
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+            {activeProfile?.description ||
+              'Prepara a máquina para desenvolver: para serviços, libera portas, abre a IDE e sobe o Karaf, nessa ordem.'}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <div className="relative inline-block" data-tour="profile-selector">
+            <select
+              value={activeProfileId}
+              onChange={(e) => onSelectProfile(e.target.value)}
+              aria-label="Perfil do ambiente"
+              className="h-10 bg-card border border-input rounded-[10px] px-3 text-sm font-medium text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring cursor-pointer"
+            >
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id} className="bg-card text-foreground font-medium">
+                  {p.name} ({p.steps?.length || 0} passos)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Ação principal da tela: Subir Ambiente em Sequência */}
+          <button
+            type="button"
+            data-tour="run-profile-button"
+            onClick={onRun}
+            disabled={isRunDisabled}
+            className={`h-10 px-4 rounded-[10px] font-medium text-sm flex items-center gap-2 transition-colors ${
+              isRunDisabled
+                ? 'bg-primary/40 text-primary-foreground/80 cursor-not-allowed'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            }`}
+          >
+            <Play className={`w-4 h-4 fill-current ${isRunningProfile ? 'animate-spin' : ''}`} />
+            <span>{isRunningProfile ? 'Executando esteira...' : 'Subir ambiente'}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-[14px] p-4 shadow-xs flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
           <ProfileToolbar
             profiles={profiles}
             activeProfile={activeProfile}
@@ -125,32 +140,15 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
             onRestartAll={onRestartAll}
           />
 
-          {/* BOTÃO PRINCIPAL: Subir Ambiente em Sequência */}
-          <button
-            type="button"
-            data-tour="run-profile-button"
-            onClick={onRun}
-            disabled={isRunDisabled}
-            className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all shadow-lg ${
-              isRunDisabled
-                ? 'bg-primary/40 text-muted-foreground cursor-not-allowed border border-primary/30'
-                : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/30 hover:scale-[1.02] border border-primary/40'
-            }`}
-          >
-            <Play className={`w-4 h-4 fill-current ${isRunningProfile ? 'animate-spin' : ''}`} />
-            <span>{isRunningProfile ? 'Executando Esteira...' : 'Subir Ambiente em Sequência'}</span>
-          </button>
-
           <button
             type="button"
             onClick={onOpenTour}
-            className="h-9 w-9 rounded-xl border border-border/60 hover:border-primary/40 text-muted-foreground hover:text-primary transition flex items-center justify-center shrink-0 cursor-pointer"
+            className="ml-auto h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition flex items-center justify-center shrink-0 cursor-pointer"
             title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
           >
             <Sparkles className="w-4 h-4" />
           </button>
         </div>
-      </div>
 
       {activeProfile?.steps && activeProfile.steps.length > 0 && (
         <ProfileStepper
@@ -163,6 +161,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
           currentRunningStepId={currentRunningStepId}
         />
       )}
+      </div>
     </div>
   );
 };

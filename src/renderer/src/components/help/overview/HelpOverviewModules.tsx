@@ -8,7 +8,7 @@ interface HelpOverviewModulesProps {
 }
 
 export const HelpOverviewModules: React.FC<HelpOverviewModulesProps> = ({ onNavigate }) => (
-  <div className="cockpit-panel rounded-xl p-5 border border-border shadow-xl space-y-3.5">
+  <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs space-y-3.5">
     <HelpOverviewSectionHeader
       icon={Boxes}
       title="Ecossistema & Módulos do Sistema"

@@ -16,7 +16,7 @@ export const ContainersStatusBar: React.FC<ContainersStatusBarProps> = ({
   isPruning,
   onPruneClick
 }) => (
-  <div className="mx-4 mt-2 flex items-center justify-between text-xs text-muted-foreground shrink-0">
+  <div className="mx-7 mt-3 flex items-center justify-between text-[13px] text-muted-foreground shrink-0">
     <div className="flex items-center gap-3">
       <span className="flex items-center gap-1.5 font-medium">
         <span className="w-2 h-2 rounded-full bg-success" />
@@ -37,10 +37,10 @@ export const ContainersStatusBar: React.FC<ContainersStatusBarProps> = ({
         onClick={onPruneClick}
         disabled={isPruning}
         title="Remover todos os containers parados (docker container prune)"
-        className="flex items-center gap-1.5 px-2.5 py-1 bg-card hover:bg-danger/10 text-muted-foreground hover:text-danger border border-border/80 hover:border-danger/30 rounded-lg text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-98"
+        className="flex items-center gap-1.5 h-8 px-3 bg-card hover:bg-danger/10 text-muted-foreground hover:text-danger border border-border hover:border-danger/30 rounded-lg text-[13px] font-medium transition cursor-pointer"
       >
-        <Trash2 className="w-3 h-3" />
-        <span>Limpar Parados ({stoppedCount})</span>
+        <Trash2 className="w-3.5 h-3.5" />
+        <span>Limpar parados ({stoppedCount})</span>
       </button>
     )}
   </div>

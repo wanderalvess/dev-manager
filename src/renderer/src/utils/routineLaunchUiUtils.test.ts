@@ -15,7 +15,7 @@ describe('routineLaunchUiUtils', () => {
       );
       expect(badge.label).toBe('Karaf (WTA): Online');
       expect(badge.isOffline).toBe(false);
-      expect(badge.colorClass).toContain('emerald');
+      expect(badge.colorClass).toContain('text-success');
     });
 
     it('retorna badge Parado quando offline e winthorStart ativo com destaque', () => {
@@ -26,7 +26,7 @@ describe('routineLaunchUiUtils', () => {
       );
       expect(badge.label).toBe('Karaf (WTA): Parado');
       expect(badge.isOffline).toBe(true);
-      expect(badge.colorClass).toContain('rose');
+      expect(badge.colorClass).toContain('text-danger');
     });
 
     it('retorna Checando quando isChecking é true e karafStatus é null', () => {

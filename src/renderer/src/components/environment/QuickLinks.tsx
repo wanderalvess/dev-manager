@@ -11,6 +11,9 @@ interface QuickLinksProps {
   onOpenLink: (url: string) => void;
 }
 
+const LINK_BTN =
+  'h-9 px-3 bg-card hover:bg-muted border border-border rounded-[10px] text-[13px] font-medium text-foreground flex items-center gap-2 transition-colors cursor-pointer';
+
 /** Links rápidos do portal web (com saúde HTTP) e do console OSGi. */
 export const QuickLinks: React.FC<QuickLinksProps> = ({
   webPort,
@@ -19,44 +22,48 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({
   hasKarafPath,
   webHealth,
   onOpenLink
-}) => (
-  <div className="md:col-span-4 flex items-center space-x-2">
-    <button
-      onClick={() => onOpenLink(webPortalUrl)}
-      className="flex-1 py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-between gap-1.5 transition-all shadow-xs group"
-      title={`Abrir Portal Web no navegador (${webPortalUrl}) - ${(webHealth?.reachable ?? webHealth?.isHealthy) ? `Ativo: HTTP ${webHealth?.status ?? webHealth?.statusCode ?? 200} (${webHealth?.timeMs ?? webHealth?.responseTimeMs ?? 0}ms)` : 'Serviço HTTP indisponível ou iniciando'}`}
-    >
-      <div className="flex items-center gap-1.5 truncate">
-        <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
-        <span className="truncate">Portal Web (:{webPort})</span>
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        {webHealth && (
-          (webHealth.reachable ?? webHealth.isHealthy) ? (
-            <span className="flex items-center gap-1 text-2xs font-mono text-success bg-success/10 border border-success/30 px-1.5 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-              {webHealth.status ?? webHealth.statusCode ?? 200} ({webHealth.timeMs ?? webHealth.responseTimeMs ?? 0}ms)
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-2xs font-mono text-warning bg-warning/10 border border-warning/30 px-1.5 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-              Off
-            </span>
-          )
-        )}
-        <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
-      </div>
-    </button>
+}) => {
+  const isUp = webHealth ? (webHealth.reachable ?? webHealth.isHealthy) : null;
+  const status = webHealth?.status ?? webHealth?.statusCode ?? 200;
+  const timeMs = webHealth?.timeMs ?? webHealth?.responseTimeMs ?? 0;
 
-    {hasKarafPath && (
+  return (
+    <div className="flex flex-wrap items-center gap-2">
       <button
-        onClick={() => onOpenLink(karafConsoleUrl)}
-        className="py-2 px-3 bg-card hover:bg-muted/60 border border-border hover:border-primary/50 rounded-xl text-xs font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all shadow-xs"
-        title={`Abrir Console Web OSGi / Apache Felix (${karafConsoleUrl})`}
+        type="button"
+        onClick={() => onOpenLink(webPortalUrl)}
+        className={`${LINK_BTN} flex-1 min-w-0 justify-between`}
+        title={`Abrir Portal Web no navegador (${webPortalUrl}) - ${isUp ? `Ativo: HTTP ${status} (${timeMs}ms)` : 'Serviço HTTP indisponível ou iniciando'}`}
       >
-        <Server className="w-3.5 h-3.5 text-warning" />
-        <span className="hidden lg:inline">Console OSGi</span>
+        <span className="flex items-center gap-2 truncate">
+          <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+          <span className="truncate">Portal web (:{webPort})</span>
+        </span>
+        <span className="flex items-center gap-2 shrink-0">
+          {isUp !== null && (
+            <span
+              className={`text-[13px] font-medium px-2 py-0.5 rounded-full ${
+                isUp ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {isUp ? `Ativo · ${status} (${timeMs} ms)` : 'Parado'}
+            </span>
+          )}
+          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+        </span>
       </button>
-    )}
-  </div>
-);
+
+      {hasKarafPath && (
+        <button
+          type="button"
+          onClick={() => onOpenLink(karafConsoleUrl)}
+          className={LINK_BTN}
+          title={`Abrir Console Web OSGi / Apache Felix (${karafConsoleUrl})`}
+        >
+          <Server className="w-4 h-4 text-muted-foreground" />
+          <span className="hidden xl:inline">Console OSGi</span>
+        </button>
+      )}
+    </div>
+  );
+};

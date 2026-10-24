@@ -20,16 +20,16 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
   onSearchChange,
   onModuleChange
 }) => (
-  <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/60">
+  <div className="flex flex-wrap items-center justify-between gap-3 pt-0">
     <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
       <div className="relative flex-1 min-w-[240px]" data-tour="busca-rotina">
-        <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3.5 top-2.5" />
+        <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3" />
         <input
           type="text"
           placeholder="Buscar rotina por número ou nome..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-xl pl-9 pr-9 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono shadow-2xs"
+          className="w-full bg-card border border-input rounded-[10px] pl-9 pr-9 h-9 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
         {searchTerm && (
           <button
@@ -48,7 +48,7 @@ export const RoutinesFilterBar: React.FC<RoutinesFilterBarProps> = ({
         <select
           value={selectedModule}
           onChange={(e) => onModuleChange(e.target.value)}
-          className="bg-card border border-border/80 rounded-xl px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono cursor-pointer shadow-2xs"
+          className="bg-card border border-input rounded-[10px] px-2.5 h-9 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring cursor-pointer"
         >
           {modules.map((m) => (
             <option key={m} value={m} className="bg-card text-foreground">

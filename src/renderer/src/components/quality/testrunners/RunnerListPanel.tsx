@@ -35,7 +35,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
       <div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-primary" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
+          <h3 className="text-base font-semibold text-foreground">
             Suítes &amp; Runners
           </h3>
           <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/60">
@@ -57,7 +57,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
 
     {/* Presets de Início Rápido */}
     <div className="p-3 border-b border-border/60 bg-muted/20 shrink-0">
-      <div className="text-2xs font-mono font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+      <div className="text-[13px] font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
         <span>Modelos rápidos:</span>
       </div>
       <div className="flex flex-wrap gap-1.5">

@@ -19,7 +19,7 @@ interface StepCardProps {
   onToggleService: (step: AutomationStep, isRunning: boolean) => void;
 }
 
-const MODE_BADGE = 'text-2xs font-mono text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded border border-primary/20';
+const MODE_BADGE = 'text-2xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border';
 
 /** Cartão de uma etapa do perfil: título, tipo, detalhes contextuais e ações individuais. */
 export const StepCard: React.FC<StepCardProps> = ({
@@ -39,12 +39,12 @@ export const StepCard: React.FC<StepCardProps> = ({
 
   return (
     <div
-      className={`p-3 bg-card border rounded-xl flex flex-col gap-2 transition-all shadow-xs ${
+      className={`p-3.5 bg-card border rounded-[10px] flex flex-col gap-2 transition-colors ${
         step.enabled === false
-          ? 'opacity-50 border-border/40 bg-muted/20'
+          ? 'opacity-60 border-border bg-muted/40'
           : isPortActive || (srvFound && srvFound.state === 'RUNNING')
-          ? 'border-success/40 hover:border-success/60'
-          : 'border-border/80 hover:border-border'
+          ? 'border-success/50'
+          : 'border-border hover:border-input'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -58,16 +58,16 @@ export const StepCard: React.FC<StepCardProps> = ({
           />
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-5 h-5 flex items-center justify-center rounded-md bg-muted text-2xs font-bold text-muted-foreground shrink-0">
+              <span className="w-5 h-5 flex items-center justify-center rounded-full bg-muted text-2xs font-semibold text-muted-foreground shrink-0">
                 {index + 1}
               </span>
-              <span className="text-xs font-bold text-foreground truncate">{step.name}</span>
-              <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/40 flex items-center gap-1">
+              <span className="text-[13px] font-medium text-foreground truncate">{step.name}</span>
+              <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border flex items-center gap-1">
                 <StepIcon className="w-3 h-3" />
                 {step.type}
               </span>
               {step.type === 'karaf' && (
-                <span className="text-2xs font-mono text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 font-semibold flex items-center gap-1">
+                <span className="text-2xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border flex items-center gap-1">
                   Debug :{effectiveKarafPort}
                 </span>
               )}

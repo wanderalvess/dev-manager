@@ -32,15 +32,15 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
   return (
     <div className="space-y-4">
       {/* Tabela de Atalhos de Teclado Globais */}
-      <div className="cockpit-panel rounded-xl p-5 border border-border shadow-xl space-y-4">
+      <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-2 border-b border-border flex-wrap gap-2">
           <div className="flex items-center space-x-2">
             <Zap className="w-4 h-4 text-primary" />
-            <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               Atalhos de Teclado Globais
             </h3>
           </div>
-          <span className="text-2xs text-muted-foreground font-mono">
+          <span className="text-[13px] text-muted-foreground">
             Navegação instantânea sem tirar as mãos do teclado
           </span>
         </div>
@@ -53,11 +53,11 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
             >
               <div className="space-y-0.5 min-w-0 pr-3">
                 <span className="text-xs font-bold text-foreground block truncate">{sc.desc}</span>
-                <span className="text-2xs text-muted-foreground font-mono uppercase tracking-wider">
+                <span className="text-[13px] text-muted-foreground">
                   {sc.category}
                 </span>
               </div>
-              <kbd className="px-2.5 py-1 rounded-lg bg-muted border border-border font-mono text-xs font-bold text-primary shrink-0 shadow-xs">
+              <kbd className="px-2.5 py-1 rounded-lg bg-muted border border-border font-mono text-[13px] font-medium text-foreground shrink-0">
                 {sc.key}
               </kbd>
             </div>
@@ -68,8 +68,8 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
       {/* Dicas Pro para Desenvolvedores */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Dica 1: Debug IntelliJ */}
-        <div className="cockpit-panel rounded-xl p-5 border border-border shadow-md space-y-3">
-          <div className="flex items-center space-x-2 text-primary font-bold text-xs uppercase tracking-wider">
+        <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs space-y-3">
+          <div className="flex items-center space-x-2 text-primary font-semibold text-sm">
             <Code2 className="w-4 h-4" />
             <span>Dica Pro: Depuração JVM Remota no IntelliJ IDEA</span>
           </div>
@@ -83,8 +83,8 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
         </div>
 
         {/* Dica 2: Karaf Shell */}
-        <div className="cockpit-panel rounded-xl p-5 border border-border shadow-md space-y-3">
-          <div className="flex items-center space-x-2 text-warning font-bold text-xs uppercase tracking-wider">
+        <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs space-y-3">
+          <div className="flex items-center space-x-2 text-warning font-semibold text-sm">
             <Terminal className="w-4 h-4" />
             <span>Dica Pro: Comandos Rápidos do Apache Karaf</span>
           </div>
@@ -104,8 +104,8 @@ export const HelpShortcutsTab: React.FC<HelpShortcutsTabProps> = ({
         </div>
 
         {/* Dica 3: Automação por IA via MCP */}
-        <div className="cockpit-panel rounded-xl p-5 border border-border shadow-md space-y-3">
-          <div className="flex items-center space-x-2 text-violet-700 dark:text-violet-400 font-bold text-xs uppercase tracking-wider">
+        <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs space-y-3">
+          <div className="flex items-center space-x-2 text-foreground font-semibold text-sm">
             <Bot className="w-4 h-4" />
             <span>Dica Pro: Automação por IA no IntelliJ &amp; VS Code (Copilot / MCP)</span>
           </div>

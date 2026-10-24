@@ -33,7 +33,7 @@ export const BackupTabNav: React.FC<BackupTabNavProps> = ({
   ];
 
   return (
-    <div className="flex items-center px-6 py-2.5 border-b border-border/70 bg-muted/20 shrink-0 gap-1.5 overflow-x-auto">
+    <div className="flex items-center px-6 border-b border-border bg-card shrink-0 gap-6 overflow-x-auto">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -42,22 +42,22 @@ export const BackupTabNav: React.FC<BackupTabNavProps> = ({
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+            className={`flex items-center gap-2 py-3 text-sm transition-colors shrink-0 cursor-pointer border-b-2 -mb-px ${
               isActive
-                ? 'bg-background text-foreground shadow-2xs border border-border/80 font-bold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
+                ? 'text-foreground font-medium border-primary'
+                : 'text-muted-foreground hover:text-foreground border-transparent'
             }`}
           >
-            <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-primary' : 'opacity-70'}`} />
+            <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'opacity-70'}`} />
             <span>{tab.label}</span>
             {tab.indicator === 'active' && (
               <span className="w-2 h-2 rounded-full bg-success animate-pulse" title="Agendamento ativo" />
             )}
             {tab.count !== undefined && tab.count > 0 && (
               <span
-                className={`px-1.5 py-0.2 rounded-full text-2xs font-mono leading-none ${
+                className={`px-2 py-0.5 rounded-full text-xs font-medium leading-none ${
                   isActive
-                    ? 'bg-primary/15 text-primary font-bold'
+                    ? 'bg-accent text-accent-foreground'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >

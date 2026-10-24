@@ -15,7 +15,7 @@ export function getKarafWtaBadgeInfo(
   if (isChecking && !karafStatus) {
     return {
       label: 'Karaf (WTA): Checando...',
-      colorClass: 'bg-muted text-muted-foreground border-border animate-pulse',
+      colorClass: 'bg-muted text-muted-foreground animate-pulse',
       tooltip: 'Verificando se o servidor Apache Karaf / WTA está online...',
       isOffline: false
     };
@@ -27,7 +27,7 @@ export function getKarafWtaBadgeInfo(
   if (isOnline) {
     return {
       label: 'Karaf (WTA): Online',
-      colorClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+      colorClass: 'bg-success/10 text-success',
       tooltip: `Servidor Apache Karaf / WTA online em ${wtaUrl}. Sessões autenticadas ativas para o WinThor Start.`,
       isOffline: false
     };
@@ -36,8 +36,8 @@ export function getKarafWtaBadgeInfo(
   return {
     label: 'Karaf (WTA): Parado',
     colorClass: winthorStartActive
-      ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 font-bold'
-      : 'bg-muted text-muted-foreground border-border',
+      ? 'bg-danger/10 text-danger'
+      : 'bg-muted text-muted-foreground',
     tooltip: `Apache Karaf / WTA não está em execução em ${wtaUrl}. O WinThor Start precisa do Karaf ativo para autenticar a sessão do usuário.`,
     isOffline: true
   };

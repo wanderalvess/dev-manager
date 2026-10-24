@@ -35,7 +35,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
 }) => (
   <div className="lg:col-span-5 space-y-4">
     {/* Meta Tags (Esteira, Crítico, Regressão, Contrato) */}
-    <div className="p-3 rounded-xl bg-card border border-border shadow-2xs space-y-2.5">
+    <div className="p-4 rounded-[14px] bg-card border border-border shadow-xs space-y-2.5">
       <label className="text-xs font-bold text-foreground flex items-center justify-between">
         <span>Filtro de Meta-Tags (@cypress/grep)</span>
         <span className="text-2xs text-muted-foreground font-normal">Clique para alternar</span>
@@ -63,7 +63,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
     </div>
 
     {/* Módulos do WinThor */}
-    <div className="p-3 rounded-xl bg-card border border-border shadow-2xs space-y-2.5">
+    <div className="p-4 rounded-[14px] bg-card border border-border shadow-xs space-y-2.5">
       <label className="text-xs font-bold text-foreground flex items-center justify-between">
         <span>Módulos de Negócio (Serviços WTA)</span>
         <span className="text-2xs text-muted-foreground font-normal">Selecione para focar</span>
@@ -92,9 +92,9 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
     </div>
 
     {/* Parâmetros Avançados de Execução */}
-    <div className="p-3 rounded-xl bg-card border border-border shadow-2xs space-y-3">
+    <div className="p-4 rounded-[14px] bg-card border border-border shadow-xs space-y-3">
       <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
-        <Sliders className="w-3.5 h-3.5 text-primary" />
+        <Sliders className="w-3.5 h-3.5 text-muted-foreground" />
         <span>Parâmetros de Execução</span>
       </div>
 
@@ -156,7 +156,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
           type="button"
           onClick={onRun}
           disabled={isRunning || !projectExists}
-          className="w-full py-2 px-3 rounded-lg bg-success hover:bg-success/90 text-background font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50"
+          className="w-full h-10 px-4 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm transition-colors cursor-pointer flex items-center justify-center space-x-2 disabled:opacity-50"
         >
           <Play className={`w-3.5 h-3.5 ${isRunning ? 'animate-spin' : ''}`} />
           <span>{isRunning ? 'Executando...' : 'Rodar Headless'}</span>
@@ -166,10 +166,10 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
           type="button"
           onClick={onOpenInteractive}
           disabled={isRunning || !projectExists}
-          className="w-full sm:w-auto py-2 px-3 rounded-lg bg-card hover:bg-muted text-foreground border border-border/70 hover:border-border text-xs font-semibold transition cursor-pointer flex items-center justify-center space-x-1.5 whitespace-nowrap disabled:opacity-50"
+          className="w-full sm:w-auto h-10 px-3 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium transition-colors cursor-pointer flex items-center justify-center space-x-1.5 whitespace-nowrap disabled:opacity-50"
           title="Abre o Cypress Runner Interativo com navegador (cy:open)"
         >
-          <ExternalLink className="w-3.5 h-3.5 text-primary" />
+          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
           <span>Abrir cy:open</span>
         </button>
 
@@ -177,7 +177,7 @@ export const TautRunnerControls: React.FC<TautRunnerControlsProps> = ({
           <button
             type="button"
             onClick={onAbort}
-            className="w-full sm:w-auto py-2 px-3 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs transition cursor-pointer flex items-center justify-center space-x-1.5"
+            className="w-full sm:w-auto h-10 px-4 rounded-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium text-sm transition-colors cursor-pointer flex items-center justify-center space-x-1.5"
             title="Interromper execução do processo Cypress"
           >
             <Square className="w-3.5 h-3.5 fill-current" />

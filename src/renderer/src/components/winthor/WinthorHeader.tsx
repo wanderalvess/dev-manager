@@ -37,13 +37,13 @@ interface WinthorHeaderProps {
 }
 
 const SECONDARY_BTN =
-  'flex items-center space-x-1.5 px-2.5 py-1.5 bg-card hover:bg-muted border border-border/80 text-foreground rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer active:scale-98';
+  'flex items-center space-x-1.5 px-3 h-10 bg-card hover:bg-muted border border-border text-foreground rounded-[10px] text-sm font-medium transition-colors cursor-pointer';
 
 /** Cabeçalho da tela WinThor & WSL: runtime WSL, subir a stack, snapshots e assistente INFR. */
 export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
   <>
     <header
-      className="px-4 py-3 bg-card/85 backdrop-blur-sm border-b border-border/80 flex flex-wrap items-center justify-between gap-3 shrink-0"
+      className="px-7 pt-6 pb-4 flex flex-wrap items-end justify-between gap-4 shrink-0"
       data-tour="winthor-header"
     >
       <ContainersHeaderTitle
@@ -78,12 +78,12 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
             onClick={p.onStartWinThorSequence}
             disabled={p.sequenceProgress.running || p.containersCount === 0}
             title="Inicia sequencialmente Oracle XE -> WTA -> WSH"
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer active:scale-98"
+            className="flex items-center space-x-1.5 px-4 h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-[10px] text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
           >
             {p.sequenceProgress.running ? (
-              <RotateCw className="w-3.5 h-3.5 animate-spin" />
+              <RotateCw className="w-4 h-4 animate-spin" />
             ) : (
-              <Play className="w-3.5 h-3.5 fill-current" />
+              <Play className="w-4 h-4 fill-current" />
             )}
             <span>Subir WinThor</span>
           </button>
@@ -93,7 +93,7 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
             title="Gerenciamento de Snapshots .tar do WSL (Importar / Exportar / Remover)"
             className={SECONDARY_BTN}
           >
-            <Archive className="w-3.5 h-3.5 text-primary" />
+            <Archive className="w-4 h-4 text-muted-foreground" />
             <span className="hidden lg:inline">Snapshots WSL</span>
           </button>
 
@@ -102,7 +102,7 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
             title="Assistente de Bootstrap INFR-Docker (Setup Oracle XE, WTA, WSH)"
             className={SECONDARY_BTN}
           >
-            <Sliders className="w-3.5 h-3.5 text-orange-500" />
+            <Sliders className="w-4 h-4 text-muted-foreground" />
             <span className="hidden lg:inline">Assistente INFR</span>
           </button>
 
@@ -110,9 +110,9 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
             onClick={p.onRefreshData}
             disabled={p.isLoading}
             title="Atualizar status" aria-label="Atualizar status"
-            className="p-1.5 bg-card hover:bg-muted border border-border/80 text-muted-foreground hover:text-foreground rounded-lg text-xs transition shadow-2xs disabled:opacity-50 cursor-pointer"
+            className="h-10 w-10 flex items-center justify-center bg-card hover:bg-muted border border-border text-muted-foreground hover:text-foreground rounded-[10px] transition-colors disabled:opacity-50 cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${p.isLoading ? 'animate-spin text-primary' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${p.isLoading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>

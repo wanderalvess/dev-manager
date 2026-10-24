@@ -33,7 +33,7 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
   return (
     <div className="p-3 rounded-xl bg-card/60 border border-border space-y-2 shadow-2xs">
       <div className="flex items-center justify-between">
-        <span className="text-2xs text-muted-foreground uppercase font-bold tracking-wider block">
+        <span className="text-[13px] text-muted-foreground block">
           Versão do Aplicativo:
         </span>
         <button

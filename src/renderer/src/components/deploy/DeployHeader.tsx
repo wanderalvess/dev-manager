@@ -3,7 +3,6 @@ import {
   Cpu,
   GitMerge,
   History,
-  Layers,
   Pencil,
   Play,
   Sparkles,
@@ -35,7 +34,7 @@ interface DeployHeaderProps {
 }
 
 const toolbarBtn =
-  'px-3 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 transition-colors bg-card hover:bg-muted border text-foreground shadow-2xs cursor-pointer';
+  'h-10 px-3 rounded-[10px] font-medium text-sm flex items-center gap-1.5 transition-colors bg-card hover:bg-muted border text-foreground cursor-pointer';
 
 export const DeployHeader: React.FC<DeployHeaderProps> = ({
   profiles,
@@ -61,40 +60,32 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
   const isBusy = isDeploying || !!runningStepId || !!isDiagRunning;
 
   return (
-    <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border shrink-0">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
-            <Layers className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
-              Perfis de Deploy
-              <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
-                Karaf · Docker · Genérico
-              </span>
-              <button
-                type="button"
-                onClick={onOpenTour}
-                className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
-                title="Rever o tour guiado desta página"
-                aria-label="Rever o tour guiado desta página"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-              </button>
-            </h1>
-            <p className="text-2xs text-muted-foreground">
-              {activeProfile?.description || 'Monte etapas sequenciais de build e publicação para qualquer alvo.'}
-            </p>
-          </div>
+    <div className="shrink-0">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-3">
+            Deploy
+            <button
+              type="button"
+              onClick={onOpenTour}
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
+              title="Rever o tour guiado desta página"
+              aria-label="Rever o tour guiado desta página"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {activeProfile?.description || 'Monte etapas sequenciais de build e publicação para qualquer alvo (Karaf, Docker ou genérico).'}
+          </p>
         </div>
 
-        <div className="flex items-center gap-2" data-tour="select-deploy-profile">
+        <div className="flex flex-wrap items-center gap-2" data-tour="select-deploy-profile">
           <select
             value={activeProfileId}
             onChange={(e) => onSelectProfile(e.target.value)}
             disabled={isBusy}
-            className="bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-hidden focus:border-primary transition-colors font-mono max-w-[220px]"
+            className="h-10 bg-card border border-input rounded-[10px] px-3 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring transition-colors max-w-[240px]"
           >
             {profiles.map((p) => (
               <option key={p.id} value={p.id}>
@@ -107,7 +98,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
             data-tour="edit-deploy-profile"
             onClick={onEditProfile}
             disabled={!activeProfile || isBusy}
-            className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors disabled:opacity-50 cursor-pointer"
+            className="h-10 w-10 flex items-center justify-center bg-card hover:bg-muted border border-border rounded-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
             title="Editar Perfil"
             aria-label="Editar Perfil"
           >
@@ -128,7 +119,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
             className={`${toolbarBtn} border-border`}
             title="Ver histórico completo das últimas execuções de deploy"
           >
-            <History className="w-3.5 h-3.5 text-muted-foreground" />
+            <History className="w-4 h-4 text-muted-foreground" />
             <span className="hidden sm:inline">Histórico</span>
           </button>
 
@@ -138,7 +129,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
             className={`${toolbarBtn} border-border`}
             title="Bundles, features, catálogo 801, memória da JVM e diagnósticos do Karaf"
           >
-            <Cpu className="w-3.5 h-3.5 text-muted-foreground" />
+            <Cpu className="w-4 h-4 text-muted-foreground" />
             <span>Karaf</span>
           </button>
 
@@ -146,11 +137,11 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
             <button
               type="button"
               onClick={onOpenChainModal}
-              className={`${toolbarBtn} border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary font-bold`}
+              className={`${toolbarBtn} border-border`}
               title="Criar e executar esteira automatizada de compilação multi-camadas (ex: Venda -> Pedido -> Varejo)"
             >
-              <GitMerge className="w-3.5 h-3.5 text-primary" />
-              <span>Cadeia Multi-Módulos</span>
+              <GitMerge className="w-4 h-4 text-muted-foreground" />
+              <span>Cadeia multi-módulos</span>
             </button>
           )}
 
@@ -158,7 +149,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
             <button
               type="button"
               onClick={onAbort}
-              className="px-4 py-2 rounded-lg font-semibold text-xs flex items-center space-x-1.5 transition-colors bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-2xs cursor-pointer animate-pulse"
+              className="h-10 px-4 rounded-[10px] font-medium text-sm flex items-center gap-1.5 transition-colors bg-destructive hover:bg-destructive/90 text-destructive-foreground cursor-pointer"
               title={
                 isDeploying
                   ? 'Interromper execução do perfil imediatamente'
@@ -175,7 +166,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
               data-tour="run-active-profile"
               onClick={onRun}
               disabled={isBusy || !activeProfile || enabledCount === 0}
-              className="px-5 py-2 rounded-lg font-semibold text-xs flex items-center space-x-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-2xs cursor-pointer disabled:opacity-50"
+              className="h-10 px-4 rounded-[10px] font-medium text-sm flex items-center gap-2 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer disabled:opacity-50"
               title={
                 enabledCount === 0
                   ? 'Selecione ao menos uma etapa para executar'
@@ -187,10 +178,10 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>
                 {enabledCount === 0
-                  ? 'Nenhuma Selecionada'
+                  ? 'Nenhuma selecionada'
                   : enabledCount < totalCount
-                  ? `Executar Selecionadas (${enabledCount})`
-                  : 'Executar Perfil'}
+                  ? `Executar selecionadas (${enabledCount})`
+                  : 'Executar perfil'}
               </span>
             </button>
           )}

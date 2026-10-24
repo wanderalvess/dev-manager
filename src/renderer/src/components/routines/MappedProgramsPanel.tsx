@@ -23,15 +23,15 @@ export const MappedProgramsPanel: React.FC<MappedProgramsPanelProps> = ({
   onLaunch,
   onRemove
 }) => (
-  <div className="cockpit-panel rounded-xl p-3 shadow-2xs border border-border/80 shrink-0 space-y-2.5">
+  <div className="bg-card rounded-[14px] p-5 shadow-xs border border-border shrink-0 space-y-3">
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-2">
-        <AppWindow className="w-4 h-4 text-primary shrink-0" />
+        <AppWindow className="w-4 h-4 text-muted-foreground shrink-0" />
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-            Programas Mapeados &amp; Atalhos Rápidos ({mappedPrograms.length})
+          <h3 className="text-base font-semibold text-foreground">
+            Programas mapeados e atalhos rápidos <span className="text-muted-foreground font-normal">({mappedPrograms.length})</span>
           </h3>
-          <p className="text-2xs text-muted-foreground font-mono">
+          <p className="text-[13px] text-muted-foreground">
             Atalhos diretos para executáveis (.exe, .bat, .cmd) independente da pasta padrão.
           </p>
         </div>
@@ -40,16 +40,16 @@ export const MappedProgramsPanel: React.FC<MappedProgramsPanelProps> = ({
         type="button"
         onClick={onAdd}
         disabled={isAddingProgram}
-        className="px-2.5 py-1.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.98] shadow-2xs"
+        className="h-9 px-3 bg-card hover:bg-muted text-foreground border border-border rounded-[10px] text-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
         title="Selecionar um executável para mapear"
       >
         <Plus className="w-3.5 h-3.5" />
-        <span>Adicionar Atalho</span>
+        <span>Adicionar atalho</span>
       </button>
     </div>
 
     {mappedPrograms.length === 0 ? (
-      <p className="text-xs text-muted-foreground py-2.5 text-center bg-card/30 rounded-lg border border-border/60 font-mono">
+      <p className="text-[13px] text-muted-foreground py-3 text-center bg-muted/50 rounded-[10px]">
         Nenhum programa mapeado ainda. Clique em "Adicionar Atalho" e escolha um executável do seu computador.
       </p>
     ) : (

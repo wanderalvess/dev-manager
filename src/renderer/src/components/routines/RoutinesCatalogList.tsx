@@ -46,8 +46,8 @@ export const RoutinesCatalogList: React.FC<RoutinesCatalogListProps> = ({
         <div className="space-y-2.5 shrink-0" data-tour="rotinas-favoritas">
           <div className="flex items-center space-x-2">
             <Star className="w-4 h-4 text-warning fill-warning" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-warning">
-              Rotinas Favoritas ({favoriteRoutines.length})
+            <h3 className="text-sm font-semibold text-foreground">
+              Rotinas favoritas ({favoriteRoutines.length})
             </h3>
           </div>
           <div className={GRID_CLASS}>{favoriteRoutines.map(renderCard)}</div>
@@ -58,17 +58,17 @@ export const RoutinesCatalogList: React.FC<RoutinesCatalogListProps> = ({
       <div className="space-y-2.5">
         <div className="flex items-center space-x-2">
           <Layers className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Todas as Rotinas ({otherRoutines.length})
+          <h3 className="text-sm font-semibold text-foreground">
+            Todas as rotinas ({otherRoutines.length})
           </h3>
         </div>
 
         {routinesCount === 0 ? (
-          <div className="cockpit-panel rounded-xl p-6 text-center flex flex-col items-center justify-center space-y-2.5 border border-border/80 bg-card/40 shadow-2xs">
+          <div className="rounded-[14px] p-8 text-center flex flex-col items-center justify-center space-y-2.5 border border-border bg-card shadow-xs">
             <FolderOpen className="w-8 h-8 text-muted-foreground/60 mb-0.5" />
             <div>
-              <h4 className="text-xs font-bold text-foreground">Nenhuma rotina encontrada</h4>
-              <p className="text-2xs text-muted-foreground mt-0.5 max-w-md font-mono">
+              <h4 className="text-base font-semibold text-foreground">Nenhuma rotina encontrada</h4>
+              <p className="text-[13px] text-muted-foreground mt-1 max-w-md">
                 Verifique se o diretório de rotinas está configurado corretamente nas Configurações ou clique em "Atualizar Catálogo".
               </p>
             </div>

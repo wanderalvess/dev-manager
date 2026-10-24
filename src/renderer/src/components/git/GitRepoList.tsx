@@ -30,25 +30,25 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
   onFilterChange,
   onSelect
 }) => (
-  <div className="lg:col-span-4 flex flex-col space-y-3 cockpit-panel rounded-xl p-3 overflow-hidden border border-border">
+  <div className="lg:col-span-4 flex flex-col space-y-3 bg-card rounded-[14px] p-3 overflow-hidden border border-border shadow-xs">
     {/* Busca */}
     <div className="relative">
-      <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
+      <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
       <input
         type="text"
-        placeholder="Buscar repositório ou branch..."
+        placeholder="Filtrar repositórios"
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full bg-card border border-border rounded-xl pl-9 pr-3 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:border-primary font-mono"
+        className="w-full h-9 bg-card border border-input rounded-[10px] pl-9 pr-3 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
       />
     </div>
 
     <GitRepoFilterChips filter={filter} counts={filterCounts} onChange={onFilterChange} />
 
     {/* Lista Rolável */}
-    <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5" data-tour="repo-list">
+    <div className="flex-1 overflow-y-auto space-y-0.5 pr-0.5" data-tour="repo-list">
       {projects.length === 0 && (
-        <p className="text-2xs text-muted-foreground text-center py-6">Nenhum repositório neste filtro.</p>
+        <p className="text-[13px] text-muted-foreground text-center py-6">Nenhum repositório neste filtro.</p>
       )}
       {projects.map((p) => {
         const isSelected = selectedPath === p.path;
@@ -61,40 +61,32 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
           <button
             key={p.path}
             onClick={() => onSelect(p.path)}
-            className={`w-full text-left p-3 rounded-xl border transition-all ${
-              isSelected
-                ? 'bg-primary/10 border-primary shadow-xs font-semibold'
-                : 'bg-card/70 border-border/70 hover:border-border hover:bg-muted/40'
+            className={`w-full text-left px-3 py-2.5 rounded-[10px] transition-colors cursor-pointer ${
+              isSelected ? 'bg-accent' : 'hover:bg-muted'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className={`text-xs font-bold truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+            <div className="flex items-center justify-between gap-2">
+              <span className={`text-sm truncate ${isSelected ? 'text-accent-foreground font-semibold' : 'text-foreground font-medium'}`}>
                 {p.name}
               </span>
-              <div className="flex items-center space-x-1.5">
-                {p.isAzure && (
-                  <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-1.5 py-0.2 rounded font-mono font-bold">
-                    AZURE
-                  </span>
-                )}
-              </div>
+              {p.isAzure && <span className="text-xs text-muted-foreground shrink-0">Azure</span>}
             </div>
-            <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-2xs text-muted-foreground">
-              <GitBranch className="w-3 h-3 text-success shrink-0" />
-              <span className="truncate font-mono text-success font-medium" title={p.currentBranch}>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5 text-[13px] text-muted-foreground">
+              <GitBranch className="w-3 h-3 shrink-0" />
+              <span className="truncate font-mono" title={p.currentBranch}>
                 {p.currentBranch}
               </span>
               {localOnly && (
                 <span
-                  className="bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.5 rounded font-bold"
+                  className="bg-warning/10 text-warning px-2 rounded-full font-medium"
                   title="A branch atual ainda não existe no origin"
                 >
-                  SÓ LOCAL
+                  só local
                 </span>
               )}
               {unpushed > 0 && (
                 <span
-                  className="bg-info/15 text-info border border-info/30 px-1.5 py-0.5 rounded font-bold"
+                  className="bg-info/10 text-info px-2 rounded-full font-medium"
                   title={`${unpushed} commit(s) local(is) que o origin ainda não tem`}
                 >
                   ↑ {unpushed} sem push
@@ -102,10 +94,10 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
               )}
               {hasChanges && (
                 <span
-                  className="bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.5 rounded font-bold"
+                  className="bg-warning/10 text-warning px-2 rounded-full font-medium"
                   title={`${pendingCount} arquivo(s) modificado(s)`}
                 >
-                  ● {pendingCount} {pendingCount === 1 ? 'alteração' : 'alterações'}
+                  {pendingCount} {pendingCount === 1 ? 'alteração' : 'alterações'}
                 </span>
               )}
             </div>

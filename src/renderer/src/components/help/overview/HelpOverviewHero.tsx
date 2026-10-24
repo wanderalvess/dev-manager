@@ -37,22 +37,22 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
   onResetPageTours,
   setActiveCategory
 }) => (
-  <div className="cockpit-panel rounded-xl p-5 sm:p-6 border border-border shadow-xl relative overflow-hidden">
+  <div className="cockpit-panel rounded-[14px] p-5 sm:p-6 border border-border shadow-xs relative overflow-hidden">
     <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
       <div className="space-y-2.5 max-w-2xl">
         <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-          <span className="text-2xs uppercase font-extrabold tracking-wider px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25">
+          <span className="text-[13px] font-medium px-2.5 py-0.5 rounded-full bg-accent text-accent-foreground">
             COCKPIT INTEGRADO
           </span>
           <span className="text-xs text-muted-foreground font-mono">
             Hub Manager • v{appInfo?.appVersion || '1.35.0'}
           </span>
           {appInfo?.isAdmin ? (
-            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/25">
+            <span className="inline-flex items-center gap-1 text-[13px] font-medium px-2.5 py-0.5 rounded-full bg-success/10 text-success">
               <ShieldCheck className="w-3 h-3" /> Modo Administrador
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning border border-warning/25">
+            <span className="inline-flex items-center gap-1 text-[13px] font-medium px-2.5 py-0.5 rounded-full bg-warning/10 text-warning">
               <ShieldAlert className="w-3 h-3" /> Usuário Padrão
             </span>
           )}

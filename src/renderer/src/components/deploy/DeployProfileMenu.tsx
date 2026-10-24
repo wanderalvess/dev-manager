@@ -30,7 +30,7 @@ export const DeployProfileMenu: React.FC<DeployProfileMenuProps> = ({
     <div className="relative" data-tour="profile-menu-options">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-foreground transition-colors flex items-center gap-1 cursor-pointer"
+        className="h-10 px-2.5 bg-card hover:bg-muted border border-border rounded-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 cursor-pointer"
         title="Mais opções de perfil" aria-label="Mais opções de perfil"
       >
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />

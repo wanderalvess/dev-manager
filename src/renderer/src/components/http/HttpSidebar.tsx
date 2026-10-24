@@ -63,17 +63,17 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
   const currentEnv = environments.find((e) => e.id === selectedEnvId) || environments[0];
 
   return (
-    <div className="w-72 border-r border-border bg-card/40 flex flex-col h-full overflow-hidden text-xs">
+    <div className="w-72 border-r border-border bg-card flex flex-col h-full overflow-hidden text-xs">
       {/* Seletor de Ambiente no Topo */}
-      <div className="p-2 border-b border-border flex items-center justify-between gap-1.5 bg-card/60">
+      <div className="p-3 border-b border-border flex items-center justify-between gap-1.5">
         <div className="flex-1 min-w-0">
-          <label className="block text-[10px] uppercase font-semibold text-muted-foreground/80 tracking-wider">
+          <label className="block text-xs font-medium text-muted-foreground">
             Ambiente
           </label>
           <select
             value={selectedEnvId}
             onChange={(e) => onSelectEnv(e.target.value)}
-            className="w-full mt-0.5 px-2 py-1 bg-background border border-border rounded font-medium text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary truncate"
+            className="w-full mt-1 px-2 h-8 bg-background border border-input rounded-lg font-medium text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-ring truncate"
           >
             {environments.map((e) => (
               <option key={e.id} value={e.id}>
@@ -94,11 +94,11 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
       </div>
 
       {/* Botões de Ação Rápida */}
-      <div className="p-2 border-b border-border flex items-center gap-1.5">
+      <div className="p-3 border-b border-border flex items-center gap-1.5">
         <button
           type="button"
           onClick={() => onNewRequest()}
-          className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 rounded font-medium transition-colors"
+          className="flex-1 flex items-center justify-center gap-1 px-2 h-8 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[13px] font-medium transition-colors"
         >
           <Plus className="w-3 h-3" />
           <span>Requisição</span>
@@ -107,7 +107,7 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
         <button
           type="button"
           onClick={onOpenImportModal}
-          className="flex items-center gap-1 px-2 py-1.5 bg-muted hover:bg-muted/80 text-foreground border border-border rounded transition-colors"
+          className="flex items-center gap-1 px-2 h-8 bg-card hover:bg-muted text-foreground border border-border rounded-lg text-[13px] font-medium transition-colors"
           title="Importar coleção do Postman"
         >
           <Upload className="w-3 h-3 text-muted-foreground" />
@@ -123,12 +123,12 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filtrar rotas ou coleções..."
-          className="w-full pl-7 pr-2 py-1 bg-background border border-border rounded text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full pl-7 pr-2 h-8 bg-background border border-input rounded-lg text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       {/* Abas Coleções vs Histórico */}
-      <div className="flex border-b border-border bg-card/20">
+      <div className="flex border-b border-border">
         <button
           type="button"
           onClick={() => setActiveTab('collections')}
@@ -190,7 +190,7 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
           <div className="space-y-1.5">
             {history.length > 0 && onClearHistory && (
               <div className="flex items-center justify-between px-1 pb-1 mb-1 border-b border-border/40">
-                <span className="text-[10px] uppercase font-semibold text-muted-foreground/80 tracking-wider">
+                <span className="text-xs font-medium text-muted-foreground">
                   Execuções ({history.length})
                 </span>
                 <button

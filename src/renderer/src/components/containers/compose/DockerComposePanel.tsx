@@ -62,7 +62,7 @@ export const DockerComposePanel: React.FC<DockerComposePanelProps> = ({
 }) => {
   return (
     <div
-      className="mx-4 mt-3 p-3 bg-card/60 backdrop-blur-sm border border-border/70 rounded-xl shrink-0 space-y-2.5 shadow-2xs"
+      className="mx-7 mt-3 p-3 bg-card border border-border rounded-[14px] shrink-0 space-y-2.5 shadow-xs"
       data-tour="compose-panel"
     >
       <div className="flex items-center justify-between">

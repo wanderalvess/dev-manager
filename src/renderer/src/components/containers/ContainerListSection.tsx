@@ -31,7 +31,7 @@ export const ContainerListSection: React.FC<ContainerListSectionProps> = ({
   logs,
   tools
 }) => (
-  <div className="px-4">
+  <div className="px-7">
     {filteredContainers.length === 0 ? (
       <div className="min-h-[260px] flex flex-col items-center justify-center text-center p-6 bg-card/30 border border-dashed border-border/80 rounded-xl">
         <div className="w-12 h-12 rounded-xl bg-muted/80 flex items-center justify-center text-muted-foreground mb-3">

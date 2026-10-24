@@ -128,7 +128,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const artifacts = useAzureArtifacts(currentProject);
 
   return (
-    <div className="h-full flex flex-col p-5 space-y-4 overflow-hidden">
+    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden">
       <GitPageHeader
         projectCount={projects.length}
         localOnlyCount={repoFilter.filterCounts['local-only']}
@@ -138,7 +138,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
         onSync={ops.handleSyncRepositories}
       />
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
         <GitRepoList
           projects={repoFilter.visibleProjects}
           selectedPath={currentProject?.path}
@@ -156,7 +156,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
         <div className="lg:col-span-8 flex flex-col space-y-3 overflow-y-auto pr-1">
           {currentProject ? (
             <>
-              <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
+              <div className="bg-card rounded-[14px] p-6 space-y-5 border border-border shadow-xs">
                 <GitProjectTitleBar
                   project={currentProject}
                   onOpenAzurePipelines={ops.handleOpenAzurePipelines}

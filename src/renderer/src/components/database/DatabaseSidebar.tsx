@@ -81,7 +81,7 @@ export const DatabaseSidebar: React.FC<DatabaseSidebarProps> = ({
   }
 
   return (
-    <aside className="w-72 bg-card/60 border-r border-border/70 flex flex-col shrink-0 transition-all" data-tour="connections-sidebar">
+    <aside className="w-72 bg-card border-r border-border flex flex-col shrink-0 transition-all" data-tour="connections-sidebar">
       <DatabaseSidebarHeader
         onOpenCreateModal={onOpenCreateModal}
         onOpenTour={onOpenTour}

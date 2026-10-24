@@ -24,7 +24,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
 
   return (
     <div
-      className={`p-3 rounded-xl border transition-all ${
+      className={`p-4 rounded-[14px] border transition-colors ${
         isRunning
           ? 'border-primary/80 bg-primary/5 shadow-2xs ring-1 ring-primary/20'
           : 'border-border/70 bg-card hover:border-border hover:bg-card/90'
@@ -37,11 +37,11 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-xs font-bold text-foreground truncate max-w-[160px]" title={runner.name}>
+              <h4 className="text-sm font-semibold text-foreground truncate max-w-[160px]" title={runner.name}>
                 {runner.name}
               </h4>
               <span
-                className={`px-1.5 py-0.2 rounded text-2xs font-mono uppercase tracking-wider font-semibold border ${badge.badgeClass}`}
+                className={`px-2 rounded-full text-xs font-medium ${badge.badgeClass}`}
               >
                 {badge.label}
               </span>
