@@ -72,7 +72,7 @@ export const RoutinesPage: React.FC<RoutinesPageProps> = ({
   const { favoriteRoutines, otherRoutines } = splitFavorites(filteredRoutines);
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-5 space-y-3.5 overflow-hidden max-w-full select-none">
+    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden max-w-full select-none">
       <RoutinesHeader
         routinesCount={routines.length}
         filteredCount={filteredRoutines.length}

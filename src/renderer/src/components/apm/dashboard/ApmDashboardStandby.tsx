@@ -27,9 +27,9 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
   return (
     <div className="flex-1 flex flex-col p-6 items-center justify-center select-text bg-background">
-      <div className="w-full max-w-xl flex flex-col gap-4 p-5 rounded-xl border border-border bg-card shadow-2xs">
+      <div className="w-full max-w-xl flex flex-col gap-4 p-6 rounded-[14px] border border-border bg-card shadow-xs">
         {/* Header de Instrumento */}
-        <div className="flex items-center justify-between border-b border-border/80 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               {receiverState === 'listening' && (
@@ -41,7 +41,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
                 }`}
               />
             </span>
-            <h3 className="text-xs font-bold uppercase tracking-wider font-mono text-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               {receiverState === 'down' ? 'Receptor OTLP Inativo' : 'Receptor OTLP Standby'} • Porta :{port}
             </h3>
           </div>
@@ -60,7 +60,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
 
         {receiverState === 'down' ? (
           <div className="flex flex-col gap-2">
-            <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+            <p className="text-xs text-foreground leading-relaxed">
               O receptor não conseguiu abrir a porta {port}: <strong>{receiver?.error || 'erro desconhecido'}</strong>. Se
               outro coletor OpenTelemetry (OTel Collector, Jaeger, SigNoz) estiver usando a porta, encerre-o ou escolha
               outra porta para o receptor.
@@ -69,7 +69,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
               <button
                 type="button"
                 onClick={onOpenSetup}
-                className="self-start px-3 py-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold cursor-pointer transition"
+                className="self-start px-3 py-1.5 h-9 rounded-[10px] bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium cursor-pointer transition"
               >
                 Trocar porta do receptor
               </button>

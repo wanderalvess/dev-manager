@@ -18,7 +18,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
   overview, receiverPort, traceCount, viewMode, onViewModeChange, isRecording,
   onToggleRecording, onClear, onOpenSetup
 }) => (
-      <header className="h-11 px-3 border-b border-border bg-card/75 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0 text-xs">
+      <header className="h-12 px-5 border-b border-border bg-card flex items-center justify-between gap-3 shrink-0 text-xs">
         {/* Lado Esquerdo: Status do Receptor & Métricas Chave */}
         <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
           {/* Status OTLP (abre a configuração de conexão/porta) */}
