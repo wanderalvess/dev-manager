@@ -30,7 +30,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
           value={health.schema}
           onChange={(e) => health.setSchema(e.target.value)}
           placeholder="Ex: LOCAL (vazio = todos)"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-1 focus:ring-primary font-mono uppercase"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
       <div>
@@ -39,7 +39,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
           type="text"
           value={health.user}
           onChange={(e) => health.setUser(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
         />
       </div>
       <div>
@@ -48,7 +48,7 @@ export const OracleHealthTab: React.FC<OracleHealthTabProps> = ({ health, copied
           type="password"
           value={health.pass}
           onChange={(e) => health.setPass(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
     </div>

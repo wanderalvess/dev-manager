@@ -104,7 +104,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
                 <span className="font-mono text-xs font-semibold text-foreground truncate" title={f.filePath}>
                   {f.fileName}
                 </span>
-                <span className="text-2xs font-mono uppercase px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
+                <span className="text-xs px-1.5 py-0.2 rounded bg-muted border border-border/60 text-muted-foreground shrink-0">
                   {f.fileName.split('.').pop()}
                 </span>
               </div>
@@ -136,7 +136,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
                 onClick={() => onRestore(f)}
                 disabled={restoringFilePath !== null}
                 title="Restaurar este backup na conexão ativa (sobrescreve dados existentes)"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
               >
                 {restoringFilePath === f.filePath ? (
                   <RotateCw className="w-3.5 h-3.5 animate-spin" />

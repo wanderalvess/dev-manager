@@ -51,14 +51,14 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-2xl overflow-hidden animate-fade-in flex flex-col max-h-[90vh]"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
           <div className="flex items-center space-x-2">
             <Database className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               {editingConn.id ? 'Editar Conexão' : 'Nova Conexão de Banco'}
             </h3>
           </div>

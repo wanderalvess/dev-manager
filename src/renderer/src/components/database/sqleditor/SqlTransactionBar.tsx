@@ -57,7 +57,7 @@ export const SqlTransactionBar: React.FC<SqlTransactionBarProps> = ({
       </div>
 
       {isProduction && (
-        <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-danger/15 text-danger border border-danger/30" title="Conexão marcada como produção">
+        <span className="px-1.5 py-0.5 rounded text-2xs font-bold bg-danger/10 text-danger" title="Conexão marcada como produção">
           PRODUÇÃO
         </span>
       )}

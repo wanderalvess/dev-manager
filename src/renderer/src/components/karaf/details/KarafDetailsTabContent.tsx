@@ -101,7 +101,7 @@ export const KarafDetailsTabContent: React.FC<KarafDetailsTabContentProps> = ({
         )}
 
         {detailsTab === 'diag' && (
-          <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl font-mono text-xs text-danger whitespace-pre-wrap leading-relaxed">
+          <div className="p-3 bg-danger/10 rounded-xl font-mono text-xs text-danger whitespace-pre-wrap leading-relaxed">
             {bundleDetails.diag}
           </div>
         )}

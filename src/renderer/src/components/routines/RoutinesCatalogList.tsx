@@ -46,7 +46,7 @@ export const RoutinesCatalogList: React.FC<RoutinesCatalogListProps> = ({
         <div className="space-y-2.5 shrink-0" data-tour="rotinas-favoritas">
           <div className="flex items-center space-x-2">
             <Star className="w-4 h-4 text-warning fill-warning" />
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               Rotinas favoritas ({favoriteRoutines.length})
             </h3>
           </div>
@@ -58,7 +58,7 @@ export const RoutinesCatalogList: React.FC<RoutinesCatalogListProps> = ({
       <div className="space-y-2.5">
         <div className="flex items-center space-x-2">
           <Layers className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-base font-semibold text-foreground">
             Todas as rotinas ({otherRoutines.length})
           </h3>
         </div>

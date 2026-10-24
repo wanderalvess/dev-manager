@@ -40,7 +40,7 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-fade-in"
+    panelClassName="bg-card border border-border/80 rounded-xl shadow-lg w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-fade-in"
     closeOnBackdrop={false}
   >
     {/* Cabeçalho do Modal de Diff */}
@@ -50,7 +50,7 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({
           <Split className="w-4 h-4" />
         </div>
         <div>
-          <h3 className="text-xs font-semibold text-foreground tracking-tight">
+          <h3 className="text-base font-semibold text-foreground tracking-tight">
             Diff de Alterações · {project.name}
           </h3>
           <span className="text-2xs text-muted-foreground font-mono">

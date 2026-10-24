@@ -28,14 +28,14 @@ export function wshUtilsModalPrereqVisual(prereq: { exists: boolean; required: b
   if (prereq.exists) {
     return {
       cardClass: 'bg-emerald-500/5 border-emerald-500/25 text-foreground',
-      badgeClass: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+      badgeClass: 'bg-success/10 text-success',
       label: 'Presente'
     };
   }
   if (prereq.required) {
     return {
       cardClass: 'bg-rose-500/5 border-rose-500/30 text-foreground',
-      badgeClass: 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30',
+      badgeClass: 'bg-danger/10 text-danger',
       label: 'Obrigatório Ausente'
     };
   }

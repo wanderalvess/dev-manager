@@ -34,7 +34,7 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
         type="button"
         onClick={onOpenOptFolder}
         disabled={isOpeningOptFolder}
-        className="flex items-center space-x-1.5 px-3 py-1.5 bg-info/20 hover:bg-info/30 text-info border border-info/40 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 active:scale-98"
+        className="flex items-center space-x-1.5 px-3 py-1.5 bg-info/20 hover:bg-info/30 text-info rounded-lg text-xs font-bold transition cursor-pointer shrink-0 active:scale-98"
       >
         <FolderOpen className="w-3.5 h-3.5" />
         <span>{isOpeningOptFolder ? 'Abrindo...' : 'Abrir /opt no Explorer'}</span>
@@ -65,7 +65,7 @@ export const WshFilesTab: React.FC<WshFilesTabProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-bold text-xs font-mono">{prereq.file}</span>
                 <span
-                  className={`text-2xs font-bold px-1.5 py-0.2 rounded uppercase border ${visual.badgeClass}`}
+                  className={`text-xs font-semibold px-1.5 py-0.2 rounded border ${visual.badgeClass}`}
                 >
                   {visual.label}
                 </span>

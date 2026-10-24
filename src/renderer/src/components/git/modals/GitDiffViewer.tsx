@@ -32,7 +32,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ isLoading, error, 
     ) : (
       <div className="flex-1 overflow-auto font-mono text-xs leading-5 select-text">
         {hiddenCount > 0 && (
-          <div className="m-2 p-2 rounded-md bg-warning/10 border border-warning/30 text-warning font-sans text-xs">
+          <div className="m-2 p-2 rounded-md bg-warning/10 text-warning font-sans text-xs">
             Diff extenso: exibindo as primeiras {MAX_RENDERED_DIFF_LINES} linhas ({hiddenCount} ocultas).
             Selecione um arquivo na lista ou use "Copiar Diff" para obter o conteúdo completo.
           </div>

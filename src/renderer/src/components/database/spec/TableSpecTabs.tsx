@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ArrowRight, Check, Copy, Key, Link2, Search } from 'lucide-react';
 import type { TableDetails } from '../../../../../shared/types';
 
-const TH = 'px-3 py-2 text-left text-2xs uppercase tracking-wider font-bold text-muted-foreground';
+const TH = 'px-3 py-2 text-left text-xs font-semibold text-muted-foreground';
 const TD = 'px-3 py-1.5 align-top';
 
 const STATUS_BAD = /DISABLED|INVALID|NOT VALID|UNUSABLE/i;

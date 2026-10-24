@@ -48,14 +48,14 @@ export const AzureArtifactsModal: React.FC<AzureArtifactsModalProps> = ({ projec
       open
       onClose={state.close}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
         <div className="flex items-center space-x-2">
           <Package className="w-5 h-5 text-blue-400" />
           <div>
-            <h3 className="text-sm font-bold text-foreground">Artefatos do Azure Pipelines - {project.name}</h3>
+            <h3 className="text-base font-semibold text-foreground">Artefatos do Azure Pipelines - {project.name}</h3>
             <span className="text-2xs text-muted-foreground font-mono">
               {project.azureOrg}/{project.azureProject} · destino: {state.artifactsDir || '...'}
             </span>
@@ -91,7 +91,7 @@ export const AzureArtifactsModal: React.FC<AzureArtifactsModalProps> = ({ projec
       </div>
 
       {state.error && (
-        <div className="mx-4 mt-3 p-2.5 rounded-lg bg-danger/10 border border-danger/30 text-xs text-danger flex items-center gap-1.5 shrink-0">
+        <div className="mx-4 mt-3 p-2.5 rounded-lg bg-danger/10 text-xs text-danger flex items-center gap-1.5 shrink-0">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{state.error}</span>
         </div>

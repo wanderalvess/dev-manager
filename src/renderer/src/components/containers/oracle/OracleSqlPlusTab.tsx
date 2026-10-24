@@ -26,7 +26,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
           value={sql.user}
           onChange={(e) => sql.setUser(e.target.value)}
           placeholder="sys ou system"
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
         />
         <p className="text-2xs text-muted-foreground mt-1">Conexão como <span className="font-mono text-foreground font-semibold">sys</span> eleva automaticamente para AS SYSDBA.</p>
       </div>
@@ -36,7 +36,7 @@ export const OracleSqlPlusTab: React.FC<OracleSqlPlusTabProps> = ({ sql }) => (
           type="password"
           value={sql.pass}
           onChange={(e) => sql.setPass(e.target.value)}
-          className="w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
     </div>

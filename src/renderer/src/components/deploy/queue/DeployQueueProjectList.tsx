@@ -29,7 +29,7 @@ export const DeployQueueProjectList: React.FC<DeployQueueProjectListProps> = ({
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={`Buscar entre ${projects.length} projetos...`}
-        className="w-full bg-background border border-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
+        className="w-full bg-background border border-input rounded-[10px] pl-8 pr-3 py-2.5 text-sm text-foreground focus:outline-hidden"
       />
     </div>
     <ul className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1">

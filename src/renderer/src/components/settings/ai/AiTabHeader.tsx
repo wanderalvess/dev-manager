@@ -11,17 +11,17 @@ export const AiTabHeader: React.FC<AiTabHeaderProps> = ({ activeProvider, onNewP
   <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
     <div className="space-y-1">
       <div className="flex items-center gap-2.5">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
           <Bot className="w-5 h-5 text-primary" />
           Provedores de IA & Motores LLM (BYOK)
         </h3>
         {activeProvider ? (
-          <span className="px-2.5 py-0.5 rounded-full bg-success/10 border border-success/25 text-success font-mono text-2xs font-bold flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-success/10 text-success font-mono text-2xs font-bold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-success" />
             ONLINE · {activeProvider.name} ({activeProvider.model})
           </span>
         ) : (
-          <span className="px-2.5 py-0.5 rounded-full bg-warning/10 border border-warning/25 text-warning font-mono text-2xs font-bold flex items-center gap-1.5">
+          <span className="px-2.5 py-0.5 rounded-full bg-warning/10 text-warning font-mono text-2xs font-bold flex items-center gap-1.5">
             <AlertTriangle className="w-3 h-3" />
             NENHUM MOTOR ATIVO
           </span>

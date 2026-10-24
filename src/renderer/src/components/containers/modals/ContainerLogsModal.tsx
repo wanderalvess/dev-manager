@@ -58,7 +58,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-4xl h-[82vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
         {/* Header do Modal */}
@@ -67,7 +67,7 @@ export const ContainerLogsModal: React.FC<ContainerLogsModalProps> = ({
             <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center text-primary">
               <Terminal className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-xs font-bold text-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               Logs:{' '}
               <span className="font-mono text-primary">{container.names.replace(/^\//, '')}</span>
             </h3>

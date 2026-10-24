@@ -37,11 +37,11 @@ export const KarafSnapshotDiffPanel: React.FC<KarafSnapshotDiffPanelProps> = ({
 
         {/* Resumo com badges */}
         <div className="flex flex-wrap gap-2 text-xs font-mono">
-          <span className="px-2.5 py-1 rounded-lg bg-success/10 text-success border border-success/30">
+          <span className="px-2.5 py-1 rounded-lg bg-success/10 text-success">
             {snapshotDiff?.unchanged.length || 0} inalterados
           </span>
           {(snapshotDiff?.versionChanged.length || 0) > 0 && (
-            <span className="px-2.5 py-1 rounded-lg bg-warning/15 text-warning border border-warning/30 font-bold">
+            <span className="px-2.5 py-1 rounded-lg bg-warning/10 text-warning font-bold">
               {snapshotDiff?.versionChanged.length} versões alteradas
             </span>
           )}
@@ -51,12 +51,12 @@ export const KarafSnapshotDiffPanel: React.FC<KarafSnapshotDiffPanelProps> = ({
             </span>
           )}
           {(snapshotDiff?.added.length || 0) > 0 && (
-            <span className="px-2.5 py-1 rounded-lg bg-success/15 text-success border border-success/30 font-bold">
+            <span className="px-2.5 py-1 rounded-lg bg-success/10 text-success font-bold">
               +{snapshotDiff?.added.length} novos
             </span>
           )}
           {(snapshotDiff?.removed.length || 0) > 0 && (
-            <span className="px-2.5 py-1 rounded-lg bg-danger/15 text-danger border border-danger/30 font-bold">
+            <span className="px-2.5 py-1 rounded-lg bg-danger/10 text-danger font-bold">
               -{snapshotDiff?.removed.length} ausentes
             </span>
           )}
@@ -64,7 +64,7 @@ export const KarafSnapshotDiffPanel: React.FC<KarafSnapshotDiffPanelProps> = ({
 
         {/* Se nenhuma diferença */}
         {isDiffEmpty(snapshotDiff) && (
-          <div className="p-4 bg-success/10 border border-success/30 rounded-xl text-center text-xs text-success font-medium">
+          <div className="p-4 bg-success/10 rounded-xl text-center text-xs text-success font-medium">
             <CheckCircle2 className="w-6 h-6 mx-auto mb-1.5 text-success" />
             Todos os bundles estão idênticos ao snapshot em versão e estado!
           </div>

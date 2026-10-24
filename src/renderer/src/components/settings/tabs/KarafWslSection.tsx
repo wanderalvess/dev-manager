@@ -100,7 +100,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
               <select id="karaf-wsl-section-1"
                 value={settings.karafWslDistro || ''}
                 onChange={(e) => setSettings({ ...settings, karafWslDistro: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary text-xs"
+                className="w-full bg-card border border-input rounded-[10px] px-3 py-2.5 text-foreground font-mono focus:outline-hidden text-sm"
               >
                 <option value="">Selecione uma distribuição instalada...</option>
                 {distros.map((d) => (
@@ -114,7 +114,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
                 type="text"
                 value={settings.karafWslDistro || ''}
                 onChange={(e) => setSettings({ ...settings, karafWslDistro: e.target.value })}
-                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-hidden focus:border-primary text-xs"
+                className="w-full bg-card border border-input rounded-[10px] px-3 py-2.5 text-foreground font-mono focus:outline-hidden text-sm"
                 placeholder="Ex: Ubuntu, Debian"
               />
             )}

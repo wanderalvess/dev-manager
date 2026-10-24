@@ -35,7 +35,7 @@ export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResul
 
   if (!queryResult.success) {
     return (
-      <div className="p-4 m-3 bg-danger/10 border border-danger/30 rounded-xl text-danger text-xs">
+      <div className="p-4 m-3 bg-danger/10 rounded-xl text-danger text-xs">
         <div className="flex items-center space-x-2 font-bold mb-1">
           <AlertCircle className="w-4 h-4 text-danger shrink-0" />
           <span>Falha na execução do SQL:</span>
@@ -50,10 +50,10 @@ export const ResultsGridStates: React.FC<ResultsGridStatesProps> = ({ queryResul
   if (!queryResult.isQuery) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-6">
-        <div className="w-12 h-12 rounded-full bg-success/10 border border-success/30 flex items-center justify-center text-success mb-3">
+        <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center text-success mb-3">
           <CheckCircle2 className="w-6 h-6" />
         </div>
-        <h3 className="text-sm font-bold text-foreground">Comando executado com sucesso!</h3>
+        <h3 className="text-base font-semibold text-foreground">Comando executado com sucesso!</h3>
         <p className="text-xs text-muted-foreground mt-1">
           {queryResult.affectedRows !== undefined
             ? `${queryResult.affectedRows} linha(s) afetada(s) no banco de dados.`

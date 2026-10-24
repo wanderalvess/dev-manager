@@ -36,13 +36,13 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-4xl h-[84vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
         {/* Header do Modal */}
         <div className="px-5 py-3.5 border-b border-border/80 flex items-center justify-between bg-card/60 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-2xs">
               <Info className="w-4.5 h-4.5" />
             </div>
             <div>
@@ -122,41 +122,41 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">ID Completo</span>
+                  <span className="text-xs font-semibold text-muted-foreground">ID Completo</span>
                   <div className="text-xs font-mono select-all text-foreground break-all">{inspectingContainer.id}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Criado em</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Criado em</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.created || 'N/D'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Iniciado em</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Iniciado em</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.state.startedAt || 'N/D'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Plataforma</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Plataforma</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.platform || 'linux/amd64'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Política de Reinício</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Política de Reinício</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.restartPolicy?.name || 'no'}</div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Diretório de Trabalho</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Diretório de Trabalho</span>
                   <div className="text-xs text-foreground font-mono">{inspectingContainer.workingDir || '/'}</div>
                 </div>
               </div>
 
               {inspectingContainer.entrypoint && inspectingContainer.entrypoint.length > 0 && (
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Entrypoint</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Entrypoint</span>
                   <div className="text-xs font-mono text-foreground">{inspectingContainer.entrypoint.join(' ')}</div>
                 </div>
               )}
 
               {inspectingContainer.cmd && inspectingContainer.cmd.length > 0 && (
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Comando (Cmd)</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Comando (Cmd)</span>
                   <div className="text-xs font-mono text-foreground">{inspectingContainer.cmd.join(' ')}</div>
                 </div>
               )}
@@ -168,19 +168,19 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Endereço IP</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Endereço IP</span>
                   <div className="text-xs font-mono font-bold text-info select-all">
                     {inspectingContainer.networkSettings.ipAddress || 'Host Mode / Nenhum'}
                   </div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Gateway</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Gateway</span>
                   <div className="text-xs font-mono text-foreground select-all">
                     {inspectingContainer.networkSettings.gateway || 'N/D'}
                   </div>
                 </div>
                 <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
-                  <span className="text-2xs uppercase font-bold text-muted-foreground">Endereço MAC</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Endereço MAC</span>
                   <div className="text-xs font-mono text-foreground select-all">
                     {inspectingContainer.networkSettings.macAddress || 'N/D'}
                   </div>
@@ -188,7 +188,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
               </div>
 
               <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-2">
-                <span className="text-2xs uppercase font-bold text-muted-foreground block">Mapeamento de Portas</span>
+                <span className="text-xs font-semibold text-muted-foreground block">Mapeamento de Portas</span>
                 {(() => {
                   const portEntries = flattenPortBindings(inspectingContainer.networkSettings.ports);
                   return portEntries.length === 0 ? (
@@ -217,7 +217,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                 inspectingContainer.mounts.map((m, idx) => (
                   <div key={idx} className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1.5 text-xs">
                     <div className="flex items-center justify-between font-mono">
-                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-2xs font-bold uppercase">
+                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-semibold">
                         {m.type} {m.rw ? '(rw)' : '(ro)'}
                       </span>
                       <span className="text-2xs text-muted-foreground">{m.mode || 'default'}</span>
@@ -242,7 +242,7 @@ export const ContainerInspectModal: React.FC<ContainerInspectModalProps> = ({
                   value={envSearchFilter}
                   onChange={(e) => setEnvSearchFilter(e.target.value)}
                   placeholder="Filtrar variáveis de ambiente..."
-                  className="w-full bg-background border border-border/80 rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono"
+                  className="w-full bg-background border border-input/80 rounded-[10px] pl-9 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono"
                 />
               </div>
 

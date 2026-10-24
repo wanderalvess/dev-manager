@@ -69,10 +69,10 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
               aria-label="Marcar ou desmarcar todas as etapas"
             />
           )}
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             Etapas ({enabledCount}/{totalCount})
             {totalCount > 0 && enabledCount < totalCount && (
-              <span className="text-2xs font-normal lowercase bg-warning/15 text-warning border border-warning/30 px-1.5 py-0.2 rounded font-mono font-bold">
+              <span className="text-2xs font-normal lowercase bg-warning/10 text-warning px-1.5 py-0.2 rounded font-mono font-bold">
                 {totalCount - enabledCount} pulada{totalCount - enabledCount > 1 ? 's' : ''}
               </span>
             )}
@@ -112,7 +112,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
 
       {/* Barra de Progresso Durante Execução Geral */}
       {currentProgress && (
-        <div className="bg-primary/10 border border-primary/30 rounded-xl p-2.5 space-y-1.5 animate-fade-in">
+        <div className="bg-primary/10 rounded-xl p-2.5 space-y-1.5 animate-fade-in">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-foreground flex items-center gap-1.5">
               <RotateCw className="w-3.5 h-3.5 animate-spin text-primary" />

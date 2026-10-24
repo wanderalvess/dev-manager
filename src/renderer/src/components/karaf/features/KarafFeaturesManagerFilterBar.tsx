@@ -47,7 +47,7 @@ export const KarafFeaturesManagerFilterBar: React.FC<KarafFeaturesManagerFilterB
         }
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full bg-background border border-border rounded-md pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:border-primary transition-colors font-mono"
+        className="w-full bg-background border border-input rounded-[10px] pl-8 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden transition-colors font-mono"
       />
       {searchQuery && (
         <button

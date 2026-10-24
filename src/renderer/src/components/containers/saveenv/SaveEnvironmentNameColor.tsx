@@ -24,7 +24,7 @@ export const SaveEnvironmentNameColor: React.FC<SaveEnvironmentNameColorProps> =
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         placeholder="Ex: Stack Financeiro, Core Bancos, Mensageria"
-        className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-medium"
+        className="w-full bg-background border border-input/80 rounded-[10px] px-3 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-medium"
         autoFocus
       />
     </div>

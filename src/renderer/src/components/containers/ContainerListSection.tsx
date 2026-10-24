@@ -47,7 +47,7 @@ export const ContainerListSection: React.FC<ContainerListSectionProps> = ({
           <div className="mt-4 flex items-center gap-2">
             <button
               onClick={onReload}
-              className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
+              className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
             >
               Recarregar status da distro
             </button>

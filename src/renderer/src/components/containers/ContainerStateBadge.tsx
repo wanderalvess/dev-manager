@@ -4,7 +4,7 @@ export const getStateBadge = (state: string): React.ReactNode => {
   switch (state) {
     case 'running':
       return (
-        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-2xs font-bold bg-success/10 text-success border border-success/30">
+        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-2xs font-bold bg-success/10 text-success">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           <span>RODANDO</span>
         </span>
@@ -18,7 +18,7 @@ export const getStateBadge = (state: string): React.ReactNode => {
       );
     case 'paused':
       return (
-        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-2xs font-bold bg-warning/10 text-warning border border-warning/30">
+        <span className="flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-2xs font-bold bg-warning/10 text-warning">
           <span>PAUSADO</span>
         </span>
       );

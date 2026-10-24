@@ -47,7 +47,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <h4 className="text-xs font-bold font-mono uppercase text-foreground">
+            <h4 className="text-xs font-semibold text-foreground">
               Instalação Manual de Feature OSGi
             </h4>
           </div>
@@ -63,7 +63,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
 
         {/* Presets rápidos de Features WinThor */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-2xs font-mono text-muted-foreground uppercase tracking-wider mr-1">
+          <span className="text-xs text-muted-foreground mr-1">
             Atalhos:
           </span>
           {COMMON_PRESETS.map((preset) => (
@@ -81,7 +81,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
         {/* Campos de Input */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <div className="sm:col-span-2">
-            <label className="text-2xs font-mono uppercase font-semibold text-muted-foreground block mb-1">
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">
               Nome da Feature <span className="text-danger">*</span>
             </label>
             <input
@@ -89,13 +89,13 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
               value={featureName}
               onChange={(e) => setFeatureName(e.target.value)}
               placeholder="Ex: winthor-integracao-varejo ou camel-core"
-              className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:border-indigo-500 transition-colors"
+              className="w-full px-3 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden focus:border-indigo-500 transition-colors"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="text-2xs font-mono uppercase font-semibold text-muted-foreground block mb-1">
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">
               Versão (Opcional)
             </label>
             <input
@@ -103,7 +103,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
               value={featureVersion}
               onChange={(e) => setFeatureVersion(e.target.value)}
               placeholder="Ex: 1.0.0-SNAPSHOT"
-              className="w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:border-indigo-500 transition-colors"
+              className="w-full px-3 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden focus:border-indigo-500 transition-colors"
             />
           </div>
         </div>

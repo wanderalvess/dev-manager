@@ -58,7 +58,7 @@ export const BackupDefaultCommandPanel: React.FC<BackupDefaultCommandPanelProps>
       {/* Preview do comando padrão */}
       <div className="mt-2.5 p-3 bg-muted/40 border border-border/70 rounded-xl space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
             <Terminal className="w-3 h-3 text-primary" /> Linha de Comando Gerada (Automática)
           </span>
           <div className="flex items-center gap-2">

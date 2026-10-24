@@ -64,19 +64,19 @@ export const CellViewerModal: React.FC<CellViewerModalProps> = ({
       open={isOpen}
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-fade-in flex flex-col max-h-[85vh]"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-3xl overflow-hidden animate-fade-in flex flex-col max-h-[85vh]"
     >
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
         <div className="flex items-center space-x-2">
           <FileCode2 className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">
+          <h3 className="text-base font-semibold text-foreground">
             Coluna: <span className="font-mono text-primary">{columnName}</span>
           </h3>
           <span className="text-2xs px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground font-mono">
             Linha #{rowIndex + 1}
           </span>
-          <span className="text-2xs px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground uppercase font-mono">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
             {dataType}
           </span>
         </div>

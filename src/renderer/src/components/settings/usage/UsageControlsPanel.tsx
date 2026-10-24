@@ -88,7 +88,7 @@ export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled,
           type="button"
           onClick={onClear}
           disabled={!hasHistory}
-          className="px-3 py-1.5 bg-muted hover:bg-danger/10 text-danger border border-danger/40 hover:border-danger/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 bg-muted hover:bg-danger/10 text-danger hover:border-danger/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           title="Apaga todo o histórico de uso desta máquina"
         >
           <Trash2 className="w-3.5 h-3.5" />

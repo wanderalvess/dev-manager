@@ -34,14 +34,14 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-md flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
           <div className="flex items-center space-x-2">
             <GitBranch className="w-5 h-5 text-success" />
-            <h3 className="text-sm font-bold text-foreground">Gerenciar Branches - {project.name}</h3>
+            <h3 className="text-base font-semibold text-foreground">Gerenciar Branches - {project.name}</h3>
           </div>
           <button
             type="button"
@@ -55,7 +55,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
 
         <div className="p-4 space-y-4">
           {branchError && (
-            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-danger/10 text-danger text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
               <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <span>{branchError}</span>
             </div>
@@ -79,7 +79,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
                   if (e.key === 'Enter' && !isExecutingGit && newBranchName.trim()) onCheckout(newBranchName, true);
                 }}
                 placeholder="ex: feature/rotina-1400"
-                className="flex-1 bg-background border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary"
+                className="flex-1 bg-background border border-input rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden"
               />
               <button
                 type="button"
@@ -95,7 +95,7 @@ export const GitBranchModal: React.FC<GitBranchModalProps> = ({
           {/* Lista de Branches Existentes (locais + só no origin, que o checkout passa a rastrear) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <label className="font-bold text-muted-foreground uppercase text-2xs tracking-wider block">
+              <label className="font-semibold text-muted-foreground text-xs block">
                 Branches Disponíveis ({total}):
               </label>
               <div className="relative">

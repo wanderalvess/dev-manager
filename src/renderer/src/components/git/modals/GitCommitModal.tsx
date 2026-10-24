@@ -41,7 +41,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
+    panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
     closeOnBackdrop={false}
     closeOnEscape={false}
     ariaLabel="Commit & Push Rápido"
@@ -50,7 +50,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
       <div className="flex items-center space-x-2">
         <UploadCloud className="w-5 h-5 text-success" />
         <div>
-          <h3 className="text-sm font-bold text-foreground">Commit & Push Rápido</h3>
+          <h3 className="text-base font-semibold text-foreground">Commit & Push Rápido</h3>
           <span className="text-2xs text-muted-foreground font-mono">
             {project.name} [{project.currentBranch}]
           </span>
@@ -68,7 +68,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
 
     <div className="p-4 space-y-3">
       {commitError && (
-        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-danger/10 text-danger text-2xs font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
           <span>{commitError}</span>
         </div>
@@ -87,7 +87,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
       </div>
 
       {alteredPoms.length > 0 && (
-        <div role="alert" className="p-2.5 rounded-xl bg-danger/10 border border-danger/40 text-2xs text-foreground space-y-1.5">
+        <div role="alert" className="p-2.5 rounded-xl bg-danger/10 text-2xs text-foreground space-y-1.5">
           <p className="font-bold text-danger flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" /> Este commit inclui pom.xml alterado só para teste local
           </p>

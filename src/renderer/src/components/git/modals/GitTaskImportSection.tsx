@@ -33,7 +33,7 @@ export const GitTaskImportSection: React.FC<GitTaskImportSectionProps> = ({
         value={rawInput}
         onChange={(e) => onRawInputChange(e.target.value)}
         placeholder="URL do Azure/Jira ou 'SRE-1234 Ajustes no faturamento'"
-        className="flex-1 bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:border-primary placeholder:text-muted-foreground/50"
+        className="flex-1 bg-background border border-input rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden placeholder:text-muted-foreground/50"
       />
       <button
         type="button"
@@ -53,7 +53,7 @@ export const GitTaskImportSection: React.FC<GitTaskImportSectionProps> = ({
     {/* Lista de tarefas retornadas da busca, se houver */}
     {tasks.length > 0 && (
       <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-        <span className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block">
+        <span className="text-xs font-semibold text-muted-foreground block">
           Tarefas encontradas ({tasks.length}):
         </span>
         <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
