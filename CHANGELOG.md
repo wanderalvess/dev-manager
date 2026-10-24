@@ -10,6 +10,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Menu lateral com todos os módulos**: a partir de telas largas (lg), os módulos ficam sempre visíveis à esquerda, agrupados em Infraestrutura, Dados & Rotinas, Desenvolvimento e Qualidade, com os atalhos Alt+N ao lado. Substitui os quatro menus suspensos do cabeçalho; em janelas estreitas continua o seletor compacto. Os módulos desligados em Configurações → Módulos seguem fora do menu.
 
 ### Alterado
+- **Telas Containers, Deploy e Banco de Dados no visual Papel**: mesmo padrão do Ambiente e do Git (título sem cartão, ação principal única, botões secundários discretos, avisos em palavras). Em Containers, *Novo grupo* é a ação em destaque; em Deploy, *Executar perfil*; no Banco, o aviso de primeiro uso e a barra lateral de conexões e tabelas.
 - **Telas Ambiente Dev e Git no visual Papel**: título de página sem cartão, uma única ação principal por tela (*Subir ambiente*, *Commit e push*), botões secundários discretos, status escritos em palavras (*Aberta*, *Fechada*, *só local*) em vez de chips em maiúsculas, e portas e rede como listas na coluna da direita do Ambiente. Nenhuma ação mudou de lugar de forma que quebre o tour guiado.
 
 ## [1.45.0] - 2026-10-23

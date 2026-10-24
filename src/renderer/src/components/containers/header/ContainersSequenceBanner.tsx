@@ -15,7 +15,7 @@ export const ContainersSequenceBanner: React.FC<ContainersSequenceBannerProps> =
   total,
   waitingSeconds
 }) => (
-  <div className="p-3 mx-4 mt-3 bg-linear-to-r from-success/15 via-success/10 to-transparent border border-success/30 rounded-xl flex items-center justify-between text-xs text-success shadow-2xs">
+  <div className="p-3 mx-7 mt-3 bg-linear-to-r from-success/15 via-success/10 to-transparent border border-success/30 rounded-xl flex items-center justify-between text-xs text-success shadow-2xs">
     <div className="flex items-center space-x-2.5">
       <div className="w-7 h-7 rounded-lg bg-success/20 flex items-center justify-center shrink-0">
         <RotateCw className="w-4 h-4 animate-spin text-success" />

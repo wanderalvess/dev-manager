@@ -21,15 +21,15 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
   onDeleteConnection,
   getDbBadge
 }) => (
-  <div className="p-2 space-y-1 overflow-y-auto max-h-48 border-b border-border/60">
+  <div className="p-2 space-y-0.5 overflow-y-auto max-h-48 border-b border-border">
     {connections.length === 0 ? (
-      <div className="text-center py-4 text-xs text-muted-foreground">
+      <div className="text-center py-4 text-[13px] text-muted-foreground">
         Nenhuma conexão cadastrada.
         <button
           onClick={onOpenCreateModal}
-          className="block mx-auto mt-2 text-primary font-bold hover:underline cursor-pointer"
+          className="block mx-auto mt-2 text-primary font-medium hover:underline cursor-pointer"
         >
-          + Adicionar Conexão
+          + Adicionar conexão
         </button>
       </div>
     ) : (
@@ -39,10 +39,10 @@ export const DatabaseSidebarConnectionList: React.FC<DatabaseSidebarConnectionLi
           <div
             key={conn.id}
             onClick={() => setActiveConnectionId(conn.id)}
-            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition text-xs border ${
+            className={`flex items-center justify-between px-2.5 py-2 rounded-[10px] cursor-pointer transition text-[13px] ${
               isActive
-                ? 'bg-primary/15 border-primary/40 text-foreground font-semibold shadow-2xs'
-                : 'bg-card/40 border-transparent hover:bg-card hover:border-border text-muted-foreground'
+                ? 'bg-accent text-accent-foreground font-semibold'
+                : 'hover:bg-muted text-foreground'
             }`}
           >
             <div className="flex flex-col truncate pr-1">

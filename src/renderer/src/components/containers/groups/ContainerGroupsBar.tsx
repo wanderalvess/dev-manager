@@ -45,7 +45,7 @@ export const ContainerGroupsBar: React.FC<ContainerGroupsBarProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   return (
-    <div className="mx-4 mt-3 p-3 bg-card/75 border border-border/80 rounded-xl shadow-2xs transition-all">
+    <div className="mx-7 mt-3 p-3 bg-card border border-border rounded-[14px] shadow-xs transition-all">
       {/* Topo do Painel de Grupos */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">

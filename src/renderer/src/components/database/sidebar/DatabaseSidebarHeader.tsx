@@ -12,10 +12,10 @@ export const DatabaseSidebarHeader: React.FC<DatabaseSidebarHeaderProps> = ({
   onOpenTour,
   onToggleCollapse
 }) => (
-  <div className="p-3 border-b border-border/70 flex items-center justify-between">
+  <div className="px-4 py-3.5 border-b border-border flex items-center justify-between">
     <div className="flex items-center space-x-2">
-      <Database className="w-4 h-4 text-primary" />
-      <span className="text-xs font-bold text-foreground tracking-wide uppercase">Conexões</span>
+      <Database className="w-4 h-4 text-muted-foreground" />
+      <span className="text-base font-semibold text-foreground">Conexões</span>
     </div>
     <div className="flex items-center gap-1.5">
       {onToggleCollapse && (
@@ -39,9 +39,9 @@ export const DatabaseSidebarHeader: React.FC<DatabaseSidebarHeaderProps> = ({
       <button
         data-tour="new-connection-button"
         onClick={onOpenCreateModal}
-        className="flex items-center space-x-1 px-2 py-1 bg-primary text-primary-foreground rounded text-2xs font-semibold hover:bg-primary/90 transition shadow-xs cursor-pointer"
+        className="flex items-center gap-1 h-8 px-3 bg-primary text-primary-foreground rounded-lg text-[13px] font-medium hover:bg-primary/90 transition cursor-pointer"
       >
-        <Plus className="w-3 h-3" />
+        <Plus className="w-3.5 h-3.5" />
         <span>Nova</span>
       </button>
     </div>

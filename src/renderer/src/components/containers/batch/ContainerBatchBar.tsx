@@ -31,7 +31,7 @@ export const ContainerBatchBar: React.FC<ContainerBatchBarProps> = ({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="mx-4 my-1 p-2.5 bg-card/95 border border-primary/50 rounded-xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in backdrop-blur-md">
+    <div className="mx-7 my-1 p-2.5 bg-card/95 border border-primary/50 rounded-xl shadow-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in backdrop-blur-md">
       <div className="flex items-center gap-2.5">
         <button
           type="button"

@@ -11,11 +11,11 @@ export const DatabaseFirstUseBanner: React.FC<DatabaseFirstUseBannerProps> = ({
   onOpenCreateModal,
   onNavigateToSettings
 }) => (
-  <div className="shrink-0 bg-warning/10 border-b border-warning/40 p-3 flex items-start space-x-2.5 text-xs text-warning">
+  <div className="shrink-0 bg-warning/10 px-7 py-3.5 flex items-start space-x-3 text-[13px] text-foreground">
     <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
     <div className="flex-1">
-      <span className="font-bold block">Nenhuma conexão de banco configurada</span>
-      <span className="text-2xs text-muted-foreground block mt-0.5">
+      <span className="font-semibold block">Nenhuma conexão de banco configurada</span>
+      <span className="text-[13px] text-muted-foreground block mt-0.5">
         Cadastre uma conexão Oracle, PostgreSQL ou MySQL para executar consultas, ver tabelas e agendar
         backups.
       </span>
@@ -24,18 +24,18 @@ export const DatabaseFirstUseBanner: React.FC<DatabaseFirstUseBannerProps> = ({
       <button
         type="button"
         onClick={onOpenCreateModal}
-        className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-lg text-2xs font-bold text-warning flex items-center gap-1 transition-all"
+        className="h-8 px-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
       >
-        <DatabaseZap className="w-3 h-3" />
-        <span>Nova Conexão</span>
+        <DatabaseZap className="w-3.5 h-3.5" />
+        <span>Nova conexão</span>
       </button>
       {onNavigateToSettings && (
         <button
           type="button"
           onClick={onNavigateToSettings}
-          className="px-2.5 py-1 bg-card hover:bg-muted border border-warning/40 rounded-lg text-2xs font-bold text-warning flex items-center gap-1 transition-all"
+          className="h-8 px-3 bg-card hover:bg-muted border border-border rounded-lg text-[13px] font-medium text-foreground flex items-center gap-1.5 transition-colors cursor-pointer"
         >
-          <Settings className="w-3 h-3" />
+          <Settings className="w-3.5 h-3.5" />
           <span>Configurações</span>
         </button>
       )}

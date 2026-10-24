@@ -48,7 +48,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
   const isBusy = isDeploying || runningStepId !== null || isDiagRunning !== null;
 
   return (
-    <div className="cockpit-panel rounded-xl p-3 space-y-2.5 border border-border/80 shadow-2xs" data-tour="steps-list-panel">
+    <div className="bg-card rounded-[14px] p-5 space-y-3 border border-border shadow-xs" data-tour="steps-list-panel">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           {totalCount > 0 && onToggleAllSteps && (
@@ -105,7 +105,7 @@ export const DeployStepsPanel: React.FC<DeployStepsPanelProps> = ({
             disabled={!activeProfile || isDeploying}
             className="text-2xs text-primary hover:underline flex items-center gap-1 disabled:opacity-50 cursor-pointer"
           >
-            <Pencil className="w-3 h-3" /> Editar Etapas
+            <Pencil className="w-3 h-3" /> Editar etapas
           </button>
         </div>
       </div>

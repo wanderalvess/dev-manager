@@ -36,17 +36,17 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
   onDeleteEnvironmentClick,
   sequenceRunning
 }) => (
-  <div className="flex items-center bg-muted/50 border border-border/80 rounded-xl p-1 gap-1.5 shadow-2xs">
+  <div className="flex items-center bg-card border border-border rounded-[10px] h-10 px-1 gap-1.5">
     {/* Seletor WSL */}
-    <div className="flex items-center px-2 py-0.5 text-xs">
-      <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground mr-1.5">
+    <div className="flex items-center px-2 py-0.5 text-[13px]">
+      <span className="text-[13px] text-muted-foreground mr-1.5">
         Runtime
       </span>
       <select
         value={selectedDistro}
         onChange={(e) => onSelectDistro(e.target.value)}
         disabled={isSwitchingDistro}
-        className="bg-transparent text-foreground font-semibold text-xs focus:outline-hidden cursor-pointer pr-1"
+        className="bg-transparent text-foreground font-medium text-[13px] focus:outline-hidden cursor-pointer pr-1"
       >
         <option value="" className="bg-card text-foreground">
           Windows Host (Nativo)
@@ -68,7 +68,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             title={`Abrir terminal WSL na distro ${selectedDistro}`} aria-label={`Abrir terminal WSL na distro ${selectedDistro}`}
             className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
           >
-            <Terminal className="w-3 h-3 text-info" />
+            <Terminal className="w-3 h-3" />
           </button>
           <button
             type="button"
@@ -88,8 +88,8 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
 
     {/* Seletor de Ambientes */}
     {environments.length > 0 && (
-      <div className="flex items-center px-2 py-0.5 text-xs">
-        <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground mr-1.5">
+      <div className="flex items-center px-2 py-0.5 text-[13px]">
+        <span className="text-[13px] text-muted-foreground mr-1.5">
           Grupo
         </span>
         <select
@@ -101,7 +101,7 @@ export const ContainersRuntimeControls: React.FC<ContainersRuntimeControlsProps>
             if (found) onStartEnvironment(found);
           }}
           disabled={sequenceRunning}
-          className="bg-transparent text-foreground font-semibold text-xs focus:outline-hidden cursor-pointer pr-1"
+          className="bg-transparent text-foreground font-medium text-[13px] focus:outline-hidden cursor-pointer pr-1"
         >
           <option value="" className="bg-card text-foreground">
             Escolher...
