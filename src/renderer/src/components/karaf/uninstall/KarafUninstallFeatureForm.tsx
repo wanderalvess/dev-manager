@@ -12,7 +12,7 @@ interface KarafUninstallFeatureFormProps {
 }
 
 const INPUT_CLASS =
-  'w-full px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-danger';
+  'w-full px-3 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-danger';
 
 export const KarafUninstallFeatureForm: React.FC<KarafUninstallFeatureFormProps> = ({
   featureName,

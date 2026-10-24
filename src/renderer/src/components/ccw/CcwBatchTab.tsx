@@ -136,7 +136,7 @@ export const CcwBatchTab: React.FC<CcwBatchTabProps> = ({
 
     {/* Feedback de Erro do Batch */}
     {error && (
-      <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-xs flex items-center gap-2">
+      <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-xs flex items-center gap-2">
         <AlertCircle className="w-4 h-4 shrink-0" />
         <span>{error}</span>
       </div>

@@ -14,7 +14,7 @@ interface WslSnapshotImportPanelProps {
 }
 
 const INPUT_CLASS =
-  'w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary';
+  'w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-2 focus:ring-ring';
 
 export const WslSnapshotImportPanel: React.FC<WslSnapshotImportPanelProps> = ({
   name,

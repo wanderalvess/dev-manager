@@ -48,7 +48,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
   return (
     <div className="overflow-x-auto min-h-[300px]">
       <table className="w-full text-left text-xs border-collapse">
-        <thead className="sticky top-0 bg-muted/80 backdrop-blur-xs border-b border-border z-10 text-2xs font-mono font-bold text-muted-foreground uppercase tracking-wider">
+        <thead className="sticky top-0 bg-muted/80 backdrop-blur-xs border-b border-border z-10 text-xs font-semibold text-muted-foreground">
           <tr>
             <th className="py-2.5 px-4">Feature / Descrição</th>
             <th className="py-2.5 px-3">Versão</th>
@@ -93,7 +93,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                     {/* Tag WinThor */}
                     {feat.isWinthor && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-2xs font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25 uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25">
                         <ShieldCheck className="w-3 h-3" />
                         WinThor
                       </span>
@@ -101,7 +101,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                     {/* Tag Obrigatório / Required */}
                     {feat.required && (
-                      <span className="px-1.5 py-0.2 rounded text-2xs font-bold bg-warning/10 text-warning border border-warning/25">
+                      <span className="px-1.5 py-0.2 rounded text-2xs font-bold bg-warning/10 text-warning">
                         Required
                       </span>
                     )}
@@ -140,7 +140,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                   <span
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-2xs font-bold border ${
                       isStarted
-                        ? 'bg-success/10 text-success border border-success/25'
+                        ? 'bg-success/10 text-success'
                         : 'bg-muted text-muted-foreground border-border'
                     }`}
                   >
@@ -159,7 +159,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
                     type="button"
                     onClick={() => onRequestUninstall(feat)}
                     disabled={isBusy}
-                    className="px-2.5 py-1 rounded-md font-mono font-semibold text-2xs bg-danger/10 hover:bg-danger/20 text-danger border border-danger/25 transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-2.5 py-1 rounded-md font-mono font-semibold text-2xs bg-danger/10 hover:bg-danger/20 text-danger transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                     title={`Desinstalar "${feat.name}" com feature:uninstall -r`}
                   >
                     {isBusy ? (

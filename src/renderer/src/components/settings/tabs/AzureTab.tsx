@@ -111,7 +111,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   type="password"
                   value={settings.azureDevOpsToken || ''}
                   onChange={(e) => setSettings({ ...settings, azureDevOpsToken: e.target.value })}
-                  className="flex-1 bg-card border border-border hover:border-blue-500/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-blue-500/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
                   placeholder="Cole seu Personal Access Token do Azure DevOps (leitura de Work Items)"
                 />
               </div>
@@ -131,7 +131,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                 type="text"
                 value={settings.azureArtifactsDir || ''}
                 onChange={(e) => setSettings({ ...settings, azureArtifactsDir: e.target.value })}
-                className="w-full bg-card border border-border hover:border-blue-500/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
+                className="w-full bg-card border border-input hover:border-blue-500/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
                 placeholder="Padrão: %USERPROFILE%\Downloads\HubManager-Azure"
               />
               <p className="text-2xs text-muted-foreground">

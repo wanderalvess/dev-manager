@@ -24,13 +24,13 @@ export const KarafDetailsModal: React.FC<KarafDetailsModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[86vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-5xl xl:max-w-6xl h-[86vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
         <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary">
             <Info className="w-5 h-5" />
           </div>
           <div>

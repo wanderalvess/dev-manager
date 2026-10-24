@@ -71,7 +71,7 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
                   {w.method || 'POST'}
                 </span>
                 <span
-                  className={`text-2xs font-mono px-1.5 py-0.2 rounded border uppercase font-bold shrink-0 ${webhookPlatformBadgeClass(w.platform)}`}
+                  className={`text-xs px-1.5 py-0.2 rounded border font-semibold shrink-0 ${webhookPlatformBadgeClass(w.platform)}`}
                 >
                   {w.platform || 'generic'}
                 </span>

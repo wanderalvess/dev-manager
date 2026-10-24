@@ -61,7 +61,7 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
 
         <div className="flex items-center gap-1.5 shrink-0">
           {isActive ? (
-            <span className="px-2 py-0.5 text-2xs font-mono font-bold rounded-lg bg-success/10 text-success border border-success/25 flex items-center gap-1">
+            <span className="px-2 py-0.5 text-2xs font-mono font-bold rounded-lg bg-success/10 text-success flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-success" />
               ATIVO
             </span>

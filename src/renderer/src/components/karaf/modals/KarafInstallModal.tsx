@@ -50,7 +50,7 @@ export const KarafInstallModal: React.FC<KarafInstallModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >

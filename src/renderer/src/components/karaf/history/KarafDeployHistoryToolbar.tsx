@@ -40,7 +40,7 @@ export const KarafDeployHistoryToolbar: React.FC<KarafDeployHistoryToolbarProps>
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Pesquisar por artefato, versão, feature, erro..."
-          className="w-full bg-background/80 border border-border rounded-xl pl-8.5 pr-8 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-info/60 font-mono placeholder:text-muted-foreground placeholder:font-sans transition"
+          className="w-full bg-background/80 border border-input rounded-[10px] pl-8.5 pr-8 py-2.5 text-sm text-foreground focus:outline-hidden focus:border-info/60 font-mono placeholder:text-muted-foreground placeholder:font-sans transition"
         />
         {search && (
           <button

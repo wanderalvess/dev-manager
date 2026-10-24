@@ -44,7 +44,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card dark:bg-slate-900 border border-border rounded-xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden animate-fade-in relative"
+      panelClassName="bg-card dark:bg-slate-900 border border-border rounded-xl shadow-lg w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden animate-fade-in relative"
       closeOnBackdrop={false}
     >
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/70 shrink-0">
@@ -76,7 +76,7 @@ export const KarafLogModal: React.FC<KarafLogModalProps> = ({
             value={logSearch}
             onChange={(e) => setLogSearch(e.target.value)}
             placeholder="Filtrar linhas do log..."
-            className="w-full bg-background border border-border rounded-lg pl-8 pr-2 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary font-mono"
+            className="w-full bg-background border border-input rounded-[10px] pl-8 pr-2 py-2.5 text-sm text-foreground focus:outline-hidden font-mono"
           />
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

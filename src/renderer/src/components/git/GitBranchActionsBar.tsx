@@ -147,7 +147,7 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
         disabled={isExecutingGit}
         className={
           isLocalOnly
-            ? 'h-8 px-3 bg-warning/10 hover:bg-warning/20 border border-warning/40 text-warning rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+            ? 'h-8 px-3 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
             : ACTION_BUTTON
         }
         title={

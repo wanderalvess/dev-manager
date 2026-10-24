@@ -35,7 +35,7 @@ export const BindVariablesModal: React.FC<BindVariablesModalProps> = ({
       onClose={onClose}
       bare
       closeOnBackdrop={false}
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl max-w-2xl w-full p-5 space-y-4 font-sans animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg max-w-2xl w-full p-5 space-y-4 font-sans animate-fade-in"
     >
         <BindModalHeader count={bindInputs.length} onClose={onClose} />
 

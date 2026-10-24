@@ -30,7 +30,7 @@ export const SaveEnvironmentContainerList: React.FC<SaveEnvironmentContainerList
 }) => (
   <div className="space-y-2">
     <div className="flex items-center justify-between gap-2">
-      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      <label className="text-xs font-semibold text-muted-foreground">
         Containers Disponíveis ({filteredContainers.length})
       </label>
 

@@ -224,20 +224,20 @@ describe('getKarafStatusInfo', () => {
   it('retorna metadados para status ONLINE', () => {
     const info = getKarafStatusInfo('ONLINE');
     expect(info.label).toBe('Karaf Online');
-    expect(info.badgeClass).toContain('emerald');
+    expect(info.badgeClass).toContain('text-success');
     expect(info.dotClass).toContain('animate-pulse');
   });
 
   it('retorna metadados para status STARTING', () => {
     const info = getKarafStatusInfo('STARTING');
     expect(info.label).toBe('Karaf Inicializando...');
-    expect(info.badgeClass).toContain('amber');
+    expect(info.badgeClass).toContain('text-warning');
   });
 
   it('retorna metadados para status OFFLINE', () => {
     const info = getKarafStatusInfo('OFFLINE');
     expect(info.label).toBe('Karaf Offline');
-    expect(info.badgeClass).toContain('rose');
+    expect(info.badgeClass).toContain('text-danger');
   });
 });
 

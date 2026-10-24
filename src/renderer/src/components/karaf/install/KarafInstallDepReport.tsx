@@ -22,7 +22,7 @@ export const KarafInstallDepReport: React.FC<KarafInstallDepReportProps> = ({ ch
 
     {check.dependentBundles.length > 0 && (
       <div className="mt-2 bg-background/50 border border-border rounded-lg p-2 max-h-28 overflow-y-auto space-y-1">
-        <span className="text-2xs font-bold text-muted-foreground uppercase block">
+        <span className="text-xs font-semibold text-muted-foreground block">
           Bundles clientes afetados na reconexão:
         </span>
         {check.dependentBundles.map((dep) => (

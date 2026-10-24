@@ -20,7 +20,7 @@ export const KarafInlineDiagModal: React.FC<KarafInlineDiagModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
     >
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">

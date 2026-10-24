@@ -31,20 +31,20 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
   onClose,
   onChangeTab
 }) => (
-  <div className="flex flex-col border-b border-border bg-muted/20">
+  <div className="flex flex-col border-b border-border">
     <div className="flex items-center justify-between px-5 pt-3.5 pb-2.5">
       <div className="flex items-center space-x-3">
-        <Boxes className="w-5 h-5 text-primary shrink-0" />
+        <Boxes className="w-5 h-5 text-muted-foreground shrink-0" />
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold tracking-tight text-foreground uppercase">
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">
               Features & Repositórios Maven
             </h2>
-            <span className="text-2xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border font-medium">
+            <span className="text-[13px] px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
               KARAF OSGi :8101
             </span>
           </div>
-          <p className="text-2xs text-muted-foreground font-mono mt-0.5">
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             Gerenciamento de repositórios XML e provisionamento de bundles do ecossistema WinThor.
           </p>
         </div>

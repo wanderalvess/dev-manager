@@ -40,7 +40,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
         <select
           value={distro}
           onChange={(e) => onDistroChange(e.target.value)}
-          className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary cursor-pointer"
+          className="w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring cursor-pointer"
         >
           <option value="">Selecione a distro WSL...</option>
           {availableDistros.map((d) => (
@@ -60,7 +60,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
           value={exportPath}
           onChange={(e) => onExportPathChange(e.target.value)}
           placeholder="Ex: C:\WSL\snapshots\backup.tar"
-          className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
+          className="w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
       </div>
     </div>
@@ -72,7 +72,7 @@ export const WslSnapshotExportPanel: React.FC<WslSnapshotExportPanelProps> = ({
           onClick={() => onUnregister(distro)}
           disabled={unregistering === distro}
           title="Exclui definitivamente esta distro e seu disco virtual"
-          className="flex items-center space-x-1 px-3 py-1.5 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+          className="flex items-center space-x-1 px-3 py-1.5 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg text-xs font-semibold transition cursor-pointer disabled:opacity-50"
         >
           <Trash2 className="w-3.5 h-3.5" />
           <span>{unregistering === distro ? 'Removendo...' : `Desregistrar "${distro}"`}</span>

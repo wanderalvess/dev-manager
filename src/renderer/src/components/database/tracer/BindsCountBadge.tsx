@@ -3,7 +3,7 @@ import { formatBindsCount } from '../../../utils/statementTracerUtils';
 
 export const BindsCountBadge: React.FC<{ count: number }> = ({ count }) =>
   count > 0 ? (
-    <span className="px-1.5 py-0.5 rounded text-2xs font-mono font-bold bg-info/15 text-info border border-info/30">
+    <span className="px-1.5 py-0.5 rounded text-2xs font-mono font-bold bg-info/10 text-info">
       {formatBindsCount(count)}
     </span>
   ) : (

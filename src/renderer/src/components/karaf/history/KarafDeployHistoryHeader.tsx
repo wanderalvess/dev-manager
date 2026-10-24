@@ -14,13 +14,13 @@ export const KarafDeployHistoryHeader: React.FC<KarafDeployHistoryHeaderProps> =
 }) => (
   <div className="p-4 border-b border-border/80 bg-card/60 flex items-center justify-between shrink-0">
     <div className="flex items-center space-x-3">
-      <div className="p-2.5 rounded-xl bg-info/10 border border-info/30 text-info shadow-xs shadow-info/10">
+      <div className="p-2.5 rounded-xl bg-info/10 text-info shadow-xs shadow-info/10">
         <History className="w-5 h-5" />
       </div>
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold text-foreground tracking-tight">Histórico & Telemetria de Deploys</h3>
-          <span className="text-2xs uppercase font-mono tracking-wider px-2 py-0.5 rounded-md bg-info/15 text-info border border-info/30 font-semibold">
+          <h3 className="text-base font-semibold text-foreground tracking-tight">Histórico & Telemetria de Deploys</h3>
+          <span className="text-xs px-2 py-0.5 rounded-md bg-info/10 text-info font-semibold">
             OSGi Audit Rail
           </span>
         </div>

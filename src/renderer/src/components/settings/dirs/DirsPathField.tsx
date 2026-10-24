@@ -49,7 +49,7 @@ export const DirsPathField: React.FC<DirsPathFieldProps> = ({
         data-tour={inputTourId}
         value={inputValue}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+        className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
         placeholder={placeholder}
       />
       <button

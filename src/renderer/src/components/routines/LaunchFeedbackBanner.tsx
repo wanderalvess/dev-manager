@@ -43,7 +43,7 @@ export const LaunchFeedbackBanner: React.FC<LaunchFeedbackBannerProps> = ({
                 <button
                   type="button"
                   onClick={onNavigateToEnv}
-                  className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 border border-warning/40 rounded-lg text-2xs font-bold text-warning flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-2.5 py-1 bg-warning/20 hover:bg-warning/30 rounded-lg text-2xs font-bold text-warning flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Terminal className="w-3 h-3" />
                   <span>Ir para Ambiente Dev &amp; Iniciar Karaf (Alt+1)</span>
@@ -72,7 +72,7 @@ export const LaunchFeedbackBanner: React.FC<LaunchFeedbackBannerProps> = ({
             <button
               type="button"
               onClick={onNavigateToSettings}
-              className="px-2.5 py-1 bg-danger/20 hover:bg-danger/30 border border-danger/40 rounded-lg text-2xs font-bold text-danger flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-2.5 py-1 bg-danger/20 hover:bg-danger/30 rounded-lg text-2xs font-bold text-danger flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Settings className="w-3 h-3" />
               <span>Configurar Credenciais do WTA</span>

@@ -51,7 +51,7 @@ export const ResultsGridHeader: React.FC<ResultsGridHeaderProps> = ({
 }) => (
   <thead className="bg-muted sticky top-0 z-10 border-b border-border shadow-2xs">
     <tr>
-      <th className="px-2.5 py-2 text-center text-2xs font-bold text-muted-foreground uppercase border-b border-r border-border/50 w-12 min-w-[48px] max-w-[48px] bg-muted select-none">
+      <th className="px-2.5 py-2 text-center text-xs font-semibold text-muted-foreground border-b border-r border-border/50 w-12 min-w-[48px] max-w-[48px] bg-muted select-none">
         #
       </th>
       {columns.map((col) => {

@@ -48,7 +48,7 @@ export const InfrWtaTab: React.FC<InfrWtaTabProps> = ({
             value={container}
             onChange={(e) => onContainerChange(e.target.value)}
             placeholder="linux-winthor"
-            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-cyan-500"
+            className="w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-cyan-500"
           />
         </div>
 
@@ -61,7 +61,7 @@ export const InfrWtaTab: React.FC<InfrWtaTabProps> = ({
             value={port}
             onChange={(e) => onPortChange(infrBootstrapModalParsePort(e.target.value, INFR_DEFAULT_WTA_PORT))}
             placeholder="8080"
-            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-cyan-500"
+            className="w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-cyan-500"
           />
         </div>
       </div>

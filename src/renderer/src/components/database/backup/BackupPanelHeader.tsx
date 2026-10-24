@@ -6,11 +6,11 @@ import { getDefaultDbPort } from '../../../utils/backupModalUtils';
 const getDbBadge = (type: DatabaseType) => {
   switch (type) {
     case 'oracle':
-      return <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-danger/10 text-danger border border-danger/30">ORACLE</span>;
+      return <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-danger/10 text-danger">ORACLE</span>;
     case 'mysql':
-      return <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-warning/10 text-warning border border-warning/30">MYSQL</span>;
+      return <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-warning/10 text-warning">MYSQL</span>;
     case 'postgres':
-      return <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-info/10 text-info border border-info/30">POSTGRES</span>;
+      return <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-info/10 text-info">POSTGRES</span>;
   }
 };
 
@@ -21,7 +21,7 @@ interface BackupPanelHeaderProps {
 export const BackupPanelHeader: React.FC<BackupPanelHeaderProps> = ({ activeConnection }) => (
   <div className="px-6 py-4 border-b border-border/80 flex items-center bg-muted/40 shrink-0">
     <div className="flex items-center space-x-3.5">
-      <div className="w-10 h-10 rounded-xl bg-info/10 text-info border border-info/20 flex items-center justify-center shadow-2xs shrink-0">
+      <div className="w-10 h-10 rounded-xl bg-info/10 text-info flex items-center justify-center shadow-2xs shrink-0">
         <HardDriveDownload className="w-5 h-5" />
       </div>
       <div>

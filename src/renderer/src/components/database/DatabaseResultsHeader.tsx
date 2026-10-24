@@ -34,7 +34,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
         onClick={() => onChangeTab('grid')}
         className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
           activeTab === 'grid'
-            ? 'bg-primary/20 text-primary border border-primary/30'
+            ? 'bg-primary/20 text-primary'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -46,7 +46,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
         onClick={() => onChangeTab('explain')}
         className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
           activeTab === 'explain'
-            ? 'bg-warning/20 text-warning border border-warning/30'
+            ? 'bg-warning/20 text-warning'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -58,7 +58,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
         onClick={() => onChangeTab('tracer')}
         className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
           activeTab === 'tracer'
-            ? 'bg-info/20 text-info border border-info/30'
+            ? 'bg-info/20 text-info'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -69,7 +69,7 @@ export const DatabaseResultsHeader: React.FC<DatabaseResultsHeaderProps> = ({
         onClick={() => onChangeTab('history')}
         className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-semibold transition cursor-pointer ${
           activeTab === 'history'
-            ? 'bg-primary/20 text-primary border border-primary/30'
+            ? 'bg-primary/20 text-primary'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >

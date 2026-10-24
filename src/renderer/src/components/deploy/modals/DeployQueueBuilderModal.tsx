@@ -45,14 +45,14 @@ export const DeployQueueBuilderModal: React.FC<DeployQueueBuilderModalProps> = (
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] overflow-hidden animate-fade-in flex flex-col"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-4xl h-[80vh] overflow-hidden animate-fade-in flex flex-col"
       closeOnBackdrop={false}
       ariaLabel="Montar fila de deploy"
     >
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
         <div className="flex items-center gap-2">
           <ListOrdered className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">Montar fila de deploy</h3>
+          <h3 className="text-base font-semibold text-foreground">Montar fila de deploy</h3>
           <span className="text-2xs text-muted-foreground truncate max-w-[40ch]" title={builder.projectsPath}>
             {builder.projectsPath}
           </span>

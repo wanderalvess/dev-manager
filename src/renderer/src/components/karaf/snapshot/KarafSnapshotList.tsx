@@ -17,7 +17,7 @@ export const KarafSnapshotList: React.FC<KarafSnapshotListProps> = ({
   onDelete
 }) => (
   <div className="w-72 border-r border-border bg-card/40 flex flex-col shrink-0 overflow-y-auto p-2.5 space-y-1.5">
-    <div className="text-2xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+    <div className="text-xs font-semibold text-muted-foreground px-1">
       Snapshots Salvos ({snapshots.length})
     </div>
     {snapshots.length === 0 ? (
