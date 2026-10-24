@@ -31,7 +31,7 @@ export const QaRunnerAssertionsTable: React.FC<QaRunnerAssertionsTableProps> = (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-xs border-collapse">
         <thead>
-          <tr className="border-b border-border text-2xs font-mono text-muted-foreground uppercase">
+          <tr className="border-b border-border text-[13px] text-muted-foreground">
             <th className="py-1 px-2 w-48">Coluna / Campo</th>
             <th className="py-1 px-2 w-40">Esperado</th>
             <th className="py-1 px-2 w-40">Retornado no Banco</th>

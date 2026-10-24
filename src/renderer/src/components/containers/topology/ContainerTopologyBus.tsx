@@ -48,10 +48,10 @@ export const ContainerTopologyBus: React.FC<ContainerTopologyBusProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 pb-2.5">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-            <span>Topologia do Ambiente WinThor</span>
-            <span className="text-2xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/60 font-normal">
-              WSL2 &amp; Containers
+          <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+            <span>Topologia do ambiente WinThor</span>
+            <span className="text-[13px] px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+              WSL2 e containers
             </span>
           </h3>
         </div>

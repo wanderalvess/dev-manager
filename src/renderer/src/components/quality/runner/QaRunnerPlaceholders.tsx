@@ -20,7 +20,7 @@ export const QaRunnerIdleState: React.FC<QaRunnerIdleStateProps> = ({
       <div className="max-w-md w-full border border-border rounded-lg bg-card p-6 space-y-4 text-left">
         <div className="flex items-center gap-2.5 text-foreground border-b border-border pb-3">
           <Terminal className="w-4 h-4 text-primary" />
-          <span className="text-xs font-mono font-bold uppercase tracking-wider">
+          <span className="text-sm font-semibold">
             Console de Regressão Oracle
           </span>
         </div>

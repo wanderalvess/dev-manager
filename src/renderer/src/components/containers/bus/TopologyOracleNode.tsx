@@ -18,42 +18,42 @@ export const TopologyOracleNode: React.FC<TopologyOracleNodeProps> = ({
   onOpenOracleTools
 }) => (
   <div
-    className={`bg-muted/30 dark:bg-muted/15 border rounded-lg p-3 flex flex-col justify-between space-y-2 relative transition ${
+    className={`bg-card border rounded-xl p-3.5 flex flex-col justify-between space-y-2 relative transition ${
       node.running
-        ? 'border-orange-500/40 hover:border-orange-500/60 shadow-2xs'
+        ? 'border-border hover:border-primary/40 shadow-xs'
         : 'border-border/80 opacity-75 hover:opacity-100'
     }`}
   >
     <div className="flex items-start justify-between gap-1">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-orange-500/10 border border-orange-500/25 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
+        <div className="w-8 h-8 rounded-[10px] bg-muted flex items-center justify-center text-muted-foreground shrink-0">
           <Database className="w-3.5 h-3.5" />
         </div>
         <div>
-          <div className="text-2xs font-mono uppercase tracking-wider text-orange-600 dark:text-orange-400 font-bold">
+          <div className="text-[13px] text-muted-foreground">
             Oracle XE 11g
           </div>
-          <div className="text-xs font-bold text-foreground font-mono truncate max-w-[120px]">{node.name}</div>
+          <div className="text-sm font-semibold text-foreground font-mono truncate max-w-[120px]">{node.name}</div>
         </div>
       </div>
       <span
-        className={`text-2xs font-mono font-bold px-1.5 py-0.2 rounded border ${
+        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
           node.running
-            ? 'bg-success/15 text-success border-success/30'
-            : 'bg-muted text-muted-foreground border-border/70'
+            ? 'bg-success/10 text-success'
+            : 'bg-muted text-muted-foreground'
         }`}
       >
         {node.running ? `:${node.port}` : 'OFF'}
       </span>
     </div>
 
-    <div className="pt-1 flex items-center justify-between gap-1 text-2xs">
+    <div className="pt-1 flex items-center justify-between gap-1 text-[13px]">
       <button
         type="button"
         onClick={() => {
           onCopyText(getOracleTnsConfig(node.port), 'topo-tns');
         }}
-        className="px-1.5 py-0.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-800 dark:text-orange-400 rounded border border-orange-500/30 font-semibold cursor-pointer transition"
+        className="px-2.5 py-1 bg-card hover:bg-muted text-foreground rounded-lg border border-border font-medium cursor-pointer transition"
       >
         {copyFeedback === 'topo-tns' ? 'Copiado!' : 'Copiar TNS'}
       </button>
@@ -61,7 +61,7 @@ export const TopologyOracleNode: React.FC<TopologyOracleNodeProps> = ({
         <button
           type="button"
           onClick={() => onOpenOracleTools(node.container!)}
-          className="text-muted-foreground hover:text-orange-600 dark:hover:text-orange-400 hover:underline cursor-pointer font-medium"
+          className="text-muted-foreground hover:text-foreground hover:underline cursor-pointer font-medium"
         >
           Ferramentas
         </button>

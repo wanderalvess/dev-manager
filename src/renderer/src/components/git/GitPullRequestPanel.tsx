@@ -32,14 +32,14 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
   onOpenPr
 }) => (
   <div className="space-y-4 pt-4 border-t border-border">
-    <div className="flex items-center justify-between">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
         <GitMerge className="w-4 h-4 text-muted-foreground" />
         {getPrPanelTitle(project.provider)}
       </h3>
 
       <div className="flex items-center gap-2 text-[13px]" data-tour="selecionar-branch-destino">
-        <span className="text-muted-foreground">Branch de destino</span>
+        <span className="text-muted-foreground whitespace-nowrap">Branch de destino</span>
         <select
           value={targetBranch}
           onChange={(e) => onTargetBranchChange(e.target.value)}
