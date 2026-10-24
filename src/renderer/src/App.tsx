@@ -2,6 +2,7 @@ import React from 'react';
 import { Header } from './components/Header';
 import { QuickLauncherModal } from './components/QuickLauncherModal';
 import { AppPageHost } from './components/app/AppPageHost';
+import { AppSidebar } from './components/app/AppSidebar';
 import { AppGlobalModals } from './components/app/AppGlobalModals';
 import { ConsoleDock } from './components/console/ConsoleDock';
 import { KarafConsoleProvider } from './hooks/karafConsole/KarafConsoleContext';
@@ -35,7 +36,16 @@ export const App: React.FC = () => {
 
   return (
     <KarafConsoleProvider>
-    <div className="flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden select-none transition-colors duration-300">
+    <div className="flex h-screen w-screen bg-background text-foreground overflow-hidden select-none transition-colors duration-300">
+      {/* Menu lateral com todos os módulos (a partir de lg; abaixo disso o Header traz o seletor compacto) */}
+      <AppSidebar
+        activeTab={activeTab}
+        setActiveTab={navigate}
+        navGroups={modules.navGroups}
+        onOpenWhatsNew={onboarding.handleOpenWhatsNew}
+      />
+
+      <div className="flex flex-col flex-1 min-w-0 h-full">
       {/* Topo / Header Cockpit */}
       <Header
         activeTab={activeTab}
@@ -76,6 +86,7 @@ export const App: React.FC = () => {
       />
 
       <ConsoleDock />
+      </div>
 
       <AppGlobalModals
         isSplashOpen={onboarding.isSplashOpen}

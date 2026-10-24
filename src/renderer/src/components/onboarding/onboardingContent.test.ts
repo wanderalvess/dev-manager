@@ -9,7 +9,7 @@ describe('onboardingContent', () => {
   });
 
   it('oferece um card por variante de tema', () => {
-    expect(ONBOARDING_THEMES.map((t) => t.id)).toEqual(['default', 'midnight', 'cyberpunk', 'nebula', 'nordic']);
+    expect(ONBOARDING_THEMES.map((t) => t.id)).toEqual(['paper', 'default', 'midnight', 'cyberpunk', 'nebula', 'nordic']);
   });
 
   it('cita só ferramentas MCP com prefixos existentes', () => {

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
-export type ThemeVariant = 'default' | 'midnight' | 'cyberpunk' | 'nebula' | 'nordic';
+export type ThemeVariant = 'paper' | 'default' | 'midnight' | 'cyberpunk' | 'nebula' | 'nordic';
 
 interface ThemeContextType {
   mode: ThemeMode;
@@ -16,7 +16,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_KEY = 'theme';
 const VARIANT_KEY = 'theme-variant';
 
-const VALID_VARIANTS: ThemeVariant[] = ['default', 'midnight', 'cyberpunk', 'nebula', 'nordic'];
+const VALID_VARIANTS: ThemeVariant[] = ['paper', 'default', 'midnight', 'cyberpunk', 'nebula', 'nordic'];
 
 const getInitialMode = (): ThemeMode => {
   try {
@@ -39,7 +39,8 @@ const getInitialVariant = (): ThemeVariant => {
   } catch (e) {
     console.error('Erro ao ler preferência de variante do localStorage:', e);
   }
-  return 'default';
+  // Instalação nova começa no Papel; quem já escolheu outro estilo continua com ele (ver o try acima).
+  return 'paper';
 };
 
 interface ThemeProviderProps {
@@ -65,7 +66,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
 
     // Remove todas as variantes possíveis
-    ['default', 'midnight', 'nebula', 'cyberpunk', 'nordic'].forEach((v) => {
+    VALID_VARIANTS.forEach((v) => {
       root.classList.remove(`theme-${v}`);
     });
 

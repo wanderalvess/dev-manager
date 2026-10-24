@@ -27,6 +27,7 @@ export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number]['id'];
 
 // Cores de amostra de cada tema (o `--primary`/`--background`/`--card` do modo escuro em index.css).
 export const ONBOARDING_THEMES: { id: ThemeVariant; label: string; accent: string; bg: string; card: string }[] = [
+  { id: 'paper', label: 'Papel', accent: '#5B93FF', bg: '#0E1116', card: '#161B22' },
   { id: 'default', label: 'Cockpit Âmbar', accent: '#FF6A00', bg: '#020817', card: '#0F172A' },
   { id: 'midnight', label: 'Midnight Tech', accent: '#3B82F6', bg: '#050505', card: '#0E0E0E' },
   { id: 'cyberpunk', label: 'Cyberpunk', accent: '#18DC9B', bg: '#030A08', card: '#091511' },
