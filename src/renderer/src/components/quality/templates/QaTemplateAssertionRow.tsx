@@ -19,7 +19,7 @@ export const QaTemplateAssertionRow: React.FC<QaTemplateAssertionRowProps> = ({
       value={ass.column}
       onChange={(e) => onChange({ ...ass, column: e.target.value.toUpperCase() })}
       placeholder="COLUNA"
-      className="bg-card border border-border rounded px-2 py-1 text-xs font-mono font-semibold text-foreground w-36 uppercase focus:outline-hidden focus:ring-1 focus:ring-primary"
+      className="bg-card border border-border rounded px-2 py-1 text-xs font-semibold text-foreground w-36 focus:outline-hidden focus:ring-1 focus:ring-primary"
     />
 
     <select

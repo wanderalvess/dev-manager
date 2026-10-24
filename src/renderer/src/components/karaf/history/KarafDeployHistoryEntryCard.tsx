@@ -39,7 +39,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
       className={`p-3.5 rounded-xl border transition-all duration-200 ${
         entry.success
           ? 'border-border/80 bg-card/40 hover:border-border hover:bg-card/60'
-          : 'border-rose-900/40 bg-rose-950/15 hover:border-rose-800/60 hover:bg-rose-950/25'
+          : 'border-danger/40 bg-danger/15 hover:border-danger/60 hover:bg-danger/25'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -47,8 +47,8 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
           {/* Status Pill */}
           <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${
             entry.success
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-              : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+              ? 'bg-success/10 text-success'
+              : 'bg-danger/10 text-danger'
           }`}>
             {entry.success ? (
               <CheckCircle className="w-4 h-4" />
@@ -65,7 +65,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               </span>
 
               {entry.version && (
-                <span className="text-2xs font-mono text-sky-400 bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.5 rounded font-semibold">
+                <span className="text-2xs font-mono text-info bg-info/10 px-1.5 py-0.5 rounded font-semibold">
                   v{entry.version}
                 </span>
               )}
@@ -73,8 +73,8 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               {/* Trigger Tag */}
               <span className={`text-2xs uppercase font-bold tracking-wider px-2 py-0.5 rounded flex items-center gap-1 border ${
                 entry.trigger === 'mcp'
-                  ? 'bg-purple-500/10 text-purple-300 border-purple-500/30'
-                  : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'bg-warning/10 text-warning border-warning/30'
               }`}>
                 {entry.trigger === 'mcp' ? (
                   <>
@@ -92,8 +92,8 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               {/* Status Tag */}
               <span className={`text-2xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
                 entry.success
-                  ? 'bg-emerald-500/15 text-emerald-400'
-                  : 'bg-rose-500/15 text-rose-400'
+                  ? 'bg-success/15 text-success'
+                  : 'bg-danger/15 text-danger'
               }`}>
                 {entry.success ? 'Sucesso' : 'Falha'}
               </span>
@@ -114,8 +114,8 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
               >
                 {isCopied ? (
                   <>
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span className="text-emerald-400 font-semibold">Copiado</span>
+                    <Check className="w-3 h-3 text-success" />
+                    <span className="text-success font-semibold">Copiado</span>
                   </>
                 ) : (
                   <>
@@ -130,7 +130,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
                 <button
                   type="button"
                   onClick={() => onUseInInstaller(mvnCoords, entry.version)}
-                  className="p-1 px-1.5 rounded bg-muted/60 hover:bg-muted text-sky-400 hover:text-sky-300 text-2xs flex items-center gap-1 border border-border/60 transition cursor-pointer"
+                  className="p-1 px-1.5 rounded bg-muted/60 hover:bg-muted text-info hover:text-info text-2xs flex items-center gap-1 border border-border/60 transition cursor-pointer"
                   title="Reutilizar coordenadas para novo deploy"
                 >
                   <UploadCloud className="w-3 h-3" />
@@ -145,7 +145,7 @@ export const KarafDeployHistoryEntryCard: React.FC<KarafDeployHistoryEntryCardPr
                 <button
                   type="button"
                   onClick={onToggleExpanded}
-                  className="text-2xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1.5 cursor-pointer"
+                  className="text-2xs font-semibold text-danger hover:text-danger flex items-center gap-1.5 cursor-pointer"
                 >
                   {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   <span>{isExpanded ? 'Ocultar diagnóstico da falha' : 'Ver diagnóstico detalhado da falha'}</span>

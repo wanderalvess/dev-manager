@@ -36,7 +36,7 @@ export const DocSettingsFoldersTab: React.FC<DocSettingsFoldersTabProps> = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <DocSettingsToggleCard
         icon={<GitBranch className="w-3.5 h-3.5" />}
-        iconWrapperClass="bg-warning/10 text-warning border border-warning/20"
+        iconWrapperClass="bg-warning/10 text-warning"
         title="Repositórios Git"
         description="Vasculha arquivos README e pastas docs/ em todos os projetos Git clonados no Hub Manager."
         checked={indexProjectsDocs}
@@ -46,7 +46,7 @@ export const DocSettingsFoldersTab: React.FC<DocSettingsFoldersTabProps> = ({
       />
       <DocSettingsToggleCard
         icon={<RotateCcw className="w-3.5 h-3.5" />}
-        iconWrapperClass="bg-primary/10 text-primary border border-primary/20"
+        iconWrapperClass="bg-primary/10 text-primary"
         title="Watchdog Automático"
         description="Monitora o sistema de arquivos e reindexa trechos semanticamente em segundo plano ao salvar."
         checked={autoReindexOnChange}

@@ -49,7 +49,7 @@ export const KarafFeaturesInstalledTab: React.FC<KarafFeaturesInstalledTabProps>
     <KarafFeaturesLogDrawer logs={s.executionLogs} onClear={s.clearLogs} />
 
     <div className="px-5 py-2.5 border-t border-border bg-muted/20 text-2xs text-muted-foreground font-mono flex items-center gap-2 shrink-0">
-      <Info className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+      <Info className="w-3.5 h-3.5 text-primary shrink-0" />
       <span>
         Desinstalar com <code className="text-danger font-bold">-r</code> purga a feature e seus bundles associados do container Karaf permanentemente.
       </span>

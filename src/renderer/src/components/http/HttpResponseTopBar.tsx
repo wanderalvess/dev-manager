@@ -30,10 +30,10 @@ export const HttpResponseTopBar: React.FC<HttpResponseTopBarProps> = ({
   const isOk = response.status >= 200 && response.status < 300;
   const isClientError = response.status >= 400 && response.status < 500;
   const statusColor = isOk
-    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+    ? 'bg-success/15 text-success border-success/30'
     : isClientError
-      ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-      : 'bg-red-500/15 text-red-400 border-red-500/30';
+      ? 'bg-warning/15 text-warning border-warning/30'
+      : 'bg-danger/15 text-danger border-danger/30';
 
   const formatBytes = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -63,10 +63,10 @@ export const HttpResponseTopBar: React.FC<HttpResponseTopBarProps> = ({
           <button
             type="button"
             onClick={onOpenAiDiagnostic}
-            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded border border-purple-500/30 transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-primary/10 hover:bg-primary/25 text-primary rounded transition-colors cursor-pointer"
             title="Diagnosticar a causa raiz deste erro com IA"
           >
-            <Bot className="w-3 h-3 text-purple-400" />
+            <Bot className="w-3 h-3 text-primary" />
             <span>Analisar com IA</span>
           </button>
         )}
@@ -75,10 +75,10 @@ export const HttpResponseTopBar: React.FC<HttpResponseTopBarProps> = ({
           <button
             type="button"
             onClick={() => onUpdateActiveToken(extractedToken)}
-            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 rounded border border-emerald-500/30 transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs bg-success/10 hover:bg-success/25 text-success rounded transition-colors cursor-pointer"
             title="Salvar este token na variável {{TOKEN}} do ambiente ativo"
           >
-            <Key className="w-3 h-3 text-amber-400" />
+            <Key className="w-3 h-3 text-warning" />
             <span>Usar como &#123;&#123;TOKEN&#125;&#125;</span>
           </button>
         )}
@@ -111,7 +111,7 @@ export const HttpResponseTopBar: React.FC<HttpResponseTopBarProps> = ({
           className="flex items-center gap-1 px-2.5 py-1 text-xs bg-muted hover:bg-muted/80 text-foreground rounded border border-border transition-colors cursor-pointer"
           title={viewMode === 'pretty' && isValidJson ? 'Copiar JSON formatado' : 'Copiar resposta'}
         >
-          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+          {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
           <span>{copied ? 'Copiado!' : 'Copiar'}</span>
         </button>
       </div>

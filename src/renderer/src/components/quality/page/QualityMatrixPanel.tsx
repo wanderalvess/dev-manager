@@ -176,7 +176,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
     <div className="bg-card rounded-xl border border-border overflow-hidden shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full min-w-4xl text-left text-xs">
-          <thead className="bg-muted/50 border-b border-border text-muted-foreground uppercase text-2xs tracking-wider font-bold">
+          <thead className="bg-muted/50 border-b border-border text-muted-foreground text-xs font-semibold">
             <tr>
               <SortableTh label="Status" sortKey="status" active={sortKey} dir={sortDir} onSort={onSort} />
               <SortableTh label="Cenário / Teste" sortKey="title" active={sortKey} dir={sortDir} onSort={onSort} />

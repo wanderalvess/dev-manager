@@ -15,7 +15,7 @@ interface RunnerEditorModalProps {
 
 const labelClass = 'block text-[13px] text-muted-foreground mb-1';
 const monoInputClass =
-  'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary/80';
+  'w-full bg-background border border-input/80 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden';
 const textInputClass =
   'w-full bg-background border border-border/80 rounded-lg px-3 py-1.5 text-foreground focus:outline-hidden focus:border-primary/80';
 
@@ -71,7 +71,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
               const type = e.target.value as TestRunnerType;
               onChange({ ...runner, type, commandArgs: getDefaultCommandArgs(type) });
             }}
-            className="w-full bg-background border border-border/80 rounded-lg px-2.5 py-1.5 text-foreground focus:outline-hidden focus:border-primary/80 font-mono text-xs cursor-pointer"
+            className="w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2.5 text-foreground focus:outline-hidden font-mono text-sm cursor-pointer"
           >
             <option value="maven">Maven (JUnit / Karaf)</option>
             <option value="playwright">Playwright E2E</option>

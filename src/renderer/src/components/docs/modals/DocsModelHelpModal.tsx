@@ -11,12 +11,12 @@ export const DocsModelHelpModal: React.FC<DocsModelHelpModalProps> = ({ onClose 
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
+    panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-lg flex flex-col overflow-hidden animate-fade-in"
     closeOnBackdrop={false}
   >
     <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
       <div className="flex items-center space-x-2.5 min-w-0">
-        <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
+        <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
           <Download className="w-5 h-5" />
         </div>
         <h4 className="text-sm font-bold text-foreground">Instalação Manual do Modelo de IA (Offline)</h4>

@@ -35,7 +35,7 @@ export function getCellTitle(isEditable: boolean): string {
 }
 
 export function getRowClassName(isSelected: boolean, index: number): string {
-  if (isSelected) return 'bg-sky-500/15 dark:bg-sky-500/25 border-l-4 border-sky-500 font-medium';
+  if (isSelected) return 'bg-info/15 border-l-4 border-info font-medium';
   return index % 2 === 0
     ? 'bg-background hover:bg-muted/30'
     : 'bg-muted/15 dark:bg-muted/10 hover:bg-muted/30';

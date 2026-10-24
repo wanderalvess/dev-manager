@@ -27,7 +27,7 @@ export const KarafEmbeddedOutputModal: React.FC<KarafEmbeddedOutputModalProps> =
     open
     onClose={onClose}
     bare
-    panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in flex flex-col max-h-[80vh]"
+    panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-2xl overflow-hidden animate-fade-in flex flex-col max-h-[80vh]"
     closeOnBackdrop={false}
     ariaLabel="Histórico do Karaf Embedded"
   >
@@ -55,7 +55,7 @@ export const KarafEmbeddedOutputModal: React.FC<KarafEmbeddedOutputModalProps> =
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Filtrar linhas do histórico..."
-          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
+          className="w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground focus:outline-hidden"
         />
       </div>
     )}

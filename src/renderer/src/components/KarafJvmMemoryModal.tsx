@@ -30,7 +30,7 @@ export const KarafJvmMemoryModal: React.FC<KarafJvmMemoryModalProps> = ({ isOpen
       open
       onClose={onClose}
       bare
-      panelClassName="relative w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+      panelClassName="relative w-full max-w-2xl bg-card border border-border rounded-xl shadow-lg overflow-hidden flex flex-col max-h-[92vh]"
       closeOnBackdrop={false}
     >
       <JvmMemoryHeader metrics={metrics} isNearOom={isNearOom} alertLevel={alertLevel} onClose={onClose} />
@@ -48,7 +48,7 @@ export const KarafJvmMemoryModal: React.FC<KarafJvmMemoryModalProps> = ({ isOpen
         {/* Gráfico Visual */}
         <div className="p-3.5 bg-background border border-border rounded-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-primary" /> Curva de Consumo de Heap
             </span>
             <div className="text-2xs font-mono tabular-nums text-muted-foreground flex items-center gap-3">

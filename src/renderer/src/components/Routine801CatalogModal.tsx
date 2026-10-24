@@ -73,7 +73,7 @@ export const Routine801CatalogModal: React.FC<Routine801CatalogModalProps> = ({ 
       open
       onClose={onClose}
       bare
-      panelClassName="relative flex flex-col w-full max-w-7xl h-[92vh] bg-card text-card-foreground border border-border rounded-lg shadow-2xl overflow-hidden"
+      panelClassName="relative flex flex-col w-full max-w-7xl h-[92vh] bg-card text-card-foreground border border-border rounded-lg shadow-lg overflow-hidden"
       closeOnBackdrop={false}
     >
       <Routine801Header

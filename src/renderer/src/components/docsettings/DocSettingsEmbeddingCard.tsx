@@ -10,13 +10,13 @@ interface DocSettingsEmbeddingCardProps {
 export const DocSettingsEmbeddingCard: React.FC<DocSettingsEmbeddingCardProps> = ({ status, onOpenModelHelp }) => (
   <div className="p-3 rounded-xl border border-border/90 bg-muted/25 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
     <div className="flex items-center gap-3 min-w-0">
-      <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
+      <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
         <Cpu className="w-4 h-4" />
       </div>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-foreground">Motor de Vetorização Local (Embeddings)</span>
-          <span className="text-2xs font-mono px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/25 font-bold">
+          <span className="text-2xs font-mono px-2 py-0.5 rounded-md bg-primary/10 text-primary font-bold">
             FastEmbed AllMiniLML6V2 (384d)
           </span>
           {status && (

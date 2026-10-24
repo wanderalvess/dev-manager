@@ -23,7 +23,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Server className="w-4 h-4 text-info" />
-          <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-foreground">
+          <h4 className="text-xs font-semibold text-foreground">
             Endpoints {sortMode === 'slow' ? 'Mais Lentos (p95)' : 'Mais Solicitados'}
           </h4>
         </div>
@@ -89,7 +89,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
                           ? 'text-danger'
                           : ep.p95DurationMs >= 400
                           ? 'text-warning'
-                          : 'text-indigo-600 dark:text-indigo-400'
+                          : 'text-primary'
                       }`}
                     >
                       {ep.p95DurationMs}ms

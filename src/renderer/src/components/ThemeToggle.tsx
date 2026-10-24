@@ -34,18 +34,18 @@ export const ThemeToggle: React.FC = () => {
   const getIndicatorDot = (v: ThemeVariant) => {
     switch (v) {
       case 'paper':
-        return 'bg-blue-600';
+        return 'bg-info';
       case 'midnight':
-        return 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]';
+        return 'bg-info shadow-[0_0_8px_rgba(59,130,246,0.8)]';
       case 'cyberpunk':
         return 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.8)]';
       case 'nebula':
-        return 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]';
+        return 'bg-primary shadow-[0_0_8px_rgba(168,85,247,0.8)]';
       case 'nordic':
-        return 'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]';
+        return 'bg-info shadow-[0_0_8px_rgba(6,182,212,0.8)]';
       case 'default':
       default:
-        return 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]';
+        return 'bg-warning shadow-[0_0_8px_rgba(249,115,22,0.8)]';
     }
   };
 
@@ -62,24 +62,24 @@ export const ThemeToggle: React.FC = () => {
       label: 'Papel',
       description: mode === 'light' ? 'Azul sobre cinza-claro, leitura confortável' : 'Azul sobre grafite, sem brilho',
       icon: FileText,
-      colorClass: mode === 'light' ? 'text-blue-600' : 'text-blue-400',
-      bgPreview: 'bg-blue-600'
+      colorClass: mode === 'light' ? 'text-info' : 'text-info',
+      bgPreview: 'bg-info'
     },
     {
       id: 'default',
       label: 'Cockpit Âmbar',
       description: mode === 'light' ? 'Laranja Solar & Canvas Âmbar' : 'Laranja Solar & Slate Cockpit',
       icon: Flame,
-      colorClass: 'text-orange-500',
-      bgPreview: 'bg-orange-500'
+      colorClass: 'text-warning',
+      bgPreview: 'bg-warning'
     },
     {
       id: 'midnight',
       label: 'Midnight Tech',
       description: mode === 'light' ? 'Azul Safira & Clean Tech' : 'Azul Elétrico & Pitch Black',
       icon: Zap,
-      colorClass: mode === 'light' ? 'text-blue-600' : 'text-blue-400',
-      bgPreview: 'bg-blue-500'
+      colorClass: mode === 'light' ? 'text-info' : 'text-info',
+      bgPreview: 'bg-info'
     },
     {
       id: 'cyberpunk',
@@ -94,16 +94,16 @@ export const ThemeToggle: React.FC = () => {
       label: 'Nebula',
       description: mode === 'light' ? 'Violeta Real & Soft Lilac' : 'Roxo Cósmico & Deep Void',
       icon: Sparkles,
-      colorClass: mode === 'light' ? 'text-purple-600' : 'text-purple-400',
-      bgPreview: 'bg-purple-500'
+      colorClass: mode === 'light' ? 'text-primary' : 'text-primary',
+      bgPreview: 'bg-primary'
     },
     {
       id: 'nordic',
       label: 'Nordic Frost',
       description: mode === 'light' ? 'Ciano Ártico & Gelo Polar' : 'Ciano Glacial & Noite Ártica',
       icon: Snowflake,
-      colorClass: mode === 'light' ? 'text-cyan-600' : 'text-cyan-400',
-      bgPreview: 'bg-cyan-500'
+      colorClass: mode === 'light' ? 'text-info' : 'text-info',
+      bgPreview: 'bg-info'
     }
   ];
 
@@ -123,7 +123,7 @@ export const ThemeToggle: React.FC = () => {
       >
         <div className="relative flex items-center justify-center w-4 h-4">
           {mode === 'dark' ? (
-            <Moon className="w-3.5 h-3.5 text-blue-400 transition-transform duration-300" />
+            <Moon className="w-3.5 h-3.5 text-info transition-transform duration-300" />
           ) : (
             <Sun className="w-3.5 h-3.5 text-warning transition-transform duration-300" />
           )}
@@ -141,7 +141,7 @@ export const ThemeToggle: React.FC = () => {
       {isOpen && (
         <div
           style={{ backgroundColor: 'hsl(var(--card))' }}
-          className="absolute right-0 mt-2 w-80 max-h-[85vh] overflow-y-auto origin-top-right rounded-xl bg-card border border-border/80 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-80 max-h-[85vh] overflow-y-auto origin-top-right rounded-xl bg-card border border-border/80 shadow-lg p-3 z-50 animate-in fade-in zoom-in-95 duration-150"
           role="menu"
         >
           {/* Cabeçalho */}
@@ -152,14 +152,14 @@ export const ThemeToggle: React.FC = () => {
                 Aparência & Tema
               </span>
             </div>
-            <span className="text-2xs font-mono font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
               {variant}
             </span>
           </div>
 
           {/* Seção 1: Modo de Exibição */}
           <div className="mb-3">
-            <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
               Modo de Exibição
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-muted/60 rounded-lg border border-border/40">
@@ -181,11 +181,11 @@ export const ThemeToggle: React.FC = () => {
                 onClick={() => setMode('dark')}
                 className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
                   mode === 'dark'
-                    ? 'bg-card text-blue-400 shadow-xs border border-border/80 font-bold'
+                    ? 'bg-card text-info shadow-xs border border-border/80 font-bold'
                     : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
                 }`}
               >
-                <Moon className="w-3.5 h-3.5 text-blue-400" />
+                <Moon className="w-3.5 h-3.5 text-info" />
                 <span>Modo Escuro</span>
               </button>
             </div>
@@ -193,7 +193,7 @@ export const ThemeToggle: React.FC = () => {
 
           {/* Seção 2: Estilo Visual */}
           <div>
-            <label className="text-2xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
               Estilo Visual
             </label>
             <div className="space-y-1.5">

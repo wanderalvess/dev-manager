@@ -34,12 +34,12 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
       dismissible={false}
       bare
       zIndexClass="z-10001"
-      panelClassName="bg-card text-card-foreground border border-border/80 rounded-xl shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200"
+      panelClassName="bg-card text-card-foreground border border-border/80 rounded-xl shadow-lg max-w-md w-full p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200"
     >
         <div className="flex items-center space-x-3">
           <AppLogo size="md" />
           <div>
-            <span className="text-2xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+            <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               Tour Geral Concluído 🎉
             </span>
             <h2 className="text-sm sm:text-base font-bold text-foreground mt-1 leading-tight">
@@ -59,7 +59,7 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
           <button
             type="button"
             onClick={() => handleChoose(true)}
-            className="w-full text-left p-3.5 rounded-xl border border-primary/40 hover:border-primary bg-primary/5 hover:bg-primary/10 transition flex items-center justify-between group cursor-pointer"
+            className="w-full text-left p-3.5 rounded-xl hover:border-primary bg-primary/5 hover:bg-primary/10 transition flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center space-x-3 min-w-0 pr-2">
               <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-2xs">

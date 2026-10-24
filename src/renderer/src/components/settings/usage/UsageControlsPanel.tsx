@@ -30,7 +30,7 @@ export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled,
     <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-usageMetricsEnabled">
       <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-border/60">
         <div className="max-w-2xl">
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-success" /> Contagem de uso (local)
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -59,7 +59,7 @@ export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled,
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         <div className="space-y-1.5">
-          <h4 className="text-2xs uppercase tracking-wider text-success font-bold">O que é contado</h4>
+          <h4 className="text-xs text-success font-semibold">O que é contado</h4>
           <ul className="space-y-1 text-muted-foreground list-disc pl-4">
             {COUNTED.map((item) => (
               <li key={item}>{item}</li>
@@ -67,7 +67,7 @@ export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled,
           </ul>
         </div>
         <div className="space-y-1.5">
-          <h4 className="text-2xs uppercase tracking-wider text-danger font-bold">O que nunca é contado</h4>
+          <h4 className="text-xs text-danger font-semibold">O que nunca é contado</h4>
           <ul className="space-y-1 text-muted-foreground list-disc pl-4">
             {NEVER_COUNTED.map((item) => (
               <li key={item}>{item}</li>

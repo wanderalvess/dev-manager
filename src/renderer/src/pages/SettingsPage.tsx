@@ -32,6 +32,7 @@ import { useEnvironmentProfiles } from '../hooks/settings/useEnvironmentProfiles
 import { useSettingsImportExport } from '../hooks/settings/useSettingsImportExport';
 import { useSettingsSearch } from '../hooks/settings/useSettingsSearch';
 import { useSetupChecklist } from '../hooks/settings/useSetupChecklist';
+import { clearPendingSettingsTab, onSettingsTabRequested, peekPendingSettingsTab } from '../utils/settingsDeepLink';
 import { DEFAULT_AUTOMATION, DEFAULT_LOG_SOURCES, DEFAULT_PORTS, DEFAULT_PROCESSES, DEFAULT_SERVICES } from '../utils/settingsDefaults';
 
 interface SettingsPageProps {
@@ -47,7 +48,11 @@ const BANNER_BASE = 'px-4 py-2.5 rounded-xl border text-xs font-semibold flex it
  */
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onNavigate }) => {
   const tour = usePageTour(SETTINGS_TOUR_STORAGE_KEY);
-  const [activeTab, setActiveTab] = useState<SettingsTab>('dirs');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => peekPendingSettingsTab() ?? 'dirs');
+  useEffect(() => {
+    clearPendingSettingsTab();
+    return onSettingsTabRequested(setActiveTab);
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [showWtaPassword, setShowWtaPassword] = useState(false);
 

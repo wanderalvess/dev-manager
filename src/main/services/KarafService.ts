@@ -215,6 +215,10 @@ export class KarafService {
     return bundleQuery.listBundlesParsed(this.ctx, credentials);
   }
 
+  public async listBundlesOrThrow(credentials?: KarafCredentials): Promise<KarafBundleInfo[]> {
+    return bundleQuery.listBundlesOrThrow(this.ctx, credentials);
+  }
+
   public async listInstalledFeatures(credentials?: KarafCredentials): Promise<KarafFeatureInfo[]> {
     return features.listInstalledFeatures(this.ctx, credentials);
   }

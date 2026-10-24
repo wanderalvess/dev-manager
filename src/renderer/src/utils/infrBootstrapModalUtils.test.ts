@@ -23,7 +23,7 @@ describe('infrBootstrapModalUtils', () => {
   });
 
   it('diferencia aba ativa e inativa', () => {
-    expect(infrBootstrapModalTabClass(true)).toContain('border-orange-500');
+    expect(infrBootstrapModalTabClass(true)).toContain('border-warning');
     expect(infrBootstrapModalTabClass(false)).toContain('border-transparent');
   });
 });

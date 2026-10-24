@@ -34,11 +34,11 @@ export const ContainerCardMetrics: React.FC<ContainerCardMetricsProps> = ({ cont
         />
         <ContainerCardGauge
           label="MEM"
-          icon={<Activity className="w-3 h-3 text-purple-400" />}
+          icon={<Activity className="w-3 h-3 text-primary" />}
           percent={containerCardParsePercent(stats.memPerc)}
           warnAbove={60}
           criticalAbove={85}
-          normalClassName="bg-purple-500"
+          normalClassName="bg-primary"
           valueText={stats.mem}
         />
 

@@ -22,7 +22,7 @@ export const DocsFileCard: React.FC<DocsFileCardProps> = ({
     <div className="cockpit-card rounded-xl p-3 border border-border shadow-2xs flex items-center justify-between gap-3 hover:border-primary/50 transition-all group">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+          <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded-md bg-primary/10 text-primary shrink-0">
             {ext}
           </span>
           <span className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors" title={fileName}>
@@ -45,7 +45,7 @@ export const DocsFileCard: React.FC<DocsFileCardProps> = ({
       <div className="flex items-center gap-1.5 shrink-0">
         <button
           onClick={() => onOpenPreview(file.id, file.title)}
-          className="px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all flex items-center gap-1.5 text-2xs font-bold cursor-pointer active:scale-95 shadow-2xs"
+          className="px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all flex items-center gap-1.5 text-2xs font-bold cursor-pointer active:scale-95 shadow-2xs"
           title="Ler documento formatado"
         >
           <BookOpen className="w-3.5 h-3.5" />

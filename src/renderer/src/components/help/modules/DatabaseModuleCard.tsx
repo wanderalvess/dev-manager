@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const DatabaseModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Database className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-success/10 text-success border border-success/20"
+    iconBoxClass="p-2 rounded-xl bg-success/10 text-success"
     title="2. Banco de Dados"
     subtitle="Oracle · PostgreSQL · MySQL · CLI Custom"
     shortcut="Alt+2"
@@ -13,7 +13,7 @@ export const DatabaseModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) =>
       <ModuleNavButton
         onNavigate={onNavigate}
         target="database"
-        colorClass="bg-success/10 hover:bg-success/20 text-success border border-success/30"
+        colorClass="bg-success/10 hover:bg-success/20 text-success"
         label="Abrir Módulo de Banco de Dados"
       />
     }

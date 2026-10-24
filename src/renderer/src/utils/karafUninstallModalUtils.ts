@@ -28,14 +28,14 @@ export function buildFeatureUninstallPreview(name: string, version: string): str
 }
 
 export function getBundleStateBadgeClass(state: string): string {
-  if (state === 'Active') return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30';
-  if (state === 'Resolved') return 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30';
-  if (state === 'Installed') return 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30';
+  if (state === 'Active') return 'bg-success/15 text-success border-success/30';
+  if (state === 'Resolved') return 'bg-warning/15 text-warning border-warning/30';
+  if (state === 'Installed') return 'bg-info/15 text-info border-info/30';
   return 'bg-muted text-muted-foreground border-border';
 }
 
 export function getBundleStateDotClass(state: string): string {
-  if (state === 'Active') return 'bg-emerald-500';
-  if (state === 'Resolved') return 'bg-amber-500';
-  return 'bg-blue-500';
+  if (state === 'Active') return 'bg-success';
+  if (state === 'Resolved') return 'bg-warning';
+  return 'bg-info';
 }

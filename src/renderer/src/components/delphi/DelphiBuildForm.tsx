@@ -4,7 +4,7 @@ import type { DelphiInstallation, DelphiProject } from '../../../../shared/types
 import type { DelphiFormState } from '../../utils/delphiBuildView';
 
 const INPUT_CLASS =
-  'w-full bg-card border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary font-mono disabled:opacity-60';
+  'w-full bg-card border border-input/80 rounded-[10px] px-2.5 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono disabled:opacity-60';
 
 interface DelphiBuildFormProps {
   form: DelphiFormState;
@@ -16,7 +16,7 @@ interface DelphiBuildFormProps {
 
 const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode }> = ({ label, hint, children }) => (
   <label className="flex flex-col gap-1 min-w-0">
-    <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+    <span className="text-xs font-semibold text-muted-foreground">{label}</span>
     {children}
     {hint && <span className="text-2xs text-muted-foreground">{hint}</span>}
   </label>

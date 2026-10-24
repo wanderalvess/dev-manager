@@ -15,24 +15,24 @@ interface ContainerCardTitleRowProps extends ContainerCardKinds {
 const RuntimeTag: React.FC<ContainerCardKinds> = ({ isOracle, isWta, isWsh }) => {
   if (isOracle) {
     return (
-      <span className="px-2 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 text-2xs font-mono font-bold flex items-center gap-1.5">
-        <Database className="w-3 h-3 text-orange-500" />
+      <span className="px-2 py-0.5 rounded bg-warning/10 text-warning text-2xs font-mono font-bold flex items-center gap-1.5">
+        <Database className="w-3 h-3 text-warning" />
         ORACLE XE
       </span>
     );
   }
   if (isWta) {
     return (
-      <span className="px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 text-2xs font-mono font-bold flex items-center gap-1.5">
-        <Globe className="w-3 h-3 text-cyan-500" />
+      <span className="px-2 py-0.5 rounded bg-info/10 text-info text-2xs font-mono font-bold flex items-center gap-1.5">
+        <Globe className="w-3 h-3 text-info" />
         WTA KARAF
       </span>
     );
   }
   if (isWsh) {
     return (
-      <span className="px-2 py-0.5 rounded bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/30 text-2xs font-mono font-bold flex items-center gap-1.5">
-        <Key className="w-3 h-3 text-violet-500" />
+      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-2xs font-mono font-bold flex items-center gap-1.5">
+        <Key className="w-3 h-3 text-primary" />
         WSH HUB
       </span>
     );

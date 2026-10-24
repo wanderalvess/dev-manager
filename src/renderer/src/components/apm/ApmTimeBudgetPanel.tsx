@@ -22,18 +22,18 @@ export const ApmTimeBudgetPanel: React.FC<ApmTimeBudgetPanelProps> = ({
       <div className="flex items-center gap-2 text-2xs tabular-nums">
         <span className="text-info font-semibold" title="Tempo em handlers e chamadas HTTP">🌐 HTTP: {timeBudget.httpPct}% ({timeBudget.httpMs}ms)</span>
         <span>•</span>
-        <span className="text-purple-600 dark:text-purple-400 font-semibold" title="Tempo em lógica Java / OSGi">☕ Java: {timeBudget.javaPct}% ({timeBudget.javaMs}ms)</span>
+        <span className="text-primary font-semibold" title="Tempo em lógica Java / OSGi">☕ Java: {timeBudget.javaPct}% ({timeBudget.javaMs}ms)</span>
         <span>•</span>
         <span className="text-warning font-semibold" title="Tempo em consultas JDBC / Oracle">🗄️ JDBC: {timeBudget.jdbcPct}% ({timeBudget.jdbcMs}ms)</span>
       </div>
     </div>
     <div className="w-full h-2.5 rounded-full bg-muted/60 overflow-hidden flex shadow-inner">
       {timeBudget.httpPct > 0 && <div style={{ width: `${timeBudget.httpPct}%` }} className="bg-info h-full transition-all" title={`Requisição HTTP: ${timeBudget.httpMs}ms (${timeBudget.httpPct}%) — ${timeBudget.httpSpansCount} spans`} />}
-      {timeBudget.javaPct > 0 && <div style={{ width: `${timeBudget.javaPct}%` }} className="bg-purple-500 h-full transition-all" title={`Processamento Java: ${timeBudget.javaMs}ms (${timeBudget.javaPct}%) — ${timeBudget.javaSpansCount} spans`} />}
+      {timeBudget.javaPct > 0 && <div style={{ width: `${timeBudget.javaPct}%` }} className="bg-primary h-full transition-all" title={`Processamento Java: ${timeBudget.javaMs}ms (${timeBudget.javaPct}%) — ${timeBudget.javaSpansCount} spans`} />}
       {timeBudget.jdbcPct > 0 && <div style={{ width: `${timeBudget.jdbcPct}%` }} className="bg-warning h-full transition-all" title={`Queries JDBC no Banco: ${timeBudget.jdbcMs}ms (${timeBudget.jdbcPct}%) — ${timeBudget.jdbcSpansCount} spans`} />}
     </div>
     {timeBudget.hasDbBottleneck ? (
-      <div className="px-2.5 py-1.5 rounded bg-warning/10 border border-warning/30 text-2xs font-mono text-warning flex items-center justify-between">
+      <div className="px-2.5 py-1.5 rounded bg-warning/10 text-2xs font-mono text-warning flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Database className="w-3.5 h-3.5 text-warning shrink-0" />
           <span>Gargalo no Banco: <strong>{timeBudget.jdbcPct}%</strong> ({timeBudget.jdbcMs}ms) consumidos em queries JDBC</span>
@@ -41,12 +41,12 @@ export const ApmTimeBudgetPanel: React.FC<ApmTimeBudgetPanelProps> = ({
         {hasSqlTab && <button type="button" onClick={() => onSelectTab('sql')} className="text-xs text-warning hover:text-warning underline font-bold cursor-pointer">Inspecionar SQL &rarr;</button>}
       </div>
     ) : timeBudget.hasJavaBottleneck ? (
-      <div className="px-2.5 py-1.5 rounded bg-purple-500/10 border border-purple-500/30 text-2xs font-mono text-purple-800 dark:bg-purple-950/30 dark:border-purple-800/40 dark:text-purple-300 flex items-center justify-between">
+      <div className="px-2.5 py-1.5 rounded bg-primary/10 text-2xs font-mono text-primary flex items-center justify-between">
         <span className="flex items-center gap-1.5">
-          <Code2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+          <Code2 className="w-3.5 h-3.5 text-primary shrink-0" />
           <span>Gargalo em Java: <strong>{timeBudget.javaPct}%</strong> ({timeBudget.javaMs}ms) em processamento interno / OSGi</span>
         </span>
-        <button type="button" onClick={() => onSelectTier('java')} className="text-xs text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-200 underline font-bold cursor-pointer">Filtrar Java &rarr;</button>
+        <button type="button" onClick={() => onSelectTier('java')} className="text-xs text-primary hover:text-primary underline font-bold cursor-pointer">Filtrar Java &rarr;</button>
       </div>
     ) : null}
   </div>

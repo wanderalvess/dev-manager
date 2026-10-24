@@ -28,7 +28,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
       return 'bg-warning';
     }
     if (tier.category === 'java') {
-      return 'bg-purple-500/85';
+      return 'bg-primary/85';
     }
     return 'bg-info';
   };
@@ -38,7 +38,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
       <div
         onClick={() => onSelectSpan(span.spanId)}
         className={`group py-1 px-2 rounded flex items-center justify-between text-xs font-mono transition cursor-pointer ${
-          isSelected ? 'bg-primary/20 border border-primary/50' : 'hover:bg-muted/40'
+          isSelected ? 'bg-primary/20' : 'hover:bg-muted/40'
         }`}
       >
         {/* Identificação do Span (Indentada por depth com guia de árvore e pílula de camada) */}
@@ -90,7 +90,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
           {/* Tag de Alerta para Consulta/Span Lento (>= 300ms) */}
           {tier.isSlow && (
             <span
-              className="px-1 py-0.2 rounded bg-warning/20 text-warning border border-warning/40 text-2xs font-bold flex items-center gap-0.5 shrink-0"
+              className="px-1 py-0.2 rounded bg-warning/20 text-warning text-2xs font-bold flex items-center gap-0.5 shrink-0"
               title={`Span com duração elevada: ${span.durationMs}ms`}
             >
               <Zap className="w-3 h-3 text-warning" />

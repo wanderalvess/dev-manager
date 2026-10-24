@@ -26,7 +26,7 @@ export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsPr
     {/* Extensões e Launchers do Catálogo de Rotinas */}
     <div className="space-y-1.5">
       <label htmlFor="dirs-routine-extensions-fields-1" className="font-bold text-foreground flex items-center gap-1.5">
-        <FileCode2 className="w-3.5 h-3.5 text-purple-500" />
+        <FileCode2 className="w-3.5 h-3.5 text-primary" />
         Extensões Reconhecidas como Rotina:
       </label>
       <input id="dirs-routine-extensions-fields-1"
@@ -44,7 +44,7 @@ export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsPr
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <span className="font-bold text-foreground flex items-center gap-1.5">
-          <FileCode2 className="w-3.5 h-3.5 text-purple-500" />
+          <FileCode2 className="w-3.5 h-3.5 text-primary" />
           Launchers por Extensão (opcional):
         </span>
         <button

@@ -46,7 +46,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
         {/* Cabeçalho do Drawer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <Sparkles className="w-4 h-4 text-primary" />
             <h4 className="text-xs font-semibold text-foreground">
               Instalação Manual de Feature OSGi
             </h4>
@@ -89,7 +89,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
               value={featureName}
               onChange={(e) => setFeatureName(e.target.value)}
               placeholder="Ex: winthor-integracao-varejo ou camel-core"
-              className="w-full px-3 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden focus:border-indigo-500 transition-colors"
+              className="w-full px-3 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden focus:border-primary transition-colors"
               autoFocus
             />
           </div>
@@ -103,7 +103,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
               value={featureVersion}
               onChange={(e) => setFeatureVersion(e.target.value)}
               placeholder="Ex: 1.0.0-SNAPSHOT"
-              className="w-full px-3 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden focus:border-indigo-500 transition-colors"
+              className="w-full px-3 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -111,9 +111,9 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
         {/* Rodapé com Prévia do Comando e Botões */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/40">
           <div className="flex items-center space-x-1.5 text-2xs font-mono text-muted-foreground">
-            <ChevronRight className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <ChevronRight className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>Comando:</span>
-            <code className="text-indigo-700 dark:text-indigo-300 font-bold bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
+            <code className="text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">
               feature:install -r -u {targetIdentifier}
             </code>
           </div>
@@ -130,7 +130,7 @@ export const KarafFeaturesInstallDrawer: React.FC<KarafFeaturesInstallDrawerProp
             <button
               type="submit"
               disabled={!featureName.trim() || isInstalling}
-              className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              className="px-4 py-1.5 rounded-lg text-xs font-mono font-bold text-white bg-primary hover:bg-primary disabled:opacity-50 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               {isInstalling ? (
                 <>

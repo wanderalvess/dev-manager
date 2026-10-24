@@ -21,7 +21,7 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
       {/* Heap Card */}
       <div className="p-3 bg-card border border-border rounded-lg space-y-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-foreground font-mono uppercase tracking-wide flex items-center gap-1.5">
+          <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5 text-info" /> Heap Memory (Java Objects)
           </span>
           <span
@@ -41,15 +41,15 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
 
         <div className="grid grid-cols-3 gap-2 pt-1 text-2xs font-mono tabular-nums">
           <div>
-            <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Usado</span>
+            <span className="block text-xs text-muted-foreground">Usado</span>
             <span className="font-bold text-foreground">{metrics?.heapUsedMb ?? 0} MB</span>
           </div>
           <div>
-            <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Alocado</span>
+            <span className="block text-xs text-muted-foreground">Alocado</span>
             <span className="font-bold text-foreground">{metrics?.heapCommittedMb ?? 0} MB</span>
           </div>
           <div>
-            <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Máximo</span>
+            <span className="block text-xs text-muted-foreground">Máximo</span>
             <span className="font-bold text-foreground">{metrics?.heapMaxMb ?? 0} MB</span>
           </div>
         </div>
@@ -58,10 +58,10 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
       {/* Non-Heap Card */}
       <div className="p-3 bg-card border border-border rounded-lg space-y-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-foreground font-mono uppercase tracking-wide flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-purple-400" /> Non-Heap (Metaspace / CodeCache)
+          <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-primary" /> Non-Heap (Metaspace / CodeCache)
           </span>
-          <span className="text-xs font-mono font-bold text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/30">
+          <span className="text-xs font-mono font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10">
             {metrics?.nonHeapUsedMb || 0} MB
           </span>
         </div>
@@ -69,18 +69,18 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
         {/* Progress Gauge para Metaspace */}
         <div className="w-full bg-muted/60 rounded-xs h-1.5 overflow-hidden">
           <div
-            className="h-full bg-purple-500 transition-all duration-300"
+            className="h-full bg-primary transition-all duration-300"
             style={{ width: `${computeNonHeapGaugeWidth(metrics?.nonHeapUsedMb, metrics?.nonHeapCommittedMb)}%` }}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-2 pt-1 text-2xs font-mono tabular-nums">
           <div>
-            <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Usado</span>
+            <span className="block text-xs text-muted-foreground">Usado</span>
             <span className="font-bold text-foreground">{metrics?.nonHeapUsedMb ?? 0} MB</span>
           </div>
           <div>
-            <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Alocado (Committed)</span>
+            <span className="block text-xs text-muted-foreground">Alocado (Committed)</span>
             <span className="font-bold text-foreground">{metrics?.nonHeapCommittedMb ?? 0} MB</span>
           </div>
         </div>
@@ -92,21 +92,21 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
       <div className="flex items-center space-x-2">
         <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <div>
-          <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Uptime JVM</span>
+          <span className="block text-xs text-muted-foreground">Uptime JVM</span>
           <span className="font-bold text-foreground">{metrics?.uptime || 'N/A'}</span>
         </div>
       </div>
       <div className="flex items-center space-x-2">
         <Zap className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <div>
-          <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Threads Ativas</span>
+          <span className="block text-xs text-muted-foreground">Threads Ativas</span>
           <span className="font-bold text-foreground tabular-nums">{metrics?.liveThreads ?? 0}</span>
         </div>
       </div>
       <div className="flex items-center space-x-2">
         <Layers className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <div>
-          <span className="block text-2xs uppercase tracking-wider text-muted-foreground">Classes</span>
+          <span className="block text-xs text-muted-foreground">Classes</span>
           <span className="font-bold text-foreground tabular-nums">{metrics?.classesLoaded ?? 0}</span>
         </div>
       </div>

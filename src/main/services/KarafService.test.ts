@@ -184,6 +184,24 @@ client.bat "feature:install -r custom-feature/2.0.0"
     });
   });
 
+  describe('listBundlesOrThrow', () => {
+    it('lança erro quando o comando falha, para a tela mostrar Karaf offline', async () => {
+      vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({
+        code: 1,
+        stdout: '',
+        stderr: 'Error connecting'
+      });
+
+      await expect(karafService.listBundlesOrThrow()).rejects.toThrow('Error connecting');
+    });
+
+    it('retorna lista vazia quando o Karaf responde sem bundles', async () => {
+      vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({ code: 0, stdout: '', stderr: '' });
+
+      await expect(karafService.listBundlesOrThrow()).resolves.toEqual([]);
+    });
+  });
+
   describe('listBundlesParsed', () => {
     it('retorna array vazio quando comando falha ou saída é vazia', async () => {
       vi.spyOn(karafService, 'executeKarafCommand').mockResolvedValueOnce({

@@ -104,7 +104,7 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
           onClick={() => onExecute(runner)}
           className={`w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-98 ${
             isRunning
-              ? 'bg-primary/15 text-primary border border-primary/30 cursor-not-allowed'
+              ? 'bg-primary/10 text-primary cursor-not-allowed'
               : 'bg-primary hover:bg-primary/90 text-primary-foreground'
           }`}
         >

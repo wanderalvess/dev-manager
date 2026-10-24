@@ -5,7 +5,7 @@ import { ModuleBullets, ModuleCardShell, ModuleNavButton, type ModuleCardProps }
 export const DeployModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Layers className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-warning/10 text-warning border border-warning/20"
+    iconBoxClass="p-2 rounded-xl bg-warning/10 text-warning"
     title="4. Perfis de Deploy (Multi-Alvo)"
     subtitle="Karaf OSGi · Docker · Comandos Maven"
     shortcut="Alt+4"
@@ -13,7 +13,7 @@ export const DeployModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
       <ModuleNavButton
         onNavigate={onNavigate}
         target="deploy"
-        colorClass="bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30"
+        colorClass="bg-warning/10 hover:bg-warning/20 text-warning"
         label="Abrir Módulo de Deploy"
       />
     }

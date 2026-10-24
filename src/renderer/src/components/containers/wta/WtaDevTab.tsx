@@ -9,8 +9,8 @@ interface WtaDevTabProps {
 
 export const WtaDevTab: React.FC<WtaDevTabProps> = ({ copiedKey, onCopy }) => (
   <div className="space-y-4">
-    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 flex items-start gap-3">
-      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
+    <div className="bg-success/5 border border-success/20 rounded-xl p-3 flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center text-success shrink-0 mt-0.5">
         <HardDrive className="w-4 h-4" />
       </div>
       <div className="text-xs leading-relaxed text-muted-foreground">

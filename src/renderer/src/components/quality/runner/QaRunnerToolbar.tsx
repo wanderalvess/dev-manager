@@ -64,7 +64,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
               ))}
             </select>
           ) : (
-            <div className="flex items-center gap-2 text-xs text-warning bg-warning/10 border border-warning/20 px-2.5 py-1 rounded-md">
+            <div className="flex items-center gap-2 text-xs text-warning bg-warning/10 px-2.5 py-1 rounded-md">
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>Nenhuma conexão cadastrada</span>
               {onNavigate && (

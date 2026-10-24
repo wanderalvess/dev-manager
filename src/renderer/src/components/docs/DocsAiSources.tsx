@@ -9,7 +9,7 @@ interface DocsAiSourcesProps {
 export const DocsAiSources: React.FC<DocsAiSourcesProps> = ({ sources, onOpenPreview }) => (
   <div className="space-y-2 pt-2 border-t border-border/60">
     <div className="flex items-center justify-between">
-      <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+      <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
         <Layers className="w-3 h-3 text-primary" />
         Fontes & Referências Utilizadas na Síntese ({sources.length}):
       </span>
@@ -28,7 +28,7 @@ export const DocsAiSources: React.FC<DocsAiSourcesProps> = ({ sources, onOpenPre
         >
           <FileText className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform shrink-0" />
           <span className="max-w-[260px] truncate font-medium">{source.title}</span>
-          <span className="text-2xs font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-md border border-success/20 font-mono shrink-0">
+          <span className="text-2xs font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-md font-mono shrink-0">
             {(source.score * 100).toFixed(0)}%
           </span>
         </button>

@@ -23,14 +23,14 @@ export const AzureTab: React.FC<AzureTabProps> = ({
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
-              <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-blue-500" /> Configurações do Git & Azure DevOps
+              <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-info" /> Configurações do Git & Azure DevOps
               </h3>
               <p className="text-2xs text-muted-foreground mt-0.5">
                 Parâmetros para criação automatizada de Pull Requests e rastreamento de repositórios.
               </p>
             </div>
-            <span className="text-2xs bg-blue-500/10 text-blue-500 border border-blue-500/30 px-2 py-0.5 rounded font-mono font-bold">
+            <span className="text-2xs bg-info/10 text-info px-2 py-0.5 rounded font-mono font-bold">
               dev.azure.com
             </span>
           </div>
@@ -102,7 +102,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   className="font-bold text-foreground flex items-center gap-1.5"
                   title="Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e criação de branches baseadas em tarefas."
                 >
-                  <KeyRound className="w-3.5 h-3.5 text-blue-500" />
+                  <KeyRound className="w-3.5 h-3.5 text-info" />
                   Personal Access Token (PAT) do Azure DevOps:
                 </label>
               </div>
@@ -111,7 +111,7 @@ export const AzureTab: React.FC<AzureTabProps> = ({
                   type="password"
                   value={settings.azureDevOpsToken || ''}
                   onChange={(e) => setSettings({ ...settings, azureDevOpsToken: e.target.value })}
-                  className="flex-1 bg-card border border-input hover:border-blue-500/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
+                  className="flex-1 bg-card border border-input hover:border-info/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden focus:border-info transition-colors shadow-xs"
                   placeholder="Cole seu Personal Access Token do Azure DevOps (leitura de Work Items)"
                 />
               </div>
@@ -124,14 +124,14 @@ export const AzureTab: React.FC<AzureTabProps> = ({
             {/* Pasta de download dos artefatos do Azure Pipelines */}
             <div className="space-y-1.5 pt-2 border-t border-border/60">
               <label htmlFor="azure-tab-artifacts-dir" className="font-bold text-foreground flex items-center gap-1.5">
-                <FolderOpen className="w-3.5 h-3.5 text-blue-500" />
+                <FolderOpen className="w-3.5 h-3.5 text-info" />
                 Pasta de download dos artefatos de pipeline:
               </label>
               <input id="azure-tab-artifacts-dir"
                 type="text"
                 value={settings.azureArtifactsDir || ''}
                 onChange={(e) => setSettings({ ...settings, azureArtifactsDir: e.target.value })}
-                className="w-full bg-card border border-input hover:border-blue-500/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden focus:border-blue-500 transition-colors shadow-xs"
+                className="w-full bg-card border border-input hover:border-info/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden focus:border-info transition-colors shadow-xs"
                 placeholder="Padrão: %USERPROFILE%\Downloads\HubManager-Azure"
               />
               <p className="text-2xs text-muted-foreground">
@@ -141,8 +141,8 @@ export const AzureTab: React.FC<AzureTabProps> = ({
           </div>
 
           {/* Box Informativo de Integração Azure */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 text-xs text-foreground space-y-1">
-            <span className="font-bold text-blue-600 dark:text-blue-400 block flex items-center gap-1.5">
+          <div className="bg-info/10 rounded-xl p-3 text-xs text-foreground space-y-1">
+            <span className="font-bold text-info block flex items-center gap-1.5">
               <GitBranch className="w-4 h-4" /> Integração com o Azure DevOps (dev.azure.com)
             </span>
             <p className="text-2xs text-muted-foreground leading-relaxed">

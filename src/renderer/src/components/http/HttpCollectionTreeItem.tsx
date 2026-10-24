@@ -50,7 +50,7 @@ export const HttpCollectionTreeItem: React.FC<HttpCollectionTreeItemProps> = ({
           <button
             type="button"
             onClick={() => onDeleteCollection(col.id)}
-            className="p-0.5 hover:text-red-400"
+            className="p-0.5 hover:text-danger"
             title="Excluir coleção"
           >
             <Trash2 className="w-3 h-3" />
@@ -83,10 +83,10 @@ export const HttpCollectionTreeItem: React.FC<HttpCollectionTreeItemProps> = ({
             >
               <div className="flex items-center gap-1 truncate">
                 {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                {isOpen ? <FolderOpen className="w-3.5 h-3.5 text-amber-400" /> : <Folder className="w-3.5 h-3.5 text-amber-400" />}
+                {isOpen ? <FolderOpen className="w-3.5 h-3.5 text-warning" /> : <Folder className="w-3.5 h-3.5 text-warning" />}
                 <span className="truncate font-medium">{folder.name}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground/60">{folderRequests.length}</span>
+              <span className="text-xs text-muted-foreground/60">{folderRequests.length}</span>
             </div>
 
             {isOpen && (
@@ -111,7 +111,7 @@ export const HttpCollectionTreeItem: React.FC<HttpCollectionTreeItemProps> = ({
                         e.stopPropagation();
                         onDeleteRequest(col.id, req.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-danger transition-opacity"
                       title="Excluir requisição"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -148,7 +148,7 @@ export const HttpCollectionTreeItem: React.FC<HttpCollectionTreeItemProps> = ({
                   e.stopPropagation();
                   onDeleteRequest(col.id, req.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-red-400 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-danger transition-opacity"
               >
                 <Trash2 className="w-3 h-3" />
               </button>

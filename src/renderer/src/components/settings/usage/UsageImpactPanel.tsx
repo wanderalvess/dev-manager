@@ -20,7 +20,7 @@ const WindowCard: React.FC<{ title: string; window: UsageImpactWindow }> = ({ ti
   const estimatedMs = window.savedMs - window.confirmedMs;
   return (
     <div className="bg-card/70 border border-border/80 rounded-xl p-3 space-y-1">
-      <div className="text-2xs uppercase tracking-wider text-muted-foreground font-bold">{title}</div>
+      <div className="text-xs text-muted-foreground font-semibold">{title}</div>
       <div className="text-xl font-bold text-foreground font-mono">{formatSavedTime(window.savedMs)}</div>
       <div className="text-2xs text-muted-foreground">
         {share === null
@@ -47,7 +47,7 @@ export const UsageImpactPanel: React.FC<UsageImpactPanelProps> = ({
     <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-usageImpact">
       <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-border/60">
         <div className="max-w-2xl">
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
             <Hourglass className="w-4 h-4 text-primary" /> Meu impacto (tempo economizado)
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -91,7 +91,7 @@ export const UsageImpactPanel: React.FC<UsageImpactPanelProps> = ({
 
           {impact.total.byModule.length > 0 && (
             <section aria-label="Economia por módulo" className="space-y-2">
-              <h4 className="text-2xs uppercase tracking-wider text-muted-foreground font-bold">Por módulo (desde o início)</h4>
+              <h4 className="text-xs text-muted-foreground font-semibold">Por módulo (desde o início)</h4>
               {impact.total.byModule.map((m) => (
                 <div key={m.module} className="space-y-0.5">
                   <div className="flex justify-between text-xs">
@@ -107,7 +107,7 @@ export const UsageImpactPanel: React.FC<UsageImpactPanelProps> = ({
           )}
 
           <section aria-label="Tempo que você levava à mão" className="space-y-2">
-            <h4 className="text-2xs uppercase tracking-wider text-muted-foreground font-bold">
+            <h4 className="text-xs text-muted-foreground font-semibold">
               Quanto tempo você levava à mão? A mudança vale ao salvar as configurações
             </h4>
             <UsageBaselineTable rows={impact.rows} onChange={onChangeBaseline} onReset={onResetBaseline} />

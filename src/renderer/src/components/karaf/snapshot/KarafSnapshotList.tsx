@@ -37,12 +37,12 @@ export const KarafSnapshotList: React.FC<KarafSnapshotListProps> = ({
             onClick={() => onSelect(snap)}
             className={`p-2.5 rounded-xl border cursor-pointer transition flex items-start justify-between group ${
               isSelected
-                ? 'border-purple-500/50 bg-purple-500/10'
+                ? 'border-primary/50 bg-primary/10'
                 : 'border-border/60 hover:bg-muted/50'
             }`}
           >
             <div className="space-y-0.5 min-w-0 pr-2">
-              <div className={`text-xs font-bold truncate ${isSelected ? 'text-purple-400' : 'text-foreground'}`}>
+              <div className={`text-xs font-bold truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                 {snap.label}
               </div>
               <div className="text-2xs text-muted-foreground">

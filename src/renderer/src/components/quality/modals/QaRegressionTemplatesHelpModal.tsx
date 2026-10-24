@@ -57,13 +57,13 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg max-w-3xl w-full flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       closeOnBackdrop={false}
     >
         {/* Top Header */}
         <div className="px-5 py-3.5 border-b border-border bg-card/80 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary border border-primary/20">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <BookOpen className="w-4 h-4" />
             </div>
             <div>
@@ -145,7 +145,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
           {/* ABA 1: Fluxo Passo a Passo */}
           {activeTab === 'workflow' && (
             <div className="space-y-3">
-              <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-primary text-xs leading-relaxed">
+              <div className="p-3 bg-primary/10 rounded-lg text-primary text-xs leading-relaxed">
                 <strong>O que é um Template de Regressivo?</strong> É uma suíte declarativa em formato <code className="font-mono font-bold">.json</code> contendo consultas SQL Oracle com variáveis de bind e regras de validação para checar se as tabelas do WinThor foram gravadas corretamente após a execução de rotinas ou serviços da API.
               </div>
 
@@ -212,7 +212,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
             <div className="space-y-3">
               <div className="p-3.5 rounded-lg border border-border bg-card space-y-3">
                 <div className="flex items-start gap-2.5">
-                  <div className="p-1.5 rounded bg-success/10 text-success border border-success/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded bg-success/10 text-success shrink-0 mt-0.5">
                     <Download className="w-4 h-4" />
                   </div>
                   <div>
@@ -224,7 +224,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                 </div>
 
                 <div className="flex items-start gap-2.5 pt-2 border-t border-border">
-                  <div className="p-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded bg-info/10 text-info shrink-0 mt-0.5">
                     <Layers className="w-4 h-4" />
                   </div>
                   <div>
@@ -236,7 +236,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                 </div>
 
                 <div className="flex items-start gap-2.5 pt-2 border-t border-border">
-                  <div className="p-1.5 rounded bg-warning/10 text-warning border border-warning/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded bg-warning/10 text-warning shrink-0 mt-0.5">
                     <Upload className="w-4 h-4" />
                   </div>
                   <div>

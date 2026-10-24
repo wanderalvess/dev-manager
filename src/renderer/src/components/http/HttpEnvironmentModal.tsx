@@ -145,7 +145,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
         <div className="w-52 border-r border-border pr-3 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">Ambientes</span>
+              <span className="font-semibold text-muted-foreground text-xs">Ambientes</span>
               <button
                 type="button"
                 onClick={handleAddEnv}
@@ -176,7 +176,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
                         e.stopPropagation();
                         handleDeleteEnv(env.id);
                       }}
-                      className="p-0.5 text-muted-foreground hover:text-red-400"
+                      className="p-0.5 text-muted-foreground hover:text-danger"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -208,7 +208,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
                     type="button"
                     onClick={handleWinThorLogin}
                     disabled={isLoggingIn}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 rounded text-xs font-medium transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-success/10 hover:bg-success/25 text-success rounded text-xs font-medium transition-colors"
                     title="Faz POST /winthor/autenticacao/v1/login e atualiza a variável TOKEN"
                   >
                     {isLoggingIn ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Lock className="w-3 h-3" />}
@@ -254,7 +254,7 @@ export const HttpEnvironmentModal: React.FC<HttpEnvironmentModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleDeleteVariable(v.id)}
-                      className="p-1 text-muted-foreground hover:text-red-400"
+                      className="p-1 text-muted-foreground hover:text-danger"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

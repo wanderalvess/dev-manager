@@ -34,7 +34,7 @@ export const WhatsNewBanner: React.FC<WhatsNewBannerProps> = ({
           <button
             type="button"
             onClick={() => onSelectVersion(latestVersion)}
-            className="px-2.5 py-1 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning border border-warning/40 text-2xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-warning/20 hover:bg-warning/30 text-warning text-2xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Voltar para v{latestVersion} (Mais recente)</span>
@@ -56,7 +56,7 @@ export const WhatsNewBanner: React.FC<WhatsNewBannerProps> = ({
         <button
           type="button"
           onClick={() => onSelectVersion(latestVersion)}
-          className="px-2.5 py-1 rounded-lg bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 text-2xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+          className="px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/25 text-primary text-2xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer"
         >
           <Sparkles className="w-3 h-3" />
           <span>Ver apenas a versão atual (v{latestVersion})</span>

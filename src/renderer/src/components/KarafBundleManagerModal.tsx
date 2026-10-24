@@ -96,7 +96,7 @@ export const KarafBundleManagerModal: React.FC<KarafBundleManagerModalProps> = (
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-[97vw] 2xl:max-w-[1720px] h-[94vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border/80 rounded-xl shadow-lg w-full max-w-[97vw] 2xl:max-w-[1720px] h-[94vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
       ariaLabel="Gerenciador de bundles"

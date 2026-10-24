@@ -19,8 +19,8 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
   onCopy
 }) => (
   <div className="space-y-4">
-    <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3 flex items-start gap-3">
-      <div className="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0 mt-0.5">
+    <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5">
         <Key className="w-4 h-4" />
       </div>
       <div className="text-xs leading-relaxed text-muted-foreground">
@@ -39,23 +39,23 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
           value={plainPass}
           onChange={(e) => onPlainPassChange(e.target.value)}
           placeholder="Ex: pcinfo, 123456, totvs"
-          className="w-full bg-background border border-input/80 rounded-[10px] px-3 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-violet-500"
+          className="w-full bg-background border border-input/80 rounded-[10px] px-3 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
           autoFocus
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         {/* MD5 Maiúsculo */}
-        <div className="p-3 bg-muted/40 rounded-xl border border-violet-500/30 space-y-2">
+        <div className="p-3 bg-muted/40 rounded-xl border border-primary/30 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-2xs font-bold text-violet-600 dark:text-violet-400 flex items-center gap-1.5">
+            <span className="text-2xs font-bold text-primary flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
               <span>MD5 Maiúsculo (WSH .env)</span>
             </span>
             <button
               onClick={() => onCopy(md5Upper, 'md5-upper')}
               disabled={!md5Upper}
-              className="text-2xs px-2 py-0.5 rounded bg-violet-600 hover:bg-violet-500 text-white font-semibold transition cursor-pointer disabled:opacity-50"
+              className="text-2xs px-2 py-0.5 rounded bg-primary hover:bg-primary text-white font-semibold transition cursor-pointer disabled:opacity-50"
             >
               {copiedKey === 'md5-upper' ? 'Copiado!' : 'Copiar'}
             </button>

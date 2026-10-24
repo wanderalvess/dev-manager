@@ -18,15 +18,15 @@ export const StatementInspector: React.FC<{
     item.interpolatedSql || (binds.length > 0 ? interpolateOracleSqlWithBinds(item.sqlText, binds) : undefined);
 
   return (
-    <div className="cockpit-panel rounded-xl p-4 border border-sky-500/30 bg-card/90 shadow-xl space-y-3 transition-all animate-fadeIn">
+    <div className="cockpit-panel rounded-xl p-4 border border-info/30 bg-card/90 shadow-xl space-y-3 transition-all animate-fadeIn">
       {/* Cabeçalho do Inspetor */}
       <div className="flex items-center justify-between pb-2 border-b border-border/70">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-info animate-pulse" />
           <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
             <span>Inspeção de Binds & SQL Executável</span>
           </h4>
-          <span className="font-mono text-2xs px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/30 font-bold">
+          <span className="font-mono text-2xs px-2 py-0.5 rounded bg-info/10 text-info font-bold">
             SQL_ID: {item.sqlId || '-'}
           </span>
           {item.username && (
@@ -36,7 +36,7 @@ export const StatementInspector: React.FC<{
           )}
           {item.program && (
             <span
-              className="text-2xs px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold truncate max-w-[220px]"
+              className="text-2xs px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold truncate max-w-[220px]"
               title={item.program}
             >
               {item.program}
@@ -64,10 +64,10 @@ export const StatementInspector: React.FC<{
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5 text-sky-400" />
+              <Sliders className="w-3.5 h-3.5 text-info" />
               <span>Parâmetros de Execução (V$SQL_BIND_CAPTURE)</span>
             </span>
-            <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">
+            <span className="text-2xs px-1.5 py-0.5 rounded font-mono font-bold bg-info/20 text-info">
               {binds.length} {binds.length === 1 ? 'parâmetro' : 'parâmetros'}
             </span>
           </div>
@@ -76,7 +76,7 @@ export const StatementInspector: React.FC<{
             type="button"
             onClick={() => onFetchBinds(item.sqlId, item.sqlText)}
             disabled={isFetchingBinds}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-2xs font-semibold text-sky-400 hover:text-sky-300 hover:bg-sky-500/10 border border-sky-500/30 rounded-lg transition cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-2xs font-semibold text-info hover:text-info hover:bg-info/10 rounded-lg transition cursor-pointer disabled:opacity-50"
             title="Consultar novamente a view v$sql_bind_capture no banco"
           >
             <RefreshCw className={`w-3 h-3 ${isFetchingBinds ? 'animate-spin' : ''}`} />
@@ -91,10 +91,10 @@ export const StatementInspector: React.FC<{
       <div className="space-y-1.5 pt-1">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <Sparkles className="w-3.5 h-3.5 text-success" />
             <span>{interpolatedSql ? 'SQL Montado com Parâmetros Aplicados' : 'Instrução SQL'}</span>
             {interpolatedSql && (
-              <span className="text-2xs px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span className="text-2xs px-1.5 py-0.5 rounded font-bold bg-success/20 text-success">
                 Pronto para Executar
               </span>
             )}
@@ -109,8 +109,8 @@ export const StatementInspector: React.FC<{
             >
               {copiedKey === `interpolated-${item.sqlId}` ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-emerald-500">Copiado!</span>
+                  <Check className="w-3.5 h-3.5 text-success" />
+                  <span className="text-success">Copiado!</span>
                 </>
               ) : (
                 <>
@@ -124,7 +124,7 @@ export const StatementInspector: React.FC<{
               <button
                 type="button"
                 onClick={() => onSelectSql(interpolatedSql || item.sqlText)}
-                className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 rounded-lg transition cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-success/10 hover:bg-success/25 text-success rounded-lg transition cursor-pointer"
                 title="Carregar esta consulta diretamente no Editor SQL do DB Studio"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />

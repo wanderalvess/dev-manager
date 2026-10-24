@@ -72,7 +72,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
             <span>Web: <strong className="text-foreground">:{webPort}</strong></span>
           </div>
           <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-2xs font-mono text-muted-foreground flex items-center gap-1.5">
-            <Terminal className="w-3 h-3 text-cyan-700 dark:text-cyan-400" />
+            <Terminal className="w-3 h-3 text-info" />
             <span>SSH Karaf: <strong className="text-foreground">:{sshPort}</strong></span>
           </div>
           <div className="px-2.5 py-1 rounded-lg bg-muted/60 border border-border text-2xs font-mono text-muted-foreground flex items-center gap-1.5">

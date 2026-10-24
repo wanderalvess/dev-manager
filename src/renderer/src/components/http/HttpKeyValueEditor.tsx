@@ -40,7 +40,7 @@ export const HttpKeyValueEditor: React.FC<HttpKeyValueEditorProps> = ({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/30">
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+        <span className="text-xs font-medium text-muted-foreground">
           Itens ({items.filter((i) => i.enabled).length}/{items.length} ativos)
         </span>
         <button
@@ -98,7 +98,7 @@ export const HttpKeyValueEditor: React.FC<HttpKeyValueEditorProps> = ({
               <button
                 type="button"
                 onClick={() => handleDelete(item.id)}
-                className="p-1 text-muted-foreground hover:text-red-400 rounded transition-colors"
+                className="p-1 text-muted-foreground hover:text-danger rounded transition-colors"
                 title="Remover"
               >
                 <Trash2 className="w-3.5 h-3.5" />

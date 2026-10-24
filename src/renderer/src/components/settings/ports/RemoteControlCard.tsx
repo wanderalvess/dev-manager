@@ -33,7 +33,7 @@ export const RemoteControlCard: React.FC = () => {
     <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
       <div className="flex items-center justify-between pb-1 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
             <Smartphone className="w-4 h-4 text-primary" /> Controle Remoto pelo Celular
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">
@@ -45,7 +45,7 @@ export const RemoteControlCard: React.FC = () => {
           disabled={busy}
           onClick={() => change(() => (status.running ? window.electronAPI.stopRemoteControl() : window.electronAPI.startRemoteControl()))}
           className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50 ${
-            status.running ? 'border-red-500/50 text-red-400 hover:bg-red-500/10' : 'border-primary/50 text-primary hover:bg-primary/10'
+            status.running ? 'border-danger/50 text-danger hover:bg-danger/10' : 'border-primary/50 text-primary hover:bg-primary/10'
           }`}
         >
           <Power className="w-3.5 h-3.5" /> {status.running ? 'Desligar' : 'Ligar'}
@@ -84,7 +84,7 @@ export const RemoteControlCard: React.FC = () => {
           aparelhos da rede local (ou do Tailscale) conseguem entrar.
         </p>
       )}
-      {status.error && <p className="text-2xs text-red-400">{status.error}</p>}
+      {status.error && <p className="text-2xs text-danger">{status.error}</p>}
     </div>
   );
 };

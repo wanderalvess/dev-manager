@@ -38,7 +38,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
         </div>
 
         <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-2 text-xs">
-          <div className="font-bold text-foreground text-2xs uppercase tracking-wider">Recomendações para o PO:</div>
+          <div className="font-semibold text-foreground text-xs">Recomendações para o PO:</div>
           <ul className="space-y-1 text-muted-foreground list-disc pl-4">
             <li>Validar os critérios de aceite junto às áreas de negócio.</li>
             <li>Conferir logs de homologação na aba <strong className="text-foreground">Logs</strong> antes da subida.</li>
@@ -69,7 +69,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
               />
               <div
                 style={{ width: getProgressWidth(metrics.inProgress, metrics.total) }}
-                className="bg-cyan-500 h-full transition-all"
+                className="bg-info h-full transition-all"
                 title="Em Andamento"
               />
               <div
@@ -97,7 +97,7 @@ export const QualityReadinessPanel: React.FC<QualityReadinessPanelProps> = ({ me
                 </div>
                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex">
                   <div style={{ width: getProgressWidth(cat.passed, cat.total) }} className="bg-success h-full" />
-                  <div style={{ width: getProgressWidth(cat.inProgress, cat.total) }} className="bg-cyan-500 h-full" />
+                  <div style={{ width: getProgressWidth(cat.inProgress, cat.total) }} className="bg-info h-full" />
                   <div style={{ width: getProgressWidth(cat.blocked, cat.total) }} className="bg-warning h-full" />
                   <div style={{ width: getProgressWidth(cat.failed, cat.total) }} className="bg-danger h-full" />
                 </div>

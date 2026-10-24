@@ -51,11 +51,11 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         {openMenu === 'compact' && (
           <div
             style={{ backgroundColor: 'hsl(var(--card))' }}
-            className="absolute top-full left-0 mt-2 w-72 max-h-[80vh] overflow-y-auto bg-card text-card-foreground rounded-xl border border-border shadow-2xl z-50 p-2 space-y-3"
+            className="absolute top-full left-0 mt-2 w-72 max-h-[80vh] overflow-y-auto bg-card text-card-foreground rounded-xl border border-border shadow-lg z-50 p-2 space-y-3"
           >
             {groups.map((group) => (
               <div key={group.id} className="space-y-1">
-                <div className="px-2 text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <div className="px-2 text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                   <group.icon className="w-3 h-3 text-primary" />
                   <span>{group.title}</span>
                 </div>
@@ -90,7 +90,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             ))}
 
             <div className="space-y-1 pt-1 border-t border-border/50">
-              <div className="px-2 text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <div className="px-2 text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
                 <HelpCircle className="w-3 h-3 text-primary" />
                 <span>Sistema &amp; Suporte</span>
               </div>

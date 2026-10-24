@@ -13,7 +13,7 @@ export function wshUtilsModalTabClass(active: boolean): string {
   const base =
     'px-3.5 py-2.5 text-xs font-bold rounded-t-lg border-b-2 flex items-center gap-2 transition cursor-pointer';
   return active
-    ? `${base} border-violet-500 text-violet-600 dark:text-violet-400 bg-card shadow-2xs`
+    ? `${base} border-primary text-primary bg-card shadow-2xs`
     : `${base} border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40`;
 }
 
@@ -27,14 +27,14 @@ export interface WshPrereqVisual {
 export function wshUtilsModalPrereqVisual(prereq: { exists: boolean; required: boolean }): WshPrereqVisual {
   if (prereq.exists) {
     return {
-      cardClass: 'bg-emerald-500/5 border-emerald-500/25 text-foreground',
+      cardClass: 'bg-success/5 border-success/25 text-foreground',
       badgeClass: 'bg-success/10 text-success',
       label: 'Presente'
     };
   }
   if (prereq.required) {
     return {
-      cardClass: 'bg-rose-500/5 border-rose-500/30 text-foreground',
+      cardClass: 'bg-danger/5 border-danger/30 text-foreground',
       badgeClass: 'bg-danger/10 text-danger',
       label: 'Obrigatório Ausente'
     };

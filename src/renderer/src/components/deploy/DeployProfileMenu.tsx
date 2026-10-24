@@ -54,7 +54,7 @@ export const DeployProfileMenu: React.FC<DeployProfileMenuProps> = ({
                 <Download className="w-3.5 h-3.5 text-success" /> Exportar Perfil (.json)
               </button>
               <button onClick={run(onImport)} className={itemClass}>
-                <Upload className="w-3.5 h-3.5 text-indigo-500" /> Importar Perfil (.json)
+                <Upload className="w-3.5 h-3.5 text-primary" /> Importar Perfil (.json)
               </button>
             </div>
           </div>

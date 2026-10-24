@@ -101,7 +101,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
           </p>
           <p className="text-muted-foreground/80 flex items-center gap-1 flex-wrap">
             Porta depurador JDWP:{' '}
-            <span className="text-purple-600 dark:text-purple-400 font-bold font-mono">
+            <span className="text-primary font-bold font-mono">
               :{effectiveKarafPort}
             </span>
             <span className="text-2xs text-muted-foreground">

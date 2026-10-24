@@ -23,7 +23,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
   onToggleShowKey,
   onSave
 }) => (
-  <div className="p-5 rounded-xl border border-primary/40 bg-card shadow-2xl space-y-4 animate-in fade-in-0">
+  <div className="p-5 rounded-xl border border-primary/40 bg-card shadow-lg space-y-4 animate-in fade-in-0">
     <div className="flex items-center justify-between pb-2 border-b border-border">
       <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
         <Sliders className="w-4 h-4 text-primary" />

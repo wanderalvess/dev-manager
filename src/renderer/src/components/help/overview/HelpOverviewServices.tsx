@@ -116,9 +116,9 @@ export const HelpOverviewServices: React.FC<HelpOverviewServicesProps> = ({
       <ServiceCard
         title="Apache Karaf Docs"
         badge="Manual"
-        badgeClass="bg-blue-500/10 text-blue-500"
-        hoverBorderClass="hover:border-blue-500/50"
-        openClass="bg-blue-500/10 hover:bg-blue-500/20 text-blue-500"
+        badgeClass="bg-info/10 text-info"
+        hoverBorderClass="hover:border-info/50"
+        openClass="bg-info/10 hover:bg-info/20 text-info"
         openLabel="Acessar Manual"
         displayText="karaf.apache.org/documentation"
         onOpen={() => handleOpenLink('https://karaf.apache.org/documentation.html')}
@@ -126,9 +126,9 @@ export const HelpOverviewServices: React.FC<HelpOverviewServicesProps> = ({
       <ServiceCard
         title="Azure DevOps"
         badge="PRs & Repos"
-        badgeClass="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400"
-        hoverBorderClass="hover:border-indigo-500/50"
-        openClass="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400"
+        badgeClass="bg-primary/10 text-primary"
+        hoverBorderClass="hover:border-primary/50"
+        openClass="bg-primary/10 hover:bg-primary/20 text-primary"
         openLabel="Abrir Portal"
         displayText="dev.azure.com"
         onOpen={() => handleOpenLink('https://dev.azure.com')}

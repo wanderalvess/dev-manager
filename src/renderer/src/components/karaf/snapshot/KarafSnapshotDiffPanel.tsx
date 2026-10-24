@@ -27,7 +27,7 @@ export const KarafSnapshotDiffPanel: React.FC<KarafSnapshotDiffPanelProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <div>
             <span className="text-xs font-bold text-foreground">Comparando com: </span>
-            <span className="text-xs font-mono text-purple-400 font-bold">{selectedSnapshot.label}</span>
+            <span className="text-xs font-mono text-primary font-bold">{selectedSnapshot.label}</span>
             <span className="text-2xs text-muted-foreground ml-2">({selectedSnapshot.createdAt})</span>
           </div>
           <span className="text-2xs text-muted-foreground font-mono">
@@ -46,7 +46,7 @@ export const KarafSnapshotDiffPanel: React.FC<KarafSnapshotDiffPanelProps> = ({
             </span>
           )}
           {(snapshotDiff?.stateChanged.length || 0) > 0 && (
-            <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-bold">
+            <span className="px-2.5 py-1 rounded-lg bg-info/10 text-info font-bold">
               {snapshotDiff?.stateChanged.length} estados alterados
             </span>
           )}

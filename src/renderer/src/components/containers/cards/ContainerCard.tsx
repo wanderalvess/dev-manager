@@ -61,11 +61,11 @@ export const ContainerCard: React.FC<ContainerCardProps> = ({
           ? 'border-primary ring-2 ring-primary/40 bg-primary/4 shadow-md'
           : isRunning
           ? isOracle
-            ? 'border-orange-500/35 bg-card shadow-[0_2px_14px_rgba(234,88,12,0.06)]'
+            ? 'border-warning/35 bg-card shadow-[0_2px_14px_rgba(234,88,12,0.06)]'
             : isWta
-            ? 'border-cyan-500/35 bg-card shadow-[0_2px_14px_rgba(6,182,212,0.06)]'
+            ? 'border-info/35 bg-card shadow-[0_2px_14px_rgba(6,182,212,0.06)]'
             : isWsh
-            ? 'border-violet-500/35 bg-card shadow-[0_2px_14px_rgba(139,92,246,0.06)]'
+            ? 'border-primary/35 bg-card shadow-[0_2px_14px_rgba(139,92,246,0.06)]'
             : 'border-border/80 bg-card shadow-xs hover:border-primary/40'
           : 'border-border/60 bg-card opacity-80 hover:opacity-100'
       }`}

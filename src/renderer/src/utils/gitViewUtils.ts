@@ -12,11 +12,11 @@ export function classifyDiffLine(line: string): { rowClass: string; gutterClass:
     line.startsWith('diff --git') || line.startsWith('index') || line.startsWith('+++') || line.startsWith('---');
 
   if (isAdd) {
-    rowClass = 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
-    gutterClass = 'border-l-2 border-emerald-500';
+    rowClass = 'bg-success/10 text-success';
+    gutterClass = 'border-l-2 border-success';
   } else if (isDel) {
-    rowClass = 'bg-rose-500/10 text-rose-700 dark:text-rose-300';
-    gutterClass = 'border-l-2 border-rose-500';
+    rowClass = 'bg-danger/10 text-danger';
+    gutterClass = 'border-l-2 border-danger';
   } else if (isHunk) {
     rowClass = 'bg-muted/70 text-primary font-semibold border-y border-border/40';
   } else if (isHeader) {

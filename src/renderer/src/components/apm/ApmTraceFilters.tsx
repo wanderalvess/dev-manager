@@ -36,7 +36,7 @@ export const ApmTraceFilters: React.FC<ApmTraceFiltersProps> = ({
     { value: 'ERRORS', label: 'Erros', activeClass: 'bg-danger/20 text-danger border-danger', hoverClass: 'hover:text-danger' },
     { value: 'SLOW', label: '🐢 Lentos', title: 'Traces com duração superior a 400ms', activeClass: 'bg-warning/20 text-warning border-warning', hoverClass: 'hover:text-warning' },
     { value: 'SLOW_QUERIES', label: '🗄️ Queries Lentas', title: 'Traces contendo queries SQL com alta latência', activeClass: 'bg-warning/25 text-warning border-warning', hoverClass: 'hover:text-warning' },
-    { value: 'SLOW_ENDPOINTS', label: '🌐 Endpoints Lentos', title: 'Endpoints com maior latência observada', activeClass: 'bg-orange-500/25 text-orange-900 dark:bg-orange-950 dark:text-orange-200 border-orange-500', hoverClass: 'hover:text-orange-600 dark:hover:text-orange-400' },
+    { value: 'SLOW_ENDPOINTS', label: '🌐 Endpoints Lentos', title: 'Endpoints com maior latência observada', activeClass: 'bg-warning/25 text-warning border-warning', hoverClass: 'hover:text-warning' },
     { value: 'DB', label: 'Com SQL', activeClass: 'bg-info/20 text-info border-info', hoverClass: 'hover:text-info' }
   ];
   return (

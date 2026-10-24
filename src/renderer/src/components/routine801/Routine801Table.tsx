@@ -58,7 +58,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
 
   return (
     <table className="w-full text-left text-xs border-collapse">
-      <thead className="sticky top-0 bg-card border-b border-border text-muted-foreground uppercase tracking-wider text-2xs font-mono select-none z-10">
+      <thead className="sticky top-0 bg-card border-b border-border text-muted-foreground text-xs select-none z-10">
         <tr>
           <th className="py-2 pl-4 pr-2 w-10">
             <input
@@ -125,7 +125,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
                 <span
                   className={`inline-block px-1.5 py-0.5 text-2xs font-mono font-medium rounded border ${
                     item.tipoProjeto === 'ROTINA'
-                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                      ? 'bg-info/10 text-info border-info/20'
                       : 'bg-muted text-muted-foreground border-border'
                   }`}
                 >

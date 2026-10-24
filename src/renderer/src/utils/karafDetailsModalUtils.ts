@@ -13,7 +13,7 @@ export function getDetailsTabClass(tab: KarafDetailsTab, active: KarafDetailsTab
   const isActive = tab === active;
   if (tab === 'diag') {
     return `${TAB_BASE} ${
-      isActive ? 'border-rose-500 text-rose-500 font-bold' : 'border-transparent text-rose-400 hover:text-rose-300'
+      isActive ? 'border-danger text-danger font-bold' : 'border-transparent text-danger hover:text-danger'
     }`;
   }
   const withIcon = tab === 'tree' ? ' flex items-center gap-1.5' : '';

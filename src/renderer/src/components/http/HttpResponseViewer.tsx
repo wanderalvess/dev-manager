@@ -128,8 +128,8 @@ export const HttpResponseViewer: React.FC<HttpResponseViewerProps> = ({
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-muted-foreground bg-background">
         <Globe className="w-10 h-10 mb-3 text-muted-foreground/30" />
         <p className="text-xs font-medium">Nenhuma requisição enviada ainda.</p>
-        <p className="text-[11px] text-muted-foreground/60 mt-1">
-          Informe a URL e clique em &quot;Enviar&quot; ou pressione <kbd className="px-1.5 py-0.5 bg-muted rounded font-mono text-[10px]">Ctrl + Enter</kbd>.
+        <p className="text-xs text-muted-foreground/60 mt-1">
+          Informe a URL e clique em &quot;Enviar&quot; ou pressione <kbd className="px-1.5 py-0.5 bg-muted rounded font-mono text-xs">Ctrl + Enter</kbd>.
         </p>
       </div>
     );
@@ -180,7 +180,7 @@ export const HttpResponseViewer: React.FC<HttpResponseViewerProps> = ({
 
         {activeTab === 'body' && (response.isJson || isValidJson) && (
           <div className="flex items-center gap-1.5 py-1">
-            <span className="text-[11px] text-muted-foreground">Visualização:</span>
+            <span className="text-xs text-muted-foreground">Visualização:</span>
             <div className="inline-flex rounded p-0.5 bg-muted/60 border border-border">
               <button
                 type="button"
@@ -215,11 +215,11 @@ export const HttpResponseViewer: React.FC<HttpResponseViewerProps> = ({
       {/* Conteúdo da Resposta */}
       <div className="flex-1 overflow-hidden p-2">
         {response.error && (
-          <div className="mb-2 p-2.5 rounded bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-start gap-2">
+          <div className="mb-2 p-2.5 rounded bg-danger/10 text-xs text-danger flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold">Erro ao processar requisição</p>
-              <p className="text-[11px] text-red-400/90 font-mono mt-0.5">{response.error}</p>
+              <p className="text-xs text-danger/90 font-mono mt-0.5">{response.error}</p>
             </div>
           </div>
         )}

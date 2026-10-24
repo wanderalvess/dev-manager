@@ -24,7 +24,7 @@ export const ProfileEditorStepList: React.FC<ProfileEditorStepListProps> = ({
 }) => (
   <div className="w-80 border-r border-border flex flex-col bg-muted/10">
     <div className="p-3 border-b border-border flex items-center justify-between bg-muted/30">
-      <span className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span className="text-[13px] font-semibold text-muted-foreground">
         Etapas na Sequência ({steps.length})
       </span>
       <button

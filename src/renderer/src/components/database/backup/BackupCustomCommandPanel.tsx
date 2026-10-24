@@ -32,24 +32,24 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
         <div className="px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1.5 select-none">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-danger/80 inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-warning/80 inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-success/80 inline-block" />
             </div>
             <span className="text-slate-400 font-mono text-2xs font-semibold flex items-center gap-1 ml-1">
-              <Terminal className="w-3.5 h-3.5 text-sky-400" />
+              <Terminal className="w-3.5 h-3.5 text-info" />
               <span>Console do Comando de Backup</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {hasBackupFileTag(customBackupCommand) ? (
-              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-success/10 text-success flex items-center gap-1">
                 <Check className="w-3 h-3" />
                 <span>Sintaxe Válida</span>
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-warning/10 text-warning flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 <span>Requer {'{filePath}'}</span>
               </span>
@@ -63,7 +63,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
             >
               {showPasswordInCommandPreview ? (
                 <>
-                  <EyeOff className="w-3 h-3 text-amber-400" />
+                  <EyeOff className="w-3 h-3 text-warning" />
                   <span>Ocultar Senha</span>
                 </>
               ) : (
@@ -80,7 +80,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
               className="flex items-center gap-1 px-2 py-0.5 text-2xs font-mono text-slate-400 hover:text-slate-200 rounded hover:bg-slate-800 transition cursor-pointer"
               title="Copiar comando resolvido"
             >
-              {commandCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              {commandCopied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
               <span>{commandCopied ? 'Copiado' : 'Copiar'}</span>
             </button>
           </div>
@@ -104,7 +104,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
             <span className="text-2xs text-slate-500 font-mono">execFile sem shell</span>
           </div>
           <div className="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800 text-slate-200 overflow-x-auto whitespace-pre-wrap break-all select-all flex items-start gap-2">
-            <span className="text-sky-400 select-none font-bold shrink-0">&gt;_</span>
+            <span className="text-info select-none font-bold shrink-0">&gt;_</span>
             <span>{previewBackupCommandResolved || '(digite um comando acima para ver a prévia)'}</span>
           </div>
         </div>

@@ -19,11 +19,11 @@ export const BindVariableRow: React.FC<BindVariableRowProps> = ({
   onChangeValue,
   onRemove
 }) => (
-  <div className="p-2.5 rounded-lg bg-background/80 border border-border/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 hover:border-violet-500/40 transition">
+  <div className="p-2.5 rounded-lg bg-background/80 border border-border/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 hover:border-primary/40 transition">
     {/* Identificador da Variável */}
     <div className="flex items-center space-x-2 min-w-44">
       <span className="font-mono font-bold text-xs text-foreground bg-card border border-border px-2 py-1 rounded flex items-center gap-1.5">
-        <span className="text-violet-400">{item.prefix || ':'}</span>
+        <span className="text-primary">{item.prefix || ':'}</span>
         <span>{item.name}</span>
       </span>
       <BindPrefixBadge prefix={item.prefix} />

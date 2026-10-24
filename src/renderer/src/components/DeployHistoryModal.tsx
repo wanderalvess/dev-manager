@@ -54,19 +54,19 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-5xl xl:max-w-6xl h-[88vh] flex flex-col overflow-hidden"
       closeOnBackdrop={false}
     >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
               <History className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 Histórico de Execuções de Deploy
-                <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                <span className="text-2xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-mono font-bold">
                   {totalRuns} {totalRuns === 1 ? 'registro' : 'registros'}
                 </span>
               </h2>
@@ -160,10 +160,10 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                           <span
                             className={`text-2xs px-1.5 py-0.2 rounded-full font-mono font-bold uppercase tracking-wider ${
                               entry.success
-                                ? 'bg-success/15 text-success border border-success/30'
+                                ? 'bg-success/10 text-success'
                                 : entry.aborted
-                                ? 'bg-warning/15 text-warning border border-warning/30'
-                                : 'bg-danger/15 text-danger border border-danger/30'
+                                ? 'bg-warning/10 text-warning'
+                                : 'bg-danger/10 text-danger'
                             }`}
                           >
                             {entry.success ? 'Sucesso' : entry.aborted ? 'Cancelado' : 'Falhou'}
@@ -193,13 +193,13 @@ export const DeployHistoryModal: React.FC<DeployHistoryModalProps> = ({
                   {isExpanded && (
                     <div className="px-4 pb-3 pt-1 border-t border-border/50 bg-muted/10 space-y-2 text-xs">
                       {entry.error && (
-                        <div className="bg-danger/10 border border-danger/30 rounded-lg p-2 text-danger text-2xs font-mono break-all">
+                        <div className="bg-danger/10 rounded-lg p-2 text-danger text-2xs font-mono break-all">
                           {entry.error}
                         </div>
                       )}
 
                       <div className="space-y-1">
-                        <span className="text-2xs font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                        <span className="text-xs font-semibold text-muted-foreground block mb-1">
                           Detalhamento das Etapas:
                         </span>
                         {(entry.stepResults || []).map((step, sIdx) => (

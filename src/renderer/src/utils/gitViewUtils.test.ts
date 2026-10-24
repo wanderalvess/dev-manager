@@ -10,8 +10,8 @@ import {
 
 describe('classifyDiffLine', () => {
   it('destaca adições e remoções, mas não os cabeçalhos +++ e ---', () => {
-    expect(classifyDiffLine('+novo').gutterClass).toContain('emerald');
-    expect(classifyDiffLine('-velho').gutterClass).toContain('rose');
+    expect(classifyDiffLine('+novo').gutterClass).toContain('success');
+    expect(classifyDiffLine('-velho').gutterClass).toContain('danger');
     expect(classifyDiffLine('+++ b/a.ts').gutterClass).toContain('transparent');
     expect(classifyDiffLine('--- a/a.ts').rowClass).toContain('font-semibold');
   });

@@ -17,8 +17,8 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
   return (
     <div className="space-y-4">
       {/* Banner Explicativo */}
-      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 flex items-start gap-3">
-        <div className="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5">
+      <div className="bg-info/5 border border-info/20 rounded-xl p-3 flex items-start gap-3">
+        <div className="w-7 h-7 rounded-lg bg-info/10 flex items-center justify-center text-info shrink-0 mt-0.5">
           <Globe className="w-4 h-4" />
         </div>
         <div className="text-xs leading-relaxed text-muted-foreground">
@@ -34,20 +34,20 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
         <div className="p-3 bg-card border border-border/80 rounded-xl space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-cyan-500" />
+              <Globe className="w-3.5 h-3.5 text-info" />
               <span>Portal WTA</span>
             </span>
             <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
               Porta {port}
             </span>
           </div>
-          <div className="text-xs font-mono text-cyan-600 dark:text-cyan-400 bg-background p-2 rounded-lg border border-border/60 break-all select-all">
+          <div className="text-xs font-mono text-info bg-background p-2 rounded-lg border border-border/60 break-all select-all">
             {portalUrl}
           </div>
           <button
             type="button"
             onClick={() => window.electronAPI?.openExternal?.(portalUrl)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-cyan-600/10 hover:bg-cyan-600/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
           >
             <ExternalLink className="w-3 h-3" />
             <span>Abrir Portal no Navegador</span>

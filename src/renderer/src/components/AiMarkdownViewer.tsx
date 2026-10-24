@@ -30,7 +30,7 @@ export const AiMarkdownViewer: React.FC<AiMarkdownViewerProps> = ({ content, cla
         return (
           <code
             key={index}
-            className="px-1.5 py-0.5 mx-0.5 rounded-md bg-primary/10 border border-primary/25 text-primary font-mono text-2xs font-semibold inline-block"
+            className="px-1.5 py-0.5 mx-0.5 rounded-md bg-primary/10 text-primary font-mono text-2xs font-semibold inline-block"
           >
             {part.slice(1, -1)}
           </code>
@@ -129,7 +129,7 @@ export const AiMarkdownViewer: React.FC<AiMarkdownViewerProps> = ({ content, cla
             <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800 text-2xs font-mono select-none">
               <div className="flex items-center gap-1.5">
                 <Terminal className="w-3.5 h-3.5 text-primary" />
-                <span className="px-1.5 py-0.2 rounded bg-slate-800 text-cyan-400 font-bold uppercase tracking-wider text-2xs">
+                <span className="px-1.5 py-0.2 rounded bg-slate-800 text-cyan-400 font-semibold text-xs">
                   {language}
                 </span>
                 <span className="text-slate-500 text-2xs hidden sm:inline">

@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenWhatsNew}
-              className="text-2xs px-1.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-mono font-bold border border-primary/30 hover:border-primary/50 transition cursor-pointer active:scale-95"
+              className="text-2xs px-1.5 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-mono font-bold hover:border-primary/50 transition cursor-pointer active:scale-95"
               title="Clique para ver as novidades desta versão e versões anteriores"
             >
               v{appVersion || '...'}

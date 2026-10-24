@@ -91,12 +91,12 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
                   <button
                     type="button"
                     onClick={() => copyInstallCmd('sudo apt update && sudo apt install -y docker.io', 'install-box')}
-                    className="ml-2 px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded border border-amber-500/30 text-2xs font-sans font-semibold flex items-center gap-1 cursor-pointer transition"
+                    className="ml-2 px-2 py-1 bg-warning/10 hover:bg-warning/20 text-warning rounded text-2xs font-sans font-semibold flex items-center gap-1 cursor-pointer transition"
                   >
                     {installCmdFeedback === 'install-box' ? (
                       <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400">Copiado!</span>
+                        <Check className="w-3 h-3 text-success" />
+                        <span className="text-success">Copiado!</span>
                       </>
                     ) : (
                       <>
@@ -152,7 +152,7 @@ export const ContainerSmartErrorModal: React.FC<ContainerSmartErrorModalProps> =
               <button
                 type="button"
                 onClick={() => onOpenWslTerminal(smartError.distroName)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-info hover:bg-info text-white text-xs font-bold transition shadow-2xs cursor-pointer"
               >
                 <Terminal className="w-3.5 h-3.5" />
                 <span>Abrir Terminal WSL</span>

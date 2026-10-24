@@ -29,11 +29,11 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       {/* Card 1: Throughput (Vazão RPM) */}
       <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between relative overflow-hidden">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
+          <span className="text-xs font-semibold flex items-center gap-1.5 text-foreground/80">
             <Activity className="w-3.5 h-3.5 text-info" />
             Vazão (Throughput)
           </span>
-          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-info/10 text-info border border-info/20">
+          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-info/10 text-info">
             {overview.requestsPerSecond} req/s
           </span>
         </div>
@@ -65,8 +65,8 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       {/* Card 2: Latência Percentil (p95) */}
       <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+          <span className="text-xs font-semibold flex items-center gap-1.5 text-foreground/80">
+            <Clock className="w-3.5 h-3.5 text-primary" />
             Latência (p95)
           </span>
           <span
@@ -101,7 +101,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           {/* Escala Visual de Percentis */}
           <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-3 relative">
             <div
-              className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+              className="bg-primary h-full rounded-full transition-all duration-500"
               style={{ width: `${getP95BarWidthPct(overview.p95LatencyMs, overview.p99LatencyMs)}%` }}
             />
           </div>
@@ -117,7 +117,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       {/* Card 3: Confiabilidade & Taxa de Erros */}
       <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
+          <span className="text-xs font-semibold flex items-center gap-1.5 text-foreground/80">
             <AlertCircle
               className={`w-3.5 h-3.5 ${
                 overview.errorRate > 0 ? 'text-danger' : 'text-success'
@@ -167,11 +167,11 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       {/* Card 4: Perfil de Carga (Oracle vs JVM) */}
       <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
-          <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
+          <span className="text-xs font-semibold flex items-center gap-1.5 text-foreground/80">
             <Database className="w-3.5 h-3.5 text-warning" />
             Tempo em Banco (Oracle)
           </span>
-          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20 font-bold">
+          <span className="text-2xs font-mono px-1.5 py-0.5 rounded bg-warning/10 text-warning font-bold">
             Listener SQL
           </span>
         </div>

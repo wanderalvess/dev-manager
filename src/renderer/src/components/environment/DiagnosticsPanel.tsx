@@ -56,7 +56,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                 <button
                   onClick={onBatchStop}
                   disabled={actionLoading === 'batch-stop-srv'}
-                  className="px-2 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/30 rounded-lg text-2xs font-bold"
+                  className="px-2 py-1 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg text-2xs font-bold"
                 >
                   Parar Serviços
                 </button>
@@ -65,7 +65,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                 <button
                   onClick={onBatchStart}
                   disabled={actionLoading === 'batch-start-srv'}
-                  className="px-2 py-1 bg-success/10 hover:bg-success/20 text-success border border-success/30 rounded-lg text-2xs font-bold"
+                  className="px-2 py-1 bg-success/10 hover:bg-success/20 text-success rounded-lg text-2xs font-bold"
                 >
                   Iniciar Serviços
                 </button>
@@ -93,7 +93,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     <button
                       onClick={() => onStopService(srv.name)}
                       disabled={actionLoading === `stop-${srv.name}`}
-                      className="px-2 py-0.5 bg-danger/10 text-danger border border-danger/20 rounded text-2xs font-bold"
+                      className="px-2 py-0.5 bg-danger/10 text-danger rounded text-2xs font-bold"
                     >
                       Parar
                     </button>
@@ -101,7 +101,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
                     <button
                       onClick={() => onStartService(srv.name)}
                       disabled={actionLoading === `start-${srv.name}`}
-                      className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-2xs font-bold"
+                      className="px-2 py-0.5 bg-success/10 text-success rounded text-2xs font-bold"
                     >
                       Iniciar
                     </button>
@@ -114,7 +114,7 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({
           {/* Processos com travas */}
           {processes.length > 0 && (
             <div className="pt-2 border-t border-border/40">
-              <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
+              <span className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
                 <RefreshCw className={`w-3 h-3 ${isCheckingProcesses ? 'animate-spin text-primary' : ''}`} />
                 Processos Conflitantes:
               </span>

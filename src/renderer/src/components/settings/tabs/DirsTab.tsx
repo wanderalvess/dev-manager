@@ -66,7 +66,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
 
             <DirsPathField
               fieldId="field-jdkPath"
-              labelIcon={<HardDrive className="w-3.5 h-3.5 text-orange-500" />}
+              labelIcon={<HardDrive className="w-3.5 h-3.5 text-warning" />}
               labelText="Diretório Java JDK (JAVA_HOME):"
               labelTitle="JDK usado para compilar/rodar o Karaf embutido e builds Maven. Equivalente à variável de ambiente JAVA_HOME."
               statusBadge={renderPathStatusBadge('jdkPath')}
@@ -74,7 +74,7 @@ export const DirsTab: React.FC<DirsTabProps> = ({
               placeholder="Ex: C:\Program Files\Java\jdk-17 ou C:\tools\jdk..."
               onChange={(val) => setPathField('jdkPath', val)}
               onBrowse={() => handleBrowseDirectory('jdkPath')}
-              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-orange-500" />}
+              browseIcon={<FolderOpen className="w-3.5 h-3.5 text-warning" />}
               browseTitle="Selecionar pasta do JDK"
               hint={
                 <p className="text-2xs text-muted-foreground">

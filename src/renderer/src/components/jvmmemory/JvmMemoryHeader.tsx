@@ -16,7 +16,7 @@ export const JvmMemoryHeader: React.FC<JvmMemoryHeaderProps> = ({ metrics, isNea
       <Activity className={`w-5 h-5 shrink-0 ${isNearOom ? 'text-danger animate-pulse' : 'text-primary'}`} />
       <div>
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-bold tracking-tight text-foreground uppercase">
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
             Telemetria de Memória JVM
           </h2>
           <span className="text-2xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/80 font-medium">

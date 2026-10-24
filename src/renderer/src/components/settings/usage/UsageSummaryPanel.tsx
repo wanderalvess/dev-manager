@@ -31,7 +31,7 @@ const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string; 
   hint
 }) => (
   <div className="bg-card/70 border border-border/80 rounded-xl p-3 space-y-1">
-    <div className="flex items-center gap-1.5 text-2xs uppercase tracking-wider text-muted-foreground font-bold">
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
       {icon}
       {label}
     </div>
@@ -53,7 +53,7 @@ export const UsageSummaryPanel: React.FC<UsageSummaryPanelProps> = ({ summary, l
     <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-usageSummary">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" /> Meu uso
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -105,7 +105,7 @@ export const UsageSummaryPanel: React.FC<UsageSummaryPanelProps> = ({ summary, l
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <section aria-label="Uso por módulo" className="space-y-2">
-              <h4 className="text-2xs uppercase tracking-wider text-muted-foreground font-bold">Por módulo</h4>
+              <h4 className="text-xs text-muted-foreground font-semibold">Por módulo</h4>
               {summary.byModule.map((m) => (
                 <div key={m.module} className="space-y-0.5">
                   <div className="flex justify-between text-xs">
@@ -120,7 +120,7 @@ export const UsageSummaryPanel: React.FC<UsageSummaryPanelProps> = ({ summary, l
             </section>
 
             <section aria-label="Uso por semana" className="space-y-2">
-              <h4 className="text-2xs uppercase tracking-wider text-muted-foreground font-bold">
+              <h4 className="text-xs text-muted-foreground font-semibold">
                 Por semana (últimas {WEEKS_SHOWN})
               </h4>
               <div className="flex items-end gap-1.5 h-28">
@@ -140,11 +140,11 @@ export const UsageSummaryPanel: React.FC<UsageSummaryPanelProps> = ({ summary, l
           </div>
 
           <section aria-label="Ações mais usadas" className="space-y-2">
-            <h4 className="text-2xs uppercase tracking-wider text-muted-foreground font-bold">Ações mais usadas</h4>
+            <h4 className="text-xs text-muted-foreground font-semibold">Ações mais usadas</h4>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="text-left text-2xs uppercase tracking-wider text-muted-foreground border-b border-border/60">
+                  <tr className="text-left text-xs text-muted-foreground border-b border-border/60">
                     <th className="py-1 pr-2 font-bold">Ação</th>
                     <th className="py-1 pr-2 font-bold">Origem</th>
                     <th className="py-1 pr-2 font-bold text-right">Execuções</th>

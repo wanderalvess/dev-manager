@@ -27,7 +27,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
   <div className="max-h-80 overflow-y-auto space-y-2 pr-0.5">
     {/* Seção: Minhas Consultas Salvas */}
     <div>
-      <div className="text-xs font-semibold text-amber-500 px-1 mb-1">
+      <div className="text-xs font-semibold text-warning px-1 mb-1">
         Minhas Consultas ({filteredCustomSnippets.length})
       </div>
 
@@ -56,7 +56,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
           {filteredCustomSnippets.map((s) => (
             <div
               key={s.id}
-              className="p-2 rounded-lg bg-card/60 hover:bg-muted/60 border border-border/60 hover:border-amber-500/40 transition flex flex-col space-y-1.5 group"
+              className="p-2 rounded-lg bg-card/60 hover:bg-muted/60 border border-border/60 hover:border-warning/40 transition flex flex-col space-y-1.5 group"
             >
               <div className="flex items-start justify-between gap-1.5">
                 <div className="min-w-0 flex-1">
@@ -64,7 +64,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition truncate">
                       {s.title}
                     </span>
-                    <span className="text-2xs px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold shrink-0">
+                    <span className="text-2xs px-1.5 py-0.2 rounded bg-warning/15 text-warning font-semibold shrink-0">
                       {s.category || 'Geral'}
                     </span>
                   </div>
@@ -79,7 +79,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                   <button
                     type="button"
                     onClick={(e) => onExecuteSnippetDirectly(s, e)}
-                    className="p-1 rounded bg-emerald-600/15 hover:bg-emerald-600 text-emerald-500 hover:text-white transition cursor-pointer"
+                    className="p-1 rounded bg-success/15 hover:bg-success text-success hover:text-white transition cursor-pointer"
                     title="Executar imediatamente" aria-label="Executar imediatamente"
                   >
                     <Play className="w-3 h-3 fill-current" />
@@ -106,7 +106,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
                   <button
                     type="button"
                     onClick={(e) => onDeleteSnippet(s.id, e)}
-                    className="p-1 rounded text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
+                    className="p-1 rounded text-muted-foreground hover:text-danger hover:bg-danger/10 transition cursor-pointer"
                     title="Excluir consulta" aria-label="Excluir consulta"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -151,7 +151,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
             <button
               type="button"
               onClick={(e) => onExecuteSnippetDirectly(s, e)}
-              className="p-1 rounded hover:bg-emerald-600/20 text-emerald-500 transition shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
+              className="p-1 rounded hover:bg-success/20 text-success transition shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
               title="Executar imediatamente" aria-label="Executar imediatamente"
             >
               <Play className="w-3 h-3 fill-current" />

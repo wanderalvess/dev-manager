@@ -83,7 +83,7 @@ describe('apmUiUtils', () => {
       expect(res.category).toBe('jdbc');
       expect(res.label).toBe('JDBC');
       expect(res.isSlow).toBe(true);
-      expect(res.badgeClass).toContain('amber');
+      expect(res.badgeClass).toContain('warning');
     });
 
     it('classifica span raiz HTTP ou SERVER como http', () => {
@@ -97,7 +97,7 @@ describe('apmUiUtils', () => {
       expect(res.category).toBe('http');
       expect(res.label).toBe('HTTP');
       expect(res.isSlow).toBe(false);
-      expect(res.badgeClass).toContain('sky');
+      expect(res.badgeClass).toContain('info');
     });
 
     it('classifica span de processamento interno OSGi/Karaf como java', () => {
@@ -110,7 +110,7 @@ describe('apmUiUtils', () => {
       expect(res.category).toBe('java');
       expect(res.label).toBe('Java');
       expect(res.isSlow).toBe(false);
-      expect(res.badgeClass).toContain('purple');
+      expect(res.badgeClass).toContain('primary');
     });
   });
 
@@ -360,18 +360,16 @@ describe('apmUiUtils', () => {
 
   describe('badge class helpers', () => {
     it('retorna estilos semânticos para HTTP methods', () => {
-      expect(getMethodBadgeClass('GET')).toContain('text-sky-700');
-      expect(getMethodBadgeClass('GET')).toContain('dark:text-sky-400');
-      expect(getMethodBadgeClass('POST')).toContain('text-emerald-700');
-      expect(getMethodBadgeClass('DELETE')).toContain('text-rose-700');
+      expect(getMethodBadgeClass('GET')).toContain('text-info');
+      expect(getMethodBadgeClass('POST')).toContain('text-success');
+      expect(getMethodBadgeClass('DELETE')).toContain('text-danger');
     });
 
     it('retorna estilos semânticos para status codes', () => {
-      expect(getStatusBadgeClass(200)).toContain('text-emerald-700');
-      expect(getStatusBadgeClass(200)).toContain('dark:text-emerald-400');
-      expect(getStatusBadgeClass(404)).toContain('text-amber-700');
-      expect(getStatusBadgeClass(500)).toContain('text-rose-700');
-      expect(getStatusBadgeClass(200, true)).toContain('text-rose-700');
+      expect(getStatusBadgeClass(200)).toContain('text-success');
+      expect(getStatusBadgeClass(404)).toContain('text-warning');
+      expect(getStatusBadgeClass(500)).toContain('text-danger');
+      expect(getStatusBadgeClass(200, true)).toContain('text-danger');
     });
   });
 });

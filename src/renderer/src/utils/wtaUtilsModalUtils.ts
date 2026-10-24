@@ -23,6 +23,6 @@ export function wtaUtilsModalTabClass(active: boolean): string {
   const base =
     'px-3.5 py-2.5 text-xs font-bold rounded-t-lg border-b-2 flex items-center gap-2 transition cursor-pointer';
   return active
-    ? `${base} border-cyan-500 text-cyan-600 dark:text-cyan-400 bg-card shadow-2xs`
+    ? `${base} border-info text-info bg-card shadow-2xs`
     : `${base} border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40`;
 }

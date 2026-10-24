@@ -40,13 +40,13 @@ describe('seleção', () => {
 
 describe('estilos de estado', () => {
   it('mapeia badge e ponto', () => {
-    expect(getBundleStateBadgeClass('Active')).toContain('emerald');
-    expect(getBundleStateBadgeClass('Resolved')).toContain('amber');
-    expect(getBundleStateBadgeClass('Installed')).toContain('sky');
+    expect(getBundleStateBadgeClass('Active')).toContain('success');
+    expect(getBundleStateBadgeClass('Resolved')).toContain('warning');
+    expect(getBundleStateBadgeClass('Installed')).toContain('info');
     expect(getBundleStateBadgeClass('Unknown')).toContain('bg-muted');
-    expect(getBundleStateDotClass('Active')).toBe('bg-emerald-500');
-    expect(getBundleStateDotClass('Resolved')).toBe('bg-amber-500');
-    expect(getBundleStateDotClass('Unknown')).toBe('bg-sky-500');
+    expect(getBundleStateDotClass('Active')).toBe('bg-success');
+    expect(getBundleStateDotClass('Resolved')).toBe('bg-warning');
+    expect(getBundleStateDotClass('Unknown')).toBe('bg-info');
   });
   it('classe da linha', () => {
     expect(getBundleRowClass(true)).toContain('bg-primary/5');

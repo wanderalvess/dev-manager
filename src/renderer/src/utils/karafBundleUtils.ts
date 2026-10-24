@@ -177,14 +177,14 @@ export function getKarafStatusInfo(status: KarafContainerStatus): {
       return {
         label: 'Karaf Online',
         badgeClass: 'bg-success/10 text-success',
-        dotClass: 'bg-emerald-500 animate-pulse',
+        dotClass: 'bg-success animate-pulse',
         description: 'Apache Karaf ativo e respondendo na porta SSH 8101'
       };
     case 'STARTING':
       return {
         label: 'Karaf Inicializando...',
         badgeClass: 'bg-warning/10 text-warning animate-pulse',
-        dotClass: 'bg-amber-500',
+        dotClass: 'bg-warning',
         description: 'Inicializando container Apache Karaf...'
       };
     case 'OFFLINE':
@@ -192,7 +192,7 @@ export function getKarafStatusInfo(status: KarafContainerStatus): {
       return {
         label: 'Karaf Offline',
         badgeClass: 'bg-danger/10 text-danger',
-        dotClass: 'bg-rose-500',
+        dotClass: 'bg-danger',
         description: 'Apache Karaf parado ou inacessível via SSH (:8101)'
       };
   }

@@ -24,7 +24,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
       <div className="lg:col-span-12 space-y-4 flex flex-col">
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+            <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
               <HardDriveDownload className="w-4 h-4 text-info" /> Executáveis de Backup
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
@@ -111,7 +111,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
 
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+            <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
               <RotateCcw className="w-4 h-4 text-success" /> Executáveis de Restauração
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
@@ -195,8 +195,8 @@ export const BackupTab: React.FC<BackupTabProps> = ({
         {/* Configuração de Rede Oracle & tnsnames.ora */}
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-oracleTnsnames">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-              <Network className="w-4 h-4 text-orange-500" /> Rede Oracle & tnsnames.ora
+            <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+              <Network className="w-4 h-4 text-warning" /> Rede Oracle & tnsnames.ora
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Busca de conexões & TNS_ADMIN</span>
           </div>
@@ -206,7 +206,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
 
           <div className="space-y-1.5 text-xs">
             <label htmlFor="backup-tab-7" className="font-bold text-foreground flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-orange-500" /> Arquivo de Configuração (tnsnames.ora)
+              <Database className="w-3.5 h-3.5 text-warning" /> Arquivo de Configuração (tnsnames.ora)
             </label>
             <div className="flex items-center space-x-2">
               <input id="backup-tab-7"
@@ -222,7 +222,7 @@ export const BackupTab: React.FC<BackupTabProps> = ({
                 className="px-3 py-2 bg-card hover:bg-muted border border-border hover:border-primary/50 rounded-xl text-foreground font-semibold text-xs transition-all shrink-0 shadow-xs cursor-pointer"
                 title="Selecionar arquivo tnsnames.ora" aria-label="Selecionar arquivo tnsnames.ora"
               >
-                <FolderOpen className="w-3.5 h-3.5 text-orange-500" />
+                <FolderOpen className="w-3.5 h-3.5 text-warning" />
               </button>
             </div>
             <p className="text-2xs text-muted-foreground mt-1">

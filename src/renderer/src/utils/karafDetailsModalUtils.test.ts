@@ -17,8 +17,8 @@ describe('getDetailsTabClass', () => {
     expect(getDetailsTabClass('exports', 'dependents')).not.toContain('flex items-center');
   });
 
-  it('aba diag usa a paleta rose', () => {
-    expect(getDetailsTabClass('diag', 'diag')).toContain('border-rose-500 text-rose-500 font-bold');
-    expect(getDetailsTabClass('diag', 'tree')).toContain('text-rose-400 hover:text-rose-300');
+  it('aba diag usa a paleta danger', () => {
+    expect(getDetailsTabClass('diag', 'diag')).toContain('border-danger text-danger font-bold');
+    expect(getDetailsTabClass('diag', 'tree')).toContain('text-danger hover:text-danger');
   });
 });
