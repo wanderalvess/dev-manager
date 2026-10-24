@@ -41,7 +41,7 @@ export const DeployQueuePreview: React.FC<DeployQueuePreviewProps> = ({
     </div>
 
     {queue.cycleMembers.length > 0 && (
-      <div className="flex items-start gap-2 p-2.5 rounded-lg border border-warning/40 bg-warning/10 text-xs text-warning shrink-0">
+      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 text-xs text-warning shrink-0">
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
         <span>
           Dependência circular entre {queue.cycleMembers.length} projetos. Eles entram no fim da fila na ordem da
@@ -51,7 +51,7 @@ export const DeployQueuePreview: React.FC<DeployQueuePreviewProps> = ({
     )}
 
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <div className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+      <div className="text-xs font-semibold text-muted-foreground mb-1.5">
         Ordem de build ({queue.ordered.length})
       </div>
       {queue.ordered.length === 0 ? (

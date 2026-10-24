@@ -21,7 +21,7 @@ interface BackupCommandPresetsProps {
 export const BackupCommandPresets: React.FC<BackupCommandPresetsProps> = ({ type, onSelect }) => (
   <div className="space-y-1.5">
     <div className="flex items-center justify-between">
-      <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+      <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
         <Zap className="w-3 h-3 text-warning" /> Modelos Recomendados (Presets Rápidos):
       </span>
       <span className="text-2xs text-muted-foreground">Clique em um modelo para carregar</span>
@@ -50,7 +50,7 @@ interface BackupVariableChipsProps {
 export const BackupVariableChips: React.FC<BackupVariableChipsProps> = ({ onInsert }) => (
   <div className="space-y-2 p-3 bg-muted/30 border border-border/60 rounded-xl">
     <div className="flex items-center justify-between">
-      <span className="text-2xs font-bold text-muted-foreground uppercase tracking-wider">
+      <span className="text-xs font-semibold text-muted-foreground">
         Variáveis Disponíveis (clique para inserir):
       </span>
       <span className="text-2xs text-warning font-mono font-semibold">

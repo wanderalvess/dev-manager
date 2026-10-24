@@ -124,7 +124,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
             onClick={() => onContainerAction(container, 'stop')}
             disabled={Boolean(isLoadingAction)}
             title="Parar Container"
-            className="flex items-center space-x-1 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98"
+            className="flex items-center space-x-1 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer active:scale-98"
           >
             <Square className="w-3 h-3 fill-current" />
             <span>Parar</span>

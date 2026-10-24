@@ -70,7 +70,7 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
           <button
             type="button"
             onClick={() => window.electronAPI?.openExternal?.(installerUrl)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-xs font-semibold transition cursor-pointer active:scale-98"
           >
             <ExternalLink className="w-3 h-3" />
             <span>Abrir Instalador no Navegador</span>
@@ -95,11 +95,11 @@ export const WtaAccessTab: React.FC<WtaAccessTabProps> = ({ port, copiedKey, onC
 
         <div className="grid grid-cols-2 gap-3">
           <div className="p-2.5 bg-background rounded-lg border border-border/60">
-            <span className="text-2xs text-muted-foreground uppercase font-bold block">Usuário</span>
+            <span className="text-xs text-muted-foreground font-semibold block">Usuário</span>
             <div className="font-mono text-xs font-bold text-foreground">PCADMIN</div>
           </div>
           <div className="p-2.5 bg-background rounded-lg border border-border/60">
-            <span className="text-2xs text-muted-foreground uppercase font-bold block">Senha</span>
+            <span className="text-xs text-muted-foreground font-semibold block">Senha</span>
             <div className="font-mono text-xs font-bold text-foreground">1</div>
           </div>
         </div>

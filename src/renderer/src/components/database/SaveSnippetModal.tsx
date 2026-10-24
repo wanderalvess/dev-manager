@@ -37,12 +37,12 @@ export const SaveSnippetModal: React.FC<SaveSnippetModalProps> = ({
       onClose={onClose}
       bare
       closeOnBackdrop={false}
-      panelClassName="bg-card border border-border rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in flex flex-col font-sans"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg w-full max-w-lg overflow-hidden animate-fade-in flex flex-col font-sans"
     >
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
           <div className="flex items-center space-x-2">
             <BookmarkPlus className="w-4 h-4 text-warning" />
-            <h3 className="text-sm font-bold text-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               {editingSnippetId ? 'Editar Consulta Salva' : 'Salvar Nova Consulta'}
             </h3>
           </div>

@@ -30,7 +30,7 @@ export const SaveEnvironmentPresets: React.FC<SaveEnvironmentPresetsProps> = ({
       <button
         type="button"
         onClick={() => onApplyPreset('running')}
-        className="px-2 py-1 rounded-md text-2xs font-semibold bg-success/10 hover:bg-success/20 text-success border border-success/30 transition cursor-pointer"
+        className="px-2 py-1 rounded-md text-2xs font-semibold bg-success/10 hover:bg-success/20 text-success transition cursor-pointer"
       >
         Apenas Rodando ({cleanContainers.filter((c) => c.state === 'running').length})
       </button>
@@ -38,7 +38,7 @@ export const SaveEnvironmentPresets: React.FC<SaveEnvironmentPresetsProps> = ({
         <button
           type="button"
           onClick={() => onApplyPreset('winthor')}
-          className="px-2 py-1 rounded-md text-2xs font-semibold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 transition cursor-pointer flex items-center gap-1"
+          className="px-2 py-1 rounded-md text-2xs font-semibold bg-primary/10 hover:bg-primary/20 text-primary transition cursor-pointer flex items-center gap-1"
         >
           <Sparkles className="w-3 h-3" />
           <span>WinThor Stack</span>
@@ -54,7 +54,7 @@ export const SaveEnvironmentPresets: React.FC<SaveEnvironmentPresetsProps> = ({
     </div>
 
     {/* Contador Selecionados */}
-    <span className="text-xs font-bold text-primary px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+    <span className="text-xs font-bold text-primary px-2.5 py-1 rounded-full bg-primary/10">
       {selectedCount} de {cleanContainers.length} selecionados
     </span>
   </div>

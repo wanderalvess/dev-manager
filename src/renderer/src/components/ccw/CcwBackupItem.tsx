@@ -48,13 +48,13 @@ export const CcwBackupItem: React.FC<CcwBackupItemProps> = ({
             {entry.fileName}
           </span>
           {entry.isPreRollback && (
-            <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-warning/15 text-warning border border-warning/30 flex items-center gap-1 uppercase tracking-wider">
+            <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-warning/10 text-warning flex items-center gap-1">
               <span>Pré-Rollback</span>
             </span>
           )}
           {entry.version?.fileVersion && (
             <span
-              className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-success/15 text-success border border-success/30 flex items-center gap-1 shadow-2xs"
+              className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-success/10 text-success flex items-center gap-1 shadow-2xs"
               title={`Versão do Executável (PE Header): FileVersion ${entry.version.fileVersion}${entry.version.productVersion ? ` / ProductVersion ${entry.version.productVersion}` : ''}`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-success" />

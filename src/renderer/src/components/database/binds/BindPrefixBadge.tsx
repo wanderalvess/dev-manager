@@ -11,7 +11,7 @@ export const BindPrefixBadge: React.FC<BindPrefixBadgeProps> = ({ prefix }) => {
     case 'sqlplus':
       return (
         <span
-          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning border border-warning/30"
+          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-warning/20 text-warning"
           title="Variável de substituição do SQL*Plus / PL/SQL / WinThor (&VAR)"
         >
           {prefix} SQL*Plus
@@ -20,7 +20,7 @@ export const BindPrefixBadge: React.FC<BindPrefixBadgeProps> = ({ prefix }) => {
     case 'script':
       return (
         <span
-          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-info/20 text-info border border-info/30"
+          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-info/20 text-info"
           title="Variável de script / sessão (@VAR)"
         >
           @ Script

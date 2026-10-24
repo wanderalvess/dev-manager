@@ -99,7 +99,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
 
         {/* Live Preview Console Output */}
         <div className="p-3 bg-slate-900/60 font-mono text-2xs leading-relaxed">
-          <div className="flex items-center justify-between text-2xs text-slate-500 uppercase tracking-wider mb-1 select-none">
+          <div className="flex items-center justify-between text-xs text-slate-500 mb-1 select-none">
             <span>Visualização com Parâmetros Reais (Passados Diretamente ao Executável)</span>
             <span className="text-2xs text-slate-500 font-mono">execFile sem shell</span>
           </div>

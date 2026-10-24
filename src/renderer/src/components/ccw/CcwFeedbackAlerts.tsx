@@ -10,7 +10,7 @@ interface CcwFeedbackAlertsProps {
 export const CcwFeedbackAlerts: React.FC<CcwFeedbackAlertsProps> = ({ result, errorMsg }) => (
   <>
     {result && (
-      <div className="p-3 rounded-xl bg-success/10 border border-success/30 text-success text-xs space-y-1.5 animate-in fade-in duration-150">
+      <div className="p-3 rounded-xl bg-success/10 text-success text-xs space-y-1.5 animate-in fade-in duration-150">
         <div className="flex items-center gap-2 font-bold text-success">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{result.message}</span>
@@ -34,7 +34,7 @@ export const CcwFeedbackAlerts: React.FC<CcwFeedbackAlertsProps> = ({ result, er
     )}
 
     {errorMsg && (
-      <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-xs flex items-start gap-2.5 animate-in fade-in duration-150">
+      <div className="p-3 rounded-xl bg-destructive/10 text-destructive text-xs flex items-start gap-2.5 animate-in fade-in duration-150">
         <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
         <div className="flex-1">
           <span className="font-bold block">Falha na operação</span>

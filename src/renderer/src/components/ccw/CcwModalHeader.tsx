@@ -10,13 +10,13 @@ interface CcwModalHeaderProps {
 export const CcwModalHeader: React.FC<CcwModalHeaderProps> = ({ appPath, onClose }) => (
   <div className="flex items-center justify-between px-4 py-3 border-b border-border/80 bg-card/80 backdrop-blur-xs">
     <div className="flex items-center gap-2.5">
-      <DownloadCloud className="w-4 h-4 text-primary shrink-0" />
+      <DownloadCloud className="w-5 h-5 text-muted-foreground shrink-0" />
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-xs font-bold text-foreground tracking-tight">
+          <h3 className="text-base font-semibold text-foreground tracking-tight">
             Central de Controle WinThor
           </h3>
-          <span className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30 uppercase tracking-wider">
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">
             CCW
           </span>
         </div>

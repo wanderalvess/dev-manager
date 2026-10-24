@@ -38,7 +38,7 @@ export const WslSnapshotsDirBar: React.FC<WslSnapshotsDirBarProps> = ({
         value={snapshotsDirInput}
         onChange={(e) => onDirChange(e.target.value)}
         placeholder="Ex: C:\Projetos\snapshots ou C:\Docker"
-        className="flex-1 bg-background border border-border/80 rounded-lg px-3 py-1.5 text-xs text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
+        className="flex-1 bg-background border border-input/80 rounded-[10px] px-3 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-2 focus:ring-ring"
       />
       <button
         onClick={() => onSaveSnapshotsDir(snapshotsDirInput)}

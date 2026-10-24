@@ -67,10 +67,10 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
               <span className="break-all text-xs">{backupResult.message}</span>
               {backupResult.success && backupResult.sizeBytes !== undefined && (
                 <div className="flex flex-wrap items-center gap-3 text-2xs font-mono opacity-90 mt-1.5">
-                  <span className="px-2 py-0.5 rounded bg-success/20 border border-success/30">
+                  <span className="px-2 py-0.5 rounded bg-success/20">
                     Tamanho: {formatBytes(backupResult.sizeBytes)}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-success/20 border border-success/30">
+                  <span className="px-2 py-0.5 rounded bg-success/20">
                     Duração: {backupResult.durationMs} ms
                   </span>
                 </div>

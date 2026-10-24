@@ -62,7 +62,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Filtrar por nome, versão, repositório..."
-            className="w-full pl-10 pr-9 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono transition-colors"
+            className="w-full pl-10 pr-9 py-2.5 bg-background border border-input rounded-[10px] text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono transition-colors"
           />
           {searchQuery ? (
             <button

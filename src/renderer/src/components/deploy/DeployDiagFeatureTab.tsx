@@ -23,7 +23,7 @@ export const DeployDiagFeatureTab: React.FC<DeployDiagFeatureTabProps> = ({
     <div className="space-y-2.5">
       {/* Ação pontual por Nome da Feature */}
       <div className="p-2.5 bg-muted/20 border border-border/70 rounded-lg space-y-2 text-xs">
-        <div className="flex items-center justify-between text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
           <span>Feature</span>
           <span className="font-mono text-2xs text-muted-foreground/70">feature:cmd</span>
         </div>
@@ -32,7 +32,7 @@ export const DeployDiagFeatureTab: React.FC<DeployDiagFeatureTabProps> = ({
           value={featureName}
           onChange={(e) => onFeatureNameChange(e.target.value)}
           placeholder="Ex: winthor-integracao-varejo"
-          className="w-full px-2.5 py-1.5 bg-background border border-border rounded-md text-xs font-mono text-foreground focus:outline-hidden focus:border-primary transition"
+          className="w-full px-2.5 py-2.5 bg-background border border-input rounded-[10px] text-sm font-mono text-foreground focus:outline-hidden transition"
         />
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
           <DeployDiagActionButton

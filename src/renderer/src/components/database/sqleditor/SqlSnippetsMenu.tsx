@@ -40,7 +40,7 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
         }}
         className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           showSnippetsMenu
-            ? 'bg-warning/20 text-warning border border-warning/40'
+            ? 'bg-warning/20 text-warning'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
         }`}
         title="Minhas consultas SQL salvas e modelos"
@@ -58,7 +58,7 @@ export const SqlSnippetsMenu: React.FC<SqlSnippetsMenuProps> = ({
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowSnippetsMenu(false)} />
           <EscapeToClose onEscape={() => setShowSnippetsMenu(false)} />
-          <div className="absolute right-0 mt-1 w-96 bg-card border border-border rounded-xl shadow-2xl z-50 p-2.5 space-y-2 text-xs animate-fade-in font-sans">
+          <div className="absolute right-0 mt-1 w-96 bg-card border border-border rounded-xl shadow-lg z-50 p-2.5 space-y-2 text-xs animate-fade-in font-sans">
             <div className="flex items-center justify-between border-b border-border/60 pb-2">
               <div className="flex items-center space-x-1.5">
                 <BookmarkPlus className="w-4 h-4 text-warning" />

@@ -51,19 +51,19 @@ export const KarafBundleHeader: React.FC<KarafBundleHeaderProps> = ({
   const statusInfo = getKarafStatusInfo(karafStatus);
 
   return (
-    <div className="p-3.5 sm:px-6 border-b border-border bg-muted/30 shrink-0 space-y-3">
+    <div className="p-4 sm:px-6 border-b border-border shrink-0 space-y-3">
       {/* Linha Superior: Identidade do Modal & Botão de Fechar no Canto Superior Direito */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center space-x-3 min-w-0">
-          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary shrink-0">
+          <div className="p-2 rounded-[10px] bg-muted text-muted-foreground shrink-0">
             <ListTree className="w-5 h-5" />
           </div>
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <h3 className="text-sm font-semibold text-foreground tracking-tight">Gerenciador de Bundles OSGi</h3>
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">Gerenciador de Bundles OSGi</h3>
 
             {/* Status do Karaf */}
             <span
-              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-2xs font-mono font-semibold border ${statusInfo.badgeClass}`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[13px] font-medium ${statusInfo.badgeClass}`}
               title={statusInfo.description}
             >
               {karafStatus === 'STARTING' ? (
@@ -75,7 +75,7 @@ export const KarafBundleHeader: React.FC<KarafBundleHeaderProps> = ({
             </span>
 
             {/* Telemetria Compacta de Bundles */}
-            <div className="inline-flex items-center divide-x divide-border/60 bg-muted/40 border border-border/70 rounded-md text-2xs font-mono text-muted-foreground">
+            <div className="inline-flex items-center divide-x divide-border bg-muted rounded-full text-[13px] text-muted-foreground">
               <span className="px-2 py-0.5 font-semibold text-foreground">
                 <strong className="text-foreground">{stats.total}</strong> bundles
               </span>

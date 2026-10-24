@@ -73,7 +73,7 @@ export const UsageImpactPanel: React.FC<UsageImpactPanelProps> = ({
       {impact && (
         <>
           {share !== null && share < 100 && (
-            <div className="flex gap-2 p-3 rounded-xl bg-warning/10 border border-warning/30 text-xs text-muted-foreground">
+            <div className="flex gap-2 p-3 rounded-xl bg-warning/10 text-xs text-muted-foreground">
               <Info className="w-4 h-4 shrink-0 text-warning mt-0.5" />
               <p>
                 {share === 0 ? 'Todo o tempo economizado' : `${100 - share}% do tempo economizado`} usa tempos{' '}

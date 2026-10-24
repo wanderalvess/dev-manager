@@ -45,7 +45,7 @@ export const LogsTab: React.FC<LogsTabProps> = ({
             <button
               type="button"
               onClick={handleResetLogSources}
-              className="px-3 py-1.5 bg-muted hover:bg-danger/10 text-danger border border-danger/40 hover:border-danger/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+              className="px-3 py-1.5 bg-muted hover:bg-danger/10 text-danger hover:border-danger/70 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-colors"
               title="Remove todas as fontes de log configuradas"
             >
               <RotateCcw className="w-3.5 h-3.5" />

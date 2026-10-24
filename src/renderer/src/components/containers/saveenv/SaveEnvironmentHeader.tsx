@@ -20,7 +20,7 @@ export const SaveEnvironmentHeader: React.FC<SaveEnvironmentHeaderProps> = ({
       {isEditing ? <Pencil className="w-5 h-5" /> : <FolderPlus className="w-5 h-5" />}
     </div>
     <div className="flex-1 min-w-0">
-      <h3 className="text-sm font-bold text-foreground">
+      <h3 className="text-base font-semibold text-foreground">
         {isEditing ? `Editar Grupo: ${environmentName || ''}` : 'Criar Grupo de Containers'}
       </h3>
       <p className="text-xs text-muted-foreground mt-0.5">

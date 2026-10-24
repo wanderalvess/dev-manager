@@ -43,7 +43,7 @@ export const KarafFeaturesManagerRepoList: React.FC<KarafFeaturesManagerRepoList
                 <div className="flex items-center space-x-2">
                   <span className="text-xs font-bold text-foreground font-mono truncate">{repo.name}</span>
                   {repo.isWinThor && (
-                    <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
+                    <span className="text-2xs font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary">
                       WinThor
                     </span>
                   )}

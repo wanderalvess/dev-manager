@@ -27,7 +27,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
   <div className="max-h-80 overflow-y-auto space-y-2 pr-0.5">
     {/* Seção: Minhas Consultas Salvas */}
     <div>
-      <div className="text-2xs font-bold text-amber-500 uppercase tracking-wider px-1 mb-1">
+      <div className="text-xs font-semibold text-amber-500 px-1 mb-1">
         Minhas Consultas ({filteredCustomSnippets.length})
       </div>
 
@@ -125,7 +125,7 @@ export const SqlSnippetsSections: React.FC<SqlSnippetsSectionsProps> = ({
 
     {/* Seção: Modelos de Diagnóstico do Sistema */}
     <div className="pt-2 border-t border-border/50">
-      <div className="text-2xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
+      <div className="text-xs font-semibold text-muted-foreground px-1 mb-1">
         Modelos de Diagnóstico
       </div>
       <div className="space-y-1">

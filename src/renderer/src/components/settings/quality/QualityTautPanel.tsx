@@ -25,7 +25,7 @@ export const QualityTautPanel: React.FC<QualityTautPanelProps> = ({
   return (
     <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
       <div className="flex items-center justify-between pb-1 border-b border-border/60">
-        <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
+        <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
           <TestTube className="w-3.5 h-3.5 text-success" /> Projeto de Testes Automatizados (TAUT)
         </h3>
         <span className="text-2xs text-muted-foreground font-mono">Cypress / E2E</span>
@@ -65,7 +65,7 @@ export const QualityTautPanel: React.FC<QualityTautPanelProps> = ({
             value={settings.tautKeyPrefix || ''}
             onChange={(e) => setField('tautKeyPrefix', e.target.value)}
             placeholder="Ex: PROJ-T (Vazio: aceita qualquer chave no formato ABC-T123)"
-            className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs font-mono focus:outline-hidden focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm font-mono focus:outline-hidden focus:ring-2 focus:ring-ring"
           />
         </div>
       </div>

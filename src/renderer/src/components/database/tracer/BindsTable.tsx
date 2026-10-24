@@ -41,7 +41,7 @@ export const BindsTable: React.FC<{
                 <td className="px-3 py-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className="font-semibold text-success bg-success/10 px-2 py-0.5 rounded border border-success/20 max-w-[400px] truncate"
+                      className="font-semibold text-success bg-success/10 px-2 py-0.5 rounded max-w-[400px] truncate"
                       title={b.value ?? 'NULL'}
                     >
                       {b.value ?? 'NULL'}

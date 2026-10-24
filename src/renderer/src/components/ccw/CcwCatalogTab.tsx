@@ -39,7 +39,7 @@ export const CcwCatalogTab: React.FC<CcwCatalogTabProps> = ({
         href="https://centraldecontrole.pcinformatica.com.br/#/main-suporte/arvore-rotinas"
         target="_blank"
         rel="noreferrer"
-        className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+        className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
       >
         <ExternalLink className="w-3.5 h-3.5" />
         <span>Abrir Portal CCW</span>
@@ -67,7 +67,7 @@ export const CcwCatalogTab: React.FC<CcwCatalogTabProps> = ({
         placeholder="Cookie de sessão (suukie=...) ou configure nas Configurações"
         value={catalogAuthCookie}
         onChange={(e) => onCatalogAuthCookieChange(e.target.value)}
-        className="w-full bg-card border border-border rounded-xl px-3.5 py-1.5 text-xs text-foreground placeholder-muted-foreground font-mono"
+        className="w-full bg-card border border-input rounded-[10px] px-3.5 py-2.5 text-sm text-foreground placeholder-muted-foreground font-mono"
       />
     </div>
 

@@ -25,7 +25,7 @@ export const KarafBundleBatchBar: React.FC<KarafBundleBatchBarProps> = ({
         type="button"
         onClick={() => onBatchAction('restart')}
         disabled={isBatchActionLoading}
-        className="px-3 py-1.5 rounded-xl font-bold bg-warning/15 hover:bg-warning/25 border border-warning/30 text-warning transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+        className="px-3 py-1.5 rounded-xl font-bold bg-warning/10 hover:bg-warning/25 text-warning transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
         title="Reiniciar todos os bundles selecionados"
       >
         <RotateCcw className={`w-3.5 h-3.5 ${isBatchActionLoading ? 'animate-spin' : ''}`} />
@@ -36,7 +36,7 @@ export const KarafBundleBatchBar: React.FC<KarafBundleBatchBarProps> = ({
         type="button"
         onClick={() => onBatchAction('start')}
         disabled={isBatchActionLoading}
-        className="px-3 py-1.5 rounded-xl font-bold bg-success/15 hover:bg-success/25 border border-success/30 text-success transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+        className="px-3 py-1.5 rounded-xl font-bold bg-success/10 hover:bg-success/25 text-success transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
         title="Iniciar todos os bundles selecionados"
       >
         <Play className="w-3.5 h-3.5 fill-current" />
@@ -58,7 +58,7 @@ export const KarafBundleBatchBar: React.FC<KarafBundleBatchBarProps> = ({
         type="button"
         onClick={() => onBatchAction('refresh')}
         disabled={isBatchActionLoading}
-        className="px-3 py-1.5 rounded-xl font-bold bg-info/15 hover:bg-info/25 border border-info/30 text-info transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+        className="px-3 py-1.5 rounded-xl font-bold bg-info/10 hover:bg-info/25 text-info transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
         title="Atualizar fiações OSGi dos bundles selecionados"
       >
         <RotateCw className="w-3.5 h-3.5" />
@@ -69,7 +69,7 @@ export const KarafBundleBatchBar: React.FC<KarafBundleBatchBarProps> = ({
         type="button"
         onClick={() => onBatchAction('uninstall')}
         disabled={isBatchActionLoading}
-        className="px-3 py-1.5 rounded-xl font-bold bg-danger/15 hover:bg-danger/25 border border-danger/30 text-danger transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+        className="px-3 py-1.5 rounded-xl font-bold bg-danger/10 hover:bg-danger/25 text-danger transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
         title="Desinstalar todos os bundles selecionados"
       >
         <Trash2 className="w-3.5 h-3.5" />

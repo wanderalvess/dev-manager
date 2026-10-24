@@ -33,7 +33,7 @@ export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsPr
         type="text"
         value={formatRoutineExtensions(settings.routineFileExtensions)}
         onChange={(e) => onExtensionsChange(parseRoutineExtensions(e.target.value))}
-        className="w-full bg-card border border-border hover:border-primary/50 rounded-xl px-3 py-2 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary transition-colors shadow-xs"
+        className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
         placeholder=".EXE, .BAT"
       />
       <p className="text-2xs text-muted-foreground">
@@ -75,7 +75,7 @@ export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsPr
             value={row.path}
             onChange={(e) => handleUpdateLauncherRow(index, 'path', e.target.value)}
             placeholder="Caminho do executável launcher"
-            className="flex-1 bg-card border border-border rounded-lg px-2 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary shadow-xs"
+            className="flex-1 bg-card border border-input rounded-[10px] px-2 py-2.5 text-foreground font-mono text-sm focus:outline-hidden shadow-xs"
           />
           <button
             type="button"

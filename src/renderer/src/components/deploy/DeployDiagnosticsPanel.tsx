@@ -71,7 +71,7 @@ export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
         title={collapsed ? 'Mostrar os diagnósticos' : 'Recolher os diagnósticos'}
         className="w-full flex items-center justify-between gap-2 cursor-pointer group"
       >
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+        <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-warning" /> Diagnósticos Rápidos OSGi (client.bat)
           {isDiagRunning !== null && <span className="text-2xs font-normal normal-case text-primary">executando…</span>}
         </span>
