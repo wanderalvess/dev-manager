@@ -49,7 +49,7 @@ export const HelpFaqTab: React.FC<HelpFaqTabProps> = ({
       {/* Lista Accordion */}
       <div className="space-y-3">
         {filteredFaqs.length === 0 ? (
-          <div className="cockpit-panel rounded-xl p-8 text-center border border-border space-y-2">
+          <div className="cockpit-panel rounded-[14px] p-8 text-center border border-border space-y-2">
             <LifeBuoy className="w-8 h-8 text-muted-foreground mx-auto" />
             <h4 className="text-xs font-bold text-foreground">Nenhuma pergunta encontrada</h4>
             <p className="text-2xs text-muted-foreground">
@@ -70,7 +70,7 @@ export const HelpFaqTab: React.FC<HelpFaqTabProps> = ({
             return (
               <div
                 key={faq.id}
-                className="cockpit-panel rounded-xl border border-border overflow-hidden transition-all shadow-md"
+                className="cockpit-panel rounded-[14px] border border-border overflow-hidden transition-all shadow-xs"
               >
                 <button
                   onClick={() => toggleFaq(faq.id)}
@@ -78,7 +78,7 @@ export const HelpFaqTab: React.FC<HelpFaqTabProps> = ({
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                      <span className="text-[13px] font-medium px-2.5 py-0.5 rounded-full bg-accent text-accent-foreground">
                         {faq.category}
                       </span>
                     </div>

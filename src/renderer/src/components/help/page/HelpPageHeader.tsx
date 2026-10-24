@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, HelpCircle } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 interface HelpPageHeaderProps {
   searchQuery: string;
@@ -13,21 +13,18 @@ export const HelpPageHeader: React.FC<HelpPageHeaderProps> = ({
   onSearchChange,
   onClearSearch
 }) => (
-  <div className="cockpit-panel rounded-xl p-3 sm:p-4 shadow-xl border border-border flex flex-wrap items-center justify-between gap-3 shrink-0 backdrop-blur-md">
+  <div className="flex flex-wrap items-end justify-between gap-4 shrink-0">
     <div className="flex items-center space-x-3 min-w-0">
-      <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary shrink-0">
-        <HelpCircle className="w-5 h-5 text-primary" />
-      </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-lg font-bold text-foreground tracking-tight truncate">
+          <h1 className="text-[26px] leading-tight font-semibold text-foreground tracking-tight">
             Central de Ajuda &amp; Documentação
           </h1>
-          <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold tracking-wider uppercase">
-            PORTA DE ENTRADA
+          <span className="text-[13px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-medium">
+            Porta de entrada
           </span>
         </div>
-        <p className="text-2xs text-muted-foreground truncate">
+        <p className="text-sm text-muted-foreground mt-1">
           Hub operacional: orientações de uso, fluxo diário, atalhos de teclado, FAQs e diagnósticos técnicos
         </p>
       </div>
@@ -36,18 +33,18 @@ export const HelpPageHeader: React.FC<HelpPageHeaderProps> = ({
     {/* Busca Rápida Integrada */}
     <div className="flex items-center gap-2 w-full sm:w-auto">
       <div className="relative w-full sm:w-80">
-        <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5 pointer-events-none" />
+        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3 pointer-events-none" />
         <input
           type="text"
           placeholder="Pesquisar ajuda, comandos, FAQ, portas..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-card/70 border border-border hover:border-primary/40 focus:border-primary rounded-xl pl-9 pr-8 py-1.5 text-xs text-foreground placeholder-muted-foreground focus:outline-hidden transition-all font-sans shadow-inner"
+          className="w-full h-10 bg-card border border-input rounded-[10px] pl-9 pr-8 text-sm text-foreground placeholder-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
         {searchQuery && (
           <button
             onClick={onClearSearch}
-            className="absolute right-2.5 top-2 text-muted-foreground hover:text-foreground cursor-pointer"
+            className="absolute right-2.5 top-3 text-muted-foreground hover:text-foreground cursor-pointer"
             title="Limpar busca" aria-label="Limpar busca"
           >
             <X className="w-3.5 h-3.5" />

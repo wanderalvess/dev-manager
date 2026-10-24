@@ -48,19 +48,19 @@ interface KarafToolCardsProps {
 
 /** Atalhos grandes para as ferramentas de gestão do Karaf (cada uma abre seu painel). */
 export const KarafToolCards: React.FC<KarafToolCardsProps> = ({ onOpen }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3" data-tour="karaf-tools">
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" data-tour="karaf-tools">
     {TOOLS.map(({ id, title, description, icon: Icon, accent }) => (
       <button
         key={id}
         type="button"
         onClick={() => onOpen(id)}
-        className="cockpit-panel rounded-xl p-4 border border-border/80 shadow-2xs text-left flex flex-col gap-2 hover:border-primary/50 hover:bg-muted/30 transition cursor-pointer"
+        className="rounded-[14px] bg-card p-4 border border-border shadow-xs text-left flex flex-col gap-1.5 hover:bg-muted/40 transition-colors cursor-pointer"
       >
-        <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <span className="flex items-center gap-2 text-base font-semibold text-foreground">
           <Icon className={`w-4 h-4 ${accent}`} />
           {title}
         </span>
-        <span className="text-2xs text-muted-foreground leading-relaxed">{description}</span>
+        <span className="text-[13px] text-muted-foreground leading-relaxed">{description}</span>
       </button>
     ))}
   </div>

@@ -81,7 +81,7 @@ export const HelpOverviewServices: React.FC<HelpOverviewServicesProps> = ({
   copyToClipboard,
   copiedItem
 }) => (
-  <div className="cockpit-panel rounded-xl p-5 border border-border shadow-xl space-y-3.5">
+  <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs space-y-3.5">
     <HelpOverviewSectionHeader
       icon={Compass}
       title="Serviços Locais & Portais Externos"
