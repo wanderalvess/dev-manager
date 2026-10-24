@@ -27,7 +27,7 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
         </button>
         {([
           { tier: 'http', label: '🌐 HTTP', count: timeBudget?.httpSpansCount, duration: timeBudget?.httpMs, active: 'bg-info text-background shadow-2xs', inactive: 'bg-info/10 border border-info/30 text-info hover:bg-info/20' },
-          { tier: 'java', label: '☕ Java', count: timeBudget?.javaSpansCount, duration: timeBudget?.javaMs, active: 'bg-purple-600 text-white shadow-2xs', inactive: 'bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400 hover:bg-purple-500/20' },
+          { tier: 'java', label: '☕ Java', count: timeBudget?.javaSpansCount, duration: timeBudget?.javaMs, active: 'bg-primary text-white shadow-2xs', inactive: 'bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20' },
           { tier: 'jdbc', label: '🗄️ JDBC', count: timeBudget?.jdbcSpansCount, duration: timeBudget?.jdbcMs, active: 'bg-warning text-background shadow-2xs', inactive: 'bg-warning/10 border border-warning/30 text-warning hover:bg-warning/20' }
         ] as const).map(({ tier, label, count, duration, active, inactive }) => (
           <button
@@ -43,7 +43,7 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
       </div>
       <div className="flex items-center gap-2 text-2xs font-mono text-muted-foreground">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-info inline-block" /> HTTP</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-purple-500 inline-block" /> Java</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-primary inline-block" /> Java</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-warning inline-block" /> JDBC</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-xs bg-danger inline-block" /> Erro</span>
       </div>
@@ -59,7 +59,7 @@ export const ApmWaterfallControls: React.FC<ApmWaterfallControlsProps> = ({
       <div className="w-full h-2 rounded-full bg-muted/70 overflow-hidden flex shadow-2xs">
         {timeBudget && <>
           {timeBudget.httpPct > 0 && <div style={{ width: `${timeBudget.httpPct}%` }} className="bg-info h-full" title={`Requisição HTTP: ${timeBudget.httpMs}ms (${timeBudget.httpPct}%)`} />}
-          {timeBudget.javaPct > 0 && <div style={{ width: `${timeBudget.javaPct}%` }} className="bg-purple-500 h-full" title={`Processamento Java: ${timeBudget.javaMs}ms (${timeBudget.javaPct}%)`} />}
+          {timeBudget.javaPct > 0 && <div style={{ width: `${timeBudget.javaPct}%` }} className="bg-primary h-full" title={`Processamento Java: ${timeBudget.javaMs}ms (${timeBudget.javaPct}%)`} />}
           {timeBudget.jdbcPct > 0 && <div style={{ width: `${timeBudget.jdbcPct}%` }} className="bg-warning h-full" title={`Queries JDBC: ${timeBudget.jdbcMs}ms (${timeBudget.jdbcPct}%)`} />}
         </>}
       </div>

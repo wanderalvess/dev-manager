@@ -39,9 +39,9 @@ export const DocsSyncTargetRow: React.FC<DocsSyncTargetRowProps> = ({
           <span
             className={`text-2xs font-semibold px-2 py-0.5 rounded-full border ${
               target.syncMode === 'articles'
-                ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-700 dark:text-indigo-400'
+                ? 'bg-primary/10 border-primary/30 text-primary'
                 : target.syncMode === 'chunks'
-                ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-700 dark:text-cyan-400'
+                ? 'bg-info/10 border-info/30 text-info'
                 : 'bg-success/10 border-success/30 text-success'
             }`}
           >

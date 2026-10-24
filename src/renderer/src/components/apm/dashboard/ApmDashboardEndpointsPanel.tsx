@@ -89,7 +89,7 @@ export const ApmDashboardEndpointsPanel: React.FC<ApmDashboardEndpointsPanelProp
                           ? 'text-danger'
                           : ep.p95DurationMs >= 400
                           ? 'text-warning'
-                          : 'text-indigo-600 dark:text-indigo-400'
+                          : 'text-primary'
                       }`}
                     >
                       {ep.p95DurationMs}ms

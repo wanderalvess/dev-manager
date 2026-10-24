@@ -62,9 +62,9 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenOracleTools(container)}
           title="Ferramentas Especializadas Oracle (db_health, SQL*Plus, Data Pump, TNS)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-warning/10 hover:bg-warning/20 text-warning border border-warning/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
-          <Database className="w-3.5 h-3.5 text-orange-500" />
+          <Database className="w-3.5 h-3.5 text-warning" />
           <span>Ferramentas Oracle</span>
         </button>
       )}
@@ -79,7 +79,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
           title="Copiar bloco de conexão do tnsnames.ora para este container"
           className="flex items-center space-x-1 px-2 py-1.5 bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-95 shadow-xs"
         >
-          <Network className="w-3 h-3 text-orange-400" />
+          <Network className="w-3 h-3 text-warning" />
           <span>{copyFeedback === `tns-${container.id}` ? 'TNS Copiado!' : 'Copiar TNS'}</span>
         </button>
       )}
@@ -88,9 +88,9 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenWtaTools(container)}
           title="Utilitários WTA (Portal, Instalador, Console Karaf, Modo Desenvolvedor)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
-          <Globe className="w-3.5 h-3.5 text-cyan-500" />
+          <Globe className="w-3.5 h-3.5 text-info" />
           <span>Utilitários WTA</span>
         </button>
       )}
@@ -99,9 +99,9 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
         <button
           onClick={() => onOpenWshTools(container)}
           title="Utilitários Especializados WSH (Gerador MD5, Checagem de /opt, Rotina 2650)"
-          className="flex items-center space-x-1 px-2.5 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
-          <Key className="w-3.5 h-3.5 text-violet-500" />
+          <Key className="w-3.5 h-3.5 text-primary" />
           <span>Utilitários WSH</span>
         </button>
       )}

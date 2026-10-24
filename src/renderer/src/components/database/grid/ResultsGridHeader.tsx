@@ -25,13 +25,13 @@ const DataTypeBadge: React.FC<{ dataType: ResultsGridDataType }> = ({ dataType }
     return <span className={`${BADGE_BASE} bg-info/15 text-info border-info/30`}>123</span>;
   }
   if (dataType === 'date') {
-    return <span className={`${BADGE_BASE} bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30`}>📅</span>;
+    return <span className={`${BADGE_BASE} bg-primary/15 text-primary border-primary/30`}>📅</span>;
   }
   if (dataType === 'boolean') {
     return <span className={`${BADGE_BASE} bg-warning/15 text-warning border-warning/30`}>0/1</span>;
   }
   if (dataType === 'object') {
-    return <span className={`${BADGE_BASE} bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30`}>{'{ }'}</span>;
+    return <span className={`${BADGE_BASE} bg-success/15 text-success border-success/30`}>{'{ }'}</span>;
   }
   return <span className={`${BADGE_BASE} bg-muted text-muted-foreground border-border`}>ABC</span>;
 };

@@ -27,7 +27,7 @@ describe('wtaUtilsModalUtils', () => {
   });
 
   it('diferencia aba ativa e inativa', () => {
-    expect(wtaUtilsModalTabClass(true)).toContain('border-cyan-500');
+    expect(wtaUtilsModalTabClass(true)).toContain('border-info');
     expect(wtaUtilsModalTabClass(false)).toContain('border-transparent');
   });
 });

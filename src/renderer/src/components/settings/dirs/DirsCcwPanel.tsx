@@ -15,7 +15,7 @@ export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }
     <div className="flex items-center justify-between">
       <div>
         <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
-          <Download className="w-4 h-4 text-blue-500" /> Central de Controle WinThor (CCW)
+          <Download className="w-4 h-4 text-info" /> Central de Controle WinThor (CCW)
         </span>
         <p className="text-2xs text-muted-foreground mt-0.5">
           Download e atualização automática de rotinas e executáveis da nuvem direto para o ambiente local.

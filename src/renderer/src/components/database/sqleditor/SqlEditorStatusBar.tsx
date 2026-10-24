@@ -45,7 +45,7 @@ export const SqlEditorStatusBar: React.FC<SqlEditorStatusBarProps> = ({
         className="flex items-center space-x-1 px-2 py-0.5 rounded hover:bg-muted/70 text-muted-foreground hover:text-foreground transition disabled:opacity-50 cursor-pointer"
         title="Formatar SQL (adicionar quebras e indentação em cláusulas principais)"
       >
-        <AlignLeft className="w-3 h-3 text-amber-500" />
+        <AlignLeft className="w-3 h-3 text-warning" />
         <span>Formatar SQL</span>
       </button>
 

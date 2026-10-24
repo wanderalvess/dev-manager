@@ -18,7 +18,7 @@ describe('wshUtilsModalUtils', () => {
   });
 
   it('diferencia aba ativa e inativa', () => {
-    expect(wshUtilsModalTabClass(true)).toContain('border-violet-500');
+    expect(wshUtilsModalTabClass(true)).toContain('border-primary');
     expect(wshUtilsModalTabClass(false)).toContain('border-transparent');
   });
 });

@@ -40,17 +40,17 @@ export function buildTargetBranchOptions({
 export function fileStatusBadge(status: GitFileStatus['status']): { label: string; className: string } {
   switch (status) {
     case 'added':
-      return { label: 'A', className: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30' };
+      return { label: 'A', className: 'bg-success/15 text-success border-success/30' };
     case 'deleted':
-      return { label: 'D', className: 'bg-rose-500/15 text-rose-500 border-rose-500/30' };
+      return { label: 'D', className: 'bg-danger/15 text-danger border-danger/30' };
     case 'untracked':
-      return { label: '?', className: 'bg-purple-500/15 text-purple-400 border-purple-500/30' };
+      return { label: '?', className: 'bg-primary/15 text-primary border-primary/30' };
     case 'renamed':
-      return { label: 'R', className: 'bg-sky-500/15 text-sky-500 border-sky-500/30' };
+      return { label: 'R', className: 'bg-info/15 text-info border-info/30' };
     case 'copied':
-      return { label: 'C', className: 'bg-sky-500/15 text-sky-500 border-sky-500/30' };
+      return { label: 'C', className: 'bg-info/15 text-info border-info/30' };
     default:
-      return { label: 'M', className: 'bg-amber-500/15 text-amber-500 border-amber-500/30' };
+      return { label: 'M', className: 'bg-warning/15 text-warning border-warning/30' };
   }
 }
 

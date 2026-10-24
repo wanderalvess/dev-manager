@@ -36,7 +36,7 @@ export const AiPresetGrid: React.FC<AiPresetGridProps> = ({ onApplyTemplate }) =
             <div className="flex items-center justify-between gap-1 text-2xs font-mono text-muted-foreground">
               <span className="truncate">{tmpl.model}</span>
               {isLocal && (
-                <span className="px-1 py-0.2 rounded bg-cyan-500/10 text-cyan-500 text-2xs font-bold border border-cyan-500/20">
+                <span className="px-1 py-0.2 rounded bg-info/10 text-info text-2xs font-bold border border-info/20">
                   LOCAL
                 </span>
               )}

@@ -1176,7 +1176,7 @@ export function getFaqList({
                 <strong className="text-info">Requisição HTTP:</strong> tempo gasto em I/O de rede, filtros de servlet e recepção/despacho do servidor web.
               </li>
               <li>
-                <strong className="text-purple-600 dark:text-purple-400">Processamento Java:</strong> tempo gasto em regras de negócio, transformações de dados e handlers OSGi dentro do Apache Karaf.
+                <strong className="text-primary">Processamento Java:</strong> tempo gasto em regras de negócio, transformações de dados e handlers OSGi dentro do Apache Karaf.
               </li>
               <li>
                 <strong className="text-warning">Queries JDBC no banco:</strong> tempo dedicado a consultas e comandos SQL executados no Oracle/PostgreSQL.
@@ -1532,7 +1532,7 @@ export function getFaqList({
                 <strong className="text-foreground">Sincronização de .env:</strong> Botão de 1 clique que atualiza as variáveis <code className="font-mono text-primary">ORACLE_USER</code>, <code className="font-mono text-primary">ORACLE_PASSWORD</code> e <code className="font-mono text-primary">ORACLE_CONNECT_STRING</code> do TAUT com base na conexão Oracle ativa no Hub Manager.
               </li>
               <li>
-                <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-success">esteira</code>, <code className="font-mono text-danger">critico</code>, <code className="font-mono text-blue-700 dark:text-blue-400">regressao</code>, <code className="font-mono text-warning">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
+                <strong className="text-foreground">Disparador por Tags (@cypress/grep):</strong> Seleção visual de meta-tags (<code className="font-mono text-success">esteira</code>, <code className="font-mono text-danger">critico</code>, <code className="font-mono text-info">regressao</code>, <code className="font-mono text-warning">-develop</code>) e serviços WTA (<code className="font-mono text-primary">winthor-pedido-venda</code>, <code className="font-mono text-primary">winthor-tributacao</code>, etc.) com streaming dos logs do Cypress em tempo real.
               </li>
               <li>
                 <strong className="text-foreground">Auditoria de Cobertura Zephyr Scale:</strong> Cruza os cenários dos arquivos CSV da pasta <code className="font-mono text-foreground font-bold">Insumo/</code> com os testes implementados em <code className="font-mono text-foreground font-bold">cypress/e2e/api/</code>, calculando o percentual e apontando testes pendentes. Sem nenhum CSV em <code className="font-mono text-foreground font-bold">Insumo/</code> a porcentagem não é calculada (não há universo de cenários para comparar). As chaves reconhecidas seguem o padrão <code className="font-mono text-foreground font-bold">ABC-T123</code>; para restringir a um projeto, preencha o <strong className="text-foreground">Prefixo das chaves de cenário Zephyr</strong> (ex.: <code className="font-mono text-foreground font-bold">PROJ-T</code>) em Configurações &gt; Diretórios &amp; IDE.

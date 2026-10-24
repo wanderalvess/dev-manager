@@ -224,7 +224,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
                 </div>
 
                 <div className="flex items-start gap-2.5 pt-2 border-t border-border">
-                  <div className="p-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0 mt-0.5">
+                  <div className="p-1.5 rounded bg-info/10 text-info border border-info/20 shrink-0 mt-0.5">
                     <Layers className="w-4 h-4" />
                   </div>
                   <div>

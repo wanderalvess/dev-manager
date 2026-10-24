@@ -33,11 +33,11 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               {receiverState === 'listening' && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
               )}
               <span
                 className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  receiverState === 'listening' ? 'bg-emerald-500' : receiverState === 'down' ? 'bg-rose-500' : 'bg-muted-foreground'
+                  receiverState === 'listening' ? 'bg-success' : receiverState === 'down' ? 'bg-danger' : 'bg-muted-foreground'
                 }`}
               />
             </span>
@@ -48,9 +48,9 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
           <span
             className={`text-2xs font-mono px-2 py-0.5 rounded border ${
               receiverState === 'listening'
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                ? 'bg-success/10 text-success border-success/20'
                 : receiverState === 'down'
-                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                ? 'bg-danger/10 text-danger border-danger/20'
                 : 'bg-muted text-muted-foreground border-border'
             }`}
           >
@@ -87,7 +87,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
         <div className="flex flex-col gap-2 p-3 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-200 text-xs">
           <div className="flex items-center justify-between text-2xs text-neutral-400">
             <span className="flex items-center gap-1.5 font-mono">
-              <Terminal className="w-3.5 h-3.5 text-sky-400" />
+              <Terminal className="w-3.5 h-3.5 text-info" />
               Disparo de Teste Rápido (PowerShell):
             </span>
             <button
@@ -98,11 +98,11 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
               }}
               className="px-2 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 text-2xs text-neutral-300 flex items-center gap-1 cursor-pointer transition"
             >
-              {copyFeedback === 'ps-cmd' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              {copyFeedback === 'ps-cmd' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
               Copiar
             </button>
           </div>
-          <pre className="text-2xs font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-20 no-scrollbar">
+          <pre className="text-2xs font-mono text-success overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-20 no-scrollbar">
             Invoke-RestMethod -Uri "{snippets.tracesUrl}" -Method POST ...
           </pre>
         </div>
@@ -110,7 +110,7 @@ export const ApmDashboardStandby: React.FC<ApmDashboardStandbyProps> = ({
         {/* Ações de Inicialização */}
         <div className="flex items-center justify-between pt-1">
           <div className="text-2xs text-muted-foreground flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <Zap className="w-3.5 h-3.5 text-warning" />
             <span>Dica: ligue "Anexar o agente automaticamente" em Como Conectar para o Karaf exportar sozinho.</span>
           </div>
         </div>

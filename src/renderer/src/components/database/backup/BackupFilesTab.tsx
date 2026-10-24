@@ -121,7 +121,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
                 onClick={() => onRestoreDrill(f)}
                 disabled={!scratchConnectionId || drillingFilePath !== null}
                 title="Testar restauração numa conexão descartável (não afeta o banco ativo)"
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/30 rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer"
               >
                 {drillingFilePath === f.filePath ? (
                   <RotateCw className="w-3.5 h-3.5 animate-spin" />

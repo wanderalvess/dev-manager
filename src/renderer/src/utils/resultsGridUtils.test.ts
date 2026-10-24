@@ -48,7 +48,7 @@ describe('resultsGridUtils', () => {
   });
 
   it('getRowClassName alterna zebra e seleção', () => {
-    expect(getRowClassName(true, 0)).toContain('border-sky-500');
+    expect(getRowClassName(true, 0)).toContain('border-info');
     expect(getRowClassName(false, 0)).toContain('bg-background');
     expect(getRowClassName(false, 1)).toContain('bg-muted/15');
   });

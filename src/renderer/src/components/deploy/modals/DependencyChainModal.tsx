@@ -139,7 +139,7 @@ export const DependencyChainModal: React.FC<DependencyChainModalProps> = ({
                 onChange={(e) => setCreatePomBackups(e.target.checked)}
                 className="rounded border-border text-primary focus:ring-0"
               />
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <ShieldCheck className="w-4 h-4 text-success" />
               <span>Gerar cópia .bak do pom.xml</span>
             </label>
           </div>
@@ -210,7 +210,7 @@ export const DependencyChainModal: React.FC<DependencyChainModalProps> = ({
                           onClick={() => handleToggleDeployKaraf(index)}
                           className={`px-2.5 py-1 rounded-lg text-2xs font-semibold border transition-all cursor-pointer ${
                             node.deployToKaraf
-                              ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40'
+                              ? 'bg-success/20 text-success border-success/40'
                               : 'bg-muted text-muted-foreground border-border'
                           }`}
                           title="Instalar feature final no Apache Karaf"

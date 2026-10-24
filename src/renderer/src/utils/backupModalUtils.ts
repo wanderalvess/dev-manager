@@ -10,8 +10,8 @@ export const DRILL_CRON_PRESETS = ['0 4 * * *', '0 4 * * 0'];
 
 export type BackupWebhookEvent = 'success' | 'failure';
 
-export const BACKUP_TONE_SUCCESS = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300';
-export const BACKUP_TONE_FAILURE = 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300';
+export const BACKUP_TONE_SUCCESS = 'bg-success/10 border-success/30 text-success';
+export const BACKUP_TONE_FAILURE = 'bg-danger/10 border-danger/30 text-danger';
 
 export function backupResultToneClass(success: boolean): string {
   return success ? BACKUP_TONE_SUCCESS : BACKUP_TONE_FAILURE;

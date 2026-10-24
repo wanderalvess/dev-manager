@@ -62,13 +62,13 @@ export function readStoredValidationItems(): QualityValidationItem[] {
 export function getStatusSelectClass(status: ValidationItemStatus): string {
   switch (status) {
     case 'passed':
-      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      return 'bg-success/10 text-success border-success/30';
     case 'failed':
-      return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+      return 'bg-danger/10 text-danger border-danger/30';
     case 'in_progress':
-      return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
+      return 'bg-info/10 text-info border-info/30';
     case 'blocked':
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+      return 'bg-warning/10 text-warning border-warning/30';
     default:
       return 'bg-muted text-muted-foreground border-border';
   }
@@ -100,18 +100,18 @@ export function getReadinessVerdict(score: number, openIssues = 0, total = 1): {
   }
   if (score >= 80 && openIssues === 0) {
     return {
-      ringClass: 'border-emerald-500 bg-emerald-500/10 text-emerald-500',
+      ringClass: 'border-success bg-success/10 text-success',
       title: 'Release Pronta para Produção 🚀'
     };
   }
   if (score >= 50 || (score >= 80 && openIssues > 0)) {
     return {
-      ringClass: 'border-amber-500 bg-amber-500/10 text-amber-500',
+      ringClass: 'border-warning bg-warning/10 text-warning',
       title: 'Atenção: Testes em Andamento ⚠️'
     };
   }
   return {
-    ringClass: 'border-rose-500 bg-rose-500/10 text-rose-500',
+    ringClass: 'border-danger bg-danger/10 text-danger',
     title: 'Bloqueado: Correções Necessárias ⛔'
   };
 }

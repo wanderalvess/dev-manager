@@ -66,7 +66,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
       <div className="p-3 rounded-xl bg-card border border-border shadow-2xs flex flex-col justify-between">
         <div className="flex items-center justify-between text-muted-foreground mb-1">
           <span className="text-2xs uppercase tracking-wider font-semibold font-mono flex items-center gap-1.5 text-foreground/80">
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+            <Clock className="w-3.5 h-3.5 text-primary" />
             Latência (p95)
           </span>
           <span
@@ -101,7 +101,7 @@ export const ApmDashboardMetricCards: React.FC<ApmDashboardMetricCardsProps> = (
           {/* Escala Visual de Percentis */}
           <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden mt-3 relative">
             <div
-              className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+              className="bg-primary h-full rounded-full transition-all duration-500"
               style={{ width: `${getP95BarWidthPct(overview.p95LatencyMs, overview.p99LatencyMs)}%` }}
             />
           </div>

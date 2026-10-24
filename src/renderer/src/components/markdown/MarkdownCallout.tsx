@@ -6,9 +6,9 @@ import { MarkdownInline } from './MarkdownInline';
 
 const ALERT_STYLES: Record<CalloutType, { bg: string; border: string; text: string; label: string; icon: LucideIcon }> = {
   NOTE: {
-    bg: 'bg-blue-500/10 dark:bg-blue-950/20',
-    border: 'border-blue-500/40',
-    text: 'text-blue-600 dark:text-blue-400',
+    bg: 'bg-info/10',
+    border: 'border-info/40',
+    text: 'text-info',
     label: 'Nota Informativa',
     icon: Info
   },
@@ -20,9 +20,9 @@ const ALERT_STYLES: Record<CalloutType, { bg: string; border: string; text: stri
     icon: Sparkles
   },
   IMPORTANT: {
-    bg: 'bg-indigo-500/10 dark:bg-indigo-950/20',
-    border: 'border-indigo-500/40',
-    text: 'text-indigo-600 dark:text-indigo-400',
+    bg: 'bg-primary/10',
+    border: 'border-primary/40',
+    text: 'text-primary',
     label: 'Importante',
     icon: AlertCircle
   },

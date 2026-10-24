@@ -28,6 +28,6 @@ export function infrBootstrapModalTabClass(active: boolean): string {
   const base =
     'px-3.5 py-2.5 text-xs font-bold rounded-t-lg border-b-2 flex items-center gap-2 transition cursor-pointer';
   return active
-    ? `${base} border-orange-500 text-orange-600 dark:text-orange-400 bg-card shadow-2xs`
+    ? `${base} border-warning text-warning bg-card shadow-2xs`
     : `${base} border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40`;
 }

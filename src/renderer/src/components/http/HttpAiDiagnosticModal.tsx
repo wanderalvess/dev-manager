@@ -89,7 +89,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
         {/* Banner com a rota e status */}
         <div className="flex items-center justify-between p-3 rounded-lg bg-card/60 border border-border">
           <div className="flex items-center gap-2 truncate">
-            <span className="font-mono font-bold text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded">
+            <span className="font-mono font-bold text-danger bg-danger/10 border border-danger/30 px-2 py-0.5 rounded">
               {response.status > 0 ? `${response.status} ${response.statusText}` : 'Falha na Conexão'}
             </span>
             <span className="font-mono text-muted-foreground truncate">{request.method} {request.url}</span>
@@ -112,13 +112,13 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
             <div className="flex flex-col items-center justify-center py-16 space-y-3 text-muted-foreground">
               <div className="relative">
                 <Bot className="w-10 h-10 text-primary animate-pulse" />
-                <Sparkles className="w-4 h-4 text-amber-400 absolute -top-1 -right-1 animate-spin" />
+                <Sparkles className="w-4 h-4 text-warning absolute -top-1 -right-1 animate-spin" />
               </div>
               <p className="font-medium text-xs">Analisando causa raiz e stacktrace com o Assistente de IA...</p>
               <p className="text-xs text-muted-foreground/60">Cruzando com regras comuns do Karaf e WinThor REST</p>
             </div>
           ) : error ? (
-            <div className="p-4 rounded bg-red-500/10 border border-red-500/30 text-red-400 space-y-2">
+            <div className="p-4 rounded bg-danger/10 border border-danger/30 text-danger space-y-2">
               <div className="flex items-center gap-2 font-semibold">
                 <AlertTriangle className="w-4 h-4" />
                 <span>Não foi possível gerar o diagnóstico</span>
@@ -159,7 +159,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copiado!' : 'Copiar Diagnóstico'}</span>
               </button>
             )}

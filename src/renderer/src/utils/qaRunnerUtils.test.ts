@@ -43,6 +43,6 @@ describe('qaRunnerUtils', () => {
     expect(getAssertionBadgeLabel('passed')).toBe('OK');
     expect(getAssertionBadgeLabel('failed')).toBe('DIVERG');
     expect(getAssertionBadgeLabel('warning')).toBe('ALERTA');
-    expect(getAssertionRowClass('failed')).toContain('rose');
+    expect(getAssertionRowClass('failed')).toContain('danger');
   });
 });

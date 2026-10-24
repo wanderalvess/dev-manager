@@ -1629,13 +1629,9 @@ app.get('/api/system/metrics', async (_req, res) => {
 });
 
 // 12. Bundles Karaf
-app.post('/api/karaf/bundles', async (req, res) => {
-  try {
-    res.json(await karafService.listBundlesOrThrow(req.body));
-  } catch (err) {
-    res.status(502).json({ error: err instanceof Error ? err.message : 'Karaf inacessível' });
-  }
-});
+app.post('/api/karaf/bundles', (req, res) =>
+  karafService.listBundlesOrThrow(req.body).then((b) => res.json(b), (e: Error) => res.status(502).json({ error: e.message }))
+);
 
 app.post('/api/karaf/bundles/manage', async (req, res) => {
   const { action, bundleId, credentials } = req.body;

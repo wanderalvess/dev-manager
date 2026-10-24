@@ -39,7 +39,7 @@ export const HttpResponseHeadersTab: React.FC<HttpResponseHeadersTabProps> = ({ 
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           title="Copiar todos os cabeçalhos"
         >
-          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+          {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
           <span>{copied ? 'Copiados!' : 'Copiar'}</span>
         </button>
       </div>

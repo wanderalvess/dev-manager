@@ -45,7 +45,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 shrink-0">
         <div className="flex items-center space-x-2.5">
-          <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+          <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
             <Camera className="w-5 h-5" />
           </div>
           <div>
@@ -80,7 +80,7 @@ export const KarafSnapshotModal: React.FC<KarafSnapshotModalProps> = ({
           type="button"
           onClick={handleCreateSnapshot}
           disabled={bundles.length === 0}
-          className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white disabled:opacity-50 flex items-center gap-1.5 transition cursor-pointer"
+          className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-primary hover:bg-primary text-white disabled:opacity-50 flex items-center gap-1.5 transition cursor-pointer"
         >
           <Camera className="w-3.5 h-3.5" />
           <span>Salvar Snapshot Agora ({bundles.length})</span>

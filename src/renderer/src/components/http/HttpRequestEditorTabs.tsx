@@ -93,7 +93,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Auth {request.auth?.type !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">•</span>}
+          Auth {request.auth?.type !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-success/20 text-success text-xs">•</span>}
         </button>
 
         <button
@@ -105,7 +105,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Body {request.body?.mode !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-400 text-xs">•</span>}
+          Body {request.body?.mode !== 'none' && <span className="ml-1 px-1.5 py-0.2 rounded-full bg-info/20 text-info text-xs">•</span>}
         </button>
       </div>
 
@@ -148,7 +148,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
 
             {(request.auth?.type === 'winthor-auth' || request.auth?.type === 'inherit') && (
               <div className="p-3 bg-muted/30 border border-border rounded text-xs space-y-2">
-                <div className="flex items-center gap-2 text-emerald-400 font-medium">
+                <div className="flex items-center gap-2 text-success font-medium">
                   <ShieldCheck className="w-4 h-4" />
                   <span>Autenticação Integrada com WinThor</span>
                 </div>
@@ -157,7 +157,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
                 </p>
                 {activeToken && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Key className="w-3.5 h-3.5 text-amber-400" />
+                    <Key className="w-3.5 h-3.5 text-warning" />
                     <span>Token ativo atual: <code className="text-xs font-mono text-foreground">{activeToken.substring(0, 16)}...</code></span>
                   </div>
                 )}
@@ -251,7 +251,7 @@ export const HttpRequestEditorTabs: React.FC<HttpRequestEditorTabsProps> = ({
                     className="flex items-center gap-1 px-2.5 py-1 text-xs bg-muted hover:bg-muted/80 text-foreground rounded border border-border transition-colors cursor-pointer"
                     title="Copiar corpo da requisição"
                   >
-                    {bodyCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                    {bodyCopied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
                     <span>{bodyCopied ? 'Copiado!' : 'Copiar'}</span>
                   </button>
                 )}

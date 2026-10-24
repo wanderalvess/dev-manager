@@ -32,7 +32,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
     <div className="flex items-center justify-between gap-3">
       <div>
         <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-          <Layers className="w-3.5 h-3.5 text-blue-500" />
+          <Layers className="w-3.5 h-3.5 text-info" />
           <span>Projetos & Issues Jira</span>
         </h4>
         <p className="text-2xs text-muted-foreground">Issues do Jira indexadas como documentos técnicos.</p>
@@ -49,7 +49,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
 
     {sources.length === 0 && !editing ? (
       <div className="text-center py-5 border border-dashed border-border rounded-xl bg-muted/20">
-        <Layers className="w-6 h-6 mx-auto text-blue-500/50 mb-1" />
+        <Layers className="w-6 h-6 mx-auto text-info/50 mb-1" />
         <p className="text-xs font-semibold text-foreground">Nenhum projeto Jira configurado</p>
         <p className="text-2xs text-muted-foreground mt-0.5">
           Adicione projetos ou filtros JQL para transformar issues e requisitos em base de busca técnica.
@@ -67,7 +67,7 @@ export const DocSettingsJiraSection: React.FC<DocSettingsJiraSectionProps> = ({
                   onChange={(e) => onToggleEnabled(source, e.target.checked)}
                   className="text-primary focus:ring-0 shrink-0 accent-primary cursor-pointer"
                 />
-                <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                <Layers className="w-3.5 h-3.5 text-info shrink-0" />
                 <span className="font-semibold text-foreground truncate">{source.name}</span>
                 <span className="font-mono text-2xs text-muted-foreground truncate">{source.baseUrl}</span>
                 {source.projectKey && (

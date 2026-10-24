@@ -18,7 +18,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
-            <Terminal className="w-4 h-4 text-cyan-500" />
+            <Terminal className="w-4 h-4 text-info" />
             <span>Console Interativo Karaf Client</span>
           </h4>
           <p className="text-2xs text-muted-foreground mt-0.5">
@@ -29,7 +29,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
         <button
           onClick={() => onOpenKarafClient?.(containerNames)}
           disabled={isOpeningKarafClient}
-          className="flex items-center space-x-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
+          className="flex items-center space-x-1.5 px-3.5 py-2 bg-info hover:bg-info text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50 active:scale-98"
         >
           <Terminal className="w-3.5 h-3.5" />
           <span>{isOpeningKarafClient ? 'Abrindo Console...' : 'Abrir Console Karaf'}</span>
@@ -46,7 +46,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
           <span className="text-xs font-semibold text-muted-foreground">HTTP Web</span>
-          <div className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">8080</div>
+          <div className="text-xs font-mono font-bold text-info">8080</div>
           <p className="text-2xs text-muted-foreground">Portal & APIs</p>
         </div>
 
@@ -64,7 +64,7 @@ export const WtaKarafTab: React.FC<WtaKarafTabProps> = ({
 
         <div className="p-3 bg-muted/40 rounded-xl border border-border/70 space-y-1">
           <span className="text-xs font-semibold text-muted-foreground">Artemis JMS</span>
-          <div className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">61616</div>
+          <div className="text-xs font-mono font-bold text-primary">61616</div>
           <p className="text-2xs text-muted-foreground">Broker de Filas</p>
         </div>
       </div>

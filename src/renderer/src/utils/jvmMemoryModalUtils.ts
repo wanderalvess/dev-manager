@@ -58,16 +58,16 @@ export const resolveStrokeColor = (isNearOom: boolean, alertLevel: JvmAlertLevel
 
 export const resolveBadgeClass = (isNearOom: boolean, alertLevel: JvmAlertLevel): string =>
   isNearOom
-    ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+    ? 'bg-danger/20 text-danger border-danger/40'
     : alertLevel === 'WARNING'
-    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-    : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+    ? 'bg-warning/20 text-warning border-warning/40'
+    : 'bg-success/15 text-success border-success/30';
 
 export const resolveGaugeClass = (isNearOom: boolean, alertLevel: JvmAlertLevel): string =>
-  isNearOom ? 'bg-rose-500' : alertLevel === 'WARNING' ? 'bg-amber-500' : 'bg-sky-500';
+  isNearOom ? 'bg-danger' : alertLevel === 'WARNING' ? 'bg-warning' : 'bg-info';
 
 export const resolveStatusDotClass = (isNearOom: boolean, alertLevel: JvmAlertLevel): string =>
-  isNearOom ? 'bg-rose-500 animate-ping' : alertLevel === 'WARNING' ? 'bg-amber-500' : 'bg-emerald-500';
+  isNearOom ? 'bg-danger animate-ping' : alertLevel === 'WARNING' ? 'bg-warning' : 'bg-success';
 
 export const resolveStatusTitle = (isNearOom: boolean, alertLevel: JvmAlertLevel): string =>
   isNearOom ? 'Crítico (Quase OOM)' : alertLevel === 'WARNING' ? 'Atenção' : 'Operação Normal';

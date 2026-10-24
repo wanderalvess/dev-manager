@@ -46,13 +46,13 @@ export const KarafDeployHistoryStats: React.FC<KarafDeployHistoryStatsProps> = (
 
     {/* Origem */}
     <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-card/50 border border-border/60">
-      <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+      <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
         <Cpu className="w-3.5 h-3.5" />
       </div>
       <div>
         <div className="text-xs text-muted-foreground font-medium">Origem (MCP / UI)</div>
         <div className="text-xs font-bold font-mono text-foreground">
-          <span className="text-purple-400">{stats.mcpCount}</span> MCP · <span className="text-warning">{stats.uiCount}</span> UI
+          <span className="text-primary">{stats.mcpCount}</span> MCP · <span className="text-warning">{stats.uiCount}</span> UI
         </div>
       </div>
     </div>

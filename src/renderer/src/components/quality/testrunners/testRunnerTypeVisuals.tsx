@@ -4,11 +4,11 @@ import type { TestRunnerType } from '../../../../../shared/types';
 
 
 export const TYPE_ICONS: Record<TestRunnerType, React.ReactNode> = {
-  maven: <FileCode2 className="w-4 h-4 text-orange-400" />,
+  maven: <FileCode2 className="w-4 h-4 text-warning" />,
   playwright: <Globe className="w-4 h-4 text-success" />,
-  cypress: <Globe className="w-4 h-4 text-teal-400" />,
+  cypress: <Globe className="w-4 h-4 text-success" />,
   newman: <Send className="w-4 h-4 text-warning" />,
-  custom: <Terminal className="w-4 h-4 text-blue-400" />
+  custom: <Terminal className="w-4 h-4 text-info" />
 };
 
 export const TYPE_BADGES: Record<TestRunnerType, { label: string; badgeClass: string }> = {

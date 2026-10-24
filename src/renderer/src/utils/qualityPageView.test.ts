@@ -75,8 +75,8 @@ describe('calculateCategoryBreakdown', () => {
 
 describe('qualityPageView', () => {
   it('mapeia classes de status e rótulos de categoria', () => {
-    expect(getStatusSelectClass('passed')).toContain('emerald');
-    expect(getStatusSelectClass('failed')).toContain('rose');
+    expect(getStatusSelectClass('passed')).toContain('success');
+    expect(getStatusSelectClass('failed')).toContain('danger');
     expect(getStatusSelectClass('pending')).toContain('bg-muted');
     expect(getCategoryLabel('routine')).toBe('Rotina Delphi');
     expect(getCategoryLabel('e2e')).toBe('Fluxo E2E');

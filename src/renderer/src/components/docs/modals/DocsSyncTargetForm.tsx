@@ -111,7 +111,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
             className={modeButtonClass(editingTarget.syncMode === 'articles')}
           >
             <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-              <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
               <span>Artigos KB</span>
             </div>
             <p className="text-2xs text-muted-foreground leading-tight">
@@ -125,7 +125,7 @@ export const DocsSyncTargetForm: React.FC<DocsSyncTargetFormProps> = ({
             className={modeButtonClass(editingTarget.syncMode === 'chunks')}
           >
             <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-              <Cpu className="w-3.5 h-3.5 text-cyan-500" />
+              <Cpu className="w-3.5 h-3.5 text-info" />
               <span>Chunks RAG</span>
             </div>
             <p className="text-2xs text-muted-foreground leading-tight">

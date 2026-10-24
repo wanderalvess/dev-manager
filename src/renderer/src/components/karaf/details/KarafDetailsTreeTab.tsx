@@ -14,7 +14,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
     <div className="p-3 bg-muted/30 border border-border rounded-xl space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+          <span className="w-2 h-2 rounded-full bg-info inline-block"></span>
           Bundles Dependentes (Consumidores)
         </span>
         <span className="text-2xs font-mono text-muted-foreground">
@@ -26,7 +26,7 @@ export const KarafDetailsTreeTab: React.FC<KarafDetailsTreeTabProps> = ({ target
           Nenhum bundle no container consome pacotes deste bundle.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-3.5 border-l-2 border-blue-500/40 ml-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-3.5 border-l-2 border-info/40 ml-1">
           {bundleDetails.dependentBundles.map((dep) => (
             <div
               key={dep.id}

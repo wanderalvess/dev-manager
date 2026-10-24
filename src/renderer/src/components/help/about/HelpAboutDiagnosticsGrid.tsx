@@ -59,7 +59,7 @@ export const HelpAboutDiagnosticsGrid: React.FC<HelpAboutDiagnosticsGridProps> =
           Sistema Operacional:
         </span>
         <div className="flex items-center space-x-1.5 font-mono text-foreground font-semibold truncate">
-          <Monitor className="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" />
+          <Monitor className="w-4 h-4 text-info shrink-0" />
           <span className="truncate">
             {appInfo ? `Windows (${appInfo.osRelease} ${appInfo.osArch})` : 'Carregando...'}
           </span>

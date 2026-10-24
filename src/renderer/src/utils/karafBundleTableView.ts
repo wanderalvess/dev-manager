@@ -28,16 +28,16 @@ export function getSelectAllTitle(filteredCount: number, selectedCount: number):
 }
 
 export function getBundleStateBadgeClass(state: KarafBundleInfo['state']): string {
-  if (state === 'Active') return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25';
-  if (state === 'Resolved') return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25';
-  if (state === 'Installed') return 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25';
+  if (state === 'Active') return 'bg-success/10 text-success border-success/25';
+  if (state === 'Resolved') return 'bg-warning/10 text-warning border-warning/25';
+  if (state === 'Installed') return 'bg-info/10 text-info border-info/25';
   return 'bg-muted text-muted-foreground border-border';
 }
 
 export function getBundleStateDotClass(state: KarafBundleInfo['state']): string {
-  if (state === 'Active') return 'bg-emerald-500';
-  if (state === 'Resolved') return 'bg-amber-500';
-  return 'bg-sky-500';
+  if (state === 'Active') return 'bg-success';
+  if (state === 'Resolved') return 'bg-warning';
+  return 'bg-info';
 }
 
 export function getBundleRowClass(isSelected: boolean): string {

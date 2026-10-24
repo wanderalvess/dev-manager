@@ -37,7 +37,7 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     description: 'Serviços Windows, liberação de portas e servidor OSGi Debug.',
     shortcut: 'Alt+1',
     hoverBorderClass: 'hover:border-primary/50',
-    iconClass: 'text-cyan-400',
+    iconClass: 'text-info',
     titleHoverClass: 'group-hover:text-primary'
   },
   {
@@ -46,9 +46,9 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Banco de Dados',
     description: 'Database Studio SQL para Oracle, PostgreSQL e MySQL.',
     shortcut: 'Alt+2',
-    hoverBorderClass: 'hover:border-emerald-500/50',
-    iconClass: 'text-emerald-500',
-    titleHoverClass: 'group-hover:text-emerald-500'
+    hoverBorderClass: 'hover:border-success/50',
+    iconClass: 'text-success',
+    titleHoverClass: 'group-hover:text-success'
   },
   {
     navTarget: 'containers',
@@ -56,18 +56,18 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Containers Docker',
     description: 'Gestão de ciclo de vida de containers, streaming de logs e status.',
     shortcut: 'Alt+3',
-    hoverBorderClass: 'hover:border-blue-400/50',
-    iconClass: 'text-blue-400',
-    titleHoverClass: 'group-hover:text-blue-400'
+    hoverBorderClass: 'hover:border-info/50',
+    iconClass: 'text-info',
+    titleHoverClass: 'group-hover:text-info'
   },
   {
     navTarget: 'winthor',
     icon: Network,
     title: 'WinThor & WSL',
     description: 'Stack Oracle XE, WTA e WSH, distros WSL2, snapshots e bootstrap INFR.',
-    hoverBorderClass: 'hover:border-blue-400/50',
-    iconClass: 'text-blue-400',
-    titleHoverClass: 'group-hover:text-blue-400'
+    hoverBorderClass: 'hover:border-info/50',
+    iconClass: 'text-info',
+    titleHoverClass: 'group-hover:text-info'
   },
   {
     navTarget: 'deploy',
@@ -75,27 +75,27 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Deploy & Esteiras',
     description: 'Perfis de build e deploy: Karaf, Maven, Docker compose e scripts custom.',
     shortcut: 'Alt+4',
-    hoverBorderClass: 'hover:border-amber-500/50',
-    iconClass: 'text-amber-500',
-    titleHoverClass: 'group-hover:text-amber-500'
+    hoverBorderClass: 'hover:border-warning/50',
+    iconClass: 'text-warning',
+    titleHoverClass: 'group-hover:text-warning'
   },
   {
     navTarget: 'karaf',
     icon: Cpu,
     title: 'Karaf & OSGi',
     description: 'Bundles, features, catálogo 801, memória da JVM e diagnósticos do servidor.',
-    hoverBorderClass: 'hover:border-amber-500/50',
-    iconClass: 'text-amber-500',
-    titleHoverClass: 'group-hover:text-amber-500'
+    hoverBorderClass: 'hover:border-warning/50',
+    iconClass: 'text-warning',
+    titleHoverClass: 'group-hover:text-warning'
   },
   {
     navTarget: 'db-backups',
     icon: HardDriveDownload,
     title: 'Backups de Banco',
     description: 'Backup, restauração, agendamento, arquivos, histórico e webhooks.',
-    hoverBorderClass: 'hover:border-emerald-500/50',
-    iconClass: 'text-emerald-500',
-    titleHoverClass: 'group-hover:text-emerald-500'
+    hoverBorderClass: 'hover:border-success/50',
+    iconClass: 'text-success',
+    titleHoverClass: 'group-hover:text-success'
   },
   {
     navTarget: 'git',
@@ -103,9 +103,9 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Git & Azure DevOps',
     description: 'Status de branches, diffs, commits e criação ágil de Pull Requests.',
     shortcut: 'Alt+5',
-    hoverBorderClass: 'hover:border-blue-500/50',
-    iconClass: 'text-blue-500',
-    titleHoverClass: 'group-hover:text-blue-500'
+    hoverBorderClass: 'hover:border-info/50',
+    iconClass: 'text-info',
+    titleHoverClass: 'group-hover:text-info'
   },
   {
     navTarget: 'routines',
@@ -113,9 +113,9 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Catálogo de Rotinas',
     description: 'Executáveis WinThor (.exe/.pc), download CCW e rollback .bak.',
     shortcut: 'Alt+6',
-    hoverBorderClass: 'hover:border-indigo-500/50',
-    iconClass: 'text-indigo-400',
-    titleHoverClass: 'group-hover:text-indigo-400'
+    hoverBorderClass: 'hover:border-primary/50',
+    iconClass: 'text-primary',
+    titleHoverClass: 'group-hover:text-primary'
   },
   {
     navTarget: 'docs',
@@ -123,9 +123,9 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Documentação (RAG)',
     description: 'Busca semântica em manuais e contratos de API com IA local.',
     shortcut: 'Alt+7',
-    hoverBorderClass: 'hover:border-purple-500/50',
-    iconClass: 'text-purple-400',
-    titleHoverClass: 'group-hover:text-purple-400'
+    hoverBorderClass: 'hover:border-primary/50',
+    iconClass: 'text-primary',
+    titleHoverClass: 'group-hover:text-primary'
   },
   {
     navTarget: 'logs',
@@ -133,9 +133,9 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Logs em Tempo Real',
     description: 'Acompanhamento contínuo (tail -f) de logs de aplicações.',
     shortcut: 'Alt+8',
-    hoverBorderClass: 'hover:border-sky-500/50',
-    iconClass: 'text-sky-500',
-    titleHoverClass: 'group-hover:text-sky-500'
+    hoverBorderClass: 'hover:border-info/50',
+    iconClass: 'text-info',
+    titleHoverClass: 'group-hover:text-info'
   },
   {
     navTarget: 'apm',
@@ -143,9 +143,9 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'APM & Traces',
     description: 'Receptor OpenTelemetry, latências, erros e waterfall de traces.',
     shortcut: 'Alt+0',
-    hoverBorderClass: 'hover:border-rose-500/50',
-    iconClass: 'text-rose-500',
-    titleHoverClass: 'group-hover:text-rose-500'
+    hoverBorderClass: 'hover:border-danger/50',
+    iconClass: 'text-danger',
+    titleHoverClass: 'group-hover:text-danger'
   },
   {
     navTarget: 'quality',
@@ -153,9 +153,9 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     title: 'Qualidade (QA & PO)',
     description: 'Homologação, validador regressivo, test runners e TAUT (Cypress) em páginas próprias.',
     shortcut: 'Alt+Q',
-    hoverBorderClass: 'hover:border-emerald-500/50',
-    iconClass: 'text-emerald-400',
-    titleHoverClass: 'group-hover:text-emerald-400'
+    hoverBorderClass: 'hover:border-success/50',
+    iconClass: 'text-success',
+    titleHoverClass: 'group-hover:text-success'
   },
   {
     navTarget: 'settings',

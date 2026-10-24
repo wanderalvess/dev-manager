@@ -28,7 +28,7 @@ export const ApmWaterfallNode: React.FC<WaterfallNodeProps> = ({ node, selectedS
       return 'bg-warning';
     }
     if (tier.category === 'java') {
-      return 'bg-purple-500/85';
+      return 'bg-primary/85';
     }
     return 'bg-info';
   };

@@ -68,7 +68,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
     <div className="p-2.5 rounded-lg border border-border/70 bg-muted/20 space-y-2">
       <div className="flex items-center justify-between">
         <label className="font-bold text-foreground flex items-center gap-1.5 text-2xs">
-          <Network className="w-3.5 h-3.5 text-orange-500" />
+          <Network className="w-3.5 h-3.5 text-warning" />
           <span>Buscar no tnsnames.ora</span>
         </label>
         <div className="flex items-center gap-1.5">
@@ -87,7 +87,7 @@ export const OracleTnsSelector: React.FC<OracleTnsSelectorProps> = ({
             className="p-1 text-muted-foreground hover:text-foreground rounded transition cursor-pointer"
             title="Selecionar outro arquivo tnsnames.ora" aria-label="Selecionar outro arquivo tnsnames.ora"
           >
-            <FolderOpen className="w-3 h-3 text-orange-500" />
+            <FolderOpen className="w-3 h-3 text-warning" />
           </button>
         </div>
       </div>

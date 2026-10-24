@@ -125,7 +125,7 @@ export const Routine801Table: React.FC<Routine801TableProps> = ({
                 <span
                   className={`inline-block px-1.5 py-0.5 text-2xs font-mono font-medium rounded border ${
                     item.tipoProjeto === 'ROTINA'
-                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                      ? 'bg-info/10 text-info border-info/20'
                       : 'bg-muted text-muted-foreground border-border'
                   }`}
                 >

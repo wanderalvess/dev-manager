@@ -98,7 +98,7 @@ export const HttpKeyValueEditor: React.FC<HttpKeyValueEditorProps> = ({
               <button
                 type="button"
                 onClick={() => handleDelete(item.id)}
-                className="p-1 text-muted-foreground hover:text-red-400 rounded transition-colors"
+                className="p-1 text-muted-foreground hover:text-danger rounded transition-colors"
                 title="Remover"
               >
                 <Trash2 className="w-3.5 h-3.5" />

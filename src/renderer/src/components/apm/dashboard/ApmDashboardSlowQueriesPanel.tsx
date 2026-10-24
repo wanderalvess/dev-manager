@@ -115,7 +115,7 @@ export const ApmDashboardSlowQueriesPanel: React.FC<ApmDashboardSlowQueriesPanel
                     }
                     if (isWinThorTable(tok.text)) {
                       return (
-                        <span key={`tk-${tIdx}`} className="text-info font-semibold underline decoration-dotted decoration-sky-500/50">
+                        <span key={`tk-${tIdx}`} className="text-info font-semibold underline decoration-dotted decoration-info/50">
                           {tok.text}
                         </span>
                       );

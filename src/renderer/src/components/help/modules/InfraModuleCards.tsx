@@ -9,7 +9,7 @@ interface EnvironmentModuleCardProps extends ModuleCardProps {
 export const EnvironmentModuleCard: React.FC<EnvironmentModuleCardProps> = ({ debugPort, onNavigate }) => (
   <ModuleCardShell
     icon={<Terminal className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20"
+    iconBoxClass="p-2 rounded-xl bg-info/10 text-info border border-info/20"
     title="1. Gestor de Ambiente &amp; Automação"
     subtitle="Servidor OSGi Debug, Portas &amp; Serviços"
     shortcut="Alt+1"
@@ -17,7 +17,7 @@ export const EnvironmentModuleCard: React.FC<EnvironmentModuleCardProps> = ({ de
       <ModuleNavButton
         onNavigate={onNavigate}
         target="env"
-        colorClass="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30"
+        colorClass="bg-info/10 hover:bg-info/20 text-info border border-info/30"
         label="Abrir Módulo de Ambiente"
       />
     }
@@ -37,7 +37,7 @@ export const EnvironmentModuleCard: React.FC<EnvironmentModuleCardProps> = ({ de
 export const ContainersModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<Boxes className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-blue-400/10 text-blue-700 dark:text-blue-400 border border-blue-400/20"
+    iconBoxClass="p-2 rounded-xl bg-info/10 text-info border border-info/20"
     title="3. Containers Docker"
     subtitle="Gerenciador do Daemon Docker Local"
     shortcut="Alt+3"
@@ -45,14 +45,14 @@ export const ContainersModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) 
       <ModuleNavButton
         onNavigate={onNavigate}
         target="containers"
-        colorClass="bg-blue-400/10 hover:bg-blue-400/20 text-blue-700 dark:text-blue-400 border border-blue-400/30"
+        colorClass="bg-info/10 hover:bg-info/20 text-info border border-info/30"
         label="Abrir Módulo de Containers"
       />
     }
   >
     <ModuleBullets
       intro="Controle intuitivo dos containers de apoio do seu ecossistema (bancos de dados, filas, caches):"
-      checkClass="text-blue-700 dark:text-blue-400"
+      checkClass="text-info"
     >
       <span><strong>Tela WinThor &amp; WSL:</strong> a topologia da stack (Oracle XE, WTA, WSH), o botão <em>Subir WinThor</em>, os snapshots do WSL e o Assistente INFR ficam na tela própria <em>WinThor &amp; WSL</em> (menu Infra).</span>
       <span><strong>Status em Tempo Real:</strong> Identifica containers ativos, portas expostas e consumo.</span>
@@ -66,7 +66,7 @@ export const ContainersModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) 
 export const DocsRagModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => (
   <ModuleCardShell
     icon={<FileSearch className="w-4 h-4" />}
-    iconBoxClass="p-2 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20"
+    iconBoxClass="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20"
     title="7. Documentação Semântica (RAG Local)"
     subtitle="IA Local com Embeddings FastEmbed"
     shortcut="Alt+7"
@@ -74,14 +74,14 @@ export const DocsRagModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => 
       <ModuleNavButton
         onNavigate={onNavigate}
         target="docs"
-        colorClass="bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-500/30"
+        colorClass="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30"
         label="Abrir Documentação Semântica"
       />
     }
   >
     <ModuleBullets
       intro="Indexação de manuais, diagnósticos técnicos e contratos de API com pesquisa por significado conceitual:"
-      checkClass="text-purple-700 dark:text-purple-400"
+      checkClass="text-primary"
     >
       <span><strong>Perguntas em Linguagem Natural:</strong> Encontre respostas mesmo sem saber o nome exato da função.</span>
       <span><strong>100% Offline e Seguro:</strong> Processamento de embeddings local, sem envio de código para nuvem.</span>

@@ -96,7 +96,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
         {/* Explicação Clara: Causa e Solução */}
         <div className="p-3 rounded-lg bg-background/70 border border-border/90 space-y-2 text-xs">
           <div className="flex items-start gap-2">
-            <span className="font-bold text-amber-500 uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
+            <span className="font-bold text-warning uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
               Causa:
             </span>
             <span className="text-foreground/90 leading-relaxed">
@@ -105,7 +105,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
           </div>
 
           <div className="flex items-start gap-2 pt-2 border-t border-border/50">
-            <span className="font-bold text-emerald-500 uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
+            <span className="font-bold text-success uppercase font-mono text-2xs tracking-wider shrink-0 mt-0.5">
               Solução:
             </span>
             <span className="text-foreground/90 leading-relaxed font-medium">
@@ -230,7 +230,7 @@ export const OsgiResolutionDiagnosticCard: React.FC<OsgiResolutionDiagnosticCard
                 type="button"
                 onClick={() => onExecuteMatchedProfile(diagnostic.matchedProfileId || diagnostic.matchedProfileName!)}
                 disabled={isBusy}
-                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all duration-150 cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-1.5 rounded-lg bg-success hover:bg-success active:bg-success text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all duration-150 cursor-pointer disabled:opacity-50"
                 title={`Disparar imediatamente o perfil de deploy "${diagnostic.matchedProfileName}" para construir e registrar a versão necessária no Karaf`}
               >
                 <Play className="w-3.5 h-3.5 fill-current" />

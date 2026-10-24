@@ -59,9 +59,9 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
       <div className="p-3 bg-card border border-border rounded-lg space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-foreground font-mono uppercase tracking-wide flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-purple-400" /> Non-Heap (Metaspace / CodeCache)
+            <Layers className="w-3.5 h-3.5 text-primary" /> Non-Heap (Metaspace / CodeCache)
           </span>
-          <span className="text-xs font-mono font-bold text-purple-400 px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/30">
+          <span className="text-xs font-mono font-bold text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30">
             {metrics?.nonHeapUsedMb || 0} MB
           </span>
         </div>
@@ -69,7 +69,7 @@ export const JvmMemoryCards: React.FC<JvmMemoryCardsProps> = ({ metrics, isNearO
         {/* Progress Gauge para Metaspace */}
         <div className="w-full bg-muted/60 rounded-xs h-1.5 overflow-hidden">
           <div
-            className="h-full bg-purple-500 transition-all duration-300"
+            className="h-full bg-primary transition-all duration-300"
             style={{ width: `${computeNonHeapGaugeWidth(metrics?.nonHeapUsedMb, metrics?.nonHeapCommittedMb)}%` }}
           />
         </div>

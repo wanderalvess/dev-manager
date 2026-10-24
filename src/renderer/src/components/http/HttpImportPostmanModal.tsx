@@ -108,7 +108,7 @@ export const HttpImportPostmanModal: React.FC<HttpImportPostmanModalProps> = ({
         </div>
 
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-red-400 flex items-start gap-2">
+          <div className="p-3 bg-danger/10 border border-danger/30 rounded text-danger flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>

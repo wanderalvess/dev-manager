@@ -29,7 +29,7 @@ export const BindPrefixBadge: React.FC<BindPrefixBadgeProps> = ({ prefix }) => {
     case 'template':
       return (
         <span
-          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-600 dark:text-pink-400 border border-pink-500/30"
+          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-danger/20 text-danger border border-danger/30"
           title="Placeholder de template / MyBatis (${VAR})"
         >
           {prefix} Template
@@ -38,7 +38,7 @@ export const BindPrefixBadge: React.FC<BindPrefixBadgeProps> = ({ prefix }) => {
     default:
       return (
         <span
-          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 border border-violet-500/30"
+          className="text-2xs font-mono font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary border border-primary/30"
           title="Bind Variable nativa (:VAR)"
         >
           : Bind

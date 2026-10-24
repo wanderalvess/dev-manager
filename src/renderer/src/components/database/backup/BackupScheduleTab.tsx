@@ -123,7 +123,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
 
       <div className="p-4 bg-background/70 border border-border/70 rounded-xl space-y-3">
         <span className="font-bold text-foreground text-xs flex items-center gap-1.5">
-          <FlaskConical className="w-4 h-4 text-cyan-500" /> Restore Drill Automático (Teste Periódico)
+          <FlaskConical className="w-4 h-4 text-info" /> Restore Drill Automático (Teste Periódico)
         </span>
         <p className="text-2xs text-muted-foreground">
           Restaura automaticamente o backup mais recente gerado contra uma base de teste descartável (scratch) para certificar a integridade dos dados.

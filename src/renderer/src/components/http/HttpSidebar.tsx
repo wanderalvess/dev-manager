@@ -196,7 +196,7 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
                 <button
                   type="button"
                   onClick={onClearHistory}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-danger transition-colors cursor-pointer"
                   title="Limpar todo o histórico"
                 >
                   <Trash2 className="w-2.5 h-2.5" />
@@ -224,7 +224,7 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
                       )}
                       <span
                         className={`font-mono text-xs font-bold ${
-                          item.status >= 200 && item.status < 300 ? 'text-emerald-400' : 'text-red-400'
+                          item.status >= 200 && item.status < 300 ? 'text-success' : 'text-danger'
                         }`}
                       >
                         {item.status || 'ERR'}

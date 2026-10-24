@@ -51,12 +51,12 @@ describe('buildFeatureUninstallPreview', () => {
 
 describe('classes de estado do bundle', () => {
   it('mapeia estados conhecidos e fallback', () => {
-    expect(getBundleStateBadgeClass('Active')).toContain('emerald');
-    expect(getBundleStateBadgeClass('Resolved')).toContain('amber');
-    expect(getBundleStateBadgeClass('Installed')).toContain('blue');
+    expect(getBundleStateBadgeClass('Active')).toContain('success');
+    expect(getBundleStateBadgeClass('Resolved')).toContain('warning');
+    expect(getBundleStateBadgeClass('Installed')).toContain('info');
     expect(getBundleStateBadgeClass('Other')).toContain('bg-muted');
-    expect(getBundleStateDotClass('Active')).toBe('bg-emerald-500');
-    expect(getBundleStateDotClass('Resolved')).toBe('bg-amber-500');
-    expect(getBundleStateDotClass('Other')).toBe('bg-blue-500');
+    expect(getBundleStateDotClass('Active')).toBe('bg-success');
+    expect(getBundleStateDotClass('Resolved')).toBe('bg-warning');
+    expect(getBundleStateDotClass('Other')).toBe('bg-info');
   });
 });

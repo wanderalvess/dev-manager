@@ -39,11 +39,11 @@ export function categorizeSpan(span: TraceSpan): SpanTierInfo {
       category: 'jdbc',
       label: 'JDBC',
       fullLabel: 'Queries JDBC (Banco)',
-      badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30',
-      barColor: 'bg-amber-500',
-      borderColor: 'border-amber-500/40',
-      textColor: 'text-amber-700 dark:text-amber-400',
-      bgLight: 'bg-amber-500/10',
+      badgeClass: 'bg-warning/15 text-warning border-warning/30',
+      barColor: 'bg-warning',
+      borderColor: 'border-warning/40',
+      textColor: 'text-warning',
+      bgLight: 'bg-warning/10',
       isSlow
     };
   }
@@ -59,11 +59,11 @@ export function categorizeSpan(span: TraceSpan): SpanTierInfo {
       category: 'java',
       label: 'Java',
       fullLabel: 'Processamento Java',
-      badgeClass: 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30',
-      barColor: 'bg-purple-500',
-      borderColor: 'border-purple-500/40',
-      textColor: 'text-purple-700 dark:text-purple-400',
-      bgLight: 'bg-purple-500/10',
+      badgeClass: 'bg-primary/15 text-primary border-primary/30',
+      barColor: 'bg-primary',
+      borderColor: 'border-primary/40',
+      textColor: 'text-primary',
+      bgLight: 'bg-primary/10',
       isSlow
     };
   }
@@ -73,11 +73,11 @@ export function categorizeSpan(span: TraceSpan): SpanTierInfo {
     category: 'http',
     label: 'HTTP',
     fullLabel: 'Requisição HTTP',
-    badgeClass: 'bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/30',
-    barColor: 'bg-sky-500',
-    borderColor: 'border-sky-500/40',
-    textColor: 'text-sky-700 dark:text-sky-400',
-    bgLight: 'bg-sky-500/10',
+    badgeClass: 'bg-info/15 text-info border-info/30',
+    barColor: 'bg-info',
+    borderColor: 'border-info/40',
+    textColor: 'text-info',
+    bgLight: 'bg-info/10',
     isSlow
   };
 }
@@ -390,14 +390,14 @@ export function filterTraces(
 export function getMethodBadgeClass(method?: string): string {
   switch (method?.toUpperCase()) {
     case 'GET':
-      return 'text-sky-700 dark:text-sky-400 bg-sky-500/15 border-sky-500/30 dark:border-sky-800/60 dark:bg-sky-950/40';
+      return 'text-info bg-info/15 border-info/30';
     case 'POST':
-      return 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border-emerald-500/30 dark:border-emerald-800/60 dark:bg-emerald-950/40';
+      return 'text-success bg-success/15 border-success/30';
     case 'PUT':
     case 'PATCH':
-      return 'text-amber-700 dark:text-amber-400 bg-amber-500/15 border-amber-500/30 dark:border-amber-800/60 dark:bg-amber-950/40';
+      return 'text-warning bg-warning/15 border-warning/30';
     case 'DELETE':
-      return 'text-rose-700 dark:text-rose-400 bg-rose-500/15 border-rose-500/30 dark:border-rose-800/60 dark:bg-rose-950/40';
+      return 'text-danger bg-danger/15 border-danger/30';
     default:
       return 'text-muted-foreground bg-muted/40 border-border/60';
   }
@@ -408,15 +408,15 @@ export function getMethodBadgeClass(method?: string): string {
  */
 export function getStatusBadgeClass(code?: number, hasError?: boolean): string {
   if (hasError || (code && code >= 500)) {
-    return 'text-rose-700 dark:text-rose-400 bg-rose-500/15 border-rose-500/30 dark:border-rose-800/50';
+    return 'text-danger bg-danger/15 border-danger/30';
   }
   if (code && code >= 400) {
-    return 'text-amber-700 dark:text-amber-400 bg-amber-500/15 border-amber-500/30 dark:border-amber-800/50';
+    return 'text-warning bg-warning/15 border-warning/30';
   }
   if (code && code >= 300) {
-    return 'text-sky-700 dark:text-sky-400 bg-sky-500/15 border-sky-500/30 dark:border-sky-800/50';
+    return 'text-info bg-info/15 border-info/30';
   }
-  return 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border-emerald-500/30 dark:border-emerald-800/50';
+  return 'text-success bg-success/15 border-success/30';
 }
 
 /**

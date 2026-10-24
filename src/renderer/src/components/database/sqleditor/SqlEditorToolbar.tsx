@@ -153,7 +153,7 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
         onClick={onOpenBindModal}
         className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-2xs cursor-pointer ${
           detectedVariables.length > 0
-            ? 'bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/40 text-violet-400'
+            ? 'bg-primary/15 hover:bg-primary/25 border border-primary/40 text-primary'
             : 'bg-card hover:bg-muted border border-border/70 text-foreground'
         }`}
         title={
@@ -162,10 +162,10 @@ export const SqlEditorToolbar: React.FC<SqlEditorToolbarProps> = ({
             : 'Abrir painel de parâmetros e variáveis da consulta'
         }
       >
-        <SlidersHorizontal className={`w-3.5 h-3.5 ${detectedVariables.length > 0 ? 'text-violet-400' : 'text-muted-foreground'}`} />
+        <SlidersHorizontal className={`w-3.5 h-3.5 ${detectedVariables.length > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
         <span>Parâmetros</span>
         {detectedVariables.length > 0 && (
-          <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-violet-500/25 text-violet-300">
+          <span className="px-1.5 py-0.2 rounded-full text-2xs font-bold bg-primary/25 text-primary">
             {detectedVariables.length}
           </span>
         )}

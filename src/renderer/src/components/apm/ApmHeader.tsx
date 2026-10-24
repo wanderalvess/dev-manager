@@ -124,7 +124,7 @@ export const ApmHeader: React.FC<ApmHeaderProps> = ({
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Layers className="w-3.5 h-3.5 text-indigo-500" />
+            <Layers className="w-3.5 h-3.5 text-primary" />
             <span>Traces Explorer</span>
             {traceCount > 0 && (
               <span className="text-2xs font-mono px-1 rounded bg-muted text-muted-foreground">

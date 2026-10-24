@@ -53,7 +53,7 @@ export const DeployPomSyncFields: React.FC<DeployPomSyncFieldsProps> = ({
         {/* Destino */}
         <div className="space-y-1.5 p-3 rounded-xl border border-border bg-card">
           <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-            <FolderGit2 className="w-3.5 h-3.5 text-emerald-500" />
+            <FolderGit2 className="w-3.5 h-3.5 text-success" />
             <span>Projeto de Destino (Downstream)</span>
           </label>
           <p className="text-2xs text-muted-foreground">Projeto cujo pom.xml receberá a nova versão</p>
@@ -95,7 +95,7 @@ export const DeployPomSyncFields: React.FC<DeployPomSyncFieldsProps> = ({
               onChange={(e) => onUpdate({ createPomBackup: e.target.checked })}
               className="rounded border-border text-primary focus:ring-0"
             />
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <ShieldCheck className="w-4 h-4 text-success" />
             <span>Criar cópia de segurança (.bak) do pom.xml antes de alterar</span>
           </label>
         </div>

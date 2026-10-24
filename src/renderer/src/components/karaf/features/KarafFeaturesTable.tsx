@@ -67,7 +67,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
               <tr
                 key={`${feat.name}-${feat.version}`}
                 className={`hover:bg-muted/30 transition-colors group ${
-                  feat.isWinthor ? 'bg-indigo-500/2' : ''
+                  feat.isWinthor ? 'bg-primary/2' : ''
                 }`}
               >
                 {/* Nome da Feature & Detalhes */}
@@ -93,7 +93,7 @@ export const KarafFeaturesTable: React.FC<KarafFeaturesTableProps> = ({
 
                     {/* Tag WinThor */}
                     {feat.isWinthor && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/25">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/25">
                         <ShieldCheck className="w-3 h-3" />
                         WinThor
                       </span>

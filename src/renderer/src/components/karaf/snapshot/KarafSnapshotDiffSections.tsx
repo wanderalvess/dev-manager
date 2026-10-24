@@ -40,7 +40,7 @@ export const KarafSnapshotDiffSections: React.FC<KarafSnapshotDiffSectionsProps>
     {/* Estados alterados */}
     {snapshotDiff.stateChanged.length > 0 && (
       <div className="space-y-2">
-        <div className="text-xs font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+        <div className="text-xs font-bold text-info flex items-center gap-1.5">
           <Play className="w-3.5 h-3.5" />
           Estados Alterados ({snapshotDiff.stateChanged.length})
         </div>
@@ -48,7 +48,7 @@ export const KarafSnapshotDiffSections: React.FC<KarafSnapshotDiffSectionsProps>
           {snapshotDiff.stateChanged.map(({ snapshot, current }) => (
             <div
               key={current.id}
-              className="p-2.5 rounded-xl border border-blue-500/30 bg-blue-500/5 flex items-center justify-between text-xs"
+              className="p-2.5 rounded-xl border border-info/30 bg-info/5 flex items-center justify-between text-xs"
             >
               <div>
                 <span className="font-mono font-bold text-foreground">[{current.id}] </span>
@@ -56,8 +56,8 @@ export const KarafSnapshotDiffSections: React.FC<KarafSnapshotDiffSectionsProps>
               </div>
               <div className="flex items-center gap-2 font-mono text-2xs">
                 <span className="text-muted-foreground">{snapshot.state}</span>
-                <ArrowRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span className="text-blue-700 dark:text-blue-400 font-bold">{current.state}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-info" />
+                <span className="text-info font-bold">{current.state}</span>
               </div>
             </div>
           ))}

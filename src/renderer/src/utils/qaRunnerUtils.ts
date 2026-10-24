@@ -43,19 +43,19 @@ export function toggleStepId(current: Set<string>, stepId: string): Set<string> 
 }
 
 export function getAssertionRowClass(status: QaRunnerAssertionStatus): string {
-  if (status === 'failed') return 'bg-rose-500/5';
-  if (status === 'warning') return 'bg-amber-500/5';
+  if (status === 'failed') return 'bg-danger/5';
+  if (status === 'warning') return 'bg-warning/5';
   return 'hover:bg-muted/20';
 }
 
 export function getAssertionBadgeClass(status: QaRunnerAssertionStatus): string {
   if (status === 'passed') {
-    return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+    return 'bg-success/10 text-success border-success/30';
   }
   if (status === 'failed') {
-    return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30';
+    return 'bg-danger/10 text-danger border-danger/30';
   }
-  return 'bg-amber-500/10 text-amber-500 border-amber-500/30';
+  return 'bg-warning/10 text-warning border-warning/30';
 }
 
 export function getAssertionBadgeLabel(status: QaRunnerAssertionStatus): string {

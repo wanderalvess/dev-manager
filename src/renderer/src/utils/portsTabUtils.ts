@@ -9,12 +9,12 @@ export interface QuickPortPreset {
 export const QUICK_PORT_PRESETS: QuickPortPreset[] = [
   { port: 8889, label: 'Portal Web Local', buttonLabel: '+ :8889 (Portal Web)', hoverBorderClass: 'hover:border-primary/40' },
   { port: 8181, label: 'Karaf Web Alternativo', buttonLabel: '+ :8181 (Karaf Web)', hoverBorderClass: 'hover:border-primary/40' },
-  { port: 8101, label: 'Karaf SSH (client.bat)', buttonLabel: '+ :8101 (Karaf SSH)', hoverBorderClass: 'hover:border-amber-500/40' },
+  { port: 8101, label: 'Karaf SSH (client.bat)', buttonLabel: '+ :8101 (Karaf SSH)', hoverBorderClass: 'hover:border-warning/40' },
   { port: 8080, label: 'Tomcat / Web', buttonLabel: '+ :8080 (Web)', hoverBorderClass: 'hover:border-primary/40' },
-  { port: 5005, label: 'Java Remote Debug', buttonLabel: '+ :5005 (Debug JVM)', hoverBorderClass: 'hover:border-emerald-500/40' },
-  { port: 1521, label: 'Oracle DB Listener', buttonLabel: '+ :1521 (Oracle DB)', hoverBorderClass: 'hover:border-blue-500/40' },
-  { port: 6379, label: 'Redis Cache', buttonLabel: '+ :6379 (Redis)', hoverBorderClass: 'hover:border-rose-500/40' },
-  { port: 8085, label: 'Serviço API Local', buttonLabel: '+ :8085 (API Local)', hoverBorderClass: 'hover:border-emerald-500/40' }
+  { port: 5005, label: 'Java Remote Debug', buttonLabel: '+ :5005 (Debug JVM)', hoverBorderClass: 'hover:border-success/40' },
+  { port: 1521, label: 'Oracle DB Listener', buttonLabel: '+ :1521 (Oracle DB)', hoverBorderClass: 'hover:border-info/40' },
+  { port: 6379, label: 'Redis Cache', buttonLabel: '+ :6379 (Redis)', hoverBorderClass: 'hover:border-danger/40' },
+  { port: 8085, label: 'Serviço API Local', buttonLabel: '+ :8085 (API Local)', hoverBorderClass: 'hover:border-success/40' }
 ];
 
 /** Texto digitado -> número de porta; vazio/inválido vira 0 (como o campo já tratava). */

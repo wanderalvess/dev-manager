@@ -62,7 +62,7 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Filtrar por nome, versão, repositório..."
-            className="w-full pl-10 pr-9 py-2.5 bg-background border border-input rounded-[10px] text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono transition-colors"
+            className="w-full pl-10 pr-9 py-2.5 bg-background border border-input rounded-[10px] text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary font-mono transition-colors"
           />
           {searchQuery ? (
             <button
@@ -101,11 +101,11 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
             onClick={() => onScopeFilterChange('WINTHOR')}
             className={`px-2.5 py-1 rounded-md transition-all cursor-pointer flex items-center space-x-1.5 ${
               scopeFilter === 'WINTHOR'
-                ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shadow-2xs font-bold'
+                ? 'bg-primary/20 text-primary shadow-2xs font-bold'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Shield className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+            <Shield className="w-3 h-3 text-primary" />
             <span>WinThor</span>
             <span className="text-2xs opacity-70 tabular-nums">({winthorCount})</span>
           </button>
@@ -138,8 +138,8 @@ export const KarafFeaturesToolbar: React.FC<KarafFeaturesToolbarProps> = ({
           onClick={onToggleInstallDrawer}
           className={`px-3 py-1.5 rounded-lg font-mono font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
             isInstallDrawerOpen
-              ? 'bg-indigo-600 text-white shadow-2xs'
-              : 'bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
+              ? 'bg-primary text-white shadow-2xs'
+              : 'bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary'
           }`}
           title="Abrir painel de instalação de feature"
         >
