@@ -15,9 +15,9 @@ interface ProfileToolbarProps {
   onImportFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-const BTN = 'flex items-center gap-1 px-2 py-1 text-muted-foreground hover:text-foreground font-semibold rounded-lg hover:bg-card transition-colors';
+const BTN = 'h-8 flex items-center gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground font-medium rounded-lg hover:bg-muted transition-colors cursor-pointer';
 
-/** Botões do perfil: Novo, Editar, Duplicar, Exportar, Importar, Excluir. */
+/** Botões do perfil: Novo, Editar, Duplicar, Exportar, Importar, Excluir (discretos: a ação principal fica no topo). */
 export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
   profiles,
   activeProfile,
@@ -30,24 +30,14 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
   onImportFileChange
 }) => (
   <>
-    <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border/60 text-xs gap-0.5" data-tour="profile-toolbar">
-      <button
-        type="button"
-        onClick={onNew}
-        className="flex items-center gap-1 px-2.5 py-1 text-muted-foreground hover:text-foreground font-semibold rounded-lg hover:bg-card transition-colors"
-        title="Criar um novo perfil de ambiente personalizado"
-      >
-        <Plus className="w-3.5 h-3.5 text-primary" />
+    <div className="flex flex-wrap items-center gap-0.5" data-tour="profile-toolbar">
+      <button type="button" onClick={onNew} className={BTN} title="Criar um novo perfil de ambiente personalizado">
+        <Plus className="w-3.5 h-3.5" />
         <span>Novo</span>
       </button>
 
-      <button
-        type="button"
-        onClick={onEdit}
-        className="flex items-center gap-1 px-2.5 py-1 text-muted-foreground hover:text-foreground font-semibold rounded-lg hover:bg-card transition-colors"
-        title="Editar os passos, comandos e portas do perfil ativo"
-      >
-        <Edit3 className="w-3.5 h-3.5 text-warning" />
+      <button type="button" onClick={onEdit} className={BTN} title="Editar os passos, comandos e portas do perfil ativo">
+        <Edit3 className="w-3.5 h-3.5" />
         <span>Editar</span>
       </button>
 
@@ -57,7 +47,7 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
       </button>
 
       <button type="button" onClick={onExport} className={BTN} title="Exportar este perfil como arquivo JSON">
-        <Download className="w-3.5 h-3.5 text-success" />
+        <Download className="w-3.5 h-3.5" />
         <span>Exportar</span>
       </button>
 
@@ -67,7 +57,7 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
         className={BTN}
         title="Importar perfil a partir de arquivo JSON"
       >
-        <Upload className="w-3.5 h-3.5 text-info" />
+        <Upload className="w-3.5 h-3.5" />
         <span>Importar</span>
       </button>
 
@@ -75,7 +65,7 @@ export const ProfileToolbar: React.FC<ProfileToolbarProps> = ({
         <button
           type="button"
           onClick={() => onDelete(activeProfile.id)}
-          className="flex items-center gap-1 px-2 py-1 text-danger hover:text-danger/80 font-semibold rounded-lg hover:bg-danger/10 transition-colors"
+          className="h-8 flex items-center gap-1.5 px-2.5 text-[13px] text-danger font-medium rounded-lg hover:bg-danger/10 transition-colors cursor-pointer"
           title={`Excluir perfil "${activeProfile.name}"`}
         >
           <Trash2 className="w-3.5 h-3.5" />

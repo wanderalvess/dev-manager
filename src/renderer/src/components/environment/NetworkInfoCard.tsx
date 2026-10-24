@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wifi, Cpu, Copy, Check, RefreshCw } from 'lucide-react';
+import { Copy, Check, RefreshCw } from 'lucide-react';
 import type { NetworkIpInfo } from '../../../../shared/types';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 
@@ -8,78 +8,49 @@ interface NetworkInfoCardProps {
   onRefresh: () => void;
 }
 
-const COPY_BTN = 'p-1.5 px-2 bg-muted hover:bg-muted/80 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground transition flex items-center gap-1 shrink-0 cursor-pointer';
+const COPY_BTN = 'h-7 px-2.5 bg-card hover:bg-muted border border-border rounded-lg text-[13px] font-medium text-foreground transition flex items-center gap-1.5 shrink-0 cursor-pointer';
 
 /** Card de informações de rede (IP local e IP WSL) com cópia rápida. */
 export const NetworkInfoCard: React.FC<NetworkInfoCardProps> = ({ networkIps, onRefresh }) => {
   const { copy: copyIp, copiedKey: copiedIp } = useCopyToClipboard();
 
   return (
-    <div className="cockpit-panel rounded-xl p-3 border border-border flex flex-col space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          <Wifi className="w-3.5 h-3.5 text-primary" />
-          <span>Endereços IP e Conectividade de Rede</span>
-        </div>
+    <div className="bg-card border border-border rounded-[14px] shadow-xs">
+      <div className="flex items-center justify-between px-5 pt-4">
+        <h2 className="text-base font-semibold text-foreground">Rede</h2>
         <button
           type="button"
           onClick={onRefresh}
           title="Atualizar IPs de rede" aria-label="Atualizar IPs de rede"
-          className="p-1 hover:text-foreground text-muted-foreground rounded hover:bg-muted/50 transition cursor-pointer"
+          className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition cursor-pointer"
         >
-          <RefreshCw className="w-3 h-3" />
+          <RefreshCw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-        {/* IP Local */}
-        <div className="p-2.5 bg-card/60 border border-border/70 rounded-xl flex items-center justify-between">
-          <div className="flex items-center space-x-2.5 truncate">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
-              <Wifi className="w-3.5 h-3.5" />
-            </div>
-            <div className="flex flex-col truncate">
-              <span className="text-2xs font-bold text-muted-foreground uppercase">IP Local (Windows)</span>
-              <span className="font-mono text-xs font-bold text-foreground truncate">{networkIps.primaryLocalIp}</span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => copyIp(networkIps.primaryLocalIp, 'main_lan')}
-            className={COPY_BTN}
-            title="Copiar IP Local"
-          >
+      <ul className="px-5 pb-3 pt-1">
+        <li className="flex items-center gap-3 py-2.5">
+          <span className="text-[13px] text-muted-foreground flex-1">IP local (Windows)</span>
+          <span className="font-mono text-[13px] text-foreground truncate">{networkIps.primaryLocalIp}</span>
+          <button type="button" onClick={() => copyIp(networkIps.primaryLocalIp, 'main_lan')} className={COPY_BTN} title="Copiar IP Local">
             {copiedIp === 'main_lan' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
-            <span className="text-2xs">{copiedIp === 'main_lan' ? 'Copiado' : 'Copiar'}</span>
+            <span>{copiedIp === 'main_lan' ? 'Copiado' : 'Copiar'}</span>
           </button>
-        </div>
+        </li>
 
-        {/* IP WSL */}
-        <div className="p-2.5 bg-card/60 border border-border/70 rounded-xl flex items-center justify-between">
-          <div className="flex items-center space-x-2.5 truncate">
-            <div className="w-7 h-7 rounded-lg bg-warning/10 border border-warning/30 flex items-center justify-center text-warning shrink-0">
-              <Cpu className="w-3.5 h-3.5" />
-            </div>
-            <div className="flex flex-col truncate">
-              <span className="text-2xs font-bold text-muted-foreground uppercase">IP WSL2 / Linux</span>
-              <span className="font-mono text-xs font-bold text-foreground truncate">
-                {networkIps.wslIp || 'Não detectado / inativo'}
-              </span>
-            </div>
-          </div>
+        <li className="flex items-center gap-3 py-2.5 border-t border-border">
+          <span className="text-[13px] text-muted-foreground flex-1">IP WSL2 / Linux</span>
+          <span className={`text-[13px] truncate ${networkIps.wslIp ? 'font-mono text-foreground' : 'text-muted-foreground'}`}>
+            {networkIps.wslIp || 'Não detectado'}
+          </span>
           {networkIps.wslIp && (
-            <button
-              type="button"
-              onClick={() => copyIp(networkIps.wslIp!, 'main_wsl')}
-              className={COPY_BTN}
-              title="Copiar IP WSL"
-            >
+            <button type="button" onClick={() => copyIp(networkIps.wslIp!, 'main_wsl')} className={COPY_BTN} title="Copiar IP WSL">
               {copiedIp === 'main_wsl' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
-              <span className="text-2xs">{copiedIp === 'main_wsl' ? 'Copiado' : 'Copiar'}</span>
+              <span>{copiedIp === 'main_wsl' ? 'Copiado' : 'Copiar'}</span>
             </button>
           )}
-        </div>
-      </div>
+        </li>
+      </ul>
     </div>
   );
 };

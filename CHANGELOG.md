@@ -9,6 +9,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Estilo visual "Papel"** (novo padrão em instalações novas): cinza neutro, cartões limpos, azul como único acento e texto secundário mais escuro, no modo claro e no escuro. Quem já escolheu outro estilo continua com ele; para trocar, use o seletor de tema do cabeçalho.
 - **Menu lateral com todos os módulos**: a partir de telas largas (lg), os módulos ficam sempre visíveis à esquerda, agrupados em Infraestrutura, Dados & Rotinas, Desenvolvimento e Qualidade, com os atalhos Alt+N ao lado. Substitui os quatro menus suspensos do cabeçalho; em janelas estreitas continua o seletor compacto. Os módulos desligados em Configurações → Módulos seguem fora do menu.
 
+### Alterado
+- **Telas Ambiente Dev e Git no visual Papel**: título de página sem cartão, uma única ação principal por tela (*Subir ambiente*, *Commit e push*), botões secundários discretos, status escritos em palavras (*Aberta*, *Fechada*, *só local*) em vez de chips em maiúsculas, e portas e rede como listas na coluna da direita do Ambiente. Nenhuma ação mudou de lugar de forma que quebre o tour guiado.
+
 ## [1.45.0] - 2026-10-23
 ### Adicionado
 - **Filtros e alertas na lista de repositórios (Git)**: chips *Todos*, *Com alterações*, *Só locais* e *Sem push*, cada um com a contagem, combinados com a busca. Os cartões mostram `SÓ LOCAL`, `↑ N sem push` e `● N alterações`, e o cabeçalho resume quantos repositórios estão só locais ou com alterações. A contagem de commits sem push lê as refs já baixadas (sem rede); use *Fetch* para atualizá-la.

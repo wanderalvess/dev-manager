@@ -1,15 +1,17 @@
 import React from 'react';
-import { GitPullRequest, RefreshCw, HelpCircle } from 'lucide-react';
+import { RefreshCw, HelpCircle } from 'lucide-react';
 
 interface GitPageHeaderProps {
   projectCount: number;
-  /** Repositórios com a branch atual só local e com alterações pendentes: chips de atenção (some quando zero). */
+  /** Repositórios com a branch atual só local e com alterações pendentes: avisos de atenção (somem quando zero). */
   localOnlyCount: number;
   changesCount: number;
   isBusy: boolean;
   onOpenTour: () => void;
   onSync: () => void;
 }
+
+const ATTENTION_TAG = 'text-[13px] font-medium bg-warning/10 text-warning px-2.5 py-0.5 rounded-full';
 
 export const GitPageHeader: React.FC<GitPageHeaderProps> = ({
   projectCount,
@@ -19,60 +21,43 @@ export const GitPageHeader: React.FC<GitPageHeaderProps> = ({
   onOpenTour,
   onSync
 }) => (
-  <div className="cockpit-panel rounded-xl p-4 shadow-xl border border-border">
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center space-x-3">
-        <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/30 text-primary">
-          <GitPullRequest className="w-5 h-5" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
-            Controle de Versão (Git)
-            <span className="text-2xs bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono font-bold">
-              {projectCount} {projectCount === 1 ? 'Repositório Ativo' : 'Repositórios Ativos'}
-            </span>
-            {localOnlyCount > 0 && (
-              <span
-                className="text-2xs bg-warning/15 text-warning border border-warning/30 px-2 py-0.5 rounded-full font-mono font-bold"
-                title="Repositórios cuja branch atual ainda não existe no origin"
-              >
-                {localOnlyCount} {localOnlyCount === 1 ? 'só local' : 'só locais'}
-              </span>
-            )}
-            {changesCount > 0 && (
-              <span
-                className="text-2xs bg-warning/15 text-warning border border-warning/30 px-2 py-0.5 rounded-full font-mono font-bold"
-                title="Repositórios com alterações pendentes"
-              >
-                {changesCount} com alterações
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={onOpenTour}
-              className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-muted transition cursor-pointer"
-              title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-            </button>
-          </h1>
-          <p className="text-2xs text-muted-foreground">
-            Gestão de branches locais, sincronização remota e criação direta de Pull Requests (Azure DevOps, GitHub ou GitLab).
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center space-x-2">
+  <div className="flex flex-wrap items-end justify-between gap-4 shrink-0">
+    <div className="min-w-0">
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">Git</h1>
         <button
-          onClick={onSync}
-          disabled={isBusy}
-          className="px-3 py-2 bg-card hover:bg-muted border border-border rounded-xl text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5 disabled:opacity-60"
-          title="Reescanear diretório de projetos Git"
+          type="button"
+          onClick={onOpenTour}
+          className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
+          title="Rever o tour guiado desta página" aria-label="Rever o tour guiado desta página"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin text-primary' : ''}`} />
-          <span>Sincronizar Repositórios</span>
+          <HelpCircle className="w-4 h-4" />
         </button>
+        {localOnlyCount > 0 && (
+          <span className={ATTENTION_TAG} title="Repositórios cuja branch atual ainda não existe no origin">
+            {localOnlyCount} {localOnlyCount === 1 ? 'só local' : 'só locais'}
+          </span>
+        )}
+        {changesCount > 0 && (
+          <span className={ATTENTION_TAG} title="Repositórios com alterações pendentes">
+            {changesCount} com alterações
+          </span>
+        )}
       </div>
+      <p className="text-sm text-muted-foreground mt-1">
+        {projectCount} {projectCount === 1 ? 'repositório' : 'repositórios'}. Branches locais, sincronização com o remoto e Pull Requests (Azure DevOps, GitHub ou GitLab).
+      </p>
     </div>
+
+    <button
+      type="button"
+      onClick={onSync}
+      disabled={isBusy}
+      className="h-10 px-4 bg-card hover:bg-muted border border-border rounded-[10px] text-sm font-medium text-foreground transition-colors flex items-center gap-2 disabled:opacity-60 cursor-pointer"
+      title="Reescanear diretório de projetos Git"
+    >
+      <RefreshCw className={`w-4 h-4 ${isBusy ? 'animate-spin text-primary' : ''}`} />
+      <span>Sincronizar todos</span>
+    </button>
   </div>
 );
