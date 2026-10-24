@@ -6,6 +6,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [Não lançado]
 ### Adicionado
+- **Contagem de tools do MCP** no cartão da tela Integrações (lida do catálogo `mcpCatalog`, a mesma fonte da Ajuda e do README).
 - **Estilo visual "Papel"** (novo padrão em instalações novas): cinza neutro, cartões limpos, azul como único acento e texto secundário mais escuro, no modo claro e no escuro. Quem já escolheu outro estilo continua com ele; para trocar, use o seletor de tema do cabeçalho.
 - **Menu lateral com todos os módulos**: a partir de telas largas (lg), os módulos ficam sempre visíveis à esquerda, agrupados em Infraestrutura, Dados & Rotinas, Desenvolvimento e Qualidade, com os atalhos Alt+N ao lado. Substitui os quatro menus suspensos do cabeçalho; em janelas estreitas continua o seletor compacto. Os módulos desligados em Configurações → Módulos seguem fora do menu.
 - **Tela Integrações**: novo item no fim do menu lateral (e no Ctrl+K) que reúne MCP, provedores de LLM, Confluence, Jira, Azure DevOps, GitLab/GitHub, WinThor CCW, fontes de teste, OpenTelemetry e webhooks, cada um com o estado atual e um atalho direto para a aba certa de Configurações.
