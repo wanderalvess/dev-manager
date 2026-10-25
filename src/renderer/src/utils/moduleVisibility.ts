@@ -18,10 +18,13 @@ export function resolveFallbackTab(activeTab: string, disabledModules: readonly 
   return getEnabledModuleIds(disabledModules)[0] ?? 'help';
 }
 
-/** Passos do tour global que apontam para um grupo do Header que sumiu (`nav-<grupo>`) não têm onde ancorar. */
+/** Passos do tour global que apontam para um grupo do menu lateral que sumiu (`nav-<grupo>`) não têm onde ancorar. */
 export function filterTourSteps(steps: TourStep[], visibleGroups: NavThemeGroup[]): TourStep[] {
   const visible = new Set(visibleGroups.map((group) => `nav-${group.id}`));
-  return steps.filter((step) => !step.target?.startsWith('nav-') || visible.has(step.target));
+  // `nav-integrations` não é um grupo de módulos: fica sempre no menu lateral.
+  return steps.filter(
+    (step) => !step.target?.startsWith('nav-') || step.target === 'nav-integrations' || visible.has(step.target)
+  );
 }
 
 /** Abas visitadas que continuam montadas: página desligada desmonta (para polling e tour de página). */

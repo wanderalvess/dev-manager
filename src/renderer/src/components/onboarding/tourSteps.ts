@@ -11,7 +11,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: null,
     title: 'Onde fica cada coisa',
-    desc: 'Um passeio de menos de 1 minuto pelo cabeçalho: os grupos de páginas, a busca e os atalhos que você vai usar todo dia.'
+    desc: 'Um passeio de menos de 1 minuto pelo menu lateral e pelo cabeçalho: os grupos de páginas, a busca e os atalhos que você vai usar todo dia.'
   },
   {
     target: 'nav-infra',
@@ -34,6 +34,11 @@ export const TOUR_STEPS: TourStep[] = [
     desc: 'Homologação, Validador Regressivo, Test Runners e TAUT (Cypress).'
   },
   {
+    target: 'nav-integrations',
+    title: 'Integrações',
+    desc: 'MCP, provedores de LLM, Azure DevOps, Jira, Confluence e mais, com o estado de cada uma e um atalho para configurá-la.'
+  },
+  {
     target: 'search',
     title: 'Busca Rápida',
     desc: 'Ctrl+K encontra páginas, rotinas, repositórios e ações sem tirar a mão do teclado.'
@@ -51,7 +56,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: 'settings',
     title: 'Configurações',
-    desc: 'Caminhos, portas, conexões e integrações. Em Módulos você liga ou desliga as páginas do cabeçalho.'
+    desc: 'Caminhos, portas, conexões e integrações. Em Módulos você liga ou desliga as páginas do menu lateral.'
   },
   {
     target: 'refresh',
