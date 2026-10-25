@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { IntegrationTraceService } from '../../main/services/IntegrationTraceService';
 import { summarizeReadiness } from '../../main/services/integration/readinessPlan';
@@ -27,6 +28,52 @@ export function registerIntegrationTools(server: McpServer, { integrationTraceSe
       } catch (err: any) {
         return error(err?.message || 'Falha ao executar o pré-voo da integração.');
       }
+    }
+  );
+
+  server.registerTool(
+    'integration_check_batch',
+    {
+      title: 'Rastrear um lote da integração',
+      description:
+        'Rastreia um lote já executado ao longo da cadeia WinThor → WSH → CH → PDV, sem disparar nada. Prova o que consegue com as fontes disponíveis: o lote e o status por loja na API do PDVSync (login RAC configurado na camada CH), a chegada no PDV por consulta SQL somente leitura (esperando até o tempo configurado no fluxo), o dado na retaguarda Oracle, a chamada da API do WinThor no APM e as linhas dos logs do WSH e do CH que citam o lote. Vale para fluxos de saída (produto, preço, estoque...); a venda é de entrada e não usa lote. Os oito passos voltam como ok, failed ou unknown; unknown significa sem evidência, nunca sucesso. Informa em qual passo quebrou (brokenAt), guarda o resultado no histórico e devolve o relatório em Markdown pronto para o Jira. O fluxo informado precisa estar cadastrado e ativo em Configurações → Integração ponta a ponta.',
+      inputSchema: {
+        flowId: z.string().describe('Id do fluxo cadastrado em Configurações → Integração ponta a ponta (ex.: "produto")'),
+        batchNumber: z.string().describe('Número do lote devolvido pelo CH (letras, números, ponto, hífen, barra ou sublinhado)'),
+        lookbackMinutes: z.number().int().positive().optional().describe('Janela para trás, em minutos, usada em :inicio e na busca no APM (padrão 120, máximo 10080)'),
+        branchId: z.string().optional().describe('Código da filial (idRetaguardaLoja) para ver o status só dessa loja no PDVSync; sem ele vêm todas')
+      }
+    },
+    async ({ flowId, batchNumber, lookbackMinutes, branchId }) => {
+      try {
+        const response = await integrationTraceService.traceBatch({ flowId, batchNumber, lookbackMinutes, branchId });
+        return response.success ? reply(response.trace) : error(response.error);
+      } catch (err: any) {
+        return error(err?.message || 'Falha ao rastrear o lote.');
+      }
+    }
+  );
+
+  server.registerTool(
+    'integration_list_traces',
+    {
+      title: 'Listar rastreios de integração',
+      description:
+        'Lista os últimos rastreios de lote guardados no histórico (mais recentes primeiro), com o lote, o fluxo, o passo em que quebrou e a contagem de passos ok, com falha e sem evidência.'
+    },
+    async () => reply(await integrationTraceService.listTraces())
+  );
+
+  server.registerTool(
+    'integration_get_trace',
+    {
+      title: 'Obter um rastreio de integração',
+      description: 'Devolve um rastreio do histórico por id, com os oito passos, os trechos de log, as observações e o relatório em Markdown.',
+      inputSchema: { id: z.string().describe('Id do rastreio, como em integration_list_traces') }
+    },
+    async ({ id }) => {
+      const trace = await integrationTraceService.getTrace(id);
+      return trace ? reply(trace) : error('Rastreio não encontrado no histórico.');
     }
   );
 }

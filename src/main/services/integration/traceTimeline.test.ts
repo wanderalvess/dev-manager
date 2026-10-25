@@ -11,10 +11,10 @@ import {
 } from './traceTimeline';
 
 describe('traceTimeline', () => {
-  it('nasce com os oito passos pendentes, na ordem da cadeia', () => {
+  it('nasce com os oito passos pendentes, na ordem real do fluxo de saída', () => {
     const steps = createEmptyTimeline();
     expect(steps.map((s) => s.id)).toEqual([
-      'open-batch', 'winthor-token', 'winthor-api', 'jolt', 'ch-token', 'ch-send', 'pdv-arrival', 'close-batch'
+      'winthor-login', 'winthor-fetch', 'jolt', 'pdvsync-login', 'open-batch', 'send', 'close-batch', 'pdv-arrival'
     ]);
     expect(steps.every((s) => s.status === 'pending' && s.source === 'none')).toBe(true);
   });
@@ -23,27 +23,27 @@ describe('traceTimeline', () => {
     const steps = createEmptyTimeline();
     const updated = applyStepUpdate(steps, { id: 'open-batch', status: 'ok', source: 'ch-api', httpStatus: 200, durationMs: 120 });
 
-    expect(updated[0]).toEqual({ id: 'open-batch', status: 'ok', source: 'ch-api', httpStatus: 200, durationMs: 120 });
-    expect(updated.slice(1)).toEqual(steps.slice(1));
-    expect(steps[0].status).toBe('pending');
+    expect(updated.find((s) => s.id === 'open-batch')).toEqual({ id: 'open-batch', status: 'ok', source: 'ch-api', httpStatus: 200, durationMs: 120 });
+    expect(updated.filter((s) => s.id !== 'open-batch')).toEqual(steps.filter((s) => s.id !== 'open-batch'));
+    expect(steps.find((s) => s.id === 'open-batch')?.status).toBe('pending');
   });
 
-  it('findBrokenStep devolve o primeiro passo falho', () => {
+  it('findBrokenStep devolve o primeiro passo falho na ordem da cadeia', () => {
     let steps = createEmptyTimeline();
     expect(findBrokenStep(steps)).toBeUndefined();
     steps = applyStepUpdate(steps, { id: 'pdv-arrival', status: 'failed' });
     steps = applyStepUpdate(steps, { id: 'close-batch', status: 'failed' });
-    expect(findBrokenStep(steps)).toBe('pdv-arrival');
+    expect(findBrokenStep(steps)).toBe('close-batch');
   });
 
   it('skipAfterFailure pula só os pendentes depois da falha e preserva o que já foi observado', () => {
     let steps = createEmptyTimeline();
-    steps = applyStepUpdate(steps, { id: 'open-batch', status: 'ok' });
-    steps = applyStepUpdate(steps, { id: 'winthor-api', status: 'failed' });
+    steps = applyStepUpdate(steps, { id: 'winthor-login', status: 'ok' });
+    steps = applyStepUpdate(steps, { id: 'jolt', status: 'failed' });
     steps = applyStepUpdate(steps, { id: 'close-batch', status: 'unknown' });
 
     const result = skipAfterFailure(steps).map((s) => s.status);
-    expect(result).toEqual(['ok', 'pending', 'failed', 'skipped', 'skipped', 'skipped', 'skipped', 'unknown']);
+    expect(result).toEqual(['ok', 'pending', 'failed', 'skipped', 'skipped', 'skipped', 'unknown', 'skipped']);
   });
 
   it('skipAfterFailure sem falha devolve a mesma lista', () => {
@@ -54,8 +54,8 @@ describe('traceTimeline', () => {
   it('summarizeTimeline conta por status', () => {
     const steps: IntegrationTraceStep[] = [
       { id: 'open-batch', status: 'ok', source: 'ch-api' },
-      { id: 'winthor-token', status: 'ok', source: 'http' },
-      { id: 'winthor-api', status: 'failed', source: 'apm' },
+      { id: 'winthor-login', status: 'ok', source: 'http' },
+      { id: 'winthor-fetch', status: 'failed', source: 'apm' },
       { id: 'jolt', status: 'skipped', source: 'none' },
       { id: 'close-batch', status: 'unknown', source: 'none' }
     ];
@@ -63,17 +63,18 @@ describe('traceTimeline', () => {
   });
 
   it('stepPosition é 1-based na ordem da cadeia', () => {
-    expect(stepPosition('open-batch')).toBe(1);
-    expect(stepPosition('pdv-arrival')).toBe(7);
+    expect(stepPosition('winthor-login')).toBe(1);
+    expect(stepPosition('open-batch')).toBe(5);
+    expect(stepPosition('pdv-arrival')).toBe(8);
   });
 
   it('finalizeTrace marca os pulados, aponta brokenAt e registra o fim', () => {
     let steps = createEmptyTimeline();
-    steps = applyStepUpdate(steps, { id: 'open-batch', status: 'ok' });
-    steps = applyStepUpdate(steps, { id: 'ch-send', status: 'failed', message: 'HTTP 500' });
+    steps = applyStepUpdate(steps, { id: 'winthor-login', status: 'ok' });
+    steps = applyStepUpdate(steps, { id: 'send', status: 'failed', message: 'HTTP 500' });
 
-    const result = finalizeTrace({ id: 't1', flowId: 'venda', startedAt: 1000, steps }, 5000);
-    expect(result.brokenAt).toBe('ch-send');
+    const result = finalizeTrace({ id: 't1', flowId: 'produto', startedAt: 1000, steps }, 5000);
+    expect(result.brokenAt).toBe('send');
     expect(result.finishedAt).toBe(5000);
     expect(result.steps.map((s) => s.status)).toEqual(['ok', 'pending', 'pending', 'pending', 'pending', 'failed', 'skipped', 'skipped']);
   });

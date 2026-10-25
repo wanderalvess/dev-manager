@@ -17,6 +17,13 @@ const makeLayer = (overrides: Partial<IntegrationLayerConfig> = {}): Integration
   ...overrides
 });
 
+const makeRacLayer = (overrides: Partial<IntegrationLayerConfig> = {}): IntegrationLayerConfig => ({
+  layer: 'ch',
+  pdvsync: { racUrl: 'https://rac.exemplo/token', tenantId: 'T1' },
+  auth: { type: 'rac-password', user: 'svc', password: 'senha-rac', clientId: 'cli', clientSecret: 'segredo-do-cliente' },
+  ...overrides
+});
+
 describe('integrationSecrets', () => {
   let configDir: string;
 
@@ -28,43 +35,73 @@ describe('integrationSecrets', () => {
     fs.rmSync(configDir, { recursive: true, force: true });
   });
 
-  it('criptografa senha e token para o disco e descriptografa de volta, sem tocar as camadas sem auth', () => {
-    const layers = [makeLayer(), makeLayer({ layer: 'pdv', auth: undefined })];
+  it('criptografa senha, token e client_secret para o disco e descriptografa de volta, sem tocar as camadas sem auth', () => {
+    const layers = [makeLayer(), makeRacLayer({ layer: 'wsh' }), makeLayer({ layer: 'pdv', auth: undefined })];
 
     const forDisk = encryptIntegrationLayersForDisk(layers, configDir)!;
     expect(forDisk[0].auth?.password).toMatch(/^enc:v1:/);
     expect(forDisk[0].auth?.token).toMatch(/^enc:v1:/);
-    expect(forDisk[1]).toBe(layers[1]);
+    expect(forDisk[1].auth?.clientSecret).toMatch(/^enc:v1:/);
+    expect(forDisk[1].auth?.clientId).toBe('cli');
+    expect(forDisk[2]).toBe(layers[2]);
+    expect(JSON.stringify(forDisk)).not.toContain('segredo-do-cliente');
     // O original continua em texto plano (é o que o app usa em memória)
-    expect(layers[0].auth?.password).toBe('segredo');
+    expect(layers[1].auth?.clientSecret).toBe('segredo-do-cliente');
 
     decryptIntegrationLayersInPlace(forDisk, configDir);
     expect(forDisk[0].auth?.password).toBe('segredo');
     expect(forDisk[0].auth?.token).toBe('tok-1');
+    expect(forDisk[1].auth?.clientSecret).toBe('segredo-do-cliente');
   });
 
   it('sanitiza os segredos e sinaliza que existem', () => {
-    const sanitized = sanitizeIntegrationLayers([makeLayer(), makeLayer({ layer: 'wsh', auth: { type: 'none' } })])!;
+    const sanitized = sanitizeIntegrationLayers([makeLayer(), makeRacLayer({ layer: 'wsh' }), makeLayer({ layer: 'pdv', auth: { type: 'none' } })])!;
 
-    expect(sanitized[0].auth).toEqual({ type: 'basic', user: 'hub', password: '', token: '', hasPassword: true, hasToken: true });
-    expect(sanitized[1].auth).toEqual({ type: 'none', password: '', token: '', hasPassword: false, hasToken: false });
+    expect(sanitized[0].auth).toEqual({
+      type: 'basic', user: 'hub', password: '', token: '', clientSecret: '', hasPassword: true, hasToken: true, hasClientSecret: false
+    });
+    expect(sanitized[1].auth).toMatchObject({ clientId: 'cli', clientSecret: '', hasClientSecret: true, hasPassword: true });
+    expect(sanitized[2].auth).toEqual({
+      type: 'none', password: '', token: '', clientSecret: '', hasPassword: false, hasToken: false, hasClientSecret: false
+    });
   });
 
-  it('preserva o segredo salvo quando o save volta vazio e a baseUrl não mudou', () => {
-    const current = [makeLayer()];
-    const candidate = [makeLayer({ auth: { type: 'basic', user: 'hub', password: '', token: '', hasPassword: true, hasToken: true } })];
+  it('preserva o segredo salvo quando o save volta vazio e os destinos não mudaram', () => {
+    const current = [makeLayer(), makeRacLayer({ layer: 'wsh' })];
+    const candidate = [
+      makeLayer({ auth: { type: 'basic', user: 'hub', password: '', token: '', hasPassword: true, hasToken: true } }),
+      makeRacLayer({ layer: 'wsh', auth: { type: 'rac-password', user: 'svc', password: '', clientId: 'cli', clientSecret: '', hasClientSecret: true } })
+    ];
 
     const merged = preserveIntegrationLayerSecrets(candidate, current)!;
-    expect(merged[0].auth).toEqual({ type: 'basic', user: 'hub', password: 'segredo', token: 'tok-1' });
+    expect(merged[0].auth).toEqual({ type: 'basic', user: 'hub', password: 'segredo', token: 'tok-1', clientSecret: '' });
+    expect(merged[1].auth).toEqual({ type: 'rac-password', user: 'svc', password: 'senha-rac', token: '', clientId: 'cli', clientSecret: 'segredo-do-cliente' });
   });
 
   it('não leva o segredo salvo para outra baseUrl', () => {
-    const current = [makeLayer()];
-    const candidate = [makeLayer({ baseUrl: 'http://outro-host:9000', auth: { type: 'basic', user: 'hub', password: '' } })];
-
-    const merged = preserveIntegrationLayerSecrets(candidate, current)!;
+    const merged = preserveIntegrationLayerSecrets(
+      [makeLayer({ baseUrl: 'http://outro-host:9000', auth: { type: 'basic', user: 'hub', password: '' } })],
+      [makeLayer()]
+    )!;
     expect(merged[0].auth?.password).toBe('');
     expect(merged[0].auth?.token).toBe('');
+  });
+
+  it('não leva o client_secret nem a senha para outro endereço de login (RAC)', () => {
+    const merged = preserveIntegrationLayerSecrets(
+      [makeRacLayer({ pdvsync: { racUrl: 'https://rac-falso.exemplo/token', tenantId: 'T1' }, auth: { type: 'rac-password', user: 'svc', password: '', clientId: 'cli', clientSecret: '' } })],
+      [makeRacLayer()]
+    )!;
+    expect(merged[0].auth?.clientSecret).toBe('');
+    expect(merged[0].auth?.password).toBe('');
+  });
+
+  it('mudar só o inquilino ou o endereço de consulta não derruba o segredo', () => {
+    const merged = preserveIntegrationLayerSecrets(
+      [makeRacLayer({ pdvsync: { racUrl: 'https://rac.exemplo/token', tenantId: 'T2', batchStatusUrl: 'https://x.exemplo/lote' }, auth: { type: 'rac-password', user: 'svc', clientSecret: '' } })],
+      [makeRacLayer()]
+    )!;
+    expect(merged[0].auth?.clientSecret).toBe('segredo-do-cliente');
   });
 
   it('um segredo novo no candidato sempre vence o salvo', () => {

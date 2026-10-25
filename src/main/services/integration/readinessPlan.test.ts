@@ -72,6 +72,34 @@ describe('readinessPlan', () => {
     expect(planLayerChecks(layer({ baseUrl: 'http://localhost:9', healthPath: '/h', auth: { type: 'winthor', user: 'a', password: 'b' } })).map((c) => c.kind)).toEqual(['health']);
   });
 
+  it('login do PDVSync só existe na camada CH com autenticação RAC; com campo faltando vira aviso que diz qual', () => {
+    const rac = (auth: IntegrationLayerConfig['auth'], pdvsync: IntegrationLayerConfig['pdvsync'] = { racUrl: 'https://rac.exemplo/token' }) =>
+      planLayerChecks({ layer: 'ch', pdvsync, auth });
+    const full = { type: 'rac-password' as const, user: 'svc', password: 'p', clientId: 'cli', clientSecret: 's' };
+
+    expect(rac(full)).toEqual([{
+      kind: 'pdvsync-login',
+      label: 'Login PDVSync',
+      credentials: { racUrl: 'https://rac.exemplo/token', username: 'svc', password: 'p', clientId: 'cli', clientSecret: 's' }
+    }]);
+    expect(rac({ ...full, clientSecret: '', password: '' })).toEqual([
+      { kind: 'static', label: 'Login PDVSync', status: 'skipped', detail: 'Faltam campos do login do PDVSync: senha, client_secret.' }
+    ]);
+    expect(rac(full, {})[0]).toMatchObject({ kind: 'static', detail: expect.stringContaining('endereço do login (RAC)') });
+    expect(planLayerChecks({ layer: 'wsh', pdvsync: { racUrl: 'https://rac.exemplo/token' }, auth: full })).toEqual([]);
+    expect(planLayerChecks({ layer: 'ch', auth: { type: 'basic', user: 'a', password: 'b' } })).toEqual([]);
+  });
+
+  it('o login do PDVSync continua sendo planejado mesmo com a URL base inválida', () => {
+    const planned = planLayerChecks({
+      layer: 'ch',
+      baseUrl: 'ftp://x',
+      pdvsync: { racUrl: 'https://rac.exemplo/token' },
+      auth: { type: 'rac-password', user: 'svc', password: 'p', clientId: 'cli', clientSecret: 's' }
+    });
+    expect(planned.map((c) => c.kind)).toEqual(['static', 'pdvsync-login']);
+  });
+
   it('deriveLayerStatus: vazio, falha, aviso e ok', () => {
     const check = (status: 'ok' | 'failed' | 'skipped') => ({ label: 'x', status });
     expect(deriveLayerStatus([])).toBe('not-configured');

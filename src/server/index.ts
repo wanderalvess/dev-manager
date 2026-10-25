@@ -2248,7 +2248,10 @@ app.use('/api/delphi', createDelphiRouter(new DelphiBuildService(configService, 
 app.use(
   '/api/integration',
   createIntegrationRouter(
-    new IntegrationTraceService(configService, databaseService, networkService, windowsService, httpClientService)
+    new IntegrationTraceService(configService, databaseService, networkService, windowsService, httpClientService, {
+      logWatcherService,
+      apmTraces: apmService
+    })
   )
 );
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));

@@ -34,11 +34,19 @@ export const IntegrationTraceModuleCard: React.FC<ModuleCardProps> = ({ onNaviga
       </span>
       <span>
         <strong>Pelo assistente de IA:</strong> a tool MCP <code className="font-mono text-primary">integration_check_readiness</code>{' '}
-        devolve o mesmo pré-voo, com um resumo dizendo se o ambiente está pronto para testar.
+        devolve o mesmo pré-voo, e <code className="font-mono text-primary">integration_check_batch</code> rastreia um lote e devolve
+        o relatório pronto para o Jira.
       </span>
       <span>
-        <strong>Em construção:</strong> a linha do tempo de um lote, do disparo do fluxo até a chegada no PDV, vem nas próximas
-        versões.
+        <strong>Rastrear lote:</strong> para um fluxo de saída (produto, preço, estoque...), informe o número do lote e o Hub
+        procura onde consegue: o lote e o status de cada loja na API do PDVSync, a chegada no banco do PDV por consulta SQL
+        (esperando o dado descer), a retaguarda Oracle, a chamada da API do WinThor no APM e as linhas dos logs do WSH e do CH
+        que citam o lote. Os oito passos aparecem como <em>ok</em>, <em>falhou</em>, <em>pendente</em> ou <em>sem evidência</em>,
+        com o passo em que quebrou em destaque, histórico dos últimos 50 e o botão <em>Copiar relatório (Jira)</em>.
+      </span>
+      <span>
+        <strong>O que o Hub não enxerga:</strong> login no WinThor, JOLT, login no PDVSync e envio acontecem dentro do WSH e ficam
+        <em>sem evidência</em>. A venda é de entrada (PDV → WinThor), não usa lote e ainda não tem rastreio.
       </span>
     </ModuleBullets>
   </ModuleCardShell>

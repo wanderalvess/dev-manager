@@ -10,23 +10,9 @@ import {
   CHECK_STATUS_TONES,
   LAYER_STATUS_LABELS,
   LAYER_STATUS_TONES,
-  formatCheckDuration,
-  type ReadinessTone
+  formatCheckDuration
 } from '../../utils/integrationReadinessView';
-
-const TONE_TEXT: Record<ReadinessTone, string> = {
-  success: 'text-success',
-  warning: 'text-warning',
-  danger: 'text-danger',
-  muted: 'text-muted-foreground'
-};
-
-const TONE_BADGE: Record<ReadinessTone, string> = {
-  success: 'bg-success/10 text-success',
-  warning: 'bg-warning/10 text-warning',
-  danger: 'bg-danger/10 text-danger',
-  muted: 'bg-muted text-muted-foreground'
-};
+import { TONE_BADGE, TONE_TEXT } from './toneClasses';
 
 const CHECK_ICONS: Record<IntegrationCheckStatus, { Icon: typeof CheckCircle2; className: string }> = {
   ok: { Icon: CheckCircle2, className: 'text-success' },

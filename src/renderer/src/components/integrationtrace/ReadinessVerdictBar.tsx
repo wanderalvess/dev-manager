@@ -2,13 +2,7 @@ import React from 'react';
 import { CheckCircle2, Loader2, MinusCircle, RefreshCw, XCircle, AlertTriangle } from 'lucide-react';
 import type { IntegrationReadinessResult } from '../../../../shared/integrationTypes';
 import { describeReadiness, formatCheckedAgo, type ReadinessTone } from '../../utils/integrationReadinessView';
-
-const TONE_CLASSES: Record<ReadinessTone, { box: string; icon: string }> = {
-  success: { box: 'bg-success/10 border-success/30', icon: 'text-success' },
-  warning: { box: 'bg-warning/10 border-warning/30', icon: 'text-warning' },
-  danger: { box: 'bg-danger/10 border-danger/30', icon: 'text-danger' },
-  muted: { box: 'bg-muted/40 border-border', icon: 'text-muted-foreground' }
-};
+import { TONE_BOX } from './toneClasses';
 
 const TONE_ICONS: Record<ReadinessTone, typeof CheckCircle2> = {
   success: CheckCircle2,
@@ -26,7 +20,7 @@ interface ReadinessVerdictBarProps {
 /** Veredito do pré-voo em uma frase ("posso testar agora?") e o botão que roda a conferência. */
 export const ReadinessVerdictBar: React.FC<ReadinessVerdictBarProps> = ({ result, running, onRun }) => {
   const verdict = describeReadiness(result);
-  const classes = TONE_CLASSES[verdict.tone];
+  const classes = TONE_BOX[verdict.tone];
   const Icon = TONE_ICONS[verdict.tone];
   return (
     <div role="status" className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${classes.box}`}>

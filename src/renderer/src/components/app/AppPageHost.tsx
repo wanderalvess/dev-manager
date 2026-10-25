@@ -173,7 +173,7 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
           />
         </PageSlot>
         <PageSlot id="integration-trace" {...slot}>
-          <IntegrationTracePage onNavigateToSettings={goSettings} />
+          <IntegrationTracePage onNavigateToSettings={goSettings} settingsVersion={settingsVersion} />
         </PageSlot>
         <QualityValidationProvider>
           <PageSlot id="quality" {...slot}>

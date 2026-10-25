@@ -54,6 +54,7 @@ export const TRACKED_USAGE_ACTIONS: readonly TrackedUsageAction[] = [
   { module: 'qa', action: 'taut-process-intake', ipc: 'taut:process-intake', rest: 'POST /api/taut/intake' },
   // Rastreio de Integração ponta a ponta
   { module: 'integration', action: 'readiness-check', ipc: 'integration:check-readiness', rest: 'POST /api/integration/readiness' },
+  { module: 'integration', action: 'batch-trace', ipc: 'integration:trace-batch', rest: 'POST /api/integration/trace' },
   // API Studio
   { module: 'api-studio', action: 'send-request', ipc: 'http:execute', rest: 'POST /api/http-client/execute' },
   // Documentação e IA

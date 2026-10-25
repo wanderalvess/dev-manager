@@ -15,7 +15,8 @@ export const INTEGRATION_LAYER_LABELS: Readonly<Record<IntegrationLayerId, strin
   pdv: 'PDV (Postgres)'
 };
 
-export type IntegrationLayerAuthType = 'none' | 'basic' | 'bearer' | 'winthor';
+/** `rac-password` é o login do PDVSync (OAuth2 por senha no RAC): usuário, senha, client_id e client_secret. */
+export type IntegrationLayerAuthType = 'none' | 'basic' | 'bearer' | 'winthor' | 'rac-password';
 
 export interface IntegrationLayerAuth {
   type: IntegrationLayerAuthType;
@@ -24,10 +25,28 @@ export interface IntegrationLayerAuth {
   password?: string;
   /** Segredo: criptografado em disco, nunca devolvido pela API (ver `hasToken`). */
   token?: string;
+  /** Só `rac-password`: identificador do cliente OAuth. Não é segredo. */
+  clientId?: string;
+  /** Só `rac-password`. Segredo: criptografado em disco, nunca devolvido pela API (ver `hasClientSecret`). */
+  clientSecret?: string;
   /** Indica que há senha salva, quando `password` trafega sanitizado. */
   hasPassword?: boolean;
   /** Indica que há token salvo, quando `token` trafega sanitizado. */
   hasToken?: boolean;
+  /** Indica que há client_secret salvo, quando `clientSecret` trafega sanitizado. */
+  hasClientSecret?: boolean;
+}
+
+/** Endereços e inquilino do PDVSync (CH) usados pelo rastreio. Todos validados com `isSafeUrl` no main. */
+export interface IntegrationPdvSyncEndpoints {
+  /** `POST` do login (RAC), que devolve `access_token`. */
+  racUrl?: string;
+  /** Código do inquilino, usado nos caminhos e filtros da API de lote. */
+  tenantId?: string;
+  /** Base de `LoteExternoRetornos`: o Hub acrescenta `/<inquilino>/<lote>`. */
+  batchStatusUrl?: string;
+  /** Base de `LojaLoteStatusretorno`: o Hub acrescenta `?inquilino=&loteOrigem=&idRetaguardaLoja=`. */
+  storeStatusUrl?: string;
 }
 
 /** Como alcançar e observar uma camada na máquina local. Tudo opcional: o pré-voo pula o que não estiver preenchido. */
@@ -46,6 +65,8 @@ export interface IntegrationLayerConfig {
   /** Lido com `isLogFilePath`/`isInsideDir`, como as fontes de log. */
   logFilePath?: string;
   auth?: IntegrationLayerAuth;
+  /** Só na camada CH: como consultar o lote no PDVSync. */
+  pdvsync?: IntegrationPdvSyncEndpoints;
 }
 
 export interface IntegrationFlowTrigger {
@@ -82,37 +103,46 @@ export interface IntegrationFlowDefinition {
   enabled?: boolean;
 }
 
+/**
+ * Os oito passos de um fluxo de **saída** (WinThor → PDV), na ordem real dos layouts do WSH: o lote só é
+ * aberto depois de buscar e transformar os dados. Fluxos de entrada (vendas) não usam lote e têm modelo próprio.
+ */
 export type IntegrationStepId =
-  | 'open-batch'
-  | 'winthor-token'
-  | 'winthor-api'
+  | 'winthor-login'
+  | 'winthor-fetch'
   | 'jolt'
-  | 'ch-token'
-  | 'ch-send'
-  | 'pdv-arrival'
-  | 'close-batch';
+  | 'pdvsync-login'
+  | 'open-batch'
+  | 'send'
+  | 'close-batch'
+  | 'pdv-arrival';
 
 export const INTEGRATION_STEP_ORDER: readonly IntegrationStepId[] = [
-  'open-batch',
-  'winthor-token',
-  'winthor-api',
+  'winthor-login',
+  'winthor-fetch',
   'jolt',
-  'ch-token',
-  'ch-send',
-  'pdv-arrival',
-  'close-batch'
+  'pdvsync-login',
+  'open-batch',
+  'send',
+  'close-batch',
+  'pdv-arrival'
 ];
 
 export const INTEGRATION_STEP_LABELS: Readonly<Record<IntegrationStepId, string>> = {
-  'open-batch': 'WSH abre o lote no CH',
-  'winthor-token': 'Token do WinThor',
-  'winthor-api': 'Chamada da API do fluxo (Karaf)',
+  'winthor-login': 'Login no WinThor',
+  'winthor-fetch': 'Busca na API do WinThor',
   jolt: 'Transformação JOLT',
-  'ch-token': 'Token do CH',
-  'ch-send': 'Envio do JSON ao lote',
-  'pdv-arrival': 'CH desce para o PDV',
-  'close-batch': 'WSH fecha o lote'
+  'pdvsync-login': 'Login no PDVSync',
+  'open-batch': 'Abertura do lote no PDVSync',
+  send: 'Envio do JSON ao lote',
+  'close-batch': 'Fechamento do lote',
+  'pdv-arrival': 'Chegada nas lojas (PDV)'
 };
+
+/** Rótulo do passo, tolerante a rastreios antigos guardados com ids que não existem mais. */
+export function stepLabel(id: string): string {
+  return (INTEGRATION_STEP_LABELS as Record<string, string>)[id] ?? id;
+}
 
 export type IntegrationStepStatus = 'ok' | 'failed' | 'pending' | 'skipped' | 'unknown';
 
@@ -132,6 +162,18 @@ export interface IntegrationTraceStep {
   message?: string;
 }
 
+/** Trechos de log filtrados pelo número do lote, de uma das camadas. */
+export interface IntegrationLogExcerpt {
+  source: 'wsh' | 'ch';
+  /** Últimas linhas que casaram, em ordem de arquivo (limitadas). */
+  lines: string[];
+  /** Quantas linhas casaram no trecho lido do arquivo. */
+  totalMatches: number;
+  /** Quantas das que casaram parecem erro (ERROR, FATAL, Exception...). */
+  errorLines: number;
+  truncated: boolean;
+}
+
 export interface IntegrationTraceResult {
   id: string;
   flowId: string;
@@ -142,8 +184,41 @@ export interface IntegrationTraceResult {
   steps: IntegrationTraceStep[];
   /** Primeiro passo com status `failed`. */
   brokenAt?: IntegrationStepId;
+  logExcerpts?: IntegrationLogExcerpt[];
+  /** Avisos sobre fontes que não puderam ser consultadas (APM sem receptor, log inexistente...). */
+  notes?: string[];
   evidenceMarkdown: string;
 }
+
+/** Linha da lista do histórico de rastreios, sem os passos. */
+export interface IntegrationTraceListItem {
+  id: string;
+  flowId: string;
+  flowName?: string;
+  batchNumber?: string;
+  startedAt: number;
+  finishedAt?: number;
+  brokenAt?: IntegrationStepId;
+  okSteps: number;
+  failedSteps: number;
+  unknownSteps: number;
+}
+
+export const DEFAULT_TRACE_LOOKBACK_MINUTES = 120;
+export const MAX_TRACE_LOOKBACK_MINUTES = 10080;
+
+export interface IntegrationBatchTraceRequest {
+  flowId: string;
+  batchNumber: string;
+  /** Janela para trás a partir de agora usada em :inicio (padrão 120 min, máximo 7 dias). */
+  lookbackMinutes?: number;
+  /** Código da filial na retaguarda (`idRetaguardaLoja`) para filtrar o status por loja no PDVSync. Sem ele, vêm todas. */
+  branchId?: string;
+}
+
+export type IntegrationBatchTraceResponse =
+  | { success: true; trace: IntegrationTraceResult }
+  | { success: false; error: string };
 
 export type IntegrationCheckStatus = 'ok' | 'failed' | 'skipped';
 

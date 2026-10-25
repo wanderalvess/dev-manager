@@ -33,7 +33,7 @@ export const IntegrationFlowsEditor: React.FC<IntegrationFlowsEditorProps> = ({ 
 
     {flows.length === 0 ? (
       <p className="text-xs text-muted-foreground py-4 text-center">
-        Nenhum fluxo cadastrado. Comece pelo fluxo que você mais testa, como a venda.
+        Nenhum fluxo cadastrado. Comece pelo fluxo de saída que você mais testa, como produto ou preço. A venda é de entrada e não usa lote.
       </p>
     ) : (
       <div className="space-y-3">

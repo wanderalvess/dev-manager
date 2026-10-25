@@ -76,6 +76,20 @@ describe('integrationSettingsUtils', () => {
     expect(validateLayer({ layer: 'ch', baseUrl: 'ftp://x', healthPath: 'health', port: 70000 })).toHaveLength(3);
   });
 
+  it('a camada CH configurada só com o login do PDVSync conta como configurada', () => {
+    expect(countConfiguredLayers([{ layer: 'ch', auth: { type: 'rac-password' } }])).toBe(1);
+    expect(countConfiguredLayers([{ layer: 'wsh', auth: { type: 'rac-password' } }])).toBe(0);
+  });
+
+  it('validateLayer confere os três endereços do PDVSync, nomeando qual está errado', () => {
+    expect(validateLayer({ layer: 'ch', pdvsync: { racUrl: 'https://rac/x', batchStatusUrl: 'https://x/lote', storeStatusUrl: '' } })).toEqual([]);
+    expect(validateLayer({ layer: 'ch', pdvsync: { racUrl: 'rac/x', batchStatusUrl: 'ftp://x', storeStatusUrl: 'localhost:9' } })).toEqual([
+      'O endereço do login (RAC) precisa começar com http:// ou https://.',
+      'O endereço de consulta do lote precisa começar com http:// ou https://.',
+      'O endereço do status por loja precisa começar com http:// ou https://.'
+    ]);
+  });
+
   it('isHttpUrl e parsePortInput', () => {
     expect(isHttpUrl('https://localhost')).toBe(true);
     expect(isHttpUrl('localhost:9000')).toBe(false);

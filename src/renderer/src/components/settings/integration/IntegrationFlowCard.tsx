@@ -27,13 +27,13 @@ export const IntegrationFlowCard: React.FC<IntegrationFlowCardProps> = ({ flow, 
     <div className="bg-card/70 border border-border/80 rounded-xl p-4 space-y-3 hover:border-border transition-colors">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <IntegrationField id={`${id}-name`} label="Nome do fluxo">
-          <input id={`${id}-name`} type="text" value={flow.name} onChange={(e) => onPatch({ name: e.target.value })} className={INPUT_CLASS} placeholder="Venda" />
+          <input id={`${id}-name`} type="text" value={flow.name} onChange={(e) => onPatch({ name: e.target.value })} className={INPUT_CLASS} placeholder="Produto" />
         </IntegrationField>
         <IntegrationField id={`${id}-batchType`} label="Tipo de lote no CH" hint="O tipo que o WSH informa ao abrir o lote.">
           <input id={`${id}-batchType`} type="text" value={flow.chBatchType} onChange={(e) => onPatch({ chBatchType: e.target.value })} className={INPUT_CLASS} />
         </IntegrationField>
         <IntegrationField id={`${id}-winthorApi`} label="API do fluxo no WinThor" hint="Caminho chamado pelo WSH (evidência do passo 3).">
-          <input id={`${id}-winthorApi`} type="text" value={flow.winthorApiPath || ''} onChange={(e) => onPatch({ winthorApiPath: e.target.value })} className={INPUT_CLASS} placeholder="/winthor/vendas/v1/..." />
+          <input id={`${id}-winthorApi`} type="text" value={flow.winthorApiPath || ''} onChange={(e) => onPatch({ winthorApiPath: e.target.value })} className={INPUT_CLASS} placeholder="/winthor/integracao/.../produtos" />
         </IntegrationField>
       </div>
 
@@ -45,7 +45,7 @@ export const IntegrationFlowCard: React.FC<IntegrationFlowCardProps> = ({ flow, 
           </select>
         </IntegrationField>
         <IntegrationField id={`${id}-trigger-path`} label="Caminho do disparo" className="md:col-span-3" hint="Relativo à URL base do WSH. Deixe vazio enquanto o WSH não expuser um disparo por API.">
-          <input id={`${id}-trigger-path`} type="text" value={trigger.path} onChange={(e) => patchTrigger({ path: e.target.value })} className={INPUT_CLASS} placeholder="/fluxos/venda/executar" />
+          <input id={`${id}-trigger-path`} type="text" value={trigger.path} onChange={(e) => patchTrigger({ path: e.target.value })} className={INPUT_CLASS} placeholder="/fluxos/produto/executar" />
         </IntegrationField>
       </div>
       {trigger.method === 'POST' && (
@@ -54,10 +54,10 @@ export const IntegrationFlowCard: React.FC<IntegrationFlowCardProps> = ({ flow, 
         </IntegrationField>
       )}
 
-      <IntegrationField id={`${id}-pdvQuery`} label="Consulta de evidência no PDV (Postgres)" hint="Prova que o dado desceu. Binds: :lote, :inicio, :fim.">
+      <IntegrationField id={`${id}-pdvQuery`} label="Consulta de evidência no PDV (Postgres)" hint="Prova que o dado desceu; só SELECT. Binds de texto: :lote, :inicio e :fim (AAAA-MM-DD HH:MM:SS, hora local). Com count(*) vale o número; senão, as linhas.">
         <textarea id={`${id}-pdvQuery`} value={flow.evidence.pdvQuery} onChange={(e) => patchEvidence({ pdvQuery: e.target.value })} className={TEXTAREA_CLASS} spellCheck={false} placeholder="select count(*) from ... where lote = :lote" />
       </IntegrationField>
-      <IntegrationField id={`${id}-oracleQuery`} label="Consulta de evidência no WinThor (Oracle), opcional" hint="O dado existe na retaguarda? Mesmos binds.">
+      <IntegrationField id={`${id}-oracleQuery`} label="Consulta de evidência no WinThor (Oracle), opcional" hint="O dado existe na retaguarda? Mesmos binds e regras; no Oracle use TO_DATE(:inicio, 'YYYY-MM-DD HH24:MI:SS').">
         <textarea id={`${id}-oracleQuery`} value={flow.evidence.oracleQuery || ''} onChange={(e) => patchEvidence({ oracleQuery: e.target.value })} className={TEXTAREA_CLASS} spellCheck={false} />
       </IntegrationField>
 

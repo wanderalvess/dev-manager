@@ -8,6 +8,7 @@ const makeDeps = (overrides: Partial<ReadinessDeps> = {}): ReadinessDeps => ({
   checkHealth: vi.fn(async (url: string) => ({ url, reachable: true, isHealthy: true, statusCode: 200, timeMs: 40, responseTimeMs: 40 })),
   testDb: vi.fn(async () => ({ success: true, message: 'ok', version: 'PostgreSQL 15' })),
   loginWinthor: vi.fn(async () => ({ success: true, accessToken: 'segredo-do-token', statusCode: 200, durationMs: 300 })),
+  loginPdvSync: vi.fn(async () => ({ ok: true, durationMs: 210 })),
   statLog: vi.fn(async () => ({ exists: true, modifiedAt: 1_700_000_000_000, sizeBytes: 4096 })),
   ...overrides
 });
@@ -64,6 +65,19 @@ describe('runPlannedCheck', () => {
       makeDeps({ loginWinthor: async () => ({ success: false, error: 'Usuário ou senha inválidos' }) })
     );
     expect(denied).toMatchObject({ status: 'failed', detail: 'Usuário ou senha inválidos' });
+  });
+
+  it('login do PDVSync: ok mostra só a duração, recusado mostra o motivo, e as credenciais nunca vão para o resultado', async () => {
+    const credentials = { racUrl: 'https://rac.exemplo/token', username: 'svc', password: 'senha-secreta', clientId: 'cli', clientSecret: 'segredo-secreto' };
+    const good = await runPlannedCheck({ kind: 'pdvsync-login', label: 'Login PDVSync', credentials }, makeDeps());
+    expect(good).toMatchObject({ status: 'ok', detail: 'token obtido · 210 ms' });
+
+    const denied = await runPlannedCheck(
+      { kind: 'pdvsync-login', label: 'Login PDVSync', credentials },
+      makeDeps({ loginPdvSync: async () => ({ ok: false, error: 'O PDVSync recusou o login (HTTP 401).', durationMs: 5 }) })
+    );
+    expect(denied).toMatchObject({ status: 'failed', detail: 'O PDVSync recusou o login (HTTP 401).' });
+    expect(JSON.stringify([good, denied])).not.toMatch(/senha-secreta|segredo-secreto/);
   });
 
   it('log existente é ok; inexistente é aviso, não falha', async () => {

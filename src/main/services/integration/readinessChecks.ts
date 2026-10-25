@@ -1,6 +1,7 @@
 import type { HttpHealthResult, ServiceState } from '../../../shared/types';
 import type { WinThorLoginResult } from '../../../shared/httpClientTypes';
 import type { IntegrationReadinessCheck } from '../../../shared/integrationTypes';
+import type { PdvSyncCredentials } from '../../../shared/pdvSyncConfig';
 import type { PlannedCheck } from './readinessPlan';
 
 /** Tudo que o pré-voo precisa do mundo externo, injetado para o plano poder ser testado sem rede, banco ou Windows. */
@@ -12,6 +13,8 @@ export interface ReadinessDeps {
   /** `null` quando a conexão não existe mais nas configurações. */
   testDb: (connectionId: string) => Promise<{ success: boolean; message: string; version?: string } | null>;
   loginWinthor: (url: string, user: string, password: string) => Promise<WinThorLoginResult>;
+  /** Login no RAC do PDVSync; nunca devolve o token, só se funcionou. */
+  loginPdvSync: (credentials: PdvSyncCredentials) => Promise<{ ok: boolean; error?: string; durationMs: number }>;
   statLog: (path: string) => Promise<{ exists: boolean; modifiedAt?: number; sizeBytes?: number }>;
 }
 
@@ -84,6 +87,10 @@ async function evaluate(planned: PlannedCheck, deps: ReadinessDeps): Promise<Out
       const login = await deps.loginWinthor(planned.url, planned.user, planned.password);
       // O token nunca aparece no resultado: só o fato de ter sido emitido
       return login.success ? ok(`HTTP ${login.statusCode ?? 200} · token obtido · ${login.durationMs ?? 0} ms`) : failed(login.error || 'Login recusado.');
+    }
+    case 'pdvsync-login': {
+      const login = await deps.loginPdvSync(planned.credentials);
+      return login.ok ? ok(`token obtido · ${login.durationMs} ms`) : failed(login.error || 'Login recusado.');
     }
     case 'log': {
       const stat = await deps.statLog(planned.path);

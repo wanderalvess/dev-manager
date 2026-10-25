@@ -20,6 +20,7 @@ export const IntegrationTab: React.FC<IntegrationTabProps> = ({ settings, setSet
         services={settings.trackedServices || []}
         onPatchLayer={config.updateLayer}
         onPatchLayerAuth={config.updateLayerAuth}
+        onPatchLayerPdvSync={config.updateLayerPdvSync}
         onBrowseLog={(layer) => void config.browseLayerLog(layer)}
       />
       <IntegrationFlowsEditor

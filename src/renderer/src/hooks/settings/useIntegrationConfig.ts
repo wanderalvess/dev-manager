@@ -3,7 +3,8 @@ import type {
   IntegrationFlowDefinition,
   IntegrationLayerAuth,
   IntegrationLayerConfig,
-  IntegrationLayerId
+  IntegrationLayerId,
+  IntegrationPdvSyncEndpoints
 } from '../../../../shared/integrationTypes';
 import { createFlowDraft, ensureAllLayers, patchLayer, removeFlowAt, updateFlowAt } from '../../utils/integrationSettingsUtils';
 import { requestConfirm } from '../../components/ui/confirmService';
@@ -22,6 +23,12 @@ export function useIntegrationConfig(settings: AppSettings, setSettings: SetSett
       const current = ensureAllLayers(prev.integrationLayers).find((entry) => entry.layer === layer);
       const auth: IntegrationLayerAuth = { ...(current?.auth ?? { type: 'none' }), ...patch };
       return { ...prev, integrationLayers: patchLayer(prev.integrationLayers, layer, { auth }) };
+    });
+
+  const updateLayerPdvSync = (layer: IntegrationLayerId, patch: Partial<IntegrationPdvSyncEndpoints>) =>
+    setSettings((prev) => {
+      const current = ensureAllLayers(prev.integrationLayers).find((entry) => entry.layer === layer);
+      return { ...prev, integrationLayers: patchLayer(prev.integrationLayers, layer, { pdvsync: { ...(current?.pdvsync ?? {}), ...patch } }) };
     });
 
   const browseLayerLog = async (layer: IntegrationLayerId) => {
@@ -53,5 +60,5 @@ export function useIntegrationConfig(settings: AppSettings, setSettings: SetSett
     if (confirmed) setSettings((prev) => ({ ...prev, integrationFlows: removeFlowAt(prev.integrationFlows, index) }));
   };
 
-  return { layers, flows, updateLayer, updateLayerAuth, browseLayerLog, addFlow, updateFlow, removeFlow };
+  return { layers, flows, updateLayer, updateLayerAuth, updateLayerPdvSync, browseLayerLog, addFlow, updateFlow, removeFlow };
 }

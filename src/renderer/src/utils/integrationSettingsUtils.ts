@@ -4,6 +4,7 @@ import {
   type IntegrationLayerConfig,
   type IntegrationLayerId
 } from '../../../shared/integrationTypes';
+import { usesPdvSyncLogin } from '../../../shared/pdvSyncConfig';
 
 /**
  * Lógica pura da aba "Integração ponta a ponta" das Configurações (decisão 0003): as quatro
@@ -31,7 +32,8 @@ export function isLayerConfigured(layer: IntegrationLayerConfig): boolean {
       layer.windowsServiceName?.trim() ||
       layer.processName?.trim() ||
       layer.dbConnectionId ||
-      layer.logFilePath?.trim()
+      layer.logFilePath?.trim() ||
+      usesPdvSyncLogin(layer)
   );
 }
 
@@ -94,6 +96,14 @@ export function validateLayer(layer: IntegrationLayerConfig): string[] {
   const issues: string[] = [];
   if (layer.baseUrl?.trim() && !isHttpUrl(layer.baseUrl)) issues.push('A URL base precisa começar com http:// ou https://.');
   if (layer.healthPath?.trim() && !layer.healthPath.trim().startsWith('/')) issues.push('O caminho de health deve começar com "/".');
+  const pdvsyncUrls: [string, string | undefined][] = [
+    ['endereço do login (RAC)', layer.pdvsync?.racUrl],
+    ['endereço de consulta do lote', layer.pdvsync?.batchStatusUrl],
+    ['endereço do status por loja', layer.pdvsync?.storeStatusUrl]
+  ];
+  for (const [label, url] of pdvsyncUrls) {
+    if (url?.trim() && !isHttpUrl(url)) issues.push(`O ${label} precisa começar com http:// ou https://.`);
+  }
   if (layer.port !== undefined && (!Number.isInteger(layer.port) || layer.port < 1 || layer.port > 65535)) {
     issues.push('A porta precisa estar entre 1 e 65535.');
   }

@@ -89,16 +89,17 @@ const testRunnerService = new TestRunnerService(configService, windowsService, k
 const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
 const httpCollectionService = new HttpCollectionService();
 const httpClientService = new HttpClientService(httpCollectionService);
+// Os traces vivem na memória do processo dono da porta OTLP (app desktop ou servidor web): este
+// processo não sobe receptor próprio — tomaria a porta do app — e consulta aquele buffer.
+const apmClient = new ApmReceiverClient(getApmReceiverHandlePath());
 const integrationTraceService = new IntegrationTraceService(
   configService,
   databaseService,
   networkService,
   windowsService,
-  httpClientService
+  httpClientService,
+  { logWatcherService, apmTraces: apmClient }
 );
-// Os traces vivem na memória do processo dono da porta OTLP (app desktop ou servidor web): este
-// processo não sobe receptor próprio — tomaria a porta do app — e consulta aquele buffer.
-const apmClient = new ApmReceiverClient(getApmReceiverHandlePath());
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {

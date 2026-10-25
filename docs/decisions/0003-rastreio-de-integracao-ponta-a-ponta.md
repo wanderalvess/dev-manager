@@ -187,7 +187,7 @@ src/main/services/integration/
 | IPC | `main/ipc/handlers/integrationHandlers.ts`, canais `integration:*` |
 | Preload / web | método novo no `preload/index.ts` + `renderer/src/services/webBridge/integration.ts` |
 | REST / WS | `server/index.ts`: `/api/integration/*` (extrair para `server/routes/integrationRoutes.ts`, o arquivo já passa do teto) |
-| MCP | `integration_check_readiness` (leitura), `integration_list_flows` (leitura), `integration_trace_batch` (leitura: consulta um lote existente), `integration_run_flow` (**`DESTRUCTIVE_TOOLS`**: dispara processamento real) |
+| MCP | `integration_check_readiness` (leitura), `integration_check_batch`, `integration_list_traces` e `integration_get_trace` (leitura: consultam um lote existente e o histórico), `integration_run_flow` (**`DESTRUCTIVE_TOOLS`**: dispara processamento real) |
 
 ### Tela
 
@@ -218,7 +218,20 @@ Entram em `USAGE_BASELINE_DEFINITIONS`: `integration/readiness-check` (manual: 1
 |------|----------|
 | 0. Fundamentos | Entregue (tipos, segredos, aba de Configurações, linha do tempo e Markdown puros) |
 | 1. Pré-voo | Entregue (página, `IntegrationTraceService`, `integration_check_readiness`, `POST /api/integration/readiness`) |
-| 2 a 5 | Pendentes das coletas P1 a P5 |
+| Rastreio parcial de lote (adiantado das fases 2 a 4) | Entregue sem depender de P1 a P5: chegada no PDV por SQL com espera, retaguarda Oracle, passo 3 pelo APM, logs filtrados pelo lote, histórico em arquivo e relatório Markdown (`integration_check_batch`, `integration_list_traces`, `integration_get_trace`, `POST /api/integration/trace`) |
+| 2. Cliente do PDVSync e passos reais | **Entregue**: login RAC, consultar lote e status por loja (só leitura), configuração na camada CH, pré-voo do login, modelo de oito passos na ordem real e chegada por loja. Falta validar contra um ambiente real (P1) |
+| 3. Disparo do fluxo | Pendente de P2 (disparo e número do lote) e P3 (OTLP no Karaf) |
+| 5. Fechamento | Parcial: relatório e histórico existem; falta o diff do JOLT |
+
+### Decisões do rastreio parcial
+
+- **Semântica da evidência:** `:lote` vai sempre como texto; `:inicio` e `:fim` como `AAAA-MM-DD HH:MM:SS` em hora local, e só os binds que a consulta usa são enviados. Com `count(*)` vale o valor da primeira coluna; em qualquer outra consulta, o número de linhas.
+- **Somente leitura:** a consulta do cadastro passa por `isReadOnlySql` antes de cada execução, mesmo que o `config.json` tenha sido editado à mão.
+- **Sem evidência nunca é ok:** passo sem fonte fica `unknown` com o motivo. Erro de SQL na consulta do PDV também vira `unknown` (o erro é da evidência, não da integração) e a causa vai para as observações. A retaguarda Oracle sozinha deixa o passo 3 como `unknown`, porque o dado existir não prova que a API foi chamada.
+- **Logs:** só a janela final do arquivo (até 5000 linhas e 512 KB, limite do leitor), o lote precisa estar isolado no texto (482 não casa com 14821) e o marcador do fluxo restringe, não amplia. Mesma guarda do visualizador de logs: extensão de log e fora da pasta de dados do app.
+- **Nomes das tools:** `integration_check_batch` no lugar de `integration_trace_batch`, para o classificador de risco tratá-la como leitura pelo nome (`check`).
+- **Histórico:** um JSON por rastreio em `integration-traces/` ao lado do `config.json`, com o lote e trechos de log, só nesta máquina; os 50 mais recentes.
+- **Fora do que foi feito:** disparar o fluxo, abrir ou fechar lote e comparar o JSON antes e depois do JOLT.
 
 Cada fase fecha com testes das funções puras, Ajuda atualizada e entrada no CHANGELOG. As fases
 0 e 1 não dependem de nenhuma pendência de coleta.
@@ -250,7 +263,7 @@ o MCP devolve o mesmo resultado que a tela.
   `open-batch`, `ch-send` (itens aceitos/rejeitados) e `close-batch`.
 - Campo **Rastrear lote existente**, `TraceTimeline` com os passos que o CH prova; os outros
   ficam `unknown`.
-- Tool `integration_trace_batch`, histórico em arquivo.
+- Tool `integration_check_batch`, histórico em arquivo (já entregues no rastreio parcial).
 
 **Pronto quando:** informando um número de lote real, a tela mostra aberto/itens/fechado com os
 horários do CH.
@@ -285,16 +298,50 @@ real pelo WebSocket.
 
 ## Pendências de coleta
 
+Roteiro para ir à máquina do ambiente e trazer as respostas: [roteiro-coleta-integracao.md](../roteiro-coleta-integracao.md).
+
+**Atualização após ler o repositório de layouts do WSH** ([referencia-wsh-pdvsync.md](../referencia-wsh-pdvsync.md)): o contrato da
+API de lote (P1) e o agendamento dos fluxos (parte de P2) já são conhecidos, e três premissas deste documento mudam. A tabela
+abaixo mostra o estado de cada pendência; as premissas corrigidas estão em "Correções do modelo".
+
 Preencher aqui antes de iniciar a fase indicada. Até lá, os clientes correspondentes ficam com
 interface definida e implementação que devolve `unknown`.
 
 | Nº | O que coletar | Bloqueia | Resposta |
 |----|---------------|----------|----------|
-| P1 | API de lote do CH: endpoints de abrir, consultar, monitorar e fechar; autenticação; exemplo de resposta da consulta (campos de status, itens aceitos/rejeitados, horários) | Fase 2 | _pendente_ |
-| P2 | WSH: existe API para listar e disparar fluxos? Se só agendamento, como forçar uma execução? Onde grava log e em que formato aparece o número do lote | Fase 3 | _pendente_ |
-| P3 | Os serviços WinThor no Karaf já exportam OTLP para o APM do app, ou só log? Qual arquivo de log | Fase 3 | _pendente_ |
-| P4 | Para o fluxo de venda: tabela e colunas do Postgres do PDV que provam a chegada; chave para ligar ao lote ou ao cupom | Fase 4 | _pendente_ |
-| P5 | Como os serviços do CH rodam na máquina local (serviço Windows, Docker, processo solto), nome do serviço e caminho do log | Fases 1 (health) e 4 (log) | _pendente_ |
+| P1 | API de lote do CH (PDVSync) | Fase 2 | **Contrato conhecido** pelo repositório de layouts ([referência](../referencia-wsh-pdvsync.md)). Falta: ambiente usado (nuvem, homologação ou cópia local), inquilino, credenciais (ficam com você) e respostas reais de três lotes |
+| P2 | WSH: como disparar um fluxo, onde loga e como o lote aparece no log | Fase 3 | **Parcial**: os fluxos rodam por agendamento (vendas 300 s, status de lote 600 s). Falta: como forçar a execução, o log do WSH e as linhas com o lote |
+| P3 | Os serviços WinThor no Karaf exportam OTLP para o APM do app, ou só log? Qual arquivo de log | Fase 3 | _pendente_ |
+| P4 | Tabela e colunas do Postgres do PDV que provam a chegada | Fase 4 | _pendente_, **menos crítica**: o PDVSync informa o status do lote por loja |
+| P5 | O CH do ambiente é a nuvem, uma cópia local ou um simulador? Serviços, porta e log | Fases 1 (health) e 4 (log) | _pendente_ |
+| O1 | Estrutura e amostras das tabelas `PCINTEGRACAO*` do Oracle (colunas de status, erro e data; como o lote aparece) | Fases 2 a 4 | _pendente_ |
+| V1 | Como se confere que uma **venda** (sentido PDV → WinThor) chegou ao WinThor | Novo modelo de venda | _pendente_ |
+
+## Correções do modelo após ler os layouts do WSH
+
+Este documento foi escrito a partir da descrição verbal da cadeia. O repositório de layouts mostra o que realmente roda, e três
+premissas mudam (detalhes em [referencia-wsh-pdvsync.md](../referencia-wsh-pdvsync.md)):
+
+1. **Venda não usa lote.** É um fluxo de entrada (PDV → WinThor): busca as vendas no PDVSync, envia ao WinThor e devolve o status.
+   Os oito passos modelados aqui valem para fluxos de **saída** (produto, preço, estoque, cliente...). A venda precisa de modelo
+   próprio, que depende de V1.
+2. **A ordem dos passos é outra.** Num fluxo de saída: login no WinThor, busca, JOLT, login no PDVSync, **abrir lote**, enviar,
+   **fechar lote**, consultar lote. O lote só é aberto depois de buscar os dados. Os identificadores `open-batch`,
+   `winthor-token`, `ch-token` e a ordem de `INTEGRATION_STEP_ORDER` foram revistos e **aplicados**: os ids agora são `winthor-login`, `winthor-fetch`, `jolt`, `pdvsync-login`, `open-batch`, `send`, `close-batch` e `pdv-arrival`.
+3. **A chegada ao PDV tem uma fonte melhor que o SQL do PDV.** O PDVSync informa o status do lote e o status por loja
+   (`LoteExternoRetornos` e `LojaLoteStatusretorno`). O SQL no Postgres vira confirmação, **aplicado**.
+
+### Decisões do cliente do PDVSync
+
+- **Só leitura.** O Hub faz login e consulta; nunca abre nem fecha lote, para não competir com o WSH (só existe um lote aberto por tipo).
+- **Segredos:** senha e `client_secret` na criptografia do `config.json`; trocar o endereço do login sem digitá-los de novo descarta os salvos.
+- **Abertura e fechamento por inferência explícita:** o lote existir prova a abertura; sair de `EmPreparacao` indica o fechamento (a confirmar); ficar em `EmPreparacao` é `pending`, não falha, porque o fluxo pode estar rodando.
+- **Chegada:** por loja, `BaixadoComSucesso` em todas é `ok`, `BaixadoComErro` em alguma é `failed` com o motivo, e `Disponivel` ou `EmProcessoDeBaixa` é `pending`. Sem status por loja, vale o status do lote. `EnviadoComSucesso` não prova a baixa e fica sem evidência.
+- **Conflito entre fontes:** falha do PDVSync vence um `ok` do banco; PDVSync em andamento com dado ainda ausente no banco é `pending`; e uma consulta rápida do banco que não acha o lote, quando o PDVSync já deu a resposta final, vira observação, não falha.
+
+Também muda o "disparar fluxo": os fluxos rodam por agendamento (`PCINTEGRACAOAGENDAMENTO`), então o botão depende de saber como
+forçar uma execução (P2). E o Oracle do WSH (`PCINTEGRACAOCORE` e tabelas de fluxo) guarda o histórico de execuções, o que pode
+substituir a leitura de log para dizer se uma integração rodou (O1).
 
 ## Riscos e respostas
 

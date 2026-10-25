@@ -6,6 +6,7 @@ import type {
   IntegrationReadinessResult
 } from '../../../shared/integrationTypes';
 import { isLogFilePath, isSafeUrl } from '../../utils/security';
+import { missingLoginFields, toPdvSyncCredentials, usesPdvSyncLogin, type PdvSyncCredentials } from '../../../shared/pdvSyncConfig';
 
 /**
  * Planejamento puro do pré-voo (decisão 0003): transforma a configuração de uma camada na lista
@@ -23,6 +24,7 @@ export type PlannedCheck =
   | { kind: 'health'; label: string; url: string }
   | { kind: 'db'; label: string; connectionId: string }
   | { kind: 'winthor-login'; label: string; url: string; user: string; password: string }
+  | { kind: 'pdvsync-login'; label: string; credentials: PdvSyncCredentials }
   | { kind: 'log'; label: string; path: string }
   | { kind: 'static'; label: string; status: IntegrationCheckStatus; detail: string };
 
@@ -88,6 +90,16 @@ function planWinthorLogin(layer: IntegrationLayerConfig, baseUrl: string | undef
   return [{ kind: 'winthor-login', label: 'Login WinThor', url: joinUrl(baseUrl, WINTHOR_LOGIN_PATH), user, password }];
 }
 
+/** Login do PDVSync (RAC): só na camada CH com esse tipo de autenticação; campo faltando vira aviso, nunca ok. */
+function planPdvSyncLogin(layer: IntegrationLayerConfig): PlannedCheck[] {
+  if (!usesPdvSyncLogin(layer)) return [];
+  const credentials = toPdvSyncCredentials(layer);
+  if (!credentials) {
+    return [{ kind: 'static', label: 'Login PDVSync', status: 'skipped', detail: `Faltam campos do login do PDVSync: ${missingLoginFields(layer).join(', ')}.` }];
+  }
+  return [{ kind: 'pdvsync-login', label: 'Login PDVSync', credentials }];
+}
+
 function planLocal(layer: IntegrationLayerConfig): PlannedCheck[] {
   const planned: PlannedCheck[] = [];
   const service = layer.windowsServiceName?.trim();
@@ -111,11 +123,12 @@ export function planLayerChecks(layer: IntegrationLayerConfig): PlannedCheck[] {
   if (rawUrl && !isSafeUrl(rawUrl)) {
     return [
       { kind: 'static', label: 'URL base', status: 'failed', detail: 'URL inválida ou não permitida (use http:// ou https://).' },
+      ...planPdvSyncLogin(layer),
       ...planLocal(layer)
     ];
   }
   const baseUrl = rawUrl || undefined;
-  return [...planAddress(layer, baseUrl), ...planWinthorLogin(layer, baseUrl), ...planLocal(layer)];
+  return [...planAddress(layer, baseUrl), ...planWinthorLogin(layer, baseUrl), ...planPdvSyncLogin(layer), ...planLocal(layer)];
 }
 
 /** Sem verificação a camada não está configurada; falha pesa mais que aviso; aviso mais que ok. */

@@ -1,7 +1,12 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
 import type { DatabaseConnectionConfig, TrackedServiceConfig } from '../../../../../shared/types';
-import type { IntegrationLayerAuth, IntegrationLayerConfig, IntegrationLayerId } from '../../../../../shared/integrationTypes';
+import type {
+  IntegrationLayerAuth,
+  IntegrationLayerConfig,
+  IntegrationLayerId,
+  IntegrationPdvSyncEndpoints
+} from '../../../../../shared/integrationTypes';
 import { countConfiguredLayers } from '../../../utils/integrationSettingsUtils';
 import { IntegrationLayerCard } from './IntegrationLayerCard';
 
@@ -11,6 +16,7 @@ interface IntegrationLayersEditorProps {
   services: TrackedServiceConfig[];
   onPatchLayer: (layer: IntegrationLayerId, patch: Partial<IntegrationLayerConfig>) => void;
   onPatchLayerAuth: (layer: IntegrationLayerId, patch: Partial<IntegrationLayerAuth>) => void;
+  onPatchLayerPdvSync: (layer: IntegrationLayerId, patch: Partial<IntegrationPdvSyncEndpoints>) => void;
   onBrowseLog: (layer: IntegrationLayerId) => void;
 }
 
@@ -21,6 +27,7 @@ export const IntegrationLayersEditor: React.FC<IntegrationLayersEditorProps> = (
   services,
   onPatchLayer,
   onPatchLayerAuth,
+  onPatchLayerPdvSync,
   onBrowseLog
 }) => {
   const configured = countConfiguredLayers(layers);
@@ -47,6 +54,7 @@ export const IntegrationLayersEditor: React.FC<IntegrationLayersEditorProps> = (
             services={services}
             onPatch={(patch) => onPatchLayer(layer.layer, patch)}
             onPatchAuth={(patch) => onPatchLayerAuth(layer.layer, patch)}
+            onPatchPdvSync={(patch) => onPatchLayerPdvSync(layer.layer, patch)}
             onBrowseLog={() => onBrowseLog(layer.layer)}
           />
         ))}

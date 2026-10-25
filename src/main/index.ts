@@ -178,7 +178,8 @@ function createWindow() {
     databaseService,
     networkService,
     windowsService,
-    httpClientService
+    httpClientService,
+    { logWatcherService, apmTraces: apmService }
   );
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({

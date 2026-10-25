@@ -1,5 +1,6 @@
 import {
-  INTEGRATION_STEP_LABELS,
+  stepLabel,
+  type IntegrationLogExcerpt,
   type IntegrationStepStatus,
   type IntegrationTraceResult,
   type IntegrationTraceStep
@@ -20,7 +21,7 @@ const STATUS_LABELS: Readonly<Record<IntegrationStepStatus, string>> = {
 };
 
 const SOURCE_LABELS: Readonly<Record<IntegrationTraceStep['source'], string>> = {
-  'ch-api': 'API do CH',
+  'ch-api': 'API do PDVSync',
   apm: 'APM',
   log: 'log',
   sql: 'SQL',
@@ -50,7 +51,7 @@ function buildStepsTable(steps: IntegrationTraceStep[]): string {
   const rows = steps.map((step) =>
     [
       stepPosition(step.id),
-      INTEGRATION_STEP_LABELS[step.id],
+      stepLabel(step.id),
       STATUS_LABELS[step.status],
       SOURCE_LABELS[step.source],
       cell(step.httpStatus),
@@ -65,10 +66,33 @@ function buildStepsTable(steps: IntegrationTraceStep[]): string {
 function buildBrokenSection(trace: Pick<IntegrationTraceResult, 'brokenAt' | 'steps'>): string[] {
   if (!trace.brokenAt) return ['**Resultado:** todos os passos observados concluíram sem falha.'];
   const step = trace.steps.find((s) => s.id === trace.brokenAt);
-  const lines = [`**Quebrou no passo ${stepPosition(trace.brokenAt)}: ${INTEGRATION_STEP_LABELS[trace.brokenAt]}**`];
+  const lines = [`**Quebrou no passo ${stepPosition(trace.brokenAt)}: ${stepLabel(trace.brokenAt)}**`];
   if (step?.message) lines.push('', step.message);
   if (step?.evidence) lines.push('', '```', step.evidence.trim(), '```');
   return lines;
+}
+
+const LOG_SOURCE_LABELS: Readonly<Record<IntegrationLogExcerpt['source'], string>> = { wsh: 'WSH', ch: 'CH' };
+
+function buildLogSections(excerpts: IntegrationLogExcerpt[] | undefined): string[] {
+  if (!excerpts || excerpts.length === 0) return [];
+  const lines = ['### Logs filtrados pelo lote'];
+  for (const excerpt of excerpts) {
+    const label = LOG_SOURCE_LABELS[excerpt.source];
+    if (excerpt.totalMatches === 0) {
+      lines.push('', `**${label}:** nenhuma linha cita o lote nas últimas linhas do log.`);
+      continue;
+    }
+    const errors = excerpt.errorLines > 0 ? `, ${excerpt.errorLines} com erro` : '';
+    const cut = excerpt.truncated ? `; mostrando as ${excerpt.lines.length} mais recentes` : '';
+    lines.push('', `**${label}:** ${excerpt.totalMatches} linha(s) citam o lote${errors}${cut}`, '', '```', ...excerpt.lines, '```');
+  }
+  return ['', ...lines];
+}
+
+function buildNotesSection(notes: string[] | undefined): string[] {
+  if (!notes || notes.length === 0) return [];
+  return ['', '### Observações', '', ...notes.map((note) => `- ${note}`)];
 }
 
 export function buildTraceEvidenceMarkdown(trace: Omit<IntegrationTraceResult, 'evidenceMarkdown'>): string {
@@ -85,6 +109,8 @@ export function buildTraceEvidenceMarkdown(trace: Omit<IntegrationTraceResult, '
     ...buildBrokenSection(trace),
     '',
     buildStepsTable(trace.steps),
+    ...buildLogSections(trace.logExcerpts),
+    ...buildNotesSection(trace.notes),
     '',
     '_Gerado pelo Hub Manager (Rastreio de Integração)._'
   ];

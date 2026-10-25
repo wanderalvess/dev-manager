@@ -1,22 +1,22 @@
-import React from 'react';
-import { AlertTriangle, Route, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { Route, Settings } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
-import { ReadinessVerdictBar } from '../components/integrationtrace/ReadinessVerdictBar';
-import { ReadinessLayerCard } from '../components/integrationtrace/ReadinessLayerCard';
-import { ReadinessEmptyState } from '../components/integrationtrace/ReadinessEmptyState';
-import { useIntegrationReadiness } from '../hooks/integration/useIntegrationReadiness';
+import { BatchTraceView } from '../components/integrationtrace/BatchTraceView';
+import { IntegrationTraceTabs, type IntegrationTraceTab } from '../components/integrationtrace/IntegrationTraceTabs';
+import { ReadinessView } from '../components/integrationtrace/ReadinessView';
 import { requestSettingsTab } from '../utils/settingsDeepLink';
 
 interface IntegrationTracePageProps {
   onNavigateToSettings: () => void;
+  settingsVersion?: number;
 }
 
 /**
  * Rastreio de Integração ponta a ponta (decisão 0003): WinThor → WSH → CH → PDV.
- * Fase 1: pré-voo das camadas. A linha do tempo do lote chega nas próximas fases.
+ * Pré-voo das camadas e rastreio parcial de um lote por SQL, logs e APM.
  */
-export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNavigateToSettings }) => {
-  const { result, running, error, run } = useIntegrationReadiness();
+export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNavigateToSettings, settingsVersion }) => {
+  const [tab, setTab] = useState<IntegrationTraceTab>('readiness');
 
   const openSettings = () => {
     requestSettingsTab('integration');
@@ -28,7 +28,7 @@ export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNa
       <PageHeader
         icon={Route}
         title="Rastreio de Integração"
-        description="Confira WinThor, WSH, CH e PDV antes de testar uma integração de ponta a ponta."
+        description="Confira WinThor, WSH, CH e PDV e descubra em que ponta um lote parou."
         actions={
           <button
             type="button"
@@ -41,25 +41,16 @@ export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNa
         }
       />
 
-      <ReadinessVerdictBar result={result} running={running} onRun={() => void run()} />
+      <IntegrationTraceTabs active={tab} onChange={setTab} />
 
-      {error && (
-        <div role="alert" className="px-4 py-2.5 rounded-xl border bg-danger/10 border-danger/30 text-danger text-xs font-semibold flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
+      {/* As duas abas ficam montadas: o resultado do pré-voo e do rastreio sobrevive à troca de aba */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 -mr-1">
-        {result ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" data-testid="readiness-layers">
-            {result.layers.map((layer) => (
-              <ReadinessLayerCard key={layer.layer} readiness={layer} />
-            ))}
-          </div>
-        ) : (
-          <ReadinessEmptyState onOpenSettings={openSettings} />
-        )}
+        <div hidden={tab !== 'readiness'}>
+          <ReadinessView onOpenSettings={openSettings} />
+        </div>
+        <div hidden={tab !== 'batch'}>
+          <BatchTraceView settingsVersion={settingsVersion} onOpenSettings={openSettings} />
+        </div>
       </div>
     </div>
   );

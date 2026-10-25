@@ -58,7 +58,9 @@ describe('ConfigService: Rastreio de Integração', () => {
     service.saveSettings({ integrationLayers: [chLayer] });
 
     const sanitized = service.sanitizeSecrets(service.getSettings());
-    expect(sanitized.integrationLayers?.[0].auth).toEqual({ type: 'basic', user: 'hub', password: '', token: '', hasPassword: true, hasToken: false });
+    expect(sanitized.integrationLayers?.[0].auth).toEqual({
+      type: 'basic', user: 'hub', password: '', token: '', clientSecret: '', hasPassword: true, hasToken: false, hasClientSecret: false
+    });
   });
 
   it('preserva a senha quando a tela salva o objeto sanitizado de volta', () => {

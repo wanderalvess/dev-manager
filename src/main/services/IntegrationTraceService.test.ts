@@ -1,27 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import type { AppSettings } from '../../shared/types';
-import { IntegrationTraceService } from './IntegrationTraceService';
-
-function makeService(settings: Partial<AppSettings>, overrides: { testConnection?: ReturnType<typeof vi.fn> } = {}) {
-  const configService = { getSettings: () => settings as AppSettings };
-  const databaseService = { testConnection: overrides.testConnection ?? vi.fn(async () => ({ success: true, message: 'ok', version: 'Oracle 19' })) };
-  const networkService = {
-    checkHttpHealth: vi.fn(async (url: string) => ({ url, reachable: true, isHealthy: true, statusCode: 200, timeMs: 12, responseTimeMs: 12 }))
-  };
-  const windowsService = { getServiceStatus: vi.fn(async () => 'RUNNING' as const), isProcessRunning: vi.fn(async () => true) };
-  const httpClientService = { loginWinThor: vi.fn(async () => ({ success: true, accessToken: 'tok', statusCode: 200, durationMs: 50 })) };
-  const service = new IntegrationTraceService(
-    configService as never,
-    databaseService as never,
-    networkService as never,
-    windowsService as never,
-    httpClientService as never
-  );
-  return { service, databaseService, networkService, windowsService, httpClientService };
-}
+import type { IntegrationTraceResult } from '../../shared/integrationTypes';
+import type { AppSettings, TraceSummary } from '../../shared/types';
+import { makeService } from './integrationTraceServiceTestKit';
 
 describe('IntegrationTraceService.checkReadiness', () => {
   it('sem nada configurado devolve as quatro camadas na ordem, todas não configuradas', async () => {
@@ -97,5 +80,108 @@ describe('IntegrationTraceService.checkReadiness', () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('IntegrationTraceService: rastreio de lote', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'integration-trace-service-'));
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  const flow = {
+    id: 'venda',
+    name: 'Venda',
+    chBatchType: 'VENDA',
+    winthorApiPath: '/winthor/vendas/v1/pedidos',
+    evidence: { pdvQuery: 'select count(*) from venda where lote = :lote', pdvWaitSeconds: 0 }
+  };
+  const settings = (extra: Partial<AppSettings> = {}): Partial<AppSettings> => ({
+    databaseConnections: [{ id: 'pg', name: 'PDV', type: 'postgres', host: 'h', port: 5432, database: 'd', user: 'u' }],
+    integrationLayers: [{ layer: 'pdv', dbConnectionId: 'pg' }],
+    integrationFlows: [flow],
+    ...extra
+  });
+  const traceOf = (response: unknown) => (response as { trace: IntegrationTraceResult }).trace;
+
+  it('entrada inválida e fluxo desconhecido voltam como erro legível, sem exceção nem histórico', async () => {
+    const { service } = makeService(settings(), { configDir: dir });
+
+    expect(await service.traceBatch({ flowId: 'venda', batchNumber: '' })).toEqual({ success: false, error: 'Informe o número do lote.' });
+    const unknown = await service.traceBatch({ flowId: 'nao-existe', batchNumber: '1' });
+    expect(unknown).toMatchObject({ success: false });
+    expect((unknown as { error: string }).error).toContain('Fluxo não encontrado');
+    expect(await service.listTraces()).toEqual([]);
+  });
+
+  it('fluxo desativado não pode ser rastreado e não aparece na lista de fluxos', async () => {
+    const { service } = makeService(settings({ integrationFlows: [{ ...flow, enabled: false }] }), { configDir: dir });
+    expect(service.listFlows()).toEqual([]);
+    expect(await service.traceBatch({ flowId: 'venda', batchNumber: '1' })).toMatchObject({ success: false });
+  });
+
+  it('rastreia o lote com SQL do PDV, grava no histórico e permite reabrir e apagar', async () => {
+    const { service, databaseService } = makeService(settings(), { configDir: dir });
+
+    const response = await service.traceBatch({ flowId: 'venda', batchNumber: '48213' });
+    expect(response.success).toBe(true);
+    const trace = traceOf(response);
+    expect(trace.steps.find((s) => s.id === 'pdv-arrival')).toMatchObject({ status: 'ok', itemCount: 3 });
+    expect(databaseService.executeQuery).toHaveBeenCalledWith(expect.objectContaining({ id: 'pg' }), flow.evidence.pdvQuery, 200, { lote: '48213' });
+
+    expect((await service.listTraces()).map((item) => item.id)).toEqual([trace.id]);
+    expect(await service.getTrace(trace.id)).toMatchObject({ id: trace.id, batchNumber: '48213' });
+    expect(fs.existsSync(path.join(dir, 'integration-traces', `${trace.id}.json`))).toBe(true);
+
+    expect(await service.deleteTrace(trace.id)).toBe(true);
+    expect(await service.getTrace(trace.id)).toBeNull();
+    expect(await service.getTrace('../config')).toBeNull();
+  });
+
+  it('usa o APM e os logs reais: o passo 3 vem do trace e o log filtra pelo lote', async () => {
+    const logFile = path.join(dir, 'wsh.log');
+    fs.writeFileSync(logFile, ['10:00 INFO lote 99 aberto', '10:01 ERROR lote 48213 falhou', '10:02 INFO lote 48213 reenviado'].join('\n') + '\n');
+    const apmTrace: TraceSummary = {
+      traceId: 'tr-9', rootSpanName: 'GET /winthor/vendas/v1/pedidos', serviceName: 'karaf', httpMethod: 'GET',
+      httpRoute: '/winthor/vendas/v1/pedidos', httpStatusCode: 200, startTimeUnixMs: Date.now() - 1000, durationMs: 700,
+      spanCount: 3, hasError: false, errorCount: 0, hasDatabaseQuery: false
+    };
+    const { service } = makeService(
+      settings({ integrationLayers: [{ layer: 'pdv', dbConnectionId: 'pg' }, { layer: 'wsh', logFilePath: logFile }] }),
+      { configDir: dir, traces: [apmTrace] }
+    );
+
+    const trace = traceOf(await service.traceBatch({ flowId: 'venda', batchNumber: '48213' }));
+
+    expect(trace.steps.find((s) => s.id === 'winthor-fetch')).toMatchObject({ status: 'ok', source: 'apm' });
+    expect(trace.logExcerpts?.[0]).toMatchObject({ totalMatches: 2, errorLines: 1 });
+    expect(trace.logExcerpts?.[0].lines).toEqual(['10:01 ERROR lote 48213 falhou', '10:02 INFO lote 48213 reenviado']);
+    expect(trace.notes).toContain('O log do WSH tem 1 linha(s) de erro citando o lote.');
+  });
+
+  it('arquivo fora do padrão de log nunca é lido, nem que esteja configurado como log', async () => {
+    const notALog = path.join(dir, 'config.json');
+    fs.writeFileSync(notALog, '{ "karafPass": "lote 7" }');
+    const { service } = makeService(
+      settings({ integrationLayers: [{ layer: 'pdv', dbConnectionId: 'pg' }, { layer: 'ch', logFilePath: notALog }] }),
+      { configDir: dir }
+    );
+
+    const trace = traceOf(await service.traceBatch({ flowId: 'venda', batchNumber: '7' }));
+    expect(trace.logExcerpts).toEqual([]);
+    expect(trace.notes).toContain('Log do CH não encontrado ou ilegível (config.json).');
+  });
+
+  it('falha ao gravar o histórico não perde o resultado, só avisa', async () => {
+    const blocked = path.join(dir, 'ocupado');
+    fs.writeFileSync(blocked, 'arquivo, não pasta');
+    const { service } = makeService(settings(), { configDir: blocked });
+
+    const response = await service.traceBatch({ flowId: 'venda', batchNumber: '5' });
+    expect(response.success).toBe(true);
+    expect(traceOf(response).notes?.some((n) => n.startsWith('O rastreio não pôde ser salvo no histórico'))).toBe(true);
   });
 });

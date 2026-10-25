@@ -4,11 +4,14 @@ import type { DatabaseConnectionConfig, TrackedServiceConfig } from '../../../..
 import {
   INTEGRATION_LAYER_LABELS,
   type IntegrationLayerAuth,
-  type IntegrationLayerConfig
+  type IntegrationLayerConfig,
+  type IntegrationPdvSyncEndpoints
 } from '../../../../../shared/integrationTypes';
+import { usesPdvSyncLogin } from '../../../../../shared/pdvSyncConfig';
 import { isLayerConfigured, parsePortInput, validateLayer } from '../../../utils/integrationSettingsUtils';
 import { INPUT_CLASS, IntegrationField } from './IntegrationField';
 import { IntegrationLayerAuthFields } from './IntegrationLayerAuthFields';
+import { PdvSyncEndpointsFields } from './PdvSyncEndpointsFields';
 
 interface IntegrationLayerCardProps {
   layer: IntegrationLayerConfig;
@@ -16,6 +19,7 @@ interface IntegrationLayerCardProps {
   services: TrackedServiceConfig[];
   onPatch: (patch: Partial<IntegrationLayerConfig>) => void;
   onPatchAuth: (patch: Partial<IntegrationLayerAuth>) => void;
+  onPatchPdvSync: (patch: Partial<IntegrationPdvSyncEndpoints>) => void;
   onBrowseLog: () => void;
 }
 
@@ -31,6 +35,7 @@ export const IntegrationLayerCard: React.FC<IntegrationLayerCardProps> = ({
   services,
   onPatch,
   onPatchAuth,
+  onPatchPdvSync,
   onBrowseLog
 }) => {
   const idPrefix = `integration-layer-${layer.layer}`;
@@ -150,7 +155,8 @@ export const IntegrationLayerCard: React.FC<IntegrationLayerCardProps> = ({
         </IntegrationField>
       </div>
 
-      {layer.layer !== 'pdv' && <IntegrationLayerAuthFields idPrefix={idPrefix} auth={layer.auth} onChange={onPatchAuth} />}
+      {layer.layer !== 'pdv' && <IntegrationLayerAuthFields idPrefix={idPrefix} layer={layer.layer} auth={layer.auth} onChange={onPatchAuth} />}
+      {usesPdvSyncLogin(layer) && <PdvSyncEndpointsFields idPrefix={idPrefix} layer={layer} onChange={onPatchPdvSync} />}
 
       {issues.length > 0 && (
         <ul className="text-2xs text-danger space-y-0.5" role="alert">
