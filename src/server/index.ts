@@ -40,6 +40,8 @@ import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
+import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
+import { createIntegrationRouter } from './routes/integrationRoutes';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { createUsageTrackingMiddleware } from './usageTracking';
@@ -2243,6 +2245,12 @@ app.use('/api/http-client', createHttpClientRouter(httpClientService, httpCollec
 app.use('/api/karaf/stream', createKarafStreamRouter(karafService, broadcastWs));
 app.use('/api/deploy', createDeployWorkspaceRouter(new PomGraphService(configService)));
 app.use('/api/delphi', createDelphiRouter(new DelphiBuildService(configService, windowsService), broadcastWs));
+app.use(
+  '/api/integration',
+  createIntegrationRouter(
+    new IntegrationTraceService(configService, databaseService, networkService, windowsService, httpClientService)
+  )
+);
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
 
 // Servir Frontend SPA estático se compilado

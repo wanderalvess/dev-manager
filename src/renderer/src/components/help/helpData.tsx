@@ -1699,7 +1699,7 @@ export function getFaqList({
     ...getModulesFaq(onNavigate),
     ...getRemoteControlFaq(onNavigate),
     ...getLogsFaq(onNavigate),
-    ...getIntegrationTraceFaq(),
+    ...getIntegrationTraceFaq(onNavigate),
     ...getDeployCancellationFaq(onNavigate),
     ...getUpdateFaq(handleOpenLink)
   ];
@@ -1732,7 +1732,7 @@ export function getKeyboardShortcuts(debugPort: number) {
 export function getHelpCategories(faqCount: number, appVersion: string = '1.43.0'): HelpCategoryItem[] {
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
-    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '13 Módulos' },
+    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '14 Módulos' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqCount}` },
     { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appVersion}` }

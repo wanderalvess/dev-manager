@@ -14,6 +14,7 @@ import { McpModuleCard } from '../modules/McpModuleCard';
 import { QualityModuleCard } from '../modules/QualityModuleCard';
 import { HttpClientModuleCard } from '../modules/HttpClientModuleCard';
 import { IntegrationsModuleCard } from '../modules/IntegrationsModuleCard';
+import { IntegrationTraceModuleCard } from '../modules/IntegrationTraceModuleCard';
 
 interface HelpModulesTabProps {
   debugPort: number;
@@ -49,6 +50,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
       <QualityModuleCard onNavigate={onNavigate} />
       <HttpClientModuleCard onNavigate={onNavigate} />
       <IntegrationsModuleCard onNavigate={onNavigate} />
+      <IntegrationTraceModuleCard onNavigate={onNavigate} />
     </div>
   );
 };

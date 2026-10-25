@@ -20,6 +20,9 @@ const SettingsPage = lazy(() => import('../../pages/SettingsPage').then((m) => (
 const HelpPage = lazy(() => import('../../pages/HelpPage').then((m) => ({ default: m.HelpPage })));
 const LogsPage = lazy(() => import('../../pages/LogsPage').then((m) => ({ default: m.LogsPage })));
 const ApmPage = lazy(() => import('../../pages/ApmPage').then((m) => ({ default: m.ApmPage })));
+const IntegrationTracePage = lazy(() =>
+  import('../../pages/IntegrationTracePage').then((m) => ({ default: m.IntegrationTracePage }))
+);
 const QualityPage = lazy(() => import('../../pages/QualityPage').then((m) => ({ default: m.QualityPage })));
 const QualityRegressionPage = lazy(() =>
   import('../../pages/QualityRegressionPage').then((m) => ({ default: m.QualityRegressionPage }))
@@ -168,6 +171,9 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
             onNavigateToSettings={goSettings}
             onNavigateToDatabase={() => setActiveTab('database')}
           />
+        </PageSlot>
+        <PageSlot id="integration-trace" {...slot}>
+          <IntegrationTracePage onNavigateToSettings={goSettings} />
         </PageSlot>
         <QualityValidationProvider>
           <PageSlot id="quality" {...slot}>

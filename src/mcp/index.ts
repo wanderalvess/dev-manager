@@ -46,6 +46,8 @@ import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
+import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
+import { registerIntegrationTools } from './tools/integrationTools';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { mcpUsageInfo } from './usageTracking';
@@ -87,6 +89,13 @@ const testRunnerService = new TestRunnerService(configService, windowsService, k
 const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
 const httpCollectionService = new HttpCollectionService();
 const httpClientService = new HttpClientService(httpCollectionService);
+const integrationTraceService = new IntegrationTraceService(
+  configService,
+  databaseService,
+  networkService,
+  windowsService,
+  httpClientService
+);
 // Os traces vivem na memória do processo dono da porta OTLP (app desktop ou servidor web): este
 // processo não sobe receptor próprio — tomaria a porta do app — e consulta aquele buffer.
 const apmClient = new ApmReceiverClient(getApmReceiverHandlePath());
@@ -2458,6 +2467,9 @@ server.registerTool(
 
 // --- Delphi: build via MSBuild e pipeline de publicação ---
 registerDelphiTools(server, { delphiBuildService, ok, fail });
+
+// --- Rastreio de Integração ponta a ponta: WinThor → WSH → CH → PDV ---
+registerIntegrationTools(server, { integrationTraceService, ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

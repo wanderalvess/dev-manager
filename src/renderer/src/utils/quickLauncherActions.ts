@@ -20,7 +20,8 @@ import {
   PlayCircle,
   Zap,
   Globe,
-  Plug
+  Plug,
+  Route
 } from 'lucide-react';
 
 export interface QuickLauncherItem {
@@ -149,6 +150,13 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     subtitle: 'Métricas, traces distribuídos e observabilidade de APIs',
     badge: 'Alt+0',
     icon: Activity
+  },
+  {
+    id: 'act-integration-trace',
+    tab: 'integration-trace',
+    title: 'Rastreio de Integração (WinThor, WSH, CH e PDV)',
+    subtitle: 'Pré-voo das camadas para testar a integração de ponta a ponta',
+    icon: Route
   },
   {
     id: 'act-quality',

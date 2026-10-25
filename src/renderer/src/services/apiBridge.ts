@@ -19,6 +19,7 @@ import { createApmApi } from './webBridge/apm';
 import { createQualityApi } from './webBridge/quality';
 import { createHttpClientApi } from './webBridge/httpClient';
 import { createRemoteControlApi } from './webBridge/remoteControl';
+import { createIntegrationApi } from './webBridge/integration';
 
 export function initApiBridge() {
   if (typeof window === 'undefined') return;
@@ -53,6 +54,7 @@ export function initApiBridge() {
     ...createApmApi(deps),
     ...createQualityApi(deps),
     ...createHttpClientApi(deps),
+    ...createIntegrationApi(deps),
     ...createRemoteControlApi()
   };
 }

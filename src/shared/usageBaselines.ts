@@ -30,7 +30,8 @@ export const USAGE_BASELINE_DEFINITIONS: readonly UsageBaselineDefinition[] = [
   { key: 'qa/regression-execute', module: 'qa', label: 'Regressão de QA', defaultMinutes: 30 },
   { key: 'qa/test-runner-execute', module: 'qa', label: 'Rodar suíte de testes', defaultMinutes: 10 },
   { key: 'qa/taut-run-tests', module: 'qa', label: 'Rodar testes Cypress (TAUT)', defaultMinutes: 10 },
-  { key: 'git/create-task-branch', module: 'git', label: 'Criar branch da tarefa', defaultMinutes: 3 }
+  { key: 'git/create-task-branch', module: 'git', label: 'Criar branch da tarefa', defaultMinutes: 3 },
+  { key: 'integration/readiness-check', module: 'integration', label: 'Conferir à mão as camadas da integração (WinThor, WSH, CH e PDV)', defaultMinutes: 10 }
 ];
 
 const DEFINITIONS_BY_KEY = new Map(USAGE_BASELINE_DEFINITIONS.map((d) => [d.key, d]));
@@ -53,7 +54,8 @@ export const MCP_TOOL_TO_BASELINE_KEY: Readonly<Record<string, string>> = {
   qa_run_regression_suite: 'qa/regression-execute',
   test_runner_execute: 'qa/test-runner-execute',
   taut_run_tests: 'qa/taut-run-tests',
-  git_create_task_branch: 'git/create-task-branch'
+  git_create_task_branch: 'git/create-task-branch',
+  integration_check_readiness: 'integration/readiness-check'
 };
 
 /** Tempo manual informado pela própria pessoa. `setAt` (AAAA-MM-DD) é o dia em que ela informou. */

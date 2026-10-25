@@ -30,6 +30,7 @@ import { QaPayloadService } from './services/QaPayloadService';
 import { TestRunnerService } from './services/TestRunnerService';
 import { TautAutomationService } from './services/TautAutomationService';
 import { HttpClientService } from './services/HttpClientService';
+import { IntegrationTraceService } from './services/IntegrationTraceService';
 import { HttpCollectionService } from './services/HttpCollectionService';
 import { RemoteControlService } from './services/RemoteControlService';
 import { createRemoteBackend } from './services/remoteControl/remoteBackend';
@@ -172,6 +173,13 @@ function createWindow() {
   const httpCollectionService = new HttpCollectionService();
   const httpClientService = new HttpClientService(httpCollectionService);
   const delphiBuildService = new DelphiBuildService(configService, windowsService);
+  const integrationTraceService = new IntegrationTraceService(
+    configService,
+    databaseService,
+    networkService,
+    windowsService,
+    httpClientService
+  );
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({
       configService,
@@ -221,7 +229,8 @@ function createWindow() {
     httpClientService,
     httpCollectionService,
     usageMetricsService,
-    remoteControlService
+    remoteControlService,
+    integrationTraceService
   });
 
   backupSchedulerService.rescheduleAll();

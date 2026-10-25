@@ -52,6 +52,8 @@ export const TRACKED_USAGE_ACTIONS: readonly TrackedUsageAction[] = [
   { module: 'qa', action: 'test-runner-execute', ipc: 'test-runner:execute', rest: 'POST /api/test-runner/execute' },
   { module: 'qa', action: 'taut-run-tests', ipc: 'taut:run-tests', rest: 'POST /api/taut/run' },
   { module: 'qa', action: 'taut-process-intake', ipc: 'taut:process-intake', rest: 'POST /api/taut/intake' },
+  // Rastreio de Integração ponta a ponta
+  { module: 'integration', action: 'readiness-check', ipc: 'integration:check-readiness', rest: 'POST /api/integration/readiness' },
   // API Studio
   { module: 'api-studio', action: 'send-request', ipc: 'http:execute', rest: 'POST /api/http-client/execute' },
   // Documentação e IA
@@ -91,6 +93,7 @@ export const USAGE_MODULE_LABELS: Readonly<Record<string, string>> = {
   assistant: 'Assistente IA',
   containers: 'Containers',
   apm: 'APM & Traces',
+  integration: 'Rastreio de Integração',
   logs: 'Logs',
   system: 'Sistema',
   settings: 'Configurações'
@@ -123,6 +126,7 @@ export const MCP_PREFIX_TO_MODULE: Readonly<Record<string, string>> = {
   llm: 'assistant',
   docker: 'containers',
   apm: 'apm',
+  integration: 'integration',
   logs: 'logs',
   network: 'system',
   system: 'system',

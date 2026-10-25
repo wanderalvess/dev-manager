@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { UsageCounter, UsageDays } from '../../../shared/usageMetricsTypes';
 import { computeImpact } from '../../../shared/usageImpact';
+import { USAGE_BASELINE_DEFINITIONS } from '../../../shared/usageBaselines';
 import {
   IMPACT_CSV_COLUMNS,
   buildImpactCsv,
@@ -121,7 +122,7 @@ describe('buildImpactCsv', () => {
 
   it('uma linha por automação com linha de base, mais o total', () => {
     const out = lines(csv());
-    expect(out.length).toBe(1 + 13 + 1); // cabeçalho + 13 automações + total
+    expect(out.length).toBe(1 + USAGE_BASELINE_DEFINITIONS.length + 1); // cabeçalho + uma linha por automação + total
     expect(out[out.length - 1]).toContain('"TOTAL"');
   });
 

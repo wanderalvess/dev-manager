@@ -64,10 +64,10 @@ describe('buildQuickLauncherItems', () => {
       routines: [routine({})],
       projects: [project({ uncommittedCount: 2 })]
     });
-    expect(items).toHaveLength(23);
-    expect(items[21].id).toBe('rt-801');
-    expect(items[22].id).toBe('repo-api');
-    expect(items[22].subtitle).toBe('Branch: main (2 mods)');
+    expect(items).toHaveLength(24);
+    expect(items[22].id).toBe('rt-801');
+    expect(items[23].id).toBe('repo-api');
+    expect(items[23].subtitle).toBe('Branch: main (2 mods)');
   });
 
   it('filtra por busca e ordena por score decrescente', () => {

@@ -11,6 +11,7 @@ import {
   FileSearch,
   FileText,
   Activity,
+  Route,
   CheckCheck,
   Settings,
   HelpCircle,
@@ -146,6 +147,15 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     hoverBorderClass: 'hover:border-danger/50',
     iconClass: 'text-danger',
     titleHoverClass: 'group-hover:text-danger'
+  },
+  {
+    navTarget: 'integration-trace',
+    icon: Route,
+    title: 'Rastreio de Integração',
+    description: 'Pré-voo de WinThor, WSH, CH e PDV para testar a integração de ponta a ponta.',
+    hoverBorderClass: 'hover:border-primary/50',
+    iconClass: 'text-primary',
+    titleHoverClass: 'group-hover:text-primary'
   },
   {
     navTarget: 'quality',

@@ -214,6 +214,12 @@ Entram em `USAGE_BASELINE_DEFINITIONS`: `integration/readiness-check` (manual: 1
 
 ## Plano por fases
 
+| Fase | Situação |
+|------|----------|
+| 0. Fundamentos | Entregue (tipos, segredos, aba de Configurações, linha do tempo e Markdown puros) |
+| 1. Pré-voo | Entregue (página, `IntegrationTraceService`, `integration_check_readiness`, `POST /api/integration/readiness`) |
+| 2 a 5 | Pendentes das coletas P1 a P5 |
+
 Cada fase fecha com testes das funções puras, Ajuda atualizada e entrada no CHANGELOG. As fases
 0 e 1 não dependem de nenhuma pendência de coleta.
 
