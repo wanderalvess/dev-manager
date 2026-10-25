@@ -6,6 +6,7 @@ import {
   type IntegrationTraceResult,
   type IntegrationTraceStore
 } from '../../../shared/integrationTypes';
+import { STEP_STATUS_LABELS } from './integrationTraceView';
 
 /**
  * Modelo puro da vista animada do rastreio: o que o lote percorre, onde para e como as lojas aparecem no fim.
@@ -45,18 +46,22 @@ export interface TraceAnimationModel {
 }
 
 export const MAX_VISIBLE_STORES = 6;
-export const SCENE = { width: 680, height: 260, nodeY: 130, endpointX: 600, branchFromX: 430 } as const;
+/**
+ * Cena em pixels fixos (não escala com a coluna, para o texto não encolher): cartões dos sistemas com 140 px,
+ * centrados em 90, 274 e 458, e as lojas a partir de x = 596. A borda direita do PDVSync (528) é onde os ramos nascem.
+ */
+export const SCENE = { width: 720, height: 270, nodeY: 135, nodeWidth: 140, endpointX: 596, endpointWidth: 112, branchFromX: 528 } as const;
 
-/** Onde o lote está em cada passo: WinThor, a meio caminho, WSH, a meio caminho e PDVSync (quatro passos lá dentro). */
+/** Onde o lote está em cada passo: WinThor, a meio caminho, WSH, a meio caminho e PDVSync (três passos lá dentro). */
 export const STEP_POSITIONS: readonly Point[] = [
-  { x: 90, y: 130 },
-  { x: 175, y: 130 },
-  { x: 260, y: 130 },
-  { x: 345, y: 130 },
-  { x: 430, y: 130 },
-  { x: 430, y: 130 },
-  { x: 430, y: 130 },
-  { x: 430, y: 130 }
+  { x: 90, y: 135 },
+  { x: 182, y: 135 },
+  { x: 274, y: 135 },
+  { x: 366, y: 135 },
+  { x: 458, y: 135 },
+  { x: 458, y: 135 },
+  { x: 458, y: 135 },
+  { x: 458, y: 135 }
 ];
 
 /** Escala logarítmica: 10 ms e 6 s cabem na mesma animação sem uma etapa demorar uma eternidade. */
@@ -73,7 +78,7 @@ export function worstStatus(statuses: IntegrationStepStatus[]): IntegrationStepS
 }
 
 /** Distribui as lojas na vertical, centradas no trilho. */
-export function endpointYs(count: number, top = 40, bottom = 220): number[] {
+export function endpointYs(count: number, top = 40, bottom = 230): number[] {
   if (count <= 1) return [SCENE.nodeY];
   const gap = (bottom - top) / (count - 1);
   return Array.from({ length: count }, (_, i) => Math.round(top + gap * i));
@@ -92,8 +97,15 @@ export function cubicPoint(p0: Point, p1: Point, p2: Point, p3: Point, t: number
 /** Pontos de controle do ramo do PDVSync até a loja na altura `y`. */
 export function branchControls(y: number): [Point, Point, Point, Point] {
   const from = { x: SCENE.branchFromX, y: SCENE.nodeY };
-  const to = { x: SCENE.endpointX - 15, y };
-  return [from, { x: from.x + 90, y: from.y }, { x: from.x + 90, y }, to];
+  const to = { x: SCENE.endpointX, y };
+  const midX = (from.x + to.x) / 2;
+  return [from, { x: midX, y: from.y }, { x: midX, y }, to];
+}
+
+/** Altura de cada cartão de loja: 44 px quando cabe, menor quando há muitas lojas na coluna. */
+export function endpointHeight(count: number): number {
+  const ys = endpointYs(count);
+  return ys.length < 2 ? 44 : Math.min(44, ys[1] - ys[0] - 6);
 }
 
 function storeEndpoint(store: IntegrationTraceStore, index: number): Omit<AnimEndpoint, 'y'> {
@@ -190,9 +202,48 @@ export function trackPoint(index: number, t: number): Point {
   return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
 }
 
-/** Passos que acontecem dentro de cada sistema, mostrados como pontos de status sob o nome. */
-export const NODE_STEPS: Readonly<Record<'winthor' | 'wsh' | 'pdvsync', readonly IntegrationStepId[]>> = {
+export type SceneNodeKey = 'winthor' | 'wsh' | 'pdvsync';
+
+/** Passos que acontecem dentro de cada sistema, mostrados como chips com nome curto e ícone de status. */
+export const NODE_STEPS: Readonly<Record<SceneNodeKey, readonly IntegrationStepId[]>> = {
   winthor: ['winthor-login', 'winthor-fetch'],
   wsh: ['jolt', 'pdvsync-login'],
   pdvsync: ['open-batch', 'send', 'close-batch']
 };
+
+export const STEP_SHORT_LABELS: Readonly<Partial<Record<IntegrationStepId, string>>> = {
+  'winthor-login': 'Login',
+  'winthor-fetch': 'Busca na API',
+  jolt: 'JOLT',
+  'pdvsync-login': 'Login PDVSync',
+  'open-batch': 'Abertura',
+  send: 'Envio',
+  'close-batch': 'Fechamento'
+};
+
+/** Estado de um passo no desenho: o status provado, ou "não alcançado" enquanto o lote não passou (ou nunca passará). */
+export type SceneStatus = IntegrationStepStatus | 'unreached';
+
+/** Rótulos do desenho: os do rastreio mais o "não alcançado", que só existe no percurso. */
+export const SCENE_STATUS_LABELS: Readonly<Record<SceneStatus, string>> = { ...STEP_STATUS_LABELS, unreached: 'não alcançado' };
+
+export function sceneStatus(model: TraceAnimationModel, frame: TimelineFrame, index: number): SceneStatus {
+  const step = model.steps[index];
+  return step && isRevealed(frame, index) ? step.status : 'unreached';
+}
+
+/** Cada sistema assume o pior status provado dos seus passos; sem nada provado, fica neutro. */
+export function nodeStatus(model: TraceAnimationModel, frame: TimelineFrame, node: SceneNodeKey): SceneStatus {
+  const shown = NODE_STEPS[node]
+    .map((id) => sceneStatus(model, frame, model.steps.findIndex((step) => step.id === id)))
+    .filter((status): status is IntegrationStepStatus => status !== 'unreached');
+  return shown.length === 0 ? 'unreached' : worstStatus(shown);
+}
+
+/** Resumo das lojas para a linha do ao vivo: "1 de 2 lojas baixaram". */
+export function storesSummary(trace: Pick<IntegrationTraceResult, 'stores'>): string | null {
+  const stores = trace.stores ?? [];
+  if (stores.length === 0) return null;
+  const done = stores.filter((store) => store.status === 'ok').length;
+  return stores.length === 1 ? (done ? 'a loja baixou' : 'a loja ainda não baixou') : `${done} de ${stores.length} lojas baixaram`;
+}

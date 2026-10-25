@@ -22,7 +22,8 @@ export const STEP_STATUS_LABELS: Readonly<Record<IntegrationStepStatus, string>>
 export const STEP_STATUS_TONES: Readonly<Record<IntegrationStepStatus, ReadinessTone>> = {
   ok: 'success',
   failed: 'danger',
-  pending: 'muted',
+  // Âmbar como no percurso animado e no veredito: em andamento não é problema, mas pede atenção
+  pending: 'warning',
   skipped: 'muted',
   unknown: 'muted'
 };

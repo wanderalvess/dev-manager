@@ -8,6 +8,8 @@ interface LiveTraceBarProps {
   secondsLeft: number;
   stopReason: string | null;
   canStart: boolean;
+  /** Resumo das lojas ("1 de 2 lojas baixaram"), quando o PDVSync informa o status por loja. */
+  summary?: string | null;
   onStart: () => void;
   onStop: () => void;
 }
@@ -15,11 +17,16 @@ interface LiveTraceBarProps {
 const BUTTON = 'h-7 px-2 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5';
 
 /** Linha do modo ao vivo sob a vista animada: contagem até a próxima consulta e o botão de parar ou retomar. */
-export const LiveTraceBar: React.FC<LiveTraceBarProps> = ({ active, checking, attempts, secondsLeft, stopReason, canStart, onStart, onStop }) => {
+export const LiveTraceBar: React.FC<LiveTraceBarProps> = ({ active, checking, attempts, secondsLeft, stopReason, canStart, summary, onStart, onStop }) => {
   if (!active && !canStart && !stopReason) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 text-xs" data-testid="trace-live">
+    <div
+      className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
+        active ? 'border-warning/30 bg-warning/10' : 'border-border bg-muted/30'
+      }`}
+      data-testid="trace-live"
+    >
       {active ? (
         <p className="flex items-center gap-2 text-foreground" role="status">
           <span className="relative flex w-2 h-2">
@@ -32,7 +39,9 @@ export const LiveTraceBar: React.FC<LiveTraceBarProps> = ({ active, checking, at
             </span>
           ) : (
             <span>
-              Ao vivo · próxima consulta em {secondsLeft}s{attempts > 0 ? ` · ${attempts} consulta(s) feita(s)` : ''}
+              <strong className="font-semibold">Ao vivo</strong>
+              {summary ? ` · ${summary}` : ''} · próxima consulta em {secondsLeft} s
+              {attempts > 0 ? ` · ${attempts} consulta(s) feita(s)` : ''}
             </span>
           )}
         </p>

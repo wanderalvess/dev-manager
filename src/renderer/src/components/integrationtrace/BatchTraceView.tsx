@@ -6,6 +6,7 @@ import { TraceHistoryList } from './TraceHistoryList';
 import { TraceResultPanel } from './TraceResultPanel';
 import { LiveTraceBar } from './LiveTraceBar';
 import { useLiveTraceRefresh } from '../../hooks/integration/useLiveTraceRefresh';
+import { storesSummary } from '../../utils/traceAnimationModel';
 
 interface BatchTraceViewProps {
   settingsVersion?: number;
@@ -52,6 +53,7 @@ export const BatchTraceView: React.FC<BatchTraceViewProps> = ({ settingsVersion,
           <TraceResultPanel
             trace={current}
             onCopyReport={() => void copyReport()}
+            liveActive={live.active}
             live={
               <LiveTraceBar
                 active={live.active}
@@ -60,6 +62,7 @@ export const BatchTraceView: React.FC<BatchTraceViewProps> = ({ settingsVersion,
                 secondsLeft={live.secondsLeft}
                 stopReason={live.stopReason}
                 canStart={live.canStart}
+                summary={storesSummary(current)}
                 onStart={live.start}
                 onStop={live.stop}
               />

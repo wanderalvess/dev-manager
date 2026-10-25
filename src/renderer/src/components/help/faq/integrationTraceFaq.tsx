@@ -116,8 +116,9 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
           </p>
           <p>
             O <strong className="text-foreground">Percurso do lote</strong>, acima dos passos, anima o mesmo resultado: o lote só ganha cor
-            onde o rastreio provou alguma coisa, trechos sem evidência ficam tracejados e cada loja pode ser clicada para ver o status e os
-            erros. <em>Replay</em> toca de novo e <em>Vista 3D</em> inclina o desenho. Enquanto a chegada está <em>pendente</em>, o modo ao
+            onde o rastreio provou alguma coisa, cada passo aparece com nome e ícone dentro do sistema em que acontece (a legenda explica
+            os ícones), trechos sem evidência ficam tracejados, o que vem depois da quebra fica como <em>não alcançado</em> e cada loja
+            pode ser clicada (ou acionada pelo teclado) para ver o status e os erros. <em>Replay</em> toca de novo e <em>Vista 3D</em> inclina o desenho. Enquanto a chegada está <em>pendente</em>, o modo ao
             vivo reconsulta o PDVSync a cada 15 s e atualiza o mesmo rastreio do histórico; ele para sozinho quando as lojas terminam, quando
             falha ou depois de 40 consultas, e o botão <em>Parar</em> encerra antes.
           </p>

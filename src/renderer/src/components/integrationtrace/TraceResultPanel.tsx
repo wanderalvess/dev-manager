@@ -20,10 +20,11 @@ interface TraceResultPanelProps {
   onCopyReport: () => void;
   /** Linha do modo ao vivo, repassada para a vista animada. */
   live?: React.ReactNode;
+  liveActive?: boolean;
 }
 
 /** O resultado de um rastreio: veredito, o percurso animado, os oito passos, os logs do lote e as observações. */
-export const TraceResultPanel: React.FC<TraceResultPanelProps> = ({ trace, onCopyReport, live }) => {
+export const TraceResultPanel: React.FC<TraceResultPanelProps> = ({ trace, onCopyReport, live, liveActive }) => {
   const verdict = describeTrace(trace);
   const classes = TONE_BOX[verdict.tone];
   const Icon = TONE_ICONS[verdict.tone];
@@ -53,7 +54,7 @@ export const TraceResultPanel: React.FC<TraceResultPanelProps> = ({ trace, onCop
         </button>
       </div>
 
-      <TraceAnimationPanel trace={trace} live={live} />
+      <TraceAnimationPanel trace={trace} live={live} liveActive={liveActive} />
 
       <ol className="bg-card border border-border rounded-xl divide-y divide-border overflow-hidden">
         {trace.steps.map((step, index) => (

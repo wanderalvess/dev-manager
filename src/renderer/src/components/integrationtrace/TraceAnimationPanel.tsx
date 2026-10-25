@@ -5,6 +5,7 @@ import { buildAnimationModel } from '../../utils/traceAnimationModel';
 import { STEP_STATUS_LABELS } from '../../utils/integrationTraceView';
 import { useTraceReplay } from '../../hooks/integration/useTraceReplay';
 import { TraceAnimationScene } from './TraceAnimationScene';
+import { TraceLegend } from './TraceStatusGlyph';
 
 const VIEW_3D_KEY = 'devManager.integrationTrace.view3d';
 
@@ -25,10 +26,11 @@ interface TraceAnimationPanelProps {
   trace: IntegrationTraceResult;
   /** Linha do modo ao vivo, mostrada sob o desenho enquanto a chegada está em andamento. */
   live?: React.ReactNode;
+  liveActive?: boolean;
 }
 
 /** Vista animada do rastreio: o lote percorre as camadas e para onde o rastreio provou que parou. */
-export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace, live }) => {
+export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace, live, liveActive = false }) => {
   const model = useMemo(() => buildAnimationModel(trace), [trace]);
   const { frame, playing, replay, skip, reducedMotion } = useTraceReplay(model, trace.id);
   const [view3d, setView3d] = useState(readView3d);
@@ -56,7 +58,7 @@ export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace,
   const selected = model.endpoints.find((endpoint) => endpoint.key === selectedKey);
 
   return (
-    <section className="bg-card border border-border rounded-xl p-3 space-y-2" data-testid="trace-animation">
+    <section className="bg-card border border-border rounded-xl p-4 space-y-3" data-testid="trace-animation">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">Percurso do lote</h3>
         <div className="flex items-center gap-2">
@@ -75,9 +77,12 @@ export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace,
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg" style={{ perspective: '1100px' }}>
+      <TraceLegend />
+
+      {/* Tamanho fixo para o texto não encolher; em coluna estreita, rola na horizontal */}
+      <div className="overflow-x-auto overflow-y-hidden rounded-lg" style={{ perspective: '1100px' }}>
         <div
-          className={`rounded-lg border border-border/60 bg-muted/20 transition-transform duration-700 ease-out ${view3d ? 'shadow-xl' : ''}`}
+          className={`min-w-fit rounded-lg border border-border/60 bg-muted/20 py-2 transition-transform duration-700 ease-out ${view3d ? 'shadow-xl' : ''}`}
           style={{ transform: view3d ? TILT_3D : 'none', transformOrigin: '50% 55%' }}
         >
           <TraceAnimationScene
@@ -90,7 +95,12 @@ export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace,
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground" aria-live="polite">{caption}</p>
+      {/* Com o ao vivo ligado, a linha dele já diz o que importa; a legenda do passo só volta quando ele para */}
+      {!(frame.done && liveActive) && (
+        <p className="text-xs text-muted-foreground" aria-live="polite">
+          {caption}
+        </p>
+      )}
 
       {selected && frame.done && (
         <div className="rounded-lg border border-border bg-muted/30 p-2.5 text-xs space-y-1">

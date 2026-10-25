@@ -6,9 +6,13 @@ import {
   buildAnimationModel,
   cubicPoint,
   easeInOut,
+  endpointHeight,
   endpointYs,
   isRevealed,
   MAX_VISIBLE_STORES,
+  nodeStatus,
+  sceneStatus,
+  storesSummary,
   timelineAt,
   trackPoint,
   worstStatus
@@ -49,7 +53,7 @@ describe('buildAnimationModel', () => {
 
   it('sem status por loja mostra um único destino PDV com o status da chegada', () => {
     const model = buildAnimationModel({ steps: steps({ 'pdv-arrival': { status: 'pending', message: 'Lote em EmProcessoDeBaixa.' } }) });
-    expect(model.endpoints).toEqual([{ key: 'pdv', label: 'PDV', status: 'pending', errors: [], detail: 'Lote em EmProcessoDeBaixa.', y: 130 }]);
+    expect(model.endpoints).toEqual([{ key: 'pdv', label: 'PDV', status: 'pending', errors: [], detail: 'Lote em EmProcessoDeBaixa.', y: 135 }]);
   });
 
   it('uma loja por destino, com o primeiro erro no detalhe', () => {
@@ -61,7 +65,7 @@ describe('buildAnimationModel', () => {
       ['Loja 1', 'ok', 'BaixadoComSucesso'],
       ['Loja 2', 'failed', 'BaixadoComErro: PROD-7 · NCM inválido']
     ]);
-    expect(model.endpoints.map((e) => e.y)).toEqual([40, 220]);
+    expect(model.endpoints.map((e) => e.y)).toEqual([40, 230]);
   });
 
   it('muitas lojas: mostra as primeiras e agrupa o resto com o pior status', () => {
@@ -101,9 +105,9 @@ describe('linha do tempo', () => {
   });
 
   it('o lote sai do ponto do passo anterior e chega no do passo atual', () => {
-    expect(trackPoint(0, 0.5)).toEqual({ x: 90, y: 130 });
-    expect(trackPoint(1, 0.5)).toEqual({ x: 132.5, y: 130 });
-    expect(trackPoint(6, 1)).toEqual({ x: 430, y: 130 });
+    expect(trackPoint(0, 0.5)).toEqual({ x: 90, y: 135 });
+    expect(trackPoint(1, 0.5)).toEqual({ x: 136, y: 135 });
+    expect(trackPoint(6, 1)).toEqual({ x: 458, y: 135 });
     expect(easeInOut(0)).toBe(0);
     expect(easeInOut(1)).toBe(1);
   });
@@ -118,14 +122,44 @@ describe('geometria', () => {
   });
 
   it('endpointYs centraliza um destino e espalha vários', () => {
-    expect(endpointYs(1)).toEqual([130]);
-    expect(endpointYs(3)).toEqual([40, 130, 220]);
+    expect(endpointYs(1)).toEqual([135]);
+    expect(endpointYs(3)).toEqual([40, 135, 230]);
   });
 
   it('a curva do ramo começa no PDVSync e termina na loja', () => {
     const controls = branchControls(40);
-    expect(cubicPoint(...controls, 0)).toEqual({ x: 430, y: 130 });
-    expect(cubicPoint(...controls, 1)).toEqual({ x: 585, y: 40 });
+    expect(cubicPoint(...controls, 0)).toEqual({ x: 528, y: 135 });
+    expect(cubicPoint(...controls, 1)).toEqual({ x: 596, y: 40 });
+  });
+});
+
+describe('estado no desenho', () => {
+  const model = buildAnimationModel({
+    steps: steps({ 'winthor-login': { status: 'ok' }, 'winthor-fetch': { status: 'failed' } }),
+    brokenAt: 'winthor-fetch'
+  });
+  const final = timelineAt(model, Number.POSITIVE_INFINITY);
+
+  it('passo provado mostra o status; depois da quebra é "não alcançado", nunca "sem evidência"', () => {
+    expect(sceneStatus(model, final, 1)).toBe('failed');
+    expect(sceneStatus(model, final, 2)).toBe('unreached');
+    expect(sceneStatus(model, timelineAt(model, 0), 0)).toBe('unreached');
+  });
+
+  it('cada sistema assume o pior status provado; sem nada provado fica neutro', () => {
+    expect(nodeStatus(model, final, 'winthor')).toBe('failed');
+    expect(nodeStatus(model, final, 'wsh')).toBe('unreached');
+  });
+
+  it('cartões de loja encolhem quando há muitas lojas', () => {
+    expect(endpointHeight(2)).toBe(44);
+    expect(endpointHeight(6)).toBe(32);
+  });
+
+  it('resumo das lojas para o ao vivo', () => {
+    expect(storesSummary({ stores: [store('1', 'ok'), store('2', 'pending')] })).toBe('1 de 2 lojas baixaram');
+    expect(storesSummary({ stores: [store('1', 'ok')] })).toBe('a loja baixou');
+    expect(storesSummary({ stores: [] })).toBeNull();
   });
 });
 
