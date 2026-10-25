@@ -1,4 +1,4 @@
-export type SettingsTab = 'dirs' | 'routines' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality' | 'usage' | 'modules';
+export type SettingsTab = 'dirs' | 'routines' | 'karaf' | 'azure' | 'services' | 'ports' | 'automation' | 'logs' | 'backup' | 'ai' | 'quality' | 'integration' | 'usage' | 'modules';
 
 export interface SettingsSearchEntry {
   id: string;
@@ -35,6 +35,8 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-oracleTnsnames', tab: 'backup', tabLabel: 'Backup & Oracle', label: 'Arquivo tnsnames.ora (Oracle)', keywords: 'tnsnames tnsnames.ora tns oracle rede listener conexao banco' },
   { id: 'field-ai', tab: 'ai', tabLabel: 'IA & Provedores LLM', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' },
   { id: 'field-quality', tab: 'quality', tabLabel: 'Qualidade & QA', label: 'Integrações de Testes (Zephyr, Jira, Azure)', keywords: 'qualidade qa zephyr scale squad jira test plans testes homologacao cenarios token api' },
+  { id: 'field-integrationLayers', tab: 'integration', tabLabel: 'Integração ponta a ponta', label: 'Camadas da integração (WinThor, WSH, CH, PDV)', keywords: 'integracao ponta a ponta rastreio camada winthor wsh smart hub commerce hub ch pdv url health porta servico log conexao oracle postgres' },
+  { id: 'field-integrationFlows', tab: 'integration', tabLabel: 'Integração ponta a ponta', label: 'Fluxos do WSH (tipo de lote, disparo, evidência no PDV)', keywords: 'integracao fluxo wsh lote ch venda disparo evidencia pdv postgres jolt rastreio' },
   { id: 'field-usageMetricsEnabled', tab: 'usage', tabLabel: 'Meu uso', label: 'Contagem de uso (ligar, desligar, apagar histórico)', keywords: 'uso metricas contagem telemetria privacidade historico apagar meu uso impacto horas economizadas' },
   { id: 'field-usageImpact', tab: 'usage', tabLabel: 'Meu uso', label: 'Meu impacto: tempo economizado por automação', keywords: 'impacto tempo economizado horas economia produtividade resultado exportar csv' },
   { id: 'field-usageBaselines', tab: 'usage', tabLabel: 'Meu uso', label: 'Quanto tempo você levava à mão (linha de base)', keywords: 'linha de base tempo manual levava a mao minutos referencia antes economia padrao estimativa confirmar' },

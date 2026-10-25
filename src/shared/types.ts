@@ -1,5 +1,6 @@
 import type { UsageBaselineOverrides } from './usageBaselines';
 import type { OracleStatementMetrics } from './oracleTracerAnalysis';
+import type { IntegrationFlowDefinition, IntegrationLayerConfig } from './integrationTypes';
 export type ServiceState = 'RUNNING' | 'STOPPED' | 'START_PENDING' | 'STOP_PENDING' | 'UNKNOWN' | 'NOT_INSTALLED';
 
 export interface ServiceStatus {
@@ -646,6 +647,10 @@ export interface AppSettings {
   testRunners?: TestRunnerConfig[];
   /** Histórico das últimas execuções de testes automatizados (limitado a 100) */
   testExecutionHistory?: TestExecutionResult[];
+  /** Rastreio de Integração (decisão 0003): como alcançar WinThor, WSH, CH e PDV na máquina local. */
+  integrationLayers?: IntegrationLayerConfig[];
+  /** Rastreio de Integração: fluxos do WSH e como provar cada passo deles. */
+  integrationFlows?: IntegrationFlowDefinition[];
 }
 
 export interface DocSyncTargetConfig {
@@ -2867,3 +2872,4 @@ export * from './azurePipelineTypes';
 export * from './oracleTracerAnalysis';
 export * from './delphiTypes';
 export * from './gitPublishTypes';
+export * from './integrationTypes';

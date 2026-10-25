@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
+import { getIntegrationTraceFaq } from './faq/integrationTraceFaq';
 import { getRemoteControlFaq } from './faq/remoteControlFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 import { getUpdateFaq } from './faq/updateFaq';
@@ -1278,7 +1279,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Não. Senhas de banco, senha do Karaf, token pessoal do Azure DevOps (PAT), tokens do Confluence/Jira, API keys de provedores de IA e credenciais de webhooks ficam <strong className="text-foreground">criptografados (AES-256-GCM)</strong> no <code className="font-mono text-primary">config.json</code>.
+            Não. Senhas de banco, senha do Karaf, token pessoal do Azure DevOps (PAT), tokens do Confluence/Jira, API keys de provedores de IA, credenciais de webhooks e das camadas da Integração ponta a ponta ficam <strong className="text-foreground">criptografados (AES-256-GCM)</strong> no <code className="font-mono text-primary">config.json</code>.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
             <p>
@@ -1698,6 +1699,7 @@ export function getFaqList({
     ...getModulesFaq(onNavigate),
     ...getRemoteControlFaq(onNavigate),
     ...getLogsFaq(onNavigate),
+    ...getIntegrationTraceFaq(),
     ...getDeployCancellationFaq(onNavigate),
     ...getUpdateFaq(handleOpenLink)
   ];

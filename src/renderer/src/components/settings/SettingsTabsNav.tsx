@@ -13,6 +13,7 @@ import {
   BarChart3,
   LayoutGrid,
   PackageOpen,
+  Route,
   LucideIcon
 } from 'lucide-react';
 import type { SettingsTab } from './settingsSearchData';
@@ -61,6 +62,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: 'backup', label: 'Backup', icon: HardDriveDownload },
       { id: 'ai', label: 'IA & LLM', icon: Bot },
       { id: 'quality', label: 'Qualidade & QA', icon: CheckCheck },
+      { id: 'integration', label: 'Integração ponta a ponta', icon: Route },
       { id: 'usage', label: 'Meu uso', icon: BarChart3 }
     ]
   }

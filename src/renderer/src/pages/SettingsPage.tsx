@@ -20,6 +20,7 @@ import { LogsTab } from '../components/settings/tabs/LogsTab';
 import { BackupTab } from '../components/settings/tabs/BackupTab';
 import { AiTab } from '../components/settings/tabs/AiTab';
 import { QualityTab } from '../components/settings/tabs/QualityTab';
+import { IntegrationTab } from '../components/settings/tabs/IntegrationTab';
 import { UsageTab } from '../components/settings/tabs/UsageTab';
 import { ModulesTab } from '../components/settings/tabs/ModulesTab';
 import { useSettingsDraft } from '../hooks/settings/useSettingsDraft';
@@ -125,7 +126,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           ports: (settings.monitoredPorts || []).length,
           logs: (settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length,
           ai: (settings.llmProviders || []).length,
-          quality: (settings.qualitySources || []).length
+          quality: (settings.qualitySources || []).length,
+          integration: (settings.integrationFlows || []).length
         }}
       />
 
@@ -259,6 +261,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             handleBrowseDirectory={paths.handleBrowseDirectory}
           />
         )}
+
+        {activeTab === 'integration' && <IntegrationTab settings={settings} setSettings={setSettings} />}
 
         {activeTab === 'usage' && <UsageTab settings={settings} setSettings={setSettings} />}
       </div>
