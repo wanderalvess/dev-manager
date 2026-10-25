@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { AppLogo } from '../AppLogo';
 import { Modal } from '../ui/Modal';
 import { SPLASH_BOOT_LINES } from './onboardingContent';
+import { getSplashTiming, RETURNING_AUTO_CLOSE_MS } from './splashTiming';
 
 interface SplashScreenProps {
   isOpen: boolean;
@@ -15,10 +16,6 @@ interface SplashScreenProps {
   onWhatsNew: () => void;
 }
 
-const LINE_MS = 380;
-const BOOT_START_MS = 1500;
-// Quem já usa o app não precisa clicar para entrar: a abertura some sozinha pouco depois do boot.
-const RETURNING_AUTO_CLOSE_MS = 1600;
 
 const prefersReducedMotion = (): boolean => {
   try {
@@ -54,9 +51,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       setDone(true);
       return;
     }
-    const timers = SPLASH_BOOT_LINES.map((_, i) => setTimeout(() => setTick(i), BOOT_START_MS + i * LINE_MS));
-    timers.push(setTimeout(() => setDone(true), BOOT_START_MS + SPLASH_BOOT_LINES.length * LINE_MS));
+    const { bootStartMs, lineMs } = getSplashTiming(isNewUser);
+    const timers = SPLASH_BOOT_LINES.map((_, i) => setTimeout(() => setTick(i), bootStartMs + i * lineMs));
+    timers.push(setTimeout(() => setDone(true), bootStartMs + SPLASH_BOOT_LINES.length * lineMs));
     return () => timers.forEach(clearTimeout);
+    // isNewUser só muda quando a abertura já fechou; reiniciar o boot no meio dela seria pior que ignorar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   useEffect(() => {

@@ -40,7 +40,7 @@ export const PageToursPromptModal: React.FC<PageToursPromptModalProps> = ({ isOp
           <AppLogo size="md" />
           <div>
             <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-              Tour Geral Concluído 🎉
+              Tutoriais por tela
             </span>
             <h2 className="text-sm sm:text-base font-bold text-foreground mt-1 leading-tight">
               Deseja ver tutoriais ao entrar em cada tela?

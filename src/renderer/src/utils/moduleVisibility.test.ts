@@ -51,6 +51,7 @@ describe('filterTourSteps', () => {
     expect(targets).toContain('nav-infra');
     expect(targets).toContain(null);
     expect(targets).toContain('settings');
+    expect(targets).toContain('nav-integrations');
   });
 });
 

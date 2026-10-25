@@ -13,6 +13,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Ajuda e acabamento**: cartão da tela Integrações no Guia dos Módulos (agora 13) e o restante dos modais e painéis (Memória JVM, APM, Docs, API Studio, Homologação e os modais da raiz) com rótulos em frase, campos de 40 px e selos sem borda colorida.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Telas Rotinas, Backups, Logs e APM no visual Papel**: título sem cartão, *Atualizar rotina (CCW)* como ação principal em Rotinas, abas sublinhadas em Backups, barras de Logs e APM com fundo sólido e estado do receptor OTLP com a ação *Trocar porta do receptor* em destaque. Os selos do Karaf (WTA) em Rotinas passam a usar as cores semânticas de sucesso e perigo.
 - **Telas Docs, API Studio, Homologação e Configurações no visual Papel**: títulos sem cartão, botões e campos de 40 px com anel de foco, abas sublinhadas (Homologação e Configurações), indicadores de Homologação com rótulos em frase e números maiores, checklist de configuração em chips com cor e palavra. A mudança vale também para Regressivo, Runners e TAUT, que compartilham o cabeçalho de Homologação.
 - **Telas WinThor, Karaf, Regressivo, Runners, TAUT e Ajuda no visual Papel**: títulos sem cartão, botões e campos de 40 px, status do Karaf em selo com palavra, atalhos das ferramentas Karaf em cartões simples, abas sublinhadas na Ajuda e no TAUT, controles do Validador Regressivo e do TAUT com a ação principal em azul, selos de tipo dos Runners nas cores semânticas e rótulos da Ajuda em frase, sem maiúsculas.
@@ -41,6 +43,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Controle remoto pelo celular**: em *Configurações → Portas*, o cartão *Controle Remoto pelo Celular* liga um servidor na rede local e mostra um QR. O celular (mesmo Wi-Fi ou Tailscale) abre uma página leve, sem instalar nada, para preparar o ambiente, abrir a IDE e o servidor debug, ver portas e serviços, iniciar/parar o Karaf com log ao vivo, controlar containers Docker, rodar perfis de deploy e fazer backup de banco. Ações destrutivas pedem confirmação no celular. Só no app desktop.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Tela Git mais clara**: Stash e Pop ganharam rótulo, todos os botões da barra mostram o estado desativado e a barra quebra linha em janelas estreitas. O *Commit & Push Rápido* mostra o comando real (`git push` ou `git push -u origin`). O modal *Trocar / Nova* informa de qual branch a nova parte e cria com Enter, e depois de criar uma branch por tarefa o terminal avisa que ela ainda é só local.
 - **Containers ganhou a tela WinThor & WSL**: a topologia da stack (Oracle XE, WTA, WSH), o botão *Subir WinThor*, os *Snapshots WSL* e o *Assistente INFR* saíram da tela Containers e foram para a nova tela *WinThor & WSL* (menu Infra), com seletor de runtime WSL, terminal e desligar distro. Containers ficou com lista, grupos, lote, Compose e métricas; os cartões continuam abrindo as ferramentas Oracle/WTA/WSH. O módulo se liga/desliga em Configurações → Módulos; sem atalho Alt novo.
 - **Telas menos cheias: Karaf e Backups ganharam tela própria**: a nova tela *Karaf & OSGi* (menu Infra) reúne Bundles OSGi, Features & Repositórios, Catálogo 801, Memória JVM e os diagnósticos rápidos, que antes ficavam no cabeçalho e no painel do Deploy (o Deploy ficou com perfis, etapas e fila de build, e ganhou o botão *Karaf*). A nova tela *Backups de Banco* (menu Dados) passa a mostrar o antigo modal de Backup & Restore em página inteira, com seletor de conexão; o botão *Backup* do Studio SQL abre nela, na conexão ativa. As duas são módulos que se ligam/desligam em Configurações → Módulos; sem atalhos Alt novos (acesso pelo menu e por Ctrl+K).
@@ -78,6 +82,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Ferramenta MCP para ciclos**: adicionada a tool `routines_get_ccw_cycles` ao servidor MCP para permitir que agentes de IA descubram e validem ciclos de evolução disponíveis.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Versão padrão do WinThor**: a versão padrão de download e configuração da CCW agora é `37.00` (ciclo estável padrão), alinhada com as versões atuais da TOTVS.
 
 ## [1.43.0] - 2026-10-21
@@ -94,6 +100,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - **Numeração real de linhas**: a régua do console de log exibe permanentemente o número físico real de cada linha no arquivo.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Ambiente Dev e Deploy**: o console saiu das duas páginas, que passaram a usar a largura toda. Rodar um diagnóstico do Karaf não limpa mais o console.
 - **Desinstalar bundle**: o modal já abre no modo *bundle* quando o bundle não pertence a nenhuma feature instalada. Instalar com sucesso fecha o modal.
 
@@ -109,6 +117,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Onboarding em etapas**: substitui a introdução de uma tela por sete etapas — Boas-vindas, Módulos (liga e desliga as páginas do menu), Tema (variante e claro/escuro), Ambiente (o que já está configurado, por aba, com a detecção automática de caminhos), Checklist da configuração inicial, IA & MCP (exemplos do que um agente consegue fazer pelo servidor MCP) e Pronto, com o tour guiado opcional.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Logo nova**: o símbolo passa a ser o hub — o centro com as quatro áreas chegando nele, dentro do quadro do cockpit. No app ele acompanha a cor do tema escolhido; os ícones do instalador, da janela e do favicon foram refeitos com o mesmo desenho.
 - **Tour guiado**: textos mais curtos e sem a segunda tela de boas-vindas; o passo de Configurações aponta para a aba Módulos.
 
@@ -135,6 +145,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Exportar CSV**: baixa a tabela de economia por automação (formato "CSV para Excel Brasil"), com a origem do tempo manual em cada linha (padrão ou informado, e a data), para quem recebe o arquivo saber o que é medição e o que é estimativa.
 - **Nova tool MCP `usage_get_impact`** (de leitura, 164 tools no total) e **API REST** `GET /api/usage/impact` e `GET /api/usage/days`: permitem perguntar a uma IA quanto tempo você economizou. A consulta não conta como uso.
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - A contagem de uso passa a guardar também o tempo dos usos **com sucesso** (necessário para o cálculo). Contagens gravadas pela 1.39.0 continuam válidas: o tempo dos usos com sucesso é estimado a partir do total quando o campo não existe.
 
 ## [1.39.0] - 2026-10-17
@@ -145,6 +157,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Nova tool MCP `usage_get_summary`** (de leitura): permite perguntar a uma IA quanto você usou cada automação. A própria consulta não conta como uso. No modo somente leitura (`HUB_MCP_MODE=readonly`) continua disponível.
 - **API REST**: `GET /api/usage/summary` (aceita `from` e `to`) e `POST /api/usage/clear`.
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - Contagem de tools MCP atualizada nos textos da Ajuda, do README e do catálogo (`docs/MCP_TOOLS.md`), que estavam desatualizados.
 
 ## [1.38.0] - 2026-10-16
@@ -174,6 +188,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Área de transferência — fallback com execCommand**: o hook `useCopyToClipboard` agora conta com fallback retrocompatível via `document.execCommand('copy')`, garantindo sucesso na cópia de células mesmo quando a API moderna `navigator.clipboard.writeText` estiver restrita por foco ou políticas de permissão da janela.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **DB Studio — largura flexível nas colunas do grid**: removida a restrição fixa rígida de `max-w-xs` (320px) em todas as células, adotando largura dinâmica baseada nas preferências do usuário e largura mínima confortável de `120px` por padrão.
 
 ## [1.35.1] - 2026-10-15
@@ -181,6 +197,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **DB Studio — seletor de pasta para Oracle Instant Client**: adicionado botão com diálogo nativo de busca no Explorer diretamente ao lado do campo de diretório do Instant Client no modal de conexão.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **DB Studio — largura do modal de conexão**: ampliado de `max-w-md` (448px) para `max-w-2xl` (672px), distribuindo com conforto todas as configurações (Host, Porta, Service Name/SID, Thick Mode, credenciais e ambiente de produção) e evitando corte/truncamento na mensagem de versão do banco.
 - **Auditoria de UI/UX**: foco de teclado visível em todo o app (`:focus-visible` global) e `prefers-reduced-motion` respeitado; ~270 botões só de ícone ganharam `aria-label` e o componente `IconButton` (rótulo obrigatório) substitui os do cabeçalho. A rampa `amber` passou para amarelo, separando "aviso" do laranja do tema, e há tokens `success`/`warning`/`danger`/`info`. Cinzas crus (`slate`/`zinc`/`neutral`) saíram do cromo de UI e ficam só em console/terminal; `text-[11px]` virou `text-2xs`; raios `2xl` viraram `xl`. Cada página tem um único `<h1>` e os modais usam `<h2>`.
 - **Diálogos**: 3 `confirm()` nativos (excluir perfil de deploy/ambiente e remover fontes de log) agora usam o diálogo do app; nove overlays (QuickLauncher, leitor de Markdown, drawer de análise de exceção, modais de binds/snippet/especificação/item de qualidade, onboarding) passaram a usar o `ui/Modal` (foco preso, Esc e ARIA padronizados), e os menus de clique-fora fecham com Esc.
@@ -211,6 +229,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - Ajuda e README: contagem de 166 tools MCP, nível de permissão `asInvoker` e fallbacks de versão corrigidos.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - Dependências atualizadas com `npm audit fix` e remoção do `patch-package` (vulnerabilidades 26 para 21, altas 10 para 5). O patch do `fastembed` foi removido (a versão 2.1.1 não precisa mais dele).
 - **Diálogos**: as confirmações (`window.confirm`) e avisos (`alert`) do app, que travavam a janela e ignoravam o tema, viraram um diálogo próprio e toasts. O diálogo respeita Esc, clique fora e Tab (o foco não escapa para a tela de trás), devolve o foco ao fechar e é lido corretamente por leitores de tela. Os avisos importantes (como os alertas de uma importação de configurações) pedem um "Entendi" em vez de sumir sozinhos. Os 49 modais do app (Karaf, containers, Git, banco, documentação, qualidade e outros) passam pelo mesmo `Modal`: foco preso e devolvido, nome acessível e camada padronizada. Esc e clique fora continuam sem fechar os formulários e editores, como antes; os visualizadores (histórico, logs, diff, detalhes) fecham com Esc.
 - A tela de Configurações foi reorganizada por dentro (de 1204 para 241 linhas, com a lógica em hooks por assunto e testes das regras puras), sem mudar o que o usuário vê.
@@ -224,6 +244,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - Fechar uma aba com alterações pendentes (alterações do grid não aplicadas ou comandos sem commit) pede confirmação e encerra a sessão com rollback.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - Ao trocar de conexão, o editor deixa de manter o texto da conexão anterior: cada conexão tem a sua aba, com a consulta padrão do banco na primeira vez.
 - A lista de tabelas e as colunas da sidebar ficam em cache **por conexão**: alternar entre bancos não recarrega a lista, e colunas de tabelas com o mesmo nome em bancos diferentes não se misturam mais.
 - O histórico de execuções é único e compartilhado entre as abas.
@@ -257,6 +279,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Instalador (NSIS)**: sempre em pt-BR, com atalhos de Desktop e Menu Iniciar e execução ao finalizar declarados explicitamente.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Marca**: "Dev Manager" deu lugar a **Hub Manager** na interface, na Central de Ajuda, nas descrições das tools MCP, no README, no DOCKER.md, no AGENTS.md, no LEIA-ME e nas notas de release. O README e o LEIA-ME apontam o instalador `Hub Manager Setup <versão>.exe` e a variável `HUB_MANAGER_EXE`; o launcher do MCP continua aceitando `DEV_MANAGER_EXE`. A pasta de dados, o `dev-manager-mcp.cmd` e o nome do servidor MCP não mudaram.
 - **Configurações → Qualidade**: deixa claro que a sincronização com Zephyr, Jira e Azure ainda não existe (as fontes só ficam registradas); o selo "ATIVA" virou "SELECIONADA".
 - **Remover cenário** da Matriz pede confirmação.
@@ -275,6 +299,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [1.31.3] - 2026-10-05
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Identidade do Produto (Rebranding)**: o cockpit agora se chama **Hub Manager**, com o subtítulo oficial *"Cockpit Integrado de Operação, Desenvolvimento e Qualidade"*. O novo posicionamento reflete a evolução da plataforma para atender toda a squad (Dev, QA, PO e SME) em fluxos de infraestrutura, banco de dados, catálogo de rotinas, qualidade de software e observabilidade.
 - **Legibilidade**: nenhum texto da interface fica abaixo de 11px. O novo token `text-2xs` (11px) substituiu todas as fontes de 7 a 10,5px em badges, rótulos de seção, dicas de atalho e consoles.
 - **Qualidade**: as abas agora estão agrupadas em Automação (TAUT, Test Runners), Validação (Matriz, Validador Regressivo) e Entrega (Prontidão, Roadmap). Os badges decorativos ("QA Hub", "Automação", "Oracle QA") saíram; ficam só a contagem da Matriz e a nota de Prontidão. Abas renomeadas: "TAUT (Cypress)", "Matriz" e "Prontidão (PO)".
@@ -287,6 +313,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [1.31.2] - 2026-10-05
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Qualidade — Painel de Prontidão (PO)**: os cartões por categoria (Rotinas Delphi, Serviço Karaf, API REST, Fluxo E2E) agora mostram números reais calculados da Matriz de Validação (aprovados/total, barra de progresso e contagem de pendentes, em teste, falhas e bloqueados). Antes eram textos fixos, que sugeriam ler a saúde do Karaf.
 - **TAUT**: o cabeçalho mostra "Cypress não detectado" quando não há versão no projeto (antes exibia "Cypress 15.6.0" fixo). O placeholder do campo Release deixou de sugerir `v1.24.0`.
 
@@ -299,6 +327,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - Detecção automática do projeto TAUT por qualquer pasta `taut*` (além de `cypress-tests`, `cypress` e `e2e-tests`) no diretório de projetos.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Qualidade — Matriz de Validação**: os 4 cenários-modelo iniciais agora nascem como *pendentes* (antes, um vinha "Aprovado" sem verificação) e a Release padrão ficou vazia (era `v1.24.0`). Dados inválidos no `localStorage` não quebram mais a tela.
 - **Qualidade — Roadmap**: status refletem o que já existe (*Disponível*) e o que *ainda não foi implementado*.
 - **Qualidade — Prontidão**: com falha, bloqueio ou pendência, o veredito nunca é "Release Pronta".
@@ -367,6 +397,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - **Inicialização Automática de Novos Templates Padrão**: Ajustado o `QaRegressionService.ensureDefaultTemplates` para inicializar automaticamente quaisquer novos templates padrão sem sobrescrever templates customizados ou duplicar arquivos já existentes.
 
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Modularização de Templates (Regra de 300 Linhas)**: Subdivisão do catálogo de templates padrão em submódulos dedicados em `src/main/utils/qaTemplates/` (`templateVendaPdv.ts`, `templateCancelamento.ts`, `templateKitCesta.ts`, `templatePreVendaTv7Tv8.ts`, `templateMovimentacaoCaixa.ts`, `templateInutilizacaoNfce.ts`), mantendo todos os arquivos com menos de 250 linhas.
 
 ## [1.28.1] - 2026-10-02
@@ -460,6 +492,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
     - **Servidor Express / REST (Headless & Docker)**: Endpoints `/api/qa/templates`, `/api/qa/templates/:id`, `/api/qa/execute` e `/api/qa/templates-dir`;
     - **Servidor MCP**: 3 novas ferramentas para assistentes de IA (`qa_list_templates`, `qa_get_template` e `qa_run_regression_suite`), elevando o catálogo total do cockpit para **152 ferramentas**.
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Reorganização dos Menus do Header & Central de Ajuda**:
   - **Botão Dedicado da Central de Ajuda na Barra de Ações**: A Central de Ajuda (`HelpCircle`, `Alt+9`) foi movida de dentro do dropdown de desenvolvimento para um botão de acesso rápido na barra superior direita (ao lado de Configurações, Status, Tema e Atualizar), com destaque visual ativo e integração ao tour de boas-vindas (`data-tour="help"`).
   - **Estruturação dos 4 Pilares Temáticos de Navegação**:
@@ -557,6 +591,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [1.23.0] - 2026-09-30
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - **Componentização & Decomposição Modular do Frontend**:
   - **Refatoração dos 4 Maiores Módulos Monolíticos**: Redução de mais de 82% do volume de código acumulado nos arquivos raiz das páginas e modais centrais (de 15.764 para 2.813 linhas totais), particionando e extraindo 44 novos componentes atômicos, focados e reutilizáveis:
     - **Configurações (`SettingsPage.tsx`)**: De 3.428 para 1.183 linhas (-65%), desacoplando as 9 abas de configuração (`DirsTab`, `KarafTab`, `AzureTab`, `ServicesTab`, `PortsTab`, `AutomationTab`, `LogsTab`, `BackupTab`, `AiTab`), a barra de pesquisa rápida (`SettingsSearchBar`) e o checklist de setup inicial (`SetupChecklistCard`).
@@ -799,6 +835,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - Banco de Dados: aviso de primeiro uso quando não há nenhuma conexão cadastrada, com atalho direto para criar uma ou abrir Configurações.
 - Central de Ajuda: botão "Rever Tours das Telas" reativa os tours individuais de cada módulo (Banco, Rotinas, Deploy, Containers, Git...), que antes ficavam perdidos para sempre depois da escolha inicial de pular no modal de onboarding.
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - Configurações: botões "Restaurar Padrões" (serviços monitorados, processos conflitantes, portas e fontes de log) passam a pedir confirmação e usam estilo destrutivo, evitando perda acidental de listas configuradas manualmente.
 
 ## [1.15.0] - 2026-09-24
@@ -815,6 +853,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - Central de Ajuda cobre as funcionalidades das últimas versões: card de **APM & Traces** no Guia dos Módulos e na Visão Geral, Statement Tracer no card de Banco de Dados, branches remotas/upstream/worktrees e GitHub/GitLab no card de Git, WinThor Start no card de Rotinas, e FAQs sobre o Statement Tracer, conexão do Java Agent ao receptor APM, WinThor Start/WTA e criptografia de segredos.
 - **Notas de Versão e Guia de Instalação na Release**: geração automática dos arquivos `RELEASE_NOTES.md` (Markdown) e `LEIA-ME.txt` (texto puro com quebras CRLF para o Bloco de Notas) na pasta `release/` ao empacotar os instaladores (`npm run build:electron`) ou sob demanda via `npm run release:notes`. Os arquivos acompanham os executáveis com instruções claras para quem for instalar, comparativo entre o instalador padrão e a versão portátil, instruções sobre o Windows SmartScreen, requisitos de sistema e resumo das alterações desta versão.
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - Nova identidade visual do ícone/logo (fundo índigo mais claro, fonte de luz e reflexo), aplicada ao `AppLogo`, `icon.svg`, `icon.png` e `favicon.ico`.
 - Welcome do onboarding reduzido de 3 telas para 1 (saudação + escolha de tema + começar).
 - Listagem de tabelas do DB Studio sobe o teto de 500 para 50.000 tabelas (schemas de ERP passam fácil de alguns milhares), com a sidebar renderizando a lista em blocos conforme o scroll.
@@ -844,6 +884,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - Paridade do servidor MCP com IPC/REST para backup/restore de banco (`db_run_backup`, `db_list_backups`, `db_restore_backup`, `db_run_restore_drill`, `db_save_backup_config`, `db_list_backup_history`, `backup_test_webhook`) e para o observador de logs (`logs_check_file`, `logs_read_last_lines`, `logs_clear_file`) — nenhum dos dois tinha qualquer tool exposta a assistentes de IA até aqui.
 - Verificação de build (`npm run build`) adicionada ao pipeline de CI, além de lint/typecheck/test.
 ### Alterado
+- **Abertura do Hub mais rápida para quem já usa o app**: de ~5,4 s para ~2 s (animação enxuta e saída automática); quem abre pela primeira vez continua vendo a abertura completa.
+- **Onboarding e tour atualizados para o menu lateral e as Integrações**: o passo "Checklist" dizia "Quatro itens" para uma lista de cinco (agora usa a contagem real), textos que falavam em "cabeçalho" agora dizem "menu lateral", o passo de IA & MCP e o final apontam para a tela Integrações, o tour guiado ganhou o passo "Integrações" e o convite dos tutoriais por tela não diz mais "Tour geral concluído" para quem pulou o tour.
 - Code-split das páginas via `React.lazy`: bundle inicial do renderer reduzido de 1.19MB para 247KB.
 - Documentação esclarece que o modo Web/Docker é single-tenant (sem isolamento por usuário).
 - Lógica de preservação de credenciais existentes ao salvar configurações (antes duplicada em `registerIpc.ts` e `server/index.ts`, ausente no MCP) centralizada em `ConfigService.saveSettings`.

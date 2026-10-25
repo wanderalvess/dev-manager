@@ -252,7 +252,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
               <Eyebrow n={2}>MÓDULOS</Eyebrow>
               <h2 className="m-0 text-4xl font-extrabold tracking-tight">Ligue só o que você usa.</h2>
               <p className="m-0 text-muted-foreground">
-                {enabledCount} de {APP_MODULE_IDS.length} módulos ligados. Os desligados somem do cabeçalho, da busca e dos atalhos — dá pra
+                {enabledCount} de {APP_MODULE_IDS.length} módulos ligados. Os desligados somem do menu lateral, da busca e dos atalhos — dá pra
                 mudar em Configurações → Módulos.
               </p>
               <div role="tablist" aria-label="Grupos de navegação" className="flex flex-wrap gap-2">
@@ -383,9 +383,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
           {step.id === 'checklist' && (
             <>
               <Eyebrow n={5}>CHECKLIST</Eyebrow>
-              <h2 className="m-0 text-4xl font-extrabold tracking-tight">Quatro itens e você decola.</h2>
+              <h2 className="m-0 text-4xl font-extrabold tracking-tight">{checklist.length || 5} itens e você decola.</h2>
               <p className="m-0 text-muted-foreground">
-                {checklist.filter((c) => c.done).length} de {checklist.length || 4} concluídos. Pode pular — o checklist fica em Configurações.
+                {checklist.filter((c) => c.done).length} de {checklist.length || 5} concluídos. Pode pular — o checklist fica em Configurações.
               </p>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {checklist.map((c) => (
@@ -411,7 +411,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
               <h2 className="m-0 text-4xl font-extrabold tracking-tight max-w-3xl">Seus agentes de IA também pilotam o cockpit.</h2>
               <p className="m-0 text-muted-foreground max-w-3xl">
                 O servidor MCP embutido expõe o Hub Manager ao Claude Code e a outros assistentes. Você pede em linguagem natural, o agente
-                executa. Clique num exemplo:
+                executa. Clique num exemplo — e veja o estado de todas as integrações na tela Integrações, no fim do menu lateral:
               </p>
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="lg:w-80 shrink-0 flex flex-col gap-2">
@@ -461,11 +461,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
                 <br />
                 Bom trabalho por aqui.
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-3xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full max-w-4xl">
                 {[
                   ['Ctrl+K', 'Busca rápida em qualquer tela'],
                   ['Alt+1 … Alt+0', 'Pule direto para cada página'],
-                  ['Central de Ajuda', 'Refaça o tour quando quiser']
+                  ['Integrações', 'MCP, LLM, Azure e outras, no fim do menu'], ['Central de Ajuda', 'Refaça o tour quando quiser']
                 ].map(([k, d]) => (
                   <div key={k} className="rounded-xl border border-border bg-card p-5 flex flex-col gap-2">
                     <span className="font-mono text-sm font-bold text-primary">{k}</span>
