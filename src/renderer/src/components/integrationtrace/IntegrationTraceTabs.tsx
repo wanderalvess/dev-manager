@@ -1,8 +1,9 @@
 import React from 'react';
 
-export type IntegrationTraceTab = 'readiness' | 'batch';
+export type IntegrationTraceTab = 'wsh' | 'readiness' | 'batch';
 
 const TABS: { id: IntegrationTraceTab; label: string }[] = [
+  { id: 'wsh', label: 'Monitor do WSH' },
   { id: 'readiness', label: 'Pré-voo' },
   { id: 'batch', label: 'Rastrear lote' }
 ];

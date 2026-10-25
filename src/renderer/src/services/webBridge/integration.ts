@@ -6,6 +6,7 @@ import type {
   IntegrationTraceListItem,
   IntegrationTraceResult
 } from '../../../../shared/integrationTypes';
+import type { WshRoutesResponse, WshSearchRequest, WshSearchResponse } from '../../../../shared/wshMonitorTypes';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
 
@@ -36,6 +37,10 @@ export function createIntegrationApi({ apiFetch }: BridgeDeps) {
     integrationDeleteTrace: async (id: string): Promise<boolean> => {
       const result = await apiFetch<{ success: boolean }>(`/api/integration/traces/${encodeURIComponent(id)}`, { method: 'DELETE' });
       return result.success;
-    }
+    },
+
+    integrationWshRoutes: (): Promise<WshRoutesResponse> => apiFetch('/api/integration/wsh/routes'),
+
+    integrationWshSearch: (request: WshSearchRequest): Promise<WshSearchResponse> => post('/api/integration/wsh/search', request)
   } satisfies Partial<ElectronAPI>;
 }

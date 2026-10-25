@@ -220,6 +220,7 @@ Entram em `USAGE_BASELINE_DEFINITIONS`: `integration/readiness-check` (manual: 1
 | 1. Pré-voo | Entregue (página, `IntegrationTraceService`, `integration_check_readiness`, `POST /api/integration/readiness`) |
 | Rastreio parcial de lote (adiantado das fases 2 a 4) | Entregue sem depender de P1 a P5: chegada no PDV por SQL com espera, retaguarda Oracle, passo 3 pelo APM, logs filtrados pelo lote, histórico em arquivo e relatório Markdown (`integration_check_batch`, `integration_list_traces`, `integration_get_trace`, `POST /api/integration/trace`) |
 | 2. Cliente do PDVSync e passos reais | **Entregue**: login RAC, consultar lote e status por loja (só leitura), configuração na camada CH, pré-voo do login, modelo de oito passos na ordem real e chegada por loja. Falta validar contra um ambiente real (P1) |
+| Monitor do WSH (Oracle) | **Entregue**: busca na `PCINTEGRACAOCORE` por rota, dado, status e período, resposta do PDVSync lida da `OBSERVACAO`, percurso do item e `integration_check_wsh`. Fonte principal a partir da coleta |
 | Vista animada e modo ao vivo | **Entregue**: percurso do lote em SVG com replay e 3D em CSS, lojas clicáveis e reconsulta a cada 15 s enquanto a chegada está pendente (`POST /api/integration/traces/:id/refresh`) |
 | 3. Disparo do fluxo | Pendente de P2 (disparo e número do lote) e P3 (OTLP no Karaf) |
 | 5. Fechamento | Parcial: relatório e histórico existem; falta o diff do JOLT |
@@ -343,6 +344,24 @@ premissas mudam (detalhes em [referencia-wsh-pdvsync.md](../referencia-wsh-pdvsy
 Também muda o "disparar fluxo": os fluxos rodam por agendamento (`PCINTEGRACAOAGENDAMENTO`), então o botão depende de saber como
 forçar uma execução (P2). E o Oracle do WSH (`PCINTEGRACAOCORE` e tabelas de fluxo) guarda o histórico de execuções, o que pode
 substituir a leitura de log para dizer se uma integração rodou (O1).
+
+### Monitor do WSH: o Oracle como fonte principal (após a coleta de 2026-10-25)
+
+A coleta no ambiente real mudou a fonte principal. O WSH já registra cada integração na `PCINTEGRACAOCORE`, e é lá que o time
+procura hoje (no monitor do WSH, filtrando por fluxo e pelo dado). Então o Hub passa a **monitorar o que o WSH gravou**, sem
+credencial do PDVSync:
+
+- **Unidade:** cada linha é um **item** (produto, preço, cobrança...), não um lote. A rota de busca (`WTA - Buscar ...`) cria a linha
+  (`DATACRIACAO`, `IDEXTERNO` = `pdvsync-<tipo>-<código>-...`); a rota de envio (`PDVSYNC - ...`) atualiza a mesma linha
+  (`IDROTASERVICOENVIO`, `IDREQUISICAOENVIO`, `DATASINCRONISMO`) e grava a resposta do PDVSync na `OBSERVACAO`.
+- **Status:** só 2 (integrado) e 3 (erro) apareceram; outro código é mostrado como está, sem inventar significado.
+- **Erros:** a `OBSERVACAO` traz `errors` por índice, com o campo, a mensagem e o `identificadorExterno`. O PDVSync recusa a requisição
+  inteira: um item sem erro próprio fica com status 3 por causa de outros itens do mesmo envio, e o Hub separa os dois casos.
+- **Só leitura e sem dado sensível:** o SQL é fixo com binds; `OBSERVACAO` é lida até 3800 caracteres com `dbms_lob.substr`, e
+  `VARIAVEIS`, `DADOSRECEBIDOS` e `DADOSTRANSFORMADOS` nunca são lidos (podem ter token ou dado de cliente).
+- **O que a tabela não prova:** abertura e fechamento do lote e a baixa nas lojas ficam *sem evidência* no percurso. O FLUXO-24
+  (*Atualizar Status Lote Retaguarda*) grava o status por loja (`pdvsync-post-status-...`), mas não roda no ambiente coletado.
+- **Rastrear lote e o cliente do PDVSync continuam**, como complemento para quem tiver as credenciais; deixam de ser o caminho principal.
 
 ### Decisões da vista animada e do modo ao vivo
 

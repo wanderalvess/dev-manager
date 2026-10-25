@@ -27,6 +27,8 @@ import { deriveLayerStatus, planLayerChecks } from './integration/readinessPlan'
 import { checkPdvSyncLogin, lookupBatch, PdvSyncClient } from './integration/pdvSyncClient';
 import { toPdvSyncSettings } from '../../shared/pdvSyncConfig';
 import { TraceHistoryStore } from './integration/traceHistoryStore';
+import { buildWshSearch, toWshItem, toWshRoute, validateWshSearch, WSH_ROUTES_SQL } from './integration/wshMonitorQuery';
+import type { WshRoutesResponse, WshSearchRequest, WshSearchResponse } from '../../shared/wshMonitorTypes';
 
 /**
  * Fonte dos traces do APM. No app e no servidor web é o próprio `ApmService` (síncrono); no MCP, que
@@ -176,6 +178,43 @@ export class IntegrationTraceService {
         if (!isLogFilePath(filePath) || isInsideDir(filePath, getAppDataDir()) || !fs.existsSync(filePath)) return null;
         return (await this.extras.logWatcherService.readLastLines(filePath, LOG_LINES_TO_SCAN)).lines;
       }
+    };
+  }
+
+  // --- Monitor do WSH: o que o WSH gravou na PCINTEGRACAOCORE, lido só do Oracle ---
+
+  /** O WSH grava no mesmo Oracle da retaguarda: vale a conexão escolhida na camada WinThor. */
+  private wshConnection() {
+    const connectionId = this.getLayers().find((layer) => layer.layer === 'winthor')?.dbConnectionId;
+    return connectionId ? this.configService.getSettings().databaseConnections?.find((c) => c.id === connectionId) : undefined;
+  }
+
+  private static readonly NO_WSH_CONNECTION =
+    'Escolha a conexão Oracle da camada WinThor em Configurações → Integração ponta a ponta (é onde o WSH grava as integrações).';
+
+  /** Rotas de busca que já gravaram alguma integração, para o filtro do monitor. */
+  public async listWshRoutes(): Promise<WshRoutesResponse> {
+    const connection = this.wshConnection();
+    if (!connection) return { success: false, error: IntegrationTraceService.NO_WSH_CONNECTION };
+    const result = await this.databaseService.executeQuery(connection, WSH_ROUTES_SQL, 500);
+    if (!result.success) return { success: false, error: result.error || 'Falha ao listar as rotas do WSH.' };
+    return { success: true, routes: (result.rows ?? []).map(toWshRoute) };
+  }
+
+  /** Integrações do WSH filtradas por rota, trecho do IDEXTERNO, status e período. Só leitura. */
+  public async searchWsh(request: Partial<WshSearchRequest>): Promise<WshSearchResponse> {
+    const validation = validateWshSearch(request);
+    if (!validation.ok) return { success: false, error: validation.error };
+    const connection = this.wshConnection();
+    if (!connection) return { success: false, error: IntegrationTraceService.NO_WSH_CONNECTION };
+    const { sql, binds } = buildWshSearch(validation.value, Date.now());
+    const result = await this.databaseService.executeQuery(connection, sql, validation.value.limit, binds);
+    if (!result.success) return { success: false, error: result.error || 'Falha ao consultar a PCINTEGRACAOCORE.' };
+    return {
+      success: true,
+      items: (result.rows ?? []).map(toWshItem),
+      limit: validation.value.limit,
+      lookbackHours: validation.value.lookbackHours
     };
   }
 

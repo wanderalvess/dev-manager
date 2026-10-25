@@ -5,6 +5,38 @@ import type { FaqItem } from '../helpData';
 export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqItem[] {
   return [
     {
+      id: 'integration-trace-wsh-monitor',
+      question: 'Um dado não chegou ao PDV: como uso o Monitor do WSH para descobrir por quê?',
+      category: 'Segurança & Configurações',
+      tags: ['monitor', 'wsh', 'smart hub', 'pcintegracaocore', 'observacao', 'status', 'erro', 'produto', 'preço', 'cobrança', 'pdvsync', 'não chegou', 'não desceu'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Em <strong className="text-foreground">Rastreio de Integração → Monitor do WSH</strong>, escolha a rota (o fluxo, como{' '}
+            <em>WTA - Buscar Produto PDV</em>), digite o dado (o código do produto, por exemplo) e o status, e clique em Buscar. É a
+            mesma busca do monitor do WSH, lida direto da <code className="font-mono text-primary">PCINTEGRACAOCORE</code> pela conexão
+            Oracle escolhida na camada WinThor. Não precisa de senha nem de chave do PDVSync.
+          </p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li><strong className="text-foreground">Status:</strong> 2 é integrado e 3 é erro (os únicos confirmados até agora); outro código aparece como está.</li>
+            <li><strong className="text-foreground">Resposta do PDVSync:</strong> vem da OBSERVACAO, com o campo e a mensagem de cada erro.</li>
+            <li>
+              <strong className="text-foreground">Recusado junto com o envio:</strong> o PDVSync recusa a requisição inteira quando um item
+              tem erro. Se o item aberto não tem erro próprio, o Hub mostra quais outros itens do mesmo envio derrubaram tudo.
+            </li>
+            <li>
+              <strong className="text-foreground">O que não aparece:</strong> a abertura e o fechamento do lote e a baixa nas lojas não ficam
+              na PCINTEGRACAOCORE; no percurso animado esses passos aparecem como <em>sem evidência</em>.
+            </li>
+          </ul>
+          <p>
+            <strong className="text-foreground">Copiar resumo (Jira)</strong> gera o resumo do item em Markdown. O assistente de IA tem a
+            mesma consulta pela tool MCP <code className="font-mono text-primary">integration_check_wsh</code>.
+          </p>
+        </div>
+      )
+    },
+    {
       id: 'integration-trace-config',
       question: 'O que é a aba "Integração ponta a ponta" das Configurações e o que preencher nela?',
       category: 'Segurança & Configurações',

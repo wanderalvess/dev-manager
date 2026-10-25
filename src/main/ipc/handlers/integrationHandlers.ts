@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron';
 import type { IntegrationBatchTraceRequest } from '../../../shared/integrationTypes';
+import type { WshSearchRequest } from '../../../shared/wshMonitorTypes';
 import type { IpcContext } from '../ipcContext';
 
 /** Rastreio de Integração ponta a ponta (decisão 0003). Canais: integration:* */
@@ -16,4 +17,7 @@ export function registerIntegrationHandlers(ctx: IpcContext): void {
   ipcMain.handle('integration:list-traces', () => integrationTraceService.listTraces());
   ipcMain.handle('integration:get-trace', (_, id: string) => integrationTraceService.getTrace(id));
   ipcMain.handle('integration:delete-trace', (_, id: string) => integrationTraceService.deleteTrace(id));
+  // Monitor do WSH: só leitura no Oracle; consultar não é uma automação nova, por isso fica fora das métricas de uso
+  ipcMain.handle('integration:wsh-routes', () => integrationTraceService.listWshRoutes());
+  ipcMain.handle('integration:wsh-search', (_, request: WshSearchRequest) => integrationTraceService.searchWsh(request));
 }

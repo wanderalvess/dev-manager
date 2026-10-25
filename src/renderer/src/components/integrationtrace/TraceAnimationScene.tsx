@@ -58,6 +58,8 @@ export const TraceAnimationScene: React.FC<TraceAnimationSceneProps> = ({ model,
   const stopStep = model.steps[model.stopIndex];
   const eased = easeInOut(frame.t);
   const size = { width: SCENE.width, height: SCENE.height };
+  // Passo que acontece dentro de um sistema (o lote não anda): o cartão já mostra o passo, e o lote por cima taparia o chip
+  const insideNode = (index: number) => index <= 0 || STEP_POSITIONS[Math.min(index, STEP_POSITIONS.length - 1)].x === STEP_POSITIONS[index - 1]?.x;
 
   return (
     <div className="relative mx-auto" style={size}>
@@ -106,11 +108,11 @@ export const TraceAnimationScene: React.FC<TraceAnimationSceneProps> = ({ model,
             const point = cubicPoint(...branchControls(endpoint.y), eased);
             return <circle key={endpoint.key} cx={point.x} cy={point.y} r={6} className="fill-primary stroke-card" strokeWidth={2} />;
           })}
-        {!frame.done && current && current.id !== 'pdv-arrival' && (() => {
+        {!frame.done && current && current.id !== 'pdv-arrival' && !insideNode(frame.index) && (() => {
           const point = trackPoint(frame.index, eased);
           return <circle cx={point.x} cy={point.y} r={7} className="fill-primary stroke-card" strokeWidth={2} />;
         })()}
-        {frame.done && stopStep && stopStep.id !== 'pdv-arrival' && (() => {
+        {frame.done && stopStep && stopStep.id !== 'pdv-arrival' && !insideNode(model.stopIndex) && (() => {
           const point = trackPoint(model.stopIndex, 1);
           return (
             <g>

@@ -4,6 +4,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { BatchTraceView } from '../components/integrationtrace/BatchTraceView';
 import { IntegrationTraceTabs, type IntegrationTraceTab } from '../components/integrationtrace/IntegrationTraceTabs';
 import { ReadinessView } from '../components/integrationtrace/ReadinessView';
+import { WshMonitorView } from '../components/integrationtrace/wsh/WshMonitorView';
 import { requestSettingsTab } from '../utils/settingsDeepLink';
 
 interface IntegrationTracePageProps {
@@ -16,7 +17,8 @@ interface IntegrationTracePageProps {
  * Pré-voo das camadas e rastreio parcial de um lote por SQL, logs e APM.
  */
 export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNavigateToSettings, settingsVersion }) => {
-  const [tab, setTab] = useState<IntegrationTraceTab>('readiness');
+  // O monitor do WSH abre primeiro: é por ele que se descobre por que um dado não chegou ao PDV
+  const [tab, setTab] = useState<IntegrationTraceTab>('wsh');
 
   const openSettings = () => {
     requestSettingsTab('integration');
@@ -28,7 +30,7 @@ export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNa
       <PageHeader
         icon={Route}
         title="Rastreio de Integração"
-        description="Confira WinThor, WSH, CH e PDV e descubra em que ponta um lote parou."
+        description="Veja o que o WSH gravou, confira as camadas e descubra em que ponta a integração parou."
         actions={
           <button
             type="button"
@@ -43,8 +45,11 @@ export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNa
 
       <IntegrationTraceTabs active={tab} onChange={setTab} />
 
-      {/* As duas abas ficam montadas: o resultado do pré-voo e do rastreio sobrevive à troca de aba */}
+      {/* As abas ficam montadas: o resultado de cada uma sobrevive à troca de aba */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 -mr-1">
+        <div hidden={tab !== 'wsh'}>
+          <WshMonitorView settingsVersion={settingsVersion} onOpenSettings={openSettings} />
+        </div>
         <div hidden={tab !== 'readiness'}>
           <ReadinessView onOpenSettings={openSettings} />
         </div>

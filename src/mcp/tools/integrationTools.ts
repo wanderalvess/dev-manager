@@ -76,4 +76,29 @@ export function registerIntegrationTools(server: McpServer, { integrationTraceSe
       return trace ? reply(trace) : error('Rastreio não encontrado no histórico.');
     }
   );
+
+  server.registerTool(
+    'integration_check_wsh',
+    {
+      title: 'Consultar o monitor do WSH',
+      description:
+        'Consulta o que o WSH (Winthor Smart Hub) gravou na PCINTEGRACAOCORE do Oracle, sem credencial do PDVSync: cada linha é um item (produto, preço, cobrança...) buscado no WinThor por uma rota de busca e enviado ao PDVSync pela rota de envio. Filtra por rota (routeId), trecho do IDEXTERNO (ex.: código do produto), status (error = STATUS 3, ok = STATUS 2) e período. Devolve status, tentativas, datas da busca e do envio, a resposta do PDVSync lida da OBSERVACAO e os erros separados em ownErrors (citam o item) e otherErrors (outros itens do mesmo envio: o PDVSync recusa a requisição inteira). Só leitura; usa a conexão Oracle da camada WinThor.',
+      inputSchema: {
+        routeId: z.number().int().positive().optional().describe('Id da rota de busca (PCINTEGRACAOROTASERVICO.ID); sem ele, todas'),
+        text: z.string().optional().describe('Trecho do IDEXTERNO, como "produto-1000" ou o código do item'),
+        status: z.enum(['all', 'error', 'ok']).optional().describe('Filtro de status (padrão all)'),
+        lookbackHours: z.number().positive().optional().describe('Período para trás, em horas (padrão 72, máximo 2160)'),
+        limit: z.number().int().positive().optional().describe('Máximo de linhas (padrão 100, máximo 500)')
+      }
+    },
+    async (request) => {
+      try {
+        const [routes, response] = await Promise.all([integrationTraceService.listWshRoutes(), integrationTraceService.searchWsh(request)]);
+        if (!response.success) return error(response.error);
+        return reply({ ...response, routes: routes.success ? routes.routes : [] });
+      } catch (err: any) {
+        return error(err?.message || 'Falha ao consultar o monitor do WSH.');
+      }
+    }
+  );
 }

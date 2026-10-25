@@ -41,5 +41,14 @@ export function createIntegrationRouter(integrationTraceService: IntegrationTrac
     res.json({ success: await integrationTraceService.deleteTrace(req.params.id) });
   });
 
+  // Monitor do WSH: só leitura na PCINTEGRACAOCORE; POST na busca para os filtros irem no corpo
+  router.get('/wsh/routes', async (_req: Request, res: Response) => {
+    res.json(await integrationTraceService.listWshRoutes());
+  });
+
+  router.post('/wsh/search', async (req: Request, res: Response) => {
+    res.json(await integrationTraceService.searchWsh(req.body ?? {}));
+  });
+
   return router;
 }

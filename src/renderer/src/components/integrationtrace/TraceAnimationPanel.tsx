@@ -23,7 +23,8 @@ const TILT_3D = 'rotateX(38deg) rotateZ(-14deg) scale(0.94)';
 const BUTTON = 'h-8 px-2.5 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5';
 
 interface TraceAnimationPanelProps {
-  trace: IntegrationTraceResult;
+  /** Rastreio de lote ou item do monitor do WSH: a vista só precisa dos passos, da quebra e das lojas. */
+  trace: Pick<IntegrationTraceResult, 'id' | 'steps' | 'brokenAt' | 'stores'>;
   /** Linha do modo ao vivo, mostrada sob o desenho enquanto a chegada está em andamento. */
   live?: React.ReactNode;
   liveActive?: boolean;
