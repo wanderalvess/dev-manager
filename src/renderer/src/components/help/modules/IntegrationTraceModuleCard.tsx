@@ -45,6 +45,11 @@ export const IntegrationTraceModuleCard: React.FC<ModuleCardProps> = ({ onNaviga
         com o passo em que quebrou em destaque, histórico dos últimos 50 e o botão <em>Copiar relatório (Jira)</em>.
       </span>
       <span>
+        <strong>Percurso do lote:</strong> uma vista animada mostra o lote andando até as lojas e parando onde quebrou, com{' '}
+        <em>Replay</em>, <em>Vista 3D</em> e clique em cada loja para ver os erros. Enquanto as lojas ainda baixam, o{' '}
+        <em>modo ao vivo</em> reconsulta o PDVSync a cada 15 s até a chegada terminar.
+      </span>
+      <span>
         <strong>O que o Hub não enxerga:</strong> login no WinThor, JOLT, login no PDVSync e envio acontecem dentro do WSH e ficam
         <em>sem evidência</em>. A venda é de entrada (PDV → WinThor), não usa lote e ainda não tem rastreio.
       </span>

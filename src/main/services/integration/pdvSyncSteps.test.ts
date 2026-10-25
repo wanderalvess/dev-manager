@@ -111,6 +111,27 @@ describe('stepsFromLookup: chegada nas lojas', () => {
   });
 });
 
+describe('stepsFromLookup: lojas para a tela', () => {
+  it('traduz o status de cada loja para o vocabulário do rastreio, com os erros', () => {
+    const steps = stepsFromLookup(
+      lookup({ batch: batch(5), stores: [store('1', 5), store('2', 6, [{ id: 'P', message: 'erro' }]), store('3', 4), store('4', 7)] }),
+      '100'
+    );
+    expect(steps.stores).toEqual([
+      { branchId: '1', status: 'ok', statusName: 'BaixadoComSucesso', errors: [] },
+      { branchId: '2', status: 'failed', statusName: 'BaixadoComErro', errors: [{ id: 'P', message: 'erro' }] },
+      { branchId: '3', status: 'pending', statusName: 'EmProcessoDeBaixa', errors: [] },
+      { branchId: '4', status: 'unknown', statusName: 'EnviadoComSucesso', errors: [] }
+    ]);
+  });
+
+  it('sem consulta, sem lote ou sem status por loja não há lojas', () => {
+    expect(stepsFromLookup(lookup({ error: 'x' }), '1').stores).toEqual([]);
+    expect(stepsFromLookup(lookup({ batch: batch(undefined, false) }), '1').stores).toEqual([]);
+    expect(stepsFromLookup(lookup({ batch: batch(5) }), '1').stores).toEqual([]);
+  });
+});
+
 describe('mergeArrivalSteps', () => {
   const step = (status: IntegrationTraceStep['status'], source: IntegrationTraceStep['source'], message: string, evidence?: string): IntegrationTraceStep => ({
     id: 'pdv-arrival', status, source, message, evidence

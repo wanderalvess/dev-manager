@@ -112,6 +112,8 @@ export function useBatchTrace(settingsVersion?: number) {
   return {
     flows, history, current, running, error,
     form: { flowId, batchNumber, lookbackMinutes, branchId, setFlowId, setBatchNumber, setLookbackMinutes, setBranchId },
-    run, open, remove, copyReport
+    run, open, remove, copyReport,
+    // Usados pelo modo ao vivo: a reconsulta troca o rastreio atual e o resumo dele no histórico
+    replaceCurrent: setCurrent, reloadHistory
   };
 }

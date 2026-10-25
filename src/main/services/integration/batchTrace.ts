@@ -46,6 +46,8 @@ export interface BatchTraceInputs {
   request: NormalizedBatchRequest;
   flow: IntegrationFlowDefinition;
   layers: Partial<Record<IntegrationLayerConfig['layer'], IntegrationLayerConfig>>;
+  /** Reconsulta ao vivo: mantém o id do rastreio e faz uma única tentativa no banco do PDV, sem esperar. */
+  refresh?: { id: string };
 }
 
 /** Passos que o WSH executa por dentro e que não deixam rastro que o Hub leia, qualquer que seja a configuração. */
@@ -205,7 +207,7 @@ export async function runBatchTrace(inputs: BatchTraceInputs, deps: BatchTraceDe
 
   const [winthorStep, logExcerpts, pdvsync] = await Promise.all([resolveWinthorStep(ctx), collectLogs(ctx), resolvePdvSync(ctx)]);
   const pdvsyncFinal = pdvsync && (pdvsync.arrival.status === 'ok' || pdvsync.arrival.status === 'failed');
-  const sqlStep = await resolveSqlArrival(ctx, winthorStep.itemCount, Boolean(pdvsyncFinal));
+  const sqlStep = await resolveSqlArrival(ctx, winthorStep.itemCount, Boolean(pdvsyncFinal) || Boolean(inputs.refresh));
 
   let steps = createEmptyTimeline();
   for (const [id, reason] of Object.entries(NO_SOURCE_REASONS)) {
@@ -217,7 +219,18 @@ export async function runBatchTrace(inputs: BatchTraceInputs, deps: BatchTraceDe
   steps = applyStepUpdate(steps, mergeArrivalSteps(pdvsync?.arrival, sqlStep));
 
   const finished = finalizeTrace(
-    { id: deps.newId(), flowId: flow.id, flowName: flow.name, batchNumber: request.batchNumber, startedAt, steps, logExcerpts, notes: ctx.notes },
+    {
+      id: inputs.refresh?.id ?? deps.newId(),
+      flowId: flow.id,
+      flowName: flow.name,
+      batchNumber: request.batchNumber,
+      startedAt,
+      request: { lookbackMinutes: request.lookbackMinutes, ...(request.branchId ? { branchId: request.branchId } : {}) },
+      stores: pdvsync?.stores ?? [],
+      steps,
+      logExcerpts,
+      notes: ctx.notes
+    },
     deps.now()
   );
   return { ...finished, evidenceMarkdown: buildTraceEvidenceMarkdown(finished) };

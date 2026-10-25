@@ -4,6 +4,8 @@ import { useBatchTrace } from '../../hooks/integration/useBatchTrace';
 import { BatchTraceForm } from './BatchTraceForm';
 import { TraceHistoryList } from './TraceHistoryList';
 import { TraceResultPanel } from './TraceResultPanel';
+import { LiveTraceBar } from './LiveTraceBar';
+import { useLiveTraceRefresh } from '../../hooks/integration/useLiveTraceRefresh';
 
 interface BatchTraceViewProps {
   settingsVersion?: number;
@@ -12,7 +14,8 @@ interface BatchTraceViewProps {
 
 /** Aba "Rastrear lote": formulário e histórico à esquerda, resultado à direita. */
 export const BatchTraceView: React.FC<BatchTraceViewProps> = ({ settingsVersion, onOpenSettings }) => {
-  const { flows, history, current, running, error, form, run, open, remove, copyReport } = useBatchTrace(settingsVersion);
+  const { flows, history, current, running, error, form, run, open, remove, copyReport, replaceCurrent, reloadHistory } = useBatchTrace(settingsVersion);
+  const live = useLiveTraceRefresh(current, replaceCurrent, () => void reloadHistory());
   const waitSeconds = flows.find((flow) => flow.id === form.flowId)?.evidence.pdvWaitSeconds ?? 0;
 
   return (
@@ -46,7 +49,22 @@ export const BatchTraceView: React.FC<BatchTraceViewProps> = ({ settingsVersion,
             </span>
           </div>
         ) : current ? (
-          <TraceResultPanel trace={current} onCopyReport={() => void copyReport()} />
+          <TraceResultPanel
+            trace={current}
+            onCopyReport={() => void copyReport()}
+            live={
+              <LiveTraceBar
+                active={live.active}
+                checking={live.checking}
+                attempts={live.attempts}
+                secondsLeft={live.secondsLeft}
+                stopReason={live.stopReason}
+                canStart={live.canStart}
+                onStart={live.start}
+                onStop={live.stop}
+              />
+            }
+          />
         ) : (
           <div className="bg-card border border-border rounded-xl p-6 space-y-2">
             <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">

@@ -14,6 +14,7 @@ export const integrationApi = {
   integrationListFlows: (): Promise<IntegrationFlowDefinition[]> => ipcRenderer.invoke('integration:list-flows'),
   integrationTraceBatch: (request: IntegrationBatchTraceRequest): Promise<IntegrationBatchTraceResponse> =>
     ipcRenderer.invoke('integration:trace-batch', request),
+  integrationRefreshTrace: (id: string): Promise<IntegrationBatchTraceResponse> => ipcRenderer.invoke('integration:refresh-trace', id),
   integrationListTraces: (): Promise<IntegrationTraceListItem[]> => ipcRenderer.invoke('integration:list-traces'),
   integrationGetTrace: (id: string): Promise<IntegrationTraceResult | null> => ipcRenderer.invoke('integration:get-trace', id),
   integrationDeleteTrace: (id: string): Promise<boolean> => ipcRenderer.invoke('integration:delete-trace', id)

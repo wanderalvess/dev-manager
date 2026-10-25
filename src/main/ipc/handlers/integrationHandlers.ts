@@ -11,6 +11,8 @@ export function registerIntegrationHandlers(ctx: IpcContext): void {
   ipcMain.handle('integration:trace-batch', (_, request: IntegrationBatchTraceRequest) =>
     integrationTraceService.traceBatch(request)
   );
+  // Reconsulta do modo ao vivo: fora das métricas de uso de propósito (acompanhar não é um uso novo)
+  ipcMain.handle('integration:refresh-trace', (_, id: string) => integrationTraceService.refreshTrace(id));
   ipcMain.handle('integration:list-traces', () => integrationTraceService.listTraces());
   ipcMain.handle('integration:get-trace', (_, id: string) => integrationTraceService.getTrace(id));
   ipcMain.handle('integration:delete-trace', (_, id: string) => integrationTraceService.deleteTrace(id));

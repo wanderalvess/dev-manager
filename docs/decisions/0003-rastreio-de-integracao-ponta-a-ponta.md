@@ -220,6 +220,7 @@ Entram em `USAGE_BASELINE_DEFINITIONS`: `integration/readiness-check` (manual: 1
 | 1. Pré-voo | Entregue (página, `IntegrationTraceService`, `integration_check_readiness`, `POST /api/integration/readiness`) |
 | Rastreio parcial de lote (adiantado das fases 2 a 4) | Entregue sem depender de P1 a P5: chegada no PDV por SQL com espera, retaguarda Oracle, passo 3 pelo APM, logs filtrados pelo lote, histórico em arquivo e relatório Markdown (`integration_check_batch`, `integration_list_traces`, `integration_get_trace`, `POST /api/integration/trace`) |
 | 2. Cliente do PDVSync e passos reais | **Entregue**: login RAC, consultar lote e status por loja (só leitura), configuração na camada CH, pré-voo do login, modelo de oito passos na ordem real e chegada por loja. Falta validar contra um ambiente real (P1) |
+| Vista animada e modo ao vivo | **Entregue**: percurso do lote em SVG com replay e 3D em CSS, lojas clicáveis e reconsulta a cada 15 s enquanto a chegada está pendente (`POST /api/integration/traces/:id/refresh`) |
 | 3. Disparo do fluxo | Pendente de P2 (disparo e número do lote) e P3 (OTLP no Karaf) |
 | 5. Fechamento | Parcial: relatório e histórico existem; falta o diff do JOLT |
 
@@ -342,6 +343,14 @@ premissas mudam (detalhes em [referencia-wsh-pdvsync.md](../referencia-wsh-pdvsy
 Também muda o "disparar fluxo": os fluxos rodam por agendamento (`PCINTEGRACAOAGENDAMENTO`), então o botão depende de saber como
 forçar uma execução (P2). E o Oracle do WSH (`PCINTEGRACAOCORE` e tabelas de fluxo) guarda o histórico de execuções, o que pode
 substituir a leitura de log para dizer se uma integração rodou (O1).
+
+### Decisões da vista animada e do modo ao vivo
+
+- **Só desenha o que foi provado.** A animação é derivada do rastreio (`traceAnimationModel.ts`, puro e testado): um trecho só ganha cor depois que o lote passa por ele, `unknown` e `skipped` ficam tracejados e nada depois do passo quebrado é revelado.
+- **Ritmo:** a duração de cada passo na animação vem da duração medida, em escala logarítmica entre 350 ms e 1,4 s, para 10 ms e 6 s caberem na mesma cena.
+- **Lojas:** até 6 no desenho; acima disso, as 5 primeiras e um grupo com o pior status (falha > pendente > sem evidência). Sem status por loja, um destino único "PDV" com o status da chegada.
+- **3D leve:** perspectiva e `rotateX/rotateZ` em CSS sobre o mesmo SVG, sem biblioteca 3D nem WebGL. A escolha fica em `localStorage`; com movimento reduzido, a cena abre no estado final.
+- **Modo ao vivo:** `refreshTrace(id)` refaz o rastreio no mesmo id do histórico (sem entrada nova) com o SQL em modo rápido. A tela liga sozinha quando a chegada está `pending`, reconsulta a cada 15 s e para quando a chegada sai de `pending` ou depois de 40 consultas (`liveTrace.ts`). Não há tool MCP de reconsulta: o assistente pode chamar `integration_check_batch` de novo. A reconsulta não entra em Meu uso, porque acompanhar não é um uso novo.
 
 ## Riscos e respostas
 

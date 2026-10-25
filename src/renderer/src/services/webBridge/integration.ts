@@ -20,6 +20,9 @@ export function createIntegrationApi({ apiFetch }: BridgeDeps) {
     integrationTraceBatch: (request: IntegrationBatchTraceRequest): Promise<IntegrationBatchTraceResponse> =>
       post('/api/integration/trace', request),
 
+    integrationRefreshTrace: (id: string): Promise<IntegrationBatchTraceResponse> =>
+      post(`/api/integration/traces/${encodeURIComponent(id)}/refresh`, {}),
+
     integrationListTraces: (): Promise<IntegrationTraceListItem[]> => apiFetch('/api/integration/traces'),
 
     integrationGetTrace: async (id: string): Promise<IntegrationTraceResult | null> => {

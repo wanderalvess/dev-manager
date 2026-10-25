@@ -1,4 +1,10 @@
-import type { IntegrationStepId, IntegrationTraceStep } from '../../../shared/integrationTypes';
+import type { PdvSyncStatusKind } from '../../../shared/pdvSyncBatch';
+import type {
+  IntegrationStepId,
+  IntegrationStepStatus,
+  IntegrationTraceStep,
+  IntegrationTraceStore
+} from '../../../shared/integrationTypes';
 import type { PdvSyncBatch, PdvSyncLookup, PdvSyncStore } from './pdvSyncClient';
 
 /**
@@ -14,7 +20,29 @@ export interface PdvSyncSteps {
   open: IntegrationTraceStep;
   close: IntegrationTraceStep;
   arrival: IntegrationTraceStep;
+  /** Status de cada loja, para a tela desenhar quem baixou; vazio sem status por loja. */
+  stores: IntegrationTraceStore[];
   notes: string[];
+}
+
+const STORE_STATUS: Record<PdvSyncStatusKind, IntegrationStepStatus> = {
+  downloaded: 'ok',
+  error: 'failed',
+  available: 'pending',
+  downloading: 'pending',
+  preparing: 'pending',
+  processing: 'pending',
+  sent: 'unknown',
+  unknown: 'unknown'
+};
+
+export function toTraceStores(stores: PdvSyncStore[] | undefined): IntegrationTraceStore[] {
+  return (stores ?? []).map((store) => ({
+    branchId: store.branchId,
+    status: STORE_STATUS[store.status.kind],
+    statusName: store.status.name,
+    errors: store.errors
+  }));
 }
 
 const MAX_EVIDENCE_LINES = 8;
@@ -97,13 +125,13 @@ export function stepsFromLookup(lookup: PdvSyncLookup, batchNumber: string): Pdv
     const error = lookup.error ?? 'sem resposta.';
     notes.push(`Consulta ao PDVSync falhou: ${error}`);
     const reason = `a consulta ao PDVSync não funcionou (${error})`;
-    return { open: unknownStep('open-batch', reason), close: unknownStep('close-batch', reason), arrival: unknownStep('pdv-arrival', reason), notes };
+    return { open: unknownStep('open-batch', reason), close: unknownStep('close-batch', reason), arrival: unknownStep('pdv-arrival', reason), stores: [], notes };
   }
 
   if (!lookup.batch.found) {
     notes.push(`O PDVSync não conhece o lote ${batchNumber} para o inquilino configurado: confira o número, o inquilino e o ambiente.`);
     const reason = 'o PDVSync não conhece este lote.';
-    return { open: unknownStep('open-batch', reason), close: unknownStep('close-batch', reason), arrival: unknownStep('pdv-arrival', reason), notes };
+    return { open: unknownStep('open-batch', reason), close: unknownStep('close-batch', reason), arrival: unknownStep('pdv-arrival', reason), stores: [], notes };
   }
 
   const open: IntegrationTraceStep = {
@@ -116,7 +144,7 @@ export function stepsFromLookup(lookup: PdvSyncLookup, batchNumber: string): Pdv
   if (lookup.storesError) notes.push(`Status por loja indisponível, usei só o status do lote: ${lookup.storesError}`);
   const hasStores = (lookup.stores?.length ?? 0) > 0;
   const arrival = hasStores ? arrivalFromStores(lookup.stores!) : arrivalFromBatch(lookup.batch);
-  return { open, close: closeStepFrom(lookup.batch), arrival, notes };
+  return { open, close: closeStepFrom(lookup.batch), arrival, stores: toTraceStores(lookup.stores), notes };
 }
 
 const joinEvidence = (...parts: (string | undefined)[]) => parts.filter(Boolean).join('\n') || undefined;

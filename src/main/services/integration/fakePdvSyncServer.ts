@@ -40,6 +40,13 @@ const STORES_100 = [
   { idRetaguardaLoja: 2, status: '6.0', errosIdentificados: [{ idRetaguarda: 'PROD-7', erro: 'NCM inválido para o produto' }] }
 ];
 
+/**
+ * Lote 200: as lojas terminam de baixar com o tempo. Nas duas primeiras consultas do lote ele está em EmProcessoDeBaixa
+ * com a loja 2 ainda baixando; da terceira em diante, BaixadoComSucesso nas duas. Serve para o modo ao vivo.
+ */
+export const PROGRESSIVE_BATCH = '200';
+const PROGRESSIVE_DONE_AFTER = 2;
+
 export interface FakePdvSync {
   baseUrl: string;
   racUrl: string;
@@ -56,6 +63,8 @@ function send(res: http.ServerResponse, status: number, body: unknown): void {
 
 export async function startFakePdvSync(): Promise<FakePdvSync> {
   const requests: RecordedRequest[] = [];
+  let progressiveCalls = 0;
+  const progressiveDone = () => progressiveCalls > PROGRESSIVE_DONE_AFTER;
 
   const server = http.createServer((req, res) => {
     const chunks: Buffer[] = [];
@@ -90,6 +99,10 @@ export async function startFakePdvSync(): Promise<FakePdvSync> {
         const lote = decodeURIComponent(batchMatch[2]);
         if (lote === 'quebra') return send(res, 500, { message: 'falha interna do serviço' });
         if (lote === 'vazio') return send(res, 200, { data: [] });
+        if (lote === PROGRESSIVE_BATCH) {
+          progressiveCalls += 1;
+          return send(res, 200, { data: [{ loteOrigem: lote, status: progressiveDone() ? 5 : 4 }] });
+        }
         const batch = BATCHES[lote];
         if (!batch) return send(res, 404, { message: 'Lote não encontrado' });
         return send(res, 200, { data: [{ loteOrigem: lote, status: batch.status }] });
@@ -98,6 +111,14 @@ export async function startFakePdvSync(): Promise<FakePdvSync> {
       if (req.method === 'GET' && url.pathname === '/controle/api/retaguarda/v3/LojaLoteStatusretorno') {
         const lote = url.searchParams.get('loteOrigem') ?? '';
         if (lote === 'quebra') return send(res, 500, { message: 'falha no status por loja' });
+        if (lote === PROGRESSIVE_BATCH) {
+          const loja2 = progressiveDone() ? 5 : 4;
+          const lojaLotes = [
+            { idRetaguardaLoja: 1, status: 5, errosIdentificados: [] },
+            { idRetaguardaLoja: 2, status: loja2, errosIdentificados: [] }
+          ];
+          return send(res, 200, { data: { loteOrigem: lote, lojaLotes } });
+        }
         if (lote !== '100') return send(res, 200, { data: { loteOrigem: lote, lojaLotes: [] } });
         const filial = url.searchParams.get('idRetaguardaLoja');
         const stores = filial ? STORES_100.filter((store) => String(store.idRetaguardaLoja) === filial) : STORES_100;

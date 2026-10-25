@@ -174,6 +174,15 @@ export interface IntegrationLogExcerpt {
   truncated: boolean;
 }
 
+/** Status de uma loja no PDVSync, já traduzido para o vocabulário do rastreio. */
+export interface IntegrationTraceStore {
+  branchId?: string;
+  status: IntegrationStepStatus;
+  /** Nome original do status no PDVSync (ex.: BaixadoComSucesso). */
+  statusName: string;
+  errors: { id?: string; message: string }[];
+}
+
 export interface IntegrationTraceResult {
   id: string;
   flowId: string;
@@ -181,6 +190,10 @@ export interface IntegrationTraceResult {
   batchNumber?: string;
   startedAt: number;
   finishedAt?: number;
+  /** Parâmetros usados, para reconsultar o mesmo lote no modo ao vivo. */
+  request?: { lookbackMinutes: number; branchId?: string };
+  /** Status por loja vindo do PDVSync, quando houver. */
+  stores?: IntegrationTraceStore[];
   steps: IntegrationTraceStep[];
   /** Primeiro passo com status `failed`. */
   brokenAt?: IntegrationStepId;

@@ -1,0 +1,118 @@
+import React, { useMemo, useState } from 'react';
+import { Box, FastForward, RotateCcw, Square } from 'lucide-react';
+import type { IntegrationTraceResult } from '../../../../shared/integrationTypes';
+import { buildAnimationModel } from '../../utils/traceAnimationModel';
+import { STEP_STATUS_LABELS } from '../../utils/integrationTraceView';
+import { useTraceReplay } from '../../hooks/integration/useTraceReplay';
+import { TraceAnimationScene } from './TraceAnimationScene';
+
+const VIEW_3D_KEY = 'devManager.integrationTrace.view3d';
+
+function readView3d(): boolean {
+  try {
+    return localStorage.getItem(VIEW_3D_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+// Inclinação leve: o trilho vira um tabuleiro visto de cima, sem biblioteca 3D
+const TILT_3D = 'rotateX(38deg) rotateZ(-14deg) scale(0.94)';
+
+const BUTTON = 'h-8 px-2.5 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5';
+
+interface TraceAnimationPanelProps {
+  trace: IntegrationTraceResult;
+  /** Linha do modo ao vivo, mostrada sob o desenho enquanto a chegada está em andamento. */
+  live?: React.ReactNode;
+}
+
+/** Vista animada do rastreio: o lote percorre as camadas e para onde o rastreio provou que parou. */
+export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace, live }) => {
+  const model = useMemo(() => buildAnimationModel(trace), [trace]);
+  const { frame, playing, replay, skip, reducedMotion } = useTraceReplay(model, trace.id);
+  const [view3d, setView3d] = useState(readView3d);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+
+  if (!model.canonical) return null;
+
+  const toggle3d = () => {
+    const next = !view3d;
+    setView3d(next);
+    try {
+      localStorage.setItem(VIEW_3D_KEY, next ? '1' : '0');
+    } catch {
+      // Sem localStorage a preferência vale só nesta tela
+    }
+  };
+
+  const current = model.steps[frame.index];
+  const stop = model.steps[model.stopIndex];
+  const caption = !frame.done
+    ? `Passo ${frame.index + 1} de ${model.steps.length} · ${current?.label ?? ''}`
+    : stop?.id === 'pdv-arrival'
+      ? 'Percurso completo. Clique numa loja para ver o status no PDVSync.'
+      : `O lote parou em: ${stop?.label} (${STEP_STATUS_LABELS[stop?.status ?? 'unknown']}).`;
+  const selected = model.endpoints.find((endpoint) => endpoint.key === selectedKey);
+
+  return (
+    <section className="bg-card border border-border rounded-xl p-3 space-y-2" data-testid="trace-animation">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-foreground">Percurso do lote</h3>
+        <div className="flex items-center gap-2">
+          {playing ? (
+            <button type="button" onClick={skip} className={BUTTON}>
+              <FastForward className="w-3.5 h-3.5" /> Pular
+            </button>
+          ) : (
+            <button type="button" onClick={replay} className={BUTTON} disabled={reducedMotion} title={reducedMotion ? 'Movimento reduzido ativo no sistema' : undefined}>
+              <RotateCcw className="w-3.5 h-3.5" /> Replay
+            </button>
+          )}
+          <button type="button" onClick={toggle3d} aria-pressed={view3d} className={`${BUTTON} ${view3d ? 'border-primary text-primary' : ''}`}>
+            {view3d ? <Square className="w-3.5 h-3.5" /> : <Box className="w-3.5 h-3.5" />} {view3d ? 'Vista 2D' : 'Vista 3D'}
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-lg" style={{ perspective: '1100px' }}>
+        <div
+          className={`rounded-lg border border-border/60 bg-muted/20 transition-transform duration-700 ease-out ${view3d ? 'shadow-xl' : ''}`}
+          style={{ transform: view3d ? TILT_3D : 'none', transformOrigin: '50% 55%' }}
+        >
+          <TraceAnimationScene
+            model={model}
+            frame={frame}
+            reducedMotion={reducedMotion}
+            selectedKey={selectedKey}
+            onSelect={(key) => setSelectedKey((previous) => (previous === key ? null : key))}
+          />
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground" aria-live="polite">{caption}</p>
+
+      {selected && frame.done && (
+        <div className="rounded-lg border border-border bg-muted/30 p-2.5 text-xs space-y-1">
+          <p className="font-semibold text-foreground">
+            {selected.label} · {STEP_STATUS_LABELS[selected.status]}
+          </p>
+          <p className="text-muted-foreground break-words">{selected.detail}</p>
+          {selected.errors.length > 1 && (
+            <ul className="list-disc pl-4 text-muted-foreground space-y-0.5">
+              {selected.errors.slice(0, 5).map((error, index) => (
+                <li key={`${error.id ?? ''}-${index}`} className="break-words">
+                  {error.id ? `${error.id}: ` : ''}
+                  {error.message}
+                </li>
+              ))}
+              {selected.errors.length > 5 && <li>e mais {selected.errors.length - 5} erro(s), no relatório.</li>}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {live}
+    </section>
+  );
+};

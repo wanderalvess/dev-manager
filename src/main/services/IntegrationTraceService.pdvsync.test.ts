@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import type { IntegrationLayerConfig, IntegrationTraceResult } from '../../shared/integrationTypes';
 import type { AppSettings } from '../../shared/types';
-import { FAKE_CREDENTIALS, startFakePdvSync, type FakePdvSync } from './integration/fakePdvSyncServer';
+import { FAKE_CREDENTIALS, PROGRESSIVE_BATCH, startFakePdvSync, type FakePdvSync } from './integration/fakePdvSyncServer';
 import { makeService } from './integrationTraceServiceTestKit';
 
 describe('IntegrationTraceService: PDVSync (servidor falso)', () => {
@@ -101,5 +101,67 @@ describe('IntegrationTraceService: PDVSync (servidor falso)', () => {
     expect(failed.status).toBe('failed');
     expect(failed.checks[0].detail).toContain('recusou o login');
     expect(JSON.stringify(failed)).not.toContain('errado-abc');
+  });
+});
+
+describe('IntegrationTraceService.refreshTrace (servidor falso)', () => {
+  let dir: string;
+  let fake: FakePdvSync;
+  beforeAll(async () => {
+    fake = await startFakePdvSync();
+  });
+  afterAll(async () => {
+    await fake.close();
+  });
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'integration-refresh-'));
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  const make = () =>
+    makeService(
+      {
+        integrationLayers: [
+          {
+            layer: 'ch',
+            pdvsync: { racUrl: fake.racUrl, tenantId: 'T1', batchStatusUrl: fake.batchStatusUrl, storeStatusUrl: fake.storeStatusUrl },
+            auth: {
+              type: 'rac-password',
+              user: FAKE_CREDENTIALS.username,
+              password: FAKE_CREDENTIALS.password,
+              clientId: FAKE_CREDENTIALS.clientId,
+              clientSecret: FAKE_CREDENTIALS.clientSecret
+            }
+          }
+        ],
+        integrationFlows: [{ id: 'produto', name: 'Produto', chBatchType: '12', evidence: { pdvQuery: '', pdvWaitSeconds: 0 } }]
+      },
+      { configDir: dir }
+    ).service;
+  const arrival = (t: IntegrationTraceResult) => t.steps.find((s) => s.id === 'pdv-arrival')?.status;
+
+  it('acompanha o lote até as lojas terminarem, sempre no mesmo rastreio do histórico', async () => {
+    const service = make();
+    const first = ((await service.traceBatch({ flowId: 'produto', batchNumber: PROGRESSIVE_BATCH })) as { trace: IntegrationTraceResult }).trace;
+    expect(arrival(first)).toBe('pending');
+    expect(first.stores?.map((s) => s.status)).toEqual(['ok', 'pending']);
+
+    const second = ((await service.refreshTrace(first.id)) as { trace: IntegrationTraceResult }).trace;
+    expect(second.id).toBe(first.id);
+    expect(arrival(second)).toBe('pending');
+
+    const third = ((await service.refreshTrace(first.id)) as { trace: IntegrationTraceResult }).trace;
+    expect(arrival(third)).toBe('ok');
+    expect(third.stores?.map((s) => s.status)).toEqual(['ok', 'ok']);
+
+    expect((await service.listTraces()).map((item) => item.id)).toEqual([first.id]);
+  });
+
+  it('rastreio que não está no histórico ou id inseguro voltam como erro legível', async () => {
+    const service = make();
+    expect(await service.refreshTrace('t-nao-existe')).toEqual({ success: false, error: 'Rastreio não encontrado no histórico.' });
+    expect(await service.refreshTrace('../config')).toEqual({ success: false, error: 'Rastreio não encontrado no histórico.' });
   });
 });

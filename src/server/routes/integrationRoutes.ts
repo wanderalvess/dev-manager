@@ -19,6 +19,11 @@ export function createIntegrationRouter(integrationTraceService: IntegrationTrac
     res.json(await integrationTraceService.traceBatch(req.body ?? {}));
   });
 
+  // Reconsulta do modo ao vivo; não está na lista de ações rastreadas de propósito (acompanhar não é um uso novo)
+  router.post('/traces/:id/refresh', async (req: Request, res: Response) => {
+    res.json(await integrationTraceService.refreshTrace(req.params.id));
+  });
+
   router.get('/traces', async (_req: Request, res: Response) => {
     res.json(await integrationTraceService.listTraces());
   });

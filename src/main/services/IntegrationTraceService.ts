@@ -112,7 +112,29 @@ export class IntegrationTraceService {
   }
 
   /** Rastreia um lote já executado e guarda o resultado no histórico. Entrada inválida volta como erro legível, nunca exceção. */
-  public async traceBatch(request: Partial<IntegrationBatchTraceRequest>): Promise<IntegrationBatchTraceResponse> {
+  public traceBatch(request: Partial<IntegrationBatchTraceRequest>): Promise<IntegrationBatchTraceResponse> {
+    return this.runAndSave(request);
+  }
+
+  /**
+   * Reconsulta um rastreio do histórico (modo ao vivo): mesmo lote e parâmetros, mesmo id e uma única tentativa no banco
+   * do PDV. Sobrescreve a entrada em vez de criar outra, e não passa pelas métricas de uso (é acompanhamento, não um uso novo).
+   */
+  public async refreshTrace(id: string): Promise<IntegrationBatchTraceResponse> {
+    const previous = await this.history().get(id);
+    if (!previous) return { success: false, error: 'Rastreio não encontrado no histórico.' };
+    return this.runAndSave(
+      {
+        flowId: previous.flowId,
+        batchNumber: previous.batchNumber,
+        lookbackMinutes: previous.request?.lookbackMinutes,
+        branchId: previous.request?.branchId
+      },
+      previous.id
+    );
+  }
+
+  private async runAndSave(request: Partial<IntegrationBatchTraceRequest>, refreshId?: string): Promise<IntegrationBatchTraceResponse> {
     const validation = validateBatchRequest(request);
     if (!validation.ok) return { success: false, error: validation.error };
 
@@ -120,7 +142,10 @@ export class IntegrationTraceService {
     if (!flow) return { success: false, error: 'Fluxo não encontrado ou desativado em Configurações → Integração ponta a ponta.' };
 
     const layers = Object.fromEntries(this.getLayers().map((layer) => [layer.layer, layer]));
-    const trace = await runBatchTrace({ request: validation.value, flow, layers }, this.createBatchDeps());
+    const trace = await runBatchTrace(
+      { request: validation.value, flow, layers, ...(refreshId ? { refresh: { id: refreshId } } : {}) },
+      this.createBatchDeps()
+    );
     try {
       await this.history().save(trace);
     } catch (error) {

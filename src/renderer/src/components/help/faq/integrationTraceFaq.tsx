@@ -115,6 +115,13 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
             (a chegada ainda pode vir do banco do PDV). Erro de SQL ou de login também deixa o passo sem evidência e a causa aparece em Observações.
           </p>
           <p>
+            O <strong className="text-foreground">Percurso do lote</strong>, acima dos passos, anima o mesmo resultado: o lote só ganha cor
+            onde o rastreio provou alguma coisa, trechos sem evidência ficam tracejados e cada loja pode ser clicada para ver o status e os
+            erros. <em>Replay</em> toca de novo e <em>Vista 3D</em> inclina o desenho. Enquanto a chegada está <em>pendente</em>, o modo ao
+            vivo reconsulta o PDVSync a cada 15 s e atualiza o mesmo rastreio do histórico; ele para sozinho quando as lojas terminam, quando
+            falha ou depois de 40 consultas, e o botão <em>Parar</em> encerra antes.
+          </p>
+          <p>
             O rastreio só lê: as consultas precisam ser SELECT e o Hub recusa qualquer outra coisa. Os últimos 50 rastreios ficam guardados em
             arquivo nesta máquina, com os trechos de log, então podem conter dados do negócio; apague pelo histórico quando não precisar.
             <strong className="text-foreground"> Copiar relatório (Jira)</strong> gera o resumo em Markdown. O mesmo rastreio está disponível ao
