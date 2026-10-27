@@ -1,7 +1,15 @@
 import {
   QaExecutionResult,
+  QaRegressionTemplate,
   QaStepExecutionResult
 } from '../../../shared/types';
+
+/** Por que a validação ainda não pode rodar (null = pode). Usado no botão da barra e no console vazio. */
+export function getQaRunBlocker(connectionId: string, template: QaRegressionTemplate | null): string | null {
+  if (!connectionId) return 'Selecione uma conexão Oracle para executar.';
+  if (!template) return 'Selecione um cenário para executar.';
+  return null;
+}
 
 /**
  * Tenta fazer parse do payload JSON e extrair valores de chaves comuns

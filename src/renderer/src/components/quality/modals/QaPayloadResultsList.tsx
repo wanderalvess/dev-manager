@@ -19,7 +19,7 @@ export const QaPayloadResultsList: React.FC<QaPayloadResultsListProps> = ({
   error
 }) => {
   return (
-    <div className="w-72 border-r border-border overflow-y-auto bg-background/30 p-2 space-y-1.5 shrink-0">
+    <div className="h-full overflow-y-auto bg-background/30 p-2 space-y-1.5">
       {error && (
         <div className="p-2.5 rounded bg-danger/10 text-danger text-xs flex items-start gap-2">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />

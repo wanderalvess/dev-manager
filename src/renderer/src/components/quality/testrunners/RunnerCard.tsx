@@ -1,7 +1,7 @@
 import React from 'react';
-import { Play, Trash2, Edit2, Terminal, RefreshCw, FolderOpen, Layers } from 'lucide-react';
+import { Play, Trash2, Edit2, Terminal, RefreshCw, FolderOpen, Layers, AlertTriangle } from 'lucide-react';
 import type { TestRunnerConfig } from '../../../../../shared/types';
-import { getCommandPreview } from '../../../utils/testRunnersUtils';
+import { getCommandPreview, hasPlaceholderWorkingDir } from '../../../utils/testRunnersUtils';
 import { TYPE_ICONS, TYPE_BADGES } from './testRunnerTypeVisuals';
 
 interface RunnerCardProps {
@@ -21,6 +21,8 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
 }) => {
   const isRunning = runningRunnerId === runner.id;
   const badge = TYPE_BADGES[runner.type] || TYPE_BADGES.custom;
+  // Modelo ainda com a pasta de exemplo: o botão leva ao editor em vez de rodar e falhar
+  const needsWorkingDir = hasPlaceholderWorkingDir(runner);
 
   return (
     <div
@@ -31,13 +33,13 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-start gap-2.5 min-w-0">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
           <div className="p-1.5 rounded-lg bg-muted/60 border border-border/60 shrink-0 mt-0.5">
             {TYPE_ICONS[runner.type]}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-sm font-semibold text-foreground truncate max-w-[160px]" title={runner.name}>
+              <h4 className="text-sm font-semibold text-foreground truncate max-w-full" title={runner.name}>
                 {runner.name}
               </h4>
               <span
@@ -96,30 +98,48 @@ export const RunnerCard: React.FC<RunnerCardProps> = ({
         </div>
       )}
 
+      {needsWorkingDir && (
+        <div className="mt-2 flex items-start gap-1.5 rounded-md bg-warning/10 px-2 py-1.5 text-2xs text-warning">
+          <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" />
+          <span>Modelo de exemplo: aponte para a pasta do seu projeto antes de executar.</span>
+        </div>
+      )}
+
       {/* Ação de execução */}
       <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          disabled={runningRunnerId !== null}
-          onClick={() => onExecute(runner)}
-          className={`w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-98 ${
-            isRunning
-              ? 'bg-primary/10 text-primary cursor-not-allowed'
-              : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-          }`}
-        >
-          {isRunning ? (
-            <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Executando...</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Executar</span>
-            </>
-          )}
-        </button>
+        {needsWorkingDir ? (
+          <button
+            type="button"
+            onClick={() => onEdit(runner)}
+            className="w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer border border-border bg-background hover:bg-muted text-foreground"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span>Definir pasta do projeto</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={runningRunnerId !== null}
+            onClick={() => onExecute(runner)}
+            className={`w-full py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-98 ${
+              isRunning
+                ? 'bg-primary/10 text-primary cursor-not-allowed'
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+            }`}
+          >
+            {isRunning ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Executando...</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Executar</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

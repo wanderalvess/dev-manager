@@ -58,18 +58,12 @@ export function createQualityApi({ apiFetch, wsManager }: BridgeDeps) {
       filter: QaCoreSearchFilter,
       connectionId?: string
     ): Promise<QaCoreSearchResult> => {
-      if (window.electronAPI?.qaSearchCorePayloads) {
-        return window.electronAPI.qaSearchCorePayloads(filter, connectionId);
-      }
       return apiFetch<QaCoreSearchResult>('/api/qa/payloads/search', {
         method: 'POST',
         body: JSON.stringify({ filter, connectionId })
       });
     },
     qaFetchApiPayload: async (request: QaApiFetchRequest): Promise<QaApiFetchResult> => {
-      if (window.electronAPI?.qaFetchApiPayload) {
-        return window.electronAPI.qaFetchApiPayload(request);
-      }
       return apiFetch<QaApiFetchResult>('/api/qa/payloads/fetch-api', {
         method: 'POST',
         body: JSON.stringify(request)

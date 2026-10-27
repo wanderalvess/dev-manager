@@ -10,6 +10,10 @@ import {
   HelpCircle
 } from 'lucide-react';
 import type { DatabaseConnectionConfig, QaRegressionTemplate } from '../../../../../shared/types';
+import { getQaRunBlocker } from '../../../utils/qaRegressionRendererUtils';
+
+const SECONDARY_ACTION_CLASS =
+  'px-2.5 h-8 rounded-lg text-foreground hover:bg-muted text-[13px] font-medium whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
 interface QaRunnerToolbarProps {
   dbConnections: DatabaseConnectionConfig[];
@@ -42,6 +46,7 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
   onNavigate,
   onOpenTemplatesManager
 }) => {
+  const runBlocker = getQaRunBlocker(selectedConnectionId, selectedTemplate);
   return (
     <div className="px-4 py-2.5 border-b border-border bg-card space-y-2 shrink-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -89,55 +94,23 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
           <select
             value={selectedTemplateId}
             onChange={(e) => onSelectTemplate(e.target.value)}
-            className="bg-background border border-input text-foreground text-sm rounded-[10px] px-3 h-10 font-medium focus:outline-hidden focus:ring-2 focus:ring-ring flex-1 min-w-[200px] max-w-md truncate"
+            className="bg-background border border-input text-foreground text-sm rounded-[10px] px-3 h-10 font-medium focus:outline-hidden focus:ring-2 focus:ring-ring flex-1 min-w-[200px] max-w-2xl truncate"
           >
             {templates.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name} ({t.steps.length} passos) {t.category ? `[${t.category}]` : ''}
+                {t.name} ({t.steps.length} {t.steps.length === 1 ? 'passo' : 'passos'}) {t.category ? `[${t.category}]` : ''}
               </option>
             ))}
           </select>
-
-          <button
-            type="button"
-            onClick={onExportTemplate}
-            disabled={!selectedTemplate}
-            className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
-            title="Exportar template selecionado para arquivo JSON"
-          >
-            <Download className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Exportar Template</span>
-          </button>
-
-          {onOpenTemplatesManager && (
-            <button
-              type="button"
-              onClick={onOpenTemplatesManager}
-              className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Abrir Gerenciador de Templates para criar ou editar queries"
-            >
-              <Code2 className="w-3.5 h-3.5" />
-              <span>Gerenciar Templates</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onOpenHelp}
-            className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Guia Prático: Como usar, configurar asserções e exportar templates"
-          >
-            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>Como Usar</span>
-          </button>
         </div>
 
         {/* Botão de Execução Principal */}
         <button
           type="button"
           onClick={onRun}
-          disabled={isRunning || !selectedConnectionId || !selectedTemplate}
-          className="px-4 h-10 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+          disabled={isRunning || !!runBlocker}
+          title={runBlocker ?? undefined}
+          className="px-4 h-10 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium whitespace-nowrap shrink-0 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
         >
           {isRunning ? (
             <>
@@ -153,12 +126,51 @@ export const QaRunnerToolbar: React.FC<QaRunnerToolbarProps> = ({
         </button>
       </div>
 
-      {/* Descrição do Template Ativo */}
-      {selectedTemplate?.description && (
-        <p className="text-[13px] text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5">
-          {selectedTemplate.description}
-        </p>
-      )}
+      {/* Descrição do cenário + ações secundárias (ficam fora da linha principal para ela não quebrar) */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-2">
+        {selectedTemplate?.description ? (
+          <p className="text-[13px] text-muted-foreground border-l-2 border-primary/50 pl-2.5 py-0.5 flex-1 min-w-0">
+            {selectedTemplate.description}
+          </p>
+        ) : (
+          <span className="flex-1" />
+        )}
+
+        <div className="flex items-center gap-1 shrink-0">
+          {onOpenTemplatesManager && (
+            <button
+              type="button"
+              onClick={onOpenTemplatesManager}
+              className={SECONDARY_ACTION_CLASS}
+              title="Abrir Gerenciador de Templates para criar ou editar queries"
+            >
+              <Code2 className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>Gerenciar Templates</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onExportTemplate}
+            disabled={!selectedTemplate}
+            className={SECONDARY_ACTION_CLASS}
+            title="Exportar template selecionado para arquivo JSON"
+          >
+            <Download className="w-3.5 h-3.5 text-muted-foreground" />
+            <span>Exportar Template</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenHelp}
+            className={SECONDARY_ACTION_CLASS}
+            title="Guia Prático: Como usar, configurar asserções e exportar templates"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+            <span>Como Usar</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

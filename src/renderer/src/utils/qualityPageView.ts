@@ -87,8 +87,17 @@ export function getCategoryLabel(category: ValidationCategory): string {
   }
 }
 
-// openIssues = falhas + bloqueios + pendências: com qualquer um deles a release nunca é dada como pronta
-export function getReadinessVerdict(score: number, openIssues = 0, total = 1): {
+// Cenários de fábrica continuam "exemplo" até o usuário mudar o título: identificados por id + título originais,
+// sem gravar nada novo no navegador
+const DEFAULT_ITEM_TITLES = new Map(getDefaultValidationItems().map((item) => [item.id, item.title]));
+
+export function isExampleValidationItem(item: Pick<QualityValidationItem, 'id' | 'title'>): boolean {
+  return DEFAULT_ITEM_TITLES.get(item.id) === item.title;
+}
+
+// openIssues = falhas + bloqueios + pendências: com qualquer um deles a release nunca é dada como pronta.
+// started = algum cenário já saiu de "pendente"; antes disso não há o que avaliar (e "Bloqueado" assustaria à toa)
+export function getReadinessVerdict(score: number, openIssues = 0, total = 1, started = true): {
   ringClass: string;
   title: string;
 } {
@@ -96,6 +105,12 @@ export function getReadinessVerdict(score: number, openIssues = 0, total = 1): {
     return {
       ringClass: 'border-border bg-muted text-muted-foreground',
       title: 'Sem cenários para avaliar'
+    };
+  }
+  if (!started) {
+    return {
+      ringClass: 'border-border bg-muted text-muted-foreground',
+      title: 'Aguardando início dos testes'
     };
   }
   if (score >= 80 && openIssues === 0) {
@@ -131,6 +146,9 @@ export function calculateCategoryBreakdown(
 export function getReadinessSummary(failed: number, pending: number, total = 1): string {
   if (total === 0) {
     return 'Cadastre cenários na Matriz para calcular a prontidão da release.';
+  }
+  if (pending === total) {
+    return 'Nenhum cenário foi testado ainda. Mude o status na Matriz conforme a equipe de QA avança.';
   }
   if (failed > 0) {
     return `Existem ${failed} falhas registradas que precisam de resolução pela equipe de desenvolvimento antes da entrega.`;

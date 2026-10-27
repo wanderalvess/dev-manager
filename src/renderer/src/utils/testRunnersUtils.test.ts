@@ -7,8 +7,26 @@ import {
   toggleLinkedId,
   formatDurationSeconds,
   getExecutionToast,
-  buildExecutionStartMessage
+  buildExecutionStartMessage,
+  hasPlaceholderWorkingDir,
+  getPresetShortLabel
 } from './testRunnersUtils';
+import { DEFAULT_TEST_RUNNER_PRESETS } from '../../../shared/types';
+
+describe('runners-modelo no primeiro uso', () => {
+  it('reconhece a pasta de exemplo dos modelos e aceita uma pasta real', () => {
+    expect(hasPlaceholderWorkingDir({ workingDir: '{PROJECTS_PATH}/seu-projeto' })).toBe(true);
+    expect(hasPlaceholderWorkingDir({ workingDir: ' {PROJECTS_PATH}/api-gateway ' })).toBe(true);
+    expect(hasPlaceholderWorkingDir({ workingDir: '{PROJECTS_PATH}/winthor-api' })).toBe(false);
+    expect(hasPlaceholderWorkingDir({ workingDir: undefined })).toBe(false);
+  });
+
+  it('dá rótulos curtos distintos a todos os modelos rápidos', () => {
+    const labels = DEFAULT_TEST_RUNNER_PRESETS.map(getPresetShortLabel);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels).toContain('Maven Verify');
+  });
+});
 
 describe('testRunnersUtils', () => {
   it('createEmptyRunner retorna defaults de maven', () => {

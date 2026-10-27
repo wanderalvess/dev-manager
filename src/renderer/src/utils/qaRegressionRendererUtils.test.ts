@@ -2,8 +2,18 @@ import { describe, it, expect } from 'vitest';
 import {
   autoExtractVariablesFromJson,
   filterStepResults,
-  buildJiraEvidenceClipboardText
+  buildJiraEvidenceClipboardText,
+  getQaRunBlocker
 } from './qaRegressionRendererUtils';
+
+describe('getQaRunBlocker', () => {
+  it('explica primeiro a falta de conexão, depois a de cenário', () => {
+    const template = { id: 't', name: 'T', steps: [] } as any;
+    expect(getQaRunBlocker('', null)).toContain('conexão Oracle');
+    expect(getQaRunBlocker('conn-1', null)).toContain('cenário');
+    expect(getQaRunBlocker('conn-1', template)).toBeNull();
+  });
+});
 import { QaExecutionResult, QaStepExecutionResult } from '../../../shared/types';
 
 describe('qaRegressionRendererUtils', () => {

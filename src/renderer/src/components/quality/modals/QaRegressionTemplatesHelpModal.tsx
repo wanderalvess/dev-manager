@@ -57,7 +57,7 @@ export const QaRegressionTemplatesHelpModal: React.FC<QaRegressionTemplatesHelpM
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border rounded-xl shadow-lg max-w-3xl w-full flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      panelClassName="bg-card border border-border rounded-xl shadow-lg max-w-3xl w-full flex flex-col h-[min(88vh,800px)] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       closeOnBackdrop={false}
     >
         {/* Top Header */}

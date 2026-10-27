@@ -95,7 +95,7 @@ export const QaOraclePayloadTab: React.FC<QaOraclePayloadTabProps> = ({
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Barra de Filtros e Modos */}
       <div className="p-3 border-b border-border bg-background/50 space-y-2.5 shrink-0">
-        <div className="flex items-center gap-1.5 overflow-x-auto text-xs pb-1">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {SEARCH_TABS.map((tab) => {
             const Icon = tab.icon;
             const active = searchMode === tab.id;
@@ -107,7 +107,7 @@ export const QaOraclePayloadTab: React.FC<QaOraclePayloadTabProps> = ({
                   setSearchMode(tab.id as QaCoreSearchMode);
                   setError(null);
                 }}
-                className={`px-2.5 py-1 rounded text-2xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-2xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted'

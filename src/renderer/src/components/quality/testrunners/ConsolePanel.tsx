@@ -102,7 +102,7 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
         empty={
           <div className="h-full flex flex-col items-center justify-center text-zinc-600">
             <Terminal className="w-8 h-8 mb-2 opacity-40" />
-            <span>Nenhuma saída de execução. Clique em &quot;Executar Agora&quot; em um runner.</span>
+            <span>Nenhuma saída de execução. Clique em &quot;Executar&quot; em um runner.</span>
           </div>
         }
       />

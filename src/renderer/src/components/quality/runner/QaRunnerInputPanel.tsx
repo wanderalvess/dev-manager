@@ -10,6 +10,7 @@ interface QaRunnerInputPanelProps {
   setVariables: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   onOpenFetchPayload: () => void;
   onLoadSample: () => void;
+  hasSample: boolean;
   onAutoExtract: () => void;
 }
 
@@ -20,6 +21,7 @@ export const QaRunnerInputPanel: React.FC<QaRunnerInputPanelProps> = ({
   setVariables,
   onOpenFetchPayload,
   onLoadSample,
+  hasSample,
   onAutoExtract
 }) => {
   const [activeInputTab, setActiveInputTab] = useState<'json' | 'vars'>('json');
@@ -66,6 +68,7 @@ export const QaRunnerInputPanel: React.FC<QaRunnerInputPanelProps> = ({
           onChangeJson={onChangeJson}
           onOpenFetchPayload={onOpenFetchPayload}
           onLoadSample={onLoadSample}
+          hasSample={hasSample}
           onAutoExtract={onAutoExtract}
         />
       )}

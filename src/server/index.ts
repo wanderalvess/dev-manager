@@ -2145,8 +2145,9 @@ app.delete('/api/test-runner/:id', (req, res) => {
 
 app.post('/api/test-runner/execute', async (req, res) => {
   try {
-    const target = req.body;
-    const runnerId = target.id;
+    // O bridge web manda `{ id }` quando o renderer passa só o id; config completa vem com `type`
+    const target = req.body?.type ? req.body : String(req.body?.id ?? '');
+    const runnerId = req.body?.id;
     const result = await testRunnerService.executeRunner(target, (chunk) => {
       broadcastWs('test-runner:chunk', { runnerId, chunk });
     });

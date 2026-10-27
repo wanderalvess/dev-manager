@@ -6,6 +6,7 @@ interface QaRunnerJsonTabProps {
   onChangeJson: (value: string) => void;
   onOpenFetchPayload: () => void;
   onLoadSample: () => void;
+  hasSample: boolean;
   onAutoExtract: () => void;
 }
 
@@ -14,15 +15,17 @@ export const QaRunnerJsonTab: React.FC<QaRunnerJsonTabProps> = ({
   onChangeJson,
   onOpenFetchPayload,
   onLoadSample,
+  hasSample,
   onAutoExtract
 }) => {
+  const hasJson = rawJson.trim().length > 0;
   return (
     <div className="flex-1 flex flex-col p-3 overflow-hidden gap-2">
-      <div className="flex items-center justify-between">
-        <span className="text-2xs text-muted-foreground font-mono">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+        <span className="text-2xs text-muted-foreground font-mono whitespace-nowrap">
           Payload JSON da API ou PDV:
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <button
             type="button"
             onClick={onOpenFetchPayload}
@@ -36,8 +39,9 @@ export const QaRunnerJsonTab: React.FC<QaRunnerJsonTabProps> = ({
           <button
             type="button"
             onClick={onLoadSample}
-            className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors"
-            title="Preenche com o JSON de exemplo do template"
+            disabled={!hasSample}
+            className="text-2xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-muted-foreground"
+            title={hasSample ? 'Preenche com o JSON de exemplo do template' : 'Este template não tem JSON de exemplo'}
           >
             <FileCode2 className="w-3 h-3 text-primary" />
             <span>Exemplo</span>
@@ -46,8 +50,9 @@ export const QaRunnerJsonTab: React.FC<QaRunnerJsonTabProps> = ({
           <button
             type="button"
             onClick={onAutoExtract}
-            className="text-2xs text-foreground font-semibold hover:text-primary flex items-center gap-1 cursor-pointer transition-colors"
-            title="Extrai parâmetros como codFilial e numCupom automaticamente do JSON"
+            disabled={!hasJson}
+            className="text-2xs text-foreground font-semibold hover:text-primary flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-foreground"
+            title={hasJson ? 'Extrai parâmetros como codFilial e numCupom automaticamente do JSON' : 'Cole ou obtenha um payload JSON primeiro'}
           >
             <Cpu className="w-3 h-3 text-success" />
             <span>Mapear Binds</span>
@@ -58,7 +63,7 @@ export const QaRunnerJsonTab: React.FC<QaRunnerJsonTabProps> = ({
       <textarea
         value={rawJson}
         onChange={(e) => onChangeJson(e.target.value)}
-        placeholder='{\n  "codFilial": "1",\n  "numCupom": 4387,\n  "vlTotal": 768.7,\n  ...\n}'
+        placeholder={'{\n  "codFilial": "1",\n  "numCupom": 4387,\n  "vlTotal": 768.7,\n  ...\n}'}
         className="flex-1 w-full bg-background border border-border rounded-md p-2.5 font-mono text-2xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary resize-none leading-relaxed"
         spellCheck={false}
       />

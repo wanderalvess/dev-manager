@@ -7,6 +7,7 @@ import { QaFetchPayloadModal } from './modals/QaFetchPayloadModal';
 import { QaRunnerToolbar } from './runner/QaRunnerToolbar';
 import { QaRunnerInputPanel } from './runner/QaRunnerInputPanel';
 import { QaRunnerIdleState, QaRunnerRunningState } from './runner/QaRunnerPlaceholders';
+import { getQaRunBlocker } from '../../utils/qaRegressionRendererUtils';
 import { QaRunnerResultHeader } from './runner/QaRunnerResultHeader';
 import { QaRunnerResultFilters } from './runner/QaRunnerResultFilters';
 import { QaRunnerStepCard } from './runner/QaRunnerStepCard';
@@ -65,6 +66,7 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
           setVariables={inputs.setVariables}
           onOpenFetchPayload={() => setIsFetchPayloadModalOpen(true)}
           onLoadSample={inputs.handleLoadSampleJson}
+          hasSample={!!selectedTemplate?.sampleJson}
           onAutoExtract={inputs.handleAutoExtractVariables}
         />
 
@@ -74,8 +76,11 @@ export const QaRegressionRunner: React.FC<QaRegressionRunnerProps> = ({
             <QaRunnerIdleState
               selectedTemplate={selectedTemplate}
               variablesCount={Object.keys(variables).length}
-              canRun={!!selectedConnectionId && !!selectedTemplate}
+              hasConnection={!!selectedConnectionId}
+              hasConnectionsConfigured={inputs.dbConnections.length > 0}
+              canRun={!getQaRunBlocker(selectedConnectionId, selectedTemplate)}
               onRun={exec.handleRunSuite}
+              onNavigateToDatabase={onNavigate ? () => onNavigate('database') : undefined}
             />
           )}
 

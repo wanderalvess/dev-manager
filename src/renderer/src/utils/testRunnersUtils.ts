@@ -1,11 +1,24 @@
-import type {
-  TestRunnerConfig,
-  TestRunnerPreset,
-  TestRunnerType,
-  TestExecutionResult
+import {
+  DEFAULT_TEST_RUNNER_PRESETS,
+  type TestRunnerConfig,
+  type TestRunnerPreset,
+  type TestRunnerType,
+  type TestExecutionResult
 } from '../../../shared/types';
 
 export type TestRunnerStatus = TestExecutionResult['status'];
+
+const PLACEHOLDER_WORKING_DIRS = new Set(
+  DEFAULT_TEST_RUNNER_PRESETS.map((preset) => preset.suggestedWorkingDirPlaceholder)
+);
+
+/** Runner ainda com a pasta de exemplo dos modelos (ex.: `{PROJECTS_PATH}/seu-projeto`): executar só daria erro. */
+export const hasPlaceholderWorkingDir = (runner: Pick<TestRunnerConfig, 'workingDir'>): boolean =>
+  PLACEHOLDER_WORKING_DIRS.has(runner.workingDir?.trim() ?? '');
+
+/** Rótulo curto e único dos modelos rápidos ("Maven Unit/Integration Tests" → "Maven Unit/Integration"). */
+export const getPresetShortLabel = (preset: Pick<TestRunnerPreset, 'name'>): string =>
+  preset.name.replace(/\s*\(.*\)\s*$/, '').split(' ').slice(0, 2).join(' ');
 
 /** Runner "em branco" usado ao abrir o editor para criar um novo. */
 export const createEmptyRunner = (): Partial<TestRunnerConfig> => ({
@@ -85,4 +98,4 @@ export const getExecutionToast = (
 };
 
 export const buildExecutionStartMessage = (runner: Pick<TestRunnerConfig, 'name' | 'type'>): string =>
-  `\x1b[36m[DevManager]\x1b[0m Iniciando execução do runner "${runner.name}" (${runner.type})...\n\n`;
+  `[DevManager] Iniciando execução do runner "${runner.name}" (${runner.type})...\n\n`;

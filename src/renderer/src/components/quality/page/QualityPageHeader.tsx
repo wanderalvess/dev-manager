@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Check, CheckCheck, Copy, Plus } from 'lucide-react';
+import { Check, CheckCheck, Copy, Info, Plus } from 'lucide-react';
 import type { QualitySourceConfig } from '../../../../../shared/types';
 
 interface QualityPageHeaderProps {
@@ -36,14 +36,15 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
                 Fonte: {activeQualitySource.name} ({activeQualitySource.type}) · sem sincronização
               </span>
             ) : (
+              // Sem alerta: cadastrar uma fonte ainda não sincroniza nada, então não há o que "resolver" aqui
               <button
                 type="button"
                 onClick={() => onNavigate?.('settings')}
-                className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-warning/10 hover:bg-warning/20 text-warning transition-colors cursor-pointer flex items-center gap-1"
-                title="Cadastrar fontes Zephyr Scale, Jira ou Azure DevOps (sincronização ainda não implementada)"
+                className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-muted hover:bg-muted/70 text-muted-foreground transition-colors cursor-pointer flex items-center gap-1"
+                title="Os cenários são cadastrados à mão. A integração com Zephyr Scale, Jira ou Azure DevOps ainda não sincroniza; dá para cadastrar a fonte nas Configurações."
               >
-                <AlertTriangle className="w-3 h-3" />
-                <span>Cadastrar fonte (Zephyr / Jira)</span>
+                <Info className="w-3 h-3" />
+                <span>Matriz manual</span>
               </button>
             )}
           </div>
