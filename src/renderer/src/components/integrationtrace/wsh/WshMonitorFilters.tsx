@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, Loader2, Search } from 'lucide-react';
 import type { WshRoute, WshStatusFilter } from '../../../../../shared/wshMonitorTypes';
+import { groupWshRoutes } from '../../../utils/wshFlowView';
 
 const FIELD_CLASS =
   'w-full h-10 bg-card border border-border rounded-[10px] px-3 text-sm text-foreground focus:outline-hidden focus:border-primary';
@@ -48,16 +49,20 @@ export const WshMonitorFilters: React.FC<WshMonitorFiltersProps> = (props) => (
   >
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto_minmax(0,0.8fr)_auto] gap-3 items-end">
       <div className="space-y-1">
-        <label htmlFor="wsh-route" className="text-xs font-bold text-foreground block">Rota (fluxo)</label>
+        <label htmlFor="wsh-route" className="text-xs font-bold text-foreground block">Fluxo</label>
         <select
           id="wsh-route"
           value={props.routeId ?? ''}
           onChange={(e) => props.onRouteChange(e.target.value ? Number(e.target.value) : undefined)}
           className={FIELD_CLASS}
         >
-          <option value="">Todas as rotas</option>
-          {props.routes.map((route) => (
-            <option key={route.id} value={route.id}>{route.name}</option>
+          <option value="">Todos os fluxos</option>
+          {groupWshRoutes(props.routes).map((group) => (
+            <optgroup key={group.category} label={group.category}>
+              {group.options.map((option) => (
+                <option key={option.id} value={option.id}>{option.label}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>

@@ -1,6 +1,12 @@
 import React from 'react';
 import type { WshItem, WshItemTone } from '../../../../../shared/wshMonitorTypes';
 import { formatTraceTime } from '../../../utils/integrationTraceView';
+import { findFlowByRoute, flowLabel } from '../../../../../shared/wshFlowCatalog';
+
+const routeLabel = (route: string) => {
+  const flow = findFlowByRoute(route);
+  return flow ? flowLabel(flow) : route;
+};
 
 // Literais completos para o scanner do Tailwind
 const WSH_TONE_BADGE: Record<WshItemTone, string> = {
@@ -38,7 +44,7 @@ export const WshItemList: React.FC<WshItemListProps> = ({ items, limit, selected
               <span className={`px-2 py-0.5 rounded-full text-2xs font-medium shrink-0 ${WSH_TONE_BADGE[item.tone]}`}>{item.statusLabel}</span>
             </span>
             <span className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
-              <span className="truncate">{item.route}</span>
+              <span className="truncate">{routeLabel(item.route)}</span>
               <span className="font-mono shrink-0">{item.createdAt ? formatTraceTime(item.createdAt) : ''}</span>
             </span>
           </button>

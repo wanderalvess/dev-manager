@@ -18,6 +18,7 @@ import {
   worstStatus
 } from './traceAnimationModel';
 import { canGoLive, decideLive, LIVE_MAX_ATTEMPTS, secondsUntil } from './liveTrace';
+import { INBOUND_SCENE } from './traceSceneProfiles';
 
 const steps = (overrides: Partial<Record<string, Partial<IntegrationTraceStep>>> = {}): IntegrationTraceStep[] =>
   INTEGRATION_STEP_ORDER.map((id) => ({ id, status: 'unknown' as const, source: 'none' as const, ...overrides[id] }));
@@ -81,8 +82,22 @@ describe('buildAnimationModel', () => {
     const legacy = [{ id: 'ch-send' as never, status: 'failed' as const, source: 'none' as const }];
     const model = buildAnimationModel({ steps: legacy, brokenAt: 'ch-send' as never });
     expect(model.canonical).toBe(false);
-    expect(model.steps).toEqual([{ id: 'ch-send', label: 'ch-send', status: 'failed', animMs: 600 }]);
+    expect(model.steps).toEqual([{ id: 'ch-send', label: 'ch-send', shortLabel: 'ch-send', status: 'failed', animMs: 600 }]);
     expect(model.stopIndex).toBe(0);
+  });
+});
+
+describe('perfil do desenho', () => {
+  it('envio é o padrão; recebimento troca o nome dos sistemas, dos passos e do destino', () => {
+    const outbound = buildAnimationModel({ steps: steps() });
+    expect(outbound.profile.nodeLabels.winthor).toBe('WinThor');
+    expect(outbound.steps[4].shortLabel).toBe('Abertura');
+
+    const inbound = buildAnimationModel({ steps: steps() }, INBOUND_SCENE);
+    expect(inbound.profile.nodeLabels).toEqual({ winthor: 'PDVSync', wsh: 'WSH', pdvsync: 'WinThor' });
+    expect(inbound.steps.map((s) => s.label)[4]).toBe('Envio ao WinThor');
+    expect(inbound.steps[4].shortLabel).toBe('Envio');
+    expect(inbound.endpoints[0].label).toBe('Retaguarda');
   });
 });
 

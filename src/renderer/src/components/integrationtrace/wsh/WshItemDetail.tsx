@@ -4,7 +4,9 @@ import type { WshItem, WshItemError } from '../../../../../shared/wshMonitorType
 import { formatWshError } from '../../../../../shared/wshObservation';
 import { formatTraceTime } from '../../../utils/integrationTraceView';
 import type { ReadinessTone } from '../../../utils/integrationReadinessView';
-import { describeWshItem, wshItemTrace } from '../../../utils/wshItemView';
+import { describeWshItem, wshItemTrace, wshTarget } from '../../../utils/wshItemView';
+import { INBOUND_SCENE, OUTBOUND_SCENE } from '../../../utils/traceSceneProfiles';
+import { WshFlowCard } from './WshFlowCard';
 import { TONE_BOX } from '../toneClasses';
 import { TraceAnimationPanel } from '../TraceAnimationPanel';
 
@@ -59,7 +61,7 @@ export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) =>
         </button>
       </div>
 
-      <TraceAnimationPanel trace={trace} />
+      <TraceAnimationPanel trace={trace} profile={wshTarget(item) === 'WinThor' ? INBOUND_SCENE : OUTBOUND_SCENE} />
 
       <dl className="bg-card border border-border rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <Fact label="Status no WSH" value={`${item.statusLabel} (STATUS ${item.status || '?'})`} />
@@ -72,6 +74,8 @@ export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) =>
         <Fact label="Itens na requisição" value={item.observation?.records} />
       </dl>
 
+      <WshFlowCard item={item} />
+
       {(item.ownErrors.length > 0 || item.otherErrors.length > 0) && (
         <div className="bg-card border border-border rounded-xl p-4 space-y-3">
           {item.ownErrors.length > 0 && (
@@ -83,7 +87,7 @@ export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) =>
           {item.otherErrors.length > 0 && (
             <div className="space-y-1">
               <p className="text-xs font-semibold text-foreground">Erros de outros itens do mesmo envio ({item.otherErrors.length})</p>
-              <p className="text-2xs text-muted-foreground">O PDVSync recusa a requisição inteira: estes itens derrubaram o envio junto.</p>
+              <p className="text-2xs text-muted-foreground">O {wshTarget(item)} recusa a requisição inteira: estes itens derrubaram o envio junto.</p>
               <ErrorList errors={item.otherErrors} tone="muted" />
             </div>
           )}

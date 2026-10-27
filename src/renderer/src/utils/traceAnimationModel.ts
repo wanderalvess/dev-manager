@@ -7,6 +7,7 @@ import {
   type IntegrationTraceStore
 } from '../../../shared/integrationTypes';
 import { STEP_STATUS_LABELS } from './integrationTraceView';
+import { OUTBOUND_SCENE, type SceneProfile } from './traceSceneProfiles';
 
 /**
  * Modelo puro da vista animada do rastreio: o que o lote percorre, onde para e como as lojas aparecem no fim.
@@ -21,6 +22,8 @@ export interface Point {
 export interface AnimStep {
   id: string;
   label: string;
+  /** Nome no chip do sistema (os sete passos de dentro dos sistemas). */
+  shortLabel: string;
   status: IntegrationStepStatus;
   /** Duração da etapa na animação, derivada da duração real quando existe. */
   animMs: number;
@@ -39,6 +42,8 @@ export interface AnimEndpoint {
 export interface TraceAnimationModel {
   /** Falso para rastreios gravados antes do modelo de passos atual: não há trilho a desenhar. */
   canonical: boolean;
+  /** Envio ou recebimento: o nome dos sistemas e dos passos. */
+  profile: SceneProfile;
   steps: AnimStep[];
   /** Último passo que a animação percorre: o que quebrou, ou a chegada nas lojas. */
   stopIndex: number;
@@ -120,12 +125,12 @@ function storeEndpoint(store: IntegrationTraceStore, index: number): Omit<AnimEn
   };
 }
 
-function buildEndpoints(trace: Pick<IntegrationTraceResult, 'stores' | 'steps'>): AnimEndpoint[] {
+function buildEndpoints(trace: Pick<IntegrationTraceResult, 'stores' | 'steps'>, endpointLabel: string): AnimEndpoint[] {
   const stores = trace.stores ?? [];
   let items: Omit<AnimEndpoint, 'y'>[];
   if (stores.length === 0) {
     const arrival = trace.steps.find((step) => step.id === 'pdv-arrival');
-    items = [{ key: 'pdv', label: 'PDV', status: arrival?.status ?? 'unknown', errors: [], detail: arrival?.message ?? 'Sem status por loja.' }];
+    items = [{ key: 'pdv', label: endpointLabel, status: arrival?.status ?? 'unknown', errors: [], detail: arrival?.message ?? 'Sem status por loja.' }];
   } else if (stores.length <= MAX_VISIBLE_STORES) {
     items = stores.map(storeEndpoint);
   } else {
@@ -148,22 +153,27 @@ function buildEndpoints(trace: Pick<IntegrationTraceResult, 'stores' | 'steps'>)
 }
 
 /** Monta o roteiro da animação. Rastreios antigos, com ids de passo que não existem mais, seguem a ordem guardada. */
-export function buildAnimationModel(trace: Pick<IntegrationTraceResult, 'steps' | 'brokenAt' | 'stores'>): TraceAnimationModel {
+export function buildAnimationModel(
+  trace: Pick<IntegrationTraceResult, 'steps' | 'brokenAt' | 'stores'>,
+  profile: SceneProfile = OUTBOUND_SCENE
+): TraceAnimationModel {
   const byId = new Map(trace.steps.map((step) => [step.id as string, step]));
   const canonical = INTEGRATION_STEP_ORDER.every((id) => byId.has(id));
   const ordered = canonical ? INTEGRATION_STEP_ORDER.map((id) => byId.get(id)!) : trace.steps;
-  const steps: AnimStep[] = ordered.map((step) => ({
+  const steps: AnimStep[] = ordered.map((step, index) => ({
     id: step.id,
-    label: stepLabel(step.id),
+    label: (canonical && profile.stepLabels?.[index]) || stepLabel(step.id),
+    shortLabel: (canonical && profile.shortLabels[index]) || stepLabel(step.id),
     status: step.status,
     animMs: animationStepMs(step.durationMs)
   }));
   const brokenIndex = trace.brokenAt ? steps.findIndex((step) => step.id === trace.brokenAt) : -1;
   return {
     canonical,
+    profile,
     steps,
     stopIndex: brokenIndex >= 0 ? brokenIndex : steps.length - 1,
-    endpoints: buildEndpoints(trace)
+    endpoints: buildEndpoints(trace, profile.endpointLabel)
   };
 }
 
@@ -209,16 +219,6 @@ export const NODE_STEPS: Readonly<Record<SceneNodeKey, readonly IntegrationStepI
   winthor: ['winthor-login', 'winthor-fetch'],
   wsh: ['jolt', 'pdvsync-login'],
   pdvsync: ['open-batch', 'send', 'close-batch']
-};
-
-export const STEP_SHORT_LABELS: Readonly<Partial<Record<IntegrationStepId, string>>> = {
-  'winthor-login': 'Login',
-  'winthor-fetch': 'Busca na API',
-  jolt: 'JOLT',
-  'pdvsync-login': 'Login PDVSync',
-  'open-batch': 'Abertura',
-  send: 'Envio',
-  'close-batch': 'Fechamento'
 };
 
 /** Estado de um passo no desenho: o status provado, ou "não alcançado" enquanto o lote não passou (ou nunca passará). */

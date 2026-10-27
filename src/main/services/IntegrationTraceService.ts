@@ -28,7 +28,14 @@ import { checkPdvSyncLogin, lookupBatch, PdvSyncClient } from './integration/pdv
 import { toPdvSyncSettings } from '../../shared/pdvSyncConfig';
 import { TraceHistoryStore } from './integration/traceHistoryStore';
 import { buildWshSearch, toWshItem, toWshRoute, validateWshSearch, WSH_ROUTES_SQL } from './integration/wshMonitorQuery';
-import type { WshRoutesResponse, WshSearchRequest, WshSearchResponse } from '../../shared/wshMonitorTypes';
+import {
+  WSH_DEPENDENCY_PERIOD_DAYS,
+  type WshDependenciesResponse,
+  type WshRoutesResponse,
+  type WshSearchRequest,
+  type WshSearchResponse
+} from '../../shared/wshMonitorTypes';
+import { buildDependencyQuery, dependencyFlows, toDependencies } from './integration/wshDependencyQuery';
 
 /**
  * Fonte dos traces do APM. No app e no servidor web é o próprio `ApmService` (síncrono); no MCP, que
@@ -216,6 +223,19 @@ export class IntegrationTraceService {
       limit: validation.value.limit,
       lookbackHours: validation.value.lookbackHours
     };
+  }
+
+  /** Última integração de cada fluxo do qual a rota depende (catálogo de fluxos do WSH). Rota sem dependências volta vazia. */
+  public async checkWshDependencies(routeName: string): Promise<WshDependenciesResponse> {
+    const { flow, dependencies } = dependencyFlows(String(routeName ?? ''));
+    const empty = { success: true as const, ...(flow ? { flowId: flow.id } : {}), dependencies: [], periodDays: WSH_DEPENDENCY_PERIOD_DAYS };
+    if (dependencies.length === 0) return empty;
+    const connection = this.wshConnection();
+    if (!connection) return { success: false, error: IntegrationTraceService.NO_WSH_CONNECTION };
+    const { sql, binds } = buildDependencyQuery(dependencies, Date.now());
+    const result = await this.databaseService.executeQuery(connection, sql, dependencies.length, binds);
+    if (!result.success) return { success: false, error: result.error || 'Falha ao consultar as dependências do fluxo.' };
+    return { ...empty, dependencies: toDependencies(dependencies, result.rows ?? []) };
   }
 
   // --- Histórico ---

@@ -12,8 +12,8 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Em <strong className="text-foreground">Rastreio de Integração → Monitor do WSH</strong>, escolha a rota (o fluxo, como{' '}
-            <em>WTA - Buscar Produto PDV</em>), digite o dado (o código do produto, por exemplo) e o status, e clique em Buscar. É a
+            Em <strong className="text-foreground">Rastreio de Integração → Monitor do WSH</strong>, escolha o fluxo (como{' '}
+            <em>FLUXO-09 · Produto</em>), digite o dado (o código do produto, por exemplo) e o status, e clique em Buscar. É a
             mesma busca do monitor do WSH, lida direto da <code className="font-mono text-primary">PCINTEGRACAOCORE</code> pela conexão
             Oracle escolhida na camada WinThor. Não precisa de senha nem de chave do PDVSync.
           </p>
@@ -25,8 +25,18 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
               tem erro. Se o item aberto não tem erro próprio, o Hub mostra quais outros itens do mesmo envio derrubaram tudo.
             </li>
             <li>
+              <strong className="text-foreground">Dependências:</strong> o fluxo só integra bem se os fluxos de que ele depende já
+              chegaram ao PDVSync. O painel <em>Depende destes fluxos</em> mostra a última integração de cada um e marca a causa provável
+              pelo campo recusado: <code className="font-mono text-primary">impostos</code> vazio no Produto aponta o ICMS (FLUXO-07).
+            </li>
+            <li>
+              <strong className="text-foreground">Dois sentidos:</strong> envio (WinThor → PDVSync) e recebimento pelo ERP (vendas, pedidos e
+              caixa: PDVSync → WinThor). O percurso animado desenha o sentido do fluxo.
+            </li>
+            <li>
               <strong className="text-foreground">O que não aparece:</strong> a abertura e o fechamento do lote e a baixa nas lojas não ficam
-              na PCINTEGRACAOCORE; no percurso animado esses passos aparecem como <em>sem evidência</em>.
+              na PCINTEGRACAOCORE; no percurso animado esses passos aparecem como <em>sem evidência</em>. Os processos online do PDVOmni
+              (pré-venda, crédito, estoque) vão direto ao WinThor, sem o WSH.
             </li>
           </ul>
           <p>

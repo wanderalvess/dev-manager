@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Box, FastForward, RotateCcw, Square } from 'lucide-react';
 import type { IntegrationTraceResult } from '../../../../shared/integrationTypes';
 import { buildAnimationModel } from '../../utils/traceAnimationModel';
+import { OUTBOUND_SCENE, type SceneProfile } from '../../utils/traceSceneProfiles';
 import { STEP_STATUS_LABELS } from '../../utils/integrationTraceView';
 import { useTraceReplay } from '../../hooks/integration/useTraceReplay';
 import { TraceAnimationScene } from './TraceAnimationScene';
@@ -28,11 +29,13 @@ interface TraceAnimationPanelProps {
   /** Linha do modo ao vivo, mostrada sob o desenho enquanto a chegada está em andamento. */
   live?: React.ReactNode;
   liveActive?: boolean;
+  /** Sentido do desenho; o padrão é o envio (WinThor → PDVSync). */
+  profile?: SceneProfile;
 }
 
 /** Vista animada do rastreio: o lote percorre as camadas e para onde o rastreio provou que parou. */
-export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace, live, liveActive = false }) => {
-  const model = useMemo(() => buildAnimationModel(trace), [trace]);
+export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace, live, liveActive = false, profile = OUTBOUND_SCENE }) => {
+  const model = useMemo(() => buildAnimationModel(trace, profile), [trace, profile]);
   const { frame, playing, replay, skip, reducedMotion } = useTraceReplay(model, trace.id);
   const [view3d, setView3d] = useState(readView3d);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -53,9 +56,11 @@ export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace,
   const stop = model.steps[model.stopIndex];
   const caption = !frame.done
     ? `Passo ${frame.index + 1} de ${model.steps.length} · ${current?.label ?? ''}`
-    : stop?.id === 'pdv-arrival'
-      ? 'Percurso completo. Clique numa loja para ver o status no PDVSync.'
-      : `O lote parou em: ${stop?.label} (${STEP_STATUS_LABELS[stop?.status ?? 'unknown']}).`;
+    : stop?.id !== 'pdv-arrival'
+      ? `Parou em: ${stop?.label} (${STEP_STATUS_LABELS[stop?.status ?? 'unknown']}).`
+      : model.endpoints.some((endpoint) => endpoint.key !== 'pdv')
+        ? 'Percurso completo. Clique numa loja para ver o status no PDVSync.'
+        : `Percurso completo. Clique em ${model.profile.endpointLabel} para ver o detalhe.`;
   const selected = model.endpoints.find((endpoint) => endpoint.key === selectedKey);
 
   return (

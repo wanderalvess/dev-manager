@@ -65,6 +65,27 @@ export interface WshItem {
   otherErrors: WshItemError[];
 }
 
+/** Situação de um fluxo do qual o item depende, lida da PCINTEGRACAOCORE. */
+export interface WshDependency {
+  flowId: string;
+  flowName: string;
+  route: string;
+  /** Falso quando a rota nunca gravou nada neste banco: o fluxo nunca integrou neste ambiente. */
+  found: boolean;
+  lastAt?: number;
+  lastStatus?: string;
+  lastLabel?: string;
+  lastTone?: WshItemTone;
+  periodTotal: number;
+  periodErrors: number;
+}
+
+export type WshDependenciesResponse =
+  | { success: true; flowId?: string; dependencies: WshDependency[]; periodDays: number }
+  | { success: false; error: string };
+
+export const WSH_DEPENDENCY_PERIOD_DAYS = 30;
+
 export type WshRoutesResponse = { success: true; routes: WshRoute[] } | { success: false; error: string };
 export type WshSearchResponse =
   | { success: true; items: WshItem[]; limit: number; lookbackHours: number }

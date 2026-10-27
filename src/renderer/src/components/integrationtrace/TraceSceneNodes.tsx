@@ -3,7 +3,6 @@ import {
   NODE_STEPS,
   SCENE,
   STEP_POSITIONS,
-  STEP_SHORT_LABELS,
   nodeStatus,
   SCENE_STATUS_LABELS,
   sceneStatus,
@@ -25,10 +24,11 @@ const BORDER: Record<SceneStatus, string> = {
   unreached: 'border-border'
 };
 
-const NODES: { key: SceneNodeKey; label: string; x: number }[] = [
-  { key: 'winthor', label: 'WinThor', x: STEP_POSITIONS[0].x },
-  { key: 'wsh', label: 'WSH', x: STEP_POSITIONS[2].x },
-  { key: 'pdvsync', label: 'PDVSync', x: STEP_POSITIONS[4].x }
+// Posições dos três sistemas; o nome de cada um vem do perfil (envio ou recebimento)
+const NODES: { key: SceneNodeKey; x: number }[] = [
+  { key: 'winthor', x: STEP_POSITIONS[0].x },
+  { key: 'wsh', x: STEP_POSITIONS[2].x },
+  { key: 'pdvsync', x: STEP_POSITIONS[4].x }
 ];
 
 interface NodesProps {
@@ -42,6 +42,7 @@ export const TraceSceneNodes: React.FC<NodesProps> = ({ model, frame }) => {
   return (
     <>
       {NODES.map((node) => {
+        const nodeLabel = model.profile.nodeLabels[node.key];
         const status = nodeStatus(model, frame, node.key);
         const active = !frame.done && current && NODE_STEPS[node.key].includes(current.id as never);
         const dimmed = frame.done && status === 'unreached';
@@ -49,18 +50,18 @@ export const TraceSceneNodes: React.FC<NodesProps> = ({ model, frame }) => {
           <div
             key={node.key}
             role="group"
-            aria-label={node.label}
+            aria-label={nodeLabel}
             className={`absolute -translate-y-1/2 bg-card rounded-xl border-[1.5px] px-3 py-2.5 flex flex-col gap-1.5 transition-colors ${
               active ? 'border-primary' : status === 'failed' ? 'border-danger' : 'border-border'
             } ${dimmed ? 'text-muted-foreground' : 'text-foreground'}`}
             style={{ left: node.x - SCENE.nodeWidth / 2, top: SCENE.nodeY, width: SCENE.nodeWidth }}
           >
-            <span className="text-sm font-semibold leading-tight">{node.label}</span>
+            <span className="text-sm font-semibold leading-tight">{nodeLabel}</span>
             <ul className="flex flex-col gap-1">
               {NODE_STEPS[node.key].map((id) => {
                 const index = model.steps.findIndex((step) => step.id === id);
                 const stepStatus = sceneStatus(model, frame, index);
-                const label = STEP_SHORT_LABELS[id] ?? id;
+                const label = model.steps[index]?.shortLabel ?? id;
                 return (
                   <li
                     key={id}

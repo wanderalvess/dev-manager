@@ -6,7 +6,7 @@ import type {
   IntegrationTraceListItem,
   IntegrationTraceResult
 } from '../../../../shared/integrationTypes';
-import type { WshRoutesResponse, WshSearchRequest, WshSearchResponse } from '../../../../shared/wshMonitorTypes';
+import type { WshDependenciesResponse, WshRoutesResponse, WshSearchRequest, WshSearchResponse } from '../../../../shared/wshMonitorTypes';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
 
@@ -41,6 +41,8 @@ export function createIntegrationApi({ apiFetch }: BridgeDeps) {
 
     integrationWshRoutes: (): Promise<WshRoutesResponse> => apiFetch('/api/integration/wsh/routes'),
 
-    integrationWshSearch: (request: WshSearchRequest): Promise<WshSearchResponse> => post('/api/integration/wsh/search', request)
+    integrationWshSearch: (request: WshSearchRequest): Promise<WshSearchResponse> => post('/api/integration/wsh/search', request),
+
+    integrationWshDependencies: (route: string): Promise<WshDependenciesResponse> => post('/api/integration/wsh/dependencies', { route })
   } satisfies Partial<ElectronAPI>;
 }

@@ -312,7 +312,7 @@ interface definida e implementação que devolve `unknown`.
 | Nº | O que coletar | Bloqueia | Resposta |
 |----|---------------|----------|----------|
 | P1 | API de lote do CH (PDVSync) | Fase 2 | **Contrato conhecido** pelo repositório de layouts ([referência](../referencia-wsh-pdvsync.md)). Falta: ambiente usado (nuvem, homologação ou cópia local), inquilino, credenciais (ficam com você) e respostas reais de três lotes |
-| P2 | WSH: como disparar um fluxo, onde loga e como o lote aparece no log | Fase 3 | **Parcial**: os fluxos rodam por agendamento (vendas 300 s, status de lote 600 s). Falta: como forçar a execução, o log do WSH e as linhas com o lote |
+| P2 | WSH: como disparar um fluxo, onde loga e como o lote aparece no log | Fase 3 | **Parcial**: os fluxos rodam por agendamento, com intervalo configurado por cliente. Falta: como forçar a execução, o log do WSH e as linhas com o lote |
 | P3 | Os serviços WinThor no Karaf exportam OTLP para o APM do app, ou só log? Qual arquivo de log | Fase 3 | _pendente_ |
 | P4 | Tabela e colunas do Postgres do PDV que provam a chegada | Fase 4 | _pendente_, **menos crítica**: o PDVSync informa o status do lote por loja |
 | P5 | O CH do ambiente é a nuvem, uma cópia local ou um simulador? Serviços, porta e log | Fases 1 (health) e 4 (log) | _pendente_ |
@@ -362,6 +362,15 @@ credencial do PDVSync:
 - **O que a tabela não prova:** abertura e fechamento do lote e a baixa nas lojas ficam *sem evidência* no percurso. O FLUXO-24
   (*Atualizar Status Lote Retaguarda*) grava o status por loja (`pdvsync-post-status-...`), mas não roda no ambiente coletado.
 - **Rastrear lote e o cliente do PDVSync continuam**, como complemento para quem tiver as credenciais; deixam de ser o caminho principal.
+- **Catálogo de fluxos (WORKFLOW_PDVSYNC):** `shared/wshFlowCatalog.ts` liga a rota ao fluxo (nome, categoria, sentido, API,
+  tabelas, se roda por agendamento e dependências; o intervalo é de cada cliente e não entra no catálogo). O filtro mostra "FLUXO-09 · Produto" agrupado por categoria; rota fora do catálogo aparece
+  pelo nome, em "Outras rotas".
+- **Sentido:** o percurso usa o perfil de envio (WinThor → WSH → PDVSync → PDV) ou de recebimento (PDVSync → WSH → WinThor →
+  retaguarda). Fora do catálogo, o prefixo da rota decide (`PDVSYNC -` = recebimento).
+- **Dependências:** no detalhe, a última integração e os erros dos últimos 30 dias de cada fluxo do qual o item depende, numa
+  consulta agregada por rota. "Nunca integrou neste banco" quando a rota não tem linha. O campo recusado aponta a causa provável
+  (`impostos` → ICMS, `pisCofins` → PIS/COFINS, `ncms` → NCM). A tool `integration_check_wsh` devolve as dependências quando recebe `routeId`.
+- **Processos online** (PDVOmni → WinThor direto) ficam para uma próxima etapa: não passam pelo WSH.
 
 ### Decisões da vista animada e do modo ao vivo
 

@@ -22,10 +22,11 @@ export const IntegrationTraceModuleCard: React.FC<ModuleCardProps> = ({ onNaviga
       checkClass="text-primary"
     >
       <span>
-        <strong>Monitor do WSH:</strong> filtre por rota (o fluxo), pelo dado (código do produto, da cobrança...) e pelo status, como no
+        <strong>Monitor do WSH:</strong> filtre pelo fluxo (FLUXO-09 · Produto, FLUXO-16 · Vendas...), pelo dado (código do produto, da cobrança...) e pelo status, como no
         monitor do próprio WSH. O Hub lê a <code className="font-mono text-primary">PCINTEGRACAOCORE</code> pela conexão Oracle da camada
         WinThor, sem credencial do PDVSync, e mostra quando o item foi buscado e enviado, a resposta do PDVSync e os erros, separando o
-        erro do próprio item dos erros de outros itens que derrubaram o mesmo envio.
+        erro do próprio item dos erros de outros itens que derrubaram o mesmo envio. Mostra também a situação dos fluxos de que ele
+        depende, apontando a causa provável (impostos vazio no Produto → ICMS).
       </span>
       <span>
         <strong>Pré-voo das camadas:</strong> o botão <em>Conferir agora</em> verifica WinThor, WSH, CH e PDV em paralelo:

@@ -20,4 +20,5 @@ export function registerIntegrationHandlers(ctx: IpcContext): void {
   // Monitor do WSH: só leitura no Oracle; consultar não é uma automação nova, por isso fica fora das métricas de uso
   ipcMain.handle('integration:wsh-routes', () => integrationTraceService.listWshRoutes());
   ipcMain.handle('integration:wsh-search', (_, request: WshSearchRequest) => integrationTraceService.searchWsh(request));
+  ipcMain.handle('integration:wsh-dependencies', (_, route: string) => integrationTraceService.checkWshDependencies(route));
 }

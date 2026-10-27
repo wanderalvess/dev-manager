@@ -49,7 +49,7 @@ A ordem real difere da que eu havia descrito: o login no PDVSync e a abertura do
 
 `Login PDVSync` → `Buscar vendas` (GET do inquilino em `preVendaMensagens` ou `vendaMensagens`, conforme o ambiente) → `Login WinThor` →
 `Enviar venda` (POST `/winthor/varejo/v1/movimentacao/venda`) → `Atualizar status venda` (PUT `vendaMensagens` com
-`idMensagem` e `status`). Roda a cada 300 s.
+`idMensagem` e `status`). Roda por agendamento (300 s no layout padrão).
 
 ## 3. Contrato do lote no PDVSync
 
@@ -131,8 +131,10 @@ O `{{TIPO_LOTE}}` é um SELECT que devolve um código fixo por rota de busca. Os
 
 ## 4. Agendamento
 
-Os fluxos não são disparados à mão: o WSH os executa por agendamento. Valores do repositório: vendas a cada 300 s, consulta de
-status do lote a cada 600 s. Ativar ou desativar um fluxo é a coluna `ATIVO` de `PCINTEGRACAOFLUXOEXECUCAO` (nos fluxos que li, Vendas e Produto,
+Os fluxos não são disparados à mão: o WSH os executa por agendamento. **O intervalo é configuração de cada cliente**
+(`PCINTEGRACAOAGENDAMENTO.AGENDAMENTOSEGUNDOS`): por isso o repositório traz 600 s para a consulta de status do lote e o
+levantamento WORKFLOW_PDVSYNC traz 300 s, e nenhum dos dois vale para todo ambiente. Os layouts sugerem 300 s para vendas,
+monitor de vendas, movimento de caixa e pedidos. O Hub não fixa intervalo: só indica que o fluxo roda por agendamento. Ativar ou desativar um fluxo é a coluna `ATIVO` de `PCINTEGRACAOFLUXOEXECUCAO` (nos fluxos que li, Vendas e Produto,
 os layouts vêm com `N`).
 
 ## 5. O que isso muda no Rastreio de Integração
@@ -145,6 +147,23 @@ os layouts vêm com `N`).
 | Chegada ao PDV | Só por SQL no Postgres | Pelo status por loja na API do PDVSync, com o SQL do banco do PDV como confirmação |
 | Disparar fluxo (P2) | Esperava uma API do WSH | Há agendamento. Falta saber como forçar a execução |
 | Lote atual ou preso | Desconhecido | Provável variável `{{LOTE_ORIGEM}}` no Oracle (a confirmar) |
-| Execuções do WSH | Só logs | `PCINTEGRACAOCORE` e as tabelas de fluxo guardam o histórico (a descrever) |
+| Execuções do WSH | Só logs | **Monitor do WSH**: cada item na `PCINTEGRACAOCORE`, com status (2 integrado, 3 erro) e a resposta do PDVSync na `OBSERVACAO` |
 
 Perguntas que continuam abertas estão em [roteiro-coleta-integracao.md](roteiro-coleta-integracao.md).
+
+## 6. Catálogo dos fluxos e dependências (WORKFLOW_PDVSYNC)
+
+O levantamento WORKFLOW_PDVSYNC (serviço `winthor-integracao-core`, 38 fluxos e 87 rotas) está codificado em
+`src/shared/wshFlowCatalog.ts`, que o Monitor do WSH usa para nomear a rota pelo fluxo, desenhar o sentido certo e mostrar as dependências.
+
+- **Envio (WinThor → PDVSync):** 01-14, 17, 21, 23, 26-36 e 38. A rota `WTA - Buscar ...` cria a linha; a `PDVSYNC - ...` envia.
+- **Recebimento pelo ERP (PDVSync → WinThor):** 15 (caixa), 16 (vendas), 19 (pedido recebido), 20 (pedido cancelado) e 37
+  (cliente). A rota `PDVSYNC - BUSCAR ...` cria a linha; a `WTA - Enviar ...` grava no WinThor.
+- **Monitor:** 18 (status pedido), 24 (status do lote) e 25 (status venda). **Utilitário:** 22 (registrar IP).
+- **Processos online (fora do WSH):** 12 endpoints do PDVOmni vão direto ao WinThor (pré-venda, crédito, estoque, nota de
+  entrada e saída, formas e condições do cliente). Não passam pela `PCINTEGRACAOCORE`.
+
+**Dependências.** Um fluxo só integra bem se os fluxos de que ele depende já estão no PDVSync; senão os `idRetaguarda*`
+referenciados não existem. A mais importante: **Produto (09) depende de ICMS (07), PIS/COFINS (06) e NCM (05)**, que ele
+embute em `impostos[]`, `pisCofins[]` e `ncms[]`. O erro `impostos: O campo não pode ser nulo ou vazio` da coleta é esse caso.
+Estoque e todos os preços dependem do Produto. A tabela completa está no catálogo.

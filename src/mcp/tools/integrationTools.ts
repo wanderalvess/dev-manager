@@ -82,7 +82,7 @@ export function registerIntegrationTools(server: McpServer, { integrationTraceSe
     {
       title: 'Consultar o monitor do WSH',
       description:
-        'Consulta o que o WSH (Winthor Smart Hub) gravou na PCINTEGRACAOCORE do Oracle, sem credencial do PDVSync: cada linha é um item (produto, preço, cobrança...) buscado no WinThor por uma rota de busca e enviado ao PDVSync pela rota de envio. Filtra por rota (routeId), trecho do IDEXTERNO (ex.: código do produto), status (error = STATUS 3, ok = STATUS 2) e período. Devolve status, tentativas, datas da busca e do envio, a resposta do PDVSync lida da OBSERVACAO e os erros separados em ownErrors (citam o item) e otherErrors (outros itens do mesmo envio: o PDVSync recusa a requisição inteira). Só leitura; usa a conexão Oracle da camada WinThor.',
+        'Consulta o que o WSH (Winthor Smart Hub) gravou na PCINTEGRACAOCORE do Oracle, sem credencial do PDVSync: cada linha é um item (produto, preço, cobrança...) buscado no WinThor por uma rota de busca e enviado ao PDVSync pela rota de envio. Filtra por rota (routeId), trecho do IDEXTERNO (ex.: código do produto), status (error = STATUS 3, ok = STATUS 2) e período. Devolve status, tentativas, datas da busca e do envio, a resposta do PDVSync lida da OBSERVACAO e os erros separados em ownErrors (citam o item) e otherErrors (outros itens do mesmo envio: o PDVSync recusa a requisição inteira). Com routeId, devolve também dependencies: a última integração de cada fluxo do qual ele depende (ex.: Produto depende de ICMS, PIS/COFINS e NCM; found=false significa que o fluxo nunca integrou neste banco). Vale para envio (WinThor → PDVSync) e recebimento (vendas, pedidos e caixa: PDVSync → WinThor). Só leitura; usa a conexão Oracle da camada WinThor.',
       inputSchema: {
         routeId: z.number().int().positive().optional().describe('Id da rota de busca (PCINTEGRACAOROTASERVICO.ID); sem ele, todas'),
         text: z.string().optional().describe('Trecho do IDEXTERNO, como "produto-1000" ou o código do item'),
@@ -95,7 +95,11 @@ export function registerIntegrationTools(server: McpServer, { integrationTraceSe
       try {
         const [routes, response] = await Promise.all([integrationTraceService.listWshRoutes(), integrationTraceService.searchWsh(request)]);
         if (!response.success) return error(response.error);
-        return reply({ ...response, routes: routes.success ? routes.routes : [] });
+        const routeList = routes.success ? routes.routes : [];
+        // Com o fluxo escolhido, junta a situação dos fluxos de que ele depende (a causa provável de muitos erros)
+        const routeName = request.routeId ? routeList.find((route) => route.id === request.routeId)?.name : undefined;
+        const dependencies = routeName ? await integrationTraceService.checkWshDependencies(routeName) : undefined;
+        return reply({ ...response, routes: routeList, ...(dependencies?.success ? { dependencies: dependencies.dependencies } : {}) });
       } catch (err: any) {
         return error(err?.message || 'Falha ao consultar o monitor do WSH.');
       }

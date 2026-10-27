@@ -63,6 +63,24 @@ describe('wshItemTrace', () => {
   });
 });
 
+describe('recebimento pelo ERP', () => {
+  const venda = (overrides: Partial<WshItem> = {}) =>
+    item({ route: 'PDVSYNC - Buscar vendas', sendRoute: 'WTA - Enviar venda', externalId: 'pdvsync-vendamensagem-3518.0-x', ...overrides });
+
+  it('venda com erro: o WinThor recusou, e a quebra fica no envio ao WinThor', () => {
+    const trace = wshItemTrace(venda({ ownErrors: [{ field: 'filial', messages: ['inexistente'] }], otherErrors: [] }));
+    expect(describeWshItem(venda({ otherErrors: [] , ownErrors: [{ field: 'filial', messages: ['inexistente'] }] })).title).toBe('O WinThor recusou este item');
+    expect(trace.brokenAt).toBe('open-batch');
+    expect(trace.steps[1].message).toContain('Buscado no PDVSync pela rota PDVSYNC - Buscar vendas');
+  });
+
+  it('venda integrada: WinThor respondeu e confirmou; o status de volta ao PDVSync fica sem evidência', () => {
+    const trace = wshItemTrace(venda({ tone: 'ok', status: '2', statusLabel: 'Integrado', otherErrors: [] }));
+    expect(trace.steps.map((s) => s.status)).toEqual(['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'unknown', 'ok']);
+    expect(describeWshItem(venda({ tone: 'ok' })).title).toBe('Integrado no WinThor');
+  });
+});
+
 describe('wshItemMarkdown', () => {
   it('resume o item e lista os erros do envio', () => {
     const md = wshItemMarkdown(item());

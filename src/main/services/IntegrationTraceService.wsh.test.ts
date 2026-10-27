@@ -38,6 +38,19 @@ describe('IntegrationTraceService: monitor do WSH', () => {
     expect(binds).toMatchObject({ texto: '%1000%' });
   });
 
+  it('dependências: consulta só as rotas das dependências; fluxo sem dependências nem vai ao banco', async () => {
+    const executeQuery = vi.fn(async () => ({ success: true, rows: [{ ROTA: 'WTA - BUSCAR ICMS', ULTIMO_STATUS: '2', TOTAL_PERIODO: 3, ERROS_PERIODO: 0 }] }));
+    const { service } = makeService(withConnection, { executeQuery });
+
+    const produto = await service.checkWshDependencies('WTA - Buscar Produto PDV');
+    const icms = await service.checkWshDependencies('WTA - Buscar ICMS');
+
+    expect(produto).toMatchObject({ success: true, flowId: '09', periodDays: 30 });
+    expect(produto.success && produto.dependencies.map((d) => [d.flowId, d.found])).toEqual([['07', true], ['06', false], ['05', false]]);
+    expect(icms).toEqual({ success: true, flowId: '07', dependencies: [], periodDays: 30 });
+    expect(executeQuery).toHaveBeenCalledTimes(1);
+  });
+
   it('entrada inválida e erro do banco voltam como mensagem, nunca exceção', async () => {
     const executeQuery = vi.fn(async () => ({ success: false, error: 'ORA-00942: table or view does not exist' }));
     const { service } = makeService(withConnection, { executeQuery });

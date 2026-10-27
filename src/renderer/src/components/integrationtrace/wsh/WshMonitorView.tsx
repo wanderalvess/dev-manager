@@ -43,6 +43,10 @@ export const WshMonitorView: React.FC<WshMonitorViewProps> = ({ settingsVersion,
             Escolha a rota e o dado, como no monitor do WSH, e clique em Buscar. O Hub lê a PCINTEGRACAOCORE pela conexão Oracle da
             camada WinThor, só leitura e sem credencial do PDVSync, e mostra o status, a resposta do PDVSync e em que ponto o item parou.
           </p>
+          <p className="text-2xs text-muted-foreground">
+            Vale para os dois sentidos: envio (WinThor → PDVSync) e recebimento pelo ERP (vendas, pedidos e caixa). Os processos online do
+            PDVOmni, como pré-venda e crédito, vão direto ao WinThor sem passar pelo WSH e não aparecem aqui.
+          </p>
         </div>
       ) : monitor.items.length === 0 ? (
         <p className="bg-card border border-border rounded-xl p-6 text-xs text-muted-foreground">Nenhum item encontrado com esses filtros.</p>

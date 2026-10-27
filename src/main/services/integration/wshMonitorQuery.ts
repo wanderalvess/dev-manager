@@ -84,13 +84,13 @@ export function buildWshSearch(search: ValidWshSearch, now: number): { sql: stri
   return { sql, binds };
 }
 
-type Row = Record<string, unknown>;
+export type Row = Record<string, unknown>;
 
 /** O driver pode devolver as colunas em maiúsculas ou minúsculas. */
-const col = (row: Row, name: string): unknown => row[name.toUpperCase()] ?? row[name.toLowerCase()];
-const asNumber = (value: unknown) => (value === null || value === undefined || value === '' ? undefined : Number(value));
-const asText = (value: unknown) => (value === null || value === undefined ? undefined : String(value));
-function asEpoch(value: unknown): number | undefined {
+export const col = (row: Row, name: string): unknown => row[name.toUpperCase()] ?? row[name.toLowerCase()];
+export const asNumber = (value: unknown) => (value === null || value === undefined || value === '' ? undefined : Number(value));
+export const asText = (value: unknown) => (value === null || value === undefined ? undefined : String(value));
+export function asEpoch(value: unknown): number | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   const time = value instanceof Date ? value.getTime() : new Date(String(value)).getTime();
   return Number.isFinite(time) ? time : undefined;
