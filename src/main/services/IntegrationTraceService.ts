@@ -32,11 +32,14 @@ import { buildWshSearch, toWshItem, toWshRoute, validateWshSearch, WSH_ROUTES_SQ
 import {
   WSH_DEPENDENCY_PERIOD_DAYS,
   type WshDependenciesResponse,
+  type WshLayoutRequest,
+  type WshLayoutResponse,
   type WshRoutesResponse,
   type WshSearchRequest,
   type WshSearchResponse
 } from '../../shared/wshMonitorTypes';
 import { buildDependencyQuery, dependencyFlows, toDependencies } from './integration/wshDependencyQuery';
+import { buildLayoutQuery, toRouteLayouts, validateLayoutRequest } from './integration/wshLayoutQuery';
 
 /**
  * Fonte dos traces do APM. No app e no servidor web é o próprio `ApmService` (síncrono); no MCP, que
@@ -243,6 +246,18 @@ export class IntegrationTraceService {
     const result = await this.databaseService.executeQuery(connection, sql, dependencies.length, binds);
     if (!result.success) return { success: false, error: result.error || 'Falha ao consultar as dependências do fluxo.' };
     return { ...empty, dependencies: toDependencies(dependencies, result.rows ?? []) };
+  }
+
+  /** Nível 2 do "Como resolver": as regras do JOLT das rotas do item que montam os campos recusados. Só leitura. */
+  public async explainWshLayout(request: Partial<WshLayoutRequest>): Promise<WshLayoutResponse> {
+    const validation = validateLayoutRequest(request);
+    if (!validation.ok) return { success: false, error: validation.error };
+    const connection = this.wshConnection();
+    if (!connection) return { success: false, error: IntegrationTraceService.NO_WSH_CONNECTION };
+    const { sql, binds } = buildLayoutQuery(validation.value.routes);
+    const result = await this.databaseService.executeQuery(connection, sql, validation.value.routes.length, binds);
+    if (!result.success) return { success: false, error: result.error || 'Falha ao ler o layout das rotas do WSH.' };
+    return { success: true, layouts: toRouteLayouts(validation.value, result.rows ?? []) };
   }
 
   // --- Histórico ---

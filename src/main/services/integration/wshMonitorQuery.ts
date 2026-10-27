@@ -64,13 +64,14 @@ export function buildWshSearch(search: ValidWshSearch, now: number): { sql: stri
     binds.rota = search.routeId;
   }
   if (search.text) {
-    where.push(`upper(c.idexterno) like :texto escape '\\'`);
+    // IDINTERNO traz o que o negócio procura nas transações (venda: filial-série-cupom, ex.: 1-3-10905)
+    where.push(`(upper(c.idexterno) like :texto escape '\\' or upper(c.idinterno) like :texto escape '\\')`);
     binds.texto = `%${escapeLike(search.text.toUpperCase())}%`;
   }
   if (search.status === 'error') where.push(`c.status = '3'`);
   if (search.status === 'ok') where.push(`c.status = '2'`);
   const sql = `select * from (
-  select c.id, c.status, c.tentativas, c.idexterno, c.datacriacao, c.datasincronismo, c.dtultalter,
+  select c.id, c.status, c.tentativas, c.idexterno, c.idinterno, c.datacriacao, c.datasincronismo, c.dtultalter,
          r.servico as rota, re.servico as rota_envio, c.idrequisicaoenvio,
          case when c.dadostransformados is null then 0 else 1 end as tem_transformado,
          dbms_lob.substr(c.observacao, ${OBSERVATION_READ_CHARS}, 1) as observacao,
@@ -102,6 +103,7 @@ export function toWshRoute(row: Row): WshRoute {
 
 export function toWshItem(row: Row): WshItem {
   const externalId = asText(col(row, 'idexterno')) ?? '';
+  const internalId = asText(col(row, 'idinterno'));
   const status = asText(col(row, 'status')) ?? '';
   const { label, tone } = describeWshStatus(status);
   const observation = parseObservation(asText(col(row, 'observacao')), asNumber(col(row, 'observacao_tamanho')));
@@ -119,6 +121,7 @@ export function toWshItem(row: Row): WshItem {
     tone,
     ...(attempts !== undefined ? { attempts } : {}),
     externalId,
+    ...(internalId ? { internalId } : {}),
     route: asText(col(row, 'rota')) ?? '',
     ...(sendRoute ? { sendRoute } : {}),
     ...(requestId ? { requestId } : {}),

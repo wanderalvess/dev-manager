@@ -54,5 +54,9 @@ export function createIntegrationRouter(integrationTraceService: IntegrationTrac
     res.json(await integrationTraceService.checkWshDependencies(String(req.body?.route ?? '')));
   });
 
+  router.post('/wsh/layout', async (req: Request, res: Response) => {
+    res.json(await integrationTraceService.explainWshLayout(req.body ?? {}));
+  });
+
   return router;
 }

@@ -14,7 +14,8 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
           <p>
             Em <strong className="text-foreground">Rastreio de Integração → Monitor do WSH</strong>, escolha o fluxo (como{' '}
             <em>FLUXO-09 · Produto</em>), digite o dado (o código do produto, por exemplo) e o status, e clique em Buscar. É a
-            mesma busca do monitor do WSH, lida direto da <code className="font-mono text-primary">PCINTEGRACAOCORE</code> pela conexão
+            mesma busca do monitor do WSH (o dado procura no IDEXTERNO e no IDINTERNO, então o cupom acha a venda: o IDINTERNO da venda é
+            filial-série-cupom, como 1-3-10905), lida direto da <code className="font-mono text-primary">PCINTEGRACAOCORE</code> pela conexão
             Oracle escolhida na camada WinThor. Não precisa de senha nem de chave do PDVSync.
           </p>
           <ul className="list-disc pl-4 space-y-1.5">
@@ -23,6 +24,13 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
             <li>
               <strong className="text-foreground">Recusado junto com o envio:</strong> o PDVSync recusa a requisição inteira quando um item
               tem erro. Se o item aberto não tem erro próprio, o Hub mostra quais outros itens do mesmo envio derrubaram tudo.
+            </li>
+            <li>
+              <strong className="text-foreground">Como resolver:</strong> num item com erro, o primeiro bloco diz o que fazer, em ordem:
+              corrigir os itens que derrubaram o envio, o valor fora da lista aceita pelo PDVSync, o campo que foi vazio e a dependência
+              que não integrou, com o link do TDN quando o PDVSync manda. Logo abaixo, <em>Como o WSH monta</em> mostra as regras do JOLT
+              da rota (lidas do Oracle do ambiente) que escrevem o campo recusado, com a regra que valeu para o item destacada. Ex.: a
+              cobrança PIXS cai na regra <code className="font-mono text-primary">PIX*</code> → <code className="font-mono text-primary">tipo = 8</code>.
             </li>
             <li>
               <strong className="text-foreground">Dependências:</strong> o fluxo só integra bem se os fluxos de que ele depende já

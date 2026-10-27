@@ -78,7 +78,7 @@ export const WshMonitorFilters: React.FC<WshMonitorFiltersProps> = (props) => (
           value={props.text}
           onChange={(e) => props.onTextChange(e.target.value)}
           className={`${FIELD_CLASS} w-52 font-mono font-normal`}
-          placeholder="produto-1000 ou PIX"
+          placeholder="produto-1000, PIX ou cupom 10905"
           autoComplete="off"
           spellCheck={false}
         />

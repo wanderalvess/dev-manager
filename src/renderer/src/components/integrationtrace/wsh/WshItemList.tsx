@@ -36,7 +36,10 @@ export const WshItemList: React.FC<WshItemListProps> = ({ items, selectedId, onS
             }`}
           >
             <span className="flex items-center justify-between gap-2">
-              <span className="font-mono text-xs text-foreground truncate" title={item.externalId}>{item.externalId}</span>
+              {/* Transação (venda, pedido) mostra o IDINTERNO, que é o que se procura (filial-série-cupom); o resto, o IDEXTERNO */}
+              <span className="font-mono text-xs text-foreground truncate" title={item.externalId}>
+                {item.internalId ?? item.externalId}
+              </span>
               <span className={`px-2 py-0.5 rounded-full text-2xs font-medium shrink-0 ${WSH_TONE_BADGE[item.tone]}`}>{item.statusLabel}</span>
             </span>
             <span className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">

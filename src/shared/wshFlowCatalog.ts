@@ -23,11 +23,45 @@ export interface WshFlow {
   dependsOn?: string[];
   /** Campo do erro do PDVSync → fluxo que o preenche (o Produto embute impostos, PIS/COFINS e NCM). */
   fieldHints?: Record<string, string>;
+  /**
+   * Campo da saída → de onde o JOLT o tira na entrada, conferido num par real de entrada e saída do mesmo registro.
+   * Aponta onde olhar quando o destino recusa um valor.
+   */
+  fieldOrigins?: Record<string, string>;
   /** Roda por agendamento. O intervalo é de cada cliente (PCINTEGRACAOAGENDAMENTO), por isso o catálogo não fixa um valor. */
   scheduled?: boolean;
 }
 
 const flow = (f: WshFlow) => f;
+
+/**
+ * Vendas (FLUXO-16): de onde sai cada campo enviado ao WinThor. Conferido no par real da venda 50277 / cupom 10905
+ * (2026-10-23): a entrada é o `conteudo` em Base64 que o PDVSync devolve, decodificado pela custom-totvs.
+ */
+const VENDA_ORIGINS: Record<string, string> = {
+  numCupom: 'Ccf',
+  idInterno: 'NumeroLoja-SerieNota-Ccf (filial-série-cupom)',
+  idExterno: '"pdvsync-vendamensagem-" + id + dataAtualizacao da mensagem no PDVSync',
+  chaveNfce: 'ChaveAcesso',
+  chaveNfe: 'ChaveAcesso',
+  serieNota: 'SerieNota',
+  codFilial: 'Loja.IdRetaguarda',
+  numCaixa: 'NumeroPdv',
+  codFuncCx: 'Operador.IdRetaguarda',
+  codEmitente: 'Operador.IdRetaguarda',
+  codCli: 'Cliente.IdRetaguarda',
+  codCob: 'VendaPagamentos[].PagamentoForma.IdRetaguarda',
+  codPlPag: 'VendaPagamentos[].PagamentoCondicao.IdRetaguarda',
+  codProd: 'VendaItems[].Produto.IdRetaguarda',
+  codAuxiliar: 'VendaItems[].IdProdutoEmbalagemRetaguarda',
+  codUsur: 'VendaItems[].Vendedor.IdRetaguarda, sem o prefixo "RCA-"',
+  idPreVenda: 'IdPreVenda',
+  numero: 'PreVenda.Numero',
+  vlTabela: 'ValorBruto',
+  vlTotal: 'ValorLiquido',
+  vlAtend: 'ValorLiquido',
+  xml: 'VendaCustodiaXml[].Xml (XML em Base64, repassado como veio)'
+};
 
 export const WSH_FLOWS: readonly WshFlow[] = [
   flow({ id: '01', name: 'Compartilhamento Master', category: 'Compartilhamentos e filiais', direction: 'envio', searchRoute: 'WTA - PDVSYNC COMPARTILHAMENTO MASTER', sendRoute: 'PDVSYNC - ENVIAR COMPARTILHAMENTOS', pdvTables: ['compartilhamento'] }),
@@ -60,7 +94,7 @@ export const WSH_FLOWS: readonly WshFlow[] = [
   flow({ id: '28', name: 'Ramo de Atividade', category: 'Clientes e cadastros', direction: 'envio', searchRoute: 'WTA - Buscar Ramo Atividade', sendRoute: 'PDVSYNC - SALVAR RAMO ATIVIDADE', apiPath: '/winthor/cliente/v1/ramoatividade', apiProject: 'winthor-integracao-cliente', oracleTables: ['PCATIVI'], pdvTables: ['ramo_atividade'] }),
   flow({ id: '31', name: 'Grupo Campanha Cliente', category: 'Clientes e cadastros', direction: 'envio', searchRoute: 'WTA - Buscar Grupo Campanha Cliente', sendRoute: 'PDVSYNC - SALVAR GRUPO CAMPANHA CLIENTE', apiPath: '/winthor/cliente/v1/grupoCampanha', apiProject: 'winthor-integracao-cliente', oracleTables: ['PCGRUPOSCAMPANHAC', 'PCGRUPOSCAMPANHAI'], pdvTables: ['grupo_cliente'], dependsOn: ['17', '02'] }),
   flow({ id: '15', name: 'Movimentações de Caixa', category: 'Recebimento pelo ERP', direction: 'recebimento', searchRoute: 'PDVSYNC - BUSCAR MOVIMENTACOES CAIXA', sendRoute: 'WTA - Enviar movimentacao caixa', apiPath: '/winthor/varejo/v1/movimentacao', apiProject: 'winthor-integracao-varejo', dependsOn: ['14', '13'], scheduled: true }),
-  flow({ id: '16', name: 'Vendas', category: 'Recebimento pelo ERP', direction: 'recebimento', searchRoute: 'PDVSYNC - BUSCAR VENDAS', sendRoute: 'WTA - Enviar venda', apiPath: '/winthor/varejo/v1/movimentacao/venda', apiProject: 'winthor-integracao-varejo', dependsOn: ['09', '17', '14'], scheduled: true }),
+  flow({ id: '16', name: 'Vendas', category: 'Recebimento pelo ERP', direction: 'recebimento', searchRoute: 'PDVSYNC - BUSCAR VENDAS', sendRoute: 'WTA - Enviar venda', apiPath: '/winthor/varejo/v1/movimentacao/venda', apiProject: 'winthor-integracao-varejo', dependsOn: ['09', '17', '14'], scheduled: true, fieldOrigins: VENDA_ORIGINS }),
   flow({ id: '19', name: 'Pedido Recebido', category: 'Recebimento pelo ERP', direction: 'recebimento', searchRoute: 'PDVSYNC - BUSCAR PEDIDOS RECEBIDO', sendRoute: 'WTA - ENVIAR PEDIDO RECEBIDO', apiPath: '/winthor/varejo/matcon/v1/orders/pdvsync', apiProject: 'winthor-integracao-matcon', dependsOn: ['09', '17'], scheduled: true }),
   flow({ id: '20', name: 'Pedido Cancelado', category: 'Recebimento pelo ERP', direction: 'recebimento', searchRoute: 'PDVSYNC - BUSCAR PEDIDOS CANCELADA', sendRoute: 'WTA - ENVIAR PEDIDO CANCELADO', apiPath: '/winthor/varejo/matcon/v1/orders/pdvsync', apiProject: 'winthor-integracao-matcon', dependsOn: ['09', '17'], scheduled: true }),
   flow({ id: '37', name: 'Cadastrar Cliente Retaguarda', category: 'Recebimento pelo ERP', direction: 'recebimento', searchRoute: 'PDVSYNC - BUSCAR CLIENTES', sendRoute: 'WTA - ENVIAR CLIENTE', dependsOn: ['17'] }),

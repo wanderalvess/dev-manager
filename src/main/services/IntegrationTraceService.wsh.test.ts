@@ -51,6 +51,20 @@ describe('IntegrationTraceService: monitor do WSH', () => {
     expect(executeQuery).toHaveBeenCalledTimes(1);
   });
 
+  it('layout: lê a LAYOUTTRANSFORMACAO das rotas por bind e devolve as regras do campo', async () => {
+    const layout = JSON.stringify([{ operation: 'shift', spec: { items: { '*': { '@(1,id)': { 'PIX*': { '#8': 'items.[&3].tipo' } } } } } }]);
+    const executeQuery = vi.fn(async () => ({ success: true, rows: [{ SERVICO: 'WTA - Buscar tipos cobrancas', LAYOUTTRANSFORMACAO: layout }] }));
+    const { service } = makeService(withConnection, { executeQuery });
+
+    const response = await service.explainWshLayout({ routes: ['WTA - Buscar tipos cobrancas'], fields: ['tipo'], itemIds: ['PIXS'] });
+
+    expect(response).toMatchObject({ success: true, layouts: [{ found: true, fields: [{ field: 'tipo', mappings: [{ value: '8', matches: ['PIXS'] }] }] }] });
+    const [, sql, , binds] = executeQuery.mock.calls[0] as unknown as [unknown, string, number, Record<string, string>];
+    expect(sql).not.toContain('PIX');
+    expect(binds).toEqual({ r0: 'WTA - BUSCAR TIPOS COBRANCAS' });
+    expect(await service.explainWshLayout({ routes: [], fields: ['tipo'] })).toMatchObject({ success: false });
+  });
+
   it('entrada inválida e erro do banco voltam como mensagem, nunca exceção', async () => {
     const executeQuery = vi.fn(async () => ({ success: false, error: 'ORA-00942: table or view does not exist' }));
     const { service } = makeService(withConnection, { executeQuery });

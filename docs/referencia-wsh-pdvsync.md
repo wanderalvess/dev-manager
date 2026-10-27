@@ -167,3 +167,20 @@ O levantamento WORKFLOW_PDVSYNC (serviço `winthor-integracao-core`, 38 fluxos e
 referenciados não existem. A mais importante: **Produto (09) depende de ICMS (07), PIS/COFINS (06) e NCM (05)**, que ele
 embute em `impostos[]`, `pisCofins[]` e `ncms[]`. O erro `impostos: O campo não pode ser nulo ou vazio` da coleta é esse caso.
 Estoque e todos os preços dependem do Produto. A tabela completa está no catálogo.
+
+## 7. Como o JOLT de vendas monta o que vai ao WinThor (par real, 2026-10-23)
+
+Conferido num par de entrada e saída do mesmo registro (venda 50277 no PDVSync, cupom 10905), sem guardar os dados no repositório.
+
+- **Entrada:** a rota `PDVSYNC - BUSCAR VENDAS` recebe `data[]` com `tipoDado: "Venda"`, `loteOrigem` (ex.: `Venda20261023172023547`) e
+  a venda inteira em Base64 no campo `conteudo`. A operação `custom-totvs` (`=base64ToObject`) decodifica antes do shift.
+- **Saída:** um envelope `{"items":[...], "_attr_access":"items"}`. O `_attr_access` diz qual lista vira linhas: **uma linha da
+  `PCINTEGRACAOCORE` por item**, e o `DADOSTRANSFORMADOS` é o item. O mesmo `default` com `_attr_access` fecha os layouts de busca.
+- **Identificadores:** `IDEXTERNO` = `pdvsync-vendamensagem-<id da mensagem>-<dataAtualizacao>`; `IDINTERNO` = `filial-série-cupom`
+  (ex.: `1-3-10905`). Por isso o Monitor do WSH procura também no `IDINTERNO`: o cupom acha a venda sem ler dado de cliente.
+- **Campos:** `numCupom` ← `Ccf`; `chaveNfce` ← `ChaveAcesso`; `codCob` ← `VendaPagamentos[].PagamentoForma.IdRetaguarda`; `codPlPag` ←
+  `PagamentoCondicao.IdRetaguarda`; `codCli` ← `Cliente.IdRetaguarda`; `codProd` ← `Produto.IdRetaguarda`; `codUsur` ←
+  `Vendedor.IdRetaguarda` **sem o prefixo `RCA-`**; `vlTabela`/`vlTotal` ← `ValorBruto`/`ValorLiquido`; o XML da nota passa em Base64 como
+  veio. A lista completa está em `VENDA_ORIGINS`, em `src/shared/wshFlowCatalog.ts`.
+- **Tipos:** neste par, valores saem como número e booleano (`316.93`, `false`); em outro exemplo saíram como texto (`"6.0"`). Ao comparar
+  payloads, não assumir tipo nem ordem de chaves.

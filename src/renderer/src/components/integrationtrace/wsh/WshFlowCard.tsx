@@ -1,35 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { GitBranch, Loader2 } from 'lucide-react';
 import { findFlowByRoute, flowLabel, hintedDependencies } from '../../../../../shared/wshFlowCatalog';
 import type { WshDependency, WshItem } from '../../../../../shared/wshMonitorTypes';
 import { formatTraceTime } from '../../../utils/integrationTraceView';
 import { flowFacts } from '../../../utils/wshFlowView';
-
-type DepsState = { loading: true } | { loading: false; error?: string; dependencies: WshDependency[]; periodDays: number };
-
-/** Busca a situação das dependências do fluxo do item; recarrega só quando muda a rota. */
-function useDependencies(route: string, enabled: boolean): DepsState | null {
-  const [state, setState] = useState<DepsState | null>(null);
-  useEffect(() => {
-    const load = window.electronAPI?.integrationWshDependencies;
-    if (!enabled || !load) {
-      setState(null);
-      return;
-    }
-    let cancelled = false;
-    setState({ loading: true });
-    load(route)
-      .then((response) => {
-        if (cancelled) return;
-        setState(response.success ? { loading: false, dependencies: response.dependencies, periodDays: response.periodDays } : { loading: false, error: response.error, dependencies: [], periodDays: 0 });
-      })
-      .catch((err) => !cancelled && setState({ loading: false, error: (err as Error)?.message || 'Falha ao consultar as dependências.', dependencies: [], periodDays: 0 }));
-    return () => {
-      cancelled = true;
-    };
-  }, [route, enabled]);
-  return state;
-}
+import type { WshDependenciesState } from '../../../hooks/integration/useWshDependencies';
 
 function dependencyLine(dep: WshDependency, periodDays: number): { text: string; tone: string } {
   if (!dep.found) return { text: 'Nunca integrou neste banco.', tone: 'text-danger' };
@@ -39,9 +14,8 @@ function dependencyLine(dep: WshDependency, periodDays: number): { text: string;
 }
 
 /** O fluxo do item e a situação dos fluxos de que ele depende, ao lado dos erros. */
-export const WshDependenciesCard: React.FC<{ item: WshItem }> = ({ item }) => {
+export const WshDependenciesCard: React.FC<{ item: WshItem; deps: WshDependenciesState | null }> = ({ item, deps }) => {
   const flow = findFlowByRoute(item.route);
-  const deps = useDependencies(item.route, Boolean(flow?.dependsOn?.length));
   if (!flow) {
     return (
       <section className="border border-border rounded-xl p-3 space-y-1" aria-label="Fluxo do item">
@@ -99,7 +73,9 @@ export const WshFlowFacts: React.FC<{ item: WshItem }> = ({ item }) => {
   if (!flow) return null;
   return (
     <details className="border border-border rounded-xl p-3">
-      <summary className="text-xs font-semibold text-foreground cursor-pointer">Ficha do fluxo: API, tabelas e agendamento</summary>
+      <summary className="text-xs font-semibold text-foreground cursor-pointer">
+        Ficha do fluxo: API, tabelas, agendamento{flow.fieldOrigins ? " e origem dos campos" : ""}
+      </summary>
       <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
         {flowFacts(flow).map((fact) => (
           <div key={fact.label} className="min-w-0">
@@ -108,6 +84,21 @@ export const WshFlowFacts: React.FC<{ item: WshItem }> = ({ item }) => {
           </div>
         ))}
       </dl>
+      {flow.fieldOrigins && (
+        <div className="mt-3 space-y-1">
+          <p className="text-2xs font-semibold text-foreground">
+            De onde vem cada campo (conferido num par real de entrada e saída)
+          </p>
+          <dl className="grid grid-cols-[minmax(0,10rem)_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-2xs font-mono">
+            {Object.entries(flow.fieldOrigins).map(([field, origin]) => (
+              <React.Fragment key={field}>
+                <dt className="text-foreground truncate">{field}</dt>
+                <dd className="text-muted-foreground break-words">{origin}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+        </div>
+      )}
     </details>
   );
 };

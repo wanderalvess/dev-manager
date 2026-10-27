@@ -84,6 +84,8 @@ describe('consulta', () => {
     if (!valid.ok) throw new Error(valid.error);
     const { sql, binds } = buildWshSearch(valid.value, now);
     expect(sql).toContain('c.idrotaservico = :rota');
+    // O texto procura também no IDINTERNO (venda: filial-série-cupom)
+    expect(sql).toMatch(/upper\(c\.idexterno\) like :texto .* or upper\(c\.idinterno\) like :texto/);
     expect(sql).toContain(`c.status = '3'`);
     expect(sql).not.toMatch(/variaveis|dadosrecebidos|dadostransformados,/i);
     expect(binds).toEqual({ inicio: '2026-10-24 12:00:00', limite: 100, rota: 25, texto: '%PRODUTO-1000\\_1\\%%' });
@@ -103,5 +105,8 @@ describe('consulta', () => {
     expect(item.otherErrors).toHaveLength(2);
     expect(item.syncedAt! - item.createdAt!).toBe(11_000);
     expect(item.updatedAt).toBeUndefined();
+    expect(item.internalId).toBeUndefined();
+    // Venda real: o IDINTERNO é filial-série-cupom
+    expect(toWshItem({ ID: 2, STATUS: '2', IDEXTERNO: 'pdvsync-vendamensagem-50277-x', IDINTERNO: '1-3-10905', ROTA: 'PDVSYNC - Buscar vendas' }).internalId).toBe('1-3-10905');
   });
 });

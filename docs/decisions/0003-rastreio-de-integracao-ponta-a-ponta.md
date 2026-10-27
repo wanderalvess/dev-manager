@@ -370,6 +370,18 @@ credencial do PDVSync:
 - **Dependências:** no detalhe, a última integração e os erros dos últimos 30 dias de cada fluxo do qual o item depende, numa
   consulta agregada por rota. "Nunca integrou neste banco" quando a rota não tem linha. O campo recusado aponta a causa provável
   (`impostos` → ICMS, `pisCofins` → PIS/COFINS, `ncms` → NCM). A tool `integration_check_wsh` devolve as dependências quando recebe `routeId`.
+- **Como resolver (níveis 1 e 2):** `shared/wshSuggestions.ts` transforma os erros, o catálogo e as dependências em ações
+  ordenadas (corrigir os itens que derrubaram o envio, valor fora do Enum, campo vazio, dependência que não integrou), só
+  afirmando o que os dados mostram; o link do TDN (`linkDocumentacao`) aparece quando é https da TOTVS. O nível 2 lê a
+  `LAYOUTTRANSFORMACAO` das rotas do item no Oracle (definição do JOLT, sem dado de negócio) e `shared/joltFieldMap.ts` acha as regras
+  que escrevem o campo recusado, marcando a que casa com o item (PIXS casa com `PIX*` → `tipo = 8`). Do Jolt do WSH: valor fixo de shift (`#8`) é texto
+  até um `=toInteger` seguinte, e o painel liga os dois; `custom-totvs`/`custom-decode` só decodifica Base64 e é ignorada; `{{X}}`
+  é variável opaca do WSH. Não está confirmado se a rota de envio roda sobre a saída da de busca, então cada rota aparece separada. O nível 3 (explicação pela IA)
+  fica para depois.
+- **IDINTERNO:** a busca procura também no `IDINTERNO`, que nas transações traz o identificador do negócio (venda:
+  filial-série-cupom). A lista mostra o `IDINTERNO` quando existe. Assim o cupom acha a venda sem ler o `DADOSTRANSFORMADOS`.
+- **Origem dos campos:** `fieldOrigins` no catálogo diz de onde o JOLT tira cada campo, conferido num par real (vendas, FLUXO-16). O "Como
+  resolver" usa isso quando o destino recusa um campo ("codCob vem de PagamentoForma.IdRetaguarda no PDVSync").
 - **Processos online** (PDVOmni → WinThor direto) ficam para uma próxima etapa: não passam pelo WSH.
 
 ### Decisões da vista animada e do modo ao vivo

@@ -19,6 +19,18 @@ const QUOTED = /"((?:[^"\\]|\\.)*)"/g;
 
 const unescape = (value: string) => value.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
 
+/** Só links https do TDN da TOTVS viram link na tela; o resto (inclusive um link cortado no meio) é descartado. */
+export function safeDocUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    const totvs = /(^|\.)totvs\.com(\.br)?$/.test(url.hostname);
+    return url.protocol === 'https:' && totvs && url.pathname.length > 1 ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function parseErrors(text: string): WshItemError[] {
   const start = text.search(/"errors"\s*:\s*\{/);
   if (start < 0) return [];
@@ -28,13 +40,15 @@ function parseErrors(text: string): WshItemError[] {
   entries.forEach((entry, index) => {
     const chunk = body.slice(entry.index! + entry[0].length, entries[index + 1]?.index ?? body.length);
     let externalId: string | undefined;
+    let docUrl: string | undefined;
     const fields: { field: string; messages: string[] }[] = [];
     for (const match of chunk.matchAll(ERROR_FIELD)) {
       const values = [...match[2].matchAll(QUOTED)].map((value) => unescape(value[1]));
       if (match[1] === 'identificadorExterno') externalId = values[0];
-      else if (match[1] !== 'linkDocumentacao' && values.length > 0) fields.push({ field: match[1], messages: values });
+      else if (match[1] === 'linkDocumentacao') docUrl = safeDocUrl(values[0]);
+      else if (values.length > 0) fields.push({ field: match[1], messages: values });
     }
-    fields.forEach((field) => errors.push({ externalId, ...field }));
+    fields.forEach((field) => errors.push({ externalId, ...field, ...(docUrl ? { docUrl } : {}) }));
   });
   return errors;
 }

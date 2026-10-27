@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import type { IntegrationBatchTraceRequest } from '../../../shared/integrationTypes';
-import type { WshSearchRequest } from '../../../shared/wshMonitorTypes';
+import type { WshLayoutRequest, WshSearchRequest } from '../../../shared/wshMonitorTypes';
 import type { IpcContext } from '../ipcContext';
 
 /** Rastreio de Integração ponta a ponta (decisão 0003). Canais: integration:* */
@@ -21,4 +21,5 @@ export function registerIntegrationHandlers(ctx: IpcContext): void {
   ipcMain.handle('integration:wsh-routes', () => integrationTraceService.listWshRoutes());
   ipcMain.handle('integration:wsh-search', (_, request: WshSearchRequest) => integrationTraceService.searchWsh(request));
   ipcMain.handle('integration:wsh-dependencies', (_, route: string) => integrationTraceService.checkWshDependencies(route));
+  ipcMain.handle('integration:wsh-layout', (_, request: WshLayoutRequest) => integrationTraceService.explainWshLayout(request));
 }

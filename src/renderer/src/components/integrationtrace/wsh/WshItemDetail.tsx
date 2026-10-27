@@ -7,6 +7,8 @@ import type { ReadinessTone } from '../../../utils/integrationReadinessView';
 import { describeWshItem, wshItemTrace, wshTarget } from '../../../utils/wshItemView';
 import { INBOUND_SCENE, OUTBOUND_SCENE } from '../../../utils/traceSceneProfiles';
 import { WshDependenciesCard, WshFlowFacts } from './WshFlowCard';
+import { WshFixPanel } from './WshFixPanel';
+import { useWshDependencies } from '../../../hooks/integration/useWshDependencies';
 import { TONE_BOX } from '../toneClasses';
 import { TraceAnimationPanel } from '../TraceAnimationPanel';
 
@@ -43,6 +45,7 @@ export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) =>
   const Icon = TONE_ICONS[verdict.tone];
   const sendSeconds = item.createdAt && item.syncedAt ? Math.round((item.syncedAt - item.createdAt) / 1000) : undefined;
   const hasErrors = item.ownErrors.length > 0 || item.otherErrors.length > 0;
+  const deps = useWshDependencies(item.route);
 
   return (
     <div className="flex flex-col lg:h-full min-h-0 bg-card border border-border rounded-xl overflow-hidden" data-testid="wsh-item-detail">
@@ -51,7 +54,10 @@ export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) =>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-foreground">{verdict.title}</p>
           <p className="text-xs text-muted-foreground break-words">{verdict.detail}</p>
-          <p className="text-2xs font-mono text-muted-foreground mt-0.5 break-all">{item.externalId}</p>
+          <p className="text-2xs font-mono text-muted-foreground mt-0.5 break-all">
+            {item.internalId ? `${item.internalId} · ` : ''}
+            {item.externalId}
+          </p>
         </div>
         <button
           type="button"
@@ -64,6 +70,9 @@ export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) =>
       </div>
 
       <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto p-4 space-y-3">
+        {/* O que fazer vem primeiro: é para isso que se abre um item com erro */}
+        <WshFixPanel item={item} deps={deps} />
+
         <TraceAnimationPanel trace={trace} profile={wshTarget(item) === 'WinThor' ? INBOUND_SCENE : OUTBOUND_SCENE} collapsible />
 
         <dl className="border border-border rounded-xl p-3 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -96,7 +105,7 @@ export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) =>
               {item.observation?.truncated && <p className="text-2xs text-muted-foreground">A OBSERVACAO foi lida em parte; pode haver mais erros.</p>}
             </div>
           )}
-          <WshDependenciesCard item={item} />
+          <WshDependenciesCard item={item} deps={deps} />
         </div>
 
         <WshFlowFacts item={item} />

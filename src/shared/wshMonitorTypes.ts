@@ -1,3 +1,5 @@
+import type { JoltFieldMapping } from './joltFieldMap';
+
 /**
  * Monitor do WSH (decisão 0003, revisão após a coleta): o que o Winthor Smart Hub gravou na PCINTEGRACAOCORE,
  * lido só do Oracle, sem credencial do PDVSync. Cada linha é um item (produto, preço, cobrança...) buscado no WinThor
@@ -14,7 +16,7 @@ export interface WshRoute {
 export interface WshSearchRequest {
   /** Rota de busca (PCINTEGRACAOROTASERVICO.ID). Vazio: todas. */
   routeId?: number;
-  /** Trecho do IDEXTERNO, como o código do produto ("1000") ou "produto-1000-1". */
+  /** Trecho do IDEXTERNO ou do IDINTERNO, como o código do produto ("produto-1000") ou o cupom da venda ("10905"). */
   text?: string;
   status?: WshStatusFilter;
   lookbackHours?: number;
@@ -27,6 +29,8 @@ export interface WshItemError {
   externalId?: string;
   field: string;
   messages: string[];
+  /** Página do TDN que o PDVSync manda junto com o erro (linkDocumentacao). */
+  docUrl?: string;
 }
 
 /** A OBSERVACAO lida: a resposta do PDVSync ao envio que o WSH gravou na linha. */
@@ -51,6 +55,8 @@ export interface WshItem {
   tone: WshItemTone;
   attempts?: number;
   externalId: string;
+  /** IDINTERNO: o identificador do negócio nas transações (venda: filial-série-cupom, ex.: "1-3-10905"). */
+  internalId?: string;
   route: string;
   sendRoute?: string;
   requestId?: string;
@@ -85,6 +91,28 @@ export type WshDependenciesResponse =
   | { success: false; error: string };
 
 export const WSH_DEPENDENCY_PERIOD_DAYS = 30;
+
+/** Nível 2 do "Como resolver": onde o JOLT das rotas do item monta os campos recusados. */
+export interface WshLayoutRequest {
+  /** Rotas do item (busca e envio): o payload é montado na busca, o envio só completa. */
+  routes: string[];
+  fields: string[];
+  /** Identificadores dos itens com erro, para marcar a regra que casou com eles. */
+  itemIds?: string[];
+}
+
+export interface WshLayoutField {
+  field: string;
+  mappings: JoltFieldMapping[];
+}
+
+export interface WshRouteLayout {
+  route: string;
+  found: boolean;
+  fields: WshLayoutField[];
+}
+
+export type WshLayoutResponse = { success: true; layouts: WshRouteLayout[] } | { success: false; error: string };
 
 export type WshRoutesResponse = { success: true; routes: WshRoute[] } | { success: false; error: string };
 export type WshSearchResponse =
