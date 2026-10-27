@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, FolderOpen } from 'lucide-react';
-import type { DatabaseConnectionConfig, TrackedServiceConfig } from '../../../../../shared/types';
+import type { DatabaseConnectionConfig, MonitoredPortConfig, RealtimeLogSource, TrackedProcessConfig, TrackedServiceConfig } from '../../../../../shared/types';
+import { INHERITED_FROM, type InheritedField } from '../../../../../shared/integrationInheritance';
 import {
   INTEGRATION_LAYER_LABELS,
   type IntegrationLayerAuth,
@@ -17,6 +18,12 @@ interface IntegrationLayerCardProps {
   layer: IntegrationLayerConfig;
   connections: DatabaseConnectionConfig[];
   services: TrackedServiceConfig[];
+  /** Listas já cadastradas em Serviços & Processos, Portas e Logs, oferecidas como sugestão. */
+  processes?: TrackedProcessConfig[];
+  ports?: MonitoredPortConfig[];
+  logSources?: RealtimeLogSource[];
+  /** O que a camada herda agora de outras telas (campo vazio e o Hub tem o valor). */
+  inherited?: Partial<Record<InheritedField, string>>;
   onPatch: (patch: Partial<IntegrationLayerConfig>) => void;
   onPatchAuth: (patch: Partial<IntegrationLayerAuth>) => void;
   onPatchPdvSync: (patch: Partial<IntegrationPdvSyncEndpoints>) => void;
@@ -33,35 +40,42 @@ export const IntegrationLayerCard: React.FC<IntegrationLayerCardProps> = ({
   layer,
   connections,
   services,
+  processes = [],
+  ports = [],
+  logSources = [],
+  inherited = {},
   onPatch,
   onPatchAuth,
   onPatchPdvSync,
   onBrowseLog
 }) => {
   const idPrefix = `integration-layer-${layer.layer}`;
-  const dbType = DB_TYPE_BY_LAYER[layer.layer];
+  // A conexão Oracle da camada WinThor fica no topo da aba (é a única coisa que o Monitor do WSH precisa)
+  const dbType = layer.layer === 'winthor' ? undefined : DB_TYPE_BY_LAYER[layer.layer];
+  const inheritedHint = (field: InheritedField) => (inherited[field] ? `Vazio: usa ${inherited[field]} (${INHERITED_FROM[field]}).` : undefined);
   const dbOptions = dbType ? connections.filter((conn) => conn.type === dbType) : [];
   const issues = validateLayer(layer);
   const configured = isLayerConfigured(layer);
+  const inheriting = !configured && Object.keys(inherited).length > 0;
 
   return (
     <div className="bg-card/70 border border-border/80 rounded-xl p-4 space-y-3 hover:border-border transition-colors" id={`${idPrefix}-card`}>
       <div className="flex items-center justify-between gap-3">
         <h4 className="text-xs font-semibold text-foreground">{INTEGRATION_LAYER_LABELS[layer.layer]}</h4>
-        <span className={`text-2xs font-medium ${configured ? 'text-success' : 'text-muted-foreground'}`}>
-          {configured ? 'Configurada' : 'Não configurada'}
+        <span className={`text-2xs font-medium ${configured || inheriting ? 'text-success' : 'text-muted-foreground'}`}>
+          {configured ? 'Configurada' : inheriting ? 'Usando as outras telas' : 'Não configurada'}
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <IntegrationField id={`${idPrefix}-baseUrl`} label="URL base" className="md:col-span-2" hint="Ex.: http://localhost:9000">
+        <IntegrationField id={`${idPrefix}-baseUrl`} label="URL base" className="md:col-span-2" hint={inheritedHint('baseUrl') ?? 'Ex.: http://localhost:9000'}>
           <input
             id={`${idPrefix}-baseUrl`}
             type="text"
             value={layer.baseUrl || ''}
             onChange={(e) => onPatch({ baseUrl: e.target.value })}
             className={INPUT_CLASS}
-            placeholder="http://localhost:porta"
+            placeholder={inherited.baseUrl ?? 'http://localhost:porta'}
           />
         </IntegrationField>
         <IntegrationField id={`${idPrefix}-healthPath`} label="Caminho de health" hint="Sem isso, o pré-voo testa só a porta.">
@@ -80,10 +94,18 @@ export const IntegrationLayerCard: React.FC<IntegrationLayerCardProps> = ({
             type="number"
             min={1}
             max={65535}
+            list={`${idPrefix}-port-options`}
             value={layer.port ?? ''}
             onChange={(e) => onPatch({ port: parsePortInput(e.target.value) })}
             className={INPUT_CLASS}
           />
+          <datalist id={`${idPrefix}-port-options`}>
+            {ports.map((port) => (
+              <option key={port.port} value={port.port}>
+                {port.label}
+              </option>
+            ))}
+          </datalist>
         </IntegrationField>
         <IntegrationField id={`${idPrefix}-service`} label="Serviço Windows" hint="Nome do serviço, como em Serviços & Processos.">
           <input
@@ -106,11 +128,19 @@ export const IntegrationLayerCard: React.FC<IntegrationLayerCardProps> = ({
           <input
             id={`${idPrefix}-process`}
             type="text"
+            list={`${idPrefix}-process-options`}
             value={layer.processName || ''}
             onChange={(e) => onPatch({ processName: e.target.value })}
             className={INPUT_CLASS}
             placeholder="programa.exe"
           />
+          <datalist id={`${idPrefix}-process-options`}>
+            {processes.map((process) => (
+              <option key={process.name} value={process.name}>
+                {process.displayName}
+              </option>
+            ))}
+          </datalist>
         </IntegrationField>
         {dbType && (
           <IntegrationField
@@ -133,16 +163,24 @@ export const IntegrationLayerCard: React.FC<IntegrationLayerCardProps> = ({
             </select>
           </IntegrationField>
         )}
-        <IntegrationField id={`${idPrefix}-log`} label="Arquivo de log" className={dbType ? 'md:col-span-2' : 'md:col-span-3'}>
+        <IntegrationField id={`${idPrefix}-log`} label="Arquivo de log" className={dbType ? 'md:col-span-2' : 'md:col-span-3'} hint={inheritedHint('logFilePath')}>
           <div className="flex items-center gap-2">
             <input
               id={`${idPrefix}-log`}
               type="text"
+              list={`${idPrefix}-log-options`}
               value={layer.logFilePath || ''}
               onChange={(e) => onPatch({ logFilePath: e.target.value })}
               className={INPUT_CLASS}
-              placeholder="C:\caminho\do\servico.log"
+              placeholder={inherited.logFilePath ?? 'C:\\caminho\\do\\servico.log'}
             />
+            <datalist id={`${idPrefix}-log-options`}>
+              {logSources.map((source) => (
+                <option key={source.id} value={source.filePath}>
+                  {source.name}
+                </option>
+              ))}
+            </datalist>
             <button
               type="button"
               onClick={onBrowseLog}
@@ -155,7 +193,7 @@ export const IntegrationLayerCard: React.FC<IntegrationLayerCardProps> = ({
         </IntegrationField>
       </div>
 
-      {layer.layer !== 'pdv' && <IntegrationLayerAuthFields idPrefix={idPrefix} layer={layer.layer} auth={layer.auth} onChange={onPatchAuth} />}
+      {layer.layer !== 'pdv' && <IntegrationLayerAuthFields idPrefix={idPrefix} layer={layer.layer} auth={layer.auth} onChange={onPatchAuth} hubLogin={inherited.auth} />}
       {usesPdvSyncLogin(layer) && <PdvSyncEndpointsFields idPrefix={idPrefix} layer={layer} onChange={onPatchPdvSync} />}
 
       {issues.length > 0 && (

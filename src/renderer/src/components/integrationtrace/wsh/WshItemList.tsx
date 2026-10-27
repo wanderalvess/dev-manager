@@ -17,18 +17,14 @@ const WSH_TONE_BADGE: Record<WshItemTone, string> = {
 
 interface WshItemListProps {
   items: WshItem[];
-  limit: number;
   selectedId?: number;
   onSelect: (id: number) => void;
 }
 
-/** Linhas da PCINTEGRACAOCORE encontradas, mais recentes primeiro. */
-export const WshItemList: React.FC<WshItemListProps> = ({ items, limit, selectedId, onSelect }) => (
-  <div className="bg-card border border-border rounded-xl overflow-hidden">
-    <p className="px-3 py-2 text-2xs text-muted-foreground border-b border-border">
-      {items.length} item(ns){items.length >= limit ? ` · mostrando os ${limit} mais recentes, refine a busca` : ''}
-    </p>
-    <ul className="max-h-[60vh] overflow-y-auto divide-y divide-border">
+/** Linhas da PCINTEGRACAOCORE encontradas, mais recentes primeiro. Em tela larga ocupa a altura toda e rola sozinha. */
+export const WshItemList: React.FC<WshItemListProps> = ({ items, selectedId, onSelect }) => (
+  <div className="flex flex-col lg:h-full min-h-0 bg-card border border-border rounded-xl overflow-hidden">
+    <ul aria-label="Itens encontrados" className="max-h-[60vh] lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto divide-y divide-border">
       {items.map((item) => (
         <li key={item.id}>
           <button

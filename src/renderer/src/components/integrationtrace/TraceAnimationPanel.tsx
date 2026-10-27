@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Box, FastForward, RotateCcw, Square } from 'lucide-react';
+import { Box, ChevronUp, FastForward, RotateCcw, Square } from 'lucide-react';
 import type { IntegrationTraceResult } from '../../../../shared/integrationTypes';
 import { buildAnimationModel } from '../../utils/traceAnimationModel';
 import { OUTBOUND_SCENE, type SceneProfile } from '../../utils/traceSceneProfiles';
@@ -7,14 +7,24 @@ import { STEP_STATUS_LABELS } from '../../utils/integrationTraceView';
 import { useTraceReplay } from '../../hooks/integration/useTraceReplay';
 import { TraceAnimationScene } from './TraceAnimationScene';
 import { TraceLegend } from './TraceStatusGlyph';
+import { TracePathStrip } from './TracePathStrip';
 
 const VIEW_3D_KEY = 'devManager.integrationTrace.view3d';
+const EXPANDED_KEY = 'devManager.integrationTrace.pathExpanded';
 
-function readView3d(): boolean {
+function readFlag(key: string): boolean {
   try {
-    return localStorage.getItem(VIEW_3D_KEY) === '1';
+    return localStorage.getItem(key) === '1';
   } catch {
     return false;
+  }
+}
+
+function saveFlag(key: string, value: boolean): void {
+  try {
+    localStorage.setItem(key, value ? '1' : '0');
+  } catch {
+    // Sem localStorage a preferência vale só nesta tela
   }
 }
 
@@ -31,25 +41,30 @@ interface TraceAnimationPanelProps {
   liveActive?: boolean;
   /** Sentido do desenho; o padrão é o envio (WinThor → PDVSync). */
   profile?: SceneProfile;
+  /** Começa recolhido numa faixa de uma linha (a escolha fica salva); sem isso, a animação aparece sempre. */
+  collapsible?: boolean;
 }
 
 /** Vista animada do rastreio: o lote percorre as camadas e para onde o rastreio provou que parou. */
-export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace, live, liveActive = false, profile = OUTBOUND_SCENE }) => {
+export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace, live, liveActive = false, profile = OUTBOUND_SCENE, collapsible = false }) => {
   const model = useMemo(() => buildAnimationModel(trace, profile), [trace, profile]);
   const { frame, playing, replay, skip, reducedMotion } = useTraceReplay(model, trace.id);
-  const [view3d, setView3d] = useState(readView3d);
+  const [view3d, setView3d] = useState(() => readFlag(VIEW_3D_KEY));
+  const [expandedPref, setExpandedPref] = useState(() => readFlag(EXPANDED_KEY));
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const expanded = !collapsible || expandedPref;
 
   if (!model.canonical) return null;
 
   const toggle3d = () => {
-    const next = !view3d;
-    setView3d(next);
-    try {
-      localStorage.setItem(VIEW_3D_KEY, next ? '1' : '0');
-    } catch {
-      // Sem localStorage a preferência vale só nesta tela
-    }
+    setView3d(!view3d);
+    saveFlag(VIEW_3D_KEY, !view3d);
+  };
+  const setExpanded = (next: boolean) => {
+    setExpandedPref(next);
+    saveFlag(EXPANDED_KEY, next);
+    // Ao abrir, o percurso toca do começo: é para isso que se abre
+    if (next) replay();
   };
 
   const current = model.steps[frame.index];
@@ -62,6 +77,11 @@ export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace,
         ? 'Percurso completo. Clique numa loja para ver o status no PDVSync.'
         : `Percurso completo. Clique em ${model.profile.endpointLabel} para ver o detalhe.`;
   const selected = model.endpoints.find((endpoint) => endpoint.key === selectedKey);
+
+  if (!expanded) {
+    const finalCaption = stop?.id !== 'pdv-arrival' ? `Parou em: ${stop?.label} (${STEP_STATUS_LABELS[stop?.status ?? 'unknown']}).` : 'Percurso completo.';
+    return <TracePathStrip model={model} caption={finalCaption} onExpand={() => setExpanded(true)} />;
+  }
 
   return (
     <section className="bg-card border border-border rounded-xl p-4 space-y-3" data-testid="trace-animation">
@@ -80,6 +100,11 @@ export const TraceAnimationPanel: React.FC<TraceAnimationPanelProps> = ({ trace,
           <button type="button" onClick={toggle3d} aria-pressed={view3d} className={`${BUTTON} ${view3d ? 'border-primary text-primary' : ''}`}>
             {view3d ? <Square className="w-3.5 h-3.5" /> : <Box className="w-3.5 h-3.5" />} {view3d ? 'Vista 2D' : 'Vista 3D'}
           </button>
+          {collapsible && (
+            <button type="button" onClick={() => setExpanded(false)} aria-expanded={true} className={BUTTON}>
+              Recolher <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

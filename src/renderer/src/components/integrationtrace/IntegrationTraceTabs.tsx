@@ -13,9 +13,9 @@ interface IntegrationTraceTabsProps {
   onChange: (tab: IntegrationTraceTab) => void;
 }
 
-/** Abas sublinhadas da página, no mesmo padrão das Configurações. */
+/** Abas sublinhadas da página, na mesma linha do título (a linha de baixo é do cabeçalho). */
 export const IntegrationTraceTabs: React.FC<IntegrationTraceTabsProps> = ({ active, onChange }) => (
-  <div role="tablist" aria-label="Seções do Rastreio de Integração" className="flex items-center border-b border-border text-sm">
+  <div role="tablist" aria-label="Seções do Rastreio de Integração" className="flex items-stretch text-sm">
     {TABS.map(({ id, label }) => (
       <button
         key={id}

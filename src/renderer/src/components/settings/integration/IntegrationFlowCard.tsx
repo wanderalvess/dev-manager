@@ -29,7 +29,7 @@ export const IntegrationFlowCard: React.FC<IntegrationFlowCardProps> = ({ flow, 
         <IntegrationField id={`${id}-name`} label="Nome do fluxo">
           <input id={`${id}-name`} type="text" value={flow.name} onChange={(e) => onPatch({ name: e.target.value })} className={INPUT_CLASS} placeholder="Produto" />
         </IntegrationField>
-        <IntegrationField id={`${id}-batchType`} label="Tipo de lote no CH" hint="O tipo que o WSH informa ao abrir o lote.">
+        <IntegrationField id={`${id}-batchType`} label="Tipo de lote no CH, opcional" hint="Só referência: o rastreio consulta o lote pelo número.">
           <input id={`${id}-batchType`} type="text" value={flow.chBatchType} onChange={(e) => onPatch({ chBatchType: e.target.value })} className={INPUT_CLASS} />
         </IntegrationField>
         <IntegrationField id={`${id}-winthorApi`} label="API do fluxo no WinThor" hint="Caminho chamado pelo WSH (evidência do passo 3).">
@@ -54,7 +54,7 @@ export const IntegrationFlowCard: React.FC<IntegrationFlowCardProps> = ({ flow, 
         </IntegrationField>
       )}
 
-      <IntegrationField id={`${id}-pdvQuery`} label="Consulta de evidência no PDV (Postgres)" hint="Prova que o dado desceu; só SELECT. Binds de texto: :lote, :inicio e :fim (AAAA-MM-DD HH:MM:SS, hora local). Com count(*) vale o número; senão, as linhas.">
+      <IntegrationField id={`${id}-pdvQuery`} label="Consulta de evidência no PDV (Postgres), opcional" hint="Confirma no banco do PDV o que o PDVSync já informa por loja; só SELECT. Binds de texto: :lote, :inicio e :fim (AAAA-MM-DD HH:MM:SS, hora local). Com count(*) vale o número; senão, as linhas.">
         <textarea id={`${id}-pdvQuery`} value={flow.evidence.pdvQuery} onChange={(e) => patchEvidence({ pdvQuery: e.target.value })} className={TEXTAREA_CLASS} spellCheck={false} placeholder="select count(*) from ... where lote = :lote" />
       </IntegrationField>
       <IntegrationField id={`${id}-oracleQuery`} label="Consulta de evidência no WinThor (Oracle), opcional" hint="O dado existe na retaguarda? Mesmos binds e regras; no Oracle use TO_DATE(:inicio, 'YYYY-MM-DD HH24:MI:SS').">

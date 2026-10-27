@@ -38,35 +38,33 @@ function dependencyLine(dep: WshDependency, periodDays: number): { text: string;
   return { text: `${last} · ${period}`, tone: dep.lastTone === 'error' || dep.periodErrors > 0 ? 'text-danger' : 'text-muted-foreground' };
 }
 
-/** Ficha do fluxo do item (sentido, API, tabelas) e a situação dos fluxos de que ele depende. */
-export const WshFlowCard: React.FC<{ item: WshItem }> = ({ item }) => {
+/** O fluxo do item e a situação dos fluxos de que ele depende, ao lado dos erros. */
+export const WshDependenciesCard: React.FC<{ item: WshItem }> = ({ item }) => {
   const flow = findFlowByRoute(item.route);
   const deps = useDependencies(item.route, Boolean(flow?.dependsOn?.length));
-  if (!flow) return null;
+  if (!flow) {
+    return (
+      <section className="border border-border rounded-xl p-3 space-y-1" aria-label="Fluxo do item">
+        <h3 className="text-xs font-semibold text-foreground">{item.route}</h3>
+        <p className="text-2xs text-muted-foreground">Rota fora do catálogo de fluxos: sem dependências conhecidas.</p>
+      </section>
+    );
+  }
   const fields = [...item.ownErrors, ...item.otherErrors].map((error) => error.field);
   const hinted = hintedDependencies(flow, fields);
 
   return (
-    <section className="bg-card border border-border rounded-xl p-4 space-y-3" aria-label="Fluxo do item">
-      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+    <section className="border border-border rounded-xl p-3 space-y-2" aria-label="Fluxo do item">
+      <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
         <GitBranch className="w-4 h-4 text-primary" /> {flowLabel(flow)}
         <span className="text-2xs font-normal text-muted-foreground">{flow.category}</span>
       </h3>
-      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-        {flowFacts(flow).map((fact) => (
-          <div key={fact.label} className="min-w-0">
-            <dt className="text-2xs text-muted-foreground">{fact.label}</dt>
-            <dd className="text-xs text-foreground break-words font-mono">{fact.value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {flow.dependsOn && flow.dependsOn.length > 0 && (
-        <div className="space-y-1.5 border-t border-border pt-3">
+      {!flow.dependsOn?.length ? (
+        <p className="text-2xs text-muted-foreground">Este fluxo não depende de outros.</p>
+      ) : (
+        <div className="space-y-1.5">
           <p className="text-xs font-semibold text-foreground">Depende destes fluxos</p>
-          <p className="text-2xs text-muted-foreground">
-            Se algum não chegou ao PDVSync, os registros deste fluxo saem incompletos ou são recusados.
-          </p>
+          <p className="text-2xs text-muted-foreground">Se algum não chegou ao PDVSync, os registros deste fluxo saem incompletos ou são recusados.</p>
           {deps?.loading && (
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Loader2 className="w-3 h-3 animate-spin" /> Consultando...
@@ -92,5 +90,24 @@ export const WshFlowCard: React.FC<{ item: WshItem }> = ({ item }) => {
         </div>
       )}
     </section>
+  );
+};
+
+/** Ficha do fluxo (sentido, API, tabelas, agendamento), recolhida no fim do detalhe. */
+export const WshFlowFacts: React.FC<{ item: WshItem }> = ({ item }) => {
+  const flow = findFlowByRoute(item.route);
+  if (!flow) return null;
+  return (
+    <details className="border border-border rounded-xl p-3">
+      <summary className="text-xs font-semibold text-foreground cursor-pointer">Ficha do fluxo: API, tabelas e agendamento</summary>
+      <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+        {flowFacts(flow).map((fact) => (
+          <div key={fact.label} className="min-w-0">
+            <dt className="text-2xs text-muted-foreground">{fact.label}</dt>
+            <dd className="text-xs text-foreground break-words font-mono">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
   );
 };

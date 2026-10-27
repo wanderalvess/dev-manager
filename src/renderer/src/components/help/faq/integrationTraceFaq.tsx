@@ -54,15 +54,16 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            É o catálogo usado pelo <strong className="text-foreground">Rastreio de Integração</strong>: a cadeia
-            WinThor → WSH (Winthor Smart Hub) → CH (PDVSync) → PDV. Ele serve para o Hub confirmar que cada camada está de pé
-            antes de um teste e para seguir um lote até as lojas, mostrando onde parou.
+            Para o <strong className="text-foreground">Monitor do WSH</strong> basta o bloco de cima,{' '}
+            <strong className="text-foreground">Conexão Oracle do WSH</strong>: o Oracle onde o WSH grava a PCINTEGRACAOCORE, o mesmo da
+            retaguarda. Sem senha nem chave do PDVSync. O resto da aba é opcional e fica recolhido:
           </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>
-              <strong className="text-foreground">Camadas da integração:</strong> para cada uma (WinThor, WSH, CH, PDV), como o Hub a
-              alcança e observa na sua máquina: URL base e caminho de health, porta TCP, serviço Windows ou processo, conexão do
-              DB Studio (Oracle no WinThor, Postgres no PDV), arquivo de log e autenticação. Tudo é opcional; o que ficar vazio é
+              <strong className="text-foreground">Pré-voo das camadas:</strong> para conferir se WinThor, WSH, CH e PDV estão de pé antes
+              de um teste (serviço Windows, processo, porta, health, login e log). A camada WinThor reaproveita o que já está em outras
+              telas: a URL e o login do WinThor de <em>Diretórios &amp; IDE → WinThor Start</em> e o log dos serviços na pasta do Karaf. Os
+              campos de serviço, processo, porta e log sugerem o que já está em Serviços &amp; Processos, Portas e Logs. O que ficar vazio é
               pulado, nunca inventado.
             </li>
             <li>
@@ -74,9 +75,9 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
               Hub só lê: nunca abre nem fecha lote.
             </li>
             <li>
-              <strong className="text-foreground">Fluxos do WSH:</strong> um por fluxo de <strong className="text-foreground">saída</strong>{' '}
-              que você testa (ex.: produto ou preço), com o tipo de lote, a API do WinThor que ele chama e a consulta no Postgres que
-              prova a chegada no PDV. A venda é de entrada (PDV → WinThor) e não usa lote. As consultas só podem ler (SELECT) e aceitam os
+              <strong className="text-foreground">Rastrear lote pelo PDVSync:</strong> só para seguir um lote pelo número. Um fluxo por
+              fluxo de <strong className="text-foreground">saída</strong> que você testa (ex.: produto ou preço); só o nome é obrigatório,
+              e a consulta no Postgres do PDV é uma confirmação opcional. A venda é de entrada (PDV → WinThor) e não usa lote. As consultas só podem ler (SELECT) e aceitam os
               binds de texto <code className="font-mono text-primary">:lote</code>, <code className="font-mono text-primary">:inicio</code> e{' '}
               <code className="font-mono text-primary">:fim</code> (datas como <code className="font-mono text-primary">AAAA-MM-DD HH:MM:SS</code>,
               hora local; no Oracle use <code className="font-mono text-primary">TO_DATE</code>). Com <code className="font-mono text-primary">count(*)</code> vale

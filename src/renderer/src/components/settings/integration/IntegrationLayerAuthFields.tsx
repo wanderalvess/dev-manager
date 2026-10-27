@@ -5,7 +5,7 @@ import type {
   IntegrationLayerId
 } from '../../../../../shared/integrationTypes';
 import { INPUT_CLASS, IntegrationField } from './IntegrationField';
-import { authOptionsFor } from './authOptions';
+import { authOptionsFor, defaultAuthType } from './authOptions';
 import { SecretInput } from './SecretInput';
 
 interface IntegrationLayerAuthFieldsProps {
@@ -13,10 +13,12 @@ interface IntegrationLayerAuthFieldsProps {
   layer: IntegrationLayerId;
   auth: IntegrationLayerAuth | undefined;
   onChange: (patch: Partial<IntegrationLayerAuth>) => void;
+  /** Usuário do login do WinThor salvo nas Configurações, quando a camada o reaproveita. */
+  hubLogin?: string;
 }
 
-export const IntegrationLayerAuthFields: React.FC<IntegrationLayerAuthFieldsProps> = ({ idPrefix, layer, auth, onChange }) => {
-  const type = auth?.type ?? 'none';
+export const IntegrationLayerAuthFields: React.FC<IntegrationLayerAuthFieldsProps> = ({ idPrefix, layer, auth, onChange, hubLogin }) => {
+  const type = auth?.type ?? defaultAuthType(layer);
   const usesUser = type === 'basic' || type === 'winthor' || type === 'rac-password';
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-border/60">
@@ -34,6 +36,13 @@ export const IntegrationLayerAuthFields: React.FC<IntegrationLayerAuthFieldsProp
           ))}
         </select>
       </IntegrationField>
+      {type === 'hub-winthor' && (
+        <p className="md:col-span-2 self-end text-2xs text-muted-foreground pb-2">
+          {hubLogin
+            ? `Usa o login "${hubLogin}" salvo em Diretórios & IDE → WinThor Start. Nada é digitado de novo aqui.`
+            : 'Nenhum login do WinThor salvo em Diretórios & IDE → WinThor Start: o pré-voo não testa o login até ele ser preenchido lá.'}
+        </p>
+      )}
       {usesUser && (
         <>
           <IntegrationField id={`${idPrefix}-auth-user`} label="Usuário">

@@ -16,7 +16,7 @@ export const WshMonitorView: React.FC<WshMonitorViewProps> = ({ settingsVersion,
   const { filters } = monitor;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-3 lg:h-full">
       <WshMonitorFilters
         routes={monitor.routes}
         routesError={monitor.routesError}
@@ -26,6 +26,8 @@ export const WshMonitorView: React.FC<WshMonitorViewProps> = ({ settingsVersion,
         lookbackHours={filters.lookbackHours}
         loading={monitor.loading}
         error={monitor.error}
+        resultCount={monitor.items?.length}
+        limit={monitor.limit}
         onRouteChange={filters.setRouteId}
         onTextChange={filters.setText}
         onStatusChange={filters.setStatus}
@@ -51,9 +53,12 @@ export const WshMonitorView: React.FC<WshMonitorViewProps> = ({ settingsVersion,
       ) : monitor.items.length === 0 ? (
         <p className="bg-card border border-border rounded-xl p-6 text-xs text-muted-foreground">Nenhum item encontrado com esses filtros.</p>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] gap-4 items-start">
-          <WshItemList items={monitor.items} limit={monitor.limit} selectedId={monitor.selected?.id} onSelect={monitor.select} />
-          <div className="min-w-0">{monitor.selected && <WshItemDetail item={monitor.selected} onCopy={() => void monitor.copySelected()} />}</div>
+        // Em tela larga a lista e o detalhe ocupam o resto da altura e rolam cada um no seu quadro
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(18rem,25rem)_minmax(0,1fr)] gap-3 lg:flex-1 lg:min-h-0">
+          <WshItemList items={monitor.items} selectedId={monitor.selected?.id} onSelect={monitor.select} />
+          <div className="min-w-0 lg:min-h-0">
+            {monitor.selected && <WshItemDetail item={monitor.selected} onCopy={() => void monitor.copySelected()} />}
+          </div>
         </div>
       )}
     </div>

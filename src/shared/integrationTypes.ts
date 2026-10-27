@@ -16,7 +16,8 @@ export const INTEGRATION_LAYER_LABELS: Readonly<Record<IntegrationLayerId, strin
 };
 
 /** `rac-password` é o login do PDVSync (OAuth2 por senha no RAC): usuário, senha, client_id e client_secret. */
-export type IntegrationLayerAuthType = 'none' | 'basic' | 'bearer' | 'winthor' | 'rac-password';
+/** `hub-winthor`: usa o login do WinThor já salvo nas Configurações (WinThor Start), sem guardar nada na camada. */
+export type IntegrationLayerAuthType = 'none' | 'basic' | 'bearer' | 'winthor' | 'hub-winthor' | 'rac-password';
 
 export interface IntegrationLayerAuth {
   type: IntegrationLayerAuthType;

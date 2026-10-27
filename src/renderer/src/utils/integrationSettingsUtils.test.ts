@@ -47,7 +47,8 @@ describe('integrationSettingsUtils', () => {
   it('fluxos: criar, alterar e remover sem mutar a lista original', () => {
     const draft = createFlowDraft(123);
     expect(draft.id).toBe('flow-123');
-    expect(validateFlow(draft)).toContain('Informe o tipo de lote no CH.');
+    // Um fluxo novo já é válido: tipo de lote e consulta do PDV são opcionais
+    expect(validateFlow(draft)).toEqual([]);
 
     const flows = [draft];
     const updated = updateFlowAt(flows, 0, { name: 'Venda' });
@@ -58,13 +59,12 @@ describe('integrationSettingsUtils', () => {
     expect(removeFlowAt(undefined, 0)).toEqual([]);
   });
 
-  it('validateFlow aponta cada campo obrigatório e o caminho de disparo sem barra', () => {
+  it('validateFlow exige só o nome; espera só conta com consulta do PDV; caminho de disparo sem barra é erro', () => {
     expect(validateFlow(makeFlow())).toEqual([]);
-    const issues = validateFlow(makeFlow({ name: ' ', chBatchType: '', evidence: { pdvQuery: '', pdvWaitSeconds: 0 }, trigger: { method: 'GET', path: 'fluxos/venda' } }));
+    expect(validateFlow(makeFlow({ chBatchType: '', evidence: { pdvQuery: '', pdvWaitSeconds: 0 } }))).toEqual([]);
+    const issues = validateFlow(makeFlow({ name: ' ', evidence: { pdvQuery: 'select 1', pdvWaitSeconds: 0 }, trigger: { method: 'GET', path: 'fluxos/venda' } }));
     expect(issues).toEqual([
       'Informe o nome do fluxo.',
-      'Informe o tipo de lote no CH.',
-      'Informe a consulta de evidência no PDV.',
       'A espera pela descida ao PDV precisa ser maior que zero.',
       'O caminho de disparo no WSH deve começar com "/".'
     ]);

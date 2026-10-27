@@ -27,6 +27,7 @@ import { deriveLayerStatus, planLayerChecks } from './integration/readinessPlan'
 import { checkPdvSyncLogin, lookupBatch, PdvSyncClient } from './integration/pdvSyncClient';
 import { toPdvSyncSettings } from '../../shared/pdvSyncConfig';
 import { TraceHistoryStore } from './integration/traceHistoryStore';
+import { effectiveLayer, hubDefaultsFrom } from '../../shared/integrationInheritance';
 import { buildWshSearch, toWshItem, toWshRoute, validateWshSearch, WSH_ROUTES_SQL } from './integration/wshMonitorQuery';
 import {
   WSH_DEPENDENCY_PERIOD_DAYS,
@@ -71,10 +72,16 @@ export class IntegrationTraceService {
     private readonly extras: IntegrationTraceExtras
   ) {}
 
-  /** Camadas na ordem da cadeia; as que ainda não foram salvas entram vazias. */
+  /**
+   * Camadas na ordem da cadeia, como o pré-voo e o rastreio as usam: as que ainda não foram salvas entram vazias,
+   * e a camada WinThor completa o que ficou em branco com a URL, o login e a pasta do Karaf já salvos em outras telas.
+   */
   public getLayers(): IntegrationLayerConfig[] {
-    const saved = this.configService.getSettings().integrationLayers;
-    return INTEGRATION_LAYER_ORDER.map((layer) => saved?.find((entry) => entry.layer === layer) ?? { layer });
+    const settings = this.configService.getSettings();
+    const defaults = hubDefaultsFrom(settings);
+    return INTEGRATION_LAYER_ORDER.map((layer) =>
+      effectiveLayer(settings.integrationLayers?.find((entry) => entry.layer === layer) ?? { layer }, defaults)
+    );
   }
 
   /** Confere cada camada configurada. As camadas (e as verificações dentro delas) rodam em paralelo. */

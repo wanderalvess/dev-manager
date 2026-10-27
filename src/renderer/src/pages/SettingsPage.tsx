@@ -81,7 +81,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   const renderPathStatusBadge = (fieldKey: string) => <PathStatusBadge status={paths.pathStatuses[fieldKey]} />;
 
   return (
-    <div className="h-full w-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden">
+    <div className="h-full w-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
       <SettingsHeader
         onOpenTour={tour.open}
         importExport={importExport}
@@ -91,15 +91,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         isSaving={draft.isSaving}
         savedSuccess={draft.savedSuccess}
         onSave={draft.handleSave}
-      />
-
-      <SettingsSearchBar
-        query={search.query}
-        onQueryChange={search.setQuery}
-        isOpen={search.isOpen}
-        onOpenChange={search.setIsOpen}
-        results={search.results}
-        onSelectResult={search.selectResult}
+        search={
+          <SettingsSearchBar
+            query={search.query}
+            onQueryChange={search.setQuery}
+            isOpen={search.isOpen}
+            onOpenChange={search.setIsOpen}
+            results={search.results}
+            onSelectResult={search.selectResult}
+          />
+        }
       />
 
       {importExport.statusMessage && (

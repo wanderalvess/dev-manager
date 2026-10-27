@@ -3,8 +3,7 @@ import { AlertTriangle, Loader2, Search } from 'lucide-react';
 import type { WshRoute, WshStatusFilter } from '../../../../../shared/wshMonitorTypes';
 import { groupWshRoutes } from '../../../utils/wshFlowView';
 
-const FIELD_CLASS =
-  'w-full h-10 bg-card border border-border rounded-[10px] px-3 text-sm text-foreground focus:outline-hidden focus:border-primary';
+const FIELD_CLASS = 'h-9 bg-card border border-border rounded-[10px] px-3 text-sm text-foreground focus:outline-hidden focus:border-primary';
 
 const STATUS_OPTIONS: { value: WshStatusFilter; label: string }[] = [
   { value: 'error', label: 'Com erro' },
@@ -30,6 +29,9 @@ interface WshMonitorFiltersProps {
   lookbackHours: number;
   loading: boolean;
   error: string | null;
+  /** Itens da última busca (vazio antes de buscar) e o teto da consulta. */
+  resultCount?: number;
+  limit?: number;
   onRouteChange: (routeId?: number) => void;
   onTextChange: (text: string) => void;
   onStatusChange: (status: WshStatusFilter) => void;
@@ -38,23 +40,25 @@ interface WshMonitorFiltersProps {
   onOpenSettings: () => void;
 }
 
-/** Os mesmos filtros do monitor do WSH: rota (o fluxo), o dado e o status. */
+const LABEL_CLASS = 'flex items-center gap-2 text-xs font-bold text-foreground';
+
+/** Os mesmos filtros do monitor do WSH (fluxo, dado, status e período) numa barra de uma linha, com a contagem à direita. */
 export const WshMonitorFilters: React.FC<WshMonitorFiltersProps> = (props) => (
   <form
-    className="bg-card border border-border rounded-xl p-4 space-y-3"
+    className="shrink-0 bg-card border border-border rounded-xl px-3 py-2 space-y-1.5"
     onSubmit={(event) => {
       event.preventDefault();
       if (!props.loading) props.onSearch();
     }}
   >
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto_minmax(0,0.8fr)_auto] gap-3 items-end">
-      <div className="space-y-1">
-        <label htmlFor="wsh-route" className="text-xs font-bold text-foreground block">Fluxo</label>
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <label className={LABEL_CLASS}>
+        Fluxo
         <select
           id="wsh-route"
           value={props.routeId ?? ''}
           onChange={(e) => props.onRouteChange(e.target.value ? Number(e.target.value) : undefined)}
-          className={FIELD_CLASS}
+          className={`${FIELD_CLASS} w-64 font-normal`}
         >
           <option value="">Todos os fluxos</option>
           {groupWshRoutes(props.routes).map((group) => (
@@ -65,23 +69,23 @@ export const WshMonitorFilters: React.FC<WshMonitorFiltersProps> = (props) => (
             </optgroup>
           ))}
         </select>
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="wsh-text" className="text-xs font-bold text-foreground block">Dado</label>
+      </label>
+      <label className={LABEL_CLASS}>
+        Dado
         <input
           id="wsh-text"
           type="text"
           value={props.text}
           onChange={(e) => props.onTextChange(e.target.value)}
-          className={`${FIELD_CLASS} font-mono`}
+          className={`${FIELD_CLASS} w-52 font-mono font-normal`}
           placeholder="produto-1000 ou PIX"
           autoComplete="off"
           spellCheck={false}
         />
-      </div>
-      <fieldset className="space-y-1 min-w-0">
-        <legend className="text-xs font-bold text-foreground mb-1">Status</legend>
-        <div className="flex h-10 rounded-[10px] border border-border overflow-hidden">
+      </label>
+      <fieldset className="flex items-center gap-2 min-w-0">
+        <legend className="sr-only">Status</legend>
+        <div className="flex h-9 rounded-[10px] border border-border overflow-hidden">
           {STATUS_OPTIONS.map((option) => (
             <label
               key={option.value}
@@ -102,21 +106,30 @@ export const WshMonitorFilters: React.FC<WshMonitorFiltersProps> = (props) => (
           ))}
         </div>
       </fieldset>
-      <div className="space-y-1">
-        <label htmlFor="wsh-period" className="text-xs font-bold text-foreground block">Período</label>
-        <select id="wsh-period" value={props.lookbackHours} onChange={(e) => props.onLookbackChange(Number(e.target.value))} className={FIELD_CLASS}>
-          {PERIOD_OPTIONS.map((option) => (
-            <option key={option.hours} value={option.hours}>{option.label}</option>
-          ))}
-        </select>
-      </div>
+      <select
+        id="wsh-period"
+        aria-label="Período"
+        value={props.lookbackHours}
+        onChange={(e) => props.onLookbackChange(Number(e.target.value))}
+        className={FIELD_CLASS}
+      >
+        {PERIOD_OPTIONS.map((option) => (
+          <option key={option.hours} value={option.hours}>{option.label}</option>
+        ))}
+      </select>
       <button
         type="submit"
-        className="h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm rounded-[10px] transition-colors flex items-center justify-center gap-2"
+        className="h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm rounded-[10px] transition-colors flex items-center justify-center gap-2"
       >
         {props.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
         <span>{props.loading ? 'Buscando...' : 'Buscar'}</span>
       </button>
+      {props.resultCount !== undefined && (
+        <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">
+          {props.resultCount} item(ns)
+          {props.limit && props.resultCount >= props.limit ? ` · os ${props.limit} mais recentes, refine a busca` : ''}
+        </span>
+      )}
     </div>
 
     {(props.error || props.routesError) && (

@@ -26,7 +26,8 @@ export const IntegrationTraceModuleCard: React.FC<ModuleCardProps> = ({ onNaviga
         monitor do próprio WSH. O Hub lê a <code className="font-mono text-primary">PCINTEGRACAOCORE</code> pela conexão Oracle da camada
         WinThor, sem credencial do PDVSync, e mostra quando o item foi buscado e enviado, a resposta do PDVSync e os erros, separando o
         erro do próprio item dos erros de outros itens que derrubaram o mesmo envio. Mostra também a situação dos fluxos de que ele
-        depende, apontando a causa provável (impostos vazio no Produto → ICMS).
+        depende, apontando a causa provável (impostos vazio no Produto → ICMS). A página não rola: a lista e o item rolam cada um no seu
+        quadro, e o percurso começa recolhido numa faixa; <em>Ver animação</em> abre a animação completa.
       </span>
       <span>
         <strong>Pré-voo das camadas:</strong> o botão <em>Conferir agora</em> verifica WinThor, WSH, CH e PDV em paralelo:

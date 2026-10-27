@@ -6,7 +6,7 @@ import { formatTraceTime } from '../../../utils/integrationTraceView';
 import type { ReadinessTone } from '../../../utils/integrationReadinessView';
 import { describeWshItem, wshItemTrace, wshTarget } from '../../../utils/wshItemView';
 import { INBOUND_SCENE, OUTBOUND_SCENE } from '../../../utils/traceSceneProfiles';
-import { WshFlowCard } from './WshFlowCard';
+import { WshDependenciesCard, WshFlowFacts } from './WshFlowCard';
 import { TONE_BOX } from '../toneClasses';
 import { TraceAnimationPanel } from '../TraceAnimationPanel';
 
@@ -33,76 +33,83 @@ interface WshItemDetailProps {
   onCopy: () => void;
 }
 
-/** Um item do WSH: veredito, percurso animado, datas, erros do PDVSync e a OBSERVACAO original. */
+/**
+ * Um item do WSH num quadro só: o veredito fica preso no topo e o resto (percurso, fatos, erros, dependências e a
+ * OBSERVACAO) rola por baixo dele, sem rolar a página.
+ */
 export const WshItemDetail: React.FC<WshItemDetailProps> = ({ item, onCopy }) => {
   const verdict = describeWshItem(item);
   const trace = useMemo(() => wshItemTrace(item), [item]);
   const Icon = TONE_ICONS[verdict.tone];
   const sendSeconds = item.createdAt && item.syncedAt ? Math.round((item.syncedAt - item.createdAt) / 1000) : undefined;
+  const hasErrors = item.ownErrors.length > 0 || item.otherErrors.length > 0;
 
   return (
-    <div className="space-y-4" data-testid="wsh-item-detail">
-      <div role="status" className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${TONE_BOX[verdict.tone].box}`}>
-        <div className="flex items-center gap-3 min-w-0">
-          <Icon className={`w-5 h-5 shrink-0 ${TONE_BOX[verdict.tone].icon}`} />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">{verdict.title}</p>
-            <p className="text-xs text-muted-foreground break-words">{verdict.detail}</p>
-            <p className="text-2xs font-mono text-muted-foreground mt-0.5 break-all">{item.externalId}</p>
-          </div>
+    <div className="flex flex-col lg:h-full min-h-0 bg-card border border-border rounded-xl overflow-hidden" data-testid="wsh-item-detail">
+      <div role="status" className={`shrink-0 flex flex-wrap items-center gap-3 border-b px-4 py-3 ${TONE_BOX[verdict.tone].box}`}>
+        <Icon className={`w-5 h-5 shrink-0 ${TONE_BOX[verdict.tone].icon}`} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground">{verdict.title}</p>
+          <p className="text-xs text-muted-foreground break-words">{verdict.detail}</p>
+          <p className="text-2xs font-mono text-muted-foreground mt-0.5 break-all">{item.externalId}</p>
         </div>
         <button
           type="button"
           onClick={onCopy}
-          className="h-10 px-3 bg-muted hover:bg-muted/80 text-foreground border border-border font-medium text-sm rounded-[10px] transition-colors flex items-center gap-2"
+          className="h-9 px-3 bg-card hover:bg-muted text-foreground border border-border font-medium text-sm rounded-[10px] transition-colors flex items-center gap-2"
         >
           <ClipboardCopy className="w-4 h-4" />
           <span>Copiar resumo (Jira)</span>
         </button>
       </div>
 
-      <TraceAnimationPanel trace={trace} profile={wshTarget(item) === 'WinThor' ? INBOUND_SCENE : OUTBOUND_SCENE} />
+      <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto p-4 space-y-3">
+        <TraceAnimationPanel trace={trace} profile={wshTarget(item) === 'WinThor' ? INBOUND_SCENE : OUTBOUND_SCENE} collapsible />
 
-      <dl className="bg-card border border-border rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Fact label="Status no WSH" value={`${item.statusLabel} (STATUS ${item.status || '?'})`} />
-        <Fact label="Tentativas" value={item.attempts} />
-        <Fact label="Buscado em" value={item.createdAt ? formatTraceTime(item.createdAt) : undefined} mono />
-        <Fact label="Enviado em" value={item.syncedAt ? `${formatTraceTime(item.syncedAt)}${sendSeconds !== undefined ? ` (+${sendSeconds} s)` : ''}` : undefined} mono />
-        <Fact label="Rota de busca" value={item.route} />
-        <Fact label="Rota de envio" value={item.sendRoute} />
-        <Fact label="Requisição do envio" value={item.requestId} mono />
-        <Fact label="Itens na requisição" value={item.observation?.records} />
-      </dl>
+        <dl className="border border-border rounded-xl p-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Fact label="Status no WSH" value={`${item.statusLabel} (STATUS ${item.status || '?'})`} />
+          <Fact label="Tentativas" value={item.attempts} />
+          <Fact label="Buscado em" value={item.createdAt ? formatTraceTime(item.createdAt) : undefined} mono />
+          <Fact label="Enviado em" value={item.syncedAt ? `${formatTraceTime(item.syncedAt)}${sendSeconds !== undefined ? ` (+${sendSeconds} s)` : ''}` : undefined} mono />
+          <Fact label="Rota de busca" value={item.route} />
+          <Fact label="Rota de envio" value={item.sendRoute} />
+          <Fact label="Requisição do envio" value={item.requestId} mono />
+          <Fact label="Itens na requisição" value={item.observation?.records} />
+        </dl>
 
-      <WshFlowCard item={item} />
-
-      {(item.ownErrors.length > 0 || item.otherErrors.length > 0) && (
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-          {item.ownErrors.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs font-semibold text-foreground">Erros deste item</p>
-              <ErrorList errors={item.ownErrors} tone="danger" />
+        <div className={`grid grid-cols-1 gap-3 ${hasErrors ? 'xl:grid-cols-2' : ''}`}>
+          {hasErrors && (
+            <div className="border border-border rounded-xl p-3 space-y-3">
+              {item.ownErrors.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-foreground">Erros deste item</p>
+                  <ErrorList errors={item.ownErrors} tone="danger" />
+                </div>
+              )}
+              {item.otherErrors.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-foreground">Erros de outros itens do mesmo envio ({item.otherErrors.length})</p>
+                  <p className="text-2xs text-muted-foreground">O {wshTarget(item)} recusa a requisição inteira: estes itens derrubaram o envio junto.</p>
+                  <ErrorList errors={item.otherErrors} tone="muted" />
+                </div>
+              )}
+              {item.observation?.truncated && <p className="text-2xs text-muted-foreground">A OBSERVACAO foi lida em parte; pode haver mais erros.</p>}
             </div>
           )}
-          {item.otherErrors.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs font-semibold text-foreground">Erros de outros itens do mesmo envio ({item.otherErrors.length})</p>
-              <p className="text-2xs text-muted-foreground">O {wshTarget(item)} recusa a requisição inteira: estes itens derrubaram o envio junto.</p>
-              <ErrorList errors={item.otherErrors} tone="muted" />
-            </div>
-          )}
-          {item.observation?.truncated && <p className="text-2xs text-muted-foreground">A OBSERVACAO foi lida em parte; pode haver mais erros.</p>}
+          <WshDependenciesCard item={item} />
         </div>
-      )}
 
-      {item.observation && (
-        <details className="bg-card border border-border rounded-xl p-4">
-          <summary className="text-xs font-semibold text-foreground cursor-pointer">Resposta do PDVSync (OBSERVACAO)</summary>
-          <pre className="mt-2 text-2xs font-mono text-muted-foreground bg-muted/50 rounded-lg px-2.5 py-1.5 whitespace-pre-wrap break-all max-h-72 overflow-auto">
-            {item.observation.raw}
-          </pre>
-        </details>
-      )}
+        <WshFlowFacts item={item} />
+
+        {item.observation && (
+          <details className="border border-border rounded-xl p-3">
+            <summary className="text-xs font-semibold text-foreground cursor-pointer">Resposta do {wshTarget(item)} (OBSERVACAO)</summary>
+            <pre className="mt-2 text-2xs font-mono text-muted-foreground bg-muted/50 rounded-lg px-2.5 py-1.5 whitespace-pre-wrap break-all max-h-72 overflow-auto">
+              {item.observation.raw}
+            </pre>
+          </details>
+        )}
+      </div>
     </div>
   );
 };

@@ -37,7 +37,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
   <div className="shrink-0">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-3 flex-wrap">
+        <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground flex items-center gap-3 flex-wrap">
           Documentação
           {hasIndex && status && (
             <span className="text-[13px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-medium">
@@ -54,7 +54,7 @@ export const DocsHeaderPanel: React.FC<DocsHeaderPanelProps> = ({
             <Sparkles className="w-4 h-4" />
           </button>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="sr-only">
           Busca semântica local (RAG) nos README e docs dos projetos e das pastas adicionais configuradas.
         </p>
       </div>

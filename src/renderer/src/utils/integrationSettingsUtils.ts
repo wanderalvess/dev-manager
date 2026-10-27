@@ -83,9 +83,10 @@ export function isHttpUrl(value: string | undefined): boolean {
 export function validateFlow(flow: IntegrationFlowDefinition): string[] {
   const issues: string[] = [];
   if (!flow.name?.trim()) issues.push('Informe o nome do fluxo.');
-  if (!flow.chBatchType?.trim()) issues.push('Informe o tipo de lote no CH.');
-  if (!flow.evidence?.pdvQuery?.trim()) issues.push('Informe a consulta de evidência no PDV.');
-  if (!(flow.evidence?.pdvWaitSeconds > 0)) issues.push('A espera pela descida ao PDV precisa ser maior que zero.');
+  // Tipo de lote e consulta do PDV são opcionais: o status por loja vem do PDVSync, e a consulta só confirma
+  if (flow.evidence?.pdvQuery?.trim() && !(flow.evidence?.pdvWaitSeconds > 0)) {
+    issues.push('A espera pela descida ao PDV precisa ser maior que zero.');
+  }
   if (flow.trigger && flow.trigger.path.trim() && !flow.trigger.path.trim().startsWith('/')) {
     issues.push('O caminho de disparo no WSH deve começar com "/".');
   }
