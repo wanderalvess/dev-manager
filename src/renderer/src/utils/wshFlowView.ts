@@ -1,5 +1,5 @@
 import { WSH_CATEGORY_ORDER, findFlowByRoute, flowLabel, type WshFlow } from '../../../shared/wshFlowCatalog';
-import type { WshRoute } from '../../../shared/wshMonitorTypes';
+import type { WshRoute, WshScheduleInfo } from '../../../shared/wshMonitorTypes';
 
 /** Apresentação pura do catálogo de fluxos no Monitor do WSH: o filtro agrupado e a ficha do fluxo. */
 
@@ -49,4 +49,36 @@ export function flowFacts(flow: WshFlow): { label: string; value: string }[] {
   if (flow.pdvTables?.length) facts.push({ label: 'Tabelas do PDVOmni', value: flow.pdvTables.join(', ') });
   if (flow.scheduled) facts.push({ label: 'Agendamento', value: 'Roda sozinho; o intervalo é configurado em cada cliente' });
   return facts;
+}
+
+/** 300 → "5 min", 5 → "5 s", 5400 → "1 h 30 min". */
+export function formatSeconds(seconds: number): string {
+  if (seconds < 60) return `${seconds} s`;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = seconds % 60;
+  return [hours && `${hours} h`, minutes && `${minutes} min`, rest && `${rest} s`].filter(Boolean).join(' ');
+}
+
+export interface ScheduleFact {
+  label: string;
+  value: string;
+  warning: boolean;
+}
+
+/** O agendamento lido do ambiente, um par por fluxo que usa a rota. Rota parada ou sem agendamento vira aviso. */
+export function scheduleFacts(info: WshScheduleInfo): ScheduleFact[] {
+  if (info.flows.length === 0) {
+    return [{ label: 'Neste ambiente', value: 'A rota não está em nenhum fluxo do WSH: nada a dispara.', warning: true }];
+  }
+  return info.flows.map((flow) => {
+    const steps = `${flow.activeSteps} de ${flow.totalSteps} passo(s) ativo(s)`;
+    const when = flow.schedules.length
+      ? flow.schedules
+          .map((s) => `a cada ${s.intervalSeconds !== undefined ? formatSeconds(s.intervalSeconds) : '?'}${s.initialDelaySeconds ? ` (começa ${formatSeconds(s.initialDelaySeconds)} após o WSH subir)` : ''} pelo agendamento "${s.name}"`)
+          .join('; ')
+      : 'sem agendamento: só roda quando outro fluxo ou alguém o dispara';
+    const value = flow.routeActive ? `${when} · ${steps}` : `Passo desta rota inativo (ATIVO = N): o WSH pula a rota · ${steps}`;
+    return { label: `Fluxo "${flow.name}" neste ambiente`, value, warning: !flow.routeActive };
+  });
 }

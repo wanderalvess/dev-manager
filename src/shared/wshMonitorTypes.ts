@@ -112,6 +112,24 @@ export interface WshRouteLayout {
   fields: WshLayoutField[];
 }
 
+/** Um fluxo do WSH que usa a rota: passos ativos (ATIVO = S) e os agendamentos que o disparam, como estão no ambiente. */
+export interface WshScheduledFlow {
+  name: string;
+  /** O passo desta rota está ativo no fluxo; inativo, o WSH pula a rota e nada novo é gravado. */
+  routeActive: boolean;
+  activeSteps: number;
+  totalSteps: number;
+  schedules: { name: string; intervalSeconds?: number; initialDelaySeconds?: number }[];
+}
+
+export interface WshScheduleInfo {
+  route: string;
+  /** Vazio: a rota não está em nenhum fluxo deste ambiente. */
+  flows: WshScheduledFlow[];
+}
+
+export type WshScheduleResponse = { success: true; info: WshScheduleInfo } | { success: false; error: string };
+
 export type WshLayoutResponse = { success: true; layouts: WshRouteLayout[] } | { success: false; error: string };
 
 export type WshRoutesResponse = { success: true; routes: WshRoute[] } | { success: false; error: string };

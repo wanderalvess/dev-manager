@@ -37,6 +37,12 @@ describe('catálogo dos fluxos do WSH', () => {
     expect(findFlowByRoute(undefined)).toBeUndefined();
   });
 
+  it('Preço Oferta, visto no ambiente e fora do levantamento: sem número de fluxo, depende do Produto', () => {
+    const oferta = findFlowByRoute('WTA - Buscar Preco Oferta');
+    expect(oferta).toMatchObject({ category: 'Preços', direction: 'envio', dependsOn: ['09'] });
+    expect(flowLabel(oferta!)).toBe('Preço Oferta');
+  });
+
   it('sentido: catálogo primeiro, prefixo da rota para o que não está nele', () => {
     expect(flowDirection('WTA - Buscar Produto PDV')).toBe('envio');
     expect(flowDirection('PDVSYNC - Buscar vendas')).toBe('recebimento');

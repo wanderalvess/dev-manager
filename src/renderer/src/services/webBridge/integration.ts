@@ -11,6 +11,7 @@ import type {
   WshLayoutRequest,
   WshLayoutResponse,
   WshRoutesResponse,
+  WshScheduleResponse,
   WshSearchRequest,
   WshSearchResponse
 } from '../../../../shared/wshMonitorTypes';
@@ -52,6 +53,8 @@ export function createIntegrationApi({ apiFetch }: BridgeDeps) {
 
     integrationWshDependencies: (route: string): Promise<WshDependenciesResponse> => post('/api/integration/wsh/dependencies', { route }),
 
-    integrationWshLayout: (request: WshLayoutRequest): Promise<WshLayoutResponse> => post('/api/integration/wsh/layout', request)
+    integrationWshLayout: (request: WshLayoutRequest): Promise<WshLayoutResponse> => post('/api/integration/wsh/layout', request),
+
+    integrationWshSchedule: (route: string): Promise<WshScheduleResponse> => post('/api/integration/wsh/schedule', { route })
   } satisfies Partial<ElectronAPI>;
 }

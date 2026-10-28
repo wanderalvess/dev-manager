@@ -7,7 +7,7 @@
 export type WshFlowDirection = 'envio' | 'recebimento' | 'monitor' | 'utilitario';
 
 export interface WshFlow {
-  /** Número do fluxo com dois dígitos ("09"). */
+  /** Número do fluxo com dois dígitos ("09"); um fluxo fora do levantamento usa um nome ("preco-oferta"). */
   id: string;
   name: string;
   category: string;
@@ -84,6 +84,9 @@ export const WSH_FLOWS: readonly WshFlow[] = [
   flow({ id: '30', name: 'Preço Embalagem', category: 'Preços', direction: 'envio', searchRoute: 'WTA - Buscar Preco Embalagem', sendRoute: 'PDVSYNC - ENVIAR PRECO EMBALAGEM', apiPath: '/winthor/precos/v1/precos-embalagens', apiProject: 'winthor-integracao-precos', oracleTables: ['PCEMBALAGEM'], pdvTables: ['preco'], dependsOn: ['09', '02'] }),
   flow({ id: '32', name: 'Preço Fixo', category: 'Preços', direction: 'envio', searchRoute: 'WTA - Buscar Preco Fixo', sendRoute: 'PDVSYNC - ENVIAR PRECO FIXO', apiPath: '/winthor/precos/v1/precos-fixos', apiProject: 'winthor-integracao-precos', oracleTables: ['PCPRECOPROM'], pdvTables: ['preco_promocional'], dependsOn: ['09', '17', '28', '31'] }),
   flow({ id: '33', name: 'Política de Desconto e Acréscimo', category: 'Preços', direction: 'envio', searchRoute: 'WTA - Buscar Desconto e Acrescimo', sendRoute: 'PDVSYNC - ENVIAR DESCONTO E ACRESCIMO', apiPath: '/winthor/precos/v1/politica-desconto', apiProject: 'winthor-integracao-precos', oracleTables: ['PCDESCONTO'], pdvTables: ['regra_desconto_acrescimo'], dependsOn: ['09', '27', '28', '17'] }),
+  // Fora do levantamento WORKFLOW_PDVSYNC e do repositório de layouts: rota vista no ambiente (2026-10-26), sem número de fluxo conhecido.
+  // Depende do Produto como os demais preços.
+  flow({ id: 'preco-oferta', name: 'Preço Oferta', category: 'Preços', direction: 'envio', searchRoute: 'WTA - Buscar Preco Oferta', sendRoute: 'PDVSYNC - Enviar Preco Oferta', dependsOn: ['09'] }),
   flow({ id: '12', name: 'Operadora Cartão', category: 'Formas de pagamento', direction: 'envio', searchRoute: 'WTA - Buscar Operadora PDV', sendRoute: 'PDVSYNC - SALVAR OPERADORA', apiPath: '/winthor/venda/v0/operadoras', apiProject: 'winthor-venda', oracleTables: ['PCOPERADORACARTAO'], pdvTables: ['pagamento_operadora', 'pagamento_forma_operadora'] }),
   flow({ id: '13', name: 'Planos de Pagamento', category: 'Formas de pagamento', direction: 'envio', searchRoute: 'WTA - Buscar planos de pgto', sendRoute: 'PDVSYNC - ENVIAR PLANOS DE PGTO', apiPath: '/winthor/venda/v0/planos-pagamentos', apiProject: 'winthor-venda', oracleTables: ['PCPLPAG', 'PCPLPAGFILIAL'], pdvTables: ['pagamento_condicao', 'pagamento_forma', 'pagamento_preco'] }),
   flow({ id: '14', name: 'Cobranças Forma Pgto', category: 'Formas de pagamento', direction: 'envio', searchRoute: 'WTA - Buscar Tipos Cobrancas', sendRoute: 'PDVSYNC - ENVIAR FORMAS DE PGTO', apiPath: '/winthor/venda/v0/tipos-cobrancas/pdv-sync', apiProject: 'winthor-venda', oracleTables: ['PCCOB'], dependsOn: ['12', '13', '21'] }),
@@ -132,7 +135,8 @@ export function flowDirection(routeName: string | undefined): WshFlowDirection {
   return routeName && normalizeRouteName(routeName).startsWith('PDVSYNC') ? 'recebimento' : 'envio';
 }
 
-export const flowLabel = (f: Pick<WshFlow, 'id' | 'name'>) => `FLUXO-${f.id} · ${f.name}`;
+/** "FLUXO-09 · Produto"; fluxo sem número conhecido (fora do levantamento) aparece só pelo nome. */
+export const flowLabel = (f: Pick<WshFlow, 'id' | 'name'>) => (/^\d+$/.test(f.id) ? `FLUXO-${f.id} · ${f.name}` : f.name);
 
 /** Dependências que o erro aponta, pelo campo recusado (ex.: `impostos` vazio no Produto → ICMS). */
 export function hintedDependencies(f: WshFlow | undefined, fields: string[]): string[] {

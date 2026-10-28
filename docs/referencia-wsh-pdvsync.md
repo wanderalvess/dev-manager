@@ -134,7 +134,9 @@ O `{{TIPO_LOTE}}` é um SELECT que devolve um código fixo por rota de busca. Os
 Os fluxos não são disparados à mão: o WSH os executa por agendamento. **O intervalo é configuração de cada cliente**
 (`PCINTEGRACAOAGENDAMENTO.AGENDAMENTOSEGUNDOS`): por isso o repositório traz 600 s para a consulta de status do lote e o
 levantamento WORKFLOW_PDVSYNC traz 300 s, e nenhum dos dois vale para todo ambiente. Os layouts sugerem 300 s para vendas,
-monitor de vendas, movimento de caixa e pedidos. O Hub não fixa intervalo: só indica que o fluxo roda por agendamento. Ativar ou desativar um fluxo é a coluna `ATIVO` de `PCINTEGRACAOFLUXOEXECUCAO` (nos fluxos que li, Vendas e Produto,
+monitor de vendas, movimento de caixa e pedidos. O Hub não fixa intervalo no catálogo: a Ficha do fluxo, aberta, lê o agendamento do
+próprio ambiente (`PCINTEGRACAOFLUXOEXECUCAO` com a rota, `PCINTEGRACAOAGENDAMENTOFLUXO` e `PCINTEGRACAOAGENDAMENTO`), aceitando a
+ligação por id ou por descrição, porque os layouts usam nomes e o tipo da coluna no banco ainda não foi confirmado. Ativar ou desativar um fluxo é a coluna `ATIVO` de `PCINTEGRACAOFLUXOEXECUCAO` (nos fluxos que li, Vendas e Produto,
 os layouts vêm com `N`).
 
 ## 5. O que isso muda no Rastreio de Integração

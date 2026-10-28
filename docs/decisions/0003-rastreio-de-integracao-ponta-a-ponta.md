@@ -363,7 +363,10 @@ credencial do PDVSync:
   (*Atualizar Status Lote Retaguarda*) grava o status por loja (`pdvsync-post-status-...`), mas não roda no ambiente coletado.
 - **Rastrear lote e o cliente do PDVSync continuam**, como complemento para quem tiver as credenciais; deixam de ser o caminho principal.
 - **Catálogo de fluxos (WORKFLOW_PDVSYNC):** `shared/wshFlowCatalog.ts` liga a rota ao fluxo (nome, categoria, sentido, API,
-  tabelas, se roda por agendamento e dependências; o intervalo é de cada cliente e não entra no catálogo). O filtro mostra "FLUXO-09 · Produto" agrupado por categoria; rota fora do catálogo aparece
+  tabelas, se roda por agendamento e dependências; o intervalo é de cada cliente e não entra no catálogo: a Ficha do fluxo o lê do
+  Oracle do ambiente, junto com o `ATIVO` do passo da rota, pela rota REST `POST /api/integration/wsh/schedule` e no `schedule` da tool
+  `integration_check_wsh`). *Preço Oferta* (rota vista no ambiente, fora do levantamento e dos layouts) entra sem número de fluxo,
+  dependendo do Produto. O filtro mostra "FLUXO-09 · Produto" agrupado por categoria; rota fora do catálogo aparece
   pelo nome, em "Outras rotas".
 - **Sentido:** o percurso usa o perfil de envio (WinThor → WSH → PDVSync → PDV) ou de recebimento (PDVSync → WSH → WinThor →
   retaguarda). Fora do catálogo, o prefixo da rota decide (`PDVSYNC -` = recebimento).

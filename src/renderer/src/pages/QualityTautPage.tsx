@@ -19,7 +19,7 @@ export const QualityTautPage: React.FC<QualityTautPageProps> = ({ onNavigate, se
       title="TAUT (Cypress)"
       description="Automação de testes E2E: projeto, execução, cobertura e intake de casos via CSV."
     >
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto px-4 py-3 md:px-5 md:py-4">
         <TautAutomationPanel
           settings={settings}
           onNavigateToSettings={() => {

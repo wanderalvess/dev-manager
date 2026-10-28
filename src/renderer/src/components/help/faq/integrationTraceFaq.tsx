@@ -38,6 +38,12 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
               pelo campo recusado: <code className="font-mono text-primary">impostos</code> vazio no Produto aponta o ICMS (FLUXO-07).
             </li>
             <li>
+              <strong className="text-foreground">Agendamento deste ambiente:</strong> ao abrir a <em>Ficha do fluxo</em>, o Hub lê do
+              Oracle de quanto em quanto tempo o fluxo roda neste cliente (ex.: a cada 5 min), se o passo da rota está ativo e quantos
+              passos do fluxo estão ligados. Rota com o passo desligado (<code className="font-mono text-primary">ATIVO = N</code>) ou fora
+              de qualquer fluxo aparece em destaque: o WSH não a executa e nada novo chega.
+            </li>
+            <li>
               <strong className="text-foreground">Dois sentidos:</strong> envio (WinThor → PDVSync) e recebimento pelo ERP (vendas, pedidos e
               caixa: PDVSync → WinThor). O percurso animado desenha o sentido do fluxo.
             </li>

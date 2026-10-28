@@ -65,6 +65,24 @@ describe('IntegrationTraceService: monitor do WSH', () => {
     expect(await service.explainWshLayout({ routes: [], fields: ['tipo'] })).toMatchObject({ success: false });
   });
 
+  it('agendamento: lê as três tabelas de configuração e cruza a rota com o fluxo; tabela ausente vira mensagem', async () => {
+    const executeQuery = vi.fn(async (_c: unknown, sql: string) => {
+      if (sql.includes('pcintegracaofluxoexecucao')) return { success: true, rows: [{ ID: 1, DESCRICAO: 'Vendas', ATIVO: 'S', SERVICO: 'PDVSYNC - Buscar vendas' }] };
+      if (sql.includes('pcintegracaoagendamentofluxo')) return { success: true, rows: [{ IDAGENDAMENTO: 'pdvsync - vendas', IDFLUXO: 'Vendas' }] };
+      return { success: true, rows: [{ DESCRICAO: 'pdvsync - vendas', AGENDAMENTOSEGUNDOS: 300 }] };
+    });
+    const { service } = makeService(withConnection, { executeQuery });
+
+    const response = await service.checkWshSchedule('PDVSYNC - Buscar vendas');
+
+    expect(response).toMatchObject({ success: true, info: { flows: [{ name: 'Vendas', routeActive: true, schedules: [{ intervalSeconds: 300 }] }] } });
+    expect(executeQuery).toHaveBeenCalledTimes(3);
+
+    executeQuery.mockImplementation(async () => ({ success: false, error: 'ORA-00942: table or view does not exist' }) as never);
+    expect(await service.checkWshSchedule('PDVSYNC - Buscar vendas')).toEqual({ success: false, error: 'ORA-00942: table or view does not exist' });
+    expect(await service.checkWshSchedule('  ')).toMatchObject({ success: false });
+  });
+
   it('entrada inválida e erro do banco voltam como mensagem, nunca exceção', async () => {
     const executeQuery = vi.fn(async () => ({ success: false, error: 'ORA-00942: table or view does not exist' }));
     const { service } = makeService(withConnection, { executeQuery });

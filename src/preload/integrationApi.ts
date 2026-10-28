@@ -12,6 +12,7 @@ import type {
   WshLayoutRequest,
   WshLayoutResponse,
   WshRoutesResponse,
+  WshScheduleResponse,
   WshSearchRequest,
   WshSearchResponse
 } from '../shared/wshMonitorTypes';
@@ -29,5 +30,6 @@ export const integrationApi = {
   integrationWshRoutes: (): Promise<WshRoutesResponse> => ipcRenderer.invoke('integration:wsh-routes'),
   integrationWshSearch: (request: WshSearchRequest): Promise<WshSearchResponse> => ipcRenderer.invoke('integration:wsh-search', request),
   integrationWshDependencies: (route: string): Promise<WshDependenciesResponse> => ipcRenderer.invoke('integration:wsh-dependencies', route),
-  integrationWshLayout: (request: WshLayoutRequest): Promise<WshLayoutResponse> => ipcRenderer.invoke('integration:wsh-layout', request)
+  integrationWshLayout: (request: WshLayoutRequest): Promise<WshLayoutResponse> => ipcRenderer.invoke('integration:wsh-layout', request),
+  integrationWshSchedule: (route: string): Promise<WshScheduleResponse> => ipcRenderer.invoke('integration:wsh-schedule', route)
 };

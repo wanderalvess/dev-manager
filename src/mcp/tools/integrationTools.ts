@@ -83,7 +83,7 @@ export function registerIntegrationTools(server: McpServer, { integrationTraceSe
     {
       title: 'Consultar o monitor do WSH',
       description:
-        'Consulta o que o WSH (Winthor Smart Hub) gravou na PCINTEGRACAOCORE do Oracle, sem credencial do PDVSync: cada linha é um item (produto, preço, cobrança...) buscado no WinThor por uma rota de busca e enviado ao PDVSync pela rota de envio. Filtra por rota (routeId), trecho do IDEXTERNO (ex.: código do produto), status (error = STATUS 3, ok = STATUS 2) e período. Devolve status, tentativas, datas da busca e do envio, a resposta do PDVSync lida da OBSERVACAO e os erros separados em ownErrors (citam o item) e otherErrors (outros itens do mesmo envio: o PDVSync recusa a requisição inteira). Com routeId, devolve também dependencies: a última integração de cada fluxo do qual ele depende (ex.: Produto depende de ICMS, PIS/COFINS e NCM; found=false significa que o fluxo nunca integrou neste banco). Cada item com erro traz suggestions: o que fazer, em ordem (corrigir os itens que derrubaram o envio, valor fora da lista aceita, campo vazio, dependência que não integrou), com o link do TDN quando o PDVSync manda. Vale para envio (WinThor → PDVSync) e recebimento (vendas, pedidos e caixa: PDVSync → WinThor). Só leitura; usa a conexão Oracle da camada WinThor.',
+        'Consulta o que o WSH (Winthor Smart Hub) gravou na PCINTEGRACAOCORE do Oracle, sem credencial do PDVSync: cada linha é um item (produto, preço, cobrança...) buscado no WinThor por uma rota de busca e enviado ao PDVSync pela rota de envio. Filtra por rota (routeId), trecho do IDEXTERNO (ex.: código do produto), status (error = STATUS 3, ok = STATUS 2) e período. Devolve status, tentativas, datas da busca e do envio, a resposta do PDVSync lida da OBSERVACAO e os erros separados em ownErrors (citam o item) e otherErrors (outros itens do mesmo envio: o PDVSync recusa a requisição inteira). Com routeId, devolve também dependencies: a última integração de cada fluxo do qual ele depende (ex.: Produto depende de ICMS, PIS/COFINS e NCM; found=false significa que o fluxo nunca integrou neste banco) e schedule: os fluxos do WSH que usam a rota, se o passo dela está ativo (routeActive) e o intervalo do agendamento em segundos, como configurado neste cliente. Cada item com erro traz suggestions: o que fazer, em ordem (corrigir os itens que derrubaram o envio, valor fora da lista aceita, campo vazio, dependência que não integrou), com o link do TDN quando o PDVSync manda. Vale para envio (WinThor → PDVSync) e recebimento (vendas, pedidos e caixa: PDVSync → WinThor). Só leitura; usa a conexão Oracle da camada WinThor.',
       inputSchema: {
         routeId: z.number().int().positive().optional().describe('Id da rota de busca (PCINTEGRACAOROTASERVICO.ID); sem ele, todas'),
         text: z.string().optional().describe('Trecho do IDEXTERNO ou do IDINTERNO: "produto-1000", o código do item ou o cupom da venda (o IDINTERNO da venda é filial-série-cupom, ex.: 1-3-10905)'),
@@ -99,11 +99,19 @@ export function registerIntegrationTools(server: McpServer, { integrationTraceSe
         const routeList = routes.success ? routes.routes : [];
         // Com o fluxo escolhido, junta a situação dos fluxos de que ele depende (a causa provável de muitos erros)
         const routeName = request.routeId ? routeList.find((route) => route.id === request.routeId)?.name : undefined;
-        const dependencies = routeName ? await integrationTraceService.checkWshDependencies(routeName) : undefined;
+        const [dependencies, schedule] = routeName
+          ? await Promise.all([integrationTraceService.checkWshDependencies(routeName), integrationTraceService.checkWshSchedule(routeName)])
+          : [undefined, undefined];
         const deps = dependencies?.success ? dependencies.dependencies : undefined;
         // Cada item com erro já vem com o "Como resolver" (regras sobre os erros, o catálogo e as dependências)
         const items = response.items.map((item) => ({ ...item, suggestions: suggestWshFixes(item, deps) }));
-        return reply({ ...response, items, routes: routeList, ...(deps ? { dependencies: deps } : {}) });
+        return reply({
+          ...response,
+          items,
+          routes: routeList,
+          ...(deps ? { dependencies: deps } : {}),
+          ...(schedule?.success ? { schedule: schedule.info } : {})
+        });
       } catch (err: any) {
         return error(err?.message || 'Falha ao consultar o monitor do WSH.');
       }

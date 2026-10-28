@@ -3,7 +3,8 @@ import { GitBranch, Loader2 } from 'lucide-react';
 import { findFlowByRoute, flowLabel, hintedDependencies } from '../../../../../shared/wshFlowCatalog';
 import type { WshDependency, WshItem } from '../../../../../shared/wshMonitorTypes';
 import { formatTraceTime } from '../../../utils/integrationTraceView';
-import { flowFacts } from '../../../utils/wshFlowView';
+import { flowFacts, scheduleFacts } from '../../../utils/wshFlowView';
+import { useWshSchedule } from '../../../hooks/integration/useWshSchedule';
 import type { WshDependenciesState } from '../../../hooks/integration/useWshDependencies';
 
 function dependencyLine(dep: WshDependency, periodDays: number): { text: string; tone: string } {
@@ -67,23 +68,42 @@ export const WshDependenciesCard: React.FC<{ item: WshItem; deps: WshDependencie
   );
 };
 
-/** Ficha do fluxo (sentido, API, tabelas, agendamento), recolhida no fim do detalhe. */
+/** Ficha do fluxo (sentido, API, tabelas, agendamento), recolhida no fim do detalhe. Aberta, lê o agendamento do ambiente. */
 export const WshFlowFacts: React.FC<{ item: WshItem }> = ({ item }) => {
+  const [open, setOpen] = React.useState(false);
+  const schedule = useWshSchedule(item.route, open);
   const flow = findFlowByRoute(item.route);
   if (!flow) return null;
+  const real = schedule && !schedule.loading && schedule.info ? scheduleFacts(schedule.info) : null;
+  // O agendamento lido do ambiente substitui a frase genérica do catálogo
+  const facts = flowFacts(flow).filter((fact) => !(real && fact.label === 'Agendamento'));
   return (
-    <details className="border border-border rounded-xl p-3">
+    <details className="border border-border rounded-xl p-3" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary className="text-xs font-semibold text-foreground cursor-pointer">
         Ficha do fluxo: API, tabelas, agendamento{flow.fieldOrigins ? " e origem dos campos" : ""}
       </summary>
       <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-        {flowFacts(flow).map((fact) => (
+        {facts.map((fact) => (
           <div key={fact.label} className="min-w-0">
             <dt className="text-2xs text-muted-foreground">{fact.label}</dt>
             <dd className="text-xs text-foreground break-words font-mono">{fact.value}</dd>
           </div>
         ))}
+        {real?.map((fact) => (
+          <div key={fact.label} className="min-w-0 sm:col-span-2">
+            <dt className="text-2xs text-muted-foreground">{fact.label}</dt>
+            <dd className={`text-xs break-words ${fact.warning ? 'text-warning font-medium' : 'text-foreground'}`}>{fact.value}</dd>
+          </div>
+        ))}
       </dl>
+      {schedule?.loading && (
+        <p className="mt-2 text-2xs text-muted-foreground flex items-center gap-1.5">
+          <Loader2 className="w-3 h-3 animate-spin" /> Lendo o agendamento deste ambiente...
+        </p>
+      )}
+      {schedule && !schedule.loading && schedule.error && (
+        <p className="mt-2 text-2xs text-muted-foreground">Agendamento do ambiente indisponível: {schedule.error}</p>
+      )}
       {flow.fieldOrigins && (
         <div className="mt-3 space-y-1">
           <p className="text-2xs font-semibold text-foreground">

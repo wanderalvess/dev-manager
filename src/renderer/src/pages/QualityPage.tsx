@@ -60,7 +60,7 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate: navigate, 
         onNavigate={onNavigate}
       />
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-3 md:px-5 md:py-4 space-y-3">
         <QualityMetricsStrip metrics={metrics} onFilterStatus={handleFilterByStatus} />
 
         {tabMode === 'matrix' && (

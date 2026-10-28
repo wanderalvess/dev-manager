@@ -35,11 +35,13 @@ import {
   type WshLayoutRequest,
   type WshLayoutResponse,
   type WshRoutesResponse,
+  type WshScheduleResponse,
   type WshSearchRequest,
   type WshSearchResponse
 } from '../../shared/wshMonitorTypes';
 import { buildDependencyQuery, dependencyFlows, toDependencies } from './integration/wshDependencyQuery';
 import { buildLayoutQuery, toRouteLayouts, validateLayoutRequest } from './integration/wshLayoutQuery';
+import { FLOW_STEPS_SQL, SCHEDULE_FLOWS_SQL, SCHEDULE_MAX_ROWS, SCHEDULES_SQL, toScheduleInfo } from './integration/wshScheduleQuery';
 
 /**
  * Fonte dos traces do APM. No app e no servidor web é o próprio `ApmService` (síncrono); no MCP, que
@@ -258,6 +260,19 @@ export class IntegrationTraceService {
     const result = await this.databaseService.executeQuery(connection, sql, validation.value.routes.length, binds);
     if (!result.success) return { success: false, error: result.error || 'Falha ao ler o layout das rotas do WSH.' };
     return { success: true, layouts: toRouteLayouts(validation.value, result.rows ?? []) };
+  }
+
+  /** Fluxos que usam a rota, passos ativos e o intervalo do agendamento como estão neste ambiente. Só leitura. */
+  public async checkWshSchedule(routeName: string): Promise<WshScheduleResponse> {
+    const route = String(routeName ?? '').trim();
+    if (!route) return { success: false, error: 'Informe a rota.' };
+    const connection = this.wshConnection();
+    if (!connection) return { success: false, error: IntegrationTraceService.NO_WSH_CONNECTION };
+    const run = (sql: string) => this.databaseService.executeQuery(connection, sql, SCHEDULE_MAX_ROWS);
+    const [steps, schedules, links] = await Promise.all([run(FLOW_STEPS_SQL), run(SCHEDULES_SQL), run(SCHEDULE_FLOWS_SQL)]);
+    const failed = [steps, schedules, links].find((result) => !result.success);
+    if (failed) return { success: false, error: failed.error || 'Falha ao ler o agendamento do WSH.' };
+    return { success: true, info: toScheduleInfo(route, steps.rows ?? [], schedules.rows ?? [], links.rows ?? []) };
   }
 
   // --- Histórico ---
