@@ -163,7 +163,8 @@ O levantamento WORKFLOW_PDVSYNC (serviço `winthor-integracao-core`, 38 fluxos e
   (cliente). A rota `PDVSYNC - BUSCAR ...` cria a linha; a `WTA - Enviar ...` grava no WinThor.
 - **Monitor:** 18 (status pedido), 24 (status do lote) e 25 (status venda). **Utilitário:** 22 (registrar IP).
 - **Processos online (fora do WSH):** 12 endpoints do PDVOmni vão direto ao WinThor (pré-venda, crédito, estoque, nota de
-  entrada e saída, formas e condições do cliente). Não passam pela `PCINTEGRACAOCORE`.
+  entrada e saída, formas e condições do cliente). Não passam pela `PCINTEGRACAOCORE`. Estão em `src/shared/onlineProcessCatalog.ts`
+  e na aba *Online do PDV*; as tabelas Oracle de cada um ainda serão mapeadas (Statement Tracer durante uma operação real).
 
 **Dependências.** Um fluxo só integra bem se os fluxos de que ele depende já estão no PDVSync; senão os `idRetaguarda*`
 referenciados não existem. A mais importante: **Produto (09) depende de ICMS (07), PIS/COFINS (06) e NCM (05)**, que ele

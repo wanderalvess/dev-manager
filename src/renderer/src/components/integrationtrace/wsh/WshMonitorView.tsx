@@ -47,7 +47,7 @@ export const WshMonitorView: React.FC<WshMonitorViewProps> = ({ settingsVersion,
           </p>
           <p className="text-2xs text-muted-foreground">
             Vale para os dois sentidos: envio (WinThor → PDVSync) e recebimento pelo ERP (vendas, pedidos e caixa). Os processos online do
-            PDVOmni, como pré-venda e crédito, vão direto ao WinThor sem passar pelo WSH e não aparecem aqui.
+            PDVOmni, como pré-venda e crédito, vão direto ao WinThor sem passar pelo WSH: estão na aba Online do PDV.
           </p>
         </div>
       ) : monitor.items.length === 0 ? (

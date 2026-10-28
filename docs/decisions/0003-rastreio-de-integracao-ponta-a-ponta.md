@@ -385,7 +385,11 @@ credencial do PDVSync:
   filial-série-cupom). A lista mostra o `IDINTERNO` quando existe. Assim o cupom acha a venda sem ler o `DADOSTRANSFORMADOS`.
 - **Origem dos campos:** `fieldOrigins` no catálogo diz de onde o JOLT tira cada campo, conferido num par real (vendas, FLUXO-16). O "Como
   resolver" usa isso quando o destino recusa um campo ("codCob vem de PagamentoForma.IdRetaguarda no PDVSync").
-- **Processos online** (PDVOmni → WinThor direto) ficam para uma próxima etapa: não passam pelo WSH.
+- **Processos online** (PDVOmni → WinThor direto) não passam pelo WSH. Primeiro passo: `shared/onlineProcessCatalog.ts` com os 12
+  endpoints do levantamento (método, caminho, projeto, leitura ou escrita) e a aba *Online do PDV*, que os lista. Pré-venda, nota de
+  entrada e reserva de estoque são o mesmo `POST .../orders/pdvsync`: no log, só o corpo diferencia. O APM não está de pé no ambiente,
+  então a leitura do resultado virá do Oracle: as tabelas de cada processo serão mapeadas pela captura do Statement Tracer durante
+  uma operação real, e depois a aba consulta por pedido ou cliente, só leitura.
 
 ### Decisões da vista animada e do modo ao vivo
 

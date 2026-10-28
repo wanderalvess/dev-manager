@@ -4,6 +4,7 @@ import { BatchTraceView } from '../components/integrationtrace/BatchTraceView';
 import { IntegrationTraceTabs, type IntegrationTraceTab } from '../components/integrationtrace/IntegrationTraceTabs';
 import { ReadinessView } from '../components/integrationtrace/ReadinessView';
 import { WshMonitorView } from '../components/integrationtrace/wsh/WshMonitorView';
+import { OnlineProcessesView } from '../components/integrationtrace/online/OnlineProcessesView';
 import { requestSettingsTab } from '../utils/settingsDeepLink';
 
 interface IntegrationTracePageProps {
@@ -48,6 +49,9 @@ export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNa
         {/* O monitor não rola a página em tela larga: lista e detalhe rolam cada um no seu quadro */}
         <div hidden={tab !== 'wsh'} className="h-full overflow-y-auto lg:overflow-hidden">
           <WshMonitorView settingsVersion={settingsVersion} onOpenSettings={openSettings} />
+        </div>
+        <div hidden={tab !== 'online'} className="h-full overflow-y-auto pr-1 -mr-1">
+          <OnlineProcessesView />
         </div>
         <div hidden={tab !== 'readiness'} className="h-full overflow-y-auto pr-1 -mr-1">
           <ReadinessView onOpenSettings={openSettings} />
