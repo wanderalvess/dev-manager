@@ -26,6 +26,8 @@ export const IntegrationTab: React.FC<IntegrationTabProps> = ({ settings, setSet
         connections={settings.databaseConnections || []}
         connectionId={winthor?.dbConnectionId}
         onChange={(dbConnectionId) => config.updateLayer('winthor', { dbConnectionId })}
+        pdvConnectionId={config.layers.find((layer) => layer.layer === 'pdv')?.dbConnectionId}
+        onPdvChange={(dbConnectionId) => config.updateLayer('pdv', { dbConnectionId })}
       />
 
       <IntegrationOptionalSection
