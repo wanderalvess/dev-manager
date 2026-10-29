@@ -53,7 +53,7 @@ export const BackupHistoryTab: React.FC<BackupHistoryTabProps> = ({
         <p className="text-2xs">As rotinas manuais ou agendadas serão registradas aqui.</p>
       </div>
     ) : (
-      <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+      <div className="space-y-2 min-h-64 max-h-[calc(100vh-24rem)] overflow-y-auto">
         {backupHistory.map((h) => (
           <div
             key={h.id}

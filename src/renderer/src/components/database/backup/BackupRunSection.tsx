@@ -28,12 +28,26 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
   const missingFileTag = useCustomBackupCommand && !hasBackupFileTag(customBackupCommand);
 
   return (
-    <div className="space-y-3 pt-1">
+    <div className="space-y-3 min-w-0 xl:sticky xl:top-0 xl:rounded-[14px] xl:border xl:border-border xl:bg-muted/30 xl:p-5">
+      <dl className="hidden xl:block space-y-2 pb-2 text-[13px]">
+        <dt className="text-sm font-semibold text-foreground">Resumo da execução</dt>
+        <dd className="flex justify-between gap-3 text-muted-foreground">
+          <span>Pasta de destino</span>
+          <span className={`font-mono truncate ${backupFolder.trim() ? 'text-foreground' : 'text-warning'}`} title={backupFolder}>
+            {backupFolder.trim() || 'Pendente'}
+          </span>
+        </dd>
+        <dd className="flex justify-between gap-3 text-muted-foreground">
+          <span>Comando</span>
+          <span className="text-foreground">{useCustomBackupCommand ? 'Personalizado' : 'Padrão'}</span>
+        </dd>
+      </dl>
+
       <button
         type="button"
         onClick={onRun}
         disabled={isRunningBackup || !backupFolder.trim() || missingFileTag}
-        className="w-full flex items-center justify-center space-x-2 px-5 py-3 bg-info hover:bg-info/90 text-background rounded-xl font-bold shadow-md hover:shadow-lg transition disabled:opacity-50 text-sm tracking-wide cursor-pointer"
+        className="w-full h-12 flex items-center justify-center space-x-2 px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-[10px] font-medium transition-colors disabled:opacity-50 text-sm cursor-pointer"
       >
         {isRunningBackup ? (
           <>

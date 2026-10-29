@@ -26,9 +26,11 @@ export const BackupRunTab: React.FC<BackupRunTabProps> = ({
   onSelectFolder,
   onRun
 }) => (
-  <div className="space-y-4 animate-fade-in">
-    <BackupDestinationSection activeConnection={activeConnection} form={form} onSelectFolder={onSelectFolder} />
-    <BackupCommandModeSection activeConnection={activeConnection} form={form} />
+  <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-6 items-start animate-fade-in">
+    <div className="space-y-4 min-w-0">
+      <BackupDestinationSection activeConnection={activeConnection} form={form} onSelectFolder={onSelectFolder} />
+      <BackupCommandModeSection activeConnection={activeConnection} form={form} />
+    </div>
     <BackupRunSection
       isRunningBackup={isRunningBackup}
       backupFolder={form.backupFolder}
