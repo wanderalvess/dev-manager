@@ -5,7 +5,8 @@ import path from 'path';
 const ORACLE_TOOLS = new Set(['exp', 'imp', 'expdp', 'impdp', 'sqlplus', 'sqlldr']);
 
 export function isOracleTool(binary: string): boolean {
-  const name = path.basename(binary).toLowerCase().replace(/\.exe$/, '');
+  // Separa por "/" e "\" em qualquer plataforma: path.basename fora do Windows não reconhece "\".
+  const name = (binary.split(/[\\/]/).pop() || '').toLowerCase().replace(/\.exe$/, '');
   return ORACLE_TOOLS.has(name);
 }
 
