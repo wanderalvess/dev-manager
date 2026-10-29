@@ -12,6 +12,7 @@ import type {
 } from '../../../shared/authLockoutTypes';
 import { httpRequest } from '../../utils/httpRequest';
 import type { LockoutConfig } from './lockoutConfig';
+import { encodeWtaPassword } from './wtaPassword';
 
 export class LockoutAbortedError extends Error {
   constructor() {
@@ -58,8 +59,8 @@ export class LockoutRun {
     readonly config: LockoutConfig,
     private readonly emit: (progress: AuthLockoutProgress) => void
   ) {
-    this.secrets.add(config.userA.password);
-    if (config.userB) this.secrets.add(config.userB.password);
+    this.addPasswordSecret(config.userA.password);
+    if (config.userB) this.addPasswordSecret(config.userB.password);
   }
 
   get isAborted(): boolean {
@@ -86,12 +87,23 @@ export class LockoutRun {
     if (this.aborted) throw new LockoutAbortedError();
   }
 
+  /** Como a senha vai no corpo do login do WTA (MD5 maiúsculo por padrão). */
+  encodePassword(password: string): string {
+    return encodeWtaPassword(password, this.config.passwordEncoding);
+  }
+
+  /** Guarda a senha digitada e a forma enviada ao WTA: o servidor pode registrar qualquer uma das duas. */
+  addPasswordSecret(password: string): void {
+    this.secrets.add(password);
+    this.secrets.add(this.encodePassword(password));
+  }
+
   /** Senha errada única por tentativa: se aparecer no log, prova que o servidor registra a senha digitada. */
   nextWrongPassword(): string {
     this.wrongSeq += 1;
     const password = `Errada#${this.runId}-${this.wrongSeq}`;
     this.wrongPasswords.push(password);
-    this.secrets.add(password);
+    this.addPasswordSecret(password);
     return password;
   }
 
@@ -185,7 +197,7 @@ export class LockoutRun {
       method: 'POST',
       url: this.config.loginUrl,
       headers: { 'Content-Type': 'application/json', ...headers },
-      body: JSON.stringify({ login: user.login, senha: password })
+      body: JSON.stringify({ login: user.login, senha: this.encodePassword(password) })
     });
   }
 

@@ -28,7 +28,7 @@ export async function checkApiExceptions(run: LockoutRun): Promise<void> {
     const markers = [0, 1, 2, 3].map((i) => `mk${run.runId.replace(/\W/g, '')}r${round}i${i}`);
     const requests: CallOptions[] = [
       { checkId: 'api-exceptions', label: `Rodada ${round}: login com JSON malformado`, kind: 'probe', method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: `{"login":"${markers[0]}","senha":` },
-      { checkId: 'api-exceptions', label: `Rodada ${round}: login de usuário inexistente`, kind: 'login-wrong', user: `devmgr-${markers[1]}`, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: `devmgr-${markers[1]}`, senha: run.nextWrongPassword() }) },
+      { checkId: 'api-exceptions', label: `Rodada ${round}: login de usuário inexistente`, kind: 'login-wrong', user: `devmgr-${markers[1]}`, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: `devmgr-${markers[1]}`, senha: run.encodePassword(run.nextWrongPassword()) }) },
       { checkId: 'api-exceptions', label: `Rodada ${round}: API de logs com parâmetro inválido`, kind: 'probe', method: 'GET', url: withQuery(logsUrl, { pagina: '-1', limite: 'abc', ref: markers[2] }), withAuth: false },
       { checkId: 'api-exceptions', label: `Rodada ${round}: rota inexistente`, kind: 'probe', method: 'GET', url: `${baseUrl}/winthor/ferramenta/servidor/v1/${markers[3]}` }
     ];
@@ -134,11 +134,11 @@ export async function checkLogSinkFailure(run: LockoutRun): Promise<void> {
   const ghost = `devmgr-sink-${run.runId}`;
   const burst = await Promise.all(
     Array.from({ length: SINK_BURST }, (_, i) =>
-      run.call({ checkId: 'log-sink-failure', label: `Falha ${i + 1}/${SINK_BURST} com o log indisponível`, kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.nextWrongPassword() }) })
+      run.call({ checkId: 'log-sink-failure', label: `Falha ${i + 1}/${SINK_BURST} com o log indisponível`, kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.encodePassword(run.nextWrongPassword()) }) })
     )
   );
   const health = [
-    await run.call({ checkId: 'log-sink-failure', label: 'Serviço respondendo depois do lote (login)', kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.nextWrongPassword() }) }),
+    await run.call({ checkId: 'log-sink-failure', label: 'Serviço respondendo depois do lote (login)', kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.encodePassword(run.nextWrongPassword()) }) }),
     await run.call({ checkId: 'log-sink-failure', label: 'Serviço respondendo depois do lote (logs)', kind: 'logs', method: 'GET', url: logsUrl, withAuth: false })
   ];
   const all = [...burst, ...health];

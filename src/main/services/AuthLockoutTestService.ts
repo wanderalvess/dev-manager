@@ -133,7 +133,7 @@ export class AuthLockoutTestService {
     const login = settings.wtaLogin?.trim();
     let token: string | undefined;
     if (login && settings.wtaPassword && !testLogins.includes(login.toLowerCase())) {
-      run.secrets.add(settings.wtaPassword);
+      run.addPasswordSecret(settings.wtaPassword);
       const r = await run.login('log-correlation', { login, password: settings.wtaPassword }, settings.wtaPassword, `Login do WTA de Configurações (${login}) para ler a API de logs`);
       token = r.token;
     }

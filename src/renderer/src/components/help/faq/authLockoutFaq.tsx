@@ -11,7 +11,7 @@ export function getAuthLockoutFaq(): FaqItem[] {
       id: 'auth-lockout-test',
       question: 'Como valido o bloqueio de login do WinThor (5 falhas, duração, logoff, logs) em homologação?',
       category: 'Qualidade & Homologação',
-      tags: ['bloqueio', 'login', 'senha', 'tentativas', 'lockout', 'brute force', 'teste de carga', 'logoff', 'janela', 'winthor.log', 'logs', 'segurança', 'concorrência'],
+      tags: ['bloqueio', 'login', 'senha', 'md5', '401', 'tentativas', 'lockout', 'brute force', 'teste de carga', 'logoff', 'janela', 'winthor.log', 'logs', 'segurança', 'concorrência'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
@@ -21,6 +21,11 @@ export function getAuthLockoutFaq(): FaqItem[] {
             preenche a tabela de 12 regras com o resultado observado e as evidências de cada uma.
           </p>
           <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              {strong('Senha:')} digite a senha normal. O login do WTA recebe o MD5 dela em hexadecimal maiúsculo (senha{' '}
+              {code('1')} → {code('C4CA4238A0B923820DCC509A6F75849B')}), e o Dev Manager faz essa conversão; o hash pronto também é
+              aceito. Só troque para {strong('Texto puro')} se o seu WTA receber a senha sem hash.
+            </li>
             <li>
               {strong('Ordem:')} o usuário A erra 4 vezes (não pode bloquear), espera a janela e erra 5 (tem de bloquear). Com A bloqueado,
               o mesmo bloqueio serve para a senha certa (sem token nem cookie de sessão), outro cliente HTTP, o usuário B na mesma origem e o
