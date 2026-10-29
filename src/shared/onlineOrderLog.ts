@@ -5,6 +5,10 @@
  * gravado no WinThor, já com POSICAO) ou um R (no lugar do JSON, o motivo: "(WT-IM-0000239) -> Pedido ... já incluído. { [] }").
  */
 
+import type { OrderRejection } from './orderRejection';
+
+export { parseOrderRejection, type OrderRejection } from './orderRejection';
+
 export type OnlineOrderStatusFilter = 'all' | 'A' | 'R' | 'P';
 export type OnlineOrderTone = 'ok' | 'error' | 'pending' | 'other';
 
@@ -34,12 +38,6 @@ export interface OnlineOrderLogEntry {
   reason?: OrderRejection;
   /** Processando sem um aceito ou rejeitado depois, há mais de alguns minutos: o WTA não concluiu a chamada. */
   unanswered?: boolean;
-}
-
-export interface OrderRejection {
-  /** Código da mensagem do WinThor ("WT-IM-0000239"). */
-  code?: string;
-  message: string;
 }
 
 export type OnlineOrderLogResponse =
@@ -77,15 +75,6 @@ export function describeOrderJson(status: string | undefined): string {
   return known[code(status)] ?? 'JSON gravado';
 }
 
-/** "(WT-IM-0000239) -> Pedido HUB ou Market Place já incluído. { [] }" → código e mensagem; o "{ [] }" do fim sai. */
-export function parseOrderRejection(text: string | undefined): OrderRejection | undefined {
-  const raw = (text ?? '').trim();
-  if (!raw || raw.startsWith('{') || raw.startsWith('[')) return undefined;
-  const match = /^\(\s*([A-Z]{2,}-[A-Z0-9]+-\d+)\s*\)\s*(?:->)?\s*([\s\S]*)$/.exec(raw);
-  const message = (match ? match[2] : raw).replace(/\s*\{\s*\[\s*\]\s*\}\s*$/, '').trim();
-  return { ...(match ? { code: match[1] } : {}), message: message || raw };
-}
-
 /**
  * Marca o P que ficou sem desfecho: cada A ou R responde a um único P do mesmo pedido, o mais antigo ainda em aberto até a
  * data dele. Assim um reenvio (dois P e um A) deixa um P sem resposta. As linhas vêm da mais nova para a mais antiga.
@@ -118,4 +107,28 @@ export function prettyOrderJson(json: string | undefined, truncated: boolean): s
   } catch {
     return json;
   }
+}
+
+export interface RejectionGroup {
+  code?: string;
+  message: string;
+  count: number;
+  /** Pedidos com esse motivo, sem repetir, na ordem em que aparecem. */
+  orders: string[];
+}
+
+/** Os motivos de recusa mais frequentes do resultado, pelo código (ou pela mensagem, sem código). */
+export function topRejections(entries: OnlineOrderLogEntry[], limit = 5): RejectionGroup[] {
+  const groups = new Map<string, RejectionGroup>();
+  for (const entry of entries) {
+    if (!entry.reason) continue;
+    // Mesma mensagem com o número do pedido no fim ("Orçamento já cancelado - 1001971") cai no mesmo grupo
+    const message = entry.reason.message.replace(/\s*-\s*\d+\s*$/, '');
+    const key = `${entry.reason.code ?? ''}|${message}`;
+    const group = groups.get(key) ?? { ...(entry.reason.code ? { code: entry.reason.code } : {}), message, count: 0, orders: [] };
+    group.count += 1;
+    if (!group.orders.includes(entry.orderNumber)) group.orders.push(entry.orderNumber);
+    groups.set(key, group);
+  }
+  return [...groups.values()].sort((a, b) => b.count - a.count).slice(0, limit);
 }

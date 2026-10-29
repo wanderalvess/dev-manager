@@ -41,6 +41,7 @@ import {
 import { buildDependencyQuery, dependencyFlows, toDependencies } from './integration/wshDependencyQuery';
 import { buildLayoutQuery, toRouteLayouts, validateLayoutRequest } from './integration/wshLayoutQuery';
 import { FLOW_STEPS_SQL, SCHEDULE_FLOWS_SQL, SCHEDULE_MAX_ROWS, SCHEDULES_SQL, toScheduleInfo } from './integration/wshScheduleQuery';
+import { attachRuns } from './integration/wshExecutionQuery';
 import type { OnlineOrderLogRequest, OnlineOrderLogResponse } from '../../shared/onlineOrderLog';
 import { searchOrderLog } from './integration/onlineOrderLogQuery';
 import { createReadinessDeps } from './integration/readinessDeps';
@@ -255,7 +256,8 @@ export class IntegrationTraceService {
     const [steps, schedules, links] = await Promise.all([run(FLOW_STEPS_SQL), run(SCHEDULES_SQL), run(SCHEDULE_FLOWS_SQL)]);
     const failed = [steps, schedules, links].find((result) => !result.success);
     if (failed) return { success: false, error: failed.error || 'Falha ao ler o agendamento do WSH.' };
-    return { success: true, info: toScheduleInfo(route, steps.rows ?? [], schedules.rows ?? [], links.rows ?? []) };
+    const info = toScheduleInfo(route, steps.rows ?? [], schedules.rows ?? [], links.rows ?? []);
+    return { success: true, info: await attachRuns(info, (sql, maxRows, binds) => this.databaseService.executeQuery(connection, sql, maxRows, binds)) };
   }
 
   // --- Online do PDV: o que o WTA gravou ao receber os pedidos do PDVOmni, no mesmo Oracle ---

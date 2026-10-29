@@ -1,4 +1,5 @@
 import type { JoltFieldMapping } from './joltFieldMap';
+import type { WshFlowRun } from './wshExecution';
 
 /**
  * Monitor do WSH (decisão 0003, revisão após a coleta): o que o Winthor Smart Hub gravou na PCINTEGRACAOCORE,
@@ -114,12 +115,16 @@ export interface WshRouteLayout {
 
 /** Um fluxo do WSH que usa a rota: passos ativos (ATIVO = S) e os agendamentos que o disparam, como estão no ambiente. */
 export interface WshScheduledFlow {
+  /** IDFLUXO: o número do fluxo, o mesmo do catálogo. Ausente em banco sem a coluna. */
+  id?: number;
   name: string;
   /** O passo desta rota está ativo no fluxo; inativo, o WSH pula a rota e nada novo é gravado. */
   routeActive: boolean;
   activeSteps: number;
   totalSteps: number;
   schedules: { name: string; intervalSeconds?: number; initialDelaySeconds?: number }[];
+  /** Últimas execuções (gestão de execução do WSH), da mais recente; ausente quando o banco não tem essas tabelas. */
+  runs?: WshFlowRun[];
 }
 
 export interface WshScheduleInfo {

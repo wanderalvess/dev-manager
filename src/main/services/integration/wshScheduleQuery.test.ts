@@ -13,7 +13,27 @@ const schedules = [
   { ID: 8, DESCRICAO: 'pdvsync - consultar status lote', AGENDAMENTOSEGUNDOS: 300, DELAYINICIALSEGUNDOS: 5 }
 ];
 
+// Forma vista num banco real (2026-10-29): os passos têm IDFLUXO e a ligação do agendamento é por ele
+const realSteps = [
+  { ID: 754, IDFLUXO: 11, DESCRICAO: 'Preco', ATIVO: 'N', ORDEMEXECUCAO: 1, SERVICO: 'WTA - LoginWTA' },
+  { ID: 755, IDFLUXO: 11, DESCRICAO: 'Preco', ATIVO: 'N', ORDEMEXECUCAO: 2, SERVICO: 'WTA - Buscar Preco Produto' },
+  { ID: 900, IDFLUXO: 24, DESCRICAO: 'Atualizar Status Lote Retaguarda', ATIVO: 'S', ORDEMEXECUCAO: 2, SERVICO: 'WTA - Buscar lote PDV' },
+  { ID: 901, IDFLUXO: 24, DESCRICAO: 'Atualizar Status Lote Retaguarda', ATIVO: 'S', ORDEMEXECUCAO: 4, SERVICO: 'PDVSYNC - Consultar status lote' }
+];
+
 describe('agendamento da rota', () => {
+  it('banco real: agrupa os passos pelo IDFLUXO e liga o agendamento pelo IDFLUXO', () => {
+    const info = toScheduleInfo('WTA - Buscar lote PDV', realSteps, [{ ID: 73, DESCRICAO: 'pdvsync - consultar status lote', AGENDAMENTOSEGUNDOS: 180 }], [
+      { IDAGENDAMENTO: 73, IDFLUXO: 24 }
+    ]);
+    expect(info.flows).toEqual([
+      { id: 24, name: 'Atualizar Status Lote Retaguarda', routeActive: true, activeSteps: 2, totalSteps: 2, schedules: [{ name: 'pdvsync - consultar status lote', intervalSeconds: 180 }] }
+    ]);
+    expect(toScheduleInfo('WTA - Buscar Preco Produto', realSteps, [], []).flows).toEqual([
+      { id: 11, name: 'Preco', routeActive: false, activeSteps: 0, totalSteps: 2, schedules: [] }
+    ]);
+  });
+
   it('ligação por descrição (como nos layouts): fluxo, passos ativos e o intervalo deste ambiente', () => {
     const info = toScheduleInfo('PDVSYNC - Buscar vendas', steps, schedules, [{ IDAGENDAMENTO: 'pdvsync - vendas', IDFLUXO: 'Vendas' }]);
     expect(info).toEqual({

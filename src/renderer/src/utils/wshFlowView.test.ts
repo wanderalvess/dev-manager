@@ -50,8 +50,12 @@ describe('scheduleFacts', () => {
       warning: false
     });
     expect(inativo.warning).toBe(true);
-    expect(inativo.value).toMatch(/^Passo desta rota inativo/);
+    expect(inativo.value).toMatch(/^Fluxo desligado neste ambiente/);
     expect(avulso.value).toMatch(/^sem agendamento/);
     expect(scheduleFacts({ route: 'X', flows: [] })[0].warning).toBe(true);
+    // Um passo ativo e o desta rota inativo: o WSH pula só esta rota; com o número do fluxo no rótulo
+    const [passo] = scheduleFacts({ route: 'X', flows: [{ id: 16, name: 'Vendas', routeActive: false, activeSteps: 1, totalSteps: 3, schedules: [] }] });
+    expect(passo).toMatchObject({ label: 'Fluxo 16 "Vendas" neste ambiente', warning: true });
+    expect(passo.value).toMatch(/^Passo desta rota inativo/);
   });
 });
