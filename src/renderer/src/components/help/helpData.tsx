@@ -172,8 +172,49 @@ export function getFaqList({
               <li>
                 <strong className="text-foreground">Verificação:</strong> O botão de verificação roda <code className="font-mono text-primary font-semibold">bundle:diag</code> para analisar bundles com pendências no container.
               </li>
+              <li>
+                <strong className="text-foreground">Cadeia no log do Karaf:</strong> no <code className="font-mono text-primary font-semibold">winthor.log</code> a falha vem encadeada (<em>Unable to resolve A ... [caused by: Unable to resolve B ...]</em>). O analisador de log aponta o último elo, o pacote que nenhum bundle exporta e a faixa de versão (ex.: <code className="font-mono text-primary font-semibold">br.com.pcsist.winthor.core.data [1.38.0, 2.0.0)</code>): é ele que se corrige, não o primeiro bundle da lista. O <em>HealthService não consegue reiniciar</em> do mesmo bundle é consequência.
+              </li>
             </ul>
           </div>
+        </div>
+      )
+    },
+    {
+      id: 'karaf-deploy-no-deployment-change',
+      question: 'Rodei mvn clean install e o deploy, mas o Karaf diz "No deployment change" e o código novo não entrou. Por quê?',
+      category: 'Karaf OSGi',
+      tags: ['karaf', 'deploy', 'no deployment change', 'already installed', 'bundle:update', 'snapshot', 'versão'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Com versão fixa (ex.: <code className="font-mono text-primary font-semibold">0.39.10.99</code>, sem <code className="font-mono text-primary font-semibold">-SNAPSHOT</code>), o Karaf compara só a feature e o endereço <code className="font-mono text-primary font-semibold">mvn:</code> de cada bundle. Iguais, ele responde <em>is already installed</em> e <em>No deployment change</em> e continua com o jar antigo, mesmo com um jar novo no <code className="font-mono text-primary font-semibold">.m2</code>.
+          </p>
+          <p>
+            O deploy do Hub percebe essa resposta e roda <code className="font-mono text-primary font-semibold">bundle:update</code> em cada bundle do projeto (mesmo grupo e versão do <code className="font-mono text-primary font-semibold">pom.xml</code>), que relê o jar, e depois <code className="font-mono text-primary font-semibold">bundle:refresh</code>. Se nenhum bundle do projeto estiver no contêiner, o deploy termina com erro dizendo que nada novo foi carregado.
+          </p>
+          <p>
+            À mão, no console: <code className="font-mono text-primary font-semibold">bundle:list -l | grep &lt;projeto&gt;</code>, <code className="font-mono text-primary font-semibold">bundle:update &lt;id&gt;</code> em cada um e <code className="font-mono text-primary font-semibold">bundle:refresh</code>. Se o Karaf roda como serviço Windows, ele lê o <code className="font-mono text-primary font-semibold">.m2</code> da conta do serviço, não o seu.
+          </p>
+        </div>
+      )
+    },
+    {
+      id: 'karaf-install-etc',
+      question: 'O Hub lê as portas, o log e o serviço Windows da própria instalação do Karaf?',
+      category: 'Karaf OSGi',
+      tags: ['karaf', 'etc', 'porta', '8101', '8889', 'winthor.log', 'serviço', 'yajsw', 'jdk', 'configurações'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Sim. Em <em>Configurações → Karaf</em>, o cartão <em>O que a instalação diz</em> lê da pasta salva: versão e instância (<code className="font-mono text-primary font-semibold">etc/distribution.info</code>, <code className="font-mono text-primary font-semibold">system.properties</code>), porta SSH (<code className="font-mono text-primary font-semibold">org.apache.karaf.shell.cfg</code>), porta HTTP do WTA (<code className="font-mono text-primary font-semibold">org.ops4j.pax.web.cfg</code>), log principal (<code className="font-mono text-primary font-semibold">org.ops4j.pax.logging.cfg</code>), o JDK fixado no <code className="font-mono text-primary font-semibold">bin/winthor.bat</code> e o serviço Windows do wrapper yajsw com o estado. Não abre <code className="font-mono text-primary font-semibold">users.properties</code> nem arquivos com senha.
+          </p>
+          <p>
+            Quando o app está diferente da instalação (porta SSH, JDK ou a porta da URL do WTA), o cartão mostra os dois valores e <em>Usar os valores da instalação</em> copia para o formulário; salve para gravar. O log lido quando o buffer do Karaf está vazio passa a ser o do <code className="font-mono text-primary font-semibold">etc/</code>.
+          </p>
+          <p>
+            Com o serviço (ex.: <em>WinThor</em>) rodando, o app não inicia o Karaf embutido por cima (brigariam pela porta e pela pasta <code className="font-mono text-primary font-semibold">data/</code>) e o <em>Parar Karaf</em> não mata o processo do serviço: pare pelo <code className="font-mono text-primary font-semibold">services.msc</code>. A busca automática da pasta e do JDK também procura <code className="font-mono text-primary font-semibold">C:\pcsist\produtos\winthor</code> e <code className="font-mono text-primary font-semibold">winthor-jdk</code>, o padrão do instalador.
+          </p>
         </div>
       )
     },

@@ -209,7 +209,11 @@ export function detectDefaultKarafPath(): string {
     return process.env.KARAF_DIR;
   }
   const userHome = os.homedir();
+  // Pasta padrão do instalador do WinThor antes das genéricas
   const candidates = [
+    'C:\\pcsist\\produtos\\winthor',
+    'D:\\pcsist\\produtos\\winthor',
+    '/opt/pcsist/produtos/winthor',
     '/workspace/karaf',
     '/karaf',
     path.join(userHome, 'karaf'),
@@ -262,6 +266,9 @@ export function detectDefaultJdkPath(): string {
     return process.env.JAVA_HOME;
   }
   const candidates = [
+    // JDK que o instalador do WinThor põe ao lado do Karaf (o winthor.bat aponta para ele)
+    'C:\\pcsist\\produtos\\winthor-jdk',
+    'D:\\pcsist\\produtos\\winthor-jdk',
     'C:\\Program Files\\Java\\jdk1.8.0_202',
     'C:\\Program Files\\Java\\jdk1.8.0_232',
     'C:\\Program Files\\Java\\jdk-8',

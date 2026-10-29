@@ -15,6 +15,7 @@ import {
 } from '../../utils/karafCommandUtils';
 import { listLocalProjectsFast, tryFindPomXml } from './karafProjectFiles';
 import type { ChunkHandler, KarafCommandResult, KarafContext, KarafCredentials } from './karafContext';
+import { readKarafInstallInfo } from './karafInstallInfo';
 
 export async function runClientProcess(
   settings: AppSettings,
@@ -101,8 +102,11 @@ function buildErrorResult(
 // Fallback inteligente para comandos de log caso a saída via SSH esteja vazia
 function buildLogDisplayFallback(settings: AppSettings, command: string, onChunk: ChunkHandler): KarafCommandResult {
   const wslLog = isWslKaraf(settings) ? resolveKarafWslLogPath(settings) : null;
+  // O log que o etc/org.ops4j.pax.logging.cfg define vem antes dos nomes padrão
+  const configuredLog = wslLog ? undefined : readKarafInstallInfo(settings.karafPath).logFile;
   const candidates = [
     ...(wslLog ? [wslLog] : []),
+    ...(configuredLog ? [configuredLog] : []),
     path.join(settings.karafPath, 'data', 'log', 'winthor.log'),
     path.join(settings.karafPath, 'data', 'log', 'karaf.log')
   ];

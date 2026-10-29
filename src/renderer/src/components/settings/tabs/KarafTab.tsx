@@ -3,6 +3,7 @@ import { KeyRound, Terminal, Eye, EyeOff, Activity, ShieldCheck } from 'lucide-r
 import { AppSettings } from '../../../../../shared/types';
 import { KarafWslSection } from './KarafWslSection';
 import { KarafPathsPanel } from '../karaf/KarafPathsPanel';
+import { KarafInstallCard } from '../karaf/KarafInstallCard';
 
 interface KarafTabProps {
   settings: AppSettings;
@@ -39,6 +40,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
           handleBrowseFile={handleBrowseFile}
         />
 
+        <KarafInstallCard settings={settings} setSettings={setSettings} />
         <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>

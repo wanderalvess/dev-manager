@@ -41,7 +41,7 @@ export const KarafFeaturesManagerHeader: React.FC<KarafFeaturesManagerHeaderProp
               Features & Repositórios Maven
             </h2>
             <span className="text-[13px] px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-              KARAF OSGi :8101
+              KARAF OSGi
             </span>
           </div>
           <p className="text-[13px] text-muted-foreground mt-0.5">

@@ -21,6 +21,7 @@ const appVersion = (() => {
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
+import { getKarafInstallStatus } from '../main/services/karaf/karafInstallInfo';
 import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
@@ -564,10 +565,13 @@ server.registerTool(
   {
     title: 'Verificar status do Karaf/OSGi',
     description:
-      'Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101). Use antes de tentar executar comandos ou deploys.',
+      'Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101). Use antes de tentar executar comandos ou deploys. Devolve também install: o que o etc/ da instalação configurada diz (versão do Karaf, instância, porta SSH, porta HTTP do WTA, log principal, JDK do script de início e o serviço Windows do wrapper yajsw com o estado). Se o serviço está RUNNING, é ele que responde na porta: não inicie o Karaf embutido por cima.',
     inputSchema: { sshPort: z.number().int().positive().optional() }
   },
-  async ({ sshPort }) => ok({ isRunning: await karafService.isKarafRunning(sshPort) })
+  async ({ sshPort }) => {
+    const install = getKarafInstallStatus(configService.getSettings());
+    return ok({ isRunning: await karafService.isKarafRunning(sshPort), ...(install.success ? { install: install.info } : {}) });
+  }
 );
 
 server.registerTool(

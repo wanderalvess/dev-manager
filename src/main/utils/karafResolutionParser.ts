@@ -6,6 +6,8 @@
  * cruza com as dependências do pom.xml do projeto e sugere perfis ou comandos exatos de resolução.
  */
 
+import { requirementFilter, requirementNamespace, stripBundleRevision } from '../../shared/osgiRequirementText';
+
 export interface OsgiResolutionCause {
   /** Identificador do bundle ou feature que falhou (ex: 'winthor-integracao-varejo-service/0.0.1.SNAPSHOT') */
   bundleOrFeature: string;
@@ -120,14 +122,13 @@ function parseSingleCauseBlock(block: string): OsgiResolutionCause | null {
 
   // Extrai "Unable to resolve <bundle/version>"
   const unableMatch = trimmed.match(/Unable to resolve\s+([^:]+):/i);
-  const bundleOrFeature = unableMatch ? unableMatch[1].trim() : 'Desconhecido';
+  const bundleOrFeature = unableMatch ? stripBundleRevision(unableMatch[1]) : 'Desconhecido';
   const bundleParts = bundleOrFeature.split('/');
   const bundleName = bundleParts[0] || bundleOrFeature;
   const bundleVersion = bundleParts[1];
 
   // Extrai "missing requirement [...] <type>"
-  const reqMatch = trimmed.match(/missing requirement\s*(?:\[[^\]]*\])?\s*([a-zA-Z0-9_.-]+)/i);
-  const rawReqType = reqMatch ? reqMatch[1].trim().toLowerCase() : '';
+  const rawReqType = requirementNamespace(trimmed);
 
   let requirementType: OsgiResolutionCause['requirementType'] = 'generic';
   if (rawReqType.includes('package')) requirementType = 'package';
@@ -136,8 +137,7 @@ function parseSingleCauseBlock(block: string): OsgiResolutionCause | null {
   else if (rawReqType.includes('identity')) requirementType = 'identity';
 
   // Extrai filter:="..."
-  const filterMatch = trimmed.match(/filter:="([^"]+)"/);
-  const filter = filterMatch ? filterMatch[1] : undefined;
+  const filter = requirementFilter(trimmed);
 
   let missingItem = '';
   if (filter) {
