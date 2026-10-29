@@ -5,7 +5,7 @@
 // hosts oficiais. Atrás de proxy corporativo com SSL inspection (certificado autoassinado), rode com
 // CORP_PROXY_INSECURE=1: isso desliga a validação de TLS e usa o mirror npmmirror.com. Em qualquer modo,
 // ELECTRON_MIRROR e ELECTRON_BUILDER_BINARIES_MIRROR, se definidos, têm prioridade.
-if (process.env.CORP_PROXY_INSECURE === '1') {
+if ((process.env.CORP_PROXY_INSECURE || '').trim() === '1') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   process.env.ELECTRON_MIRROR = process.env.ELECTRON_MIRROR || 'https://npmmirror.com/mirrors/electron/';
   process.env.ELECTRON_BUILDER_BINARIES_MIRROR =

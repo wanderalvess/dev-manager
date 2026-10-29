@@ -12,6 +12,7 @@
     "prebuild": "node scripts/generate-icons.cjs",
     "build": "tsc && vite build",
     "build:electron": "npm run build && node scripts/build-electron.cjs",
+    "build:portable": "npm run build && node scripts/build-electron.cjs --win portable",
     "pack": "npm run build && node scripts/build-electron.cjs --dir",
     "release:notes": "node scripts/generate-release-notes.cjs",
     "smoke:package": "node scripts/smoke-test-package.cjs",

@@ -20,7 +20,16 @@
     "node_modules/@anush008/tokenizers-*/**/*"
   ],
   "win": {
-    "target": ["nsis", "portable"],
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "build/icon.ico",
     // Certificado interno autoassinado (dev-manager-codesign.pfx): só é "Valid" no Authenticode das máquinas

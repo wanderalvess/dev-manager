@@ -1,0 +1,188 @@
+﻿Levantamento do ambiente (somente leitura)
+Data: 2026-10-25 17:29
+Sistema: Microsoft Windows 11 Pro / PowerShell 5.1.22621.6133
+Filtro: winthor|karaf|wsh|smart|hub|commerce|chub|pdv|postgres|oracle|rabbit|kafka|nginx|tomcat|jboss|wildfly|java
+
+=== SERVICOS WINDOWS (nome | exibicao | estado | inicio | executavel) ===
+artemis-service | ActiveMQ Artemis | Running | Auto | C:\pcsist\produtos\winthor-jdk\bin\java.exe
+DellTechHub | Dell TechHub | Running | Auto | C:\Program Files\Dell\TechHub\Dell.TechHub.exe
+diagnosticshub.standardcollector.service | Serviço Coletor de Padrões de Hub de Diagnóstico da Microsoft (R) | Stopped | Manual | C:\Windows\system32\DiagSvcs\DiagnosticsHub.StandardCollector.Service.exe
+OracleJobSchedulerORCL | OracleJobSchedulerORCL | Running | Auto | c:\oracle\product\11.2.0\dbhome_1\Bin\extjob.exe
+OracleMTSRecoveryService | OracleMTSRecoveryService | Running | Auto | C:\oracle\product\11.2.0\dbhome_1\bin\omtsreco.exe
+OracleOraDb11g_home1_32bitClrAgent | OracleOraDb11g_home1_32bitClrAgent | Stopped | Manual | C:\oracle\product\11.2.0\dbhome_1\bin\OraClrAgnt.exe
+OracleOraDb11g_home1_32bitTNSListener | OracleOraDb11g_home1_32bitTNSListener | Running | Auto | (nao identificado)
+OracleServiceORCL | OracleServiceORCL | Running | Auto | c:\oracle\product\11.2.0\dbhome_1\bin\ORACLE.EXE
+OracleVssWriterORCL | Oracle ORCL VSS Writer Service | Running | Auto | c:\oracle\product\11.2.0\dbhome_1\bin\OraVSSW.exe
+PDVSync.Client.API | PDVSync Client API | Running | Auto | C:\PdvSync\PDVSync.Client.API.WebApi\PDVSync.Client.API.WebApi.exe
+PDVSync.Client.Down | PDVSync Client Down | Running | Auto | C:\PdvSync\PDVSync.Client.Servico.Down\PDVSync.Client.Servico.Down.exe
+PDVSync.Client.Up | PDVSync Client Up | Running | Auto | C:\PdvSync\PDVSync.Client.Servico.Up\PDVSync.Client.Servico.Up.exe
+pdvsyncclientservicocontrole.exe | PDVSync Client Servico.Controle | Running | Auto | C:\PdvSync\PDVSync.Client.Servico.Controle\src\daemon\pdvsyncclientservicocontrole.exe
+postgresql-x64-12 | postgresql-x64-12 - PostgreSQL Server 12 | Running | Auto | C:\Program Files\PostgreSQL\12\bin\pg_ctl.exe
+Totvs PDV Agent | Totvs PDV Agent | Running | Auto | C:\TotvsPDV\Agent\Totvs.Pdv.Agent.exe
+WinThor | WinThor Anywhere | Stopped | Manual | C:\pcsist\produtos\winthor-jdk\bin\java.exe
+winthor-integracao-core | WSH - Winthor Smart Hub | Stopped | Manual | C:\pcsist\produtos\winthor-integracao-core\winthor-integracao-core.exe
+
+=== PROCESSOS (pid | nome | executavel | linha de comando mascarada) ===
+2056 | copilot-runtime.exe | c:\Users\wanderson.alves\AppData\Local\Programs\Microsoft VS Code\04c0d99f4f\resources\app\node_modules.asar.unpacked\@github\copilot-sdk-win32-x64\prebuilds\win32-x64\copilot-runtime.exe
+    cmd: "c:\Users\wanderson.alves\AppData\Local\Programs\Microsoft VS Code\04c0d99f4f\resources\app\node_modules.asar.unpacked\@github\copilot-sdk-win32-x64\prebuilds\win32-x64\copilot-runtime.exe" --headless --no-auto-update --log-level info --stdio --no-auto-login
+8160 | Dell.CoreServices.Client.exe | C:\Program Files\Dell\TechHub\Dell.CoreServices.Client.exe
+    cmd: "C:\Program Files\Dell\TechHub\Dell.CoreServices.Client.exe"
+16028 | Dell.TechHub.Analytics.SubAgent.exe | C:\Program Files\Dell\DTP\AnalyticsSubAgent\Dell.TechHub.Analytics.SubAgent.exe
+    cmd: "C:\Program Files\Dell\DTP\AnalyticsSubAgent\Dell.TechHub.Analytics.SubAgent.exe"
+13260 | Dell.TechHub.DataManager.SubAgent.exe | C:\Program Files\Dell\DTP\DataManagerSubAgent\Dell.TechHub.DataManager.SubAgent.exe
+    cmd: "C:\Program Files\Dell\DTP\DataManagerSubAgent\Dell.TechHub.DataManager.SubAgent.exe"
+16648 | Dell.TechHub.Diagnostics.SubAgent.exe | C:\Program Files\Dell\DTP\DiagnosticsSubAgent\Dell.TechHub.Diagnostics.SubAgent.exe
+    cmd: "C:\Program Files\Dell\DTP\DiagnosticsSubAgent\Dell.TechHub.Diagnostics.SubAgent.exe"
+6188 | Dell.TechHub.exe | C:\Program Files\Dell\TechHub\Dell.TechHub.exe
+    cmd: "C:\Program Files\Dell\TechHub\Dell.TechHub.exe"
+17348 | Dell.TechHub.Instrumentation.SubAgent.exe | C:\Program Files\Dell\DTP\InstrumentationSubAgent\Dell.TechHub.Instrumentation.SubAgent.exe
+    cmd: "C:\Program Files\Dell\DTP\InstrumentationSubAgent\Dell.TechHub.Instrumentation.SubAgent.exe"
+15076 | Dell.TechHub.Instrumentation.UserProcess.exe | C:\Program Files\Dell\DTP\InstrumentationSubAgent\Dell.TechHub.Instrumentation.UserProcess.exe
+    cmd: "C:\Program Files\Dell\DTP\InstrumentationSubAgent\Dell.TechHub.Instrumentation.UserProcess.exe"
+6728 | extjob.exe | c:\oracle\product\11.2.0\dbhome_1\Bin\extjob.exe
+    cmd: c:\oracle\product\11.2.0\dbhome_1\Bin\extjob.exe ORCL
+5952 | java.exe | C:\pcsist\produtos\winthor-jdk\bin\java.exe
+    cmd: C:\pcsist\produtos\winthor-jdk\bin\java.exe -classpath C:\pcsist\produtos\artemis\bin\wtabroker\bin\yajsw\wrapper.jar -Xrs -Dwrapper.service=true -Dwrapper.working.dir=C:\pcsist\produtos\artemis -DARTEMIS_INSTANCE=C:\pcsist\produtos\artemis\bin\wtabroker -Djna_tmpdir=C:\pcsist\produtos\artemis\bin\wtabroker\bin\yajsw\bat\/../tmp -DARTEMIS_INSTANCE_ETC=C:\pcsist\produtos\artemis\bin\wtabroker\etc -Dwrapper_home=C:\pcsist\produtos\artemis\bin\wtabroker\bin\yajsw\bat\/.. -DJAVA_HOME=C:\pcsist\produtos\winthor-jdk -DARTEMIS_INSTANCE_ETC_URI=file:/C:/pcsist/produtos/artemis/bin/wtabroker/etc/ -DARTEMIS_DATA_DIR=C:\pcsist\produtos\artemis\bin\wtabroker\data -DARTEMIS_HOME=C:\pcsist\produtos\artemi ...[cortado]
+6568 | java.exe | C:\pcsist\produtos\winthor-jdk\bin\java.exe
+    cmd: C:\pcsist\produtos\winthor-jdk\bin\java.exe -classpath C:\pcsist\produtos\artemis\bin\wtabroker\bin\yajsw\wrapperApp.jar;C:\pcsist\produtos\artemis\lib\artemis-boot.jar -Xbootclasspath/a:C:\pcsist\produtos\artemis\lib\jboss-logmanager-2.0.3.Final.jar -XX:+UseParallelGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -Xms256M -Xmx1024M -Dartemis.home=C:\pcsist\produtos\artemis -Dartemis.instance=C:\pcsist\produtos\artemis\bin\wtabroker -Ddata.dir=C:\pcsist\produtos\artemis\bin\wtabroker\data -Dartemis.instance.etc=C:\pcsist\produtos\artemis\bin\wtabroker\etc -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Dlogging.configuration=file:/C:/pcsist/produtos/artemis/bin/wtabroker/etc/\ ...[cortado]
+9560 | java.exe | C:\pcsist\programas\jre-1.8.0.271-win-x86\bin\java.exe
+    cmd: "C:\pcsist\programas\jre-1.8.0.271-win-x86\bin\java" -XX:PermSize=128M -Djavax.net.ssl.trustStoreType=Windows-ROOT -XX:+TieredCompilation -Dorg.tanukisoftware.wrapper.WrapperManager.mbean=false -DPCSIST_HOME="C:\pcsist" -Djetty.home=C:\pcsist/produtos/pcserver -Xms128m -Djava.library.path="C:\pcsist/produtos/pcserver/service/lib;C:\pcsist/produtos/pcserver/lib;C:\oracle\product\11.2.0\dbhome_1\NETWORK\ADMIN;%ORACLE_HOME%/Bin" -classpath "C:\pcsist/produtos/pcserver/service/lib/wrapper.jar;C:\pcsist/produtos/pcserver/pcserver.jar" -Dwrapper.key=*** -Dwrapper.port=32000 -Dwrapper.jvm.port.min=31000 -Dwrapper.jvm.port.max=31999 -Dwrapper.pid=6776 -Dwrapper.version="3.5.15" -Dwrapper.native_libr ...[cortado]
+6676 | omtsreco.exe | C:\oracle\product\11.2.0\dbhome_1\bin\omtsreco.exe
+    cmd: C:\oracle\product\11.2.0\dbhome_1\bin\omtsreco.exe "OracleMTSRecoveryService"
+6784 | oracle.exe | c:\oracle\product\11.2.0\dbhome_1\bin\ORACLE.EXE
+    cmd: c:\oracle\product\11.2.0\dbhome_1\bin\ORACLE.EXE ORCL
+6936 | oravssw.exe | c:\oracle\product\11.2.0\dbhome_1\bin\OraVSSW.exe
+    cmd: c:\oracle\product\11.2.0\dbhome_1\bin\OraVSSW.exe ORCL
+18664 | PDVSync.Client.API.WebApi.exe | C:\PdvSync\PDVSync.Client.API.WebApi\PDVSync.Client.API.WebApi.exe
+    cmd: C:\PdvSync\PDVSync.Client.API.WebApi\PDVSync.Client.API.WebApi.exe
+27168 | PDVSync.Client.Servico.Down.exe | C:\PdvSync\PDVSync.Client.Servico.Down\PDVSync.Client.Servico.Down.exe
+    cmd: C:\PdvSync\PDVSync.Client.Servico.Down\PDVSync.Client.Servico.Down.exe
+33696 | PDVSync.Client.Servico.Up.exe | C:\PdvSync\PDVSync.Client.Servico.Up\PDVSync.Client.Servico.Up.exe
+    cmd: C:\PdvSync\PDVSync.Client.Servico.Up\PDVSync.Client.Servico.Up.exe
+16576 | pdvsyncclientservicocontrole.exe | C:\PdvSync\PDVSync.Client.Servico.Controle\src\daemon\pdvsyncclientservicocontrole.exe
+    cmd: "C:\PdvSync\PDVSync.Client.Servico.Controle\src\daemon\pdvsyncclientservicocontrole.exe"
+6856 | pg_ctl.exe | C:\Program Files\PostgreSQL\12\bin\pg_ctl.exe
+    cmd: "C:\Program Files\PostgreSQL\12\bin\pg_ctl.exe" runservice -N "postgresql-x64-12" -D "C:\Program Files\PostgreSQL\12\data" -w
+708 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forklog" "5548" "5552" "0"
+8592 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:\Program Files\PostgreSQL\12\bin\postgres.exe" -D "C:\Program Files\PostgreSQL\12\data" 
+10396 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkboot" "5444" "-x4"
+10444 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkboot" "5452" "-x3"
+10468 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkboot" "5428" "-x5"
+10524 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkavlauncher" "5408"
+10592 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkcol" "5420"
+10688 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbgworker=0" "5400"
+16364 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbackend" "4108"
+19852 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbackend" "5044"
+21136 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbackend" "4196"
+27040 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbackend" "4168"
+28068 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbackend" "5312"
+28384 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbackend" "5160"
+28660 | postgres.exe | C:\Program Files\PostgreSQL\12\bin\postgres.exe
+    cmd: "C:/Program Files/PostgreSQL/12/bin/postgres.exe" "--forkbackend" "5040"
+6668 | TNSLSNR.EXE | C:\oracle\product\11.2.0\dbhome_1\BIN\TNSLSNR.exe
+    cmd: C:\oracle\product\11.2.0\dbhome_1\BIN\TNSLSNR 
+17020 | TOTVS.Omnishop.API.WebApi.exe | C:\TOTVSPDV\TOTVS.Omnishop.API\TOTVS.Omnishop.API.WebApi.exe
+    cmd: "C:\TOTVSPDV\TOTVS.Omnishop.API\TOTVS.Omnishop.API.WebApi.exe"
+6772 | Totvs.Pdv.Agent.exe | C:\TotvsPDV\Agent\Totvs.Pdv.Agent.exe
+    cmd: "C:\TotvsPDV\Agent\Totvs.Pdv.Agent.exe"
+5260 | wsl-gvproxy.exe | \\wsl.localhost\ubuntu2604-winthor-teste\app\wsl-gvproxy.exe
+    cmd: wsl-gvproxy.exe -listen-stdio=accept -debug=0
+
+=== PORTAS EM ESCUTA (porta | endereco | processo) ===
+21 | 0.0.0.0 | FileZilla server (pid 6284)
+135 | :: | svchost (pid 1720)
+135 | 0.0.0.0 | svchost (pid 1720)
+139 | 172.19.80.1 | System (pid 4)
+139 | 192.168.0.113 | System (pid 4)
+445 | :: | System (pid 4)
+1521 | :: | TNSLSNR (pid 6668)
+1527 | 127.0.0.1 | java (pid 9560)
+1883 | :: | java (pid 6568)
+2222 | 127.0.0.1 | wsl-gvproxy (pid 5260)
+5005 | :: | System (pid 4)
+5006 | :: | node (pid 12812)
+5040 | 0.0.0.0 | svchost (pid 11848)
+5432 | :: | postgres (pid 8592)
+5432 | 0.0.0.0 | postgres (pid 8592)
+5445 | :: | java (pid 6568)
+5672 | :: | java (pid 6568)
+8081 | 0.0.0.0 | macmnsvc (pid 6572)
+8081 | :: | macmnsvc (pid 6572)
+8161 | 127.0.0.1 | java (pid 6568)
+8884 | 127.0.0.1 | System (pid 4)
+8888 | :: | java (pid 9560)
+9000 | :: | TOTVS.Omnishop.API.WebApi (pid 17020)
+9001 | :: | TOTVS.Omnishop.API.WebApi (pid 17020)
+9770 | 127.0.0.1 | pritunl-service (pid 6952)
+11777 | 127.0.0.1 | PMan.CacheServices (pid 6848)
+14147 | 127.0.0.1 | FileZilla server (pid 6284)
+15003 | 127.0.0.1 | java (pid 5952)
+15611 | :: | Postman (pid 3280)
+32000 | 127.0.0.1 | wrapper (pid 6776)
+42050 | ::1 | OneDrive.Sync.Service (pid 24132)
+49558 | 127.0.0.1 | clientidentifier (pid 21388)
+49565 | 127.0.0.1 | clientidentifier (pid 21388)
+49664 | :: | lsass (pid 1416)
+49664 | 0.0.0.0 | lsass (pid 1416)
+49665 | 0.0.0.0 | wininit (pid 1260)
+49665 | :: | wininit (pid 1260)
+49666 | 0.0.0.0 | svchost (pid 3420)
+49666 | :: | svchost (pid 3420)
+49667 | 0.0.0.0 | svchost (pid 3648)
+49667 | :: | svchost (pid 3648)
+49668 | :: | spoolsv (pid 5648)
+49668 | 0.0.0.0 | spoolsv (pid 5648)
+49669 | 127.0.0.1 | vpnagent (pid 5368)
+49670 | :: | lsass (pid 1416)
+49670 | 0.0.0.0 | lsass (pid 1416)
+49673 | 127.0.0.1 | jhi_service (pid 6472)
+49674 | ::1 | TNSLSNR (pid 6668)
+49680 | 127.0.0.1 | konea (pid 6480)
+49752 | :: | oracle (pid 6784)
+49788 | 0.0.0.0 | services (pid 1384)
+49788 | :: | services (pid 1384)
+49869 | 0.0.0.0 | SpotifyLauncher (pid 14528)
+54255 | 127.0.0.1 | konea (pid 6480)
+55701 | :: | node (pid 14048)
+55961 | 127.0.0.1 | Antigravity (pid 30560)
+55962 | 127.0.0.1 | language_server (pid 29728)
+55963 | 127.0.0.1 | language_server (pid 29728)
+57130 | 127.0.0.1 | stAgentSvc (pid 7112)
+58675 | 127.0.0.1 | Code (pid 12064)
+58900 | 127.0.0.1 | Antigravity (pid 30560)
+60010 | 127.0.0.1 | csc_iseagent (pid 712)
+60012 | 127.0.0.1 | csc_iseagent (pid 712)
+60014 | 127.0.0.1 | csc_iseagent (pid 712)
+60980 | 127.0.0.1 | detex (pid 21400)
+60982 | 127.0.0.1 | clientidentifier (pid 21388)
+61613 | :: | java (pid 6568)
+61616 | :: | java (pid 6568)
+62522 | 127.0.0.1 | vpnagent (pid 5368)
+
+=== DOCKER (nome | imagem | portas) ===
+(docker nao encontrado)
+
+=== KARAF ===
+KARAF_HOME = C:\karaf
+home: C:\karaf
+  bin\opentelemetry-javaagent.jar existe? False
+  etc\ existe? True
+
+=== PASTAS DE LOG CANDIDATAS (arquivo | KB | ultima escrita) ===
+
+=== VARIAVEIS DE AMBIENTE RELEVANTES (so os nomes) ===
+JAVA_HOME, KARAF_HOME
