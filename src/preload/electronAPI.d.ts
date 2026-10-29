@@ -1,4 +1,12 @@
 import type {
+  InfrEnvSaveRequest,
+  InfrEnvTemplate,
+  InfrManifestSaveResult,
+  InfrVersionPreview,
+  InfrVersionPreviewRequest
+} from '../shared/infrVersionManifest';
+import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
+import type {
   AppSettings,
   UsageDays,
   UsageSummary,
@@ -375,7 +383,12 @@ export interface ElectronAPI {
   exportWslSnapshot?: (params: { distroName: string; outputPath: string }) => Promise<WslSnapshotActionResult>;
   unregisterWslDistro?: (distroName: string) => Promise<WslSnapshotActionResult>;
   checkInfrDockerScripts?: (customPath?: string) => Promise<InfrDockerScriptStatus[]>;
-  runInfrSetupScript?: (scriptType: 'oracle' | 'wta' | 'wsh', options: any) => Promise<{ success: boolean; output: string }>;
+  runInfrSetupScript?: (scriptType: 'oracle' | 'wta' | 'wsh' | 'version', options: any) => Promise<{ success: boolean; output: string }>;
+  listInfrEnvironments?: (distro?: string) => Promise<InfrEnvironmentsResult>;
+  getInfrEnvTemplate?: (params: { distro?: string; from: string }) => Promise<InfrEnvTemplate>;
+  saveInfrEnvFiles?: (req: InfrEnvSaveRequest) => Promise<InfrManifestSaveResult>;
+  previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
+  saveInfrVersionManifest?: (req: { infrPath?: string; targetVersion: string; manifestText: string }) => Promise<InfrManifestSaveResult>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
   saveContainerEnvironment?: (env: ContainerEnvironment) => Promise<boolean>;

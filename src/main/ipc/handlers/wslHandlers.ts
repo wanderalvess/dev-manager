@@ -1,10 +1,33 @@
 import { ipcMain } from 'electron';
 import { wslService } from '../../services/WslService';
+import { InfrVersionService } from '../../services/infr/InfrVersionService';
+import type { InfrEnvSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
 import type { IpcContext } from '../ipcContext';
 
 /** WSL, snapshots e INFR-Docker. Canais: infr:*, wsl:* */
 export function registerWslHandlers(ctx: IpcContext): void {
   const { dockerService } = ctx;
+  const infrVersionService = new InfrVersionService(wslService, ctx.routine801Service);
+
+  ipcMain.handle('infr:version-environments', async (_, distro?: string) => {
+    return await infrVersionService.listEnvironments(distro);
+  });
+
+  ipcMain.handle('infr:version-env-template', async (_, { distro, from }: { distro?: string; from: string }) => {
+    return await infrVersionService.envTemplate(distro, from);
+  });
+
+  ipcMain.handle('infr:version-env-save', async (_, req: InfrEnvSaveRequest) => {
+    return await infrVersionService.saveEnvFiles(req);
+  });
+
+  ipcMain.handle('infr:version-preview', async (_, req: InfrVersionPreviewRequest) => {
+    return await infrVersionService.preview(req);
+  });
+
+  ipcMain.handle('infr:version-save', async (_, req: { infrPath?: string; targetVersion: string; manifestText: string }) => {
+    return infrVersionService.saveManifest(req);
+  });
 
   ipcMain.handle('wsl:list-distros', async () => {
     return await dockerService.checkDockerStatus().then((s) => s.availableDistros || []);

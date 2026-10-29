@@ -9,6 +9,8 @@ import { InfrWtaTab } from '../infr/InfrWtaTab';
 import { InfrWshTab } from '../infr/InfrWshTab';
 import { InfrScriptsTab } from '../infr/InfrScriptsTab';
 import { InfrVersionField } from '../infr/InfrVersionField';
+import { InfrNewVersionTab } from '../infr/InfrNewVersionTab';
+import { useInfrNewVersion } from '../../../hooks/containers/useInfrNewVersion';
 import { Modal } from '../../ui/Modal';
 
 export interface InfrBootstrapModalProps {
@@ -30,6 +32,8 @@ export interface InfrBootstrapModalProps {
   ) => void;
   isExecutingInfr: boolean;
   infrOutput: string;
+  /** Distro WSL selecionada na tela (a aba Nova versão lista os ambientes dela) */
+  distro?: string;
 }
 
 export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
@@ -40,9 +44,11 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
   onLoadInfrScripts,
   onRunInfrScript,
   isExecutingInfr,
-  infrOutput
+  infrOutput,
+  distro
 }) => {
   const state = useInfrBootstrapModalState({ onLoadInfrScripts, onRunInfrScript });
+  const newVersion = useInfrNewVersion(distro, state.customPath || undefined);
 
   if (!isOpen) return null;
 
@@ -64,9 +70,11 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
       />
 
       <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
-        {state.activeTab !== 'scripts' && (
+        {state.activeTab !== 'scripts' && state.activeTab !== 'newVersion' && (
           <InfrVersionField version={state.winthorVersion} onChange={state.setWinthorVersion} />
         )}
+
+        {state.activeTab === 'newVersion' && <InfrNewVersionTab s={newVersion} />}
 
         {state.activeTab === 'oracle' && (
           <InfrOracleTab

@@ -7,6 +7,14 @@ import { integrationApi } from './integrationApi';
 import { authLockoutApi } from './authLockoutApi';
 import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
+  InfrEnvSaveRequest,
+  InfrEnvTemplate,
+  InfrManifestSaveResult,
+  InfrVersionPreview,
+  InfrVersionPreviewRequest
+} from '../shared/infrVersionManifest';
+import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
+import type {
   AppSettings,
   UsageDays,
   UsageSummary,
@@ -643,8 +651,15 @@ const electronAPI = {
     ipcRenderer.invoke('wsl:unregister-distro', distroName),
   checkInfrDockerScripts: (customPath?: string): Promise<InfrDockerScriptStatus[]> =>
     ipcRenderer.invoke('infr:check-scripts', customPath),
-  runInfrSetupScript: (scriptType: 'oracle' | 'wta' | 'wsh', options: any): Promise<{ success: boolean; output: string }> =>
+  runInfrSetupScript: (scriptType: 'oracle' | 'wta' | 'wsh' | 'version', options: any): Promise<{ success: boolean; output: string }> =>
     ipcRenderer.invoke('infr:run-setup-script', { scriptType, options }),
+  listInfrEnvironments: (distro?: string): Promise<InfrEnvironmentsResult> => ipcRenderer.invoke('infr:version-environments', distro),
+  getInfrEnvTemplate: (params: { distro?: string; from: string }): Promise<InfrEnvTemplate> =>
+    ipcRenderer.invoke('infr:version-env-template', params),
+  saveInfrEnvFiles: (req: InfrEnvSaveRequest): Promise<InfrManifestSaveResult> => ipcRenderer.invoke('infr:version-env-save', req),
+  previewInfrVersion: (req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> => ipcRenderer.invoke('infr:version-preview', req),
+  saveInfrVersionManifest: (req: { infrPath?: string; targetVersion: string; manifestText: string }): Promise<InfrManifestSaveResult> =>
+    ipcRenderer.invoke('infr:version-save', req),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
     ipcRenderer.invoke('docker:set-target-wsl-distro', distro),
   getContainerEnvironments: (): Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }> =>
