@@ -121,7 +121,7 @@ function createWindow() {
     void databaseService.closeAllSessions();
   });
   const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
-  const backupService = new BackupService(configService);
+  const backupService = new BackupService(configService, databaseService);
   const backupSchedulerService = new BackupSchedulerService(configService, backupService);
   backupSchedulerService.onResult = (connectionName, result) => {
     safeSend(mainWindow, 'backup:schedule-result', { connectionName, result });

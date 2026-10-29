@@ -69,7 +69,7 @@ const usageMetricsService = new UsageMetricsService(configService);
 usageMetricsService.attachProcessHooks();
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService(configService);
-const backupService = new BackupService(configService);
+const backupService = new BackupService(configService, databaseService);
 const backupSchedulerService = new BackupSchedulerService(configService, backupService);
 const networkService = new NetworkService();
 const windowsService = new WindowsService(configService, karafService, databaseService, networkService);

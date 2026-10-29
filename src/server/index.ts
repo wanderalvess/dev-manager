@@ -153,7 +153,7 @@ app.use(createUsageTrackingMiddleware(usageMetricsService));
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService(configService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
-const backupService = new BackupService(configService);
+const backupService = new BackupService(configService, databaseService);
 const backupSchedulerService = new BackupSchedulerService(configService, backupService);
 backupSchedulerService.onResult = (connectionName, result) => {
   broadcastWs('backup:schedule-result', { connectionName, result });

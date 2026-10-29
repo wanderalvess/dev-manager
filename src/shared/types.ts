@@ -1189,6 +1189,18 @@ export interface BackupResult {
   durationMs?: number;
   /** SHA-256 do arquivo gerado, calculado após o dump (usado por histórico e restore-drill). */
   checksumSha256?: string;
+  /** O que fazer quando a falha é conhecida (hoje, erros do exp/expdp/impdp do Oracle). */
+  help?: BackupHelp;
+}
+
+/** Ajuda para resolver uma falha de backup/restauração: passos em ordem e comandos prontos para copiar. */
+export interface BackupHelp {
+  /** Código principal reconhecido (ex.: ORA-39087). */
+  code?: string;
+  steps: string[];
+  snippets?: { label: string; code: string }[];
+  /** Linhas de erro originais do utilitário (ORA-, UDE-, LRM-...). */
+  detail?: string;
 }
 
 /** Metadados de um arquivo de backup já existente na pasta de destino. */

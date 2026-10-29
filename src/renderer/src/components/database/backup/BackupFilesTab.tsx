@@ -2,6 +2,7 @@ import React from 'react';
 import { FileArchive, RotateCw, RotateCcw, FlaskConical } from 'lucide-react';
 import type { BackupFileInfo, BackupResult, DatabaseConnectionConfig } from '../../../../../shared/types';
 import { backupResultToneClass, formatBytes } from '../../../utils/backupModalUtils';
+import { BackupHelpPanel } from './BackupHelpPanel';
 
 interface BackupFilesTabProps {
   connections: DatabaseConnectionConfig[];
@@ -72,12 +73,14 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
     {restoreResult && (
       <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(restoreResult.success)}`}>
         {restoreResult.message}
+        {!restoreResult.success && restoreResult.help && <BackupHelpPanel help={restoreResult.help} />}
       </div>
     )}
 
     {drillResult && (
       <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(drillResult.success)}`}>
         {drillResult.message}
+        {!drillResult.success && drillResult.help && <BackupHelpPanel help={drillResult.help} />}
         {drillResult.success && drillResult.checksumSha256 && (
           <p className="text-2xs font-mono opacity-80 mt-1 truncate">
             SHA-256: {drillResult.checksumSha256}
