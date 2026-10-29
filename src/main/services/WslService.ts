@@ -15,6 +15,7 @@ import {
   InfrDockerScriptStatus
 } from '../../shared/types';
 import { execFileAsync, isValidIdentifier, isSafeLocalPath } from '../utils/security';
+import { buildWshSetupCommand, buildWtaSetupCommand, isValidWinthorVersion } from '../../shared/infrWinthorVersion';
 
 export class WslService {
   private cachedDistros: WslDistroInfo[] = [];
@@ -1028,6 +1029,8 @@ export class WslService {
       port?: number;
       distro?: string;
       infrPath?: string;
+      /** Versão do WinThor (ex.: 38): WTA da imagem por versão e WSH com o .env da versão */
+      winthorVersion?: string;
     }
   ): Promise<{ success: boolean; output: string }> {
     const targetDistro = options.distro || (await this.findDockerWslDistro()) || 'ubuntu2604-winthor';
@@ -1058,10 +1061,11 @@ export class WslService {
       const container = (options.containerName || 'linux-winthor').replace(/[^a-zA-Z0-9_.-]/g, '') || 'linux-winthor';
       const port = typeof options.port === 'number' && options.port > 0 && options.port <= 65535 ? options.port : 8080;
       title = `Setup WTA: ${container}`;
-      cmdToRun = `cd "${wslPath}/linux-winthor/scripts" && chmod +x ./wta_setup.sh && ./wta_setup.sh --container ${container} --port ${port}`;
+      const setup = buildWtaSetupCommand({ container, port, version: options.winthorVersion });
+      cmdToRun = `cd "${wslPath}/linux-winthor/scripts" && chmod +x ./*.sh && ${setup}`;
     } else if (scriptType === 'wsh') {
-      title = 'Setup WSH';
-      cmdToRun = `cd "${wslPath}/wsh-winthor" && chmod +x ./wsh_setup.sh && ./wsh_setup.sh`;
+      title = isValidWinthorVersion(options.winthorVersion) ? `Setup WSH ${options.winthorVersion}` : 'Setup WSH';
+      cmdToRun = `cd "${wslPath}/wsh-winthor" && chmod +x ./wsh_setup.sh && ${buildWshSetupCommand(options.winthorVersion)}`;
     } else {
       return { success: false, output: `Tipo de script desconhecido: ${scriptType}` };
     }
