@@ -93,7 +93,7 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
         <p className="text-2xs">Nenhum arquivo (.dmp, .sql, .dump) foi localizado na pasta de destino selecionada.</p>
       </div>
     ) : (
-      <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+      <div className="space-y-2 min-h-64 max-h-[calc(100vh-24rem)] overflow-y-auto">
         {backupFiles.map((f) => (
           <div
             key={f.filePath}
