@@ -33,7 +33,7 @@ export const BackupPanel: React.FC<BackupPanelProps> = ({
   const { backupActiveTab } = form;
 
   return (
-    <div className="bg-card border border-border/80 rounded-xl shadow-xs w-full max-w-5xl overflow-hidden flex flex-col">
+    <div className="bg-card border border-border rounded-[14px] shadow-xs w-full overflow-hidden flex flex-col">
       <BackupPanelHeader activeConnection={activeConnection} />
 
       <BackupTabNav
@@ -46,7 +46,7 @@ export const BackupPanel: React.FC<BackupPanelProps> = ({
       />
 
       {/* Tab Body */}
-      <div className="p-6 overflow-y-auto flex-1 text-xs space-y-4">
+      <div className="p-6 xl:p-8 overflow-y-auto flex-1 text-sm space-y-4">
         {backupActiveTab === 'backup' && (
           <BackupRunTab
             activeConnection={activeConnection}
