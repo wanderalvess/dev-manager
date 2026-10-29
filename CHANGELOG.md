@@ -6,6 +6,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [Não lançado]
 ### Alterado
+- **Validação de Cenários: página própria para o Bloqueio de Login**: o teste de bloqueio de login saiu de uma aba da Homologação e foi para a nova página **Validação de Cenários** (grupo Qualidade do menu lateral e Ctrl+K), com uma aba por cenário. Os próximos cenários de validação entram como novas abas nessa página. Homologação voltou a ter só Matriz e Prontidão. A página pode ser desligada em Configurações → Módulos, como as demais.
 - **Bloqueio de Login: passo a passo explicado**: a atividade passou a contar o teste para quem não o conhece. Abre com as condições (WTA, usuários, regra, formato da senha, log lido a partir de que ponto), cada checagem começa explicando o que vai fazer com os seus usuários e números, cada requisição diz o que foi enviado, o que o WTA respondeu em português (ex.: *recusado como conta bloqueada*) e o que se esperava, em verde quando bateu e em vermelho quando não bateu, e cada espera diz o motivo. O fim traz o placar e quem pode continuar bloqueado. *Mostrar cada requisição* esconde as requisições para ler só os passos. Cada regra ganhou *Como foi testado*, e o relatório do Jira leva essa explicação e o passo a passo; a tool MCP devolve o mesmo em `log`.
 
 ### Corrigido

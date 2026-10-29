@@ -1,5 +1,5 @@
 /**
- * Teste de bloqueio de login do WinThor (Homologação → Bloqueio de Login): tentativas controladas contra o
+ * Teste de bloqueio de login do WinThor (Validação de Cenários → Bloqueio de Login): tentativas controladas contra o
  * login do WTA, correlacionadas com o winthor.log e com a API de logs do ferramenta-servidor.
  */
 

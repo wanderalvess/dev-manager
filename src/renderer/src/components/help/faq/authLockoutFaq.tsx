@@ -4,7 +4,7 @@ import type { FaqItem } from '../helpData';
 const code = (text: string) => <code className="font-mono text-primary">{text}</code>;
 const strong = (text: string) => <strong className="text-foreground">{text}</strong>;
 
-/** Homologação → Bloqueio de Login: como validar as regras de bloqueio do login do WinThor e o registro de logs. */
+/** Validação de Cenários → Bloqueio de Login: como validar as regras de bloqueio do login do WinThor e o registro de logs. */
 export function getAuthLockoutFaq(): FaqItem[] {
   return [
     {
@@ -15,7 +15,7 @@ export function getAuthLockoutFaq(): FaqItem[] {
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Em {strong('Homologação → Bloqueio de Login')}, informe a URL do WTA, a API de logs (padrão{' '}
+            Em {strong('Validação de Cenários → Bloqueio de Login')}, informe a URL do WTA, a API de logs (padrão{' '}
             {code('/winthor/ferramenta/servidor/v1/logs')}), o {code('winthor.log')} (padrão: a pasta do Karaf de Configurações) e dois
             usuários de teste. {strong('Rodar teste')} faz as tentativas controladas contra {code('/winthor/autenticacao/v1/login')} e
             preenche a tabela de 12 regras com o resultado observado e as evidências de cada uma.

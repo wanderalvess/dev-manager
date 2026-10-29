@@ -11,7 +11,7 @@ import { AuthLockoutConfigForm } from './AuthLockoutConfigForm';
 
 const SUMMARY_ORDER: AuthLockoutCheckStatus[] = ['failed', 'warning', 'manual', 'info', 'passed', 'skipped'];
 
-/** Homologação → Bloqueio de Login: regras de bloqueio do login do WinThor validadas com tentativas controladas. */
+/** Validação de Cenários → Bloqueio de Login: regras de bloqueio do login do WinThor validadas com tentativas controladas. */
 export const AuthLockoutPanel: React.FC = () => {
   const lockout = useAuthLockoutRun();
   const counts = summarizeChecks(lockout.checks);

@@ -13,7 +13,7 @@ interface AuthLockoutToolDeps {
 const SLOW_CHECKS = AUTH_LOCKOUT_CHECKS.filter((c) => c.slow).map((c) => c.id);
 const checkIdSchema = z.enum(AUTH_LOCKOUT_CHECK_IDS as [AuthLockoutCheckId, ...AuthLockoutCheckId[]]);
 
-/** Teste de bloqueio de login do WinThor (Homologação → Bloqueio de Login). */
+/** Teste de bloqueio de login do WinThor (Validação de Cenários → Bloqueio de Login). */
 export function registerAuthLockoutTools(server: McpServer, { authLockoutTestService, ok, fail }: AuthLockoutToolDeps): void {
   const reply = ok as (data: unknown) => never;
   const error = fail as (message: string) => never;
@@ -33,7 +33,7 @@ export function registerAuthLockoutTools(server: McpServer, { authLockoutTestSer
     {
       title: 'Rodar o teste de bloqueio de login (homologação)',
       description:
-        'Executa tentativas controladas contra o login do WTA (POST /winthor/autenticacao/v1/login) com dois usuários de teste e confere: bloqueio só na N-ésima falha, senha certa sem token durante o bloqueio, outro cliente HTTP, logoff que não limpa o bloqueio, bloqueio por usuário, falhas simultâneas, duração do bloqueio (4 ou 5 min), regra da janela, falhas simultâneas em APIs diferentes, exposição de stack trace/senha/token/string de conexão, correlação com o winthor.log e com a API /winthor/ferramenta/servidor/v1/logs (acesso restrito e sem segredos) e, com confirmação, o serviço de pé com o destino de logs indisponível. BLOQUEIA as contas de teste de propósito: use só em homologação, com usuários dedicados, e não rode junto com a tela Bloqueio de Login. Sem `checks`, roda as rápidas (~2 min); `includeSlow` acrescenta duração e janela (~8 min). Devolve o status de cada checagem e o relatório em Markdown (senhas e tokens mascarados).',
+        'Executa tentativas controladas contra o login do WTA (POST /winthor/autenticacao/v1/login) com dois usuários de teste e confere: bloqueio só na N-ésima falha, senha certa sem token durante o bloqueio, outro cliente HTTP, logoff que não limpa o bloqueio, bloqueio por usuário, falhas simultâneas, duração do bloqueio (4 ou 5 min), regra da janela, falhas simultâneas em APIs diferentes, exposição de stack trace/senha/token/string de conexão, correlação com o winthor.log e com a API /winthor/ferramenta/servidor/v1/logs (acesso restrito e sem segredos) e, com confirmação, o serviço de pé com o destino de logs indisponível. BLOQUEIA as contas de teste de propósito: use só em homologação, com usuários dedicados, e não rode junto com a tela Validação de Cenários → Bloqueio de Login. Sem `checks`, roda as rápidas (~2 min); `includeSlow` acrescenta duração e janela (~8 min). Devolve o status de cada checagem e o relatório em Markdown (senhas e tokens mascarados).',
       inputSchema: {
         userALogin: z.string().describe('Login do usuário de teste A (é bloqueado durante o teste)'),
         userAPassword: z.string().describe('Senha correta do usuário A (texto digitado ou o MD5 pronto)'),
