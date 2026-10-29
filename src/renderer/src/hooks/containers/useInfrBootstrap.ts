@@ -38,6 +38,7 @@ export function useInfrBootstrap(data: DockerDataState) {
       oraclePort: number;
       wtaContainer: string;
       wtaPort: number;
+      winthorVersion?: string;
     }
   ) => {
     if (!window.electronAPI?.runInfrSetupScript) return;
@@ -46,7 +47,8 @@ export function useInfrBootstrap(data: DockerDataState) {
     try {
       const opts: any = {
         infrPath: options.customPath,
-        distro: selectedDistro || daemonStatus?.wslDistro
+        distro: selectedDistro || daemonStatus?.wslDistro,
+        winthorVersion: options.winthorVersion?.trim() || undefined
       };
       if (scriptType === 'oracle') {
         opts.containerName = options.oracleContainer.trim() || 'oracle-winthor';
