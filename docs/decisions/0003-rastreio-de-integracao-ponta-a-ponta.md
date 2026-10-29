@@ -399,6 +399,23 @@ credencial do PDVSync:
   aba mostra o código e a mensagem na própria linha. Cada A ou R fecha um único P do mesmo pedido; o P que sobra há mais de 5 minutos
   aparece como *Sem resposta* (reenvio que o WinThor não concluiu). Ainda não conferido: se a reserva de estoque e a nota de entrada, que usam
   o mesmo `POST`, também gravam nela.
+- **Conferido num banco real (2026-10-29).** Um dump do schema de um ambiente com WSH e PDVOmni, importado num Oracle de teste,
+  confirmou e corrigiu o que tinha sido deduzido dos layouts:
+  - `PCINTEGRACAOFLUXOEXECUCAO` agrupa os passos por `IDFLUXO`, que é o número do fluxo do catálogo (1 a 41); a `DESCRICAO` é o nome
+    do fluxo. O agendamento liga por `IDFLUXO` em `PCINTEGRACAOAGENDAMENTOFLUXO`. O Hub agrupava pela descrição e procurava o vínculo
+    pelo id do passo: corrigido, com as ligações antigas ainda aceitas.
+  - Preço Oferta é o fluxo 41; entram o 39 (Endereço Entrega Cliente, `/api/wholesale/v1/customer/deliveryAddress`) e o 40
+    (Parâmetros Presidência).
+  - A gestão de execução do WSH fica em `PCINTEGRACAOGESTAOFLUXO` (uma linha por execução: início, fim, status, `RECURSOFALHA`),
+    `PCINTEGRACAOGESTAORECURSO` (etapas, com `QUANTIDADEBUSCA`/`QUANTIDADEENVIO`) e `PCINTEGRACAOGESTAODETALHES` (o erro da etapa).
+    `STATUSEXECUCAO` 2 = concluída, 3 = com erro. A Ficha do fluxo mostra as últimas 5 execuções; o erro HTML do WTA vira uma frase
+    (404 = a API não existe neste WTA). O `CONTADOR` cresce também nas execuções concluídas e fica de fora.
+  - Na `PCLOGPEDIDOAPI`, o motivo da recusa vem em quatro formatos: `(CÓDIGO) -> mensagem { [detalhe] }` (o código pode não ter
+    número, ex.: `WPV-PDVSYNC`, e o detalhe pode trazer outro TotvsError), `TotvsError[code=..., message='...', detailedMessage='...']`,
+    erro de SQL do próprio WTA (`PreparedStatementCallback ... ORA-...`; o ORA-00904 indica banco mais antigo que o WTA) e texto
+    simples. A aba resume os motivos mais frequentes do resultado.
+  - Outras tabelas vistas e ainda não usadas: `PCINTEGRACAOPARAMWSH` (parâmetros do WSH, inclusive URL e senha do banco: não ler o
+    valor), `PCINTEGRACAOSTATUSWSH`, `PCINTEGRACAOFLUXOONLINE`, `PCINTEGRACAOERROREQUISICAO` e `PCINTEGRACAOALERTA`.
 
 ### Decisões da vista animada e do modo ao vivo
 

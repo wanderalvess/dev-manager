@@ -158,10 +158,13 @@ Perguntas que continuam abertas estão em [roteiro-coleta-integracao.md](roteiro
 O levantamento WORKFLOW_PDVSYNC (serviço `winthor-integracao-core`, 38 fluxos e 87 rotas) está codificado em
 `src/shared/wshFlowCatalog.ts`, que o Monitor do WSH usa para nomear a rota pelo fluxo, desenhar o sentido certo e mostrar as dependências.
 
-- **Envio (WinThor → PDVSync):** 01-14, 17, 21, 23, 26-36 e 38. A rota `WTA - Buscar ...` cria a linha; a `PDVSYNC - ...` envia.
+- **Envio (WinThor → PDVSync):** 01-14, 17, 21, 23, 26-36, 38 e, fora do levantamento, 39 (Endereço Entrega Cliente), 40
+  (Parâmetros Presidência) e 41 (Preço Oferta). A rota `WTA - Buscar ...` cria a linha; a `PDVSYNC - ...` envia.
 - **Recebimento pelo ERP (PDVSync → WinThor):** 15 (caixa), 16 (vendas), 19 (pedido recebido), 20 (pedido cancelado) e 37
   (cliente). A rota `PDVSYNC - BUSCAR ...` cria a linha; a `WTA - Enviar ...` grava no WinThor.
 - **Monitor:** 18 (status pedido), 24 (status do lote) e 25 (status venda). **Utilitário:** 22 (registrar IP).
+- **Número do fluxo = `IDFLUXO`.** Conferido num banco real: o id do catálogo é o `IDFLUXO` da `PCINTEGRACAOFLUXOEXECUCAO`
+  (1 a 41), e as execuções de cada fluxo ficam em `PCINTEGRACAOGESTAOFLUXO` (status 2 concluída, 3 com erro).
 - **Processos online (fora do WSH):** 12 endpoints do PDVOmni vão direto ao WinThor (pré-venda, crédito, estoque, nota de
   entrada e saída, formas e condições do cliente). Não passam pela `PCINTEGRACAOCORE`. Estão em `src/shared/onlineProcessCatalog.ts`
   e na aba *Online do PDV*; as tabelas Oracle de cada um são mapeadas pelo Statement Tracer durante uma operação real.

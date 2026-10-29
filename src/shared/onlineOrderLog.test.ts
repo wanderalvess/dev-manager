@@ -45,3 +45,23 @@ describe('log de pedidos online', () => {
     expect(marked[0].statusLabel).toBe('Sem resposta');
   });
 });
+
+describe('motivos de recusa mais frequentes', () => {
+  it('agrupa pelo código e pela mensagem sem o número do fim, contando pedidos sem repetir', async () => {
+    const { topRejections } = await import('./onlineOrderLog');
+    const row = (orderNumber: string, code: string | undefined, message: string) =>
+      ({ orderNumber, status: 'R', statusLabel: 'Rejeitado', tone: 'error', operation: 'C', operationLabel: 'Cancelamento', jsonTruncated: false, reason: { ...(code ? { code } : {}), message } }) as never;
+    const groups = topRejections([
+      row('1', 'WT-IM-000294', 'Pedido já Faturado'),
+      row('2', 'WT-IM-000294', 'Pedido já Faturado'),
+      row('2', 'WT-IM-000294', 'Pedido já Faturado'),
+      row('3', 'WT-IM-000378', 'Orçamento já cancelado - 1001971'),
+      row('4', 'WT-IM-000378', 'Orçamento já cancelado'),
+      { orderNumber: '5', status: 'A' } as never
+    ]);
+    expect(groups).toEqual([
+      { code: 'WT-IM-000294', message: 'Pedido já Faturado', count: 3, orders: ['1', '2'] },
+      { code: 'WT-IM-000378', message: 'Orçamento já cancelado', count: 2, orders: ['3', '4'] }
+    ]);
+  });
+});
