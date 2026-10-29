@@ -42,6 +42,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Telas Containers, Deploy e Banco de Dados no visual Papel**: mesmo padrão do Ambiente e do Git (título sem cartão, ação principal única, botões secundários discretos, avisos em palavras). Em Containers, *Novo grupo* é a ação em destaque; em Deploy, *Executar perfil*; no Banco, o aviso de primeiro uso e a barra lateral de conexões e tabelas.
 - **Telas Ambiente Dev e Git no visual Papel**: título de página sem cartão, uma única ação principal por tela (*Subir ambiente*, *Commit e push*), botões secundários discretos, status escritos em palavras (*Aberta*, *Fechada*, *só local*) em vez de chips em maiúsculas, e portas e rede como listas na coluna da direita do Ambiente. Nenhuma ação mudou de lugar de forma que quebre o tour guiado.
 
+### Corrigido
+- **Backup e restauração Oracle sem ORACLE_HOME**: `exp`, `imp`, `expdp` e `impdp` de uma instalação completa do Oracle falhavam com *Message 206 not found* ou *UDE-00019* quando o `ORACLE_HOME` não estava definido. Agora o Dev Manager define o `ORACLE_HOME` com a pasta da instalação do próprio executável (a que tem `rdbms\mesg`), no backup padrão, na restauração e no comando personalizado. Quando não dá para descobrir, a mensagem explica o que configurar em vez de repetir a saída crua do Oracle.
+
 ## [1.45.0] - 2026-10-23
 ### Adicionado
 - **Filtros e alertas na lista de repositórios (Git)**: chips *Todos*, *Com alterações*, *Só locais* e *Sem push*, cada um com a contagem, combinados com a busca. Os cartões mostram `SÓ LOCAL`, `↑ N sem push` e `● N alterações`, e o cabeçalho resume quantos repositórios estão só locais ou com alterações. A contagem de commits sem push lê as refs já baixadas (sem rede); use *Fetch* para atualizá-la.

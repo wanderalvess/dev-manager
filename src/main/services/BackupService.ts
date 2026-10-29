@@ -7,6 +7,12 @@ import { execFile, spawn } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
 import type { ConfigService } from './ConfigService';
+import {
+  buildOracleToolEnv,
+  isMissingOracleHomeOutput,
+  isOracleTool,
+  missingOracleHomeMessage
+} from './database/oracleToolEnv';
 
 /** Tempo máximo de um dump/restore MySQL via spawn (os execFile dos demais bancos já têm timeout). */
 const SPAWN_TIMEOUT_MS = 20 * 60 * 1000;
@@ -378,7 +384,7 @@ export class BackupService {
         args,
         {
           env: {
-            ...process.env,
+            ...(isOracleTool(binary) ? buildOracleToolEnv(binary) : process.env),
             PGPASSWORD: config.password || '',
             MYSQL_PWD: config.password || ''
           },
@@ -393,6 +399,11 @@ export class BackupService {
           if (error) {
             const maskedErrMessage = maskSensitiveText(error.message || '', config.password);
             const detail = maskedStderr.trim() || maskedStdout.trim() || maskedErrMessage;
+            if (isOracleTool(binary) && isMissingOracleHomeOutput(`${maskedStdout}
+${maskedStderr}`)) {
+              resolve({ success: false, message: missingOracleHomeMessage(binary), durationMs });
+              return;
+            }
             resolve({
               success: false,
               message: `Falha ao executar comando personalizado (${path.basename(binary)}): ${detail}`,
@@ -1031,6 +1042,7 @@ export class BackupService {
         binary,
         args,
         {
+          env: buildOracleToolEnv(binary),
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },
@@ -1038,7 +1050,7 @@ export class BackupService {
           const durationMs = Date.now() - startTime;
 
           if (error) {
-            resolve({ success: false, message: this.formatOracleCliError('expdp', error, stdout, stderr), durationMs });
+            resolve({ success: false, message: this.formatOracleCliError(binary, error, stdout, stderr), durationMs });
             return;
           }
 
@@ -1111,13 +1123,14 @@ export class BackupService {
         binary,
         args,
         {
+          env: buildOracleToolEnv(binary),
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },
         (error, stdout, stderr) => {
           const durationMs = Date.now() - startTime;
           if (error) {
-            resolve({ success: false, message: this.formatOracleCliError('impdp', error, stdout, stderr), durationMs });
+            resolve({ success: false, message: this.formatOracleCliError(binary, error, stdout, stderr), durationMs });
             return;
           }
           resolve({ success: true, message: `Restauração concluída a partir de ${dumpFileName}`, durationMs });
@@ -1156,6 +1169,10 @@ export class BackupService {
       return `${binary} não encontrado. Instale o Oracle Instant Client (pacote 'Tools') ou configure o caminho do executável nas configurações.`;
     }
     const msg = (stdout || stderr || error.message || '').trim();
+    if (isMissingOracleHomeOutput(`${stdout || ''}
+${stderr || ''}`)) {
+      return missingOracleHomeMessage(binary);
+    }
     if (msg.includes('ORA-01017')) {
       return 'Falha de autenticação: usuário ou senha incorretos para o Oracle.';
     }
