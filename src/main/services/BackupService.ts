@@ -14,6 +14,7 @@ import {
   isOracleTool,
   missingOracleHomeMessage
 } from './database/oracleToolEnv';
+import { buildOracleParfileContent, writeTempOracleParfile } from './database/oracleParfile';
 
 /** Tempo máximo de um dump/restore MySQL via spawn (os execFile dos demais bancos já têm timeout). */
 const SPAWN_TIMEOUT_MS = 20 * 60 * 1000;
@@ -997,8 +998,8 @@ ${maskedStderr}`)) {
    * servidor Oracle: o dump é gravado no caminho do objeto DIRECTORY do banco, não em
    * destinationFolder diretamente. Para funcionar, destinationFolder deve apontar para o
    * mesmo caminho físico que o DIRECTORY do Oracle usa (cenário comum em bancos de dev
-   * rodando na própria máquina). A senha é enviada via stdin, nunca como argumento de
-   * linha de comando, para não ficar visível na lista de processos.
+   * rodando na própria máquina). Usuário e senha vão num parfile temporário, nunca como
+   * argumento de linha de comando, para não ficarem visíveis na lista de processos.
    */
   private async backupOracle(
     config: DatabaseConnectionConfig,
@@ -1024,11 +1025,8 @@ ${maskedStderr}`)) {
     const logFileName = `${safeConnName}_${config.user}_${timestamp}.log`;
     const expectedFilePath = path.join(destinationFolder, dumpFileName);
 
-
     const binary = expdpPath && expdpPath.trim() ? expdpPath.trim() : 'expdp';
-    const args = [
-      // A conexão vai em LOCAL/TWO_TASK (ver buildOracleConnectEnv), não na linha de comando.
-      config.user,
+    const params = [
       `directory=${directory}`,
       `dumpfile=${dumpFileName}`,
       `logfile=${logFileName}`,
@@ -1036,12 +1034,15 @@ ${maskedStderr}`)) {
     ];
     // compression=ALL exige Oracle Enterprise Edition com Advanced Compression; impdp lê o
     // dump compactado de forma transparente, sem precisar de flag equivalente na restauração.
-    if (compress) args.push('compression=ALL');
+    if (compress) params.push('compression=ALL');
+
+    const parfile = await this.prepareOracleParfile(config, params);
+    if ('message' in parfile) return parfile;
 
     return new Promise<BackupResult>((resolve) => {
       const child = execFile(
         binary,
-        args,
+        [`parfile=${parfile.filePath}`],
         {
           env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
@@ -1076,10 +1077,9 @@ ${maskedStderr}`)) {
         }
       );
 
-      // expdp pede a senha interativamente; enviamos via stdin para não expor em argv/process list.
-      child.stdin?.write(`${config.password || ''}\n`);
+      // Sem stdin: se ainda assim pedir a senha, falha em vez de ficar esperando.
       child.stdin?.end();
-    });
+    }).finally(() => parfile.cleanup().catch(() => undefined));
   }
 
   /**
@@ -1107,21 +1107,21 @@ ${maskedStderr}`)) {
     const dumpFileName = path.basename(filePath);
     const logFileName = `restore_${Date.now()}.log`;
 
-
     const binary = impdpPath && impdpPath.trim() ? impdpPath.trim() : 'impdp';
-    const args = [
-      // A conexão vai em LOCAL/TWO_TASK (ver buildOracleConnectEnv), não na linha de comando.
-      config.user,
+    const params = [
       `directory=${directory}`,
       `dumpfile=${dumpFileName}`,
       `logfile=${logFileName}`,
       `schemas=${config.user}`
     ];
 
+    const parfile = await this.prepareOracleParfile(config, params);
+    if ('message' in parfile) return parfile;
+
     return new Promise<BackupResult>((resolve) => {
       const child = execFile(
         binary,
-        args,
+        [`parfile=${parfile.filePath}`],
         {
           env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
@@ -1137,9 +1137,23 @@ ${maskedStderr}`)) {
         }
       );
 
-      child.stdin?.write(`${config.password || ''}\n`);
       child.stdin?.end();
-    });
+    }).finally(() => parfile.cleanup().catch(() => undefined));
+  }
+
+  /** Grava o parfile do expdp/impdp com usuário e senha; devolve um BackupResult de erro quando não dá. */
+  private async prepareOracleParfile(
+    config: DatabaseConnectionConfig,
+    params: string[]
+  ): Promise<{ filePath: string; cleanup: () => Promise<void> } | BackupResult> {
+    if (!config.password) {
+      return { success: false, message: 'Informe a senha da conexão: o Data Pump (expdp/impdp) não roda sem ela.' };
+    }
+    try {
+      return await writeTempOracleParfile(buildOracleParfileContent(config.user, config.password, params));
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Não foi possível gravar o parfile temporário do Oracle.' };
+    }
   }
 
   private formatMysqlCliError(binary: string, error: { code?: string | number | null; message?: string }, stderr?: string): string {

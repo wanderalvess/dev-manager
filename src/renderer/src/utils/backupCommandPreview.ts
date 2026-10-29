@@ -64,8 +64,9 @@ export function resolveBackupCommandPreview(
 
   if (!useCustomBackupCommand) {
     if (connection.type === 'oracle') {
-      // A conexão vai na variável LOCAL (TWO_TASK fora do Windows), não na linha de comando.
-      return `LOCAL=${buildOracleConnectDescriptor({ ...connection, port })} expdp ${connection.user} directory=${directory} dumpfile=${sampleFileName} logfile=${sampleLogName} schemas=${connection.user}${backupCompress ? ' compression=ALL' : ''}`;
+      // A conexão vai na variável LOCAL (TWO_TASK fora do Windows) e os parâmetros, com a senha,
+      // num parfile temporário: só o parfile vai na linha de comando.
+      return `LOCAL=${buildOracleConnectDescriptor({ ...connection, port })} expdp parfile=<temporário> → userid=${connection.user}/${pwdDisplay} directory=${directory} dumpfile=${sampleFileName} logfile=${sampleLogName} schemas=${connection.user}${backupCompress ? ' compression=ALL' : ''}`;
     }
     if (connection.type === 'mysql') {
       return `mysqldump -h ${connection.host} -P ${port} -u ${connection.user} --result-file="${sampleFilePath}" ${connection.database}`;

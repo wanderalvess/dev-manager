@@ -62,11 +62,11 @@ describe('resolveBackupCommandPreview', () => {
     expect(cmd).toContain('--result-file=');
   });
 
-  it('comando padrão do oracle passa a conexão em LOCAL e só o usuário ao expdp, e adiciona compression=ALL quando comprimido', () => {
+  it('comando padrão do oracle passa a conexão em LOCAL e o resto no parfile, e adiciona compression=ALL quando comprimido', () => {
     const conn = makeConnection({ type: 'oracle', port: 1521, oracleMode: 'serviceName' });
     const cmd = resolveBackupCommandPreview(conn, baseOptions);
     expect(cmd).toContain(
-      'LOCAL=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=meudb))) expdp admin directory=DATA_PUMP_DIR'
+      'LOCAL=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=meudb))) expdp parfile=<temporário> → userid=admin/**** directory=DATA_PUMP_DIR'
     );
     expect(cmd).not.toContain('compression=ALL');
 
