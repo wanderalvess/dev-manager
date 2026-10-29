@@ -50,7 +50,7 @@ export const AuthLockoutChecksList: React.FC<AuthLockoutChecksListProps> = ({ ch
               onClick={() => toggle(check.id)}
               className="w-full flex items-start gap-3 text-left"
               aria-expanded={expanded}
-              disabled={check.evidence.length === 0}
+              disabled={check.evidence.length === 0 && !check.plan}
             >
               <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${TONE_TEXT[tone]} ${Icon === Loader2 ? 'animate-spin' : ''}`} />
               <div className="flex-1 min-w-0 space-y-0.5">
@@ -67,17 +67,30 @@ export const AuthLockoutChecksList: React.FC<AuthLockoutChecksListProps> = ({ ch
                 {check.status !== 'pending' && check.status !== 'skipped' && <p className="text-xs text-foreground">{check.summary}</p>}
                 {check.status === 'skipped' && check.summary !== 'Não selecionada.' && <p className="text-xs text-muted-foreground">{check.summary}</p>}
               </div>
-              {check.evidence.length > 0 &&
+              {(check.evidence.length > 0 || check.plan) &&
                 (expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />)}
             </button>
             {expanded && (
-              <ul className="mt-2 ml-7 space-y-1 text-2xs font-mono text-muted-foreground bg-muted/40 rounded-lg p-2 max-h-64 overflow-y-auto">
-                {check.evidence.map((line, i) => (
-                  <li key={i} className="break-all">
-                    {line}
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-2 ml-7 space-y-2">
+                {check.plan && (
+                  <div className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">Como foi testado: </span>
+                    {check.plan}
+                  </div>
+                )}
+                {check.evidence.length > 0 && (
+                  <div>
+                    <div className="text-xs font-semibold text-foreground mb-1">Evidências</div>
+                    <ul className="space-y-1 text-2xs font-mono text-muted-foreground bg-muted/40 rounded-lg p-2 max-h-64 overflow-y-auto">
+                      {check.evidence.map((line, i) => (
+                        <li key={i} className="break-all">
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             )}
           </li>
         );

@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   PlayCircle,
   Zap,
+  ListChecks,
   Globe,
   Route,
   LucideIcon
@@ -209,6 +210,13 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         shortLabel: 'TAUT',
         icon: Zap,
         description: 'Automação E2E com Cypress: execução, cobertura e intake via CSV',
+      },
+      {
+        id: 'quality-scenarios',
+        label: 'Validação de Cenários',
+        shortLabel: 'Cenários',
+        icon: ListChecks,
+        description: 'Cenários de comportamento do WinThor em homologação, como o bloqueio de login'
       }
     ]
   }

@@ -19,6 +19,7 @@ import {
   CheckCheck,
   PlayCircle,
   Zap,
+  ListChecks,
   Globe,
   Plug,
   Route
@@ -186,6 +187,13 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     title: 'TAUT (Cypress)',
     subtitle: 'Automação E2E com Cypress: execução, cobertura e intake via CSV',
     icon: Zap
+  },
+  {
+    id: 'act-quality-scenarios',
+    tab: 'quality-scenarios',
+    title: 'Validação de Cenários',
+    subtitle: 'Cenários de comportamento do WinThor em homologação, como o bloqueio de login',
+    icon: ListChecks
   },
   {
     id: 'act-http-client',

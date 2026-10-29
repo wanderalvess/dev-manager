@@ -1,4 +1,5 @@
 import { authLockoutCheckDefinition } from './authLockoutCatalog';
+import { describeRequest, describeResponse } from './authLockoutNarrative';
 import type { AuthLockoutCheckStatus, AuthLockoutRunResult } from './authLockoutTypes';
 
 export const AUTH_LOCKOUT_STATUS_LABELS: Record<AuthLockoutCheckStatus, string> = {
@@ -12,7 +13,7 @@ export const AUTH_LOCKOUT_STATUS_LABELS: Record<AuthLockoutCheckStatus, string> 
   skipped: 'Não executada'
 };
 
-const STATUS_ICON: Record<AuthLockoutCheckStatus, string> = {
+export const STATUS_ICON: Record<AuthLockoutCheckStatus, string> = {
   pending: '⏳',
   running: '⏳',
   passed: '✅',
@@ -48,18 +49,30 @@ export function buildAuthLockoutMarkdown(result: Omit<AuthLockoutRunResult, 'mar
       `| ${cell(check.title)} | ${cell(def.attempt)} | ${cell(def.expectation)} | ${STATUS_ICON[check.status]} ${AUTH_LOCKOUT_STATUS_LABELS[check.status]} | ${cell(check.summary)} |`
     );
   }
-  const withEvidence = result.checks.filter((c) => c.evidence.length > 0);
-  if (withEvidence.length > 0) {
-    lines.push('', '### Evidências');
-    for (const check of withEvidence) {
-      lines.push('', `**${check.title}**`, ...check.evidence.map((e) => `- ${e}`));
+  const detailed = result.checks.filter((c) => c.evidence.length > 0 || c.plan);
+  if (detailed.length > 0) {
+    lines.push('', '### Como cada regra foi testada');
+    for (const check of detailed) {
+      lines.push('', `**${check.title}** — ${STATUS_ICON[check.status]} ${AUTH_LOCKOUT_STATUS_LABELS[check.status]}`);
+      if (check.plan) lines.push('', `_Como foi testado:_ ${check.plan}`);
+      lines.push('', `_Resultado:_ ${check.summary}`);
+      if (check.evidence.length > 0) lines.push('', '_Evidências:_', ...check.evidence.map((e) => `- ${e}`));
+    }
+  }
+  const steps = (result.log ?? []).filter((entry) => entry.level !== 'attempt');
+  if (steps.length > 0) {
+    const start = Date.parse(result.startedAt);
+    lines.push('', '### Passo a passo', '');
+    for (const entry of steps) {
+      const offset = Number.isFinite(start) ? `\`+${((Date.parse(entry.at) - start) / 1000).toFixed(1)}s\` ` : '';
+      lines.push(`- ${offset}${entry.message}`);
     }
   }
   if (result.attempts.length > 0) {
-    lines.push('', '### Tentativas', '', '| # | +s | Checagem | Tentativa | HTTP | Resultado | ms |', '|---|---|---|---|---|---|---|');
+    lines.push('', '### Requisições', '', '| # | +s | Checagem | Requisição | Resposta do WTA | ms |', '|---|---|---|---|---|---|');
     for (const a of result.attempts) {
       lines.push(
-        `| ${a.seq} | ${(a.offsetMs / 1000).toFixed(1)} | ${a.checkId} | ${cell(a.label)} | ${a.status || '—'} | ${a.outcome ?? (a.error ? cell(a.error) : '')} | ${a.durationMs} |`
+        `| ${a.seq} | ${(a.offsetMs / 1000).toFixed(1)} | ${a.checkId} | ${cell(`${a.label} (${describeRequest(a)})`)} | ${cell(describeResponse(a))} | ${a.durationMs} |`
       );
     }
   }

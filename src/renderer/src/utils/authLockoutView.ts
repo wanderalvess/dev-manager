@@ -4,7 +4,9 @@ import type {
   AuthLockoutCheckResult,
   AuthLockoutCheckStatus,
   AuthLockoutDefaults,
+  AuthLockoutLogEntry,
   AuthLockoutPasswordEncoding,
+  AuthLockoutProgress,
   AuthLockoutRunRequest
 } from '../../../shared/authLockoutTypes';
 import type { ReadinessTone } from './integrationReadinessView';
@@ -153,4 +155,25 @@ export const STATUS_TONE: Record<AuthLockoutCheckStatus, ReadinessTone> = {
 
 export function summarizeChecks(checks: readonly AuthLockoutCheckResult[]): Partial<Record<AuthLockoutCheckStatus, number>> {
   return checks.reduce<Partial<Record<AuthLockoutCheckStatus, number>>>((acc, c) => ({ ...acc, [c.status]: (acc[c.status] ?? 0) + 1 }), {});
+}
+
+const MAX_ACTIVITY = 600;
+
+/** Só a linha da atividade, sem o resultado da checagem e a tentativa que vêm junto no progresso. */
+export function progressToEntry(progress: AuthLockoutProgress): AuthLockoutLogEntry {
+  return {
+    at: progress.at,
+    level: progress.level,
+    message: progress.message,
+    ...(progress.detail ? { detail: progress.detail } : {}),
+    ...(progress.asExpected !== undefined ? { asExpected: progress.asExpected } : {}),
+    ...(progress.status ? { status: progress.status } : {})
+  };
+}
+
+/** A contagem regressiva de uma espera substitui a linha anterior, em vez de empilhar uma a cada 15 s. */
+export function appendActivity(lines: AuthLockoutLogEntry[], entry: AuthLockoutLogEntry): AuthLockoutLogEntry[] {
+  const last = lines[lines.length - 1];
+  if (entry.level === 'wait' && last?.level === 'wait') return [...lines.slice(0, -1), entry];
+  return [...lines, entry].slice(-MAX_ACTIVITY);
 }

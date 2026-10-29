@@ -45,7 +45,7 @@ describe('resolveFallbackTab', () => {
 
 describe('filterTourSteps', () => {
   it('tira do tour global os passos dos grupos ocultos', () => {
-    const groups = filterNavGroups(NAV_THEME_GROUPS, ['quality', 'quality-regression', 'quality-runners', 'quality-taut']);
+    const groups = filterNavGroups(NAV_THEME_GROUPS, ['quality', 'quality-regression', 'quality-runners', 'quality-taut', 'quality-scenarios']);
     const targets = filterTourSteps(TOUR_STEPS, groups).map((s) => s.target);
     expect(targets).not.toContain('nav-qa');
     expect(targets).toContain('nav-infra');

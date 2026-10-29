@@ -3,7 +3,7 @@ import type { AuthLockoutRunRequest } from '../../../shared/authLockoutTypes';
 import { safeSend } from '../../utils/ipcSend';
 import type { IpcContext } from '../ipcContext';
 
-/** Teste de bloqueio de login do WinThor (Homologação → Bloqueio de Login). Canais: auth-lockout:* */
+/** Teste de bloqueio de login do WinThor (Validação de Cenários → Bloqueio de Login). Canais: auth-lockout:* */
 export function registerAuthLockoutHandlers(ctx: IpcContext): void {
   const { mainWindow, authLockoutTestService } = ctx;
 

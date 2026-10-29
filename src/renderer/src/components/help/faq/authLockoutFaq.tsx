@@ -4,7 +4,7 @@ import type { FaqItem } from '../helpData';
 const code = (text: string) => <code className="font-mono text-primary">{text}</code>;
 const strong = (text: string) => <strong className="text-foreground">{text}</strong>;
 
-/** Homologação → Bloqueio de Login: como validar as regras de bloqueio do login do WinThor e o registro de logs. */
+/** Validação de Cenários → Bloqueio de Login: como validar as regras de bloqueio do login do WinThor e o registro de logs. */
 export function getAuthLockoutFaq(): FaqItem[] {
   return [
     {
@@ -15,7 +15,7 @@ export function getAuthLockoutFaq(): FaqItem[] {
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            Em {strong('Homologação → Bloqueio de Login')}, informe a URL do WTA, a API de logs (padrão{' '}
+            Em {strong('Validação de Cenários → Bloqueio de Login')}, informe a URL do WTA, a API de logs (padrão{' '}
             {code('/winthor/ferramenta/servidor/v1/logs')}), o {code('winthor.log')} (padrão: a pasta do Karaf de Configurações) e dois
             usuários de teste. {strong('Rodar teste')} faz as tentativas controladas contra {code('/winthor/autenticacao/v1/login')} e
             preenche a tabela de 12 regras com o resultado observado e as evidências de cada uma.
@@ -25,6 +25,12 @@ export function getAuthLockoutFaq(): FaqItem[] {
               {strong('Senha:')} digite a senha normal. O login do WTA recebe o MD5 dela em hexadecimal maiúsculo (senha{' '}
               {code('1')} → {code('C4CA4238A0B923820DCC509A6F75849B')}), e o Dev Manager faz essa conversão; o hash pronto também é
               aceito. Só troque para {strong('Texto puro')} se o seu WTA receber a senha sem hash.
+            </li>
+            <li>
+              {strong('Passo a passo:')} cada checagem abre explicando o que vai ser feito, com os seus usuários e números. Cada
+              requisição mostra o que foi enviado, o que o WTA respondeu e o que se esperava: em verde quando bateu, em vermelho quando
+              não bateu. Cada espera diz o motivo, e o fim traz o placar e quem pode continuar bloqueado. Abra uma regra para ver
+              {' '}{strong('Como foi testado')} e as evidências; o relatório do Jira leva tudo isso.
             </li>
             <li>
               {strong('Ordem:')} o usuário A erra 4 vezes (não pode bloquear), espera a janela e erra 5 (tem de bloquear). Com A bloqueado,

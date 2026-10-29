@@ -76,6 +76,16 @@ describe('AuthLockoutTestService contra um WTA falso', () => {
       'count-window': 'skipped'
     });
     expect(result.markdown).toContain('Limiar de bloqueio');
+    // Passo a passo: cada checagem abre explicada, cada tentativa diz o esperado e o fim traz o placar
+    const messages = result.log.map((l) => l.message);
+    expect(messages).toContain('▶ Limiar de bloqueio');
+    expect(result.log.find((l) => l.message === '▶ Limiar de bloqueio')?.detail).toContain('Erra a senha de TESTE_A 4 vezes');
+    expect(messages.some((m) => m.includes('senha certa após 5 falhas') && m.includes('esperado: recusar ✔'))).toBe(true);
+    expect(result.log.filter((l) => l.level === 'attempt' && l.asExpected === false)).toEqual([]);
+    expect(messages.some((m) => m.startsWith('■ Fim do teste'))).toBe(true);
+    expect(result.checks.find((c) => c.id === 'threshold')?.plan).toContain('TESTE_A');
+    expect(result.markdown).toContain('_Como foi testado:_');
+    expect(result.markdown).toContain('### Passo a passo');
     // Nenhuma senha nem token sai no resultado
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain('senhaA');
