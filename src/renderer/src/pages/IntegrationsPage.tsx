@@ -66,9 +66,9 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({
   };
 
   return (
-    <div className="h-full overflow-y-auto p-5 md:p-7 space-y-6">
+    <div className="h-full overflow-y-auto px-4 py-3 md:px-5 md:py-4 space-y-3">
       <div className="space-y-1">
-        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-3">
+        <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground flex items-center gap-3">
           <Plug className="w-6 h-6 text-muted-foreground" />
           Integrações
         </h1>

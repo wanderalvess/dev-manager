@@ -71,7 +71,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">Ambiente Dev</h1>
+            <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground">Ambiente Dev</h1>
             {isRunningProfile && (
               <span className="text-xs bg-accent text-accent-foreground px-2.5 py-0.5 rounded-full font-medium animate-pulse flex items-center gap-1.5">
                 <RefreshCw className="w-3 h-3 animate-spin" />
@@ -79,7 +79,7 @@ export const EnvironmentCockpitPanel: React.FC<EnvironmentCockpitPanelProps> = (
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+          <p className="sr-only">
             {activeProfile?.description ||
               'Prepara a máquina para desenvolver: para serviços, libera portas, abre a IDE e sobe o Karaf, nessa ordem.'}
           </p>

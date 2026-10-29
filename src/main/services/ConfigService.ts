@@ -2,6 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { decryptSecret, encryptSecret } from '../utils/secretsCrypto';
+import {
+  decryptIntegrationLayersInPlace,
+  encryptIntegrationLayersForDisk,
+  preserveIntegrationLayerSecrets,
+  sanitizeIntegrationLayers
+} from './config/integrationSecrets';
 import { normalizeDisabledModules } from '../../shared/appModules';
 import {
   AppSettings,
@@ -203,7 +209,11 @@ export function detectDefaultKarafPath(): string {
     return process.env.KARAF_DIR;
   }
   const userHome = os.homedir();
+  // Pasta padrão do instalador do WinThor antes das genéricas
   const candidates = [
+    'C:\\pcsist\\produtos\\winthor',
+    'D:\\pcsist\\produtos\\winthor',
+    '/opt/pcsist/produtos/winthor',
     '/workspace/karaf',
     '/karaf',
     path.join(userHome, 'karaf'),
@@ -256,6 +266,9 @@ export function detectDefaultJdkPath(): string {
     return process.env.JAVA_HOME;
   }
   const candidates = [
+    // JDK que o instalador do WinThor põe ao lado do Karaf (o winthor.bat aponta para ele)
+    'C:\\pcsist\\produtos\\winthor-jdk',
+    'D:\\pcsist\\produtos\\winthor-jdk',
     'C:\\Program Files\\Java\\jdk1.8.0_202',
     'C:\\Program Files\\Java\\jdk1.8.0_232',
     'C:\\Program Files\\Java\\jdk-8',
@@ -421,6 +434,7 @@ export class ConfigService {
     settings.qualitySources?.forEach((qs) => {
       if (qs.apiToken) qs.apiToken = decryptSecret(qs.apiToken, dir)!;
     });
+    decryptIntegrationLayersInPlace(settings.integrationLayers, dir);
   }
 
   /**
@@ -456,6 +470,7 @@ export class ConfigService {
     clone.qualitySources = clone.qualitySources?.map((qs) =>
       qs.apiToken ? { ...qs, apiToken: encryptSecret(qs.apiToken, dir)! } : qs
     );
+    clone.integrationLayers = encryptIntegrationLayersForDisk(clone.integrationLayers, dir);
     return clone;
   }
 
@@ -641,6 +656,7 @@ export class ConfigService {
         return { ...s, apiToken: s.apiToken || (destinationChanged ? '' : existing?.apiToken || '') };
       });
     }
+    merged.integrationLayers = preserveIntegrationLayerSecrets(merged.integrationLayers, current.integrationLayers);
 
     return merged;
   }
@@ -769,6 +785,7 @@ export class ConfigService {
         hasApiToken: Boolean(qs.apiToken && qs.apiToken.trim().length > 0)
       }));
     }
+    sanitized.integrationLayers = sanitizeIntegrationLayers(sanitized.integrationLayers);
     return sanitized;
   }
 
@@ -905,6 +922,10 @@ export class ConfigService {
       if (typeof parsed.activeQualitySourceId === 'string') {
         merged.activeQualitySourceId = parsed.activeQualitySourceId;
       }
+      if (Array.isArray(parsed.integrationLayers)) {
+        merged.integrationLayers = preserveIntegrationLayerSecrets(parsed.integrationLayers, current.integrationLayers);
+      }
+      if (Array.isArray(parsed.integrationFlows)) merged.integrationFlows = parsed.integrationFlows;
 
       const warnings = [
         ...this.collectCommandStepWarnings(merged.automationProfiles, 'Perfil de automação'),

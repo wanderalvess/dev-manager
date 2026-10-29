@@ -9,6 +9,7 @@ import { useQualityPageSettings } from '../hooks/quality/page/useQualityPageSett
 import { useQualityValidation } from '../hooks/quality/page/useQualityValidation';
 import { useQualityAddItemForm } from '../hooks/quality/page/useQualityAddItemForm';
 import type { QualityTabMode } from '../utils/qualityPageView';
+import { requestSettingsTab } from '../utils/settingsDeepLink';
 
 interface QualityPageProps {
   onNavigate?: (tab: string) => void;
@@ -18,8 +19,16 @@ interface QualityPageProps {
 
 // Homologação: matriz de cenários, e prontidão da release. TAUT, Test Runners e Validador
 // Regressivo têm página própria (QualityTautPage, QualityRunnersPage, QualityRegressionPage).
-export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVersion }) => {
+export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate: navigate, settingsVersion }) => {
   const [tabMode, setTabMode] = useState<QualityTabMode>('matrix');
+
+  // Os atalhos para Configurações desta página são todos sobre fontes de teste: abre direto na aba Qualidade
+  const onNavigate = navigate
+    ? (tab: string) => {
+        if (tab === 'settings') requestSettingsTab('quality');
+        navigate(tab);
+      }
+    : undefined;
 
   const { qualitySources, activeQualitySource } = useQualityPageSettings(settingsVersion);
   const validation = useQualityValidation();
@@ -51,7 +60,7 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate, settingsVe
         onNavigate={onNavigate}
       />
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-3 md:px-5 md:py-4 space-y-3">
         <QualityMetricsStrip metrics={metrics} onFilterStatus={handleFilterByStatus} />
 
         {tabMode === 'matrix' && (

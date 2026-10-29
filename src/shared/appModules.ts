@@ -9,6 +9,7 @@ export const APP_MODULE_IDS = [
   'karaf',
   'logs',
   'apm',
+  'integration-trace',
   'database',
   'db-backups',
   'routines',

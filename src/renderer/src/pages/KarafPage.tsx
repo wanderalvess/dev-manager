@@ -37,17 +37,17 @@ export const KarafPage: React.FC<KarafPageProps> = ({ projects }) => {
   const closeTool = () => setOpenTool(null);
 
   return (
-    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-y-auto max-w-full">
+    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-y-auto max-w-full">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
-            <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-3">
+            <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground flex items-center gap-3">
               Karaf
               <span className={`text-[13px] font-medium px-2.5 py-0.5 rounded-full ${status.className}`}>
                 {status.label}
               </span>
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="sr-only">
               Bundles, features, catálogo 801, memória da JVM e diagnósticos do servidor OSGi.
             </p>
           </div>

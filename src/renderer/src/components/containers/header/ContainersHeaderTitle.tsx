@@ -22,7 +22,7 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
 }) => (
   <div className="min-w-0">
     <div className="flex items-center gap-3 flex-wrap">
-      <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">{title}</h1>
+      <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground">{title}</h1>
       <button
         type="button"
         onClick={onOpenTour}
@@ -60,6 +60,6 @@ export const ContainersHeaderTitle: React.FC<ContainersHeaderTitleProps> = ({
           </span>
         ))}
     </div>
-    <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+    <p className="sr-only">{subtitle}</p>
   </div>
 );

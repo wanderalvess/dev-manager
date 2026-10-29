@@ -76,7 +76,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-5 md:p-7 pb-5 space-y-5 overflow-y-auto lg:overflow-hidden max-w-full overflow-x-hidden">
+    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-y-auto lg:overflow-hidden max-w-full overflow-x-hidden">
       <EnvironmentConfigWarning
         missingPaths={profilesState.missingRequiredPaths}
         onNavigateToSettings={onNavigateToSettings}

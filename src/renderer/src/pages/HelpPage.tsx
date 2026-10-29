@@ -114,7 +114,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
   }, [faqList.length, appInfo?.appVersion]);
 
   return (
-    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden">
+    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
       {/* 1. TOPO / HEADER DA CENTRAL DE AJUDA & LAUNCHPAD */}
       <HelpPageHeader
         searchQuery={searchQuery}

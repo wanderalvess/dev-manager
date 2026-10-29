@@ -43,7 +43,7 @@ const SECONDARY_BTN =
 export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
   <>
     <header
-      className="px-7 pt-6 pb-4 flex flex-wrap items-end justify-between gap-4 shrink-0"
+      className="px-4 md:px-5 pt-3 md:pt-4 pb-3 flex flex-wrap items-end justify-between gap-4 shrink-0"
       data-tour="winthor-header"
     >
       <ContainersHeaderTitle

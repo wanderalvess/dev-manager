@@ -51,7 +51,7 @@ export const HistoryList: React.FC<HistoryListProps> = ({ history, canSync, onVi
               onClick={() => onViewLog(item)}
               className="text-muted-foreground hover:text-foreground underline cursor-pointer"
             >
-              Ver log completo
+              Ver saída do comando
             </button>
 
             {item.linkedValidationItemIds && item.linkedValidationItemIds.length > 0 && canSync && (

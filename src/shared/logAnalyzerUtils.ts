@@ -1,4 +1,5 @@
 import { LogExceptionMatch, LogAnalysisSummary } from './types';
+import { analyzeWinthorLine } from './logAnalyzerWinthor';
 
 /**
  * Catálogo de diagnósticos para erros conhecidos de banco Oracle (ORA-XXXXX).
@@ -94,6 +95,10 @@ const ORA_CATALOG: Record<string, { title: string; explanation: string; suggeste
  */
 export function analyzeLogLine(line: string, lineIndex: number): LogExceptionMatch | null {
   if (!line || typeof line !== 'string') return null;
+
+  // 0. Padrões do Karaf do WinThor (causa raiz da resolução, HealthService, ORA-00904) antes dos genéricos
+  const winthor = analyzeWinthorLine(line, lineIndex);
+  if (winthor) return winthor;
 
   // 1. Erro Oracle ORA-XXXXX
   const oraMatch = line.match(/\bORA-(\d{5})\b/i);

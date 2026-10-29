@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { KarafBundleInfo } from '../../../../shared/types';
 import { KarafContainerStatus } from '../../utils/karafBundleUtils';
 import { requestConfirm } from '../../components/ui/confirmService';
+import { karafStopPlan } from '../../utils/karafStopPlan';
 
 const BUNDLE_REFRESH_MS = 10000;
 
@@ -145,9 +146,17 @@ export function useKarafBundleData(isOpen: boolean) {
       if (isEmbeddedRunning && window.electronAPI?.stopEmbeddedKaraf) {
         await window.electronAPI.stopEmbeddedKaraf();
       }
+      const [settings, install] = await Promise.all([
+        window.electronAPI?.getSettings?.().catch(() => null),
+        window.electronAPI?.getKarafInstallInfo?.().catch(() => null)
+      ]);
+      const plan = karafStopPlan(settings, install?.success ? install.info : null);
+      if (plan.kind === 'service') {
+        setErrorBanner(`O Karaf que responde é o do serviço Windows "${plan.serviceName}": pare pelo serviço (services.msc). O app não mata o processo dele.`);
+        return;
+      }
       if (window.electronAPI?.killPort) {
-        await window.electronAPI.killPort(5005).catch(() => {});
-        await window.electronAPI.killPort(8101).catch(() => {});
+        for (const port of plan.ports) await window.electronAPI.killPort(port).catch(() => {});
       }
       setBundles([]);
       setKarafStatus('OFFLINE');

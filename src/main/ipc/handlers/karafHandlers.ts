@@ -8,6 +8,7 @@ import {
 } from '../../../shared/types';
 import { safeSend } from '../../utils/ipcSend';
 import type { IpcContext } from '../ipcContext';
+import { getKarafInstallStatus } from '../../services/karaf/karafInstallInfo';
 
 /** Karaf: deploy, console embutido, bundles, features e JVM. Canais: karaf:* */
 export function registerKarafHandlers(ctx: IpcContext): void {
@@ -19,6 +20,8 @@ export function registerKarafHandlers(ctx: IpcContext): void {
       safeSend(mainWindow, 'karaf:stdout', chunk);
     });
   });
+
+  ipcMain.handle('karaf:install-info', () => getKarafInstallStatus(ctx.configService.getSettings()));
 
   ipcMain.handle('karaf:get-persisted-logs', async (_, maxChars?: number) => {
     return { output: karafLogPersistenceService.read(maxChars) };

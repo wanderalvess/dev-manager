@@ -198,17 +198,22 @@ export class TestRunnerService {
     const workingDir = this.resolveWorkingDir(runner.workingDir);
     const isWin = process.platform === 'win32';
 
-    onChunk(`\r\n==================================================\r\n`);
-    onChunk(`🧪 DISPARANDO RUNNER DE TESTES: "${runner.name}"\r\n`);
-    onChunk(`Tipo: ${runner.type.toUpperCase()} | Diretório: ${workingDir}\r\n`);
-    onChunk(`==================================================\r\n\r\n`);
-
-    // Diretório informado que não existe cai em process.cwd() na resolução; rodar `mvn test` na pasta do app seria enganoso
-    if (runner.workingDir?.trim() && workingDir === process.cwd()) {
+    // Diretório informado que não existe cai em process.cwd() (ou volta relativo) na resolução; rodar `mvn test` na
+    // pasta do app seria enganoso. Quem aponta de propósito para a pasta do app passa. Checado antes do cabeçalho
+    // para o log não anunciar a pasta do app como diretório do runner.
+    const requestedDir = runner.workingDir?.trim() ? this.substituteVariables(runner.workingDir).trim() : '';
+    const pointsAtAppDir = !!requestedDir && path.resolve(requestedDir) === path.resolve(process.cwd());
+    const fellBackToAppDir = workingDir === process.cwd() && !pointsAtAppDir;
+    if (requestedDir && (fellBackToAppDir || !fs.existsSync(workingDir))) {
       const err = `[ERRO] Diretório de trabalho não encontrado: "${runner.workingDir}". Ajuste o runner antes de executar.\r\n`;
       onChunk(err);
       return this.createAndSaveFailedResult(runner, executionId, startTime, 1, err, 'Diretório de trabalho não encontrado.');
     }
+
+    onChunk(`\r\n==================================================\r\n`);
+    onChunk(`🧪 DISPARANDO RUNNER DE TESTES: "${runner.name}"\r\n`);
+    onChunk(`Tipo: ${runner.type.toUpperCase()} | Diretório: ${workingDir}\r\n`);
+    onChunk(`==================================================\r\n\r\n`);
 
     if (workingDir && !isSafeLocalPath(workingDir)) {
       const err = `[ERRO DE SEGURANÇA] Caminho de trabalho inválido ou não seguro: "${workingDir}"\r\n`;

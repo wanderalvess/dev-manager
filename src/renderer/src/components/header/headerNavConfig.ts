@@ -16,6 +16,7 @@ import {
   PlayCircle,
   Zap,
   Globe,
+  Route,
   LucideIcon
 } from 'lucide-react';
 
@@ -98,6 +99,13 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         icon: Activity,
         description: 'Métricas, traces distribuídos (OTel/SigNoz) e observabilidade de APIs',
         shortcut: 'Alt+0'
+      },
+      {
+        id: 'integration-trace',
+        label: 'Rastreio de Integração',
+        shortLabel: 'Integração',
+        icon: Route,
+        description: 'Pré-voo de WinThor, WSH, CH e PDV para testar a integração de ponta a ponta'
       }
     ]
   },

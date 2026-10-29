@@ -1,19 +1,41 @@
 import React from 'react';
-import { Play, RefreshCw, Terminal } from 'lucide-react';
+import { Check, Circle, Play, RefreshCw, Terminal } from 'lucide-react';
 import type { QaRegressionTemplate } from '../../../../../shared/types';
 
 interface QaRunnerIdleStateProps {
   selectedTemplate: QaRegressionTemplate | null;
   variablesCount: number;
+  hasConnection: boolean;
+  hasConnectionsConfigured: boolean;
   canRun: boolean;
   onRun: () => void;
+  onNavigateToDatabase?: () => void;
 }
 
+const SetupStep: React.FC<{ done: boolean; optional?: boolean; children: React.ReactNode }> = ({
+  done,
+  optional,
+  children
+}) => (
+  <li className="flex items-start gap-2">
+    {done ? (
+      <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+    ) : (
+      <Circle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${optional ? 'text-muted-foreground/60' : 'text-warning'}`} />
+    )}
+    <div className={done ? 'text-foreground' : ''}>{children}</div>
+  </li>
+);
+
+// Console vazio = roteiro de primeiro uso: mostra o que falta (e o porquê de o botão estar desabilitado)
 export const QaRunnerIdleState: React.FC<QaRunnerIdleStateProps> = ({
   selectedTemplate,
   variablesCount,
+  hasConnection,
+  hasConnectionsConfigured,
   canRun,
-  onRun
+  onRun,
+  onNavigateToDatabase
 }) => {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
@@ -24,25 +46,47 @@ export const QaRunnerIdleState: React.FC<QaRunnerIdleStateProps> = ({
             Console de Regressão Oracle
           </span>
         </div>
-        <div className="space-y-1.5 text-xs text-muted-foreground">
-          <p>
+        <ol className="space-y-2.5 text-xs text-muted-foreground">
+          <SetupStep done={hasConnection}>
+            {hasConnection ? (
+              'Conexão Oracle selecionada.'
+            ) : hasConnectionsConfigured ? (
+              'Escolha a conexão Oracle no campo "Banco", na barra acima.'
+            ) : (
+              <>
+                Cadastre uma conexão Oracle de homologação.
+                {onNavigateToDatabase && (
+                  <button
+                    type="button"
+                    onClick={onNavigateToDatabase}
+                    className="ml-1 text-primary font-semibold hover:underline cursor-pointer"
+                  >
+                    Abrir Banco de Dados
+                  </button>
+                )}
+              </>
+            )}
+          </SetupStep>
+          <SetupStep done={!!selectedTemplate}>
             {selectedTemplate ? (
               <>
-                Cenário selecionado: <b className="text-foreground font-mono">{selectedTemplate.name}</b> ({selectedTemplate.steps.length} queries).
+                Cenário: <b className="text-foreground font-mono">{selectedTemplate.name}</b> ({selectedTemplate.steps.length} queries).
               </>
             ) : (
-              'Nenhum cenário selecionado.'
+              'Escolha um cenário no campo "Cenário", na barra acima.'
             )}
-          </p>
-          <p>
-            Binds carregados: <span className="font-mono text-foreground font-semibold">{variablesCount}</span> parâmetros prontos para interpolação.
-          </p>
-        </div>
+          </SetupStep>
+          <SetupStep done={variablesCount > 0} optional>
+            {variablesCount > 0
+              ? `${variablesCount} bind(s) prontos para as queries.`
+              : 'Opcional: cole o payload JSON à esquerda e clique em "Mapear Binds" para preencher os parâmetros.'}
+          </SetupStep>
+        </ol>
         <button
           type="button"
           onClick={onRun}
           disabled={!canRun}
-          className="w-full py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+          className="w-full py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
           <span>Executar Bateria de Testes</span>

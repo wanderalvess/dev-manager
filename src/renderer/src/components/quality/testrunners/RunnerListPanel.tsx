@@ -7,6 +7,7 @@ import {
 } from '../../../../../shared/types';
 import { TYPE_ICONS } from './testRunnerTypeVisuals';
 import { RunnerCard } from './RunnerCard';
+import { getPresetShortLabel } from '../../../utils/testRunnersUtils';
 
 interface RunnerListPanelProps {
   runners: TestRunnerConfig[];
@@ -29,7 +30,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
   onEdit,
   onDelete
 }) => (
-  <div className="w-full md:w-5/12 lg:w-4/12 border-r border-border/80 flex flex-col overflow-hidden bg-card/40">
+  <div className="w-full md:w-5/12 xl:w-4/12 md:min-w-[360px] border-r border-border/80 flex flex-col overflow-hidden bg-card/40">
     {/* Barra superior de ações */}
     <div className="p-4 border-b border-border/70 flex items-center justify-between gap-3 shrink-0 bg-card/60">
       <div>
@@ -48,7 +49,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
       <button
         type="button"
         onClick={onCreate}
-        className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
+        className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold whitespace-nowrap shrink-0 flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
       >
         <Plus className="w-3.5 h-3.5" />
         <span>Criar Runner</span>
@@ -70,7 +71,7 @@ export const RunnerListPanel: React.FC<RunnerListPanelProps> = ({
             title={preset.description}
           >
             {TYPE_ICONS[preset.type]}
-            <span className="truncate max-w-[130px]">{preset.name.split(' ')[0]}</span>
+            <span className="truncate max-w-[160px]">{getPresetShortLabel(preset)}</span>
           </button>
         ))}
       </div>

@@ -17,14 +17,14 @@ export const HelpPageHeader: React.FC<HelpPageHeaderProps> = ({
     <div className="flex items-center space-x-3 min-w-0">
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-[26px] leading-tight font-semibold text-foreground tracking-tight">
+          <h1 className="text-lg leading-tight font-bold text-foreground tracking-tight">
             Central de Ajuda &amp; Documentação
           </h1>
           <span className="text-[13px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-medium">
             Porta de entrada
           </span>
         </div>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="sr-only">
           Hub operacional: orientações de uso, fluxo diário, atalhos de teclado, FAQs e diagnósticos técnicos
         </p>
       </div>

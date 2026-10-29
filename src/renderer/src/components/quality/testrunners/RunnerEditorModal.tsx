@@ -32,7 +32,6 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
     bare
     panelClassName="bg-card border border-border/80 rounded-xl max-w-lg w-full p-5 space-y-4 shadow-md"
     closeOnBackdrop={false}
-    closeOnEscape={false}
   >
     <div className="flex items-center justify-between border-b border-border/60 pb-3">
       <div className="flex items-center gap-2">
@@ -87,7 +86,7 @@ export const RunnerEditorModal: React.FC<RunnerEditorModalProps> = ({
             type="text"
             value={runner.commandArgs || ''}
             onChange={(e) => onChange({ ...runner, commandArgs: e.target.value })}
-            placeholder="Ex: test ou verify"
+            placeholder={runner.type === 'custom' ? 'Ex: run test ou --version' : `Ex: ${getDefaultCommandArgs(runner.type ?? 'maven')}`}
             className={monoInputClass}
           />
         </div>

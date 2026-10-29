@@ -56,7 +56,7 @@ export const QualityPageTabs: React.FC<QualityPageTabsProps> = ({
   };
 
   return (
-    <div className="border-b border-border bg-card px-7 flex items-center justify-between gap-4 shrink-0">
+    <div className="border-b border-border bg-card px-4 md:px-5 flex items-center justify-between gap-4 shrink-0">
       <div role="tablist" aria-label="Seções de Homologação" className="flex items-center gap-6 overflow-x-auto">
         {TABS.map(({ id, label, icon: Icon }) => {
           const active = tabMode === id;

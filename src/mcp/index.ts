@@ -21,6 +21,7 @@ const appVersion = (() => {
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
+import { getKarafInstallStatus } from '../main/services/karaf/karafInstallInfo';
 import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
@@ -46,6 +47,8 @@ import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
+import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
+import { registerIntegrationTools } from './tools/integrationTools';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { mcpUsageInfo } from './usageTracking';
@@ -66,7 +69,7 @@ const usageMetricsService = new UsageMetricsService(configService);
 usageMetricsService.attachProcessHooks();
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService(configService);
-const backupService = new BackupService(configService);
+const backupService = new BackupService(configService, databaseService);
 const backupSchedulerService = new BackupSchedulerService(configService, backupService);
 const networkService = new NetworkService();
 const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
@@ -90,6 +93,14 @@ const httpClientService = new HttpClientService(httpCollectionService);
 // Os traces vivem na memória do processo dono da porta OTLP (app desktop ou servidor web): este
 // processo não sobe receptor próprio — tomaria a porta do app — e consulta aquele buffer.
 const apmClient = new ApmReceiverClient(getApmReceiverHandlePath());
+const integrationTraceService = new IntegrationTraceService(
+  configService,
+  databaseService,
+  networkService,
+  windowsService,
+  httpClientService,
+  { logWatcherService, apmTraces: apmClient }
+);
 
 // --- Helpers de resposta MCP ---
 function ok(data: unknown) {
@@ -554,10 +565,13 @@ server.registerTool(
   {
     title: 'Verificar status do Karaf/OSGi',
     description:
-      'Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101). Use antes de tentar executar comandos ou deploys.',
+      'Verifica se o contêiner Apache Karaf/OSGi está em execução e respondendo na porta SSH (padrão 8101). Use antes de tentar executar comandos ou deploys. Devolve também install: o que o etc/ da instalação configurada diz (versão do Karaf, instância, porta SSH, porta HTTP do WTA, log principal, JDK do script de início e o serviço Windows do wrapper yajsw com o estado). Se o serviço está RUNNING, é ele que responde na porta: não inicie o Karaf embutido por cima.',
     inputSchema: { sshPort: z.number().int().positive().optional() }
   },
-  async ({ sshPort }) => ok({ isRunning: await karafService.isKarafRunning(sshPort) })
+  async ({ sshPort }) => {
+    const install = getKarafInstallStatus(configService.getSettings());
+    return ok({ isRunning: await karafService.isKarafRunning(sshPort), ...(install.success ? { install: install.info } : {}) });
+  }
 );
 
 server.registerTool(
@@ -2458,6 +2472,9 @@ server.registerTool(
 
 // --- Delphi: build via MSBuild e pipeline de publicação ---
 registerDelphiTools(server, { delphiBuildService, ok, fail });
+
+// --- Rastreio de Integração ponta a ponta: WinThor → WSH → CH → PDV ---
+registerIntegrationTools(server, { integrationTraceService, ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

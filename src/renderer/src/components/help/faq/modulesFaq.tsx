@@ -25,6 +25,10 @@ export function getModulesFaq(onNavigate?: (tab: string) => void): FaqItem[] {
             Pelo menos uma página fica sempre ligada; a Central de Ajuda e as Configurações não podem ser desligadas. Se você desligar a
             página em que está, o app abre a primeira página ligada.
           </p>
+          <p>
+            Para ganhar espaço sem desligar nada, use <strong className="text-foreground">Recolher menu</strong> no pé do menu lateral:
+            ele vira uma faixa de ícones, com o nome e o atalho no tooltip. A escolha fica salva nesta máquina.
+          </p>
           {onNavigate && (
             <button
               type="button"

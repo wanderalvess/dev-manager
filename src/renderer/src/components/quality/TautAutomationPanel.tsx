@@ -30,17 +30,26 @@ export const TautAutomationPanel: React.FC<TautAutomationPanelProps> = ({
   const [activeSubTab, setActiveSubTab] = useState<TautSubTab>('runner');
   const { copy: copyToClipboard, copiedKey } = useCopyToClipboard(2000);
 
+  const header = (
+    <TautProjectHeader
+      projectStatus={project.projectStatus}
+      specs={project.specs}
+      loading={project.loading}
+      syncingEnv={project.syncingEnv}
+      onSyncEnv={project.handleSyncEnv}
+      onReload={project.loadProjectData}
+      onNavigateToSettings={onNavigateToSettings}
+    />
+  );
+
+  // Sem projeto, execução/cobertura/specs/intake só gerariam erro: o cabeçalho já mostra como configurar
+  if (project.projectStatus && !project.projectStatus.exists) {
+    return <div className="space-y-4">{header}</div>;
+  }
+
   return (
     <div className="space-y-4">
-      <TautProjectHeader
-        projectStatus={project.projectStatus}
-        specs={project.specs}
-        loading={project.loading}
-        syncingEnv={project.syncingEnv}
-        onSyncEnv={project.handleSyncEnv}
-        onReload={project.loadProjectData}
-        onNavigateToSettings={onNavigateToSettings}
-      />
+      {header}
 
       <TautSubTabs
         activeSubTab={activeSubTab}

@@ -20,7 +20,7 @@ export const JvmMemoryHeader: React.FC<JvmMemoryHeaderProps> = ({ metrics, isNea
             Telemetria de Memória JVM
           </h2>
           <span className="text-2xs font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/80 font-medium">
-            JMX :8101 · KARAF
+            JMX · KARAF
           </span>
           {metrics && (
             <span

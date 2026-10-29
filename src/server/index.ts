@@ -40,6 +40,8 @@ import { QaPayloadService } from '../main/services/QaPayloadService';
 import { TestRunnerService } from '../main/services/TestRunnerService';
 import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
+import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
+import { createIntegrationRouter } from './routes/integrationRoutes';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { createUsageTrackingMiddleware } from './usageTracking';
@@ -47,6 +49,7 @@ import { createHttpClientRouter } from './routes/httpClientRoutes';
 import { createAzurePipelineRouter } from './routes/azurePipelineRoutes';
 import { createDelphiRouter } from './routes/delphiRoutes';
 import { createKarafStreamRouter } from './routes/karafStreamRoutes';
+import { createKarafInstallRouter } from './routes/karafInstallRoutes';
 import { createDeployWorkspaceRouter } from './routes/deployWorkspaceRoutes';
 import { PomGraphService } from '../main/services/PomGraphService';
 import { DelphiBuildService } from '../main/services/DelphiBuildService';
@@ -150,7 +153,7 @@ app.use(createUsageTrackingMiddleware(usageMetricsService));
 const karafService = new KarafService(configService);
 const databaseService = new DatabaseService(configService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
-const backupService = new BackupService(configService);
+const backupService = new BackupService(configService, databaseService);
 const backupSchedulerService = new BackupSchedulerService(configService, backupService);
 backupSchedulerService.onResult = (connectionName, result) => {
   broadcastWs('backup:schedule-result', { connectionName, result });
@@ -2143,8 +2146,9 @@ app.delete('/api/test-runner/:id', (req, res) => {
 
 app.post('/api/test-runner/execute', async (req, res) => {
   try {
-    const target = req.body;
-    const runnerId = target.id;
+    // O bridge web manda `{ id }` quando o renderer passa só o id; config completa vem com `type`
+    const target = req.body?.type ? req.body : String(req.body?.id ?? '');
+    const runnerId = req.body?.id;
     const result = await testRunnerService.executeRunner(target, (chunk) => {
       broadcastWs('test-runner:chunk', { runnerId, chunk });
     });
@@ -2241,8 +2245,18 @@ app.post('/api/taut/abort', (_req, res) => {
 
 app.use('/api/http-client', createHttpClientRouter(httpClientService, httpCollectionService));
 app.use('/api/karaf/stream', createKarafStreamRouter(karafService, broadcastWs));
+app.use('/api/karaf/install', createKarafInstallRouter(configService));
 app.use('/api/deploy', createDeployWorkspaceRouter(new PomGraphService(configService)));
 app.use('/api/delphi', createDelphiRouter(new DelphiBuildService(configService, windowsService), broadcastWs));
+app.use(
+  '/api/integration',
+  createIntegrationRouter(
+    new IntegrationTraceService(configService, databaseService, networkService, windowsService, httpClientService, {
+      logWatcherService,
+      apmTraces: apmService
+    })
+  )
+);
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
 
 // Servir Frontend SPA estático se compilado

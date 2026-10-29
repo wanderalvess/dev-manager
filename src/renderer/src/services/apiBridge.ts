@@ -6,6 +6,7 @@ import { createKarafBundlesApi } from './webBridge/karafBundles';
 import { createRoutine801Api } from './webBridge/routine801';
 import { createDelphiApi } from './webBridge/delphi';
 import { createKarafStreamApi } from './webBridge/karafStream';
+import { createKarafInstallApi } from './webBridge/karafInstall';
 import { createDeployApi } from './webBridge/deploy';
 import { createGitApi } from './webBridge/git';
 import { createRoutinesApi } from './webBridge/routines';
@@ -19,6 +20,7 @@ import { createApmApi } from './webBridge/apm';
 import { createQualityApi } from './webBridge/quality';
 import { createHttpClientApi } from './webBridge/httpClient';
 import { createRemoteControlApi } from './webBridge/remoteControl';
+import { createIntegrationApi } from './webBridge/integration';
 
 export function initApiBridge() {
   if (typeof window === 'undefined') return;
@@ -41,6 +43,7 @@ export function initApiBridge() {
     ...createRoutine801Api(deps),
     ...createDelphiApi(deps),
     ...createKarafStreamApi(deps),
+    ...createKarafInstallApi(deps),
     ...createDeployApi(deps),
     ...createGitApi(deps),
     ...createRoutinesApi(deps),
@@ -53,6 +56,7 @@ export function initApiBridge() {
     ...createApmApi(deps),
     ...createQualityApi(deps),
     ...createHttpClientApi(deps),
+    ...createIntegrationApi(deps),
     ...createRemoteControlApi()
   };
 }

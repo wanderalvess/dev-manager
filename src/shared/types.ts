@@ -1,5 +1,6 @@
 import type { UsageBaselineOverrides } from './usageBaselines';
 import type { OracleStatementMetrics } from './oracleTracerAnalysis';
+import type { IntegrationFlowDefinition, IntegrationLayerConfig } from './integrationTypes';
 export type ServiceState = 'RUNNING' | 'STOPPED' | 'START_PENDING' | 'STOP_PENDING' | 'UNKNOWN' | 'NOT_INSTALLED';
 
 export interface ServiceStatus {
@@ -646,6 +647,10 @@ export interface AppSettings {
   testRunners?: TestRunnerConfig[];
   /** Histórico das últimas execuções de testes automatizados (limitado a 100) */
   testExecutionHistory?: TestExecutionResult[];
+  /** Rastreio de Integração (decisão 0003): como alcançar WinThor, WSH, CH e PDV na máquina local. */
+  integrationLayers?: IntegrationLayerConfig[];
+  /** Rastreio de Integração: fluxos do WSH e como provar cada passo deles. */
+  integrationFlows?: IntegrationFlowDefinition[];
 }
 
 export interface DocSyncTargetConfig {
@@ -1184,6 +1189,18 @@ export interface BackupResult {
   durationMs?: number;
   /** SHA-256 do arquivo gerado, calculado após o dump (usado por histórico e restore-drill). */
   checksumSha256?: string;
+  /** O que fazer quando a falha é conhecida (hoje, erros do exp/expdp/impdp do Oracle). */
+  help?: BackupHelp;
+}
+
+/** Ajuda para resolver uma falha de backup/restauração: passos em ordem e comandos prontos para copiar. */
+export interface BackupHelp {
+  /** Código principal reconhecido (ex.: ORA-39087). */
+  code?: string;
+  steps: string[];
+  snippets?: { label: string; code: string }[];
+  /** Linhas de erro originais do utilitário (ORA-, UDE-, LRM-...). */
+  detail?: string;
 }
 
 /** Metadados de um arquivo de backup já existente na pasta de destino. */
@@ -2867,3 +2884,4 @@ export * from './azurePipelineTypes';
 export * from './oracleTracerAnalysis';
 export * from './delphiTypes';
 export * from './gitPublishTypes';
+export * from './integrationTypes';

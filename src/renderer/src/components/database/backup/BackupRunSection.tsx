@@ -2,6 +2,7 @@ import React from 'react';
 import { HardDriveDownload, RotateCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { BackupResult } from '../../../../../shared/types';
 import { backupResultToneClass, formatBytes, hasBackupFileTag } from '../../../utils/backupModalUtils';
+import { BackupHelpPanel } from './BackupHelpPanel';
 
 interface BackupRunSectionProps {
   isRunningBackup: boolean;
@@ -79,6 +80,7 @@ export const BackupRunSection: React.FC<BackupRunSectionProps> = ({
             )}
             <div className="min-w-0 flex-1">
               <span className="break-all text-xs">{backupResult.message}</span>
+              {!backupResult.success && backupResult.help && <BackupHelpPanel help={backupResult.help} />}
               {backupResult.success && backupResult.sizeBytes !== undefined && (
                 <div className="flex flex-wrap items-center gap-3 text-2xs font-mono opacity-90 mt-1.5">
                   <span className="px-2 py-0.5 rounded bg-success/20">

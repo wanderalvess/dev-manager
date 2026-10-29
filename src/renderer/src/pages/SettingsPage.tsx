@@ -20,6 +20,7 @@ import { LogsTab } from '../components/settings/tabs/LogsTab';
 import { BackupTab } from '../components/settings/tabs/BackupTab';
 import { AiTab } from '../components/settings/tabs/AiTab';
 import { QualityTab } from '../components/settings/tabs/QualityTab';
+import { IntegrationTab } from '../components/settings/tabs/IntegrationTab';
 import { UsageTab } from '../components/settings/tabs/UsageTab';
 import { ModulesTab } from '../components/settings/tabs/ModulesTab';
 import { useSettingsDraft } from '../hooks/settings/useSettingsDraft';
@@ -80,7 +81,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   const renderPathStatusBadge = (fieldKey: string) => <PathStatusBadge status={paths.pathStatuses[fieldKey]} />;
 
   return (
-    <div className="h-full w-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden">
+    <div className="h-full w-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
       <SettingsHeader
         onOpenTour={tour.open}
         importExport={importExport}
@@ -90,15 +91,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         isSaving={draft.isSaving}
         savedSuccess={draft.savedSuccess}
         onSave={draft.handleSave}
-      />
-
-      <SettingsSearchBar
-        query={search.query}
-        onQueryChange={search.setQuery}
-        isOpen={search.isOpen}
-        onOpenChange={search.setIsOpen}
-        results={search.results}
-        onSelectResult={search.selectResult}
+        search={
+          <SettingsSearchBar
+            query={search.query}
+            onQueryChange={search.setQuery}
+            isOpen={search.isOpen}
+            onOpenChange={search.setIsOpen}
+            results={search.results}
+            onSelectResult={search.selectResult}
+          />
+        }
       />
 
       {importExport.statusMessage && (
@@ -125,7 +127,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
           ports: (settings.monitoredPorts || []).length,
           logs: (settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length,
           ai: (settings.llmProviders || []).length,
-          quality: (settings.qualitySources || []).length
+          quality: (settings.qualitySources || []).length,
+          integration: (settings.integrationFlows || []).length
         }}
       />
 
@@ -259,6 +262,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
             handleBrowseDirectory={paths.handleBrowseDirectory}
           />
         )}
+
+        {activeTab === 'integration' && <IntegrationTab settings={settings} setSettings={setSettings} />}
 
         {activeTab === 'usage' && <UsageTab settings={settings} setSettings={setSettings} />}
       </div>

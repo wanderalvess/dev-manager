@@ -4,6 +4,8 @@ import { AppSettings } from '../../../shared/types';
 import { execFileAsync } from '../../utils/security';
 import { isWslKaraf, resolveKarafWslServer, killWslKarafProcesses } from '../../utils/karafWslUtils';
 import type { ChunkHandler, KarafContext } from './karafContext';
+import { readKarafInstallInfo } from './karafInstallInfo';
+import { serviceBlockingStart } from './karafServiceGuard';
 
 // --- Karaf Embutido no Painel ---
 function startEmbeddedKarafWsl(ctx: KarafContext, settings: AppSettings, onLog: ChunkHandler): boolean {
@@ -58,20 +60,28 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
     return false;
   }
 
+  const blockedByService = serviceBlockingStart(readKarafInstallInfo(settings.karafPath));
+  if (blockedByService) {
+    onLog(`[ERRO] ${blockedByService}\r\n`);
+    return false;
+  }
+
   onLog(`[OK] Inicializando Karaf OSGi em modo Debug (Console Embutido)...\r\n`);
 
   try {
     const isWin = process.platform === 'win32';
     const childEnv = ctx.getResolvedJavaEnv();
     const cmdExe = childEnv.ComSpec || process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
+    // A pasta do próprio script: ele pode estar em bin/, na raiz ou num caminho customizado (karafScript)
+    const scriptDir = path.dirname(exeFile);
     ctx.embeddedKarafProcess = isWin
       ? spawn(cmdExe, ['/c', path.basename(exeFile), 'debug'], {
-          cwd: karafBin,
+          cwd: scriptDir,
           shell: false,
           env: childEnv
         })
       : spawn(exeFile, ['debug'], {
-          cwd: karafBin,
+          cwd: scriptDir,
           shell: false,
           detached: true,
           env: childEnv

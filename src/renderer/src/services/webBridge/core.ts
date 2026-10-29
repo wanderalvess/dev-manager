@@ -122,7 +122,12 @@ export function createBridgeDeps(): BridgeDeps {
     }
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText} (${url})`);
+      // As rotas devolvem `{ error }` com a causa real; "Internal Server Error" sozinho não diz nada ao usuário
+      const serverMessage = await res
+        .json()
+        .then((body: { error?: unknown }) => (typeof body?.error === 'string' ? body.error : ''))
+        .catch(() => '');
+      throw new Error(serverMessage || `HTTP ${res.status}: ${res.statusText} (${url})`);
     }
 
     const contentType = res.headers.get('content-type');

@@ -45,7 +45,7 @@ export const DeployPage: React.FC<DeployPageProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-hidden max-w-full">
+    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden max-w-full">
       {/* Input oculto para importação de perfil JSON */}
       <input
         type="file"

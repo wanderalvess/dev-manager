@@ -1,10 +1,11 @@
 import type { DatabaseConnectionConfig, DatabaseType } from '../../../shared/types';
+import { buildOracleConnectDescriptor } from '../../../shared/oracleCliConnect';
 
 /** Template padrão de comando de backup por tipo de banco — sugestão inicial no editor de comando customizado. */
 export function getDefaultBackupCommandTemplate(type: DatabaseType): string {
   switch (type) {
     case 'oracle':
-      return 'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}';
+      return 'expdp {user}/{password}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}';
     case 'mysql':
       return 'mysqldump -h {host} -P {port} -u {user} {database} --result-file="{filePath}"';
     default:
@@ -63,7 +64,9 @@ export function resolveBackupCommandPreview(
 
   if (!useCustomBackupCommand) {
     if (connection.type === 'oracle') {
-      return `expdp ${connection.user}@${connectString} directory=${directory} dumpfile=${sampleFileName} logfile=${sampleLogName} schemas=${connection.user}${backupCompress ? ' compression=ALL' : ''}`;
+      // A conexão vai na variável LOCAL (TWO_TASK fora do Windows) e os parâmetros, com a senha,
+      // num parfile temporário: só o parfile vai na linha de comando.
+      return `LOCAL=${buildOracleConnectDescriptor({ ...connection, port })} expdp parfile=<temporário> → userid=${connection.user}/${pwdDisplay} directory=${directory} dumpfile=${sampleFileName} logfile=${sampleLogName} schemas=${connection.user}${backupCompress ? ' compression=ALL' : ''}`;
     }
     if (connection.type === 'mysql') {
       return `mysqldump -h ${connection.host} -P ${port} -u ${connection.user} --result-file="${sampleFilePath}" ${connection.database}`;

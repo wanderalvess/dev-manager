@@ -63,7 +63,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
     <div className="shrink-0">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-3">
+          <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground flex items-center gap-3">
             Deploy
             <button
               type="button"
@@ -75,7 +75,7 @@ export const DeployHeader: React.FC<DeployHeaderProps> = ({
               <Sparkles className="w-4 h-4" />
             </button>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="sr-only">
             {activeProfile?.description || 'Monte etapas sequenciais de build e publicação para qualquer alvo (Karaf, Docker ou genérico).'}
           </p>
         </div>

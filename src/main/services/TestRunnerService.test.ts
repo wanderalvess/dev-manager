@@ -108,6 +108,32 @@ describe('TestRunnerService', () => {
     });
   });
 
+  describe('diretório de trabalho na execução', () => {
+    const runnerIn = (workingDir: string): TestRunnerConfig => ({
+      id: 'r-dir',
+      name: 'Runner de diretório',
+      type: 'custom',
+      customCommand: 'node',
+      commandArgs: '--version',
+      workingDir
+    });
+
+    it('recusa pasta inexistente sem anunciar a pasta do app no log', async () => {
+      const chunks: string[] = [];
+      const result = await service.executeRunner(runnerIn('C:\\nao-existe-mesmo-123'), (c) => chunks.push(c));
+      expect(result.status).toBe('failed');
+      expect(chunks.join('')).toContain('Diretório de trabalho não encontrado');
+      expect(chunks.join('')).not.toContain('DISPARANDO');
+    });
+
+    it('aceita runner que aponta de propósito para a pasta do app', async () => {
+      const chunks: string[] = [];
+      await service.executeRunner(runnerIn(process.cwd()), (c) => chunks.push(c));
+      expect(chunks.join('')).not.toContain('Diretório de trabalho não encontrado');
+      expect(chunks.join('')).toContain('DISPARANDO');
+    }, 20000);
+  });
+
   describe('history management', () => {
     it('retorna histórico salvo e permite limpar', () => {
       mockSettings.testExecutionHistory = [

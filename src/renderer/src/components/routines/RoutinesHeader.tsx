@@ -52,7 +52,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground" data-tour="catalogo-rotinas">
+              <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground" data-tour="catalogo-rotinas">
                 Rotinas
               </h1>
               <span className="text-[13px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-medium">
@@ -86,7 +86,7 @@ export const RoutinesHeader: React.FC<RoutinesHeaderProps> = ({
                 <span>{badgeInfo.label}</span>
               </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1 truncate">
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
               Pasta das rotinas: <span className="text-foreground font-mono text-[13px]">{appPath || 'não configurada'}</span>. Busca instantânea, favoritos e rollback (.bak).
             </p>
           </div>

@@ -13,6 +13,11 @@ interface ConsoleBodyProps {
   className?: string;
 }
 
+// Saída de mvn/cypress/npm vem com cores ANSI; aqui é texto puro, então os códigos só sujariam a tela
+// eslint-disable-next-line no-control-regex
+const ANSI_PATTERN = /\x1b\[[0-9;?]*[A-Za-z]/g;
+const stripAnsi = (value: string): string => value.replace(ANSI_PATTERN, '');
+
 /** Corpo rolável de um console: colado no fim enquanto chega saída nova, com estado vazio opcional. */
 export const ConsoleBody: React.FC<ConsoleBodyProps> = ({ text, lines, getLineClass, empty, className = '' }) => {
   const hasContent = lines ? lines.length > 0 : !!text;
@@ -29,10 +34,10 @@ export const ConsoleBody: React.FC<ConsoleBodyProps> = ({ text, lines, getLineCl
         : lines
           ? lines.map((line, idx) => (
               <div key={idx} className={`whitespace-pre-wrap ${getLineClass ? getLineClass(line) : ''}`}>
-                {line}
+                {stripAnsi(line)}
               </div>
             ))
-          : text}
+          : stripAnsi(text ?? '')}
     </div>
   );
 };

@@ -14,23 +14,22 @@ export const SetupChecklistCard: React.FC<SetupChecklistCardProps> = ({
   if (pendingCount <= 0) return null;
 
   return (
-    <div className="px-4 py-3.5 rounded-[14px] bg-card border border-border shadow-xs shrink-0 space-y-2.5">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-          <ListChecks className="w-4 h-4 text-muted-foreground" />
-          Checklist de configuração inicial
-        </span>
-        <span className="text-[13px] text-muted-foreground">
+    // Uma linha só: o que já está feito vira a contagem, e só os itens pendentes aparecem como atalho
+    <div className="px-3 py-2 rounded-xl bg-card border border-border shadow-xs shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+      <span className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+        <ListChecks className="w-4 h-4 text-muted-foreground" />
+        Checklist inicial
+        <span className="font-normal text-muted-foreground">
           {checklist.length - pendingCount}/{checklist.length} concluídos
         </span>
-      </div>
+      </span>
       <div className="flex flex-wrap gap-1.5">
-        {checklist.map((item) => (
+        {checklist.filter((item) => !item.done).map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={item.action}
-            className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-[13px] font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[13px] font-medium transition-colors ${
               item.done
                 ? 'bg-success/10 text-success'
                 : 'bg-warning/10 text-warning hover:bg-warning/20'

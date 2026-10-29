@@ -20,6 +20,8 @@ interface SettingsHeaderProps {
   isSaving: boolean;
   savedSuccess: boolean;
   onSave: () => void;
+  /** Busca nas configurações, mostrada entre o título e os botões. */
+  search?: React.ReactNode;
 }
 
 /** Cabeçalho da página: título, importar/exportar, auto-detectar e o botão de salvar com o aviso de "não salvo". */
@@ -31,12 +33,13 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
   hasUnsavedChanges,
   isSaving,
   savedSuccess,
-  onSave
+  onSave,
+  search
 }) => (
-  <div className="flex flex-wrap items-end justify-between gap-4">
+  <div className="flex flex-wrap items-center justify-between gap-3">
     <div className="flex items-center space-x-3">
       <div>
-        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground flex items-center gap-2">
+        <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground flex items-center gap-2">
           Configurações do Ambiente &amp; Diretórios
           <button
             type="button"
@@ -48,11 +51,14 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
             <HelpCircle className="w-4 h-4" />
           </button>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="sr-only">
           Configure os diretórios base, serviços Windows, processos de encerramento, portas e preferências de automação.
         </p>
       </div>
     </div>
+
+    {/* A busca fica na linha do título: uma faixa a menos antes do conteúdo */}
+    {search && <div className="flex-1 min-w-[16rem] max-w-2xl">{search}</div>}
 
     <div className="flex items-center space-x-2">
       {/* Input oculto para importação de JSON */}

@@ -30,11 +30,11 @@ export const BackupsPage: React.FC<BackupsPageProps> = ({ isActive, settingsVers
   }, [isActive, connections, setActiveConnectionId]);
 
   return (
-    <div className="h-full flex flex-col p-5 md:p-7 space-y-5 overflow-y-auto max-w-full">
+    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-y-auto max-w-full">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">Backups</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground">Backups</h1>
+          <p className="sr-only">
             Backup e restauração dos bancos, com agendamento, arquivos gerados, histórico e webhooks.
           </p>
         </div>

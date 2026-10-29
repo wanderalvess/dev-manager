@@ -3,6 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { ConfigService, DEFAULT_AUTOMATION_PROFILES } from './ConfigService';
+import { APP_MODULE_IDS } from '../../shared/appModules';
 
 describe('ConfigService', () => {
   let tmpDir: string;
@@ -119,9 +120,8 @@ describe('ConfigService', () => {
 
   it('nunca grava todos os módulos desligados e preserva a lista em saves de outros campos', () => {
     const service = new ConfigService();
-    const all = ['env', 'containers', 'winthor', 'deploy', 'karaf', 'logs', 'apm', 'database', 'db-backups', 'routines', 'git', 'docs', 'http-client',
-      'quality', 'quality-regression', 'quality-runners', 'quality-taut'];
-    service.saveSettings({ disabledModules: all });
+    // Lista real de módulos: um módulo novo não deixa este teste desatualizado
+    service.saveSettings({ disabledModules: [...APP_MODULE_IDS] });
     expect(service.getSettings().disabledModules).not.toContain('env');
 
     service.saveSettings({ disabledModules: ['logs'] });

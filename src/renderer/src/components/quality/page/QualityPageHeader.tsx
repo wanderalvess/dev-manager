@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Check, CheckCheck, Copy, Plus } from 'lucide-react';
+import { Check, CheckCheck, Copy, Info, Plus } from 'lucide-react';
 import type { QualitySourceConfig } from '../../../../../shared/types';
 
 interface QualityPageHeaderProps {
@@ -21,13 +21,13 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
   onOpenAddModal,
   onNavigate
 }) => (
-  <div className="border-b border-border bg-card px-7 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+  <div className="border-b border-border bg-card px-4 py-2 md:px-5 flex flex-col md:flex-row md:items-center justify-between gap-2 shrink-0">
     <div>
       <div className="flex items-center space-x-2.5">
         <CheckCheck className="w-5 h-5 text-muted-foreground shrink-0" />
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-semibold text-foreground tracking-tight leading-tight">
+            <h1 className="text-lg font-bold text-foreground tracking-tight leading-tight">
               Homologação &amp; Prontidão
             </h1>
             {activeQualitySource ? (
@@ -36,18 +36,19 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
                 Fonte: {activeQualitySource.name} ({activeQualitySource.type}) · sem sincronização
               </span>
             ) : (
+              // Sem alerta: cadastrar uma fonte ainda não sincroniza nada, então não há o que "resolver" aqui
               <button
                 type="button"
                 onClick={() => onNavigate?.('settings')}
-                className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-warning/10 hover:bg-warning/20 text-warning transition-colors cursor-pointer flex items-center gap-1"
-                title="Cadastrar fontes Zephyr Scale, Jira ou Azure DevOps (sincronização ainda não implementada)"
+                className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-muted hover:bg-muted/70 text-muted-foreground transition-colors cursor-pointer flex items-center gap-1"
+                title="Os cenários são cadastrados à mão. A integração com Zephyr Scale, Jira ou Azure DevOps ainda não sincroniza; dá para cadastrar a fonte nas Configurações."
               >
-                <AlertTriangle className="w-3 h-3" />
-                <span>Cadastrar fonte (Zephyr / Jira)</span>
+                <Info className="w-3 h-3" />
+                <span>Matriz manual</span>
               </button>
             )}
           </div>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="sr-only">
             Planejamento de testes, critérios de aceite, matriz de validação e prontidão de entregas.
           </p>
         </div>
@@ -56,7 +57,7 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
 
     {/* Ações Rápidas de Topo */}
     <div className="flex items-center space-x-2 flex-wrap gap-y-2">
-      <div className="flex items-center bg-background border border-input rounded-[10px] px-3 h-10 text-sm">
+      <div className="flex items-center bg-background border border-input rounded-[10px] px-3 h-8 text-sm">
         <span className="text-muted-foreground mr-1.5 text-[13px]">Release</span>
         <input
           type="text"
@@ -72,7 +73,7 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
       <button
         type="button"
         onClick={onCopyReport}
-        className="px-3 h-10 rounded-[10px] bg-background hover:bg-muted text-foreground border border-border text-sm font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
+        className="px-3 h-8 rounded-[10px] bg-background hover:bg-muted text-foreground border border-border text-sm font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
         title="Copiar relatório estruturado em Markdown para colar no Teams, Azure DevOps ou Jira"
       >
         {copiedKey === 'report' ? (
@@ -86,7 +87,7 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
       <button
         type="button"
         onClick={onOpenAddModal}
-        className="px-4 h-10 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
+        className="px-4 h-8 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
       >
         <Plus className="w-4 h-4" />
         <span>Novo Cenário</span>

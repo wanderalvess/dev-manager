@@ -1,7 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { delphiApi } from './delphiApi';
 import { karafStreamApi } from './karafStreamApi';
+import { karafInstallApi } from './karafInstallApi';
 import { remoteControlApi } from './remoteControlApi';
+import { integrationApi } from './integrationApi';
 import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
   AppSettings,
@@ -351,7 +353,9 @@ const electronAPI = {
 
   ...delphiApi,
   ...karafStreamApi,
+  ...karafInstallApi,
   ...remoteControlApi,
+  ...integrationApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (

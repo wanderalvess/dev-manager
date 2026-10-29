@@ -24,7 +24,7 @@ export const GitPageHeader: React.FC<GitPageHeaderProps> = ({
   <div className="flex flex-wrap items-end justify-between gap-4 shrink-0">
     <div className="min-w-0">
       <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground">Git</h1>
+        <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground">Git</h1>
         <button
           type="button"
           onClick={onOpenTour}
@@ -44,7 +44,7 @@ export const GitPageHeader: React.FC<GitPageHeaderProps> = ({
           </span>
         )}
       </div>
-      <p className="text-sm text-muted-foreground mt-1">
+      <p className="sr-only">
         {projectCount} {projectCount === 1 ? 'repositório' : 'repositórios'}. Branches locais, sincronização com o remoto e Pull Requests (Azure DevOps, GitHub ou GitLab).
       </p>
     </div>

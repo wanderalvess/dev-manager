@@ -4,7 +4,7 @@ import { api } from '../../../services/apiBridge';
 import { showToast } from '../../../components/ToastHost';
 
 export function useTautIntake() {
-  const [csvFileName, setCsvFileName] = useState<string>('Insumo/pedido.csv');
+  const [csvFileName, setCsvFileName] = useState<string>('');
   const [processingIntake, setProcessingIntake] = useState<boolean>(false);
   const [intakeResult, setIntakeResult] = useState<TautCsvIntakeResult | null>(null);
 

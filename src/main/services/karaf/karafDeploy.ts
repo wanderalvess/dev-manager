@@ -4,6 +4,8 @@ import fs from 'fs';
 import { KarafDeployHistoryEntry, KarafDeployRequest, getKarafSshPort } from '../../../shared/types';
 import { runCapturedProcess } from '../../utils/process';
 import type { ChunkHandler, DeployTrigger, KarafContext, KarafDeployResult } from './karafContext';
+import { isNoDeploymentChange } from '../../utils/karafRedeployUtils';
+import { updateUnchangedBundles } from './karafRedeploy';
 
 const MAX_DEPLOY_HISTORY_ENTRIES = 200;
 
@@ -104,7 +106,10 @@ export async function deploy(
   );
 
   let result: KarafDeployResult;
-  if (installRes.code === 0) {
+  if (installRes.code === 0 && isNoDeploymentChange(`${installRes.stdout}\n${installRes.stderr || ''}`)) {
+    result = await updateUnchangedBundles(ctx, request, onChunk, projectPath);
+    if (result.success) onChunk(`\r\n✨ DEPLOY FINALIZADO: bundles do projeto atualizados com o jar novo.\r\n`);
+  } else if (installRes.code === 0) {
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`✨ DEPLOY FINALIZADO COM SUCESSO!\r\n`);
     onChunk(`==========================================\r\n`);

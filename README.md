@@ -98,7 +98,7 @@ Ao personalizar comandos de backup, utilize os seguintes marcadores dinâmicos q
 | `{port}` | Porta de conexão do banco de dados | `1521` (Oracle), `5432` (PG), `3306` (MySQL) |
 | `{user}` | Usuário autenticado | `SYSTEM` ou `postgres` |
 | `{password}` | Senha do banco (mascarada na UI, injetada na execução) | `******` |
-| `{connectString}` | String de conexão Oracle no formato `host:port/service` | `localhost:1521/XEPDB1` |
+| `{connectString}` | String de conexão Oracle no formato `host:port/service`. Use com a senha (`{user}/{password}@{connectString}`): sem ela, o `exp`/`expdp` lê a `/` do serviço como senha (ORA-12504). Sem conexão no comando, vale a variável `LOCAL`/`TWO_TASK` que o Dev Manager define com a conexão | `localhost:1521/XEPDB1` |
 | `{schema}` | Schema ou usuário alvo selecionado | `PRODUCAO` |
 | `{database}` | Nome da base de dados ou SID/Service | `winthor` |
 | `{timestamp}` | Carimbo de data/hora atual no formato `YYYYMMDD_HHmmss` | `20260916_103000` |
@@ -356,9 +356,9 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
 ### 10. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
   * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code ou GitHub Copilot — pode chamar diretamente, sem passar pela interface gráfica.
-* **165 Tools Organizadas por Domínio:**
+* **170 Tools Organizadas por Domínio:**
   * Para detalhes e exemplos de como usar cada ferramenta, **[acesse o Catálogo Completo de Ferramentas MCP](docs/MCP_TOOLS.md)**.
-  * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (gerência de bundles, diagnóstico de dependências OSGi, telemetria Heap/Metaspace JVM com alertas OOM, disparo de GC, gestão de repositórios/features Maven e Log Analyzer), `docker_*`, `git_*` (inspeção de diff, criação de branch por tarefas Azure DevOps/Jira e links de PR), `routines_*` (execução com WinThor Start, download CCW, rollback de `.bak`, versão PE Header e atualização em lote), `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, backup/restore/restore drill, Statement Tracer com captura e interpolação de binds), `logs_*` (leitura pontual e limpeza de arquivos), `apm_*` (traces OTLP, waterfall analítico e top endpoints/queries lentas), `routine801_*`, `deploy_*`, `llm_*`, `network_*` e `usage_*` (resumo local de uso).
+  * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (gerência de bundles, diagnóstico de dependências OSGi, telemetria Heap/Metaspace JVM com alertas OOM, disparo de GC, gestão de repositórios/features Maven e Log Analyzer), `docker_*`, `git_*` (inspeção de diff, criação de branch por tarefas Azure DevOps/Jira e links de PR), `routines_*` (execução com WinThor Start, download CCW, rollback de `.bak`, versão PE Header e atualização em lote), `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, backup/restore/restore drill, Statement Tracer com captura e interpolação de binds), `logs_*` (leitura pontual e limpeza de arquivos), `apm_*` (traces OTLP, waterfall analítico e top endpoints/queries lentas), `routine801_*`, `deploy_*`, `llm_*`, `network_*`, `integration_*` (pré-voo das camadas WinThor, WSH, CH e PDV e rastreio de lote até o PDV) e `usage_*` (resumo local de uso).
 * **Terceiro Consumidor da Mesma Camada de Serviços:**
   * Reaproveita exatamente as mesmas classes de serviço e validações de segurança (`isValidIdentifier`, `isSafeLocalPath`, `isSafeKarafCommand`) já usadas pelo IPC do Electron e pela API REST (`src/server`) — nenhuma lógica de negócio duplicada.
 * **Protocolo Aberto — Funciona em Qualquer Cliente MCP:**

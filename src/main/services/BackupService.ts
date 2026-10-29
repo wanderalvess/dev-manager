@@ -4,9 +4,20 @@ import zlib from 'zlib';
 import { pipeline } from 'stream';
 import crypto from 'crypto';
 import { execFile, spawn } from 'child_process';
-import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
+import { DatabaseConnectionConfig, BackupResult, BackupFileInfo, BackupHelp } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
 import type { ConfigService } from './ConfigService';
+import type { DatabaseService } from './DatabaseService';
+import { buildOracleConnectEnv } from '../../shared/oracleCliConnect';
+import { buildOracleToolEnv, isOracleTool } from './database/oracleToolEnv';
+import {
+  explainOracleFailure,
+  extractOracleErrorLines,
+  isOracleDirectoryError,
+  type OracleDirectoryInfo,
+  type OracleFailureContext
+} from './database/oracleBackupHelp';
+import { buildOracleParfileContent, writeTempOracleParfile } from './database/oracleParfile';
 
 /** Tempo máximo de um dump/restore MySQL via spawn (os execFile dos demais bancos já têm timeout). */
 const SPAWN_TIMEOUT_MS = 20 * 60 * 1000;
@@ -207,7 +218,11 @@ export function maskSensitiveText(text: string, sensitive?: string): string {
 }
 
 export class BackupService {
-  constructor(private configService?: ConfigService) {}
+  constructor(
+    private configService?: ConfigService,
+    /** Usado para listar os DIRECTORY do Oracle quando o backup falha por causa deles. */
+    private databaseService?: Pick<DatabaseService, 'executeQuery'>
+  ) {}
 
   /**
    * Resolve a senha da conexão caso tenha vindo em branco/sanitizada, buscando nas
@@ -378,7 +393,9 @@ export class BackupService {
         args,
         {
           env: {
-            ...process.env,
+            ...(isOracleTool(binary) ? buildOracleToolEnv(binary) : process.env),
+            // Sem conexão explícita no comando (ex.: só {user}/{password}), o utilitário Oracle usa esta.
+            ...(config.type === 'oracle' ? buildOracleConnectEnv(config) : {}),
             PGPASSWORD: config.password || '',
             MYSQL_PWD: config.password || ''
           },
@@ -393,11 +410,17 @@ export class BackupService {
           if (error) {
             const maskedErrMessage = maskSensitiveText(error.message || '', config.password);
             const detail = maskedStderr.trim() || maskedStdout.trim() || maskedErrMessage;
-            resolve({
-              success: false,
-              message: `Falha ao executar comando personalizado (${path.basename(binary)}): ${detail}`,
-              durationMs
-            });
+            const fallback = `Falha ao executar comando personalizado (${path.basename(binary)}): ${detail}`;
+            if (config.type === 'oracle' && isOracleTool(binary)) {
+              void this.describeOracleFailure(config, `${maskedStdout}\n${maskedStderr}`, {
+                binary,
+                operation: 'backup',
+                directory: placeholders.directory,
+                localPath: destinationFolder
+              }).then((explained) => resolve({ success: false, ...(explained ?? { message: fallback }), durationMs }));
+              return;
+            }
+            resolve({ success: false, message: fallback, durationMs });
             return;
           }
 
@@ -983,8 +1006,8 @@ export class BackupService {
    * servidor Oracle: o dump é gravado no caminho do objeto DIRECTORY do banco, não em
    * destinationFolder diretamente. Para funcionar, destinationFolder deve apontar para o
    * mesmo caminho físico que o DIRECTORY do Oracle usa (cenário comum em bancos de dev
-   * rodando na própria máquina). A senha é enviada via stdin, nunca como argumento de
-   * linha de comando, para não ficar visível na lista de processos.
+   * rodando na própria máquina). Usuário e senha vão num parfile temporário, nunca como
+   * argumento de linha de comando, para não ficarem visíveis na lista de processos.
    */
   private async backupOracle(
     config: DatabaseConnectionConfig,
@@ -1010,13 +1033,8 @@ export class BackupService {
     const logFileName = `${safeConnName}_${config.user}_${timestamp}.log`;
     const expectedFilePath = path.join(destinationFolder, dumpFileName);
 
-    // Mesma sintaxe de connect string usada pelo driver oracledb (ver DatabaseService.getOracleConnection)
-    const separator = config.oracleMode === 'sid' ? ':' : '/';
-    const connectString = `${config.host}:${config.port || 1521}${separator}${config.database}`;
-
     const binary = expdpPath && expdpPath.trim() ? expdpPath.trim() : 'expdp';
-    const args = [
-      `${config.user}@${connectString}`,
+    const params = [
       `directory=${directory}`,
       `dumpfile=${dumpFileName}`,
       `logfile=${logFileName}`,
@@ -1024,13 +1042,17 @@ export class BackupService {
     ];
     // compression=ALL exige Oracle Enterprise Edition com Advanced Compression; impdp lê o
     // dump compactado de forma transparente, sem precisar de flag equivalente na restauração.
-    if (compress) args.push('compression=ALL');
+    if (compress) params.push('compression=ALL');
+
+    const parfile = await this.prepareOracleParfile(config, params);
+    if ('message' in parfile) return parfile;
 
     return new Promise<BackupResult>((resolve) => {
       const child = execFile(
         binary,
-        args,
+        [`parfile=${parfile.filePath}`],
         {
+          env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },
@@ -1038,7 +1060,12 @@ export class BackupService {
           const durationMs = Date.now() - startTime;
 
           if (error) {
-            resolve({ success: false, message: this.formatOracleCliError('expdp', error, stdout, stderr), durationMs });
+            void this.oracleCliFailure(config, binary, error, stdout, stderr, {
+              binary,
+              operation: 'backup',
+              directory,
+              localPath: destinationFolder
+            }).then((failure) => resolve({ ...failure, durationMs }));
             return;
           }
 
@@ -1063,10 +1090,9 @@ export class BackupService {
         }
       );
 
-      // expdp pede a senha interativamente; enviamos via stdin para não expor em argv/process list.
-      child.stdin?.write(`${config.password || ''}\n`);
+      // Sem stdin: se ainda assim pedir a senha, falha em vez de ficar esperando.
       child.stdin?.end();
-    });
+    }).finally(() => parfile.cleanup().catch(() => undefined));
   }
 
   /**
@@ -1094,39 +1120,58 @@ export class BackupService {
     const dumpFileName = path.basename(filePath);
     const logFileName = `restore_${Date.now()}.log`;
 
-    const separator = config.oracleMode === 'sid' ? ':' : '/';
-    const connectString = `${config.host}:${config.port || 1521}${separator}${config.database}`;
-
     const binary = impdpPath && impdpPath.trim() ? impdpPath.trim() : 'impdp';
-    const args = [
-      `${config.user}@${connectString}`,
+    const params = [
       `directory=${directory}`,
       `dumpfile=${dumpFileName}`,
       `logfile=${logFileName}`,
       `schemas=${config.user}`
     ];
 
+    const parfile = await this.prepareOracleParfile(config, params);
+    if ('message' in parfile) return parfile;
+
     return new Promise<BackupResult>((resolve) => {
       const child = execFile(
         binary,
-        args,
+        [`parfile=${parfile.filePath}`],
         {
+          env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },
         (error, stdout, stderr) => {
           const durationMs = Date.now() - startTime;
           if (error) {
-            resolve({ success: false, message: this.formatOracleCliError('impdp', error, stdout, stderr), durationMs });
+            void this.oracleCliFailure(config, binary, error, stdout, stderr, {
+              binary,
+              operation: 'restore',
+              directory,
+              localPath: filePath
+            }).then((failure) => resolve({ ...failure, durationMs }));
             return;
           }
           resolve({ success: true, message: `Restauração concluída a partir de ${dumpFileName}`, durationMs });
         }
       );
 
-      child.stdin?.write(`${config.password || ''}\n`);
       child.stdin?.end();
-    });
+    }).finally(() => parfile.cleanup().catch(() => undefined));
+  }
+
+  /** Grava o parfile do expdp/impdp com usuário e senha; devolve um BackupResult de erro quando não dá. */
+  private async prepareOracleParfile(
+    config: DatabaseConnectionConfig,
+    params: string[]
+  ): Promise<{ filePath: string; cleanup: () => Promise<void> } | BackupResult> {
+    if (!config.password) {
+      return { success: false, message: 'Informe a senha da conexão: o Data Pump (expdp/impdp) não roda sem ela.' };
+    }
+    try {
+      return await writeTempOracleParfile(buildOracleParfileContent(config.user, config.password, params));
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Não foi possível gravar o parfile temporário do Oracle.' };
+    }
   }
 
   private formatMysqlCliError(binary: string, error: { code?: string | number | null; message?: string }, stderr?: string): string {
@@ -1146,35 +1191,63 @@ export class BackupService {
     return msg || `Falha desconhecida ao executar ${binary}.`;
   }
 
-  private formatOracleCliError(
+  /** Falha do expdp/impdp: executável ausente, erro conhecido com ajuda ou a saída crua do Oracle. */
+  private async oracleCliFailure(
+    config: DatabaseConnectionConfig,
     binary: string,
     error: { code?: string | number | null; message?: string },
-    stdout?: string,
-    stderr?: string
-  ): string {
+    stdout: string | undefined,
+    stderr: string | undefined,
+    ctx: Omit<OracleFailureContext, 'user' | 'database' | 'oracleMode' | 'directories'>
+  ): Promise<BackupResult> {
     if (error.code === 'ENOENT') {
-      return `${binary} não encontrado. Instale o Oracle Instant Client (pacote 'Tools') ou configure o caminho do executável nas configurações.`;
+      const help: BackupHelp = {
+        steps: [
+          `Instale o cliente Oracle com o Data Pump: Instant Client Basic + Tools, ou o Oracle Client completo.`,
+          `Se ele já está instalado, informe nas configurações de backup o caminho completo do ${path.basename(binary)}.exe, ou ponha a pasta bin dele no PATH e reinicie o Dev Manager.`
+        ]
+      };
+      return { success: false, message: `${binary} não encontrado.`, help };
     }
-    const msg = (stdout || stderr || error.message || '').trim();
-    if (msg.includes('ORA-01017')) {
-      return 'Falha de autenticação: usuário ou senha incorretos para o Oracle.';
-    }
-    if (msg.includes('ORA-39002') || msg.includes('ORA-39070') || msg.includes('ORA-39087')) {
-      return `DIRECTORY Oracle inválido ou inexistente, ou sem permissão de acesso ao caminho. Peça ao DBA para criar/conceder acesso ao DIRECTORY usado.`;
-    }
-    if (msg.includes('ORA-39001') || msg.includes('ORA-31640')) {
-      return 'Arquivo de dump não encontrado no DIRECTORY do servidor Oracle. Confirme se o arquivo está na pasta correta no servidor.';
-    }
-    if (msg.includes('ORA-31684')) {
-      return 'Objeto já existe no schema de destino. O impdp não sobrescreve objetos existentes por padrão.';
-    }
-    if (msg.includes('ORA-12541') || msg.includes('TNS:no listener')) {
-      return 'Oracle Listener não encontrado no host e porta especificados (ORA-12541).';
-    }
-    if (msg.includes('ORA-12514')) {
-      return 'Serviço/Banco Oracle não encontrado pelo Listener (ORA-12514). Verifique o Service Name / SID.';
-    }
-    return msg || `Falha desconhecida ao executar ${binary}.`;
+    const output = maskSensitiveText(`${stdout || ''}\n${stderr || ''}`, config.password);
+    const explained = await this.describeOracleFailure(config, output, ctx);
+    if (explained) return { success: false, ...explained };
+    const raw = maskSensitiveText((stdout || stderr || error.message || '').trim(), config.password);
+    return { success: false, message: raw || `Falha desconhecida ao executar ${binary}.` };
+  }
+
+  /** Mensagem e passos para um erro conhecido do Oracle; null quando não reconhece. */
+  private async describeOracleFailure(
+    config: DatabaseConnectionConfig,
+    output: string,
+    ctx: Omit<OracleFailureContext, 'user' | 'database' | 'oracleMode' | 'directories'>
+  ): Promise<{ message: string; help?: BackupHelp } | null> {
+    const directories = isOracleDirectoryError(output) ? await this.listOracleDirectories(config) : undefined;
+    const explained = explainOracleFailure(output, {
+      ...ctx,
+      user: config.user,
+      database: config.database,
+      oracleMode: config.oracleMode,
+      directories
+    });
+    if (explained) return explained;
+    const lines = extractOracleErrorLines(output);
+    return lines.length > 0 ? { message: lines[0], help: { steps: [], detail: lines.join('\n') } } : null;
+  }
+
+  /** DIRECTORY que o usuário da conexão enxerga; undefined se não deu para consultar (sem driver, sem acesso, lento). */
+  private async listOracleDirectories(config: DatabaseConnectionConfig): Promise<OracleDirectoryInfo[] | undefined> {
+    if (!this.databaseService) return undefined;
+    const query = this.databaseService
+      .executeQuery(config, 'SELECT directory_name, directory_path FROM all_directories ORDER BY directory_name', 100)
+      .then((res) =>
+        res.success
+          ? res.rows.map((r) => ({ name: String(r.DIRECTORY_NAME ?? r.directory_name), path: String(r.DIRECTORY_PATH ?? r.directory_path) }))
+          : undefined
+      )
+      .catch(() => undefined);
+    const timeout = new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 8000).unref?.());
+    return Promise.race([query, timeout]);
   }
 
   private formatPostgresCliError(binary: string, error: { code?: string | number | null; message?: string }, stderr?: string): string {

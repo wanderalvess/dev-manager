@@ -34,7 +34,7 @@ export const KarafBundleEmptyState: React.FC<KarafBundleEmptyStateProps> = ({
         </div>
         <h4 className="text-sm font-semibold text-foreground">Apache Karaf Não Conectado</h4>
         <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-          O container OSGi do Karaf está inativo ou não respondeu na porta SSH (:8101). Inicie o runtime para visualizar bundles e dependências.
+          O container OSGi do Karaf está inativo ou não respondeu na porta SSH configurada. Inicie o runtime para visualizar bundles e dependências.
         </p>
         <div className="flex items-center gap-2.5 mt-5">
           <button
@@ -77,7 +77,7 @@ export const KarafBundleEmptyState: React.FC<KarafBundleEmptyStateProps> = ({
         </div>
         <h4 className="text-sm font-semibold text-foreground">Aguardando Inicialização do Karaf...</h4>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          O container OSGi está subindo. O inventário será carregado automaticamente assim que a porta SSH (:8101) estiver disponível.
+          O container OSGi está subindo. O inventário será carregado automaticamente assim que a porta SSH configurada estiver disponível.
         </p>
       </div>
     );

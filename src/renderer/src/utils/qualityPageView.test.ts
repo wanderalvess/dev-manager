@@ -15,9 +15,25 @@ import {
   getStatusSelectClass,
   migrateLegacyRelease,
   migrateLegacySeedItems,
-  sortValidationItems
+  sortValidationItems,
+  isExampleValidationItem
 } from './qualityPageView';
-import type { QualityValidationItem } from './qualityPageUtils';
+import { getDefaultValidationItems, type QualityValidationItem } from './qualityPageUtils';
+
+describe('primeira impressão da Homologação', () => {
+  it('marca como exemplo só os cenários de fábrica ainda com o título original', () => {
+    const [seed] = getDefaultValidationItems();
+    expect(isExampleValidationItem(seed)).toBe(true);
+    expect(isExampleValidationItem({ ...seed, title: 'Conexão com o banco da filial 3' })).toBe(false);
+    expect(isExampleValidationItem({ id: 'val-123', title: seed.title })).toBe(false);
+  });
+
+  it('não chama de "Bloqueado" uma matriz em que nada foi testado ainda', () => {
+    expect(getReadinessVerdict(0, 4, 4, false).title).toContain('Aguardando');
+    expect(getReadinessVerdict(0, 4, 4).title).toContain('Bloqueado');
+    expect(getReadinessSummary(0, 4, 4)).toContain('Nenhum cenário foi testado');
+  });
+});
 
 describe('migração dos dados-modelo antigos', () => {
   const seed = (id: string, status: 'passed' | 'in_progress', testerName?: string) => ({

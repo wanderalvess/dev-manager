@@ -2,7 +2,13 @@ import React from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Pencil, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import type { QualitySourceConfig } from '../../../../../shared/types';
 import type { QualityValidationItem, ValidationItemStatus } from '../../../utils/qualityPageUtils';
-import { getCategoryLabel, getStatusSelectClass, type QualitySortDir, type QualitySortKey } from '../../../utils/qualityPageView';
+import {
+  getCategoryLabel,
+  getStatusSelectClass,
+  isExampleValidationItem,
+  type QualitySortDir,
+  type QualitySortKey
+} from '../../../utils/qualityPageView';
 
 interface QualityMatrixPanelProps {
   qualitySources: QualitySourceConfig[];
@@ -69,6 +75,7 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
   onNavigate
 }) => {
   const isFiltered = statusFilter !== 'all' || categoryFilter !== 'all' || searchTerm.trim() !== '';
+  const exampleCount = filteredItems.filter(isExampleValidationItem).length;
   const clearFilters = () => {
     onSearchTermChange('');
     onStatusFilterChange('all');
@@ -164,6 +171,13 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
     <div className="flex items-center justify-between text-xs text-muted-foreground px-1" aria-live="polite">
       <span>
         Exibindo <strong className="text-foreground">{filteredItems.length}</strong> de {totalCount} cenários
+        {exampleCount > 0 && (
+          <>
+            {' · '}
+            {exampleCount === 1 ? '1 é exemplo' : `${exampleCount} são exemplos`}: edite com os dados da sua release
+            ou remova e cadastre os seus em <strong className="text-foreground">Novo Cenário</strong>.
+          </>
+        )}
       </span>
       {isFiltered && (
         <button type="button" onClick={clearFilters} className="text-primary hover:underline cursor-pointer">
@@ -212,7 +226,17 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
                     </select>
                   </td>
 
-                  <td className="px-4 py-3 font-semibold text-foreground min-w-56">{item.title}</td>
+                  <td className="px-4 py-3 font-semibold text-foreground min-w-56">
+                    {item.title}
+                    {isExampleValidationItem(item) && (
+                      <span
+                        className="ml-2 px-1.5 py-0.5 rounded text-2xs font-medium bg-muted text-muted-foreground align-middle"
+                        title="Cenário de exemplo que vem com o Hub Manager"
+                      >
+                        Exemplo
+                      </span>
+                    )}
+                  </td>
 
                   <td className="px-4 py-3 font-mono text-2xs text-muted-foreground">
                     {item.targetName}
