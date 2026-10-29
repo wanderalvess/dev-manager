@@ -21,6 +21,7 @@ import { createQualityApi } from './webBridge/quality';
 import { createHttpClientApi } from './webBridge/httpClient';
 import { createRemoteControlApi } from './webBridge/remoteControl';
 import { createIntegrationApi } from './webBridge/integration';
+import { createAuthLockoutApi } from './webBridge/authLockout';
 
 export function initApiBridge() {
   if (typeof window === 'undefined') return;
@@ -57,6 +58,7 @@ export function initApiBridge() {
     ...createQualityApi(deps),
     ...createHttpClientApi(deps),
     ...createIntegrationApi(deps),
+    ...createAuthLockoutApi(deps),
     ...createRemoteControlApi()
   };
 }

@@ -42,6 +42,8 @@ import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { createIntegrationRouter } from './routes/integrationRoutes';
+import { createAuthLockoutRouter } from './routes/authLockoutRoutes';
+import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { createUsageTrackingMiddleware } from './usageTracking';
@@ -2258,6 +2260,7 @@ app.use(
   )
 );
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
+app.use('/api/auth-lockout', createAuthLockoutRouter(new AuthLockoutTestService(configService), broadcastWs, usageMetricsService));
 
 // Servir Frontend SPA estático se compilado
 const clientDist = path.resolve(__dirname, '../../dist');

@@ -35,6 +35,8 @@ const DESTRUCTIVE_TOOLS = new Set([
   'db_clear_oracle_capture',
   'logs_clear_file',
   'qa_delete_template',
+  // Bloqueia contas de teste de propósito (e o nome termina em _test, que parece leitura)
+  'qa_run_auth_lockout_test',
   'deploy_run_profile',
   'delphi_build',
   'delphi_run_pipeline'

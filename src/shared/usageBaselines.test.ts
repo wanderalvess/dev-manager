@@ -37,11 +37,8 @@ describe('definições da linha de base', () => {
 
   it('as tools do mapa existem de fato no servidor MCP (nome digitado errado não passa)', () => {
     const mcpDir = path.resolve(__dirname, '../mcp');
-    const sources = [
-      path.join(mcpDir, 'index.ts'),
-      path.join(mcpDir, 'tools', 'httpClientTools.ts'),
-      path.join(mcpDir, 'tools', 'integrationTools.ts')
-    ].map((f) =>
+    const toolFiles = fs.readdirSync(path.join(mcpDir, 'tools')).filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts'));
+    const sources = [path.join(mcpDir, 'index.ts'), ...toolFiles.map((f) => path.join(mcpDir, 'tools', f))].map((f) =>
       fs.readFileSync(f, 'utf-8')
     );
     const registered = new Set(sources.flatMap((s) => Array.from(s.matchAll(/registerTool\(\s*'([a-z0-9_]+)'/g), (m) => m[1])));

@@ -49,6 +49,8 @@ import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { registerIntegrationTools } from './tools/integrationTools';
+import { registerAuthLockoutTools } from './tools/authLockoutTools';
+import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { mcpUsageInfo } from './usageTracking';
@@ -2475,6 +2477,9 @@ registerDelphiTools(server, { delphiBuildService, ok, fail });
 
 // --- Rastreio de Integração ponta a ponta: WinThor → WSH → CH → PDV ---
 registerIntegrationTools(server, { integrationTraceService, ok, fail });
+
+// --- Teste de bloqueio de login do WinThor (homologação) ---
+registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestService(configService), ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

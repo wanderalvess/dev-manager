@@ -7,7 +7,7 @@ export const QualityModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => 
     icon={<CheckCheck className="w-4 h-4" />}
     iconBoxClass="p-2 rounded-xl bg-success/10 text-success"
     title="11. Central de Qualidade (QA &amp; PO)"
-    subtitle="Matriz de Testes · Critérios de Aceite · Prontidão"
+    subtitle="Matriz de Testes · Critérios de Aceite · Prontidão · Bloqueio de Login"
     shortcut="Alt+Q"
     footer={
       <ModuleNavButton
@@ -27,6 +27,7 @@ export const QualityModuleCard: React.FC<ModuleCardProps> = ({ onNavigate }) => 
       <span><strong>Validador Regressivo Oracle (QA Studio):</strong> Execução automatizada de esteiras de queries e asserções de integridade no banco (com templates prontos para Venda PDV, Pré-Venda Balcão TV7/TV8, Sangria/Suprimento de Caixa, Inutilização de NFC-e, Kits/Cestas e Cancelamento), com obtenção direta de payloads JSON via banco Oracle (<code className="font-mono text-primary">PCINTEGRACAOCORE</code> / <code className="font-mono text-primary">DADOSTRANSFORMADOS</code>) ou por requisições HTTP a <code className="font-mono text-primary">APIs REST externas</code> (com Bearer tokens e JSONPath), preenchimento automático de binds, exportação/importação de templates (.json) e geração de evidências para o Jira. A suíte só é aprovada se houver asserções e todas puderem ser verificadas (JSON inválido ou JSONPath sem payload reprovam).</span>
       <span><strong>Matriz:</strong> Acompanhamento manual de testes funcionais, serviços e APIs, salvo apenas neste navegador. Os cenários iniciais são modelos e nascem como pendentes; a sincronização com Zephyr/Jira/Azure ainda não está implementada.</span>
       <span><strong>Prontidão (PO):</strong> Indicadores de prontidão da release, semáforo de entrega (nunca "pronta" com falhas, bloqueios ou pendências) e progresso por categoria, tudo calculado a partir da Matriz de Validação.</span>
+      <span><strong>Bloqueio de Login:</strong> Valida em homologação as 12 regras de bloqueio do login do WinThor com tentativas controladas contra o WTA e dois usuários de teste: bloqueio só na 5ª falha, senha certa sem token durante o bloqueio, outro cliente, bloqueio por usuário, logoff, falhas simultâneas, duração (4 ou 5 min), janela de contagem, exceções de APIs diferentes, exposição de erro e a correlação de cada falha com o <code className="font-mono text-primary">winthor.log</code> e a API <code className="font-mono text-primary">/winthor/ferramenta/servidor/v1/logs</code> (acesso restrito e nenhuma senha registrada). Relatório em Markdown para o Jira.</span>
       <span><strong>Exportação Markdown:</strong> Cópia de relatórios de homologação em 1 clique para Teams, Jira e Azure DevOps.</span>
     </ModuleBullets>
   </ModuleCardShell>

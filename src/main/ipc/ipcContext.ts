@@ -29,6 +29,7 @@ import type { UsageMetricsService } from '../services/UsageMetricsService';
 import type { DelphiBuildService } from '../services/DelphiBuildService';
 import type { RemoteControlService } from '../services/RemoteControlService';
 import type { IntegrationTraceService } from '../services/IntegrationTraceService';
+import type { AuthLockoutTestService } from '../services/AuthLockoutTestService';
 
 /** Tudo que um grupo de handlers IPC pode precisar: a janela principal e os serviços do app. */
 export interface IpcContext {
@@ -63,4 +64,5 @@ export interface IpcContext {
   delphiBuildService: DelphiBuildService;
   remoteControlService: RemoteControlService;
   integrationTraceService: IntegrationTraceService;
+  authLockoutTestService: AuthLockoutTestService;
 }
