@@ -7,6 +7,7 @@ import { execFile, spawn } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
 import type { ConfigService } from './ConfigService';
+import { buildOracleCliConnectString } from '../../shared/oracleCliConnect';
 import {
   buildOracleToolEnv,
   isMissingOracleHomeOutput,
@@ -83,10 +84,9 @@ export function buildBackupPlaceholders(
   const defaultPort = config.type === 'oracle' ? 1521 : config.type === 'mysql' ? 3306 : 5432;
   const port = String(config.port || defaultPort);
 
-  const separator = config.oracleMode === 'sid' ? ':' : '/';
   const connectString =
     config.type === 'oracle'
-      ? `${config.host}:${port}${separator}${config.database}`
+      ? buildOracleCliConnectString({ ...config, port })
       : `${config.host}:${port}/${config.database}`;
 
   const directory = (options?.oracleDirectory && options.oracleDirectory.trim()) || 'DATA_PUMP_DIR';
@@ -1021,9 +1021,7 @@ ${maskedStderr}`)) {
     const logFileName = `${safeConnName}_${config.user}_${timestamp}.log`;
     const expectedFilePath = path.join(destinationFolder, dumpFileName);
 
-    // Mesma sintaxe de connect string usada pelo driver oracledb (ver DatabaseService.getOracleConnection)
-    const separator = config.oracleMode === 'sid' ? ':' : '/';
-    const connectString = `${config.host}:${config.port || 1521}${separator}${config.database}`;
+    const connectString = buildOracleCliConnectString(config);
 
     const binary = expdpPath && expdpPath.trim() ? expdpPath.trim() : 'expdp';
     const args = [
@@ -1106,8 +1104,7 @@ ${maskedStderr}`)) {
     const dumpFileName = path.basename(filePath);
     const logFileName = `restore_${Date.now()}.log`;
 
-    const separator = config.oracleMode === 'sid' ? ':' : '/';
-    const connectString = `${config.host}:${config.port || 1521}${separator}${config.database}`;
+    const connectString = buildOracleCliConnectString(config);
 
     const binary = impdpPath && impdpPath.trim() ? impdpPath.trim() : 'impdp';
     const args = [

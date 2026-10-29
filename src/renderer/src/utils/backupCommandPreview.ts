@@ -1,4 +1,5 @@
 import type { DatabaseConnectionConfig, DatabaseType } from '../../../shared/types';
+import { buildOracleCliConnectString } from '../../../shared/oracleCliConnect';
 
 /** Template padrão de comando de backup por tipo de banco — sugestão inicial no editor de comando customizado. */
 export function getDefaultBackupCommandTemplate(type: DatabaseType): string {
@@ -45,10 +46,9 @@ export function resolveBackupCommandPreview(
 
   const defaultPort = connection.type === 'oracle' ? 1521 : connection.type === 'mysql' ? 3306 : 5432;
   const port = String(connection.port || defaultPort);
-  const separator = connection.oracleMode === 'sid' ? ':' : '/';
   const connectString =
     connection.type === 'oracle'
-      ? `${connection.host}:${port}${separator}${connection.database}`
+      ? buildOracleCliConnectString({ ...connection, port })
       : `${connection.host}:${port}/${connection.database}`;
   const safeConnName = (connection.name || connection.database || connection.user || 'db').replace(/[^a-zA-Z0-9_-]/g, '_');
   const safeDbName = (connection.database || connection.user || 'backup').replace(/[^a-zA-Z0-9_-]/g, '_');
