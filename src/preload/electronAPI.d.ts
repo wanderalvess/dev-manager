@@ -1,4 +1,10 @@
-import type { InfrManifestSaveResult, InfrVersionPreview, InfrVersionPreviewRequest } from '../shared/infrVersionManifest';
+import type {
+  InfrEnvSaveRequest,
+  InfrEnvTemplate,
+  InfrManifestSaveResult,
+  InfrVersionPreview,
+  InfrVersionPreviewRequest
+} from '../shared/infrVersionManifest';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
@@ -379,6 +385,8 @@ export interface ElectronAPI {
   checkInfrDockerScripts?: (customPath?: string) => Promise<InfrDockerScriptStatus[]>;
   runInfrSetupScript?: (scriptType: 'oracle' | 'wta' | 'wsh' | 'version', options: any) => Promise<{ success: boolean; output: string }>;
   listInfrEnvironments?: (distro?: string) => Promise<InfrEnvironmentsResult>;
+  getInfrEnvTemplate?: (params: { distro?: string; from: string }) => Promise<InfrEnvTemplate>;
+  saveInfrEnvFiles?: (req: InfrEnvSaveRequest) => Promise<InfrManifestSaveResult>;
   previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
   saveInfrVersionManifest?: (req: { infrPath?: string; targetVersion: string; manifestText: string }) => Promise<InfrManifestSaveResult>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;

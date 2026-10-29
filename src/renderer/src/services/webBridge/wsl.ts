@@ -10,7 +10,13 @@ import type {
   InfrDockerScriptStatus
 } from '../../../../shared/types';
 import type { ElectronAPI } from '../../../../preload/index';
-import type { InfrManifestSaveResult, InfrVersionPreview, InfrVersionPreviewRequest } from '../../../../shared/infrVersionManifest';
+import type {
+  InfrEnvSaveRequest,
+  InfrEnvTemplate,
+  InfrManifestSaveResult,
+  InfrVersionPreview,
+  InfrVersionPreviewRequest
+} from '../../../../shared/infrVersionManifest';
 import type { InfrEnvironmentsResult } from '../../../../shared/infrWinthorVersion';
 import type { BridgeDeps } from './core';
 
@@ -186,6 +192,21 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return await apiFetch<InfrEnvironmentsResult>(`/api/infr/version/environments${query}`);
       } catch (err: any) {
         return { success: false, error: err.message, environments: [], oracles: [], wshJars: [] };
+      }
+    },
+    getInfrEnvTemplate: async (params: { distro?: string; from: string }): Promise<InfrEnvTemplate> => {
+      try {
+        const query = new URLSearchParams({ from: params.from, ...(params.distro ? { distro: params.distro } : {}) });
+        return await apiFetch<InfrEnvTemplate>(`/api/infr/version/env-template?${query}`);
+      } catch (err: any) {
+        return { success: false, error: err.message, wta: [], wsh: [] };
+      }
+    },
+    saveInfrEnvFiles: async (req: InfrEnvSaveRequest): Promise<InfrManifestSaveResult> => {
+      try {
+        return await apiFetch<InfrManifestSaveResult>('/api/infr/version/env-save', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message };
       }
     },
     previewInfrVersion: async (req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> => {

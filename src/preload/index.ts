@@ -6,7 +6,13 @@ import { remoteControlApi } from './remoteControlApi';
 import { integrationApi } from './integrationApi';
 import { authLockoutApi } from './authLockoutApi';
 import type { DeployQueueProject } from '../shared/deployQueue';
-import type { InfrManifestSaveResult, InfrVersionPreview, InfrVersionPreviewRequest } from '../shared/infrVersionManifest';
+import type {
+  InfrEnvSaveRequest,
+  InfrEnvTemplate,
+  InfrManifestSaveResult,
+  InfrVersionPreview,
+  InfrVersionPreviewRequest
+} from '../shared/infrVersionManifest';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
@@ -648,6 +654,9 @@ const electronAPI = {
   runInfrSetupScript: (scriptType: 'oracle' | 'wta' | 'wsh' | 'version', options: any): Promise<{ success: boolean; output: string }> =>
     ipcRenderer.invoke('infr:run-setup-script', { scriptType, options }),
   listInfrEnvironments: (distro?: string): Promise<InfrEnvironmentsResult> => ipcRenderer.invoke('infr:version-environments', distro),
+  getInfrEnvTemplate: (params: { distro?: string; from: string }): Promise<InfrEnvTemplate> =>
+    ipcRenderer.invoke('infr:version-env-template', params),
+  saveInfrEnvFiles: (req: InfrEnvSaveRequest): Promise<InfrManifestSaveResult> => ipcRenderer.invoke('infr:version-env-save', req),
   previewInfrVersion: (req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> => ipcRenderer.invoke('infr:version-preview', req),
   saveInfrVersionManifest: (req: { infrPath?: string; targetVersion: string; manifestText: string }): Promise<InfrManifestSaveResult> =>
     ipcRenderer.invoke('infr:version-save', req),

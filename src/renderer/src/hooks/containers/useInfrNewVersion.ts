@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   buildNewVersionEnvCommand,
   isValidEnvName,
@@ -7,7 +7,7 @@ import {
   type InfrDbMode,
   type InfrEnvironmentsResult
 } from '../../../../shared/infrWinthorVersion';
-import type { InfrVersionPreview } from '../../../../shared/infrVersionManifest';
+import type { InfrEnvTemplate, InfrVersionPreview } from '../../../../shared/infrVersionManifest';
 
 export interface InfrNewVersionForm {
   from: string;
@@ -54,6 +54,25 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
   const [envs, setEnvs] = useState<InfrEnvironmentsResult | null>(null);
   const [loadingEnvs, setLoadingEnvs] = useState(false);
   const [preview, setPreview] = useState<InfrVersionPreview | null>(null);
+  const [envTemplate, setEnvTemplate] = useState<InfrEnvTemplate | null>(null);
+  const [edits, setEdits] = useState<{ wta: Record<string, string>; wsh: Record<string, string> }>({ wta: {}, wsh: {} });
+
+  // Configuração do WTA/WSH de origem: recarrega quando a origem muda (edições anteriores são descartadas)
+  useEffect(() => {
+    if (!form.from || !window.electronAPI?.getInfrEnvTemplate) return;
+    let alive = true;
+    window.electronAPI.getInfrEnvTemplate({ distro, from: form.from }).then((t) => {
+      if (!alive) return;
+      setEnvTemplate(t);
+      setEdits({ wta: {}, wsh: {} });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [distro, form.from]);
+
+  const editEnv = (target: 'wta' | 'wsh', key: string, value: string) =>
+    setEdits((e) => ({ ...e, [target]: { ...e[target], [key]: value } }));
   const [busy, setBusy] = useState<'preview' | 'generate' | null>(null);
   const [message, setMessage] = useState('');
 
@@ -123,14 +142,33 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
         setMessage(saved.error || 'Não foi possível gravar o manifesto.');
         return;
       }
+      const env = await api.saveInfrEnvFiles?.({
+        distro,
+        infrPath,
+        version: form.version,
+        name: form.name,
+        from: form.from,
+        dbContainer: form.dbContainer || undefined,
+        wshJar: form.wshJar || undefined,
+        wshPort: toPort(form.wshPort),
+        wtaEdits: edits.wta,
+        wshEdits: edits.wsh
+      });
+      if (env && !env.success) {
+        setMessage(env.error || 'Não foi possível gravar a configuração do WTA/WSH.');
+        return;
+      }
       const res = await api.runInfrSetupScript('version', { distro, infrPath, winthorVersion: form.version, newEnv });
-      setMessage(`Manifesto gravado em ${saved.path}. ${res.output}`);
+      setMessage(`Manifesto: ${saved.path}. Configuração: ${env?.path ?? '—'}. ${res.output}`);
     } finally {
       setBusy(null);
     }
   };
 
-  return { form, update, envs, loadingEnvs, loadEnvironments, preview, busy, message, command, canPreview, runPreview, generate };
+  return {
+    form, update, envs, loadingEnvs, loadEnvironments, preview, busy, message, command, canPreview, runPreview, generate,
+    envTemplate, edits, editEnv
+  };
 }
 
 export type InfrNewVersionState = ReturnType<typeof useInfrNewVersion>;

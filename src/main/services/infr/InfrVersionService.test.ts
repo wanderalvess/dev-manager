@@ -75,6 +75,44 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     expect(execFileAsync).not.toHaveBeenCalled();
   });
 
+  it('configuração: senha não vai para a tela; ao gravar, vazia mantém a da origem e o ambiente novo manda no banco', async () => {
+    execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
+      const script = String(args.at(-1));
+      if (script.includes('wta-master') && script.includes('.Config.Env')) {
+        return { stdout: 'DB_HOST=oracle-master\nDB_USER=LOCAL\nDB_PASSWORD=SEGREDO\nWTA_JAVA_OPTS=-Xms1g -Xmx4g\nPATH=/bin\n' };
+      }
+      if (script.includes('wsh-master') && script.includes('.Config.Env')) return { stdout: 'DB_PASSWORD=54B4\nJVM_XMX=3072m\n' };
+      if (script.includes('.Mounts')) return { stdout: '/opt/Winthor.ini\n' };
+      return { stdout: '' };
+    });
+    const t = await service().envTemplate(undefined, 'master');
+    expect(t.wta.find((f) => f.key === 'DB_PASSWORD')).toMatchObject({ value: '', hasValue: true });
+    expect(JSON.stringify(t)).not.toContain('SEGREDO');
+    expect(t.wsh.find((f) => f.key === 'WINTHOR_INI')?.value).toBe('/opt/Winthor.ini');
+
+    fs.mkdirSync(path.join(dir, 'linux-winthor'), { recursive: true });
+    fs.mkdirSync(path.join(dir, 'wsh-winthor'), { recursive: true });
+    const res = await service().saveEnvFiles({
+      version: '40',
+      name: 'develop',
+      from: 'master',
+      wshJar: '/opt/wsh/40/winthor-integracao-core.jar',
+      wtaEdits: { DB_PASSWORD: '', WTA_JAVA_OPTS: '-Xms512m -Xmx2g' },
+      wshEdits: { JVM_XMX: '1536m' }
+    });
+    expect(res.success).toBe(true);
+    const wta = fs.readFileSync(path.join(dir, 'linux-winthor', 'wta.env.40'), 'utf-8');
+    expect(wta).toContain('DB_PASSWORD=SEGREDO');
+    expect(wta).toContain('WTA_JAVA_OPTS=-Xms512m -Xmx2g');
+    expect(wta).toContain('DB_HOST=oracle-develop');
+    expect(wta).not.toContain('PATH=');
+    const wsh = fs.readFileSync(path.join(dir, 'wsh-winthor', '.env.40'), 'utf-8');
+    expect(wsh).toContain('JVM_XMX=1536m');
+    expect(wsh).toContain('WTA_HOST=wta-develop');
+    expect(wsh).toContain('SERVER_PORT=9040');
+    expect(wsh).toContain('WINTHOR_INI=/opt/Winthor.ini');
+  });
+
   it('grava o manifesto em versions/<versão>.features com LF', () => {
     fs.mkdirSync(path.join(dir, 'linux-winthor', 'versions'), { recursive: true });
     const res = service().saveManifest({ targetVersion: '40', manifestText: 'feature a 1.40.0.1\r\n' });

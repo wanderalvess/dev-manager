@@ -1390,6 +1390,23 @@ app.get('/api/infr/version/environments', async (req, res) => {
   }
 });
 
+// Configuração do WTA/WSH de origem; as senhas não voltam (só se existem)
+app.get('/api/infr/version/env-template', async (req, res) => {
+  try {
+    res.json(await infrVersionService.envTemplate(req.query.distro as string | undefined, String(req.query.from || '')));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, wta: [], wsh: [] });
+  }
+});
+
+app.post('/api/infr/version/env-save', async (req, res) => {
+  try {
+    res.json(await infrVersionService.saveEnvFiles(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/infr/version/preview', async (req, res) => {
   try {
     res.json(await infrVersionService.preview(req.body || {}));

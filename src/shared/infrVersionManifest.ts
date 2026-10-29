@@ -5,6 +5,7 @@
  * versão cobra do WTA (`dependencies.json` do jar).
  */
 import type { Routine801CatalogResponse } from './types';
+import type { InfrEnvField } from './infrEnvConfig';
 
 export interface ManifestFeature {
   name: string;
@@ -72,6 +73,30 @@ export interface InfrVersionPreview {
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;
   manifestText?: string;
+}
+
+/** Configuração da origem para a tela da Nova versão. */
+export interface InfrEnvTemplate {
+  success: boolean;
+  error?: string;
+  wta: InfrEnvField[];
+  wsh: InfrEnvField[];
+  /** O ambiente de origem tem WSH (wsh-<origem>) */
+  hasWsh?: boolean;
+}
+
+/** Gravação de wta.env.<v> e .env.<v> com as edições do usuário. */
+export interface InfrEnvSaveRequest {
+  distro?: string;
+  infrPath?: string;
+  version: string;
+  name: string;
+  from: string;
+  dbContainer?: string;
+  wshJar?: string;
+  wshPort?: number;
+  wtaEdits?: Record<string, string>;
+  wshEdits?: Record<string, string>;
 }
 
 export interface InfrManifestSaveResult {

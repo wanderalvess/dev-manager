@@ -16,6 +16,8 @@ import {
   type InfrVersionPreview,
   type InfrVersionPreviewRequest
 } from '../../../shared/infrVersionManifest';
+import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
+import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
@@ -136,6 +138,75 @@ export class InfrVersionService {
       }
     }
     return result;
+  }
+
+  /** Ambiente do container (KEY=valor por linha) e, no WSH, o Winthor.ini montado. */
+  private async containerEnv(distro: string, container: string, target: InfrEnvTarget): Promise<Record<string, string> | null> {
+    try {
+      const out = await this.run(distro, `docker inspect ${container} --format '{{range .Config.Env}}{{println .}}{{end}}'`, 20000);
+      const env = pickEnv(target, parseEnvLines(out));
+      if (target === 'wsh') {
+        const ini = await this.run(
+          distro,
+          `docker inspect ${container} --format '{{range .Mounts}}{{if eq .Destination "/tmp/Winthor.ini"}}{{.Source}}{{end}}{{end}}'`,
+          20000
+        );
+        if (ini.trim()) env.WINTHOR_INI = ini.trim();
+      }
+      return env;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Configuração do WTA e do WSH de origem para a tela (senhas sem o valor). */
+  public async envTemplate(distroName: string | undefined, from: string): Promise<InfrEnvTemplate> {
+    if (!isValidEnvName(from)) return { success: false, error: 'Ambiente de origem inválido.', wta: [], wsh: [] };
+    const distro = distroName || (await this.wsl.findDockerWslDistro()) || 'ubuntu2604-winthor';
+    if (!isValidIdentifier(distro)) return { success: false, error: 'Distro WSL inválida.', wta: [], wsh: [] };
+    const wta = await this.containerEnv(distro, `wta-${from.trim()}`, 'wta');
+    if (!wta) return { success: false, error: `Não foi possível ler o ambiente do wta-${from}.`, wta: [], wsh: [] };
+    const wsh = await this.containerEnv(distro, `wsh-${from.trim()}`, 'wsh');
+    return { success: true, wta: envFieldsFor('wta', wta), wsh: envFieldsFor('wsh', wsh ?? {}), hasWsh: wsh !== null };
+  }
+
+  /**
+   * Grava `linux-winthor/wta.env.<v>` e (com jar do WSH) `wsh-winthor/.env.<v>` a partir dos
+   * containers de origem, com as edições do usuário; as senhas em branco vêm da origem, lidas aqui.
+   */
+  public async saveEnvFiles(req: InfrEnvSaveRequest): Promise<InfrManifestSaveResult> {
+    const v = req.version?.trim();
+    const { name, from } = req;
+    if (!isValidWinthorVersion(v) || !isValidEnvName(name) || !isValidEnvName(from)) return { success: false, error: 'Versão ou ambiente inválido.' };
+    const dbContainer = req.dbContainer?.trim() || `oracle-${name}`;
+    if (!isValidEnvName(dbContainer)) return { success: false, error: 'Oracle inválido.' };
+    if (req.wshJar && !WSL_FILE.test(req.wshJar)) return { success: false, error: 'Jar do WSH inválido.' };
+    const distro = req.distro || (await this.wsl.findDockerWslDistro()) || 'ubuntu2604-winthor';
+    const infr = this.wsl.resolveInfrPaths(req.infrPath);
+    if (!isValidIdentifier(distro) || !infr) return { success: false, error: 'Distro ou pasta do INFR-Docker inválida.' };
+    const header = `Gerado pelo Hub Manager a partir do ambiente ${from} em ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
+    try {
+      const wta = (await this.containerEnv(distro, `wta-${from}`, 'wta')) ?? {};
+      const wtaFile = path.join(infr.windows, 'linux-winthor', `wta.env.${v}`);
+      fs.writeFileSync(wtaFile, buildEnvFile(wta, req.wtaEdits ?? {}, { DB_HOST: dbContainer, DB_PORT: '1521' }, header), 'utf-8');
+      if (!req.wshJar) return { success: true, path: wtaFile };
+      const wsh = (await this.containerEnv(distro, `wsh-${from}`, 'wsh')) ?? {};
+      const wshFile = path.join(infr.windows, 'wsh-winthor', `.env.${v}`);
+      const fixed = {
+        WSH_CONTAINER: `wsh-${name}`,
+        ORACLE_CONTAINER: dbContainer,
+        DB_HOST: dbContainer,
+        WTA_CONTAINER: `wta-${name}`,
+        WTA_HOST: `wta-${name}`,
+        SERVER_PORT: String(req.wshPort || 9000 + parseInt(v, 10)),
+        WSH_JAR: req.wshJar,
+        WSH_LOGS_VOLUME: `wsh-${name}-logs`
+      };
+      fs.writeFileSync(wshFile, buildEnvFile(wsh, req.wshEdits ?? {}, fixed, header), 'utf-8');
+      return { success: true, path: `${wtaFile} e ${wshFile}` };
+    } catch (err: any) {
+      return { success: false, error: `Não foi possível gravar a configuração: ${err?.message || err}` };
+    }
   }
 
   /** Grava `linux-winthor/versions/<versão>.features` (LF, lido no Linux pelo build). */

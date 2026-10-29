@@ -3,6 +3,7 @@ import { GitBranchPlus, RotateCw, Search, Play } from 'lucide-react';
 import type { InfrContainerInfo, InfrDbMode } from '../../../../../shared/infrWinthorVersion';
 import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
 import { InfrNewVersionPreview } from './InfrNewVersionPreview';
+import { InfrEnvConfigSection } from './InfrEnvConfigSection';
 
 const INPUT =
   'w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2 text-sm text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-warning';
@@ -144,6 +145,8 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState }> = ({ s }) =
           <input value={form.originWtaUrl} onChange={(e) => update('originWtaUrl', e.target.value)} placeholder="http://localhost:8086" className={INPUT} />
         </div>
       </div>
+
+      <InfrEnvConfigSection s={s} />
 
       <button
         onClick={s.runPreview}
