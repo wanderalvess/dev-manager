@@ -15,7 +15,13 @@ import {
   InfrDockerScriptStatus
 } from '../../shared/types';
 import { execFileAsync, isValidIdentifier, isSafeLocalPath } from '../utils/security';
-import { buildWshSetupCommand, buildWtaSetupCommand, isValidWinthorVersion } from '../../shared/infrWinthorVersion';
+import {
+  buildNewVersionEnvCommand,
+  buildWshSetupCommand,
+  buildWtaSetupCommand,
+  isValidWinthorVersion,
+  type NewVersionEnvInput
+} from '../../shared/infrWinthorVersion';
 
 export class WslService {
   private cachedDistros: WslDistroInfo[] = [];
@@ -1022,8 +1028,17 @@ export class WslService {
   /**
    * Executa um script de bootstrap do INFR-Docker via terminal do Windows ou WSL.
    */
+  /** Pasta do INFR-Docker no Windows e o caminho /mnt/... dela no WSL; null se o caminho não for seguro. */
+  public resolveInfrPaths(infrPath?: string): { windows: string; wsl: string } | null {
+    const infrCandidates = this.genericProjectRoots().map((root) => path.join(root, 'INFR-Docker'));
+    const basePath = infrPath || infrCandidates.find((c) => fs.existsSync(c)) || infrCandidates[0];
+    if (!isSafeLocalPath(basePath) || !/^[a-zA-Z0-9_\-.:\\/ ]+$/.test(basePath)) return null;
+    const wsl = basePath.replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`).replace(/\\/g, '/');
+    return { windows: basePath, wsl };
+  }
+
   public async runInfrSetupScript(
-    scriptType: 'oracle' | 'wta' | 'wsh',
+    scriptType: 'oracle' | 'wta' | 'wsh' | 'version',
     options: {
       containerName?: string;
       port?: number;
@@ -1031,6 +1046,8 @@ export class WslService {
       infrPath?: string;
       /** Versão do WinThor (ex.: 38): WTA da imagem por versão e WSH com o .env da versão */
       winthorVersion?: string;
+      /** Só 'version': ambiente novo, origem, banco, portas e jar do WSH (winthorVersion é a versão) */
+      newEnv?: Omit<NewVersionEnvInput, 'version'>;
     }
   ): Promise<{ success: boolean; output: string }> {
     const targetDistro = options.distro || (await this.findDockerWslDistro()) || 'ubuntu2604-winthor';
@@ -1038,16 +1055,11 @@ export class WslService {
       return { success: false, output: 'Nome de distribuição WSL inválido.' };
     }
 
-    const infrCandidates = this.genericProjectRoots().map((root) => path.join(root, 'INFR-Docker'));
-    const basePath = options.infrPath || infrCandidates.find((c) => fs.existsSync(c)) || infrCandidates[0];
-    if (!isSafeLocalPath(basePath) || !/^[a-zA-Z0-9_\-.:\\/ ]+$/.test(basePath)) {
+    const infr = this.resolveInfrPaths(options.infrPath);
+    if (!infr) {
       return { success: false, output: 'Caminho de instalação (infrPath) inválido.' };
     }
-
-    // Converte caminho do Windows para caminho /mnt/... do WSL
-    const wslPath = basePath
-      .replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`)
-      .replace(/\\/g, '/');
+    const wslPath = infr.wsl;
 
     let cmdToRun = '';
     let title = '';
@@ -1066,6 +1078,11 @@ export class WslService {
     } else if (scriptType === 'wsh') {
       title = isValidWinthorVersion(options.winthorVersion) ? `Setup WSH ${options.winthorVersion}` : 'Setup WSH';
       cmdToRun = `cd "${wslPath}/wsh-winthor" && chmod +x ./wsh_setup.sh && ${buildWshSetupCommand(options.winthorVersion)}`;
+    } else if (scriptType === 'version') {
+      const command = buildNewVersionEnvCommand({ ...options.newEnv, version: options.winthorVersion });
+      if (!command) return { success: false, output: 'Versão, nomes de ambiente/container, portas ou jar do WSH inválidos.' };
+      title = `Nova versão ${options.winthorVersion}: ${options.newEnv?.name}`;
+      cmdToRun = `cd "${wslPath}" && chmod +x linux-winthor/scripts/*.sh oracle-winthor/*.sh oracle-winthor/11.2.0.2-xe/tools/*.sh wsh-winthor/*.sh && cd linux-winthor/scripts && ${command}`;
     } else {
       return { success: false, output: `Tipo de script desconhecido: ${scriptType}` };
     }

@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import fs from 'fs';
 import http from 'http';
 import type { AddressInfo } from 'net';
@@ -15,6 +16,8 @@ export interface FakeWtaOptions {
 }
 
 export const FAKE_WTA_USERS: Record<string, string> = { TESTE_A: 'senhaA', TESTE_B: 'senhaB', ADMIN: 'admin123' };
+/** Como o WTA real, o login só aceita o MD5 da senha em hexadecimal maiúsculo. */
+const md5Upper = (text: string) => createHash('md5').update(text, 'utf8').digest('hex').toUpperCase();
 const WINDOW_MS = 60_000;
 
 export function startFakeWta(logFile: string, options: FakeWtaOptions = {}): Promise<{ server: http.Server; url: string }> {
@@ -61,7 +64,7 @@ export function startFakeWta(logFile: string, options: FakeWtaOptions = {}): Pro
           log(`WARN Login recusado: usuario ${user} bloqueado`);
           return send(401, { message: 'Usuário bloqueado por excesso de tentativas' });
         }
-        if (FAKE_WTA_USERS[user] && FAKE_WTA_USERS[user] === data.senha) {
+        if (FAKE_WTA_USERS[user] && md5Upper(FAKE_WTA_USERS[user]) === data.senha) {
           failures.set(user, []);
           const token = `eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoi${user}${tokens.size}.assinatura${tokens.size}xyz`;
           tokens.add(token);

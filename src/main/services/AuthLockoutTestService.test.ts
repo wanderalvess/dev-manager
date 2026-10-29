@@ -113,7 +113,20 @@ describe('AuthLockoutTestService contra um WTA falso', () => {
     const result = await service.run({ userA: { login: 'TESTE_A', password: 'errada' }, checks: ['threshold'] });
     expect(result.success).toBe(false);
     expect(result.error).toContain('não entrou');
+    // A resposta do WTA vai junto para a pessoa saber se é senha errada ou conta bloqueada
+    expect(result.error).toContain('HTTP 401, resposta do WTA: {"message":"Usuário ou senha inválidos"}');
+    expect(result.error).toContain('Confira login e senha');
     expect(result.attempts).toHaveLength(1);
+  });
+
+  it('senha em texto puro é recusada pelo WTA, que só aceita o MD5', async () => {
+    const logFile = path.join(dir, 'data', 'log', 'winthor.log');
+    fs.writeFileSync(logFile, '');
+    const fake = await startFakeWta(logFile);
+    server = fake.server;
+    const service = new AuthLockoutTestService({ getSettings: () => ({ wtaUrl: fake.url }) } as unknown as ConfigService);
+    const plain = await service.run({ userA: { login: 'TESTE_A', password: 'senhaA' }, passwordEncoding: 'plain', checks: ['threshold'] });
+    expect(plain.error).toContain('HTTP 401');
   });
 
   it('recusa uma segunda execução enquanto a primeira roda', async () => {

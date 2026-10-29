@@ -41,7 +41,8 @@ describe('formulário do teste de bloqueio', () => {
   it('ignora JSON inválido, chaves estranhas e checagens desconhecidas', () => {
     const base = formFromDefaults(defaults);
     expect(mergeStoredForm(base, '{')).toEqual(base);
-    const merged = mergeStoredForm(base, JSON.stringify({ checks: ['threshold', 'xpto'], userAPassword: 'vazou', extra: 1 }));
+    const merged = mergeStoredForm(base, JSON.stringify({ checks: ['threshold', 'xpto'], userAPassword: 'vazou', extra: 1, passwordEncoding: 'sha1' }));
+    expect(merged.passwordEncoding).toBe('md5');
     expect(merged.checks).toEqual(['threshold']);
     expect(merged.userAPassword).toBe('');
     expect(merged).not.toHaveProperty('extra');
@@ -56,6 +57,7 @@ describe('formulário do teste de bloqueio', () => {
     expect(buildRunRequest(filled()).userB).toEqual({ login: 'TESTE_B', password: 'senhaB' });
     expect(buildRunRequest({ ...filled(), userBPassword: '' }).userB).toBeUndefined();
     expect(buildRunRequest(filled()).lockMinutesCandidates).toEqual([4, 5]);
+    expect(buildRunRequest(filled()).passwordEncoding).toBe('md5');
   });
 
   it('aponta o que falta antes de começar', () => {

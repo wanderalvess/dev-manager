@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  groupInfrEnvironments,
+  buildNewVersionEnvCommand,
   buildWshSetupCommand,
   buildWtaSetupCommand,
   isAutoVersionedName,
@@ -40,6 +42,48 @@ describe('versão do WinThor nos scripts do INFR-Docker', () => {
         './wta_setup.sh --container wta-38 --port 8038 --version 38 --distro debian --ssh-port 8138 --jmx-port 1038 --jms-port 61638'
     );
     expect(buildWtaSetupCommand({ container: 'x', port: 1, version: '38', distro: 'deb;ian' })).toContain('38-debian');
+  });
+
+  it('ambiente novo a partir de outro: valida nomes, versão e jar antes de montar o comando', () => {
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'develop', from: 'master' })).toBe(
+      './new_version_env.sh --version 40 --name develop --from master'
+    );
+    expect(
+      buildNewVersionEnvCommand({ version: '40', name: 'develop', from: 'master', wshJar: '/opt/wsh/40/winthor-integracao-core.jar' })
+    ).toBe('./new_version_env.sh --version 40 --name develop --from master --wsh-jar /opt/wsh/40/winthor-integracao-core.jar');
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'develop', from: 'develop' })).toBeNull();
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'dev;rm', from: 'master' })).toBeNull();
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'develop', from: 'master', wshJar: '/opt/x.jar && rm -rf /' })).toBeNull();
+    expect(buildNewVersionEnvCommand({ version: 'quarenta', name: 'develop', from: 'master' })).toBeNull();
+  });
+
+  it('leva as escolhas do usuário (banco, origem e portas) só quando diferem do padrão', () => {
+    expect(
+      buildNewVersionEnvCommand({ version: '40', name: 'develop', from: 'master', dbMode: 'existing', dbContainer: 'oracle-qa', wtaPort: 8086 })
+    ).toBe('./new_version_env.sh --version 40 --name develop --from master --db-mode existing --db-container oracle-qa --wta-port 8086');
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'develop', from: 'master', dbSource: 'oracle-suport' })).toBe(
+      './new_version_env.sh --version 40 --name develop --from master --db-source oracle-suport'
+    );
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'd', from: 'm', dbContainer: 'x;y' })).toBeNull();
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'd', from: 'm', wshPort: 70000 })).toBeNull();
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'd', from: 'm', dbMode: 'drop' as any })).toBeNull();
+  });
+
+  it('agrupa os containers da distro em ambientes e lista os Oracles', () => {
+    const { environments, oracles } = groupInfrEnvironments([
+      'oracle-master|oracle-winthor:11.2.0.2-xe|exited|',
+      'wta-master|linux-winthor:1.9.3-debian|exited|0.0.0.0:8086->8080/tcp',
+      'wsh-master|wsh:1.38.14.51|running|0.0.0.0:8090->8090/tcp',
+      'oracle-suport|oracle-winthor:11.2.0.2-xe|running|',
+      'wta-suport|linux-winthor:1.9.3-debian|running|',
+      'oracle-sozinho|oracle-winthor:11.2.0.2-xe|running|',
+      'banco-cliente|oracle-winthor:11.2.0.2-xe|running|'
+    ]);
+    expect(environments.map((e) => [e.name, e.oracle?.name, e.wta?.name, e.wsh?.name])).toEqual([
+      ['master', 'oracle-master', 'wta-master', 'wsh-master'],
+      ['suport', 'oracle-suport', 'wta-suport', undefined]
+    ]);
+    expect(oracles.map((o) => o.name)).toEqual(['banco-cliente', 'oracle-master', 'oracle-sozinho', 'oracle-suport']);
   });
 
   it('WSH usa o .env da versão', () => {

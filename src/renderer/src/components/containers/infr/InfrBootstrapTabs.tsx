@@ -1,10 +1,10 @@
 import React from 'react';
-import { Database, Globe, Key, Wrench } from 'lucide-react';
+import { Database, GitBranchPlus, Globe, Key, Wrench } from 'lucide-react';
 import { infrBootstrapModalTabClass, type InfrBootstrapTab } from '../../../utils/infrBootstrapModalUtils';
 
 interface InfrBootstrapTabsProps {
   activeTab: InfrBootstrapTab;
-  onSelect: (tab: 'oracle' | 'wta' | 'wsh') => void;
+  onSelect: (tab: 'oracle' | 'wta' | 'wsh' | 'newVersion') => void;
   onOpenScripts: () => void;
 }
 
@@ -13,7 +13,7 @@ export const InfrBootstrapTabs: React.FC<InfrBootstrapTabsProps> = ({
   onSelect,
   onOpenScripts
 }) => (
-  <div className="flex border-b border-border/70 px-5 gap-1 bg-muted/25 pt-2">
+  <div className="flex border-b border-border/70 px-5 gap-1 bg-muted/25 pt-2 overflow-x-auto scrollbar-thin">
     <button onClick={() => onSelect('oracle')} className={infrBootstrapModalTabClass(activeTab === 'oracle')}>
       <Database className="w-3.5 h-3.5" />
       <span>1. Setup Oracle XE</span>
@@ -27,6 +27,11 @@ export const InfrBootstrapTabs: React.FC<InfrBootstrapTabsProps> = ({
     <button onClick={() => onSelect('wsh')} className={infrBootstrapModalTabClass(activeTab === 'wsh')}>
       <Key className="w-3.5 h-3.5" />
       <span>3. Setup WSH</span>
+    </button>
+
+    <button onClick={() => onSelect('newVersion')} className={infrBootstrapModalTabClass(activeTab === 'newVersion')}>
+      <GitBranchPlus className="w-3.5 h-3.5" />
+      <span>Nova versão</span>
     </button>
 
     <button onClick={onOpenScripts} className={infrBootstrapModalTabClass(activeTab === 'scripts')}>

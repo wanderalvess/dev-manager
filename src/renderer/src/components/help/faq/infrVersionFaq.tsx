@@ -36,8 +36,24 @@ export function getInfrVersionFaq(): FaqItem[] {
               <em>features</em> do WTA ao subir e encerra se faltar alguma.
             </li>
             <li>
-              <strong className="text-foreground">Nova versão:</strong> o manifesto sai de um WTA de referência já atualizado, com{' '}
-              <code className={C}>./scripts/export_features.sh --version 39 --container &lt;wta&gt;</code>.
+              <strong className="text-foreground">Nova versão (aba Nova versão):</strong> escolha um ambiente que já funciona (ex.: master, no 39),
+              a versão nova (40) e o nome do ambiente novo (develop). O Hub lê as features do <code className={C}>wta-master</code>, sobe cada uma
+              pelo catálogo de atualizações da rotina 801 até a linha 40 (sem passar dela) e, com o jar do WSH 40 escolhido, confere o que esse
+              WSH exige do WTA: é aí que um clone feito à mão costuma falhar com &quot;Versão exigida ... instalada&quot;. Na prévia você vê o que
+              sobe, o que ficou na versão anterior e o que o WSH cobraria.
+            </li>
+            <li>
+              <strong className="text-foreground">Banco e portas da versão nova:</strong> clonar o banco de um Oracle escolhido (RMAN), usar um
+              Oracle que já existe ou criar um vazio para importar o dump depois; container e portas vêm sugeridos pela versão e podem ser
+              mudados. Ao gerar, o Hub grava <code className={C}>versions/40.features</code> e abre o terminal com o{' '}
+              <code className={C}>new_version_env.sh</code>, que monta a imagem, o banco, o WTA e o WSH.
+            </li>
+            <li>
+              <strong className="text-foreground">Configurações:</strong> a seção mostra o <code className={C}>wta.env</code> e o{' '}
+              <code className={C}>.env</code> do WSH com os valores do ambiente de origem (SID, usuário, loja, empresa, memória das JVMs,
+              portas internas e o <code className={C}>Winthor.ini</code>), todos editáveis. Senhas não voltam para a tela: em branco, o Hub copia
+              a da origem no servidor; digitada, vale a nova. O Hub grava <code className={C}>wta.env.40</code> e{' '}
+              <code className={C}>.env.40</code> e o script usa esses arquivos como estão.
             </li>
             <li>
               <strong className="text-foreground">Senha do banco:</strong> o <code className={C}>Winthor.ini</code> grava a senha em maiúsculas e o WSH conecta com ela.

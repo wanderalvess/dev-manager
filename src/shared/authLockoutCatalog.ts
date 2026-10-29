@@ -113,7 +113,8 @@ export function authLockoutBaseDefaults(): Omit<AuthLockoutDefaults, 'baseUrl' |
     windowSeconds: 60,
     lockMinutesCandidates: [4, 5],
     concurrency: 3,
-    lockedPattern: AUTH_LOCKOUT_LOCKED_PATTERN
+    lockedPattern: AUTH_LOCKOUT_LOCKED_PATTERN,
+    passwordEncoding: 'md5' as const
   };
 }
 
