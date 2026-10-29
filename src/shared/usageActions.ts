@@ -54,6 +54,7 @@ export const TRACKED_USAGE_ACTIONS: readonly TrackedUsageAction[] = [
   { module: 'qa', action: 'taut-process-intake', ipc: 'taut:process-intake', rest: 'POST /api/taut/intake' },
   // Sem `rest`: a rota responde na hora com um ticket, então ela mesma registra o uso quando a execução termina
   { module: 'qa', action: 'auth-lockout-run', ipc: 'auth-lockout:run' },
+  { module: 'qa', action: 'api-scenario-run', ipc: 'api-scenario:run', rest: 'POST /api/api-scenarios/run' },
   // Rastreio de Integração ponta a ponta
   { module: 'integration', action: 'readiness-check', ipc: 'integration:check-readiness', rest: 'POST /api/integration/readiness' },
   { module: 'integration', action: 'batch-trace', ipc: 'integration:trace-batch', rest: 'POST /api/integration/trace' },

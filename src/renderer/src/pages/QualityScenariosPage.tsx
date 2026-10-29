@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ListChecks } from 'lucide-react';
+import { ApiScenarioPanel } from '../components/quality/apiScenarios/ApiScenarioPanel';
 import { AuthLockoutPanel } from '../components/quality/lockout/AuthLockoutPanel';
 import { QualityPageShell } from '../components/quality/page/QualityPageShell';
 import { ValidationScenarioTabs } from '../components/quality/scenarios/ValidationScenarioTabs';
@@ -14,7 +15,8 @@ interface QualityScenariosPageProps {
 }
 
 const SCENARIO_PANELS: Record<ValidationScenarioId, React.FC> = {
-  'auth-lockout': AuthLockoutPanel
+  'auth-lockout': AuthLockoutPanel,
+  'api-check': ApiScenarioPanel
 };
 
 function readStoredScenario(): ValidationScenarioId {

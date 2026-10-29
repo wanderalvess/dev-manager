@@ -50,6 +50,8 @@ import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { registerIntegrationTools } from './tools/integrationTools';
 import { registerAuthLockoutTools } from './tools/authLockoutTools';
+import { registerApiScenarioTools } from './tools/apiScenarioTools';
+import { ApiScenarioService } from '../main/services/ApiScenarioService';
 import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
@@ -2480,6 +2482,9 @@ registerIntegrationTools(server, { integrationTraceService, ok, fail });
 
 // --- Teste de bloqueio de login do WinThor (homologação) ---
 registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestService(configService), ok, fail });
+
+// --- Validação de API: status e campos do JSON confrontados com o esperado ---
+registerApiScenarioTools(server, { apiScenarioService: new ApiScenarioService(configService), ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

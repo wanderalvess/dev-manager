@@ -1,10 +1,10 @@
-import { Lock, type LucideIcon } from 'lucide-react';
+import { Globe, Lock, type LucideIcon } from 'lucide-react';
 
 /**
  * Cenários da página Validação de Cenários (Qualidade). Cenário novo: um item aqui e o painel dele no mapa da
  * QualityScenariosPage. A ordem é a das abas.
  */
-export type ValidationScenarioId = 'auth-lockout';
+export type ValidationScenarioId = 'auth-lockout' | 'api-check';
 
 export interface ValidationScenario {
   id: ValidationScenarioId;
@@ -20,6 +20,12 @@ export const VALIDATION_SCENARIOS: readonly ValidationScenario[] = [
     label: 'Bloqueio de Login',
     icon: Lock,
     description: 'Regras de bloqueio do login do WinThor (limiar, duração, logoff, concorrência) e o registro nos logs.'
+  },
+  {
+    id: 'api-check',
+    label: 'Validação de API',
+    icon: Globe,
+    description: 'Chama uma API e confronta o status e os campos do JSON da resposta com o que se espera.'
   }
 ];
 

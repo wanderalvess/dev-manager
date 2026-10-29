@@ -32,6 +32,7 @@ import { TautAutomationService } from './services/TautAutomationService';
 import { HttpClientService } from './services/HttpClientService';
 import { IntegrationTraceService } from './services/IntegrationTraceService';
 import { AuthLockoutTestService } from './services/AuthLockoutTestService';
+import { ApiScenarioService } from './services/ApiScenarioService';
 import { HttpCollectionService } from './services/HttpCollectionService';
 import { RemoteControlService } from './services/RemoteControlService';
 import { createRemoteBackend } from './services/remoteControl/remoteBackend';
@@ -183,6 +184,7 @@ function createWindow() {
     { logWatcherService, apmTraces: apmService }
   );
   const authLockoutTestService = new AuthLockoutTestService(configService);
+  const apiScenarioService = new ApiScenarioService(configService);
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({
       configService,
@@ -234,7 +236,8 @@ function createWindow() {
     usageMetricsService,
     remoteControlService,
     integrationTraceService,
-    authLockoutTestService
+    authLockoutTestService,
+    apiScenarioService
   });
 
   backupSchedulerService.rescheduleAll();

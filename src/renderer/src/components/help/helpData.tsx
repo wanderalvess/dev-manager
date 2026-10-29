@@ -18,6 +18,7 @@ import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
 import { getIntegrationTraceFaq } from './faq/integrationTraceFaq';
 import { getAuthLockoutFaq } from './faq/authLockoutFaq';
+import { getApiScenarioFaq } from './faq/apiScenarioFaq';
 import { getRemoteControlFaq } from './faq/remoteControlFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 import { getUpdateFaq } from './faq/updateFaq';
@@ -1744,6 +1745,7 @@ export function getFaqList({
     ...getLogsFaq(onNavigate),
     ...getIntegrationTraceFaq(onNavigate),
     ...getAuthLockoutFaq(),
+    ...getApiScenarioFaq(),
     ...getDeployCancellationFaq(onNavigate),
     ...getInfrVersionFaq(),
     ...getUpdateFaq(handleOpenLink)

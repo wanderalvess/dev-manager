@@ -112,14 +112,15 @@ export function isBlockingExposure(finding: ExposureFinding): boolean {
 }
 
 /** Corta o corpo para o relatório, sem deixar passar senha nem token. */
-export function maskSecrets(text: string, secrets: readonly string[], max = 300): string {
+export function maskSecrets(text: string, secrets: readonly string[], max = 300, keepLayout = false): string {
   let masked = text;
   for (const secret of secrets) {
     if (secret.length >= 4) masked = masked.split(secret).join('***');
   }
   masked = masked.replace(new RegExp(JWT_PATTERN.source, 'g'), 'eyJ***');
   masked = masked.replace(/("(?:access_?token|accessToken|token|jwt|id_token|refresh_?token)"\s*:\s*")[^"]+"/gi, '$1***"');
-  const flat = masked.replace(/\s+/g, ' ').trim();
+  // `keepLayout` preserva as quebras de linha (corpo JSON formatado); o padrão achata para caber numa linha
+  const flat = keepLayout ? masked : masked.replace(/\s+/g, ' ').trim();
   return flat.length > max ? `${flat.slice(0, max)}…` : flat;
 }
 
