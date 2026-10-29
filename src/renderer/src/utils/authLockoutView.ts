@@ -4,6 +4,7 @@ import type {
   AuthLockoutCheckResult,
   AuthLockoutCheckStatus,
   AuthLockoutDefaults,
+  AuthLockoutPasswordEncoding,
   AuthLockoutRunRequest
 } from '../../../shared/authLockoutTypes';
 import type { ReadinessTone } from './integrationReadinessView';
@@ -21,6 +22,7 @@ export interface AuthLockoutForm {
   userAPassword: string;
   userBLogin: string;
   userBPassword: string;
+  passwordEncoding: AuthLockoutPasswordEncoding;
   threshold: string;
   windowSeconds: string;
   lockMinutes: string;
@@ -43,6 +45,7 @@ export function formFromDefaults(defaults: AuthLockoutDefaults): AuthLockoutForm
     userAPassword: '',
     userBLogin: '',
     userBPassword: '',
+    passwordEncoding: defaults.passwordEncoding,
     threshold: String(defaults.threshold),
     windowSeconds: String(defaults.windowSeconds),
     lockMinutes: defaults.lockMinutesCandidates.join(', '),
@@ -67,6 +70,8 @@ export function mergeStoredForm(base: AuthLockoutForm, raw: string | null): Auth
       const value = stored[key];
       if (key === 'checks') {
         if (Array.isArray(value)) merged.checks = value.filter((id): id is AuthLockoutCheckId => AUTH_LOCKOUT_CHECK_IDS.includes(id as AuthLockoutCheckId));
+      } else if (key === 'passwordEncoding') {
+        if (value === 'md5' || value === 'plain') merged.passwordEncoding = value;
       } else if (typeof value === 'string') {
         (merged as Record<string, unknown>)[key] = value;
       }
@@ -100,6 +105,7 @@ export function buildRunRequest(form: AuthLockoutForm): AuthLockoutRunRequest {
     logFilePath: form.logFilePath.trim(),
     userA: { login: form.userALogin.trim(), password: form.userAPassword },
     ...(hasB ? { userB: { login: form.userBLogin.trim(), password: form.userBPassword } } : {}),
+    passwordEncoding: form.passwordEncoding,
     threshold: toNumber(form.threshold),
     windowSeconds: toNumber(form.windowSeconds),
     lockMinutesCandidates: parseMinutesList(form.lockMinutes),

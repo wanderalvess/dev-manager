@@ -28,6 +28,9 @@ export type AuthLockoutAttemptKind = 'login-wrong' | 'login-correct' | 'logoff' 
 /** O que apareceu numa resposta e não deveria (status, corpo ou cabeçalhos). */
 export type ExposureFinding = 'stack-trace' | 'password' | 'token' | 'connection-string' | 'sql-error' | 'server-version';
 
+/** `md5` = MD5 em hexadecimal maiúsculo, como o login do WTA espera; `plain` = a senha como foi digitada. */
+export type AuthLockoutPasswordEncoding = 'md5' | 'plain';
+
 export interface AuthLockoutUser {
   login: string;
   password: string;
@@ -44,6 +47,8 @@ export interface AuthLockoutRunRequest {
   /** Padrão: `<pasta do Karaf>/data/log/winthor.log`. */
   logFilePath?: string;
   userA: AuthLockoutUser;
+  /** Como a senha vai no corpo do login (padrão `md5`). */
+  passwordEncoding?: AuthLockoutPasswordEncoding;
   /** Necessário para "Bloqueio por usuário" e "Concorrência". */
   userB?: AuthLockoutUser;
   /** Falhas que bloqueiam a conta (padrão 5). */
@@ -133,4 +138,5 @@ export interface AuthLockoutDefaults {
   lockMinutesCandidates: number[];
   concurrency: number;
   lockedPattern: string;
+  passwordEncoding: AuthLockoutPasswordEncoding;
 }
