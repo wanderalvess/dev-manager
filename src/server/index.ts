@@ -2307,7 +2307,7 @@ app.use(
   )
 );
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
-app.use('/api/api-scenarios', createApiScenarioRouter(new ApiScenarioService(configService), broadcastWs));
+app.use('/api/api-scenarios', createApiScenarioRouter(new ApiScenarioService(configService, databaseService), broadcastWs));
 app.use('/api/auth-lockout', createAuthLockoutRouter(new AuthLockoutTestService(configService), broadcastWs, usageMetricsService));
 
 // Servir Frontend SPA estático se compilado

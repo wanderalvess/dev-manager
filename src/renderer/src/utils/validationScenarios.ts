@@ -25,7 +25,7 @@ export const VALIDATION_SCENARIOS: readonly ValidationScenario[] = [
     id: 'api-check',
     label: 'Validação de API',
     icon: Globe,
-    description: 'Chama uma API e confronta o status e os campos do JSON da resposta com o que se espera.'
+    description: 'Chama uma API e confronta a resposta (status, tempo, cabeçalho, corpo, campos do JSON e valor no banco) com o que se espera.'
   }
 ];
 

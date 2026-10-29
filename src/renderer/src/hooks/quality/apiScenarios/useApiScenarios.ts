@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ApiScenario, ApiScenarioRunResult } from '../../../../../shared/apiScenarioTypes';
 import type { AuthLockoutLogEntry } from '../../../../../shared/authLockoutTypes';
+import type { DatabaseConnectionConfig } from '../../../../../shared/types';
 import { showToast } from '../../../components/ToastHost';
 import { requestConfirm } from '../../../components/ui/confirmService';
 import { appendActivity, progressToEntry } from '../../../utils/authLockoutView';
@@ -16,6 +17,7 @@ export function useApiScenarios() {
   const [activity, setActivity] = useState<AuthLockoutLogEntry[]>([]);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connections, setConnections] = useState<DatabaseConnectionConfig[]>([]);
   const runningRef = useRef(false);
 
   const reload = useCallback(async () => {
@@ -28,6 +30,10 @@ export function useApiScenarios() {
 
   useEffect(() => {
     void reload();
+    // Conexões do DB Studio para a regra "Campo × banco" (só id, nome e tipo são usados aqui)
+    Promise.resolve(window.electronAPI?.getSettings?.())
+      .then((settings) => setConnections(settings?.databaseConnections ?? []))
+      .catch(() => setConnections([]));
   }, [reload]);
 
   useEffect(() => {
@@ -124,5 +130,5 @@ export function useApiScenarios() {
     else showToast('Não foi possível copiar o relatório.', 'error');
   }, [current]);
 
-  return { scenarios, draft, setDraft, saved, dirty, problem, results, current, activity, running, error, select, save, remove, run, runAll, copyReport };
+  return { connections, scenarios, draft, setDraft, saved, dirty, problem, results, current, activity, running, error, select, save, remove, run, runAll, copyReport };
 }

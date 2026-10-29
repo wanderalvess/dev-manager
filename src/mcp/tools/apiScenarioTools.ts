@@ -10,12 +10,19 @@ interface ApiScenarioToolDeps {
 }
 
 const ruleSchema = z.object({
-  kind: z.enum(['status', 'json']).describe('status = status HTTP; json = um campo do corpo JSON'),
-  path: z.string().optional().describe('Caminho do campo no JSON (ex.: "$.itens[0].codigo"); só para kind=json'),
+  kind: z
+    .enum(['status', 'duration', 'header', 'body', 'json', 'db'])
+    .describe('status HTTP; duration = tempo de resposta em ms; header = cabeçalho; body = texto do corpo; json = campo do JSON; db = campo do JSON comparado com o valor de uma consulta no banco'),
+  path: z.string().optional().describe('json/db: caminho do campo (ex.: "$.itens[0].codigo"); header: nome do cabeçalho (ex.: "content-type")'),
   operator: z
-    .enum(['equals', 'not-equals', 'in', 'contains', 'exists', 'not-exists', 'not-empty', 'greater', 'less', 'length-equals'])
-    .describe('status: equals, in (lista "200, 201" ou faixa "2xx") ou not-equals; json: os demais'),
-  expected: z.string().optional().describe('Valor esperado como texto (não usado em exists, not-exists e not-empty)')
+    .enum(['equals', 'not-equals', 'in', 'contains', 'not-contains', 'matches', 'exists', 'not-exists', 'not-empty', 'greater', 'less', 'length-equals'])
+    .describe(
+      'status: equals, in (lista "200, 201" ou faixa "2xx"), not-equals; duration: less, greater; header: exists, not-exists, equals, contains; body: contains, not-contains, matches (regex, até 300 caracteres); json: equals, not-equals, contains, exists, not-exists, not-empty, greater, less, length-equals; db: equals, not-equals, greater, less'
+    ),
+  expected: z.string().optional().describe('Valor esperado como texto (não usado em exists, not-exists, not-empty nem em db)'),
+  connectionId: z.string().optional().describe('db: id da conexão do DB Studio (ver db_list_connections)'),
+  sql: z.string().optional().describe('db: consulta SELECT; o valor comparado é a primeira coluna da primeira linha'),
+  bindPath: z.string().optional().describe('db: campo da resposta que entra na consulta como :valor (ex.: "$.codigo")')
 });
 
 const scenarioShape = {
@@ -28,7 +35,7 @@ const scenarioShape = {
   rules: z.array(ruleSchema).min(1).describe('O que a resposta precisa ter')
 };
 
-/** Validação de Cenários → Validação de API: chama uma API e confronta status e campos do JSON com o esperado. */
+/** Validação de Cenários → Validação de API: chama uma API e confronta a resposta (status, tempo, cabeçalho, corpo, JSON e banco). */
 export function registerApiScenarioTools(server: McpServer, { apiScenarioService, ok, fail }: ApiScenarioToolDeps): void {
   const reply = ok as (data: unknown) => never;
   const error = fail as (message: string) => never;
@@ -39,7 +46,7 @@ export function registerApiScenarioTools(server: McpServer, { apiScenarioService
     {
       title: 'Listar os cenários da Validação de API',
       description:
-        'Lista os cenários salvos em Validação de Cenários → Validação de API: nome, método, URL (com {{wtaUrl}}), autenticação e as regras de status e de campos do JSON que a resposta precisa cumprir.'
+        'Lista os cenários salvos em Validação de Cenários → Validação de API: nome, método, URL (com {{wtaUrl}}), autenticação e as regras que a resposta precisa cumprir (status, tempo, cabeçalho, texto do corpo, campos do JSON e campo × banco).'
     },
     async () => reply(await apiScenarioService.list())
   );
@@ -49,7 +56,7 @@ export function registerApiScenarioTools(server: McpServer, { apiScenarioService
     {
       title: 'Rodar um cenário da Validação de API',
       description:
-        'Chama a API de um cenário salvo (scenarioId) ou de uma definição avulsa (scenario, sem salvar) e confronta a resposta com cada regra: status HTTP (igual, diferente, lista "200, 201" ou faixa "2xx") e campos do JSON por caminho (igual, diferente, contém, existe, não existe, não vazio, maior, menor, quantidade de itens). Devolve cada regra com esperado, obtido e se passou, a resposta (corpo com tokens mascarados), o passo a passo e o relatório em Markdown para o Jira. Com auth=settings-wta, entra antes no WTA com o login de Configurações (senha em MD5).',
+        'Chama a API de um cenário salvo (scenarioId) ou de uma definição avulsa (scenario, sem salvar) e confronta a resposta com cada regra: status HTTP (igual, diferente, lista "200, 201" ou faixa "2xx"), tempo de resposta (ms), cabeçalho (existe, igual, contém), texto do corpo (contém, não contém, regex), campos do JSON por caminho (igual, diferente, contém, existe, não existe, não vazio, maior, menor, quantidade de itens) e campo do JSON comparado com o valor de uma consulta SELECT numa conexão do DB Studio (kind=db, com :valor vindo de outro campo da resposta). Devolve cada regra com esperado, obtido e se passou, a resposta (corpo com tokens mascarados), o passo a passo e o relatório em Markdown para o Jira. Com auth=settings-wta, entra antes no WTA com o login de Configurações (senha em MD5).',
       inputSchema: {
         scenarioId: z.string().optional().describe('Id de um cenário salvo (ver qa_list_api_scenarios)'),
         scenario: z.object(scenarioShape).optional().describe('Definição avulsa, quando não houver cenário salvo')

@@ -7,6 +7,11 @@ export interface EvaluatedResponse {
   status: number;
   isJson: boolean;
   json?: unknown;
+  durationMs?: number;
+  /** Nomes em minúsculas. */
+  headers?: Record<string, string>;
+  /** Corpo como veio, sem máscara (a máscara é aplicada ao mostrar). */
+  bodyText?: string;
 }
 
 const MAX_SHOWN = 160;
@@ -84,13 +89,91 @@ function evaluateJson(rule: ApiRule, json: unknown): { passed: boolean; actual: 
   }
 }
 
-/** Confronta a resposta com uma regra. Sem resposta ou resposta que não é JSON reprovam as regras de JSON. */
+function evaluateDuration(rule: ApiRule, durationMs: number): { passed: boolean; actual: string } {
+  const limit = toNumber(rule.expected);
+  return { passed: rule.operator === 'greater' ? durationMs > limit : durationMs < limit, actual: `${durationMs} ms` };
+}
+
+function evaluateHeader(rule: ApiRule, headers: Record<string, string>): { passed: boolean; actual: string } {
+  const value = headers[rule.path?.trim().toLowerCase() ?? ''];
+  const actual = value === undefined ? '(cabeçalho ausente)' : `"${value}"`;
+  const expected = rule.expected?.trim() ?? '';
+  switch (rule.operator) {
+    case 'exists':
+      return { passed: value !== undefined, actual };
+    case 'not-exists':
+      return { passed: value === undefined, actual };
+    case 'equals':
+      return { passed: value !== undefined && value.trim().toLowerCase() === expected.toLowerCase(), actual };
+    case 'contains':
+      return { passed: value !== undefined && value.toLowerCase().includes(expected.toLowerCase()), actual };
+    default:
+      return { passed: false, actual };
+  }
+}
+
+const MAX_SEARCHED_BODY = 2 * 1024 * 1024;
+// A expressão é de quem monta o cenário (tela ou MCP): limitar tamanho e texto evita travar o processo num backtracking
+const MAX_REGEX_LENGTH = 300;
+const MAX_REGEX_BODY = 256 * 1024;
+
+function evaluateBody(rule: ApiRule, body: string): { passed: boolean; actual: string } {
+  const text = body.slice(0, MAX_SEARCHED_BODY);
+  const expected = rule.expected ?? '';
+  if (rule.operator === 'matches') {
+    if (expected.length > MAX_REGEX_LENGTH) return { passed: false, actual: `expressão maior que ${MAX_REGEX_LENGTH} caracteres` };
+    let found: RegExpExecArray | null = null;
+    try {
+      found = new RegExp(expected).exec(text.slice(0, MAX_REGEX_BODY));
+    } catch {
+      return { passed: false, actual: 'expressão regular inválida' };
+    }
+    return { passed: !!found, actual: found ? `encontrou "${showText(found[0])}"` : 'nada casou com a expressão' };
+  }
+  const has = text.includes(expected);
+  return { passed: rule.operator === 'not-contains' ? !has : has, actual: has ? 'o texto aparece no corpo' : 'o texto não aparece no corpo' };
+}
+
+const showText = (text: string) => (text.length > 80 ? `${text.slice(0, 80)}…` : text);
+
+/** Confronta a resposta com uma regra. Sem resposta reprova tudo; resposta que não é JSON reprova as regras de JSON. */
 export function evaluateRule(rule: ApiRule, response: EvaluatedResponse): ApiRuleResult {
   const label = describeRule(rule);
-  const expected = rule.expected?.trim() || '—';
+  const expected = rule.kind === 'duration' ? `${rule.expected?.trim()} ms` : rule.expected?.trim() || '—';
   const base = { ruleId: rule.id, label, expected };
   if (response.status === 0) return { ...base, passed: false, actual: 'sem resposta' };
   if (rule.kind === 'status') return { ...base, ...evaluateStatus(rule, response.status) };
+  if (rule.kind === 'duration') return { ...base, ...evaluateDuration(rule, response.durationMs ?? 0) };
+  if (rule.kind === 'header') return { ...base, ...evaluateHeader(rule, response.headers ?? {}) };
+  if (rule.kind === 'body') return { ...base, ...evaluateBody(rule, response.bodyText ?? '') };
   if (!response.isJson) return { ...base, passed: false, actual: 'a resposta não é JSON' };
   return { ...base, ...evaluateJson(rule, response.json) };
+}
+
+/** Valor que a consulta devolveu: primeira coluna da primeira linha, ou o motivo de não ter valor. */
+export type DbLookup = { value: unknown } | { problem: string };
+
+/**
+ * Campo × banco: compara o campo da resposta com o valor do banco, com a mesma tolerância das regras de JSON
+ * (número como texto, vírgula decimal, S/N). O "esperado" mostrado é o valor do banco.
+ */
+export function evaluateDbRule(rule: ApiRule, response: EvaluatedResponse, lookup: DbLookup): ApiRuleResult {
+  const label = describeRule(rule);
+  if (response.status === 0) return { ruleId: rule.id, label, expected: '—', passed: false, actual: 'sem resposta' };
+  if ('problem' in lookup) return { ruleId: rule.id, label, expected: lookup.problem, passed: false, actual: '—' };
+  const expected = showValue(lookup.value);
+  if (!response.isJson) return { ruleId: rule.id, label, expected, passed: false, actual: 'a resposta não é JSON' };
+  const value = extractJsonPath(response.json, rule.path?.trim() ?? '');
+  const actual = showValue(value);
+  let passed = false;
+  if (value !== undefined) {
+    if (rule.operator === 'equals') passed = areValuesEquivalent(value, lookup.value);
+    else if (rule.operator === 'not-equals') passed = !areValuesEquivalent(value, lookup.value);
+    else {
+      const a = toNumber(value);
+      const b = toNumber(lookup.value);
+      passed = !Number.isNaN(a) && !Number.isNaN(b) && (rule.operator === 'greater' ? a > b : a < b);
+    }
+  }
+  return { ruleId: rule.id, label, expected, passed, actual };
 }

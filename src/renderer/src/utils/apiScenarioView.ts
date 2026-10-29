@@ -8,10 +8,23 @@ export function localId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${seq}`;
 }
 
+/** Regra nova já com um exemplo que costuma servir, para a pessoa só ajustar. */
 export function newRule(kind: ApiRuleKind = 'json'): ApiRule {
-  return kind === 'status'
-    ? { id: localId('r'), kind, operator: 'equals', expected: '200' }
-    : { id: localId('r'), kind, path: '$.', operator: 'exists' };
+  const id = localId('r');
+  switch (kind) {
+    case 'status':
+      return { id, kind, operator: 'equals', expected: '200' };
+    case 'duration':
+      return { id, kind, operator: 'less', expected: '2000' };
+    case 'header':
+      return { id, kind, path: 'content-type', operator: 'contains', expected: 'json' };
+    case 'body':
+      return { id, kind, operator: 'contains', expected: '' };
+    case 'db':
+      return { id, kind, path: '$.', operator: 'equals', connectionId: '', sql: '', bindPath: '' };
+    default:
+      return { id, kind, path: '$.', operator: 'exists' };
+  }
 }
 
 /** Cenário novo já com o que quase todo teste confere: status 200. */
@@ -28,14 +41,17 @@ export function newScenario(): ApiScenario {
 }
 
 /** Troca o tipo ou o operador mantendo a regra válida (o operador antigo pode não existir no tipo novo). */
-export function changeRule(rule: ApiRule, patch: Partial<Pick<ApiRule, 'kind' | 'operator' | 'path' | 'expected'>>): ApiRule {
+export function changeRule(
+  rule: ApiRule,
+  patch: Partial<Pick<ApiRule, 'kind' | 'operator' | 'path' | 'expected' | 'connectionId' | 'sql' | 'bindPath'>>
+): ApiRule {
   const next: ApiRule = { ...rule, ...patch };
   if (patch.kind && patch.kind !== rule.kind) {
     const fresh = newRule(patch.kind);
     return { ...fresh, id: rule.id };
   }
   if (!API_RULE_OPERATORS[next.kind].includes(next.operator)) next.operator = API_RULE_OPERATORS[next.kind][0] as ApiRuleOperator;
-  if (!ruleNeedsValue(next.operator)) delete next.expected;
+  if (!ruleNeedsValue(next.operator, next.kind)) delete next.expected;
   return next;
 }
 

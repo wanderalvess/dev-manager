@@ -251,11 +251,11 @@ As mesmas 12 checagens da aba **Validação de Cenários → Bloqueio de Login**
 > "Rode só a duração do bloqueio e a janela de contagem com o usuário TESTE_A e me diga se o bloqueio é de 4 ou de 5 minutos."
 
 
-### 13.2. Validação de API (status e campos do JSON)
+### 13.2. Validação de API (status, tempo, cabeçalho, corpo, JSON e banco)
 Os cenários da aba **Validação de Cenários → Validação de API**: uma requisição e o que a resposta precisa ter. Ficam em `api-scenarios.json`, ao lado do `config.json`, sem nenhum segredo.
 
 *   **`qa_list_api_scenarios`**: Lista os cenários salvos (nome, método, URL com `{{wtaUrl}}`, autenticação e regras).
-*   **`qa_run_api_scenario`**: Roda um cenário salvo (`scenarioId`) ou uma definição avulsa (`scenario`, sem salvar) e confronta a resposta com cada regra: status HTTP (`equals`, `not-equals`, `in` com lista `200, 201` ou faixa `2xx`) e campos do JSON por caminho (`equals`, `not-equals`, `contains`, `exists`, `not-exists`, `not-empty`, `greater`, `less`, `length-equals`). Devolve esperado, obtido e se passou em cada regra, a resposta com tokens mascarados, o passo a passo e o relatório em Markdown. Com `auth: "settings-wta"`, entra antes no WTA com o login de Configurações (senha em MD5).
+*   **`qa_run_api_scenario`**: Roda um cenário salvo (`scenarioId`) ou uma definição avulsa (`scenario`, sem salvar) e confronta a resposta com cada regra (`kind`): `status` (`equals`, `not-equals`, `in` com lista `200, 201` ou faixa `2xx`), `duration` em ms (`less`, `greater`), `header` (`exists`, `not-exists`, `equals`, `contains`), `body` (`contains`, `not-contains`, `matches` com regex de até 300 caracteres), `json` por caminho (`equals`, `not-equals`, `contains`, `exists`, `not-exists`, `not-empty`, `greater`, `less`, `length-equals`) e `db`, que compara um campo da resposta com a primeira coluna de uma consulta SELECT numa conexão do DB Studio (`connectionId`, `sql` e, opcionalmente, `bindPath`, o campo da resposta que entra como `:valor`). Devolve esperado, obtido e se passou em cada regra, a resposta com tokens mascarados, o passo a passo e o relatório em Markdown. Com `auth: "settings-wta"`, entra antes no WTA com o login de Configurações (senha em MD5).
 *   **`qa_save_api_scenario`**: Cria ou atualiza (com `id`) um cenário, que aparece na tela.
 *   **`qa_delete_api_scenario`** (destrutiva, pede confirmação): Apaga um cenário pelo id.
 
@@ -263,6 +263,8 @@ Os cenários da aba **Validação de Cenários → Validação de API**: uma req
 > "Chame {{wtaUrl}}/winthor/ferramenta/servidor/v1/logs com o login do WTA e confira se o status é 200 e se $.itens não está vazio."
 > "Salve um cenário de Validação de API para a rota de filiais que confira status 2xx e $.total maior que 0."
 > "Rode todos os cenários de Validação de API e me diga quais regras falharam, com o esperado e o obtido."
+> "Chame a API de filiais e confira se $.nome bate com SELECT FANTASIA FROM PCFILIAL WHERE CODIGO = :valor na conexão Oracle de homologação, usando $.codigo como :valor."
+> "Confira se a API de logs responde em menos de 2 segundos, com content-type JSON e sem a palavra Exception no corpo."
 
 ---
 

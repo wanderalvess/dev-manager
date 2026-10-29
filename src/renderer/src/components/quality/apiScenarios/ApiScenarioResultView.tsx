@@ -60,6 +60,19 @@ export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ re
           </tbody>
         </table>
       )}
+      {r && Object.keys(r.headers ?? {}).length > 0 && (
+        <details className="border-t border-border">
+          <summary className="px-3 py-2 text-xs font-medium text-foreground cursor-pointer">Cabeçalhos da resposta ({Object.keys(r.headers).length})</summary>
+          <dl className="px-3 pb-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-2xs font-mono">
+            {Object.entries(r.headers).map(([name, value]) => (
+              <React.Fragment key={name}>
+                <dt className="text-muted-foreground">{name}</dt>
+                <dd className="text-foreground break-all">{value}</dd>
+              </React.Fragment>
+            ))}
+          </dl>
+        </details>
+      )}
       {r?.body && (
         <details className="border-t border-border">
           <summary className="px-3 py-2 text-xs font-medium text-foreground cursor-pointer">Corpo da resposta (tokens mascarados)</summary>

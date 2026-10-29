@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ApiScenario, ApiScenarioRunResult } from '../../shared/apiScenarioTypes';
 import { ApiScenarioService } from './ApiScenarioService';
 import type { ConfigService } from './ConfigService';
+import type { DatabaseService } from './DatabaseService';
 
 const TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiQURNSU4ifQ.assinaturaFalsa123';
 const md5 = (text: string) => createHash('md5').update(text, 'utf8').digest('hex').toUpperCase();
@@ -40,17 +41,28 @@ function startFakeApi(): Promise<{ server: http.Server; url: string }> {
 let dir: string;
 let server: http.Server;
 let service: ApiScenarioService;
-let settings: Record<string, string>;
+let settings: Record<string, unknown>;
+const queries: { sql: string; binds: unknown }[] = [];
+/** Banco falso: PCFILIAL com as mesmas filiais da API, para o "Campo × banco". */
+const fakeDb = {
+  executeQuery: async (_conn: unknown, sql: string, _max: number, binds: Record<string, unknown>) => {
+    queries.push({ sql, binds });
+    if (/COUNT/i.test(sql)) return { success: true, rows: [{ TOTAL: 2 }] };
+    const nomes: Record<string, string> = { '1': 'Matriz', '2': 'Loja' };
+    return { success: true, rows: nomes[String(binds.valor)] ? [{ FANTASIA: nomes[String(binds.valor)] }] : [] };
+  }
+} as unknown as DatabaseService;
 
 beforeEach(async () => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'api-scenarios-'));
   const fake = await startFakeApi();
   server = fake.server;
-  settings = { wtaUrl: fake.url, wtaLogin: 'ADMIN', wtaPassword: '1' };
-  service = new ApiScenarioService({
-    getConfigFilePath: () => path.join(dir, 'config.json'),
-    getSettings: () => settings
-  } as unknown as ConfigService);
+  settings = { wtaUrl: fake.url, wtaLogin: 'ADMIN', wtaPassword: '1', databaseConnections: [{ id: 'oracle-hml', name: 'Oracle HML', type: 'oracle' }] };
+  queries.length = 0;
+  service = new ApiScenarioService(
+    { getConfigFilePath: () => path.join(dir, 'config.json'), getSettings: () => settings } as unknown as ConfigService,
+    fakeDb
+  );
 });
 
 afterEach(() => {
@@ -173,5 +185,58 @@ describe('ApiScenarioService', () => {
       ['Filiais do WTA', true],
       ['Sem token', false]
     ]);
+  });
+
+  it('tempo, cabeçalho e texto do corpo', async () => {
+    const result = asResult(
+      await service.run({
+        scenario: filiais({
+          rules: [
+            { id: 'a', kind: 'duration', operator: 'less', expected: '5000' },
+            { id: 'b', kind: 'header', path: 'Content-Type', operator: 'contains', expected: 'json' },
+            { id: 'c', kind: 'body', operator: 'not-contains', expected: 'Exception' },
+            { id: 'd', kind: 'body', operator: 'matches', expected: '"total":\\s*2' }
+          ]
+        })
+      })
+    );
+    expect(result.rules.map((r) => [r.label, r.passed])).toEqual([
+      ['Tempo de resposta menor que 5000 ms', true],
+      ['Cabeçalho content-type contém json', true],
+      ['Corpo não contém "Exception"', true],
+      ['Corpo casa com a expressão "total":\\s*2', true]
+    ]);
+    expect(result.response?.headers['content-type']).toContain('json');
+  });
+
+  it('campo × banco: compara com a consulta, passando outro campo da resposta como :valor', async () => {
+    const saved = await service.save(
+      filiais({
+        rules: [
+          { id: 'a', kind: 'db', path: '$.filiais[1].nome', operator: 'equals', connectionId: 'oracle-hml', sql: 'SELECT FANTASIA FROM PCFILIAL WHERE CODIGO = :valor', bindPath: '$.filiais[1].codigo' },
+          { id: 'b', kind: 'db', path: '$.total', operator: 'equals', connectionId: 'oracle-hml', sql: 'SELECT COUNT(*) TOTAL FROM PCFILIAL' }
+        ]
+      })
+    );
+    if (!saved.success) throw new Error(saved.error);
+    expect(saved.scenario.rules[0]).toMatchObject({ connectionId: 'oracle-hml', bindPath: '$.filiais[1].codigo' });
+    const result = asResult(await service.run({ id: saved.scenario.id }));
+    expect(result.rules.map((r) => [r.passed, r.expected, r.actual])).toEqual([
+      [true, '"Loja"', '"Loja"'],
+      [true, '2', '2']
+    ]);
+    expect(queries[0].binds).toEqual({ valor: '2' });
+    expect(result.log.some((l) => l.message.includes(':valor = "2"'))).toBe(true);
+  });
+
+  it('campo × banco: recusa salvar consulta que escreve e acusa conexão apagada', async () => {
+    const write = await service.save(
+      filiais({ rules: [{ id: 'a', kind: 'db', path: '$.total', operator: 'equals', connectionId: 'oracle-hml', sql: 'UPDATE PCFILIAL SET X = 1' }] })
+    );
+    expect(write).toEqual({ success: false, error: expect.stringContaining('somente leitura') });
+    const gone = asResult(
+      await service.run({ scenario: filiais({ rules: [{ id: 'a', kind: 'db', path: '$.total', operator: 'equals', connectionId: 'apagada', sql: 'SELECT 1 FROM DUAL' }] }) })
+    );
+    expect(gone.rules[0]).toMatchObject({ passed: false, expected: expect.stringContaining('conexão') });
   });
 });

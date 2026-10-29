@@ -2484,7 +2484,7 @@ registerIntegrationTools(server, { integrationTraceService, ok, fail });
 registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestService(configService), ok, fail });
 
 // --- Validação de API: status e campos do JSON confrontados com o esperado ---
-registerApiScenarioTools(server, { apiScenarioService: new ApiScenarioService(configService), ok, fail });
+registerApiScenarioTools(server, { apiScenarioService: new ApiScenarioService(configService, databaseService), ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

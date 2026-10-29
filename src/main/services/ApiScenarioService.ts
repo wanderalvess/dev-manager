@@ -6,6 +6,8 @@ import type {
   ApiScenarioSaveResponse
 } from '../../shared/apiScenarioTypes';
 import type { ConfigService } from './ConfigService';
+import type { DatabaseService } from './DatabaseService';
+import type { RunDbQuery } from './apiScenarios/apiDbLookup';
 import { ApiScenarioStore, isSafeScenarioId, normalizeScenario } from './apiScenarios/apiScenarioStore';
 import { runApiScenario } from './apiScenarios/apiScenarioRunner';
 
@@ -18,7 +20,22 @@ export interface ApiScenarioRunInput {
 
 /** Validação de Cenários → Validação de API: cenários salvos em arquivo e execução com o confronto regra a regra. */
 export class ApiScenarioService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly databaseService?: DatabaseService
+  ) {}
+
+  /** Campo × banco: consulta pela conexão do DB Studio, com no máximo uma linha (só a primeira coluna importa). */
+  private runQuery(): RunDbQuery | undefined {
+    const db = this.databaseService;
+    if (!db) return undefined;
+    return async (connectionId, sql, binds) => {
+      const connection = this.configService.getSettings().databaseConnections?.find((c) => c.id === connectionId);
+      if (!connection) return null;
+      const result = await db.executeQuery(connection, sql, 1, binds);
+      return { success: result.success, rows: result.rows, error: result.error };
+    };
+  }
 
   private store(): ApiScenarioStore {
     return ApiScenarioStore.forConfigFile(this.configService.getConfigFilePath());
@@ -55,7 +72,7 @@ export class ApiScenarioService {
       scenario = normalized.scenario;
     }
     const target = scenario;
-    return runApiScenario(target, this.configService.getSettings(), (entry) => onProgress({ ...entry, scenarioId: target.id }));
+    return runApiScenario(target, this.configService.getSettings(), (entry) => onProgress({ ...entry, scenarioId: target.id }), this.runQuery());
   }
 
   /** Roda os cenários salvos um depois do outro, na ordem da lista. */
@@ -63,7 +80,7 @@ export class ApiScenarioService {
     const settings = this.configService.getSettings();
     const results: ApiScenarioRunResult[] = [];
     for (const scenario of await this.list()) {
-      results.push(await runApiScenario(scenario, settings, (entry) => onProgress({ ...entry, scenarioId: scenario.id })));
+      results.push(await runApiScenario(scenario, settings, (entry) => onProgress({ ...entry, scenarioId: scenario.id }), this.runQuery()));
     }
     return results;
   }

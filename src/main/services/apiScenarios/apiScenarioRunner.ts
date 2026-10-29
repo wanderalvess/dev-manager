@@ -7,7 +7,8 @@ import type { AppSettings } from '../../../shared/types';
 import { httpRequest } from '../../utils/httpRequest';
 import { isSafeUrl } from '../../utils/security';
 import { encodeWtaPassword } from '../authLockout/wtaPassword';
-import { evaluateRule } from './apiRules';
+import { evaluateDbRule, evaluateRule } from './apiRules';
+import { lookupDbValue, type RunDbQuery } from './apiDbLookup';
 
 export type RunnerSettings = Partial<Pick<AppSettings, 'wtaUrl' | 'wtaLogin' | 'wtaPassword' | 'wtaAuthToken'>>;
 
@@ -28,7 +29,8 @@ export function resolveScenarioUrl(url: string, settings: RunnerSettings): strin
 export async function runApiScenario(
   scenario: ApiScenario,
   settings: RunnerSettings,
-  onLog: (entry: AuthLockoutLogEntry) => void = () => {}
+  onLog: (entry: AuthLockoutLogEntry) => void = () => {},
+  runQuery?: RunDbQuery
 ): Promise<ApiScenarioRunResult> {
   const startedAt = new Date().toISOString();
   const log: AuthLockoutLogEntry[] = [];
@@ -85,17 +87,22 @@ export async function runApiScenario(
   );
 
   const json = response.isJson ? safeParse(response.rawBody) : undefined;
-  const rules: ApiRuleResult[] = scenario.rules.map((rule) => {
-    const evaluated = evaluateRule(rule, { status: response.status, isJson: response.isJson, json });
-    // O valor obtido vai para a tela, o passo a passo e o relatório do Jira: token e senha saem mascarados como no corpo
-    const result = { ...evaluated, actual: maskSecrets(evaluated.actual, secrets) };
+  const evaluated = { status: response.status, isJson: response.isJson, json, durationMs: response.durationMs, headers: response.rawHeaders, bodyText: response.rawBody };
+  const rules: ApiRuleResult[] = [];
+  for (const rule of scenario.rules) {
+    const outcome =
+      rule.kind === 'db' && response.status > 0
+        ? evaluateDbRule(rule, evaluated, await lookupDbValue(rule, json, runQuery, (m) => note(m)))
+        : evaluateRule(rule, evaluated);
+    // Os valores vão para a tela, o passo a passo e o relatório do Jira: token e senha saem mascarados como no corpo
+    const result = { ...outcome, expected: maskSecrets(outcome.expected, secrets), actual: maskSecrets(outcome.actual, secrets) };
     note(
       `${result.passed ? '✔' : '✘'} ${result.label} — ${result.passed ? `obtido ${result.actual}` : `esperado ${result.expected}, obtido ${result.actual}`}`,
       'attempt',
       { asExpected: result.passed }
     );
-    return result;
-  });
+    rules.push(result);
+  }
   const passed = rules.filter((r) => r.passed).length;
   const success = response.status > 0 && passed === rules.length;
   note(`${success ? '✅' : '❌'} ${scenario.name} — ${success ? 'OK' : 'Falhou'}: ${passed} de ${rules.length} regra(s) conferem.`, 'result', {
@@ -104,6 +111,7 @@ export async function runApiScenario(
   const snapshot: ApiResponseSnapshot = {
     status: response.status,
     durationMs: response.durationMs,
+    headers: response.headers,
     body: response.body,
     isJson: response.isJson,
     ...(response.error ? { error: response.error } : {})
@@ -146,12 +154,11 @@ async function wtaToken(settings: RunnerSettings, note: (m: string, l?: AuthLock
   return undefined;
 }
 
-async function callApi(
-  scenario: ApiScenario,
-  url: string,
-  headers: Record<string, string>,
-  secrets: string[]
-): Promise<ApiResponseSnapshot & { rawBody: string }> {
+type CalledResponse = ApiResponseSnapshot & { rawBody: string; rawHeaders: Record<string, string> };
+
+const SENSITIVE_HEADERS = /^(set-cookie|authorization|proxy-authorization|cookie)$/i;
+
+async function callApi(scenario: ApiScenario, url: string, headers: Record<string, string>, secrets: string[]): Promise<CalledResponse> {
   const started = Date.now();
   try {
     const res = await httpRequest(url, {
@@ -161,18 +168,28 @@ async function callApi(
       timeout: REQUEST_TIMEOUT_MS
     });
     const rawBody = await res.text();
+    const durationMs = Date.now() - started;
+    const rawHeaders = Object.fromEntries(
+      Object.entries(res.headers ?? {}).map(([name, value]) => [name.toLowerCase(), Array.isArray(value) ? value.join('; ') : String(value ?? '')])
+    );
+    // Cookie e token não aparecem na tela nem no relatório; as regras de cabeçalho leem os valores sem máscara
+    const shownHeaders = Object.fromEntries(
+      Object.entries(rawHeaders).map(([name, value]) => [name, SENSITIVE_HEADERS.test(name) ? '***' : maskSecrets(value, secrets, 300)])
+    );
     const parsed = safeParse(rawBody);
     const isJson = parsed !== undefined;
     const shown = isJson ? JSON.stringify(parsed, null, 2) : rawBody;
     return {
       status: res.status,
-      durationMs: Date.now() - started,
+      durationMs,
+      headers: shownHeaders,
       body: maskSecrets(shown.length > MAX_BODY_SHOWN ? `${shown.slice(0, MAX_BODY_SHOWN)}\n…` : shown, secrets, MAX_BODY_SHOWN + 2, true),
       isJson,
-      rawBody
+      rawBody,
+      rawHeaders
     };
   } catch (err: any) {
-    return { status: 0, durationMs: Date.now() - started, body: '', isJson: false, error: err?.message ?? 'sem resposta', rawBody: '' };
+    return { status: 0, durationMs: Date.now() - started, headers: {}, body: '', isJson: false, error: err?.message ?? 'sem resposta', rawBody: '', rawHeaders: {} };
   }
 }
 

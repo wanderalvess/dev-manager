@@ -9,9 +9,9 @@ export function getApiScenarioFaq(): FaqItem[] {
   return [
     {
       id: 'api-scenario-check',
-      question: 'Como confiro se uma API responde o que deveria (status e campos do JSON)?',
+      question: 'Como confiro se uma API responde o que deveria (status, tempo, campos do JSON, valor no banco)?',
       category: 'Qualidade & Homologação',
-      tags: ['api', 'validação', 'status', 'json', 'jsonpath', 'campo', 'resposta', 'esperado', 'obtido', 'wta', 'cenário', 'assert', 'asserção'],
+      tags: ['api', 'validação', 'status', 'json', 'jsonpath', 'campo', 'resposta', 'esperado', 'obtido', 'wta', 'cenário', 'assert', 'asserção', 'tempo', 'cabeçalho', 'header', 'regex', 'banco', 'sql', 'oracle'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
@@ -34,6 +34,17 @@ export function getApiScenarioFaq(): FaqItem[] {
               {strong('Campo do JSON:')} pelo caminho ({code('$.total')}, {code('$.itens[0].codigo')}): igual, diferente, contém, existe,
               não existe, não está vazio, maior, menor e quantidade de itens. Números aceitam vírgula ou ponto e S/N vale como
               verdadeiro/falso, como no Validador Regressivo.
+            </li>
+            <li>
+              {strong('Tempo de resposta:')} menor (ou maior) que N milissegundos. {strong('Cabeçalho:')} existe, não existe, igual ou
+              contém, sem diferenciar maiúsculas no nome (ex.: {code('content-type')} contém {code('json')}). {strong('Texto do corpo:')}{' '}
+              contém, não contém ou casa com uma expressão regular (até 300 caracteres).
+            </li>
+            <li>
+              {strong('Campo × banco:')} compara um campo da resposta com o valor de uma consulta numa conexão do DB Studio (a primeira
+              coluna da primeira linha vira o esperado). Só SELECT. Para buscar o registro certo, outro campo da resposta entra na consulta
+              como {code(':valor')}: {code('$.nome')} igual ao banco com {code('SELECT FANTASIA FROM PCFILIAL WHERE CODIGO = :valor')} e{' '}
+              {code(':valor')} vindo de {code('$.codigo')}.
             </li>
             <li>
               {strong('Rodar sem salvar')} testa o rascunho antes de salvar; {strong('Rodar todos')} roda os cenários salvos em sequência.

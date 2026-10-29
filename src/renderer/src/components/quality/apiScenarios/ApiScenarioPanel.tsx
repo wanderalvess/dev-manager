@@ -23,6 +23,7 @@ export const ApiScenarioPanel: React.FC = () => {
       <div className="lg:col-span-2 space-y-3 min-w-0">
         <ApiScenarioEditor
           draft={api.draft}
+          connections={api.connections}
           onChange={api.setDraft}
           isSaved={!!api.saved}
           dirty={api.dirty}

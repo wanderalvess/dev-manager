@@ -1,11 +1,13 @@
 import React from 'react';
 import { AlertTriangle, Loader2, Play, Plus, Save, Trash2 } from 'lucide-react';
 import { API_HTTP_METHODS, type ApiHttpMethod, type ApiScenario } from '../../../../../shared/apiScenarioTypes';
+import type { DatabaseConnectionConfig } from '../../../../../shared/types';
 import { FIELD_CLASS, SectionTitle, TextField } from '../lockout/lockoutFormFields';
 import { ApiRulesEditor } from './ApiRulesEditor';
 
 interface ApiScenarioEditorProps {
   draft: ApiScenario;
+  connections: DatabaseConnectionConfig[];
   onChange: (draft: ApiScenario) => void;
   isSaved: boolean;
   dirty: boolean;
@@ -20,7 +22,7 @@ interface ApiScenarioEditorProps {
 const BUTTON = 'h-10 px-4 font-medium text-sm rounded-[10px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
 /** Requisição (método, URL, autenticação, cabeçalhos, corpo) e as regras que a resposta precisa cumprir. */
-export const ApiScenarioEditor: React.FC<ApiScenarioEditorProps> = ({ draft, onChange, isSaved, dirty, problem, error, running, onSave, onRun, onDelete }) => {
+export const ApiScenarioEditor: React.FC<ApiScenarioEditorProps> = ({ draft, connections, onChange, isSaved, dirty, problem, error, running, onSave, onRun, onDelete }) => {
   const set = <K extends keyof ApiScenario>(key: K, value: ApiScenario[K]) => onChange({ ...draft, [key]: value });
   const setHeader = (index: number, patch: Partial<ApiScenario['headers'][number]>) =>
     set('headers', draft.headers.map((h, i) => (i === index ? { ...h, ...patch } : h)));
@@ -97,7 +99,7 @@ export const ApiScenarioEditor: React.FC<ApiScenarioEditorProps> = ({ draft, onC
         </div>
       )}
 
-      <ApiRulesEditor rules={draft.rules} onChange={(rules) => set('rules', rules)} />
+      <ApiRulesEditor rules={draft.rules} connections={connections} onChange={(rules) => set('rules', rules)} />
 
       {(problem || error) && (
         <p role="alert" className={`text-xs flex items-start gap-1.5 ${error ? 'text-danger' : 'text-warning'}`}>

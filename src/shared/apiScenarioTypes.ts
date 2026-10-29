@@ -2,19 +2,22 @@ import type { AuthLockoutLogEntry } from './authLockoutTypes';
 
 /**
  * Validação de Cenários → Validação de API: uma requisição e o que a resposta precisa ter. O teste chama a API
- * e confronta o resultado com cada regra. Primeira versão: regras de status HTTP e de campos do JSON.
+ * e confronta o resultado com cada regra: status, tempo de resposta, cabeçalho, texto do corpo, campos do JSON e
+ * campo do JSON comparado com o valor de uma consulta (somente leitura) numa conexão do DB Studio.
  */
 
 export type ApiHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export const API_HTTP_METHODS: readonly ApiHttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-export type ApiRuleKind = 'status' | 'json';
+export type ApiRuleKind = 'status' | 'duration' | 'header' | 'body' | 'json' | 'db';
 
 export type ApiRuleOperator =
   | 'equals'
   | 'not-equals'
   | 'in'
   | 'contains'
+  | 'not-contains'
+  | 'matches'
   | 'exists'
   | 'not-exists'
   | 'not-empty'
@@ -25,11 +28,17 @@ export type ApiRuleOperator =
 export interface ApiRule {
   id: string;
   kind: ApiRuleKind;
-  /** Caminho do campo no JSON (`$.itens[0].codigo`); não se aplica ao status. */
+  /** Caminho do campo no JSON (`$.itens[0].codigo`) em json e db; nome do cabeçalho em header. */
   path?: string;
   operator: ApiRuleOperator;
-  /** Valor esperado como texto. No status, `in` aceita lista (`200, 201`) e faixa (`2xx`). */
+  /** Valor esperado como texto. No status, `in` aceita lista (`200, 201`) e faixa (`2xx`). Em db vem da consulta. */
   expected?: string;
+  /** db: conexão do DB Studio. */
+  connectionId?: string;
+  /** db: consulta somente leitura; o valor comparado é a primeira coluna da primeira linha. */
+  sql?: string;
+  /** db: campo da resposta que entra na consulta como `:valor` (opcional). */
+  bindPath?: string;
 }
 
 /** `settings-wta` usa o login do WTA de Configurações; `none` chama a API sem autenticação. */
@@ -66,6 +75,8 @@ export interface ApiResponseSnapshot {
   /** 0 = sem resposta. */
   status: number;
   durationMs: number;
+  /** Cabeçalhos da resposta (nomes em minúsculas), com cookies e tokens mascarados. */
+  headers: Record<string, string>;
   /** Corpo com tokens mascarados, cortado em 8 KB. */
   body: string;
   isJson: boolean;

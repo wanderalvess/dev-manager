@@ -184,7 +184,7 @@ function createWindow() {
     { logWatcherService, apmTraces: apmService }
   );
   const authLockoutTestService = new AuthLockoutTestService(configService);
-  const apiScenarioService = new ApiScenarioService(configService);
+  const apiScenarioService = new ApiScenarioService(configService, databaseService);
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({
       configService,

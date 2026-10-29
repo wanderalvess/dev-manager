@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ApiRule } from '../../../shared/apiScenarioTypes';
-import { evaluateRule, statusMatchesList } from './apiRules';
+import { evaluateDbRule, evaluateRule, statusMatchesList } from './apiRules';
 
 const json = {
   codigo: 42,
@@ -83,5 +83,56 @@ describe('evaluateRule: JSON', () => {
 
   it('o rótulo descreve a regra em português', () => {
     expect(evaluateRule(rule({ path: '$.itens', operator: 'length-equals', expected: '2' }), ok).label).toBe('Campo $.itens com quantidade de itens igual a 2');
+  });
+});
+
+describe('evaluateRule: tempo, cabeçalho e corpo', () => {
+  const full = {
+    status: 200,
+    isJson: true,
+    json,
+    durationMs: 350,
+    headers: { 'content-type': 'application/json; charset=utf-8', 'x-request-id': 'abc' },
+    bodyText: '{"codigo": 42, "nome": "Filial 1"}'
+  };
+
+  it('tempo de resposta menor ou maior que o limite', () => {
+    expect(evaluateRule(rule({ kind: 'duration', operator: 'less', expected: '2000' }), full)).toMatchObject({ passed: true, actual: '350 ms', expected: '2000 ms' });
+    expect(evaluateRule(rule({ kind: 'duration', operator: 'less', expected: '100' }), full).passed).toBe(false);
+  });
+
+  it('cabeçalho: nome sem diferenciar maiúsculas, existe, igual e contém', () => {
+    expect(evaluateRule(rule({ kind: 'header', path: 'Content-Type', operator: 'contains', expected: 'JSON' }), full).passed).toBe(true);
+    expect(evaluateRule(rule({ kind: 'header', path: 'x-request-id', operator: 'equals', expected: 'abc' }), full).passed).toBe(true);
+    expect(evaluateRule(rule({ kind: 'header', path: 'x-powered-by', operator: 'not-exists' }), full).passed).toBe(true);
+    expect(evaluateRule(rule({ kind: 'header', path: 'x-powered-by', operator: 'exists' }), full)).toMatchObject({ passed: false, actual: '(cabeçalho ausente)' });
+  });
+
+  it('corpo: contém, não contém e expressão regular', () => {
+    expect(evaluateRule(rule({ kind: 'body', operator: 'contains', expected: 'Filial 1' }), full).passed).toBe(true);
+    expect(evaluateRule(rule({ kind: 'body', operator: 'not-contains', expected: 'Exception' }), full).passed).toBe(true);
+    expect(evaluateRule(rule({ kind: 'body', operator: 'matches', expected: '"codigo":\\s*\\d+' }), full)).toMatchObject({ passed: true, actual: 'encontrou ""codigo": 42"' });
+    expect(evaluateRule(rule({ kind: 'body', operator: 'matches', expected: '(' }), full)).toMatchObject({ passed: false, actual: 'expressão regular inválida' });
+    expect(evaluateRule(rule({ kind: 'body', operator: 'matches', expected: 'a'.repeat(301) }), full).passed).toBe(false);
+  });
+});
+
+describe('evaluateDbRule', () => {
+  it('compara o campo com o valor do banco, que vira o esperado', () => {
+    expect(evaluateDbRule(rule({ kind: 'db', path: '$.nome' }), ok, { value: 'Filial 1' })).toMatchObject({ passed: true, expected: '"Filial 1"' });
+    expect(evaluateDbRule(rule({ kind: 'db', path: '$.codigo' }), ok, { value: 42 }).passed).toBe(true);
+    expect(evaluateDbRule(rule({ kind: 'db', path: '$.codigo', operator: 'greater' }), ok, { value: '41' }).passed).toBe(true);
+    expect(evaluateDbRule(rule({ kind: 'db', path: '$.codigo', operator: 'not-equals' }), ok, { value: 42 }).passed).toBe(false);
+  });
+
+  it('problema na consulta reprova e aparece no esperado', () => {
+    expect(evaluateDbRule(rule({ kind: 'db', path: '$.nome' }), ok, { problem: 'a consulta não devolveu nenhuma linha' })).toMatchObject({
+      passed: false,
+      expected: 'a consulta não devolveu nenhuma linha'
+    });
+  });
+
+  it('campo ausente na resposta reprova', () => {
+    expect(evaluateDbRule(rule({ kind: 'db', path: '$.semCampo' }), ok, { value: 1 })).toMatchObject({ passed: false, actual: '(campo não existe)' });
   });
 });

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { API_RULE_OPERATORS, ruleProblem } from '../../../shared/apiRuleText';
-import { API_HTTP_METHODS, type ApiHeader, type ApiRule, type ApiScenario } from '../../../shared/apiScenarioTypes';
+import { API_HTTP_METHODS, type ApiHeader, type ApiRule, type ApiRuleKind, type ApiScenario } from '../../../shared/apiScenarioTypes';
 
 /**
  * Cenários da Validação de API num arquivo ao lado do config.json: o app, o servidor web e o MCP são processos
@@ -39,14 +39,18 @@ function normalizeRules(value: unknown): ApiRule[] | string {
   if (!Array.isArray(value)) return [];
   const rules: ApiRule[] = [];
   for (const item of value.slice(0, MAX_RULES)) {
-    const kind = item?.kind === 'status' ? 'status' : item?.kind === 'json' ? 'json' : undefined;
+    const kind = Object.keys(API_RULE_OPERATORS).find((k) => k === item?.kind) as ApiRuleKind | undefined;
     if (!kind || !API_RULE_OPERATORS[kind].includes(item?.operator)) return 'Regra com tipo ou operador desconhecido.';
+    const text = (value: unknown) => String(value ?? '').trim();
     const rule: ApiRule = {
       id: isSafeScenarioId(item.id) ? item.id : randomUUID(),
       kind,
       operator: item.operator,
-      ...(kind === 'json' ? { path: String(item.path ?? '').trim() } : {}),
-      ...(item.expected !== undefined && item.expected !== null ? { expected: String(item.expected).trim() } : {})
+      ...(kind === 'json' || kind === 'db' || kind === 'header' ? { path: text(item.path) } : {}),
+      ...(kind !== 'db' && item.expected !== undefined && item.expected !== null ? { expected: kind === 'body' ? String(item.expected) : text(item.expected) } : {}),
+      ...(kind === 'db'
+        ? { connectionId: text(item.connectionId), sql: text(item.sql), ...(text(item.bindPath) ? { bindPath: text(item.bindPath) } : {}) }
+        : {})
     };
     const problem = ruleProblem(rule);
     if (problem) return problem;
