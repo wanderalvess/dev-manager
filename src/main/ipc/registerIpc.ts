@@ -24,6 +24,7 @@ import { registerQualityHandlers } from './handlers/qualityHandlers';
 import { registerHttpClientHandlers } from './handlers/httpClientHandlers';
 import { registerRemoteControlHandlers } from './handlers/remoteControlHandlers';
 import { registerIntegrationHandlers } from './handlers/integrationHandlers';
+import { registerAuthLockoutHandlers } from './handlers/authLockoutHandlers';
 
 export type { IpcContext } from './ipcContext';
 
@@ -55,6 +56,7 @@ export function registerIpcHandlers(ctx: IpcContext): void {
     registerUsageHandlers(ctx);
     registerRemoteControlHandlers(ctx);
     registerIntegrationHandlers(ctx);
+    registerAuthLockoutHandlers(ctx);
   } finally {
     restoreIpc();
   }

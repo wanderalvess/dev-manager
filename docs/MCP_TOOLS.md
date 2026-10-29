@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **170 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **172 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -239,6 +239,17 @@ Automação de homologação regressiva para equipes de QA e desenvolvedores: ex
 > "Valide se a venda 10047 gravou corretamente os cabeçalhos PCNFSAID, PCPEDC e a movimentação fiscal PCMOV."
 > "Exclua o template de teste temporário 'temp-homolog-123'."
 
+### 13.1. Teste de bloqueio de login do WinThor (homologação)
+As mesmas 12 checagens da aba **Homologação → Bloqueio de Login**, com tentativas controladas contra o login do WTA (`/winthor/autenticacao/v1/login`) e a correlação com o `winthor.log` e a API `/winthor/ferramenta/servidor/v1/logs`.
+
+*   **`qa_list_auth_lockout_checks`**: Lista as 12 checagens (limiar, senha certa durante o bloqueio, troca de cliente, bloqueio por usuário, logoff, concorrência, duração, janela de contagem, exceções de APIs, exposição de erro, registro de logs e falha do destino de logs), com a tentativa e o que precisa ser verdade, e os padrões (URL do WTA, API de logs, `winthor.log`, limiar 5, janela 60 s, durações candidatas 4 e 5 min).
+*   **`qa_run_auth_lockout_test`** (destrutiva, pede confirmação): **bloqueia as contas de teste de propósito**. Recebe login e senha dos usuários A e B e, sem `checks`, roda as checagens rápidas (~2 min); `includeSlow` acrescenta a duração do bloqueio e a janela de contagem (~8 min). Devolve o status de cada checagem (`passed`, `failed`, `warning`, `info`, `manual`, `skipped`), as evidências e o relatório em Markdown com senhas e tokens mascarados. A checagem do destino de logs só roda com `logSinkUnavailableConfirmed`, depois que a pessoa derrubou o log por um mecanismo autorizado.
+
+**Exemplo de como pedir à IA:**
+> "Liste as checagens do teste de bloqueio de login e os padrões que ele usa."
+> "Rode o teste de bloqueio de login rápido com os usuários TESTE_A e TESTE_B (senhas a seguir) e me diga quais regras falharam."
+> "Rode só a duração do bloqueio e a janela de contagem com o usuário TESTE_A e me diga se o bloqueio é de 4 ou de 5 minutos."
+
 ---
 
 ## 14. Test Runners & Automação de Testes (Maven, Playwright, Cypress, Newman)
@@ -326,8 +337,8 @@ Ajuda a saber, na máquina local, em qual ponta da cadeia de integração está 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
 *   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (91 das 170) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
-*   **Contagem por risco**: das 170 tools, 91 são de leitura, 54 de escrita e 25 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (92 das 172) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
+*   **Contagem por risco**: das 172 tools, 92 são de leitura, 54 de escrita e 26 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 

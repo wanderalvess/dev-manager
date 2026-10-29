@@ -17,6 +17,7 @@ import {
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
 import { getIntegrationTraceFaq } from './faq/integrationTraceFaq';
+import { getAuthLockoutFaq } from './faq/authLockoutFaq';
 import { getRemoteControlFaq } from './faq/remoteControlFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 import { getUpdateFaq } from './faq/updateFaq';
@@ -1742,6 +1743,7 @@ export function getFaqList({
     ...getRemoteControlFaq(onNavigate),
     ...getLogsFaq(onNavigate),
     ...getIntegrationTraceFaq(onNavigate),
+    ...getAuthLockoutFaq(),
     ...getDeployCancellationFaq(onNavigate),
     ...getInfrVersionFaq(),
     ...getUpdateFaq(handleOpenLink)

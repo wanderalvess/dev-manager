@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, FileSpreadsheet, Grid, ScrollText, ShieldCheck, LucideIcon } from 'lucide-react';
+import { Database, FileSpreadsheet, Grid, Lock, ScrollText, ShieldCheck, LucideIcon } from 'lucide-react';
 import type { QualityTabMode } from '../../../utils/qualityPageView';
 
 interface QualityPageTabsProps {
@@ -18,7 +18,8 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { id: 'matrix', label: 'Matriz', icon: FileSpreadsheet },
-  { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck }
+  { id: 'readiness', label: 'Prontidão (PO)', icon: ShieldCheck },
+  { id: 'lockout', label: 'Bloqueio de Login', icon: Lock }
 ];
 
 const INACTIVE_CLASS = 'text-muted-foreground hover:text-foreground border-transparent';

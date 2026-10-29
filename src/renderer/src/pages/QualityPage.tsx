@@ -5,6 +5,7 @@ import { QualityMetricsStrip } from '../components/quality/page/QualityMetricsSt
 import { QualityMatrixPanel } from '../components/quality/page/QualityMatrixPanel';
 import { QualityReadinessPanel } from '../components/quality/page/QualityReadinessPanel';
 import { QualityAddItemModal } from '../components/quality/page/QualityAddItemModal';
+import { AuthLockoutPanel } from '../components/quality/lockout/AuthLockoutPanel';
 import { useQualityPageSettings } from '../hooks/quality/page/useQualityPageSettings';
 import { useQualityValidation } from '../hooks/quality/page/useQualityValidation';
 import { useQualityAddItemForm } from '../hooks/quality/page/useQualityAddItemForm';
@@ -17,7 +18,7 @@ interface QualityPageProps {
   isActive?: boolean;
 }
 
-// Homologação: matriz de cenários, e prontidão da release. TAUT, Test Runners e Validador
+// Homologação: matriz de cenários, prontidão da release e teste de bloqueio de login. TAUT, Test Runners e Validador
 // Regressivo têm página própria (QualityTautPage, QualityRunnersPage, QualityRegressionPage).
 export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate: navigate, settingsVersion }) => {
   const [tabMode, setTabMode] = useState<QualityTabMode>('matrix');
@@ -61,7 +62,7 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate: navigate, 
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-3 md:px-5 md:py-4 space-y-3">
-        <QualityMetricsStrip metrics={metrics} onFilterStatus={handleFilterByStatus} />
+        {tabMode !== 'lockout' && <QualityMetricsStrip metrics={metrics} onFilterStatus={handleFilterByStatus} />}
 
         {tabMode === 'matrix' && (
           <QualityMatrixPanel
@@ -87,6 +88,8 @@ export const QualityPage: React.FC<QualityPageProps> = ({ onNavigate: navigate, 
         )}
 
         {tabMode === 'readiness' && <QualityReadinessPanel metrics={metrics} items={items} />}
+
+        {tabMode === 'lockout' && <AuthLockoutPanel />}
 
       </div>
 
