@@ -5,7 +5,7 @@ import type { DatabaseConnectionConfig } from '../../../../../shared/types';
 import { showToast } from '../../../components/ToastHost';
 import { requestConfirm } from '../../../components/ui/confirmService';
 import { appendActivity, progressToEntry } from '../../../utils/authLockoutView';
-import { isSameScenario, newScenario, scenarioProblem } from '../../../utils/apiScenarioView';
+import { isSameScenario, isUntouchedDraft, newExceptionScenario, newScenario, scenarioProblem } from '../../../utils/apiScenarioView';
 import { copyText } from '../../useCopyToClipboard';
 
 /** Validação de API: cenários salvos, rascunho em edição, execução com passo a passo e último resultado de cada um. */
@@ -48,17 +48,17 @@ export function useApiScenarios() {
   const problem = scenarioProblem(draft);
 
   const select = useCallback(
-    async (scenario: ApiScenario | null) => {
-      if (dirty && draft.id !== (scenario?.id ?? '')) {
+    async (scenario: ApiScenario | null, template: () => ApiScenario = newScenario) => {
+      if (dirty && !isUntouchedDraft(draft) && (draft.id !== (scenario?.id ?? '') || !scenario)) {
         const discard = await requestConfirm({ title: 'Descartar alterações?', message: 'O cenário em edição tem alterações não salvas.', tone: 'warning' });
         if (!discard) return;
       }
-      setDraft(scenario ? structuredClone(scenario) : newScenario());
+      setDraft(scenario ? structuredClone(scenario) : template());
       setCurrent(scenario ? results[scenario.id] ?? null : null);
       setActivity([]);
       setError(null);
     },
-    [dirty, draft.id, results]
+    [dirty, draft, results]
   );
 
   const save = useCallback(async () => {
@@ -130,5 +130,7 @@ export function useApiScenarios() {
     else showToast('Não foi possível copiar o relatório.', 'error');
   }, [current]);
 
-  return { connections, scenarios, draft, setDraft, saved, dirty, problem, results, current, activity, running, error, select, save, remove, run, runAll, copyReport };
+  const newException = useCallback(() => select(null, newExceptionScenario), [select]);
+
+  return { connections, newException, scenarios, draft, setDraft, saved, dirty, problem, results, current, activity, running, error, select, save, remove, run, runAll, copyReport };
 }

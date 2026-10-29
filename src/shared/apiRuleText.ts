@@ -8,7 +8,9 @@ export const API_RULE_OPERATORS: Record<ApiRuleKind, readonly ApiRuleOperator[]>
   header: ['exists', 'not-exists', 'equals', 'contains'],
   body: ['contains', 'not-contains', 'matches'],
   json: ['equals', 'not-equals', 'contains', 'exists', 'not-exists', 'not-empty', 'greater', 'less', 'length-equals'],
-  db: ['equals', 'not-equals', 'greater', 'less']
+  db: ['equals', 'not-equals', 'greater', 'less'],
+  leak: ['not-contains'],
+  log: ['contains']
 };
 
 export const API_RULE_KIND_LABELS: Record<ApiRuleKind, string> = {
@@ -17,8 +19,15 @@ export const API_RULE_KIND_LABELS: Record<ApiRuleKind, string> = {
   header: 'Cabeçalho',
   body: 'Texto do corpo',
   json: 'Campo do JSON',
-  db: 'Campo × banco'
+  db: 'Campo × banco',
+  leak: 'Sem vazamento de erro',
+  log: 'Registrado no log'
 };
+
+export const API_LOG_SOURCE_LABELS = { file: 'winthor.log', api: 'API de logs', any: 'winthor.log ou API de logs' } as const;
+
+/** O que a regra "Sem vazamento de erro" procura na resposta (corpo e cabeçalhos). */
+export const LEAK_RULE_SCOPE = 'stack trace, erro ORA-/SQL, string de conexão, senha ou token';
 
 export const API_RULE_OPERATOR_LABELS: Record<ApiRuleOperator, string> = {
   equals: 'igual a',
@@ -48,7 +57,7 @@ export const OPERATORS_WITHOUT_VALUE: readonly ApiRuleOperator[] = ['exists', 'n
 
 /** Em db o valor esperado vem da consulta, nunca digitado. */
 export function ruleNeedsValue(operator: ApiRuleOperator, kind?: ApiRuleKind): boolean {
-  return kind !== 'db' && !OPERATORS_WITHOUT_VALUE.includes(operator);
+  return kind !== 'db' && kind !== 'leak' && !OPERATORS_WITHOUT_VALUE.includes(operator);
 }
 
 const subjectOf = (rule: ApiRule): string => {
@@ -72,6 +81,8 @@ export function describeRule(rule: ApiRule): string {
   const subject = subjectOf(rule);
   const op = API_RULE_OPERATOR_LABELS[rule.operator];
   if (rule.kind === 'db') return `${subject} ${DB_OPERATOR_LABELS[rule.operator] ?? op} valor do banco`;
+  if (rule.kind === 'leak') return `Resposta sem ${LEAK_RULE_SCOPE}`;
+  if (rule.kind === 'log') return `${API_LOG_SOURCE_LABELS[rule.logSource ?? 'any']} registra "${rule.expected?.trim() || '{{requestId}}'}"`;
   if (!ruleNeedsValue(rule.operator, rule.kind)) return `${subject} ${op}`;
   const value = rule.expected?.trim() || '(vazio)';
   if (rule.kind === 'duration') return `${subject} ${op} ${value} ms`;

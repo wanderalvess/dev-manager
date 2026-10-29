@@ -17,6 +17,7 @@ export const ApiScenarioPanel: React.FC = () => {
           selectedId={api.draft.id}
           running={api.running}
           onSelect={api.select}
+          onNewException={api.newException}
           onRunAll={api.runAll}
         />
       </div>

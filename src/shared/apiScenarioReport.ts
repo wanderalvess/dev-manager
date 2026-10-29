@@ -1,3 +1,4 @@
+import { EXPOSURE_LABELS } from './authLockoutAnalysis';
 import type { ApiScenarioRunResult } from './apiScenarioTypes';
 
 const cell = (text: string) => text.replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
@@ -10,7 +11,7 @@ export function buildApiScenarioMarkdown(result: Omit<ApiScenarioRunResult, 'mar
     `## Validação de API: ${result.scenarioName}`,
     '',
     `- Requisição: \`${result.request.method} ${result.request.url}\``,
-    `- Executado em: ${result.startedAt}`,
+    `- Executado em: ${result.startedAt} (identificador \`${result.requestId}\`)`,
     `- Resultado: ${verdict}${result.error ? '' : ` (${passed} de ${result.rules.length} regras)`}`
   ];
   if (result.response) {
@@ -18,6 +19,8 @@ export function buildApiScenarioMarkdown(result: Omit<ApiScenarioRunResult, 'mar
     lines.push(`- Resposta: ${r.status ? `HTTP ${r.status}` : `sem resposta (${r.error ?? 'erro'})`} em ${r.durationMs} ms${r.isJson ? ' (JSON)' : ''}`);
   }
   if (result.error) lines.push('', `> ${result.error}`);
+  const leaks = (result.exposure ?? []).filter((f) => f !== 'server-version');
+  if (leaks.length > 0) lines.push('', `> ⚠️ A resposta expõe: ${leaks.map((f) => EXPOSURE_LABELS[f]).join(', ')}.`);
   if (result.rules.length > 0) {
     lines.push('', '| Regra | Esperado | Obtido | Resultado |', '|---|---|---|---|');
     for (const rule of result.rules) {

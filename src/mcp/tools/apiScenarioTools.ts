@@ -11,8 +11,10 @@ interface ApiScenarioToolDeps {
 
 const ruleSchema = z.object({
   kind: z
-    .enum(['status', 'duration', 'header', 'body', 'json', 'db'])
-    .describe('status HTTP; duration = tempo de resposta em ms; header = cabeçalho; body = texto do corpo; json = campo do JSON; db = campo do JSON comparado com o valor de uma consulta no banco'),
+    .enum(['status', 'duration', 'header', 'body', 'json', 'db', 'leak', 'log'])
+    .describe(
+      'status HTTP; duration = tempo de resposta em ms; header = cabeçalho; body = texto do corpo; json = campo do JSON; db = campo do JSON comparado com o valor de uma consulta no banco; leak = a resposta não pode expor stack trace, erro ORA-/SQL, string de conexão, senha ou token (operator not-contains); log = o erro precisa aparecer no winthor.log e/ou na API de logs (operator contains, expected = texto procurado, padrão {{requestId}})'
+    ),
   path: z.string().optional().describe('json/db: caminho do campo (ex.: "$.itens[0].codigo"); header: nome do cabeçalho (ex.: "content-type")'),
   operator: z
     .enum(['equals', 'not-equals', 'in', 'contains', 'not-contains', 'matches', 'exists', 'not-exists', 'not-empty', 'greater', 'less', 'length-equals'])
@@ -22,7 +24,8 @@ const ruleSchema = z.object({
   expected: z.string().optional().describe('Valor esperado como texto (não usado em exists, not-exists, not-empty nem em db)'),
   connectionId: z.string().optional().describe('db: id da conexão do DB Studio (ver db_list_connections)'),
   sql: z.string().optional().describe('db: consulta SELECT; o valor comparado é a primeira coluna da primeira linha'),
-  bindPath: z.string().optional().describe('db: campo da resposta que entra na consulta como :valor (ex.: "$.codigo")')
+  bindPath: z.string().optional().describe('db: campo da resposta que entra na consulta como :valor (ex.: "$.codigo")'),
+  logSource: z.enum(['file', 'api', 'any']).optional().describe('log: winthor.log (file), API de logs (api) ou qualquer um (any, padrão); em log, path é a URL da API de logs (opcional)')
 });
 
 const scenarioShape = {
@@ -56,7 +59,7 @@ export function registerApiScenarioTools(server: McpServer, { apiScenarioService
     {
       title: 'Rodar um cenário da Validação de API',
       description:
-        'Chama a API de um cenário salvo (scenarioId) ou de uma definição avulsa (scenario, sem salvar) e confronta a resposta com cada regra: status HTTP (igual, diferente, lista "200, 201" ou faixa "2xx"), tempo de resposta (ms), cabeçalho (existe, igual, contém), texto do corpo (contém, não contém, regex), campos do JSON por caminho (igual, diferente, contém, existe, não existe, não vazio, maior, menor, quantidade de itens) e campo do JSON comparado com o valor de uma consulta SELECT numa conexão do DB Studio (kind=db, com :valor vindo de outro campo da resposta). Devolve cada regra com esperado, obtido e se passou, a resposta (corpo com tokens mascarados), o passo a passo e o relatório em Markdown para o Jira. Com auth=settings-wta, entra antes no WTA com o login de Configurações (senha em MD5).',
+        'Chama a API de um cenário salvo (scenarioId) ou de uma definição avulsa (scenario, sem salvar) e confronta a resposta com cada regra: status HTTP (igual, diferente, lista "200, 201" ou faixa "2xx"), tempo de resposta (ms), cabeçalho (existe, igual, contém), texto do corpo (contém, não contém, regex), campos do JSON por caminho (igual, diferente, contém, existe, não existe, não vazio, maior, menor, quantidade de itens) campo do JSON comparado com o valor de uma consulta SELECT numa conexão do DB Studio (kind=db, com :valor vindo de outro campo da resposta) e, para exceções não mapeadas, leak (nada de stack trace, SQL, string de conexão, senha ou token) e log (o erro registrado no winthor.log ou na API de logs). Cada execução tem um identificador único (requestId), enviado em X-Request-Id/X-Correlation-Id e usável como {{requestId}} na URL, nos cabeçalhos, no corpo e no texto procurado no log. Devolve cada regra com esperado, obtido e se passou, a resposta (corpo com tokens mascarados), o passo a passo e o relatório em Markdown para o Jira. Com auth=settings-wta, entra antes no WTA com o login de Configurações (senha em MD5).',
       inputSchema: {
         scenarioId: z.string().optional().describe('Id de um cenário salvo (ver qa_list_api_scenarios)'),
         scenario: z.object(scenarioShape).optional().describe('Definição avulsa, quando não houver cenário salvo')

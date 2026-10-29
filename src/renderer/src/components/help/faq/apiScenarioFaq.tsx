@@ -59,6 +59,35 @@ export function getApiScenarioFaq(): FaqItem[] {
           </p>
         </div>
       )
+    },
+    {
+      id: 'api-scenario-unmapped-exception',
+      question: 'Como testo uma exceção não mapeada (forçar a API a cair num erro que o código não trata)?',
+      category: 'Qualidade & Homologação',
+      tags: ['exceção', 'exception', 'não mapeada', 'erro', '500', 'stack trace', 'vazamento', 'middleware', 'log', 'winthor.log', 'requestId', 'correlation'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Em {strong('Validação de Cenários → Validação de API')}, clique em {strong('Exceção')}. O modelo vem pronto; informe só a rota e o
+            corpo (ou parâmetro) que força o erro: campo que não existe, tipo errado, valor fora da faixa, JSON quebrado.
+          </p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>{strong('Status um destes 4xx:')} o erro forçado precisa voltar como erro tratado, não como 500.</li>
+            <li>{strong('Cabeçalho e corpo:')} a resposta é JSON e tem o formato de erro ({code('message')}, {code('mensagem')} ou {code('erro')}).</li>
+            <li>
+              {strong('Sem vazamento de erro:')} reprova se a resposta (corpo ou cabeçalhos) trouxer stack trace Java, erro ORA- ou de SQL,
+              string de conexão, a senha usada ou token. Mesmo sem essa regra, o passo a passo avisa quando algo vaza.
+            </li>
+            <li>
+              {strong('Registrado no log:')} cada execução tem um identificador novo ({code('{{requestId}}')}, ex.: {code('dm-mf3k2a-1b2c3d')}),
+              enviado nos cabeçalhos {code('X-Request-Id')} e {code('X-Correlation-Id')} e usável no corpo e na URL. A regra procura esse texto
+              (ou outro que você escrever) só nas linhas do {code('winthor.log')} escritas depois da chamada e/ou na API de logs, tentando por
+              alguns segundos porque o log chega com atraso. Se o servidor não registra esses cabeçalhos, ponha o {code('{{requestId}}')} no
+              corpo ou procure pela mensagem de erro.
+            </li>
+          </ul>
+        </div>
+      )
     }
   ];
 }

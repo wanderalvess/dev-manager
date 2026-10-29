@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Circle, Loader2, Play, Plus, XCircle } from 'lucide-react';
+import { Bug, CheckCircle2, Circle, Loader2, Play, Plus, XCircle } from 'lucide-react';
 import type { ApiScenario, ApiScenarioRunResult } from '../../../../../shared/apiScenarioTypes';
 
 interface ApiScenarioListProps {
@@ -8,20 +8,30 @@ interface ApiScenarioListProps {
   selectedId: string;
   running: boolean;
   onSelect: (scenario: ApiScenario | null) => void;
+  onNewException: () => void;
   onRunAll: () => void;
 }
 
-const BUTTON = 'h-8 px-3 border border-border text-xs font-medium rounded-[10px] flex items-center gap-1.5 transition-colors';
+const BUTTON = 'h-8 px-2.5 border border-border text-xs font-medium rounded-[10px] flex items-center gap-1.5 whitespace-nowrap transition-colors';
 
 /** Cenários salvos com o resultado da última execução nesta sessão. */
-export const ApiScenarioList: React.FC<ApiScenarioListProps> = ({ scenarios, results, selectedId, running, onSelect, onRunAll }) => (
+export const ApiScenarioList: React.FC<ApiScenarioListProps> = ({ scenarios, results, selectedId, running, onSelect, onNewException, onRunAll }) => (
   <div className="bg-card border border-border rounded-xl">
-    <div className="p-3 border-b border-border flex items-center justify-between gap-2">
-      <span className="text-sm font-semibold text-foreground">Cenários ({scenarios.length})</span>
-      <div className="flex gap-2">
+    <div className="p-3 border-b border-border flex items-center justify-between gap-2 flex-wrap">
+      <span className="text-sm font-semibold text-foreground whitespace-nowrap">Cenários ({scenarios.length})</span>
+      <div className="flex gap-1.5 flex-wrap">
         <button type="button" onClick={() => onSelect(null)} className={`${BUTTON} bg-muted hover:bg-muted/80 text-foreground`}>
           <Plus className="w-3.5 h-3.5" />
           Novo
+        </button>
+        <button
+          type="button"
+          onClick={onNewException}
+          className={`${BUTTON} bg-muted hover:bg-muted/80 text-foreground`}
+          title="Modelo para exceção não mapeada: 4xx, erro em JSON, sem vazamento e registrado no log"
+        >
+          <Bug className="w-3.5 h-3.5" />
+          Exceção
         </button>
         <button
           type="button"

@@ -1,7 +1,14 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
-import { API_RULE_KIND_LABELS, API_RULE_OPERATORS, API_RULE_OPERATOR_LABELS, DB_OPERATOR_LABELS, ruleNeedsValue } from '../../../../../shared/apiRuleText';
-import type { ApiRule, ApiRuleKind, ApiRuleOperator } from '../../../../../shared/apiScenarioTypes';
+import {
+  API_LOG_SOURCE_LABELS,
+  API_RULE_KIND_LABELS,
+  API_RULE_OPERATORS,
+  API_RULE_OPERATOR_LABELS,
+  DB_OPERATOR_LABELS,
+  ruleNeedsValue
+} from '../../../../../shared/apiRuleText';
+import type { ApiLogSource, ApiRule, ApiRuleKind, ApiRuleOperator } from '../../../../../shared/apiScenarioTypes';
 import type { DatabaseConnectionConfig } from '../../../../../shared/types';
 import { changeRule, newRule } from '../../../utils/apiScenarioView';
 import { FIELD_CLASS, SectionTitle } from '../lockout/lockoutFormFields';
@@ -22,8 +29,13 @@ const VALUE_PLACEHOLDER: Record<ApiRuleKind, (op: ApiRuleOperator) => string> = 
   header: () => 'valor',
   body: (op) => (op === 'matches' ? 'regex (ex.: "codigo":\\s*\\d+)' : 'texto'),
   json: () => 'valor esperado',
-  db: () => ''
+  db: () => '',
+  leak: () => '',
+  log: () => '{{requestId}} ou texto'
 };
+
+/** Nos tipos de exceção, o operador ganha um texto que se lê junto com o tipo. */
+const OPERATOR_TEXT_BY_KIND: Partial<Record<ApiRuleKind, string>> = { leak: 'não expõe nada', log: 'contém o texto' };
 
 /** Segunda coluna da linha: caminho do campo, nome do cabeçalho ou uma legenda. */
 function Subject({ rule, onChange }: { rule: ApiRule; onChange: (path: string) => void }) {
@@ -39,8 +51,21 @@ function Subject({ rule, onChange }: { rule: ApiRule; onChange: (path: string) =
       />
     );
   }
-  const caption = rule.kind === 'duration' ? 'da requisição' : rule.kind === 'body' ? 'da resposta (texto)' : 'da resposta';
+  const caption =
+    rule.kind === 'duration' ? 'da requisição' : rule.kind === 'body' ? 'da resposta (texto)' : rule.kind === 'leak' ? 'corpo e cabeçalhos' : 'da resposta';
   return <span className="col-span-3 text-xs text-muted-foreground px-1">{caption}</span>;
+}
+
+function LogSource({ rule, onChange }: { rule: ApiRule; onChange: (source: ApiLogSource) => void }) {
+  return (
+    <select aria-label="Onde procurar no log" value={rule.logSource ?? 'any'} onChange={(e) => onChange(e.target.value as ApiLogSource)} className={`${SMALL} col-span-3`}>
+      {(Object.keys(API_LOG_SOURCE_LABELS) as ApiLogSource[]).map((source) => (
+        <option key={source} value={source}>
+          {API_LOG_SOURCE_LABELS[source]}
+        </option>
+      ))}
+    </select>
+  );
 }
 
 /** O que a resposta precisa ter: uma linha por regra. */
@@ -75,11 +100,17 @@ export const ApiRulesEditor: React.FC<ApiRulesEditorProps> = ({ rules, connectio
                 </option>
               ))}
             </select>
-            <Subject rule={rule} onChange={(path) => update(rule.id, { path })} />
+            {rule.kind === 'log' ? (
+              <LogSource rule={rule} onChange={(logSource) => update(rule.id, { logSource })} />
+            ) : (
+              <Subject rule={rule} onChange={(path) => update(rule.id, { path })} />
+            )}
             <select aria-label="Operador" value={rule.operator} onChange={(e) => update(rule.id, { operator: e.target.value as ApiRuleOperator })} className={`${SMALL} col-span-3`}>
               {API_RULE_OPERATORS[rule.kind].map((op) => (
                 <option key={op} value={op}>
-                  {rule.kind === 'db' ? `${DB_OPERATOR_LABELS[op] ?? API_RULE_OPERATOR_LABELS[op]} banco` : API_RULE_OPERATOR_LABELS[op]}
+                  {rule.kind === 'db'
+                    ? `${DB_OPERATOR_LABELS[op] ?? API_RULE_OPERATOR_LABELS[op]} banco`
+                    : OPERATOR_TEXT_BY_KIND[rule.kind] ?? API_RULE_OPERATOR_LABELS[op]}
                 </option>
               ))}
             </select>
@@ -105,11 +136,22 @@ export const ApiRulesEditor: React.FC<ApiRulesEditorProps> = ({ rules, connectio
             </button>
           </div>
           {rule.kind === 'db' && <ApiDbRuleFields rule={rule} connections={connections} onChange={(patch) => update(rule.id, patch)} />}
+          {rule.kind === 'log' && rule.logSource !== 'file' && (
+            <input
+              aria-label="URL da API de logs"
+              value={rule.path ?? ''}
+              onChange={(e) => update(rule.id, { path: e.target.value })}
+              placeholder="API de logs (vazio = {{wtaUrl}}/winthor/ferramenta/servidor/v1/logs)"
+              className={`${SMALL} ml-2 font-mono`}
+              spellCheck={false}
+            />
+          )}
         </div>
       ))}
       <p className="text-2xs text-muted-foreground">
         Caminho do campo: <code className="font-mono">$.campo</code>, <code className="font-mono">$.lista[0].campo</code>. Números aceitam
-        vírgula ou ponto, e S/N vale como verdadeiro/falso.
+        vírgula ou ponto, e S/N vale como verdadeiro/falso. <code className="font-mono">{'{{requestId}}'}</code> é um identificador novo a cada
+        execução: vai nos cabeçalhos X-Request-Id e X-Correlation-Id e pode ser usado na URL, no corpo e no texto procurado no log.
       </p>
     </div>
   );

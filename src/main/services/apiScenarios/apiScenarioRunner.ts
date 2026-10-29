@@ -2,27 +2,31 @@ import { maskSecrets } from '../../../shared/authLockoutAnalysis';
 import { describeRule } from '../../../shared/apiRuleText';
 import { buildApiScenarioMarkdown } from '../../../shared/apiScenarioReport';
 import type { ApiResponseSnapshot, ApiRuleResult, ApiScenario, ApiScenarioRunResult } from '../../../shared/apiScenarioTypes';
+import { randomBytes } from 'crypto';
 import type { AuthLockoutLogEntry } from '../../../shared/authLockoutTypes';
-import type { AppSettings } from '../../../shared/types';
 import { httpRequest } from '../../utils/httpRequest';
 import { isSafeUrl } from '../../utils/security';
-import { encodeWtaPassword } from '../authLockout/wtaPassword';
 import { evaluateDbRule, evaluateRule } from './apiRules';
 import { lookupDbValue, type RunDbQuery } from './apiDbLookup';
+import { evaluateLeakRule, evaluateLogRule, responseExposure, startLogProbe } from './apiErrorChecks';
+import { REQUEST_TIMEOUT_MS, normalizeWtaUrl, safeParse, wtaToken, type RunnerSettings } from './apiWtaAuth';
 
-export type RunnerSettings = Partial<Pick<AppSettings, 'wtaUrl' | 'wtaLogin' | 'wtaPassword' | 'wtaAuthToken'>>;
+export type { RunnerSettings } from './apiWtaAuth';
+export { normalizeWtaUrl } from './apiWtaAuth';
 
-const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_BODY_SHOWN = 8 * 1024;
 
-export function normalizeWtaUrl(raw: string | undefined): string {
-  let url = (raw || 'http://localhost:8889').trim();
-  if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
-  return url.replace(/\/+$/, '');
+export function resolveScenarioUrl(url: string, settings: RunnerSettings, requestId = ''): string {
+  return fillRequestId(url.replace(/\{\{\s*wtaUrl\s*\}\}/gi, normalizeWtaUrl(settings.wtaUrl)), requestId);
 }
 
-export function resolveScenarioUrl(url: string, settings: RunnerSettings): string {
-  return url.replace(/\{\{\s*wtaUrl\s*\}\}/gi, normalizeWtaUrl(settings.wtaUrl));
+/** `{{requestId}}` vira o identificador desta execução (para achar o erro no log). */
+export function fillRequestId(text: string, requestId: string): string {
+  return text.replace(/\{\{\s*requestId\s*\}\}/gi, requestId);
+}
+
+export function newRequestId(): string {
+  return `dm-${Date.now().toString(36)}-${randomBytes(3).toString('hex')}`;
 }
 
 /** Uma execução: narra cada etapa (mesmo formato do Bloqueio de Login) e devolve o confronto regra a regra. */
@@ -40,7 +44,8 @@ export async function runApiScenario(
     onLog(entry);
   };
   const secrets: string[] = [];
-  const url = resolveScenarioUrl(scenario.url, settings);
+  const requestId = newRequestId();
+  const url = resolveScenarioUrl(scenario.url, settings, requestId);
   const finish = (partial: Pick<ApiScenarioRunResult, 'success' | 'rules'> & Partial<ApiScenarioRunResult>): ApiScenarioRunResult => {
     const base = {
       scenarioId: scenario.id,
@@ -48,6 +53,8 @@ export async function runApiScenario(
       startedAt,
       finishedAt: new Date().toISOString(),
       request: { method: scenario.method, url },
+      requestId,
+      exposure: [],
       log,
       ...partial
     };
@@ -63,12 +70,17 @@ export async function runApiScenario(
     return finish({ success: false, rules: [], error });
   }
 
-  const headers: Record<string, string> = { Accept: 'application/json' };
-  for (const h of scenario.headers) headers[h.key] = h.value;
-  if (scenario.body && !Object.keys(headers).some((k) => k.toLowerCase() === 'content-type')) headers['Content-Type'] = 'application/json';
+  // O identificador vai em cabeçalhos comuns de rastreio; se o servidor registrar algum deles, a regra de log o encontra
+  const headers: Record<string, string> = { Accept: 'application/json', 'X-Request-Id': requestId, 'X-Correlation-Id': requestId };
+  for (const h of scenario.headers) headers[h.key] = fillRequestId(h.value, requestId);
+  const body = scenario.body ? fillRequestId(scenario.body, requestId) : undefined;
+  if (body && !Object.keys(headers).some((k) => k.toLowerCase() === 'content-type')) headers['Content-Type'] = 'application/json';
+  note(`Identificador desta execução: ${requestId} (cabeçalhos X-Request-Id e X-Correlation-Id e {{requestId}}).`);
 
+  let authToken: string | undefined;
+  const getToken = async () => (authToken ??= await wtaToken(settings, note, secrets));
   if (scenario.auth === 'settings-wta') {
-    const token = await wtaToken(settings, note, secrets);
+    const token = await getToken();
     if (!token) {
       const error = 'Não foi possível autenticar no WTA com o login de Configurações (confira login e senha em Configurações).';
       note(error, 'error');
@@ -79,7 +91,9 @@ export async function runApiScenario(
   }
 
   note(`Chamando ${scenario.method} ${url}${scenario.auth === 'settings-wta' ? ' com o token do WTA' : ' sem autenticação'}.`);
-  const response = await callApi(scenario, url, headers, secrets);
+  const hasLogRule = scenario.rules.some((r) => r.kind === 'log');
+  const probe = hasLogRule ? startLogProbe(settings) : {};
+  const response = await callApi(scenario.method, url, headers, body, secrets);
   note(
     response.status ? `Resposta: HTTP ${response.status} em ${response.durationMs} ms${response.isJson ? ' (JSON)' : ' (não é JSON)'}.` : `Sem resposta: ${response.error}.`,
     response.status ? 'action' : 'error',
@@ -88,12 +102,19 @@ export async function runApiScenario(
 
   const json = response.isJson ? safeParse(response.rawBody) : undefined;
   const evaluated = { status: response.status, isJson: response.isJson, json, durationMs: response.durationMs, headers: response.rawHeaders, bodyText: response.rawBody };
+  const exposure = response.status > 0 ? responseExposure(response.rawBody, response.rawHeaders, secrets) : [];
+  if (exposure.some((f) => f !== 'server-version') && !scenario.rules.some((r) => r.kind === 'leak')) {
+    note('A resposta expõe detalhe interno. Acrescente a regra "Sem vazamento de erro" para reprovar o cenário por isso.', 'error');
+  }
   const rules: ApiRuleResult[] = [];
   for (const rule of scenario.rules) {
-    const outcome =
-      rule.kind === 'db' && response.status > 0
-        ? evaluateDbRule(rule, evaluated, await lookupDbValue(rule, json, runQuery, (m) => note(m)))
-        : evaluateRule(rule, evaluated);
+    let outcome: ApiRuleResult;
+    if (rule.kind === 'db' && response.status > 0) outcome = evaluateDbRule(rule, evaluated, await lookupDbValue(rule, json, runQuery, (m) => note(m)));
+    else if (rule.kind === 'leak') outcome = evaluateLeakRule(rule, exposure, response.status);
+    else if (rule.kind === 'log') {
+      const needle = fillRequestId(rule.expected?.trim() || '{{requestId}}', requestId);
+      outcome = await evaluateLogRule(rule, needle, { settings, probe, getToken, note: (m, l) => note(m, l) });
+    } else outcome = evaluateRule(rule, evaluated);
     // Os valores vão para a tela, o passo a passo e o relatório do Jira: token e senha saem mascarados como no corpo
     const result = { ...outcome, expected: maskSecrets(outcome.expected, secrets), actual: maskSecrets(outcome.actual, secrets) };
     note(
@@ -116,55 +137,26 @@ export async function runApiScenario(
     isJson: response.isJson,
     ...(response.error ? { error: response.error } : {})
   };
-  return finish({ success, rules, response: snapshot });
-}
-
-async function wtaToken(settings: RunnerSettings, note: (m: string, l?: AuthLockoutLogEntry['level']) => void, secrets: string[]) {
-  const login = settings.wtaLogin?.trim();
-  const password = settings.wtaPassword;
-  if (login && password) {
-    note(`Entrando no WTA com o login de Configurações (${login}) para obter o token.`);
-    const loginUrl = `${normalizeWtaUrl(settings.wtaUrl)}/winthor/autenticacao/v1/login`;
-    const senha = encodeWtaPassword(password);
-    secrets.push(password, senha);
-    try {
-      const res = await httpRequest(loginUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ login, senha }),
-        timeout: REQUEST_TIMEOUT_MS
-      });
-      const token = safeParse(await res.text())?.accessToken;
-      if (res.ok && typeof token === 'string' && token) {
-        secrets.push(token);
-        note('Login no WTA aceito: o token vai no cabeçalho Authorization e no cookie suukie.');
-        return token;
-      }
-      note(`Login no WTA recusado (HTTP ${res.status}).`, 'error');
-    } catch (err: any) {
-      note(`Login no WTA sem resposta: ${err?.message ?? 'erro de conexão'}.`, 'error');
-    }
-  }
-  const saved = settings.wtaAuthToken?.trim().replace(/^suukie=/, '');
-  if (saved) {
-    secrets.push(saved);
-    note('Usando o token do WTA salvo em Configurações.');
-    return saved;
-  }
-  return undefined;
+  return finish({ success, rules, response: snapshot, exposure });
 }
 
 type CalledResponse = ApiResponseSnapshot & { rawBody: string; rawHeaders: Record<string, string> };
 
 const SENSITIVE_HEADERS = /^(set-cookie|authorization|proxy-authorization|cookie)$/i;
 
-async function callApi(scenario: ApiScenario, url: string, headers: Record<string, string>, secrets: string[]): Promise<CalledResponse> {
+async function callApi(
+  method: ApiScenario['method'],
+  url: string,
+  headers: Record<string, string>,
+  body: string | undefined,
+  secrets: string[]
+): Promise<CalledResponse> {
   const started = Date.now();
   try {
     const res = await httpRequest(url, {
-      method: scenario.method,
+      method,
       headers,
-      ...(scenario.body ? { body: scenario.body } : {}),
+      ...(body ? { body } : {}),
       timeout: REQUEST_TIMEOUT_MS
     });
     const rawBody = await res.text();
@@ -190,13 +182,5 @@ async function callApi(scenario: ApiScenario, url: string, headers: Record<strin
     };
   } catch (err: any) {
     return { status: 0, durationMs: Date.now() - started, headers: {}, body: '', isJson: false, error: err?.message ?? 'sem resposta', rawBody: '', rawHeaders: {} };
-  }
-}
-
-function safeParse(text: string): any {
-  try {
-    return text.trim() ? JSON.parse(text) : undefined;
-  } catch {
-    return undefined;
   }
 }

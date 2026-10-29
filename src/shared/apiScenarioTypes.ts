@@ -1,15 +1,19 @@
-import type { AuthLockoutLogEntry } from './authLockoutTypes';
+import type { AuthLockoutLogEntry, ExposureFinding } from './authLockoutTypes';
 
 /**
  * Validação de Cenários → Validação de API: uma requisição e o que a resposta precisa ter. O teste chama a API
  * e confronta o resultado com cada regra: status, tempo de resposta, cabeçalho, texto do corpo, campos do JSON e
- * campo do JSON comparado com o valor de uma consulta (somente leitura) numa conexão do DB Studio.
+ * campo do JSON comparado com o valor de uma consulta (somente leitura) numa conexão do DB Studio. Para exceções que
+ * o código não trata: a resposta não pode vazar detalhe interno (leak) e o erro precisa ficar registrado no log (log).
  */
 
 export type ApiHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export const API_HTTP_METHODS: readonly ApiHttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-export type ApiRuleKind = 'status' | 'duration' | 'header' | 'body' | 'json' | 'db';
+export type ApiRuleKind = 'status' | 'duration' | 'header' | 'body' | 'json' | 'db' | 'leak' | 'log';
+
+/** Onde a regra "Registrado no log" procura: o winthor.log, a API de logs ou qualquer um dos dois. */
+export type ApiLogSource = 'file' | 'api' | 'any';
 
 export type ApiRuleOperator =
   | 'equals'
@@ -39,6 +43,8 @@ export interface ApiRule {
   sql?: string;
   /** db: campo da resposta que entra na consulta como `:valor` (opcional). */
   bindPath?: string;
+  /** log: onde procurar o registro (padrão `any`). O texto procurado fica em `expected` e aceita `{{requestId}}`. */
+  logSource?: ApiLogSource;
 }
 
 /** `settings-wta` usa o login do WTA de Configurações; `none` chama a API sem autenticação. */
@@ -93,8 +99,12 @@ export interface ApiScenarioRunResult {
   /** Erro antes de chamar a API (URL inválida, login do WTA recusado...). */
   error?: string;
   request: { method: ApiHttpMethod; url: string };
+  /** Identificador único desta execução: vai em X-Request-Id/X-Correlation-Id e substitui `{{requestId}}`. */
+  requestId: string;
   response?: ApiResponseSnapshot;
   rules: ApiRuleResult[];
+  /** O que a resposta expõe e não deveria; preenchido em toda execução, mesmo sem a regra de vazamento. */
+  exposure: ExposureFinding[];
   log: AuthLockoutLogEntry[];
   markdown: string;
 }

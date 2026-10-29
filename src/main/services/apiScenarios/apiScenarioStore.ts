@@ -46,8 +46,9 @@ function normalizeRules(value: unknown): ApiRule[] | string {
       id: isSafeScenarioId(item.id) ? item.id : randomUUID(),
       kind,
       operator: item.operator,
-      ...(kind === 'json' || kind === 'db' || kind === 'header' ? { path: text(item.path) } : {}),
-      ...(kind !== 'db' && item.expected !== undefined && item.expected !== null ? { expected: kind === 'body' ? String(item.expected) : text(item.expected) } : {}),
+      ...(kind === 'json' || kind === 'db' || kind === 'header' || (kind === 'log' && text(item.path)) ? { path: text(item.path) } : {}),
+      ...(kind === 'log' ? { logSource: item.logSource === 'file' || item.logSource === 'api' ? item.logSource : 'any' } : {}),
+      ...(kind !== 'db' && kind !== 'leak' && item.expected !== undefined && item.expected !== null ? { expected: kind === 'body' ? String(item.expected) : text(item.expected) } : {}),
       ...(kind === 'db'
         ? { connectionId: text(item.connectionId), sql: text(item.sql), ...(text(item.bindPath) ? { bindPath: text(item.bindPath) } : {}) }
         : {})

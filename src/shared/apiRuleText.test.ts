@@ -36,3 +36,11 @@ describe('ruleProblem', () => {
     expect(ruleNeedsValue('equals', 'json')).toBe(true);
   });
 });
+
+describe('regras de exceção', () => {
+  it('sem vazamento não pede valor; registro no log pede o texto e diz onde procura', () => {
+    expect(ruleProblem(rule({ kind: 'leak', operator: 'not-contains' }))).toBeNull();
+    expect(describeRule(rule({ kind: 'log', operator: 'contains', expected: '{{requestId}}', logSource: 'file' }))).toBe('winthor.log registra "{{requestId}}"');
+    expect(ruleProblem(rule({ kind: 'log', operator: 'contains', expected: '' }))).toContain('valor esperado');
+  });
+});

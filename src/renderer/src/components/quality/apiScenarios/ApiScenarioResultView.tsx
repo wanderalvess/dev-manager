@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2, ClipboardCopy, XCircle } from 'lucide-react';
 import type { ApiScenarioRunResult } from '../../../../../shared/apiScenarioTypes';
+import { EXPOSURE_LABELS } from '../../../../../shared/authLockoutAnalysis';
 
 interface ApiScenarioResultViewProps {
   result: ApiScenarioRunResult;
@@ -10,6 +11,7 @@ interface ApiScenarioResultViewProps {
 /** O confronto regra a regra (esperado x obtido) e a resposta que a API devolveu. */
 export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ result, onCopyReport }) => {
   const passed = result.rules.filter((r) => r.passed).length;
+  const leaks = (result.exposure ?? []).filter((f) => f !== 'server-version');
   const r = result.response;
   return (
     <div className="bg-card border border-border rounded-xl">
@@ -22,7 +24,7 @@ export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ re
           </span>
           {r && (
             <span className="text-2xs font-mono text-muted-foreground">
-              {r.status ? `HTTP ${r.status}` : 'sem resposta'} · {r.durationMs} ms{r.isJson ? ' · JSON' : ''}
+              {r.status ? `HTTP ${r.status}` : 'sem resposta'} · {r.durationMs} ms{r.isJson ? ' · JSON' : ''} · {result.requestId}
             </span>
           )}
         </div>
@@ -36,6 +38,11 @@ export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ re
         </button>
       </div>
       {result.error && <p className="p-3 text-xs text-danger">{result.error}</p>}
+      {leaks.length > 0 && (
+        <p className="px-3 py-2 text-xs text-danger bg-danger/5 border-b border-border">
+          A resposta expõe: {leaks.map((f) => EXPOSURE_LABELS[f]).join(', ')}.
+        </p>
+      )}
       {result.rules.length > 0 && (
         <table className="w-full text-xs">
           <thead>

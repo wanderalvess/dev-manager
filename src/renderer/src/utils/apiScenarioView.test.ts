@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { changeRule, isSameScenario, newRule, newScenario, scenarioProblem } from './apiScenarioView';
+import { changeRule, isSameScenario, isUntouchedDraft, newExceptionScenario, newRule, newScenario, scenarioProblem } from './apiScenarioView';
 
 describe('apiScenarioView', () => {
   it('cenário novo já confere status 200 e pede a URL', () => {
@@ -31,5 +31,21 @@ describe('apiScenarioView', () => {
     const a = { ...newScenario(), id: 's1', updatedAt: '2026-01-01' };
     expect(isSameScenario(a, { ...a, updatedAt: '2026-02-02' })).toBe(true);
     expect(isSameScenario(a, { ...a, name: 'Outro' })).toBe(false);
+  });
+
+  it('modelo de exceção não mapeada: 4xx, JSON, formato de erro, sem vazamento e registro no log; falta só a rota', () => {
+    const scenario = newExceptionScenario();
+    expect(scenario.rules.map((r) => r.kind)).toEqual(['status', 'header', 'body', 'leak', 'log']);
+    expect(scenario.rules[0]).toMatchObject({ operator: 'in', expected: '4xx' });
+    expect(scenario.rules[4]).toMatchObject({ expected: '{{requestId}}', logSource: 'any' });
+    expect(scenarioProblem(scenario)).toContain('rota');
+    expect(scenarioProblem({ ...scenario, url: '{{wtaUrl}}/winthor/pedidos' })).toBeNull();
+  });
+
+  it('rascunho igual a um modelo não pede confirmação para ser trocado', () => {
+    expect(isUntouchedDraft(newScenario())).toBe(true);
+    expect(isUntouchedDraft(newExceptionScenario())).toBe(true);
+    expect(isUntouchedDraft({ ...newScenario(), name: 'Mexido' })).toBe(false);
+    expect(isUntouchedDraft({ ...newScenario(), id: 'salvo' })).toBe(false);
   });
 });
