@@ -37,10 +37,13 @@ describe('catálogo dos fluxos do WSH', () => {
     expect(findFlowByRoute(undefined)).toBeUndefined();
   });
 
-  it('Preço Oferta, visto no ambiente e fora do levantamento: sem número de fluxo, depende do Produto', () => {
+  it('fluxos fora do levantamento, com o número conferido no banco real: 39, 40 e 41 (Preço Oferta)', () => {
     const oferta = findFlowByRoute('WTA - Buscar Preco Oferta');
-    expect(oferta).toMatchObject({ category: 'Preços', direction: 'envio', dependsOn: ['09'] });
-    expect(flowLabel(oferta!)).toBe('Preço Oferta');
+    expect(oferta).toMatchObject({ id: '41', category: 'Preços', direction: 'envio', dependsOn: ['09'] });
+    expect(flowLabel(oferta!)).toBe('FLUXO-41 · Preço Oferta');
+    expect(findFlowByRoute('WTA - Buscar Endereco Entrega Client')).toMatchObject({ id: '39', dependsOn: ['17'] });
+    expect(findFlowByRoute('WTA - Buscar Parametros Presidencia')).toMatchObject({ id: '40' });
+    expect(flowLabel({ id: 'sem-numero', name: 'Fluxo avulso' })).toBe('Fluxo avulso');
   });
 
   it('sentido: catálogo primeiro, prefixo da rota para o que não está nele', () => {

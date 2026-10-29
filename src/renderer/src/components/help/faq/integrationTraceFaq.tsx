@@ -41,7 +41,10 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
               <strong className="text-foreground">Agendamento deste ambiente:</strong> ao abrir a <em>Ficha do fluxo</em>, o Hub lê do
               Oracle de quanto em quanto tempo o fluxo roda neste cliente (ex.: a cada 5 min), se o passo da rota está ativo e quantos
               passos do fluxo estão ligados. Rota com o passo desligado (<code className="font-mono text-primary">ATIVO = N</code>) ou fora
-              de qualquer fluxo aparece em destaque: o WSH não a executa e nada novo chega.
+              de qualquer fluxo aparece em destaque: o WSH não a executa e nada novo chega. Logo abaixo vêm as <em>últimas execuções</em> do
+              fluxo (<code className="font-mono text-primary">PCINTEGRACAOGESTAOFLUXO</code>): quando rodou, se terminou bem, a etapa em que parou e o erro em uma
+              frase. Um 404 do WTA vira <em>a API não existe neste WTA</em>, com o caminho chamado; execuções iguais seguidas aparecem uma vez,
+              com a contagem.
             </li>
             <li>
               <strong className="text-foreground">Dois sentidos:</strong> envio (WinThor → PDVSync) e recebimento pelo ERP (vendas, pedidos e
@@ -53,7 +56,8 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
               (pré-venda, crédito, estoque) vão direto ao WinThor, sem o WSH: estão na aba <em>Online do PDV</em>, com o endpoint de cada um e
               como mapear as tabelas que ele usa pelo Statement Tracer do Banco de Dados. Lá também se busca um pedido na PCLOGPEDIDOAPI:
               cada inclusão, alteração ou cancelamento vindo do PDV, se foi aceito ou rejeitado (com o motivo do WinThor na linha), o envio que ficou
-              sem resposta e o JSON gravado.
+              sem resposta e o JSON gravado. O motivo é lido nos formatos que o WinThor grava (código WT-..., TotvsError, erro de SQL do WTA
+              com o ORA, texto simples), com o detalhe embaixo, e o resultado abre com os motivos de recusa mais frequentes.
             </li>
           </ul>
           <p>

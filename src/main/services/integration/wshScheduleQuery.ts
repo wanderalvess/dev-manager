@@ -4,13 +4,13 @@ import { asNumber, asText, col, type Row } from './wshMonitorQuery';
 
 /**
  * Agendamento e situação do fluxo de uma rota, lidos do próprio Oracle do WSH (o intervalo é de cada cliente).
- * Estrutura conhecida pelos layouts: PCINTEGRACAOFLUXOEXECUCAO (passos do fluxo: DESCRICAO, IDROTASERVICO, ATIVO),
- * PCINTEGRACAOAGENDAMENTO (DESCRICAO, AGENDAMENTOSEGUNDOS, DELAYINICIALSEGUNDOS) e PCINTEGRACAOAGENDAMENTOFLUXO
- * (IDAGENDAMENTO, IDFLUXO). Como a ligação pode ser por id ou por descrição, o cruzamento é feito aqui, aceitando as duas.
+ * Conferido num banco real (2026-10-29): PCINTEGRACAOFLUXOEXECUCAO tem uma linha por passo, agrupada por IDFLUXO (o
+ * número do fluxo, o mesmo do catálogo), com DESCRICAO = nome do fluxo e ATIVO; PCINTEGRACAOAGENDAMENTOFLUXO liga
+ * IDAGENDAMENTO a IDFLUXO. Ligações antigas (por descrição ou pelo id do passo) continuam aceitas.
  * As três tabelas são de configuração, pequenas e sem dado de negócio.
  */
 
-export const FLOW_STEPS_SQL = `select fe.id, fe.descricao, fe.ativo, fe.ordemexecucao, r.servico
+export const FLOW_STEPS_SQL = `select fe.id, fe.idfluxo, fe.descricao, fe.ativo, fe.ordemexecucao, r.servico
 from pcintegracaofluxoexecucao fe
 left join pcintegracaorotaservico r on r.id = fe.idrotaservico`;
 export const SCHEDULES_SQL = 'select * from pcintegracaoagendamento';
@@ -23,22 +23,33 @@ const same = (a: unknown, b: unknown) => {
   return Boolean(left) && left === right;
 };
 
+/** O fluxo de um passo: IDFLUXO quando o banco tem a coluna; senão, a descrição. */
+const flowKey = (row: Row) => asText(col(row, 'idfluxo')) ?? `nome:${(asText(col(row, 'descricao')) ?? '').trim().toUpperCase()}`;
+
 export function toScheduleInfo(route: string, steps: Row[], schedules: Row[], scheduleFlows: Row[]): WshScheduleInfo {
   const wanted = normalizeRouteName(route);
   const routeSteps = steps.filter((row) => normalizeRouteName(asText(col(row, 'servico')) ?? '') === wanted);
-  const flowNames = [...new Set(routeSteps.map((row) => asText(col(row, 'descricao')) ?? ''))].filter(Boolean);
+  const keys = [...new Set(routeSteps.map(flowKey))];
   const isActive = (row: Row) => same(col(row, 'ativo'), 'S');
 
-  const flows = flowNames.map((name) => {
-    const own = steps.filter((row) => same(col(row, 'descricao'), name));
-    const ids = own.map((row) => col(row, 'id'));
-    const links = scheduleFlows.filter((link) => same(col(link, 'idfluxo'), name) || ids.some((id) => same(col(link, 'idfluxo'), id)));
+  const flows = keys.map((key) => {
+    const own = steps.filter((row) => flowKey(row) === key);
+    const name = asText(col(own[0], 'descricao'))?.trim() ?? '';
+    const flowId = asNumber(col(own[0], 'idfluxo'));
+    const stepIds = own.map((row) => col(row, 'id'));
+    const links = scheduleFlows.filter(
+      (link) =>
+        (flowId !== undefined && same(col(link, 'idfluxo'), flowId)) ||
+        same(col(link, 'idfluxo'), name) ||
+        stepIds.some((id) => same(col(link, 'idfluxo'), id))
+    );
     const linked = schedules.filter((schedule) =>
       links.some((link) => same(col(link, 'idagendamento'), col(schedule, 'id')) || same(col(link, 'idagendamento'), col(schedule, 'descricao')))
     );
     return {
+      ...(flowId !== undefined ? { id: flowId } : {}),
       name,
-      routeActive: routeSteps.some((row) => same(col(row, 'descricao'), name) && isActive(row)),
+      routeActive: routeSteps.some((row) => flowKey(row) === key && isActive(row)),
       activeSteps: own.filter(isActive).length,
       totalSteps: own.length,
       schedules: linked.map((schedule) => {

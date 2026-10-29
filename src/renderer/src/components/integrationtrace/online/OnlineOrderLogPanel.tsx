@@ -3,6 +3,7 @@ import { AlertTriangle, Loader2, Search } from 'lucide-react';
 import { describeOrderJson, prettyOrderJson, type OnlineOrderLogEntry, type OnlineOrderStatusFilter, type OnlineOrderTone } from '../../../../../shared/onlineOrderLog';
 import { useOnlineOrderLog } from '../../../hooks/integration/useOnlineOrderLog';
 import { formatTraceTime } from '../../../utils/integrationTraceView';
+import { OnlineRejectionSummary } from './OnlineRejectionSummary';
 
 const FIELD_CLASS = 'h-9 bg-card border border-border rounded-[10px] px-3 text-sm text-foreground focus:outline-hidden focus:border-primary';
 const LABEL_CLASS = 'flex items-center gap-2 text-xs font-bold text-foreground';
@@ -43,6 +44,7 @@ const EntryRow: React.FC<{ entry: OnlineOrderLogEntry }> = ({ entry }) => (
             <span className="block text-danger break-words">
               {entry.reason.code && <span className="font-mono">{entry.reason.code}: </span>}
               {entry.reason.message}
+              {entry.reason.detail && <span className="block text-muted-foreground">{entry.reason.detail}</span>}
             </span>
           )}
           {entry.unanswered && <span className="block text-warning">O WinThor não gravou aceito nem rejeitado depois deste envio.</span>}
@@ -156,11 +158,14 @@ export const OnlineOrderLogPanel: React.FC = () => {
           {byOrder ? 'Nenhum registro deste pedido na PCLOGPEDIDOAPI.' : 'Nenhum registro no período.'}
         </p>
       ) : (
-        <ul aria-label="Registros do log de pedidos" className="max-h-[60vh] overflow-y-auto divide-y divide-border">
-          {entries.map((entry, index) => (
-            <EntryRow key={`${entry.orderNumber}-${entry.date ?? ''}-${index}`} entry={entry} />
-          ))}
-        </ul>
+        <>
+          <OnlineRejectionSummary entries={entries} />
+          <ul aria-label="Registros do log de pedidos" className="max-h-[60vh] overflow-y-auto divide-y divide-border">
+            {entries.map((entry, index) => (
+              <EntryRow key={`${entry.orderNumber}-${entry.date ?? ''}-${index}`} entry={entry} />
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );

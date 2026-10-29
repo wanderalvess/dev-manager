@@ -78,7 +78,13 @@ export function scheduleFacts(info: WshScheduleInfo): ScheduleFact[] {
           .map((s) => `a cada ${s.intervalSeconds !== undefined ? formatSeconds(s.intervalSeconds) : '?'}${s.initialDelaySeconds ? ` (começa ${formatSeconds(s.initialDelaySeconds)} após o WSH subir)` : ''} pelo agendamento "${s.name}"`)
           .join('; ')
       : 'sem agendamento: só roda quando outro fluxo ou alguém o dispara';
-    const value = flow.routeActive ? `${when} · ${steps}` : `Passo desta rota inativo (ATIVO = N): o WSH pula a rota · ${steps}`;
-    return { label: `Fluxo "${flow.name}" neste ambiente`, value, warning: !flow.routeActive };
+    const off = flow.activeSteps === 0;
+    const value = flow.routeActive
+      ? `${when} · ${steps}`
+      : off
+        ? `Fluxo desligado neste ambiente: nenhum passo com ATIVO = S, então não roda até ser ativado no WSH · ${steps}`
+        : `Passo desta rota inativo (ATIVO = N): o WSH pula a rota · ${steps}`;
+    const label = flow.id !== undefined ? `Fluxo ${flow.id} "${flow.name}" neste ambiente` : `Fluxo "${flow.name}" neste ambiente`;
+    return { label, value, warning: !flow.routeActive };
   });
 }

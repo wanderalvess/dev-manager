@@ -6,6 +6,7 @@ import { formatTraceTime } from '../../../utils/integrationTraceView';
 import { flowFacts, scheduleFacts } from '../../../utils/wshFlowView';
 import { useWshSchedule } from '../../../hooks/integration/useWshSchedule';
 import type { WshDependenciesState } from '../../../hooks/integration/useWshDependencies';
+import { WshFlowRuns } from './WshFlowRuns';
 
 function dependencyLine(dep: WshDependency, periodDays: number): { text: string; tone: string } {
   if (!dep.found) return { text: 'Nunca integrou neste banco.', tone: 'text-danger' };
@@ -68,7 +69,7 @@ export const WshDependenciesCard: React.FC<{ item: WshItem; deps: WshDependencie
   );
 };
 
-/** Ficha do fluxo (sentido, API, tabelas, agendamento), recolhida no fim do detalhe. Aberta, lê o agendamento do ambiente. */
+/** Ficha do fluxo (sentido, API, tabelas, agendamento, execuções), recolhida no fim do detalhe. Aberta, lê o ambiente. */
 export const WshFlowFacts: React.FC<{ item: WshItem }> = ({ item }) => {
   const [open, setOpen] = React.useState(false);
   const schedule = useWshSchedule(item.route, open);
@@ -80,7 +81,7 @@ export const WshFlowFacts: React.FC<{ item: WshItem }> = ({ item }) => {
   return (
     <details className="border border-border rounded-xl p-3" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary className="text-xs font-semibold text-foreground cursor-pointer">
-        Ficha do fluxo: API, tabelas, agendamento{flow.fieldOrigins ? " e origem dos campos" : ""}
+        Ficha do fluxo: API, tabelas, agendamento, execuções{flow.fieldOrigins ? " e origem dos campos" : ""}
       </summary>
       <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
         {facts.map((fact) => (
@@ -101,6 +102,7 @@ export const WshFlowFacts: React.FC<{ item: WshItem }> = ({ item }) => {
           <Loader2 className="w-3 h-3 animate-spin" /> Lendo o agendamento deste ambiente...
         </p>
       )}
+      {schedule && !schedule.loading && schedule.info && <WshFlowRuns flows={schedule.info.flows} />}
       {schedule && !schedule.loading && schedule.error && (
         <p className="mt-2 text-2xs text-muted-foreground">Agendamento do ambiente indisponível: {schedule.error}</p>
       )}
