@@ -5,6 +5,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Alterado
+- **Bloqueio de Login: passo a passo explicado**: a atividade passou a contar o teste para quem não o conhece. Abre com as condições (WTA, usuários, regra, formato da senha, log lido a partir de que ponto), cada checagem começa explicando o que vai fazer com os seus usuários e números, cada requisição diz o que foi enviado, o que o WTA respondeu em português (ex.: *recusado como conta bloqueada*) e o que se esperava, em verde quando bateu e em vermelho quando não bateu, e cada espera diz o motivo. O fim traz o placar e quem pode continuar bloqueado. *Mostrar cada requisição* esconde as requisições para ler só os passos. Cada regra ganhou *Como foi testado*, e o relatório do Jira leva essa explicação e o passo a passo; a tool MCP devolve o mesmo em `log`.
+
 ### Corrigido
 - **Bloqueio de Login: Copiar relatório (Jira) no app desktop**: o botão mostrava *Não foi possível copiar o relatório*, porque o Electron recusa o `navigator.clipboard`. A cópia agora usa o mesmo caminho alternativo das outras telas e funciona no app e no modo Web.
 

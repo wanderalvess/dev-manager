@@ -101,6 +101,23 @@ export interface AuthLockoutCheckResult {
   summary: string;
   evidence: string[];
   durationMs?: number;
+  /** Como a checagem foi feita, com os números desta execução (usuários, limiar, janela). */
+  plan?: string;
+}
+
+/** Tipo de linha da atividade: o passo começando, uma ação dentro dele, uma requisição, uma espera ou o resultado. */
+export type AuthLockoutLogLevel = 'step' | 'action' | 'attempt' | 'wait' | 'result' | 'error';
+
+export interface AuthLockoutLogEntry {
+  at: string;
+  level: AuthLockoutLogLevel;
+  message: string;
+  /** Complemento da linha (ex.: o trecho mascarado da resposta do WTA). */
+  detail?: string;
+  /** Na linha de requisição: o resultado bateu com o esperado? */
+  asExpected?: boolean;
+  /** Na linha de resultado: o status da checagem. */
+  status?: AuthLockoutCheckStatus;
 }
 
 export interface AuthLockoutRunResult {
@@ -115,14 +132,14 @@ export interface AuthLockoutRunResult {
   logFilePath?: string;
   checks: AuthLockoutCheckResult[];
   attempts: AuthLockoutAttempt[];
+  /** Passo a passo da execução (sem a contagem regressiva das esperas). */
+  log: AuthLockoutLogEntry[];
   /** Relatório pronto para colar no Jira. */
   markdown: string;
 }
 
-export interface AuthLockoutProgress {
+export interface AuthLockoutProgress extends AuthLockoutLogEntry {
   runId: string;
-  at: string;
-  message: string;
   check?: AuthLockoutCheckResult;
   attempt?: AuthLockoutAttempt;
 }

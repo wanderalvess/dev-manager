@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { estimateAuthLockoutMinutes } from '../../../../../shared/authLockoutCatalog';
-import type { AuthLockoutCheckResult, AuthLockoutRunResult } from '../../../../../shared/authLockoutTypes';
+import type { AuthLockoutCheckResult, AuthLockoutLogEntry, AuthLockoutRunResult } from '../../../../../shared/authLockoutTypes';
 import { showToast } from '../../../components/ToastHost';
 import { requestConfirm } from '../../../components/ui/confirmService';
 import { copyText } from '../../useCopyToClipboard';
 import {
   AUTH_LOCKOUT_FORM_STORAGE_KEY,
+  appendActivity,
+  progressToEntry,
   buildRunRequest,
   formBlocker,
   formFromDefaults,
@@ -16,12 +18,6 @@ import {
   type AuthLockoutForm
 } from '../../../utils/authLockoutView';
 
-const MAX_ACTIVITY = 300;
-
-export interface ActivityLine {
-  at: string;
-  message: string;
-}
 
 function readStored(): string | null {
   try {
@@ -36,7 +32,7 @@ export function useAuthLockoutRun() {
   const [form, setForm] = useState<AuthLockoutForm | null>(null);
   const [running, setRunning] = useState(false);
   const [checks, setChecks] = useState<AuthLockoutCheckResult[]>(() => pendingChecks([]));
-  const [activity, setActivity] = useState<ActivityLine[]>([]);
+  const [activity, setActivity] = useState<AuthLockoutLogEntry[]>([]);
   const [result, setResult] = useState<AuthLockoutRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const runningRef = useRef(false);
@@ -68,7 +64,7 @@ export function useAuthLockoutRun() {
   useEffect(() => {
     const unsubscribe = window.electronAPI?.onAuthLockoutProgress?.((progress) => {
       if (!runningRef.current) return;
-      setActivity((lines) => [...lines, { at: progress.at, message: progress.message }].slice(-MAX_ACTIVITY));
+      setActivity((lines) => appendActivity(lines, progressToEntry(progress)));
       const check = progress.check;
       if (check) setChecks((list) => list.map((c) => (c.id === check.id ? check : c)));
     });

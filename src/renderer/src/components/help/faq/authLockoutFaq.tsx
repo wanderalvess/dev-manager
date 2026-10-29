@@ -27,6 +27,12 @@ export function getAuthLockoutFaq(): FaqItem[] {
               aceito. Só troque para {strong('Texto puro')} se o seu WTA receber a senha sem hash.
             </li>
             <li>
+              {strong('Passo a passo:')} cada checagem abre explicando o que vai ser feito, com os seus usuários e números. Cada
+              requisição mostra o que foi enviado, o que o WTA respondeu e o que se esperava: em verde quando bateu, em vermelho quando
+              não bateu. Cada espera diz o motivo, e o fim traz o placar e quem pode continuar bloqueado. Abra uma regra para ver
+              {' '}{strong('Como foi testado')} e as evidências; o relatório do Jira leva tudo isso.
+            </li>
+            <li>
               {strong('Ordem:')} o usuário A erra 4 vezes (não pode bloquear), espera a janela e erra 5 (tem de bloquear). Com A bloqueado,
               o mesmo bloqueio serve para a senha certa (sem token nem cookie de sessão), outro cliente HTTP, o usuário B na mesma origem e o
               logoff. B recebe as falhas simultâneas da concorrência.
