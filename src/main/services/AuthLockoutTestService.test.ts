@@ -113,6 +113,9 @@ describe('AuthLockoutTestService contra um WTA falso', () => {
     const result = await service.run({ userA: { login: 'TESTE_A', password: 'errada' }, checks: ['threshold'] });
     expect(result.success).toBe(false);
     expect(result.error).toContain('não entrou');
+    // A resposta do WTA vai junto para a pessoa saber se é senha errada ou conta bloqueada
+    expect(result.error).toContain('HTTP 401, resposta do WTA: {"message":"Usuário ou senha inválidos"}');
+    expect(result.error).toContain('Confira login e senha');
     expect(result.attempts).toHaveLength(1);
   });
 

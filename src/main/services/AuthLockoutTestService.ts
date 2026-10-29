@@ -19,6 +19,7 @@ import {
   checkPerUser,
   checkThreshold,
   lockAccountA,
+  preflightFailureReason,
   preflightUser,
   type AccountState
 } from './authLockout/lockoutAccountChecks';
@@ -80,12 +81,14 @@ export class AuthLockoutTestService {
       const a = await preflightUser(run, config.userA, 'usuário A');
       if (a.attempt.outcome !== 'authenticated') {
         throw new Error(
-          `O usuário A (${config.userA.login}) não entrou com a senha informada (${a.attempt.status ? `HTTP ${a.attempt.status}` : a.attempt.error}). Confira a senha ou aguarde o fim de um bloqueio anterior.`
+          `O usuário A (${config.userA.login}) não entrou com a senha informada: ${preflightFailureReason(a)}`
         );
       }
     }
     if (needsB && config.userB) {
-      state.bReady = (await preflightUser(run, config.userB, 'usuário B')).attempt.outcome === 'authenticated';
+      const b = await preflightUser(run, config.userB, 'usuário B');
+      state.bReady = b.attempt.outcome === 'authenticated';
+      if (!state.bReady) state.bFailure = preflightFailureReason(b);
     }
 
     if (run.selected('threshold')) await checkThreshold(run, state);

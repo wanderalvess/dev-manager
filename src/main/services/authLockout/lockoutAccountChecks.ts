@@ -12,6 +12,8 @@ export interface AccountState {
   /** Momento (epoch ms) da falha que bloqueou A; ausente se A não bloqueou. */
   aLockedAtMs?: number;
   bReady: boolean;
+  /** Por que o pré-voo de B falhou, para as checagens que dependem dele dizerem. */
+  bFailure?: string;
 }
 
 /** Limiar: N-1 falhas não bloqueiam; numa execução independente, N falhas em menos da janela bloqueiam. */
@@ -150,7 +152,7 @@ export async function checkPerUser(run: LockoutRun, state: AccountState): Promis
   const started = Date.now();
   const { userA, userB } = run.config;
   if (!userB || !state.bReady) {
-    run.setCheck('per-user', 'skipped', userB ? 'O usuário B não autenticou no pré-voo.' : 'Informe o usuário de teste B.', [], started);
+    run.setCheck('per-user', 'skipped', userB ? `O usuário B não autenticou no pré-voo: ${state.bFailure ?? 'sem detalhe'}` : 'Informe o usuário de teste B.', [], started);
     return;
   }
   const r = await run.login('per-user', userB, userB.password, `${userB.login}: senha certa com ${userA.login} bloqueado`);
@@ -169,7 +171,7 @@ export async function checkConcurrency(run: LockoutRun, state: AccountState): Pr
   const started = Date.now();
   const { userB, threshold, concurrency } = run.config;
   if (!userB || !state.bReady) {
-    run.setCheck('concurrency', 'skipped', userB ? 'O usuário B não autenticou no pré-voo.' : 'Informe o usuário de teste B (a conta A está ocupada com o bloqueio).', [], started);
+    run.setCheck('concurrency', 'skipped', userB ? `O usuário B não autenticou no pré-voo: ${state.bFailure ?? 'sem detalhe'}` : 'Informe o usuário de teste B (a conta A está ocupada com o bloqueio).', [], started);
     return;
   }
   run.log(`Concorrência: ${threshold} falhas simultâneas em ${userB.login}`);
@@ -200,4 +202,17 @@ export async function preflightUser(run: LockoutRun, user: AuthLockoutUser, name
   const r = await run.login('preflight', user, user.password, `Pré-voo: ${name} (${user.login}) com a senha certa`);
   if (r.token) run.tokens.set(user.login, r.token);
   return r;
+}
+
+/** Motivo do pré-voo recusado, com o que o WTA respondeu (já mascarado) para a pessoa saber se é senha ou bloqueio. */
+export function preflightFailureReason(r: CallResult): string {
+  const a = r.attempt;
+  if (a.status === 0) return `o WTA não respondeu (${a.error ?? 'sem resposta'}). Confira a URL do WTA.`;
+  const hint =
+    a.outcome === 'locked'
+      ? 'A conta parece bloqueada: aguarde o fim do bloqueio antes de rodar.'
+      : a.outcome === 'error'
+        ? 'Erro do servidor: confira se o WTA está de pé.'
+        : 'Confira login e senha (o WinThor pode diferenciar maiúsculas) ou se a conta já está bloqueada por um teste anterior.';
+  return `HTTP ${a.status}${a.bodySnippet ? `, resposta do WTA: ${a.bodySnippet.slice(0, 200)}` : ''}. ${hint}`;
 }
