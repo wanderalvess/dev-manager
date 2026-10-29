@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Bloqueio de Login: Copiar relatório (Jira) no app desktop**: o botão mostrava *Não foi possível copiar o relatório*, porque o Electron recusa o `navigator.clipboard`. A cópia agora usa o mesmo caminho alternativo das outras telas e funciona no app e no modo Web.
+
 ## [1.46.0] - 2026-10-29
 ### Adicionado
 - **Assistente INFR: Nova versão a partir de um ambiente**: nova aba que monta um ambiente WinThor de outra versão a partir de um que já funciona (ex.: develop no 40 a partir do master no 39). Lista os ambientes da distro (`oracle-`, `wta-`, `wsh-<nome>`, com o estado de cada container), os Oracles e os jars do WSH em `/opt`. A prévia lê as features do WTA de origem, sobe cada uma pelo catálogo de atualizações da rotina 801 até a versão nova sem passar dela (item bloqueado ou de linha acima fica de fora, com o motivo) e, com o jar do WSH da versão, confere o `dependencies.json` dele contra a lista nova, apontando antes do build o que faria o WSH recusar ("Versão exigida ... instalada"). O banco pode ser clonado de um Oracle escolhido (RMAN), apontar para um Oracle existente ou ser criado vazio; container e portas vêm sugeridos pela versão e são editáveis. A seção *Configurações* mostra o `wta.env` e o `.env` do WSH com os valores do ambiente de origem (SID, usuário, loja, empresa, memória das JVMs, portas internas, `Winthor.ini`), editáveis; as senhas não voltam para a tela (em branco mantém a da origem, lida no servidor). Ao gerar, grava `linux-winthor/versions/<versão>.features`, `wta.env.<versão>` e `.env.<versão>` e abre o terminal com o `new_version_env.sh` do INFR-Docker. Rotas `GET /api/infr/version/environments`, `GET /api/infr/version/env-template`, `POST /api/infr/version/env-save`, `POST /api/infr/version/preview` e `POST /api/infr/version/save`.

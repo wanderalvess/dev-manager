@@ -3,6 +3,7 @@ import { estimateAuthLockoutMinutes } from '../../../../../shared/authLockoutCat
 import type { AuthLockoutCheckResult, AuthLockoutRunResult } from '../../../../../shared/authLockoutTypes';
 import { showToast } from '../../../components/ToastHost';
 import { requestConfirm } from '../../../components/ui/confirmService';
+import { copyText } from '../../useCopyToClipboard';
 import {
   AUTH_LOCKOUT_FORM_STORAGE_KEY,
   buildRunRequest,
@@ -119,12 +120,8 @@ export function useAuthLockoutRun() {
 
   const copyReport = useCallback(async () => {
     if (!result?.markdown) return;
-    try {
-      await navigator.clipboard.writeText(result.markdown);
-      showToast('Relatório copiado (Markdown para o Jira).');
-    } catch {
-      showToast('Não foi possível copiar o relatório.', 'error');
-    }
+    if (await copyText(result.markdown)) showToast('Relatório copiado (Markdown para o Jira).');
+    else showToast('Não foi possível copiar o relatório.', 'error');
   }, [result]);
 
   return { form, update, running, checks, activity, result, error, blocker, estimatedMinutes, run, abort, copyReport };

@@ -19,6 +19,22 @@ function fallbackCopy(text: string): boolean {
 }
 
 /**
+ * Copia texto e diz se deu certo. No Electron o `navigator.clipboard` é recusado (o processo principal nega
+ * todas as permissões da página), então o caminho que funciona lá é o `execCommand('copy')`.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Cai no fallback abaixo
+  }
+  return fallbackCopy(text);
+}
+
+/**
  * Copia texto para a área de transferência com fallback robusto e mantém uma "chave copiada" ativa
  * por `resetMs`, para feedback visual.
  */
@@ -34,18 +50,7 @@ export function useCopyToClipboard(resetMs: number = 1500) {
 
   const copy = useCallback(
     (text: string, key: string = text) => {
-      const doCopy = async () => {
-        try {
-          if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(text);
-          } else {
-            fallbackCopy(text);
-          }
-        } catch {
-          fallbackCopy(text);
-        }
-      };
-      void doCopy();
+      void copyText(text);
       setCopiedKey(key);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => setCopiedKey(null), resetMs);
