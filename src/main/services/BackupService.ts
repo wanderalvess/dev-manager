@@ -17,6 +17,13 @@ import {
   type OracleDirectoryInfo,
   type OracleFailureContext
 } from './database/oracleBackupHelp';
+import {
+  explainPostgresFailure,
+  extractPostgresErrorLines,
+  isPostgresMissingDatabase,
+  isPostgresTool,
+  type PostgresFailureContext
+} from './database/postgresBackupHelp';
 import { buildOracleParfileContent, writeTempOracleParfile } from './database/oracleParfile';
 
 /** Tempo máximo de um dump/restore MySQL via spawn (os execFile dos demais bancos já têm timeout). */
@@ -420,6 +427,12 @@ export class BackupService {
               }).then((explained) => resolve({ success: false, ...(explained ?? { message: fallback }), durationMs }));
               return;
             }
+            if (config.type === 'postgres' && isPostgresTool(binary)) {
+              void this.describePostgresFailure(config, `${maskedStdout}\n${maskedStderr}`, { binary, operation: 'backup' }).then(
+                (explained) => resolve({ success: false, ...(explained ?? { message: fallback }), durationMs })
+              );
+              return;
+            }
             resolve({ success: false, message: fallback, durationMs });
             return;
           }
@@ -661,11 +674,9 @@ export class BackupService {
 
           if (error) {
             fs.promises.unlink(filePath).catch(() => {});
-            resolve({
-              success: false,
-              message: this.formatPostgresCliError('pg_dump', error, stderr),
-              durationMs
-            });
+            void this.postgresCliFailure(config, binary, error, stderr, 'backup').then((failure) =>
+              resolve({ ...failure, durationMs })
+            );
             return;
           }
 
@@ -747,7 +758,9 @@ export class BackupService {
         (error, _stdout, stderr) => {
           const durationMs = Date.now() - startTime;
           if (error) {
-            resolve({ success: false, message: this.formatPostgresCliError(binary, error, stderr), durationMs });
+            void this.postgresCliFailure(config, binary, error, stderr, 'restore').then((failure) =>
+              resolve({ ...failure, durationMs })
+            );
             return;
           }
           resolve({ success: true, message: `Restauração concluída a partir de ${filePath}`, durationMs });
@@ -1250,17 +1263,63 @@ export class BackupService {
     return Promise.race([query, timeout]);
   }
 
-  private formatPostgresCliError(binary: string, error: { code?: string | number | null; message?: string }, stderr?: string): string {
+  /** Falha do pg_dump/psql/pg_restore: executável ausente, erro conhecido com ajuda ou a saída crua. */
+  private async postgresCliFailure(
+    config: DatabaseConnectionConfig,
+    binary: string,
+    error: { code?: string | number | null; message?: string },
+    stderr: string | undefined,
+    operation: PostgresFailureContext['operation']
+  ): Promise<BackupResult> {
+    const tool = path.basename(binary).replace(/\.exe$/i, '');
     if (error.code === 'ENOENT') {
-      return `${binary} não encontrado. Instale o cliente PostgreSQL (inclui pg_dump e psql) ou configure o caminho do executável nas configurações.`;
+      const help: BackupHelp = {
+        steps: [
+          'Instale o cliente PostgreSQL da mesma versão do servidor ou mais nova (o instalador oficial traz pg_dump, psql e pg_restore; dá para instalar só as Command Line Tools).',
+          `Se ele já está instalado, informe nas configurações de backup o caminho completo do ${tool}.exe (ex.: C:\\Program Files\\PostgreSQL\\16\\bin\\${tool}.exe), ou ponha a pasta bin no PATH e reinicie o Dev Manager.`
+        ]
+      };
+      return { success: false, message: `${binary} não encontrado.`, help };
     }
-    const msg = (stderr || error.message || '').trim();
-    if (msg.includes('password authentication failed')) {
-      return 'Falha de autenticação: usuário ou senha incorretos para o PostgreSQL.';
-    }
-    if (msg.includes('could not connect') || msg.includes('ECONNREFUSED')) {
-      return 'Não foi possível conectar ao servidor PostgreSQL. Verifique host/porta e se o banco está ativo.';
-    }
-    return msg || `Falha desconhecida ao executar ${binary}.`;
+    const output = maskSensitiveText(`${stderr || ''}\n${error.message || ''}`, config.password);
+    const explained = await this.describePostgresFailure(config, output, { binary, operation });
+    if (explained) return { success: false, ...explained };
+    const raw = maskSensitiveText((stderr || error.message || '').trim(), config.password);
+    return { success: false, message: raw || `Falha desconhecida ao executar ${binary}.` };
+  }
+
+  /** Mensagem e passos para um erro conhecido do PostgreSQL; null quando não reconhece. */
+  private async describePostgresFailure(
+    config: DatabaseConnectionConfig,
+    output: string,
+    ctx: Pick<PostgresFailureContext, 'binary' | 'operation'>
+  ): Promise<{ message: string; help?: BackupHelp } | null> {
+    const databases = isPostgresMissingDatabase(output) ? await this.listPostgresDatabases(config) : undefined;
+    const explained = explainPostgresFailure(output, {
+      ...ctx,
+      host: config.host,
+      port: config.port || 5432,
+      user: config.user,
+      database: config.database,
+      databases
+    });
+    if (explained) return explained;
+    const lines = extractPostgresErrorLines(output);
+    return lines.length > 0 ? { message: lines[0], help: { steps: [], detail: lines.join('\n') } } : null;
+  }
+
+  /** Bancos do servidor, consultados pelo banco de manutenção "postgres"; undefined se não deu para consultar. */
+  private async listPostgresDatabases(config: DatabaseConnectionConfig): Promise<string[] | undefined> {
+    if (!this.databaseService) return undefined;
+    const query = this.databaseService
+      .executeQuery(
+        { ...config, database: 'postgres' },
+        'SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY datname',
+        200
+      )
+      .then((res) => (res.success ? res.rows.map((r) => String(r.datname ?? r.DATNAME)) : undefined))
+      .catch(() => undefined);
+    const timeout = new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 8000).unref?.());
+    return Promise.race([query, timeout]);
   }
 }
