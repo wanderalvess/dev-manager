@@ -44,7 +44,7 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ### Corrigido
 - **Backup e restauração Oracle sem ORACLE_HOME**: `exp`, `imp`, `expdp` e `impdp` de uma instalação completa do Oracle falhavam com *Message 206 not found* ou *UDE-00019* quando o `ORACLE_HOME` não estava definido. Agora o Dev Manager define o `ORACLE_HOME` com a pasta da instalação do próprio executável (a que tem `rdbms\mesg`), no backup padrão, na restauração e no comando personalizado. Quando não dá para descobrir, a mensagem explica o que configurar em vez de repetir a saída crua do Oracle.
-- **Backup e restauração Oracle com ORA-12504**: o `expdp`/`exp` recebia `usuario@host:porta/servico` e lia a `/` como separador da senha, então o serviço se perdia e o listener respondia ORA-12504. O backup, a restauração e o marcador `{connectString}` do comando personalizado agora usam o descritor TNS completo (`(DESCRIPTION=...(SERVICE_NAME=...))`, ou `SID=` no modo SID), sem barra.
+- **Backup e restauração Oracle com ORA-12504**: o `expdp`/`exp` recebia `usuario@host:porta/servico` e lia a `/` como separador da senha, então o serviço se perdia e o listener respondia ORA-12504 (o descritor TNS entre parênteses também não serve na linha de comando: LRM-00116). Agora o backup e a restauração passam ao executável só o usuário, e a conexão vai na variável `LOCAL` (Windows) ou `TWO_TASK` (demais), com o descritor completo (`SERVICE_NAME`, ou `SID` no modo SID). No comando personalizado vale a mesma variável quando o comando não traz a conexão, e o modelo sugerido passou a ser `{user}/{password}@{connectString}`.
 
 ## [1.45.0] - 2026-10-23
 ### Adicionado

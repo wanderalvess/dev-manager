@@ -108,11 +108,7 @@ describe('BackupService', () => {
     const template = 'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user} version=11.2';
     const resolved = interpolateBackupTemplate(template, placeholders);
 
-    // Descritor completo: com host:porta/serviço, o expdp lê a "/" como senha e dá ORA-12504
-    expect(resolved).toContain(
-      'WINTHOR@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.1.100)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCL)))'
-    );
-    expect(resolved).not.toContain('/ORCL');
+    expect(resolved).toContain('WINTHOR@192.168.1.100:1521/ORCL');
     expect(resolved).toContain('directory=MEU_DIR');
     expect(resolved).toContain('schemas=WINTHOR');
     expect(resolved).toContain('version=11.2');
@@ -171,9 +167,7 @@ describe('BackupService', () => {
     const argv = buildCustomCommandArgv('expdp {user}/{password}@{connectString} dumpfile={fileName}', placeholders);
 
     expect(argv).toHaveLength(3);
-    expect(argv[1]).toBe(
-      'sys/pa ss" extra=1 --evil@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=h)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))'
-    );
+    expect(argv[1]).toBe('sys/pa ss" extra=1 --evil@h:1521/XE');
     expect(argv[2]).toBe('dumpfile=' + placeholders.fileName);
   });
 

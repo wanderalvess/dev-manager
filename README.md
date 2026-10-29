@@ -98,7 +98,7 @@ Ao personalizar comandos de backup, utilize os seguintes marcadores dinâmicos q
 | `{port}` | Porta de conexão do banco de dados | `1521` (Oracle), `5432` (PG), `3306` (MySQL) |
 | `{user}` | Usuário autenticado | `SYSTEM` ou `postgres` |
 | `{password}` | Senha do banco (mascarada na UI, injetada na execução) | `******` |
-| `{connectString}` | Descritor TNS da conexão Oracle (sem `/`, que o `exp`/`expdp` confundiria com a senha). Nos demais bancos, `host:port/database` | `(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XEPDB1)))` |
+| `{connectString}` | String de conexão Oracle no formato `host:port/service`. Use com a senha (`{user}/{password}@{connectString}`): sem ela, o `exp`/`expdp` lê a `/` do serviço como senha (ORA-12504). Sem conexão no comando, vale a variável `LOCAL`/`TWO_TASK` que o Dev Manager define com a conexão | `localhost:1521/XEPDB1` |
 | `{schema}` | Schema ou usuário alvo selecionado | `PRODUCAO` |
 | `{database}` | Nome da base de dados ou SID/Service | `winthor` |
 | `{timestamp}` | Carimbo de data/hora atual no formato `YYYYMMDD_HHmmss` | `20260916_103000` |

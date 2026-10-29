@@ -7,7 +7,7 @@ import { execFile, spawn } from 'child_process';
 import { DatabaseConnectionConfig, BackupResult, BackupFileInfo } from '../../shared/types';
 import { isSafeLocalPath, isValidIdentifier } from '../utils/security';
 import type { ConfigService } from './ConfigService';
-import { buildOracleCliConnectString } from '../../shared/oracleCliConnect';
+import { buildOracleConnectEnv } from '../../shared/oracleCliConnect';
 import {
   buildOracleToolEnv,
   isMissingOracleHomeOutput,
@@ -84,9 +84,10 @@ export function buildBackupPlaceholders(
   const defaultPort = config.type === 'oracle' ? 1521 : config.type === 'mysql' ? 3306 : 5432;
   const port = String(config.port || defaultPort);
 
+  const separator = config.oracleMode === 'sid' ? ':' : '/';
   const connectString =
     config.type === 'oracle'
-      ? buildOracleCliConnectString({ ...config, port })
+      ? `${config.host}:${port}${separator}${config.database}`
       : `${config.host}:${port}/${config.database}`;
 
   const directory = (options?.oracleDirectory && options.oracleDirectory.trim()) || 'DATA_PUMP_DIR';
@@ -385,6 +386,8 @@ export class BackupService {
         {
           env: {
             ...(isOracleTool(binary) ? buildOracleToolEnv(binary) : process.env),
+            // Sem conexão explícita no comando (ex.: só {user}/{password}), o utilitário Oracle usa esta.
+            ...(config.type === 'oracle' ? buildOracleConnectEnv(config) : {}),
             PGPASSWORD: config.password || '',
             MYSQL_PWD: config.password || ''
           },
@@ -1021,11 +1024,11 @@ ${maskedStderr}`)) {
     const logFileName = `${safeConnName}_${config.user}_${timestamp}.log`;
     const expectedFilePath = path.join(destinationFolder, dumpFileName);
 
-    const connectString = buildOracleCliConnectString(config);
 
     const binary = expdpPath && expdpPath.trim() ? expdpPath.trim() : 'expdp';
     const args = [
-      `${config.user}@${connectString}`,
+      // A conexão vai em LOCAL/TWO_TASK (ver buildOracleConnectEnv), não na linha de comando.
+      config.user,
       `directory=${directory}`,
       `dumpfile=${dumpFileName}`,
       `logfile=${logFileName}`,
@@ -1040,7 +1043,7 @@ ${maskedStderr}`)) {
         binary,
         args,
         {
-          env: buildOracleToolEnv(binary),
+          env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },
@@ -1104,11 +1107,11 @@ ${maskedStderr}`)) {
     const dumpFileName = path.basename(filePath);
     const logFileName = `restore_${Date.now()}.log`;
 
-    const connectString = buildOracleCliConnectString(config);
 
     const binary = impdpPath && impdpPath.trim() ? impdpPath.trim() : 'impdp';
     const args = [
-      `${config.user}@${connectString}`,
+      // A conexão vai em LOCAL/TWO_TASK (ver buildOracleConnectEnv), não na linha de comando.
+      config.user,
       `directory=${directory}`,
       `dumpfile=${dumpFileName}`,
       `logfile=${logFileName}`,
@@ -1120,7 +1123,7 @@ ${maskedStderr}`)) {
         binary,
         args,
         {
-          env: buildOracleToolEnv(binary),
+          env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },

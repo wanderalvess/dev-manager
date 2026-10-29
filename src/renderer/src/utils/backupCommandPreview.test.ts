@@ -62,11 +62,11 @@ describe('resolveBackupCommandPreview', () => {
     expect(cmd).toContain('--result-file=');
   });
 
-  it('comando padrão do oracle usa expdp com connectString e diretório, e adiciona compression=ALL quando comprimido', () => {
+  it('comando padrão do oracle passa a conexão em LOCAL e só o usuário ao expdp, e adiciona compression=ALL quando comprimido', () => {
     const conn = makeConnection({ type: 'oracle', port: 1521, oracleMode: 'serviceName' });
     const cmd = resolveBackupCommandPreview(conn, baseOptions);
     expect(cmd).toContain(
-      'expdp admin@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=meudb))) directory=DATA_PUMP_DIR'
+      'LOCAL=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=meudb))) expdp admin directory=DATA_PUMP_DIR'
     );
     expect(cmd).not.toContain('compression=ALL');
 
@@ -74,7 +74,7 @@ describe('resolveBackupCommandPreview', () => {
     expect(compressed).toContain('compression=ALL');
   });
 
-  it('modo SID do oracle usa SID no descritor do connectString', () => {
+  it('modo SID do oracle usa SID no descritor da conexão', () => {
     const conn = makeConnection({ type: 'oracle', port: 1521, oracleMode: 'sid' });
     const cmd = resolveBackupCommandPreview(conn, baseOptions);
     expect(cmd).toContain('(CONNECT_DATA=(SID=meudb))');
