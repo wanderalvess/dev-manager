@@ -20,6 +20,7 @@ import { getIntegrationTraceFaq } from './faq/integrationTraceFaq';
 import { getRemoteControlFaq } from './faq/remoteControlFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 import { getUpdateFaq } from './faq/updateFaq';
+import { getInfrVersionFaq } from './faq/infrVersionFaq';
 import { McpSafetyNote } from './modules/McpSafetyNote';
 import { MCP_TOOL_COUNT } from '../../../../shared/mcpCatalog';
 
@@ -1742,6 +1743,7 @@ export function getFaqList({
     ...getLogsFaq(onNavigate),
     ...getIntegrationTraceFaq(onNavigate),
     ...getDeployCancellationFaq(onNavigate),
+    ...getInfrVersionFaq(),
     ...getUpdateFaq(handleOpenLink)
   ];
 }
