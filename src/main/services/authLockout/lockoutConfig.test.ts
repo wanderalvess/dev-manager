@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { authLockoutDefaults, normalizeLockoutRequest } from './lockoutConfig';
-import { durationProbeOffsets } from './lockoutTimingChecks';
+import { durationProbeOffsets } from '../../../shared/authLockoutNarrative';
 
 const settings = { wtaUrl: 'localhost:81/', karafPath: '/opt/karaf' };
 const userA = { login: 'TESTE_A', password: 'senhaA' };

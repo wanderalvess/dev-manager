@@ -161,7 +161,7 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     navTarget: 'quality',
     icon: CheckCheck,
     title: 'Qualidade (QA & PO)',
-    description: 'Homologação, validador regressivo, test runners e TAUT (Cypress) em páginas próprias.',
+    description: 'Homologação, validador regressivo, test runners, TAUT (Cypress) e validação de cenários em páginas próprias.',
     shortcut: 'Alt+Q',
     hoverBorderClass: 'hover:border-success/50',
     iconClass: 'text-success',
